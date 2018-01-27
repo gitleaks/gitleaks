@@ -13,20 +13,29 @@ import (
 // gotta be fast
 
 type Repo struct {
-	url      string
-	name     string
-	path     string
-	branches *Branch
-}
-
-type Branch struct {
+	url  string
 	name string
+	path string
 }
 
+// memoization for commit1+commit2 hash
+var cache map[string]bool
 var appRoot string
+var regexes map[string]string
+var strictRegexes map[string]string
 
 func init() {
 	appRoot, _ = os.Getwd()
+	cache = make(map[string]bool)
+	regexes = map[string]string{
+		"github":   "[g|G][i|I][t|T][h|H][u|U][b|B].*",
+		"aws":      "[a|A][w|W][s|S].*",
+		"heroku":   "[h|H][e|E][r|R][o|O][k|K][u|U].*",
+		"facebook": "[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*",
+		"twitter":  "[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*",
+		"reddit":   "[r|R][e|E][d|D][d|D][i|I][t|T].*",
+		"twilio":   "[t|T][w|W][i|I][l|L][i|I][o|O].*",
+	}
 }
 
 func main() {
@@ -51,7 +60,7 @@ func repoStart(repo_url string) {
 		log.Fatal(err)
 	}
 
-	repo := Repo{repo_url, repo_name, "", nil}
+	repo := Repo{repo_url, repo_name, ""}
 	repo.audit()
 	repo.cleanup()
 }
@@ -96,16 +105,23 @@ func (repo Repo) audit() {
 			if j == len(commits)-2 {
 				break
 			}
+
+			// TODO need a memoization structure for commitB vs commits[j+1]
+			// memoize the actual diff function
 			diff(string(commitB), string(commits[j+1]))
 		}
 	}
 }
 
 func diff(commit1 string, commit2 string) {
-	// fmt.Println(commit1, commit2)
-	_, err := exec.Command("git", "diff", commit1, commit2).Output()
+	_, seen := cache[commit1+commit2]
+	if seen {
+		return
+	}
+	out, err := exec.Command("git", "diff", commit1, commit2).Output()
 	if err != nil {
 		log.Fatalf("error retrieving commits %v\n", err)
 	}
-	//fmt.Printf("%s\n", out)
+	cache[commit1+commit2] = true
+	checkRegex(out)
 }
