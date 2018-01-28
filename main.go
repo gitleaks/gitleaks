@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -21,20 +22,19 @@ type Repo struct {
 // memoization for commit1+commit2 hash
 var cache map[string]bool
 var appRoot string
-var regexes map[string]string
-var strictRegexes map[string]string
+var regexes map[string]*regexp.Regexp
 
 func init() {
 	appRoot, _ = os.Getwd()
 	cache = make(map[string]bool)
-	regexes = map[string]string{
-		"github":   "[g|G][i|I][t|T][h|H][u|U][b|B].*",
-		"aws":      "[a|A][w|W][s|S].*",
-		"heroku":   "[h|H][e|E][r|R][o|O][k|K][u|U].*",
-		"facebook": "[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*",
-		"twitter":  "[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*",
-		"reddit":   "[r|R][e|E][d|D][d|D][i|I][t|T].*",
-		"twilio":   "[t|T][w|W][i|I][l|L][i|I][o|O].*",
+	regexes = map[string]*regexp.Regexp{
+		"github":   regexp.MustCompile(`[g|G][i|I][t|T][h|H][u|U][b|B].+[=|:=|:|<-].*\w+.*`),
+		"aws":      regexp.MustCompile(`[a|A][w|W][s|S].+[=|:=|:|<-].*\w+.*`),
+		"heroku":   regexp.MustCompile(`[h|H][e|E][r|R][o|O][k|K][u|U].+[=|:=|:|<-].*\w+.*`),
+		"facebook": regexp.MustCompile(`[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].+[=|:=|:|<-].*\w+.*`),
+		"twitter":  regexp.MustCompile(`[t|T][w|W][i|I][t|T][t|T][e|E][r|R].+[=|:=|:|<-].*\w+.*`),
+		"reddit":   regexp.MustCompile(`[r|R][e|E][d|D][d|D][i|I][t|T].+[=|:=|:|<-].*\w+.*`),
+		"twilio":   regexp.MustCompile(`[t|T][w|W][i|I][l|L][i|I][o|O].+[=|:=|:|<-].*\w+.*`),
 	}
 }
 
@@ -123,5 +123,5 @@ func diff(commit1 string, commit2 string) {
 		log.Fatalf("error retrieving commits %v\n", err)
 	}
 	cache[commit1+commit2] = true
-	checkRegex(out)
+	checkRegex(string(out))
 }

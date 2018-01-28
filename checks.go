@@ -1,26 +1,28 @@
 package main
 
 import (
-	"bytes"
 	_ "fmt"
-	"regexp"
+	"strings"
 )
 
-func checkRegex(diff []byte) {
-	var re *regexp.Regexp
-	var found string
-	lines := bytes.Split(diff, []byte("\n"))
+func checkRegex(diff string) ([]string, bool) {
+	var match string
+	var results []string
+	secretsPresent := false
+	lines := strings.Split(diff, "\n")
 	for _, line := range lines {
 		if len(line) == 0 {
 			continue
 		}
 
-		for _, v := range regexes {
-			re = regexp.MustCompile(v)
-			found = re.FindString(string(line))
-			if len(found) == 0 {
+		for _, re := range regexes {
+			match = re.FindString(line)
+			if len(match) == 0 {
 				continue
 			}
+			secretsPresent = true
+			results = append(results, line)
 		}
 	}
+	return results, secretsPresent
 }
