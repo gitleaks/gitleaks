@@ -1,10 +1,13 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
+	"github.com/nbutton23/zxcvbn-go"
 	"strings"
 )
 
+// check each line of a diff and see if there are any potential
+// secrets
 func checkRegex(diff string) ([]string, bool) {
 	var match string
 	var results []string
@@ -25,4 +28,20 @@ func checkRegex(diff string) ([]string, bool) {
 		}
 	}
 	return results, secretsPresent
+}
+
+// checkEntropy determines whether target contains enough
+// entropy for a hash
+func checkEntropy(target string) bool {
+	index := assignRegex.FindStringIndex(target)
+	if len(index) == 0 {
+		return false
+	}
+	target = strings.Trim(target[index[1]:len(target)], " ")
+	entropy := zxcvbn.PasswordStrength(target, nil).Entropy
+	// tune this/make option
+	if entropy > 70 {
+		return true
+	}
+	return false
 }
