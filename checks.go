@@ -2,9 +2,7 @@ package main
 
 import (
 	_ "fmt"
-	//"github.com/nbutton23/zxcvbn-go"
-	"bytes"
-	"math"
+	"github.com/nbutton23/zxcvbn-go"
 	"strings"
 )
 
@@ -42,31 +40,18 @@ func checkEntropy(target string) bool {
 	}
 
 	// TODO check for stop words here
-
 	target = strings.Trim(target[index[1]:len(target)], " ")
-	entropy := shannonEntropy(target)
+
+	if len(target) > 70 {
+		return false
+	}
+
+	// entropy := shannonEntropy(target)
+	entropy := zxcvbn.PasswordStrength(target, nil).Entropy
 
 	// tune this/make option
-	if entropy > 3.5 {
+	if entropy > 70 {
 		return true
 	}
 	return false
-}
-
-func shannonEntropy(target string) float32 {
-	freqs := make(map[byte]float64)
-	targetBytes := []byte(target)
-	entropy := float64(0)
-	for i := 0; i < 256; i++ {
-		freqs[byte(i)] = 0
-	}
-	ln := len(target)
-	for k, _ := range freqs {
-		px := float64(bytes.Count(targetBytes, []byte{k})) / float64(ln)
-		freqs[k] = px
-		if px > 0 {
-			entropy += -float64(px) * math.Log2(px)
-		}
-	}
-	return float32(entropy)
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -12,6 +14,13 @@ import (
 
 // go get hunt is a github secret key hunter written in go. target organizations, users, and remote/local repos
 // gotta be fast
+
+type ReportElem struct {
+	Lines   []string `json:"lines"`
+	Branch  string   `json:"branch"`
+	CommitA string   `json:"commitA"`
+	CommitB string   `json:"commitB"`
+}
 
 type Repo struct {
 	url  string
@@ -24,6 +33,7 @@ var cache map[string]bool
 var appRoot string
 var regexes map[string]*regexp.Regexp
 var assignRegex *regexp.Regexp
+var report []ReportElem
 
 func init() {
 	appRoot, _ = os.Getwd()
@@ -65,8 +75,11 @@ func repoStart(repo_url string) {
 	}
 
 	repo := Repo{repo_url, repo_name, ""}
-	repo.audit()
+	report := repo.audit()
 	repo.cleanup()
+
+	reportJson, _ := json.MarshalIndent(report, "", "\t")
+	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repo.name), reportJson, 0644)
 }
 
 // cleanup changes to app root and recursive rms target repo
@@ -81,7 +94,7 @@ func (repo Repo) cleanup() {
 }
 
 // (Repo) audit parses git branch --all to audit remote branches
-func (repo Repo) audit() {
+func (repo Repo) audit() []ReportElem {
 	var out []byte
 	var err error
 	var branch string
@@ -102,7 +115,7 @@ func (repo Repo) audit() {
 		branch = string(bytes.Trim(branchB, " "))
 		out, err = exec.Command("git", "rev-list", branch).Output()
 		if err != nil {
-			log.Fatalf("error retrieving commits %v\n", err)
+			continue
 		}
 		// iterate through commits
 		commits = bytes.Split(out, []byte("\n"))
@@ -115,12 +128,15 @@ func (repo Repo) audit() {
 			// memoize the actual diff function
 			leaks = checkDiff(string(commitB), string(commits[j+1]))
 			if len(leaks) != 0 {
-				fmt.Println(leaks)
+				report = append(report, ReportElem{leaks, branch,
+					string(commitB), string(commits[j+1])})
 			}
 		}
 	}
+	return report
 }
 
+// checkDiff operates on a single diff between to chronological commits
 func checkDiff(commit1 string, commit2 string) []string {
 	var leakPrs bool
 	var leaks []string
@@ -131,7 +147,7 @@ func checkDiff(commit1 string, commit2 string) []string {
 
 	out, err := exec.Command("git", "diff", commit1, commit2).Output()
 	if err != nil {
-		log.Fatalf("error retrieving commits %v\n", err)
+		return []string{}
 	}
 
 	cache[commit1+commit2] = true
