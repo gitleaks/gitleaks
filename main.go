@@ -28,6 +28,8 @@ var assignRegex *regexp.Regexp
 func init() {
 	appRoot, _ = os.Getwd()
 	cache = make(map[string]bool)
+	// TODO update regex to look for things like:
+	// client("fewafewakwafejwkaf",
 	regexes = map[string]*regexp.Regexp{
 		"github":   regexp.MustCompile(`[g|G][i|I][t|T][h|H][u|U][b|B].*(=|:|:=|<-).*\w+.*`),
 		"aws":      regexp.MustCompile(`[a|A][w|W][s|S].*(=|:=|:|<-).*\w+.*`),
@@ -84,6 +86,7 @@ func (repo Repo) audit() {
 	var err error
 	var branch string
 	var commits [][]byte
+	var leaks []string
 
 	out, err = exec.Command("git", "branch", "--all").Output()
 	if err != nil {
@@ -110,20 +113,38 @@ func (repo Repo) audit() {
 
 			// TODO need a memoization structure for commitB vs commits[j+1]
 			// memoize the actual diff function
-			diff(string(commitB), string(commits[j+1]))
+			leaks = checkDiff(string(commitB), string(commits[j+1]))
+			if len(leaks) != 0 {
+				fmt.Println(leaks)
+			}
 		}
 	}
 }
 
-func diff(commit1 string, commit2 string) {
+func checkDiff(commit1 string, commit2 string) []string {
+	var leakPrs bool
+	var leaks []string
 	_, seen := cache[commit1+commit2]
 	if seen {
-		return
+		return []string{}
 	}
+
 	out, err := exec.Command("git", "diff", commit1, commit2).Output()
 	if err != nil {
 		log.Fatalf("error retrieving commits %v\n", err)
 	}
+
 	cache[commit1+commit2] = true
-	fmt.Println(checkRegex(string(out)))
+	lines := checkRegex(string(out))
+	if len(lines) == 0 {
+		return []string{}
+	}
+
+	for _, line := range lines {
+		leakPrs = checkEntropy(line)
+		if leakPrs {
+			leaks = append(leaks, line)
+		}
+	}
+	return leaks
 }
