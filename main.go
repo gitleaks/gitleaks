@@ -1,39 +1,18 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
 	"regexp"
-	"strings"
 )
 
-// go get hunt is a github secret key hunter written in go. target organizations, users, and remote/local repos
-// gotta be fast
 
-type ReportElem struct {
-	Lines   []string `json:"lines"`
-	Branch  string   `json:"branch"`
-	CommitA string   `json:"commitA"`
-	CommitB string   `json:"commitB"`
-}
-
-type Repo struct {
-	url  string
-	name string
-	path string
-}
-
-// memoization for commit1+commit2 hash
-var cache map[string]bool
-var appRoot string
-var regexes map[string]*regexp.Regexp
-var assignRegex *regexp.Regexp
-var report []ReportElem
+var (
+	cache       map[string]bool
+	appRoot     string
+	regexes     map[string]*regexp.Regexp
+	assignRegex *regexp.Regexp
+	report      []ReportElem
+)
 
 func init() {
 	appRoot, _ = os.Getwd()
@@ -64,103 +43,3 @@ func start(opts *Options) {
 	}
 }
 
-func repoStart(repo_url string) {
-	err := exec.Command("git", "clone", repo_url).Run()
-	if err != nil {
-		log.Fatalf("failed to clone repo %v", err)
-	}
-	repo_name := strings.Split(repo_url, "/")[4]
-	if err := os.Chdir(repo_name); err != nil {
-		log.Fatal(err)
-	}
-
-	repo := Repo{repo_url, repo_name, ""}
-	report := repo.audit()
-	repo.cleanup()
-
-	reportJson, _ := json.MarshalIndent(report, "", "\t")
-	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repo.name), reportJson, 0644)
-}
-
-// cleanup changes to app root and recursive rms target repo
-func (repo Repo) cleanup() {
-	if err := os.Chdir(appRoot); err != nil {
-		log.Fatalf("failed cleaning up repo %v", err)
-	}
-	err := exec.Command("rm", "-rf", repo.name).Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// (Repo) audit parses git branch --all to audit remote branches
-func (repo Repo) audit() []ReportElem {
-	var out []byte
-	var err error
-	var branch string
-	var commits [][]byte
-	var leaks []string
-
-	out, err = exec.Command("git", "branch", "--all").Output()
-	if err != nil {
-		log.Fatalf("error retrieving branches %v\n", err)
-	}
-
-	// iterate through branches, git rev-list <branch>
-	branches := bytes.Split(out, []byte("\n"))
-	for i, branchB := range branches {
-		if i < 2 || i == len(branches)-1 {
-			continue
-		}
-		branch = string(bytes.Trim(branchB, " "))
-		out, err = exec.Command("git", "rev-list", branch).Output()
-		if err != nil {
-			continue
-		}
-		// iterate through commits
-		commits = bytes.Split(out, []byte("\n"))
-		for j, commitB := range commits {
-			if j == len(commits)-2 {
-				break
-			}
-
-			// TODO need a memoization structure for commitB vs commits[j+1]
-			// memoize the actual diff function
-			leaks = checkDiff(string(commitB), string(commits[j+1]))
-			if len(leaks) != 0 {
-				report = append(report, ReportElem{leaks, branch,
-					string(commitB), string(commits[j+1])})
-			}
-		}
-	}
-	return report
-}
-
-// checkDiff operates on a single diff between to chronological commits
-func checkDiff(commit1 string, commit2 string) []string {
-	var leakPrs bool
-	var leaks []string
-	_, seen := cache[commit1+commit2]
-	if seen {
-		return []string{}
-	}
-
-	out, err := exec.Command("git", "diff", commit1, commit2).Output()
-	if err != nil {
-		return []string{}
-	}
-
-	cache[commit1+commit2] = true
-	lines := checkRegex(string(out))
-	if len(lines) == 0 {
-		return []string{}
-	}
-
-	for _, line := range lines {
-		leakPrs = checkEntropy(line)
-		if leakPrs {
-			leaks = append(leaks, line)
-		}
-	}
-	return leaks
-}

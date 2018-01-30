@@ -3,12 +3,41 @@ package main
 import (
 	_ "fmt"
 	"github.com/nbutton23/zxcvbn-go"
+	"os/exec"
 	"strings"
 )
 
-// check each line of a diff and see if there are any potential
-// secrets
-// https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf
+// checkDiff operates on a single diff between to chronological commits
+func checkDiff(commit1 string, commit2 string) []string {
+	var leakPrs bool
+	var leaks []string
+	_, seen := cache[commit1+commit2]
+	if seen {
+		return []string{}
+	}
+
+	out, err := exec.Command("git", "diff", commit1, commit2).Output()
+	if err != nil {
+		return []string{}
+	}
+
+	cache[commit1+commit2] = true
+	lines := checkRegex(string(out))
+	if len(lines) == 0 {
+		return []string{}
+	}
+
+	for _, line := range lines {
+		leakPrs = checkEntropy(line)
+		if leakPrs {
+			leaks = append(leaks, line)
+		}
+	}
+	return leaks
+}
+
+// check each line of a diff and see if there are any potential secrets
+// [1] https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf
 func checkRegex(diff string) []string {
 	var match string
 	var results []string
