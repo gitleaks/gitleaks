@@ -73,6 +73,9 @@ func (repo Repo) audit() []ReportElem {
 	// iterate through branches, git rev-list <branch>
 	branches := bytes.Split(out, []byte("\n"))
 
+	// TODO instead of making branches concurrent use commits
+	// make the wait group update the cache. Use channel to communicate
+	// cache misses and leaks
 	messages := make(chan string)
 	wg.Add(len(branches) - 3)
 
@@ -96,7 +99,7 @@ func (repo Repo) audit() []ReportElem {
 			// iterate through commits
 			commits = bytes.Split(out, []byte("\n"))
 			for j, commitB := range commits {
-				fmt.Println(branch, string(commitB), j)
+				// fmt.Println(branch, string(commitB), j)
 				if j == len(commits)-2 {
 					break
 				}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
 	"github.com/nbutton23/zxcvbn-go"
 	"os/exec"
 	"strings"
@@ -13,6 +13,7 @@ func checkDiff(commit1 string, commit2 string) []string {
 	var leaks []string
 	_, seen := cache[commit1+commit2]
 	if seen {
+		fmt.Println("WE HAVE SEEN THIS")
 		return []string{}
 	}
 
