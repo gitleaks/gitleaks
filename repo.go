@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 type ReportElem struct {
@@ -61,6 +62,7 @@ func (repo Repo) audit() []ReportElem {
 		branch  string
 		commits [][]byte
 		leaks   []string
+		wg      sync.WaitGroup
 	)
 
 	out, err = exec.Command("git", "branch", "--all").Output()
@@ -70,31 +72,51 @@ func (repo Repo) audit() []ReportElem {
 
 	// iterate through branches, git rev-list <branch>
 	branches := bytes.Split(out, []byte("\n"))
+
+	messages := make(chan string)
+	wg.Add(len(branches) - 3)
+
 	for i, branchB := range branches {
 		if i < 2 || i == len(branches)-1 {
 			continue
 		}
-		// if err := os.Chdir(repo.name); err != nil {
-		// 	log.Fatal(err)
-		// }
 		branch = string(bytes.Trim(branchB, " "))
-		out, err = exec.Command("git", "rev-list", branch).Output()
-		if err != nil {
-			continue
-		}
-		// iterate through commits
-		commits = bytes.Split(out, []byte("\n"))
-		for j, commitB := range commits {
-			if j == len(commits)-2 {
-				break
+		go func(branch string) {
+			defer wg.Done()
+			cmd := exec.Command("git", "rev-list", branch)
+
+			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repo.name)); err != nil {
+				log.Fatal(err)
 			}
 
-			leaks = checkDiff(string(commitB), string(commits[j+1]))
-			if len(leaks) != 0 {
-				report = append(report, ReportElem{leaks, branch,
-					string(commitB), string(commits[j+1])})
+			out, err := cmd.Output()
+			if err != nil {
+				log.Fatal(err)
 			}
-		}
+			// iterate through commits
+			commits = bytes.Split(out, []byte("\n"))
+			for j, commitB := range commits {
+				fmt.Println(branch, string(commitB), j)
+				if j == len(commits)-2 {
+					break
+				}
+
+				leaks = checkDiff(string(commitB), string(commits[j+1]))
+				if len(leaks) != 0 {
+					report = append(report, ReportElem{leaks, branch,
+						string(commitB), string(commits[j+1])})
+				}
+			}
+			messages <- branch
+		}(branch)
+		go func() {
+			for i := range messages {
+				fmt.Println(i)
+			}
+		}()
+
 	}
+	wg.Wait()
+
 	return report
 }
