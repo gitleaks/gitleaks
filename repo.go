@@ -34,6 +34,7 @@ type MemoMessage struct {
 }
 
 var lock = sync.RWMutex{}
+var cmdLock = sync.Mutex{}
 
 func repoStart(repoUrl string) {
 	err := exec.Command("git", "clone", repoUrl).Run()
@@ -72,9 +73,11 @@ func (repo Repo) audit() []ReportElem {
 		branch  string
 		commits [][]byte
 		// leaks   []string
-		wg      sync.WaitGroup
-		commitA string
-		commitB string
+		wg            sync.WaitGroup
+		commitA       string
+		commitB       string
+		concurrent    = 10
+		semaphoreChan = make(chan struct{}, concurrent)
 	)
 
 	out, err = exec.Command("git", "branch", "--all").Output()
@@ -92,44 +95,51 @@ func (repo Repo) audit() []ReportElem {
 			continue
 		}
 		branch = string(bytes.Trim(branchB, " "))
+		cmdLock.Lock()
 		cmd := exec.Command("git", "rev-list", branch)
-
 		out, err := cmd.Output()
+		cmdLock.Unlock()
 		if err != nil {
-			fmt.Println("skipping branch", branch)
+			fmt.Println("skipping branch", branch, err)
 			continue
 		}
 
 		// iterate through commits
 		commits = bytes.Split(out, []byte("\n"))
-		wg.Add(len(commits) - 2)
 		for j, currCommit := range commits {
 			if j == len(commits)-2 {
 				break
 			}
 			commitA = string(commits[j+1])
 			commitB = string(currCommit)
+			_, seen := cache[commitA+commitB]
+			if seen {
+				fmt.Println("WE HAVE SEEN THIS")
+				continue
+			} else {
+				cache[commitA+commitB] = true
+			}
 
+			wg.Add(1)
 			go func(commitA string, commitB string,
-				j int) {
+				j int, branch string) {
 				defer wg.Done()
 				var leakPrs bool
 				var leaks []string
 				fmt.Println(j, branch)
 
-				lock.RLock()
-				_, seen := cache[commitA+commitB]
-				lock.RUnlock()
-				if seen {
-					fmt.Println("WE HAVE SEEN THIS")
-					return
-				}
 				if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repo.name)); err != nil {
 					log.Fatal(err)
 				}
+
+				semaphoreChan <- struct{}{}
+				fmt.Println("diffing", branch, j)
 				cmd := exec.Command("git", "diff", commitA, commitB)
 				out, err := cmd.Output()
+				<-semaphoreChan
+
 				if err != nil {
+					fmt.Println("no diff: ", err)
 					return
 				}
 				lines := checkRegex(string(out))
@@ -144,29 +154,21 @@ func (repo Repo) audit() []ReportElem {
 					}
 				}
 
-				// if len(leaks) != 0 {
-				// 	report = append(report, ReportElem{leaks, branch,
-				// 		string(commitB), string(commits[j+1])})
-				// }
 				messages <- MemoMessage{commitA + commitB, leaks, commitA, commitB, branch}
 
-			}(commitA, commitB, j)
+			}(commitA, commitB, j, branch)
 		}
-
-		go func() {
-			for memoMsg := range messages {
-				fmt.Println(memoMsg)
-				lock.Lock()
-				cache[memoMsg.hash] = true
-				lock.Unlock()
-				if len(memoMsg.leaks) != 0 {
-					report = append(report, ReportElem{memoMsg.leaks, memoMsg.branch,
-						memoMsg.commitA, memoMsg.commitB})
-				}
-			}
-		}()
-		wg.Wait()
 	}
+	go func() {
+		for memoMsg := range messages {
+			fmt.Println(memoMsg)
+			if len(memoMsg.leaks) != 0 {
+				report = append(report, ReportElem{memoMsg.leaks, memoMsg.branch,
+					memoMsg.commitA, memoMsg.commitB})
+			}
+		}
+	}()
+	wg.Wait()
 
 	return report
 }
