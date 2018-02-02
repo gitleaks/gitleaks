@@ -8,8 +8,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 type ReportElem struct {
@@ -19,13 +21,7 @@ type ReportElem struct {
 	CommitB string   `json:"commitB"`
 }
 
-type Repo struct {
-	url  string
-	name string
-	path string
-}
-
-type MemoMessage struct {
+type GitLeak struct {
 	hash    string
 	leaks   []string
 	commitA string
@@ -33,10 +29,10 @@ type MemoMessage struct {
 	branch  string
 }
 
-var lock = sync.RWMutex{}
-var cmdLock = sync.Mutex{}
+func start(opts *Options, repoUrl string) {
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-func repoStart(repoUrl string) {
 	err := exec.Command("git", "clone", repoUrl).Run()
 	if err != nil {
 		log.Fatalf("failed to clone repo %v", err)
@@ -45,39 +41,45 @@ func repoStart(repoUrl string) {
 	if err := os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
+	go func() {
+		<-c
+		cleanup(repoName)
+		os.Exit(1)
+	}()
 
-	repo := Repo{repoUrl, repoName, ""}
-	report := repo.audit()
-	repo.cleanup()
+	report := getLeaks(repoName)
+	cleanup(repoName)
 
 	reportJson, _ := json.MarshalIndent(report, "", "\t")
-	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repo.name), reportJson, 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJson, 0644)
 }
 
 // cleanup changes to app root and recursive rms target repo
-func (repo Repo) cleanup() {
+func cleanup(repoName string) {
 	if err := os.Chdir(appRoot); err != nil {
 		log.Fatalf("failed cleaning up repo. Does the repo exist? %v", err)
 	}
-	err := exec.Command("rm", "-rf", repo.name).Run()
+	err := exec.Command("rm", "-rf", repoName).Run()
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 // audit parses git branch --all
-func (repo Repo) audit() []ReportElem {
+func getLeaks(repoName string) []ReportElem {
 	var (
-		out     []byte
-		err     error
-		branch  string
-		commits [][]byte
-		// leaks   []string
+		out           []byte
+		err           error
+		branch        string
+		commits       [][]byte
 		wg            sync.WaitGroup
 		commitA       string
 		commitB       string
-		concurrent    = 10
+		concurrent    = 100
 		semaphoreChan = make(chan struct{}, concurrent)
+		gitLeaks      = make(chan GitLeak)
+		cmdLock       = sync.Mutex{}
+		cache         = make(map[string]bool)
 	)
 
 	out, err = exec.Command("git", "branch", "--all").Output()
@@ -88,16 +90,13 @@ func (repo Repo) audit() []ReportElem {
 	// iterate through branches, git rev-list <branch>
 	branches := bytes.Split(out, []byte("\n"))
 
-	messages := make(chan MemoMessage)
-
 	for i, branchB := range branches {
 		if i < 2 || i == len(branches)-1 {
 			continue
 		}
 		branch = string(bytes.Trim(branchB, " "))
 		cmdLock.Lock()
-		cmd := exec.Command("git", "rev-list", branch)
-		out, err := cmd.Output()
+		out, err := exec.Command("git", "rev-list", "--topo-order", branch).Output()
 		cmdLock.Unlock()
 		if err != nil {
 			fmt.Println("skipping branch", branch, err)
@@ -114,32 +113,26 @@ func (repo Repo) audit() []ReportElem {
 			commitB = string(currCommit)
 			_, seen := cache[commitA+commitB]
 			if seen {
-				fmt.Println("WE HAVE SEEN THIS")
 				continue
 			} else {
 				cache[commitA+commitB] = true
 			}
 
 			wg.Add(1)
-			go func(commitA string, commitB string,
-				j int, branch string) {
+			go func(commitA string, commitB string, branch string, repoName string) {
 				defer wg.Done()
 				var leakPrs bool
 				var leaks []string
-				fmt.Println(j, branch)
 
-				if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repo.name)); err != nil {
+				if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
 					log.Fatal(err)
 				}
 
 				semaphoreChan <- struct{}{}
-				fmt.Println("diffing", branch, j)
-				cmd := exec.Command("git", "diff", commitA, commitB)
-				out, err := cmd.Output()
+				out, err := exec.Command("git", "diff", commitA, commitB).Output()
 				<-semaphoreChan
 
 				if err != nil {
-					fmt.Println("no diff: ", err)
 					return
 				}
 				lines := checkRegex(string(out))
@@ -154,17 +147,17 @@ func (repo Repo) audit() []ReportElem {
 					}
 				}
 
-				messages <- MemoMessage{commitA + commitB, leaks, commitA, commitB, branch}
+				gitLeaks <- GitLeak{commitA + commitB, leaks, commitA, commitB, branch}
 
-			}(commitA, commitB, j, branch)
+			}(commitA, commitB, branch, repoName)
 		}
 	}
 	go func() {
-		for memoMsg := range messages {
-			fmt.Println(memoMsg)
-			if len(memoMsg.leaks) != 0 {
-				report = append(report, ReportElem{memoMsg.leaks, memoMsg.branch,
-					memoMsg.commitA, memoMsg.commitB})
+		for gitLeak := range gitLeaks {
+			if len(gitLeak.leaks) != 0 {
+				fmt.Println(gitLeak.branch)
+				report = append(report, ReportElem{gitLeak.leaks, gitLeak.branch,
+					gitLeak.commitA, gitLeak.commitB})
 			}
 		}
 	}()
