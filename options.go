@@ -3,31 +3,40 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // TODO regex on type.. user/organization can be treated as the same:
 // 	hittps://github.com/<user or org>
 // 	hittps://github.com/<user or org>/repo
-const usage = `usage: gogethunt [options]
+const usage = `usage: gitleaks [git link] [options]
 	
 Options:
-	-u --user		Target user
-	-r --repo 		Target repo
-	-o --org 		Target organization
-    -h --help 		Display this message
-	-e --entropy	Enable entropy detection
-	-r --regex 		Enable regex detection
+	-c 			Concurrency factor (potential number of git files open)
+	-h --help 		Display this message
 `
 
 type Options struct {
-	User string
-	Repo string
-	Org  string
+	Concurrency int
 }
 
 func help() {
 	os.Stderr.WriteString(usage)
 	os.Exit(1)
+}
+
+func optionsNextInt(args []string, i *int) int {
+	if len(args) > *i+1 {
+		*i++
+	} else {
+		help()
+	}
+	argInt, err := strconv.Atoi(args[*i])
+	if err != nil {
+		fmt.Printf("Invalid %s option: %s\n", args[*i-1], args[*i])
+		help()
+	}
+	return argInt
 }
 
 func optionsNextString(args []string, i *int) string {
@@ -39,17 +48,13 @@ func optionsNextString(args []string, i *int) string {
 	return args[*i]
 }
 
-func parseOptions(args []string) *Options {
+func parseOptions(args []string, repoUrl string) *Options {
 	opts := &Options{}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-o", "--org":
-			opts.Org = optionsNextString(args, &i)
-		case "-r", "--repo":
-			opts.Repo = optionsNextString(args, &i)
-		case "-u", "--user":
-			opts.User = optionsNextString(args, &i)
+		case "-c":
+			opts.Concurrency = optionsNextInt(args, &i)
 		case "-h", "--help":
 			help()
 			return nil

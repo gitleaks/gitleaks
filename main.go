@@ -5,9 +5,7 @@ import (
 	"regexp"
 )
 
-
 var (
-	cache       map[string]bool
 	appRoot     string
 	regexes     map[string]*regexp.Regexp
 	assignRegex *regexp.Regexp
@@ -16,9 +14,9 @@ var (
 
 func init() {
 	appRoot, _ = os.Getwd()
-	cache = make(map[string]bool)
 	// TODO update regex to look for things like:
-	// client("fewafewakwafejwkaf",
+	// TODO ability to add/filter regex
+	// client("AKAI32fJ334...",
 	regexes = map[string]*regexp.Regexp{
 		"github":   regexp.MustCompile(`[g|G][i|I][t|T][h|H][u|U][b|B].*(=|:|:=|<-).*\w+.*`),
 		"aws":      regexp.MustCompile(`[a|A][w|W][s|S].*(=|:=|:|<-).*\w+.*`),
@@ -32,14 +30,8 @@ func init() {
 }
 
 func main() {
-	args := os.Args[1:]
-	opts := parseOptions(args)
-	start(opts)
+	args := os.Args[2:]
+	repoUrl := os.Args[1]
+	opts := parseOptions(args, repoUrl)
+	start(opts, repoUrl)
 }
-
-func start(opts *Options) {
-	if opts.Repo != "" {
-		repoStart(opts.Repo)
-	}
-}
-
