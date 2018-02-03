@@ -15,18 +15,13 @@ import (
 )
 
 type ReportElem struct {
-	Lines   []string `json:"lines"`
-	Branch  string   `json:"branch"`
-	CommitA string   `json:"commitA"`
-	CommitB string   `json:"commitB"`
+	Lines  []string `json:"lines"`
+	Commit string   `json:"commit"`
 }
 
 type GitLeak struct {
-	hash    string
-	leaks   []string
-	commitA string
-	commitB string
-	branch  string
+	leaks  []string
+	commit string
 }
 
 func start(opts *Options, repoUrl string) {
@@ -70,94 +65,63 @@ func getLeaks(repoName string) []ReportElem {
 	var (
 		out           []byte
 		err           error
-		branch        string
-		commits       [][]byte
 		wg            sync.WaitGroup
-		commitA       string
-		commitB       string
 		concurrent    = 100
 		semaphoreChan = make(chan struct{}, concurrent)
 		gitLeaks      = make(chan GitLeak)
-		cmdLock       = sync.Mutex{}
-		cache         = make(map[string]bool)
 	)
 
-	out, err = exec.Command("git", "branch", "--all").Output()
+	out, err = exec.Command("git", "rev-list", "--all", "--remotes", "--topo-order").Output()
 	if err != nil {
-		log.Fatalf("error retrieving branches %v\n", err)
+		log.Fatalf("error retrieving commits%v\n", err)
 	}
 
-	// iterate through branches, git rev-list <branch>
-	branches := bytes.Split(out, []byte("\n"))
-
-	for i, branchB := range branches {
-		if i < 2 || i == len(branches)-1 {
-			continue
-		}
-		branch = string(bytes.Trim(branchB, " "))
-		cmdLock.Lock()
-		out, err := exec.Command("git", "rev-list", "--topo-order", branch).Output()
-		cmdLock.Unlock()
-		if err != nil {
-			fmt.Println("skipping branch", branch, err)
-			continue
+	commits := bytes.Split(out, []byte("\n"))
+	for j, currCommitB := range commits {
+		currCommit := string(currCommitB)
+		if j == len(commits)-2 {
+			break
 		}
 
-		// iterate through commits
-		commits = bytes.Split(out, []byte("\n"))
-		for j, currCommit := range commits {
-			if j == len(commits)-2 {
-				break
-			}
-			commitA = string(commits[j+1])
-			commitB = string(currCommit)
-			_, seen := cache[commitA+commitB]
-			if seen {
-				continue
-			} else {
-				cache[commitA+commitB] = true
+		wg.Add(1)
+		go func(currCommit string, repoName string) {
+			defer wg.Done()
+			var leakPrs bool
+			var leaks []string
+
+			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
+				log.Fatal(err)
 			}
 
-			wg.Add(1)
-			go func(commitA string, commitB string, branch string, repoName string) {
-				defer wg.Done()
-				var leakPrs bool
-				var leaks []string
+			commitCmp := fmt.Sprintf("%s^!", currCommit)
+			semaphoreChan <- struct{}{}
+			out, err := exec.Command("git", "diff", commitCmp).Output()
+			<-semaphoreChan
 
-				if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
-					log.Fatal(err)
+			if err != nil {
+				return
+			}
+			lines := checkRegex(string(out))
+			if len(lines) == 0 {
+				return
+			}
+
+			for _, line := range lines {
+				leakPrs = checkEntropy(line)
+				if leakPrs {
+					leaks = append(leaks, line)
 				}
+			}
 
-				semaphoreChan <- struct{}{}
-				out, err := exec.Command("git", "diff", commitA, commitB).Output()
-				<-semaphoreChan
+			gitLeaks <- GitLeak{leaks, currCommit}
 
-				if err != nil {
-					return
-				}
-				lines := checkRegex(string(out))
-				if len(lines) == 0 {
-					return
-				}
-
-				for _, line := range lines {
-					leakPrs = checkEntropy(line)
-					if leakPrs {
-						leaks = append(leaks, line)
-					}
-				}
-
-				gitLeaks <- GitLeak{commitA + commitB, leaks, commitA, commitB, branch}
-
-			}(commitA, commitB, branch, repoName)
-		}
+		}(currCommit, repoName)
 	}
 	go func() {
 		for gitLeak := range gitLeaks {
 			if len(gitLeak.leaks) != 0 {
-				fmt.Println(gitLeak.branch)
-				report = append(report, ReportElem{gitLeak.leaks, gitLeak.branch,
-					gitLeak.commitA, gitLeak.commitB})
+				fmt.Println(gitLeak.leaks)
+				report = append(report, ReportElem{gitLeak.leaks, gitLeak.commit})
 			}
 		}
 	}()
