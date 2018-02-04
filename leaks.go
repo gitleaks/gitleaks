@@ -14,14 +14,9 @@ import (
 	"syscall"
 )
 
-type ReportElem struct {
-	Lines  []string `json:"lines"`
-	Commit string   `json:"commit"`
-}
-
-type GitLeak struct {
-	leaks  []string
-	commit string
+type LeakElem struct {
+	Line   string `json:"line"`
+	Commit string `json:"commit"`
 }
 
 func start(opts *Options, repoUrl string) {
@@ -49,7 +44,6 @@ func start(opts *Options, repoUrl string) {
 	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJson, 0644)
 }
 
-// cleanup changes to app root and recursive rms target repo
 func cleanup(repoName string) {
 	if err := os.Chdir(appRoot); err != nil {
 		log.Fatalf("failed cleaning up repo. Does the repo exist? %v", err)
@@ -60,15 +54,14 @@ func cleanup(repoName string) {
 	}
 }
 
-// audit parses git branch --all
-func getLeaks(repoName string) []ReportElem {
+func getLeaks(repoName string) []LeakElem {
 	var (
 		out           []byte
 		err           error
 		wg            sync.WaitGroup
 		concurrent    = 100
 		semaphoreChan = make(chan struct{}, concurrent)
-		gitLeaks      = make(chan GitLeak)
+		gitLeaks      = make(chan LeakElem)
 	)
 
 	out, err = exec.Command("git", "rev-list", "--all", "--remotes", "--topo-order").Output()
@@ -87,7 +80,6 @@ func getLeaks(repoName string) []ReportElem {
 		go func(currCommit string, repoName string) {
 			defer wg.Done()
 			var leakPrs bool
-			var leaks []string
 
 			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
 				log.Fatal(err)
@@ -109,20 +101,16 @@ func getLeaks(repoName string) []ReportElem {
 			for _, line := range lines {
 				leakPrs = checkEntropy(line)
 				if leakPrs {
-					leaks = append(leaks, line)
+					gitLeaks <- LeakElem{line, currCommit}
 				}
 			}
-
-			gitLeaks <- GitLeak{leaks, currCommit}
 
 		}(currCommit, repoName)
 	}
 	go func() {
 		for gitLeak := range gitLeaks {
-			if len(gitLeak.leaks) != 0 {
-				fmt.Println(gitLeak.leaks)
-				report = append(report, ReportElem{gitLeak.leaks, gitLeak.commit})
-			}
+			fmt.Println(gitLeak)
+			report = append(report, gitLeak)
 		}
 	}()
 	wg.Wait()

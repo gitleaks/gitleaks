@@ -21,3 +21,4 @@ This will clone the target `{git url}` and run a diff on all commits. A report w
 - Specify a target branch
 - Support for custom regex
 - Filter regex
+- Modify entropy cutoff
