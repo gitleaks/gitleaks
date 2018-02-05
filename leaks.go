@@ -39,7 +39,6 @@ func start(opts *Options, repoUrl string) {
 
 	report := getLeaks(repoName)
 	cleanup(repoName)
-
 	reportJson, _ := json.MarshalIndent(report, "", "\t")
 	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJson, 0644)
 }
@@ -56,13 +55,23 @@ func cleanup(repoName string) {
 
 func getLeaks(repoName string) []LeakElem {
 	var (
-		out           []byte
-		err           error
-		wg            sync.WaitGroup
-		concurrent    = 100
-		semaphoreChan = make(chan struct{}, concurrent)
-		gitLeaks      = make(chan LeakElem)
+		out               []byte
+		err               error
+		commitWG          sync.WaitGroup
+		gitLeakReceiverWG sync.WaitGroup
+		concurrent        = 100
+		semaphoreChan     = make(chan struct{}, concurrent)
+		gitLeaks          = make(chan LeakElem)
+		report            []LeakElem
 	)
+
+	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
+		for gitLeak := range gitLeaks {
+			fmt.Println(gitLeak)
+			report = append(report, gitLeak)
+			gitLeakReceiverWG.Done()
+		}
+	}(&commitWG, &gitLeakReceiverWG)
 
 	out, err = exec.Command("git", "rev-list", "--all", "--remotes", "--topo-order").Output()
 	if err != nil {
@@ -70,15 +79,11 @@ func getLeaks(repoName string) []LeakElem {
 	}
 
 	commits := bytes.Split(out, []byte("\n"))
-	for j, currCommitB := range commits {
+	commitWG.Add(len(commits))
+	for _, currCommitB := range commits {
 		currCommit := string(currCommitB)
-		if j == len(commits)-2 {
-			break
-		}
-
-		wg.Add(1)
-		go func(currCommit string, repoName string) {
-			defer wg.Done()
+		go func(currCommit string, repoName string, commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
+			defer commitWG.Done()
 			var leakPrs bool
 
 			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
@@ -101,19 +106,14 @@ func getLeaks(repoName string) []LeakElem {
 			for _, line := range lines {
 				leakPrs = checkEntropy(line)
 				if leakPrs {
+					gitLeakReceiverWG.Add(1)
 					gitLeaks <- LeakElem{line, currCommit}
 				}
 			}
-
-		}(currCommit, repoName)
+		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG)
 	}
-	go func() {
-		for gitLeak := range gitLeaks {
-			fmt.Println(gitLeak)
-			report = append(report, gitLeak)
-		}
-	}()
-	wg.Wait()
 
+	commitWG.Wait()
+	gitLeakReceiverWG.Wait()
 	return report
 }

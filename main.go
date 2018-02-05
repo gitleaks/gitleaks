@@ -9,7 +9,6 @@ var (
 	appRoot     string
 	regexes     map[string]*regexp.Regexp
 	assignRegex *regexp.Regexp
-	report      []LeakElem
 )
 
 func init() {
