@@ -11,7 +11,7 @@ $ go get github.com/zricethezav/gitleaks
 ```
 
 ##### Usage and Explanation: 
-
+![Alt Text](https://github.com/zricethezav/gifs/blob/master/gitleaks.gif)
 ```
 $ ./gitleaks {git url}
 ```
