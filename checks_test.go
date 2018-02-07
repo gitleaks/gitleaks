@@ -5,24 +5,23 @@ import (
 )
 
 func TestCheckRegex(t *testing.T) {
-	var secretsPresent bool
 	var results []string
-	checks := map[string]bool{
-		"github.com":                                     false,
-		"github.com/user/":                               false,
-		"github.com/user -- Sys":                         false,
-		"github_api_client = \"sample key\"":             true,
-		"aws=\"afewafewafewafewaf\"":                     true,
-		"aws\"afewafewafewafewaf\"":                      false,
-		"heroku := \"afewafewafewafewaf\"":               true,
-		"heroku_client_secret := \"afewafewafewafewaf\"": true,
-		"reddit_api_secreit = \"Fwe4fa431FgklreF\"":      true,
+	checks := map[string]int{
+		"github.com":                                                 0,
+		"github.com/user/":                                           0,
+		"github.com/user -- Sys":                                     0,
+		"github_api_client = \"sample key\"\naws=afewafewafewafewaf": 2,
+		"aws=\"afewafewafewafewaf\"":                                 1,
+		"aws\"afewafewafewafewaf\"":                                  0,
+		"heroku := \"afewafewafewafewaf\"":                           1,
+		"heroku_client_secret := \"afewafewafewafewaf\"":             1,
+		"reddit_api_secreit = \"Fwe4fa431FgklreF\"":                  1,
 	}
 
 	for k, v := range checks {
-		results, secretsPresent = checkRegex(k)
-		if v != secretsPresent {
-			t.Errorf("regexCheck failed on string %s. Expected secretsPresent: %t, got %t, %v", k, v, secretsPresent, results)
+		results = checkRegex(k)
+		if v != len(results) {
+			t.Errorf("regexCheck failed on string %s", k)
 		}
 	}
 }
