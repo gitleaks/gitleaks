@@ -27,7 +27,7 @@ func start(opts *Options, repoUrl string) {
 	if err != nil {
 		log.Fatalf("failed to clone repo %v", err)
 	}
-	repoName := strings.Split(repoUrl, "/")[4]
+	repoName := getLocalRepoName(repoUrl)
 	if err := os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
@@ -41,6 +41,17 @@ func start(opts *Options, repoUrl string) {
 	cleanup(repoName)
 	reportJson, _ := json.MarshalIndent(report, "", "\t")
 	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJson, 0644)
+}
+
+// getLocalRepoName generates the name of the local clone folder based on the given URL
+func getLocalRepoName(url string) string {
+	splitSlashes := strings.Split(url, "/")
+	name := splitSlashes[len(splitSlashes)-1]
+	name = strings.TrimSuffix(name, ".git")
+	splitColons := strings.Split(name, ":")
+	name = splitColons[len(splitColons)-1]
+
+	return name
 }
 
 func cleanup(repoName string) {
