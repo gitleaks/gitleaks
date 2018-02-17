@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"regexp"
 )
@@ -12,7 +13,12 @@ var (
 )
 
 func init() {
-	appRoot, _ = os.Getwd()
+	var err error
+	appRoot, err = os.Getwd()
+	if err != nil {
+		log.Fatalf("Can't get working dir: %s", err)
+	}
+
 	// TODO update regex to look for things like:
 	// TODO ability to add/filter regex
 	// client("AKAI32fJ334...",
@@ -30,7 +36,7 @@ func init() {
 
 func main() {
 	args := os.Args[2:]
-	repoUrl := os.Args[1]
-	opts := parseOptions(args, repoUrl)
-	start(opts, repoUrl)
+	repoURL := os.Args[1]
+	opts := parseOptions(args)
+	start(opts, repoURL)
 }
