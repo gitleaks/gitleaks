@@ -1,5 +1,8 @@
 # GitLeaks
 
+[![godoc](https://godoc.org/github.com/zricethezav/gitleaks?status.svg)](http://godoc.org/github.com/zricethezav/gitleaks)
+[![GolangCI](https://golangci.com/badges/github.com/zricethezav/gitleaks.svg)](https://golangci.com)
+
 ## Check git repos for secrets and keys
 
 ### Features

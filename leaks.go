@@ -19,16 +19,16 @@ type LeakElem struct {
 	Commit string `json:"commit"`
 }
 
-func start(opts *Options, repoUrl string) {
+func start(_ *Options, repoURL string) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	err := exec.Command("git", "clone", repoUrl).Run()
+	err := exec.Command("git", "clone", repoURL).Run()
 	if err != nil {
 		log.Fatalf("failed to clone repo %v", err)
 	}
-	repoName := getLocalRepoName(repoUrl)
-	if err := os.Chdir(repoName); err != nil {
+	repoName := getLocalRepoName(repoURL)
+	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
 	go func() {
@@ -39,8 +39,11 @@ func start(opts *Options, repoUrl string) {
 
 	report := getLeaks(repoName)
 	cleanup(repoName)
-	reportJson, _ := json.MarshalIndent(report, "", "\t")
-	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJson, 0644)
+	reportJSON, _ := json.MarshalIndent(report, "", "\t")
+	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJSON, 0644)
+	if err != nil {
+		log.Fatalf("Can't write to file: %s", err)
+	}
 }
 
 // getLocalRepoName generates the name of the local clone folder based on the given URL

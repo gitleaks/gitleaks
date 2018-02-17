@@ -10,7 +10,7 @@ import (
 // 	hittps://github.com/<user or org>
 // 	hittps://github.com/<user or org>/repo
 const usage = `usage: gitleaks [git link] [options]
-	
+
 Options:
 	-c 			Concurrency factor (potential number of git files open)
 	-h --help 		Display this message
@@ -39,16 +39,7 @@ func optionsNextInt(args []string, i *int) int {
 	return argInt
 }
 
-func optionsNextString(args []string, i *int) string {
-	if len(args) > *i+1 {
-		*i++
-	} else {
-		help()
-	}
-	return args[*i]
-}
-
-func parseOptions(args []string, repoUrl string) *Options {
+func parseOptions(args []string) *Options {
 	opts := &Options{}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]

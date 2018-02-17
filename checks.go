@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/nbutton23/zxcvbn-go"
 	"strings"
+
+	"github.com/nbutton23/zxcvbn-go"
 )
 
 // check each line of a diff and see if there are any potential secrets
@@ -38,7 +39,7 @@ func checkEntropy(target string) bool {
 	}
 
 	// TODO check for stop words here
-	target = strings.Trim(target[index[1]:len(target)], " ")
+	target = strings.Trim(target[index[1]:], " ")
 
 	if len(target) > 70 {
 		return false
@@ -47,8 +48,5 @@ func checkEntropy(target string) bool {
 	entropy := zxcvbn.PasswordStrength(target, nil).Entropy
 
 	// tune this/make option
-	if entropy > 70 {
-		return true
-	}
-	return false
+	return entropy > 70
 }

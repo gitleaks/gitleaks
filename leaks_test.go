@@ -3,9 +3,9 @@ package main
 import "testing"
 
 func TestGetLocalRepoName(t *testing.T) {
-	cases := []struct{
-		name string
-		input string
+	cases := []struct {
+		name     string
+		input    string
 		expected string
 	}{
 		{
