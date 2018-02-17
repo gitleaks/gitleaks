@@ -1,5 +1,7 @@
 # GitLeaks
 
+
+[![Build Status](https://travis-ci.org/zricethezav/gitleaks.svg?branch=master)](https://travis-ci.org/zricethezav/gitleaks)
 [![godoc](https://godoc.org/github.com/zricethezav/gitleaks?status.svg)](http://godoc.org/github.com/zricethezav/gitleaks)
 [![GolangCI](https://golangci.com/badges/github.com/zricethezav/gitleaks.svg)](https://golangci.com)
 
