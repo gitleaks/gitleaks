@@ -47,10 +47,7 @@ func main() {
 		start(opts)
 	} else if opts.UserURL != "" || opts.OrgURL != "" {
 		repoList := repoScan(opts)
-		fmt.Println(repoList)
 		for _, repo := range repoList {
-			fmt.Println("yoo")
-			fmt.Println(opts.RepoURL)
 			opts.RepoURL = repo.RepoURL
 			start(opts)
 		}

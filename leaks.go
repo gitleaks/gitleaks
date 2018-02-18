@@ -21,12 +21,14 @@ type LeakElem struct {
 }
 
 func start(opts *Options) {
+	fmt.Printf("\nEvaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	err := exec.Command("git", "clone", opts.RepoURL).Run()
 	if err != nil {
-		log.Fatalf("failed to clone repo %v", err)
+		log.Printf("failed to clone repo %v", err)
+		return
 	}
 	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
@@ -39,6 +41,9 @@ func start(opts *Options) {
 	}()
 
 	report := getLeaks(repoName)
+	if len(report) == 0 {
+		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
+	}
 	cleanup(repoName)
 	reportJSON, _ := json.MarshalIndent(report, "", "\t")
 	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJSON, 0644)
