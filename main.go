@@ -1,9 +1,14 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	_ "io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -35,8 +40,52 @@ func init() {
 }
 
 func main() {
-	args := os.Args[2:]
-	repoURL := os.Args[1]
+	args := os.Args[1:]
 	opts := parseOptions(args)
-	start(opts, repoURL)
+	fmt.Println(opts)
+	if opts.RepoURL != "" {
+		start(opts)
+	} else if opts.UserURL != "" || opts.OrgURL != "" {
+		repoList := repoScan(opts)
+		fmt.Println(repoList)
+		for _, repo := range repoList {
+			fmt.Println("yoo")
+			fmt.Println(opts.RepoURL)
+			opts.RepoURL = repo.RepoURL
+			start(opts)
+		}
+	}
+}
+
+// RepoElem used for parsing json from github api
+type RepoElem struct {
+	RepoURL string `json:"html_url"`
+}
+
+// repoScan attempts to parse all repo urls from an organization or user
+func repoScan(opts *Options) []RepoElem {
+	var (
+		targetURL  string
+		target     string
+		targetType string
+		repoList   []RepoElem
+	)
+
+	if opts.UserURL != "" {
+		targetURL = opts.UserURL
+		targetType = "users"
+	} else {
+		targetURL = opts.OrgURL
+		targetType = "org"
+	}
+	splitTargetURL := strings.Split(targetURL, "/")
+	target = splitTargetURL[len(splitTargetURL)-1]
+
+	resp, err := http.Get(fmt.Sprintf("https://api.github.com/%s/%s/repos", targetType, target))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	json.NewDecoder(resp.Body).Decode(&repoList)
+	return repoList
 }

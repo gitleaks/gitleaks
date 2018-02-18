@@ -14,20 +14,21 @@ import (
 	"syscall"
 )
 
+// LeakElem contains the line and commit of a leak
 type LeakElem struct {
 	Line   string `json:"line"`
 	Commit string `json:"commit"`
 }
 
-func start(_ *Options, repoURL string) {
+func start(opts *Options) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	err := exec.Command("git", "clone", repoURL).Run()
+	err := exec.Command("git", "clone", opts.RepoURL).Run()
 	if err != nil {
 		log.Fatalf("failed to clone repo %v", err)
 	}
-	repoName := getLocalRepoName(repoURL)
+	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
