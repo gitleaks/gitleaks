@@ -42,7 +42,6 @@ func init() {
 func main() {
 	args := os.Args[1:]
 	opts := parseOptions(args)
-	fmt.Println(opts)
 	if opts.RepoURL != "" {
 		start(opts)
 	} else if opts.UserURL != "" || opts.OrgURL != "" {
