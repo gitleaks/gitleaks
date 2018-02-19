@@ -72,7 +72,7 @@ func repoScan(opts *Options) []RepoElem {
 		targetType = "users"
 	} else {
 		targetURL = opts.OrgURL
-		targetType = "org"
+		targetType = "orgs"
 	}
 	splitTargetURL := strings.Split(targetURL, "/")
 	target = splitTargetURL[len(splitTargetURL)-1]
