@@ -87,7 +87,7 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 	)
 
 	if concurrency == 0 {
-		concurrency = 100
+		concurrency = 10
 	}
 	semaphoreChan := make(chan struct{}, concurrency)
 
@@ -112,6 +112,10 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 			defer commitWG.Done()
 			var leakPrs bool
 
+			if currCommit == "" {
+				return
+			}
+
 			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
 				log.Fatal(err)
 			}
@@ -122,8 +126,11 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 			<-semaphoreChan
 
 			if err != nil {
+				fmt.Printf("error retrieving diff for commit %s try turning concurrency factor down %v\n", currCommit, err)
+				cleanup(repoName)
 				return
 			}
+
 			lines := checkRegex(string(out))
 			if len(lines) == 0 {
 				return
