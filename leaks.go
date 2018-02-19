@@ -14,20 +14,24 @@ import (
 	"syscall"
 )
 
+// LeakElem contains the line and commit of a leak
 type LeakElem struct {
 	Line   string `json:"line"`
 	Commit string `json:"commit"`
 }
 
-func start(_ *Options, repoURL string) {
+// start clones and determines if there are any leaks
+func start(opts *Options) {
+	fmt.Printf("\nEvaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	err := exec.Command("git", "clone", repoURL).Run()
+	err := exec.Command("git", "clone", opts.RepoURL).Run()
 	if err != nil {
-		log.Fatalf("failed to clone repo %v", err)
+		log.Printf("failed to clone repo %v", err)
+		return
 	}
-	repoName := getLocalRepoName(repoURL)
+	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
@@ -37,7 +41,10 @@ func start(_ *Options, repoURL string) {
 		os.Exit(1)
 	}()
 
-	report := getLeaks(repoName)
+	report := getLeaks(repoName, opts.Concurrency)
+	if len(report) == 0 {
+		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
+	}
 	cleanup(repoName)
 	reportJSON, _ := json.MarshalIndent(report, "", "\t")
 	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJSON, 0644)
@@ -57,6 +64,7 @@ func getLocalRepoName(url string) string {
 	return name
 }
 
+// cleanup deletes the repo
 func cleanup(repoName string) {
 	if err := os.Chdir(appRoot); err != nil {
 		log.Fatalf("failed cleaning up repo. Does the repo exist? %v", err)
@@ -67,17 +75,21 @@ func cleanup(repoName string) {
 	}
 }
 
-func getLeaks(repoName string) []LeakElem {
+// getLeaks will attempt to find gitleaks
+func getLeaks(repoName string, concurrency int) []LeakElem {
 	var (
 		out               []byte
 		err               error
 		commitWG          sync.WaitGroup
 		gitLeakReceiverWG sync.WaitGroup
-		concurrent        = 100
-		semaphoreChan     = make(chan struct{}, concurrent)
 		gitLeaks          = make(chan LeakElem)
 		report            []LeakElem
 	)
+
+	if concurrency == 0 {
+		concurrency = 100
+	}
+	semaphoreChan := make(chan struct{}, concurrency)
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
