@@ -22,15 +22,16 @@ type LeakElem struct {
 
 // start clones and determines if there are any leaks
 func start(opts *Options) {
-	fmt.Printf("\nEvaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
+	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	err := exec.Command("git", "clone", opts.RepoURL).Run()
 	if err != nil {
 		log.Printf("failed to clone repo %v", err)
 		return
 	}
+	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
@@ -41,7 +42,7 @@ func start(opts *Options) {
 		os.Exit(1)
 	}()
 
-	report := getLeaks(repoName, opts.Concurrency)
+	report := getLeaks(repoName, opts)
 	if len(report) == 0 {
 		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
 	}
@@ -76,7 +77,7 @@ func cleanup(repoName string) {
 }
 
 // getLeaks will attempt to find gitleaks
-func getLeaks(repoName string, concurrency int) []LeakElem {
+func getLeaks(repoName string, opts *Options) []LeakElem {
 	var (
 		out               []byte
 		err               error
@@ -84,15 +85,18 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 		gitLeakReceiverWG sync.WaitGroup
 		gitLeaks          = make(chan LeakElem)
 		report            []LeakElem
+		concurrency       = 10
 	)
 
-	if concurrency == 0 {
-		concurrency = 10
+	if opts.Concurrency != 0 {
+		concurrency = opts.Concurrency
 	}
+
 	semaphoreChan := make(chan struct{}, concurrency)
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
+			//defer gitLeakReceiverWG.Done()
 			fmt.Println(gitLeak)
 			report = append(report, gitLeak)
 			gitLeakReceiverWG.Done()
@@ -108,7 +112,10 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 	commitWG.Add(len(commits))
 	for _, currCommitB := range commits {
 		currCommit := string(currCommitB)
-		go func(currCommit string, repoName string, commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
+
+		go func(currCommit string, repoName string, commitWG *sync.WaitGroup,
+			gitLeakReceiverWG *sync.WaitGroup, opts *Options) {
+
 			defer commitWG.Done()
 			var leakPrs bool
 
@@ -137,13 +144,16 @@ func getLeaks(repoName string, concurrency int) []LeakElem {
 			}
 
 			for _, line := range lines {
-				leakPrs = checkEntropy(line)
+				leakPrs = checkShannonEntropy(line, opts.EntropyCutoff)
 				if leakPrs {
+					if opts.Strict && checkStopWords(line) {
+						continue
+					}
 					gitLeakReceiverWG.Add(1)
 					gitLeaks <- LeakElem{line, currCommit}
 				}
 			}
-		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG)
+		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG, opts)
 	}
 
 	commitWG.Wait()

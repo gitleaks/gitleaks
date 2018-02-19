@@ -18,10 +18,12 @@ Options:
 
 // Options for gitleaks
 type Options struct {
-	Concurrency int
-	UserURL     string
-	OrgURL      string
-	RepoURL     string
+	Concurrency   int
+	EntropyCutoff int
+	UserURL       string
+	OrgURL        string
+	RepoURL       string
+	Strict        bool
 }
 
 // help prints the usage string and exits
@@ -71,6 +73,10 @@ func parseOptions(args []string) *Options {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
+		case "-s":
+			opts.Strict = true
+		case "-e":
+			opts.EntropyCutoff = optionsNextInt(args, &i)
 		case "-c":
 			opts.Concurrency = optionsNextInt(args, &i)
 		case "-o":

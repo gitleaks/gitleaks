@@ -1,9 +1,9 @@
 package main
 
 import (
+	//"fmt"
+	"math"
 	"strings"
-
-	"github.com/nbutton23/zxcvbn-go"
 )
 
 // check each line of a diff and see if there are any potential secrets
@@ -28,25 +28,45 @@ func checkRegex(diff string) []string {
 	return results
 }
 
-// checkEntropy determines whether target contains enough
-// entropy for a hash
-// TODO remove stop words:
-// setting(s), config(s), property(s), etc
-func checkEntropy(target string) bool {
-	index := assignRegex.FindStringIndex(target)
-	if len(index) == 0 {
-		return false
+func checkShannonEntropy(target string, entropyCutoff int) bool {
+	var sum float64
+	frq := make(map[rune]float64)
+
+	for _, i := range target {
+		frq[i]++
 	}
 
-	// TODO check for stop words here
-	target = strings.Trim(target[index[1]:], " ")
-
-	if len(target) > 70 {
-		return false
+	for _, v := range frq {
+		f := v / float64(len(target))
+		sum += f * math.Log2(f)
 	}
 
-	entropy := zxcvbn.PasswordStrength(target, nil).Entropy
+	bits := int(math.Ceil(sum*-1)) * len(target)
+	return bits > entropyCutoff
+}
 
-	// tune this/make option
-	return entropy > 70
+func checkStopWords(target string) bool {
+	stopWords := []string{
+		"setting",
+		"Setting",
+		"SETTING",
+		"info",
+		"Info",
+		"INFO",
+		"env",
+		"Env",
+		"ENV",
+		"environment",
+		"Environment",
+		"ENVIRONMENT",
+	}
+
+	for _, stopWord := range stopWords {
+		if strings.Contains(target, stopWord) {
+			// fmt.Println("FOUND STOP", stopWord)
+			return true
+		}
+	}
+	return false
+
 }
