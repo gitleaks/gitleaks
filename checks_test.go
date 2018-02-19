@@ -29,17 +29,21 @@ func TestCheckRegex(t *testing.T) {
 func TestEntropy(t *testing.T) {
 	var enoughEntropy bool
 	checks := map[string]bool{
-		"heroku_client_secret = settings.HEROKU_CLIENT": false,
-		"heroku_client_secret = conf.heroku":            false,
-		"reddit_secret = settings.REDDIT_API":           false,
-		"reddit_api_secret = \"Fwe4fa431FgklreF\"":      true,
-		"aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
+		"heroku_client_secret = simple":            false,
+		"reddit_api_secret = \"Fwe4fa431FgklreF\"": true,
+		"aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":     true,
 	}
 	for k, v := range checks {
-		enoughEntropy = checkEntropy(k)
+		enoughEntropy = checkShannonEntropy(k, 70)
 		if v != enoughEntropy {
 			t.Errorf("checkEntropy failed for %s. Expected %t, got %t", k, v, enoughEntropy)
 		}
 	}
 
+}
+
+func TestStopWords(t *testing.T) {
+	if containsStopWords("aws_secret=settings.AWS_SECRET") != true {
+		t.Errorf("checkStopWords Failed")
+	}
 }

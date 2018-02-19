@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"math"
 	"strings"
 )
@@ -28,7 +27,18 @@ func checkRegex(diff string) []string {
 	return results
 }
 
+// checkShannonEntropy checks entropy of target
 func checkShannonEntropy(target string, entropyCutoff int) bool {
+	index := assignRegex.FindStringIndex(target)
+	if len(index) == 0 {
+		return false
+	}
+
+	target = strings.Trim(target[index[1]:], " ")
+	if len(target) > 100 {
+		return false
+	}
+
 	var sum float64
 	frq := make(map[rune]float64)
 
@@ -45,7 +55,8 @@ func checkShannonEntropy(target string, entropyCutoff int) bool {
 	return bits > entropyCutoff
 }
 
-func checkStopWords(target string) bool {
+// containsStopWords checks if there are any stop words in target
+func containsStopWords(target string) bool {
 	stopWords := []string{
 		"setting",
 		"Setting",
@@ -63,10 +74,8 @@ func checkStopWords(target string) bool {
 
 	for _, stopWord := range stopWords {
 		if strings.Contains(target, stopWord) {
-			// fmt.Println("FOUND STOP", stopWord)
 			return true
 		}
 	}
 	return false
-
 }
