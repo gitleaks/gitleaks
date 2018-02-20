@@ -31,7 +31,7 @@ Gitleaks scans all lines of all commits and checks if there are any regular expr
 
 ##### gitLeaks User
 ```bash
-./gitleaks -o {user git url}
+./gitleaks -u {user git url}
 ```
 ##### gitLeaks Org
 ```bash
