@@ -13,6 +13,12 @@ const usage = `usage: gitleaks [git link] [options]
 
 Options:
 	-c 			Concurrency factor (potential number of git files open)
+	-u 		 	Git user url
+	-r 			Git repo url
+	-o 			Git organization url
+	-s 			Strict mode uses stopwords in checks.go
+	-e 			Base64 entropy cutoff, default is 70
+	-x 			Hex entropy cutoff, default is 40
 	-h --help 		Display this message
 `
 
@@ -67,12 +73,6 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-	}
-
-	// default is repo if no additional options
-	if len(args) == 1 {
-		opts.RepoURL = args[0]
-		return opts
 	}
 
 	for i := 0; i < len(args); i++ {
