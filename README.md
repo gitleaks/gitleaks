@@ -33,11 +33,15 @@ Gitleaks scans all lines of all commits and checks if there are any regular expr
 ```
 usage: gitleaks [options] [git url]
 
+
 Options:
 	-c 			Concurrency factor (potential number of git files open)
 	-u 		 	Git user url
 	-r 			Git repo url
 	-o 			Git organization url
+	-s 			Strict mode uses stopwords in checks.go
+	-e 			Base64 entropy cutoff, default is 70
+	-x 			Hex entropy cutoff, default is 40
 	-h --help 		Display this message
 ```
 
