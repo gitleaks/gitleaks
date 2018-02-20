@@ -28,31 +28,57 @@ func checkRegex(diff string) []string {
 }
 
 // checkShannonEntropy checks entropy of target
-func checkShannonEntropy(target string, entropyCutoff int) bool {
+func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff int) bool {
+	var (
+		sum             float64
+		targetBase64Len int
+		targetHexLen    int
+		base64Freq      = make(map[rune]float64)
+		hexFreq         = make(map[rune]float64)
+		bits            int
+	)
+
+	// get assignment value
 	index := assignRegex.FindStringIndex(target)
 	if len(index) == 0 {
 		return false
 	}
-
 	target = strings.Trim(target[index[1]:], " ")
 	if len(target) > 100 {
 		return false
 	}
 
-	var sum float64
-	frq := make(map[rune]float64)
-
+	// base64Shannon
 	for _, i := range target {
-		frq[i]++
+		if strings.Contains(base64Chars, string(i)) {
+			base64Freq[i]++
+			targetBase64Len++
+		}
 	}
-
-	for _, v := range frq {
-		f := v / float64(len(target))
+	for _, v := range base64Freq {
+		f := v / float64(targetBase64Len)
 		sum += f * math.Log2(f)
 	}
 
-	bits := int(math.Ceil(sum*-1)) * len(target)
-	return bits > entropyCutoff
+	bits = int(math.Ceil(sum*-1)) * targetBase64Len
+	if bits > entropy64Cutoff {
+		return true
+	}
+
+	// hexShannon
+	sum = 0
+	for _, i := range target {
+		if strings.Contains(hexChars, string(i)) {
+			hexFreq[i]++
+			targetHexLen++
+		}
+	}
+	for _, v := range hexFreq {
+		f := v / float64(targetHexLen)
+		sum += f * math.Log2(f)
+	}
+	bits = int(math.Ceil(sum*-1)) * targetHexLen
+	return bits > entropyHexCutoff
 }
 
 // containsStopWords checks if there are any stop words in target

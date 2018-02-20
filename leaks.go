@@ -85,14 +85,8 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 		gitLeakReceiverWG sync.WaitGroup
 		gitLeaks          = make(chan LeakElem)
 		report            []LeakElem
-		concurrency       = 10
 	)
-
-	if opts.Concurrency != 0 {
-		concurrency = opts.Concurrency
-	}
-
-	semaphoreChan := make(chan struct{}, concurrency)
+	semaphoreChan := make(chan struct{}, opts.Concurrency)
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
@@ -143,7 +137,7 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 			}
 
 			for _, line := range lines {
-				leakPrs = checkShannonEntropy(line, opts.EntropyCutoff)
+				leakPrs = checkShannonEntropy(line, opts.B64EntropyCutoff, opts.HexEntropyCutoff)
 				if leakPrs {
 					if opts.Strict && containsStopWords(line) {
 						continue
