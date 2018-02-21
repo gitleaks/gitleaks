@@ -44,15 +44,15 @@ func init() {
 }
 
 func main() {
-	args := os.Args[1:]
-	opts := parseOptions(args)
-	if opts.RepoURL != "" {
-		start(opts)
-	} else if opts.UserURL != "" || opts.OrgURL != "" {
-		repoList := repoScan(opts)
+	//args := os.Args[1:]
+	//opts := parseOptions(args)
+	parseOptions()
+	if *repoURL != "" {
+		start(*repoURL)
+	} else if *userURL != "" || *orgURL != "" {
+		repoList := repoScan()
 		for _, repo := range repoList {
-			opts.RepoURL = repo.RepoURL
-			start(opts)
+			start(repo.RepoURL)
 		}
 	}
 }
@@ -63,7 +63,7 @@ type RepoElem struct {
 }
 
 // repoScan attempts to parse all repo urls from an organization or user
-func repoScan(opts *Options) []RepoElem {
+func repoScan() []RepoElem {
 	var (
 		targetURL  string
 		target     string
@@ -71,11 +71,11 @@ func repoScan(opts *Options) []RepoElem {
 		repoList   []RepoElem
 	)
 
-	if opts.UserURL != "" {
-		targetURL = opts.UserURL
+	if *userURL != "" {
+		targetURL = *userURL
 		targetType = "users"
 	} else {
-		targetURL = opts.OrgURL
+		targetURL = *orgURL
 		targetType = "orgs"
 	}
 	splitTargetURL := strings.Split(targetURL, "/")

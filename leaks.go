@@ -21,18 +21,18 @@ type LeakElem struct {
 }
 
 // start clones and determines if there are any leaks
-func start(opts *Options) {
+func start(repoURL string) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	err := exec.Command("git", "clone", opts.RepoURL).Run()
+	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", repoURL)
+	err := exec.Command("git", "clone", repoURL).Run()
 	if err != nil {
 		log.Printf("failed to clone repo %v", err)
 		return
 	}
-	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	repoName := getLocalRepoName(opts.RepoURL)
+	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", repoURL)
+	repoName := getLocalRepoName(repoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
@@ -42,9 +42,9 @@ func start(opts *Options) {
 		os.Exit(1)
 	}()
 
-	report := getLeaks(repoName, opts)
+	report := getLeaks(repoName)
 	if len(report) == 0 {
-		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
+		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", repoURL)
 	}
 	cleanup(repoName)
 	reportJSON, _ := json.MarshalIndent(report, "", "\t")
@@ -77,7 +77,7 @@ func cleanup(repoName string) {
 }
 
 // getLeaks will attempt to find gitleaks
-func getLeaks(repoName string, opts *Options) []LeakElem {
+func getLeaks(repoName string) []LeakElem {
 	var (
 		out               []byte
 		err               error
@@ -86,7 +86,7 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 		gitLeaks          = make(chan LeakElem)
 		report            []LeakElem
 	)
-	semaphoreChan := make(chan struct{}, opts.Concurrency)
+	semaphoreChan := make(chan struct{}, *concurrency)
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
@@ -107,7 +107,7 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 		currCommit := string(currCommitB)
 
 		go func(currCommit string, repoName string, commitWG *sync.WaitGroup,
-			gitLeakReceiverWG *sync.WaitGroup, opts *Options) {
+			gitLeakReceiverWG *sync.WaitGroup) {
 
 			defer commitWG.Done()
 			var leakPrs bool
@@ -137,16 +137,16 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 			}
 
 			for _, line := range lines {
-				leakPrs = checkShannonEntropy(line, opts.B64EntropyCutoff, opts.HexEntropyCutoff)
+				leakPrs = checkShannonEntropy(line, *b64EntropyCutoff, *hexEntropyCutoff)
 				if leakPrs {
-					if opts.Strict && containsStopWords(line) {
+					if *strict && containsStopWords(line) {
 						continue
 					}
 					gitLeakReceiverWG.Add(1)
 					gitLeaks <- LeakElem{line, currCommit}
 				}
 			}
-		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG, opts)
+		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG)
 	}
 
 	commitWG.Wait()
