@@ -12,10 +12,12 @@ import (
 const usage = `usage: gitleaks [git link] [options]
 
 Options:
-	-c 			Concurrency factor (potential number of git files open)
+	-c 			 Concurrency factor (potential number of git files open)
 	-u 		 	Git user url
 	-r 			Git repo url
 	-o 			Git organization url
+	-d --dir		Local path to git repo
+	-p --persist		Persist repo and don't remove after scan
 	-s 			Strict mode uses stopwords in checks.go
 	-e 			Base64 entropy cutoff, default is 70
 	-x 			Hex entropy cutoff, default is 40
@@ -30,6 +32,8 @@ type Options struct {
 	UserURL          string
 	OrgURL           string
 	RepoURL          string
+	LocalDir		 string
+	Persist 		 bool
 	Strict           bool
 }
 
@@ -73,6 +77,7 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
+		Persist:		  false,
 	}
 
 	for i := 0; i < len(args); i++ {
@@ -92,6 +97,10 @@ func parseOptions(args []string) *Options {
 			opts.UserURL = optionsNextString(args, &i)
 		case "-r":
 			opts.RepoURL = optionsNextString(args, &i)
+		case "-d", "--dir":
+			opts.LocalDir = optionsNextString(args, &i)
+		case "-p", "--persist":
+			opts.Persist = true
 		case "-h", "--help":
 			help()
 			return nil

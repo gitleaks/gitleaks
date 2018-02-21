@@ -46,7 +46,7 @@ func init() {
 func main() {
 	args := os.Args[1:]
 	opts := parseOptions(args)
-	if opts.RepoURL != "" {
+	if opts.RepoURL != "" || opts.LocalDir != "" {
 		start(opts)
 	} else if opts.UserURL != "" || opts.OrgURL != "" {
 		repoList := repoScan(opts)
@@ -54,7 +54,7 @@ func main() {
 			opts.RepoURL = repo.RepoURL
 			start(opts)
 		}
-	}
+	} 
 }
 
 // RepoElem used for parsing json from github api

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"io/ioutil"
 	"log"
 	"os"
@@ -25,20 +26,29 @@ func start(opts *Options) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	err := exec.Command("git", "clone", opts.RepoURL).Run()
-	if err != nil {
-		log.Printf("failed to clone repo %v", err)
-		return
+	if opts.RepoURL != "" {
+		fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
+		err := exec.Command("git", "clone", opts.RepoURL).Run()
+		if err != nil {
+			log.Printf("failed to clone repo %v", err)
+			return
+		}
 	}
-	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	repoName := getLocalRepoName(opts.RepoURL)
-	if err = os.Chdir(repoName); err != nil {
+
+	repoName := opts.LocalDir
+	if repoName == "" {
+		repoName = filepath.Join(appRoot, getLocalRepoName(opts.RepoURL))
+	}
+
+	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", repoName)
+	if err := os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
 	go func() {
 		<-c
-		cleanup(repoName)
+		if !opts.Persist {
+			cleanup(repoName)
+		}
 		os.Exit(1)
 	}()
 
@@ -46,9 +56,16 @@ func start(opts *Options) {
 	if len(report) == 0 {
 		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
 	}
-	cleanup(repoName)
+	if !opts.Persist {
+		cleanup(repoName)
+	}
 	reportJSON, _ := json.MarshalIndent(report, "", "\t")
-	err = ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", repoName), reportJSON, 0644)
+
+	if err := os.Chdir(appRoot); err != nil {
+		log.Fatal(err)
+	}
+	_, file := filepath.Split(repoName)
+	err := ioutil.WriteFile(fmt.Sprintf("%s_leaks.json", file), reportJSON, 0644)
 	if err != nil {
 		log.Fatalf("Can't write to file: %s", err)
 	}
@@ -67,7 +84,7 @@ func getLocalRepoName(url string) string {
 
 // cleanup deletes the repo
 func cleanup(repoName string) {
-	if err := os.Chdir(appRoot); err != nil {
+	if err := os.Chdir(repoName); err != nil {
 		log.Fatalf("failed cleaning up repo. Does the repo exist? %v", err)
 	}
 	err := exec.Command("rm", "-rf", repoName).Run()
@@ -116,7 +133,7 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 				return
 			}
 
-			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
+			if err := os.Chdir(repoName); err != nil {
 				log.Fatal(err)
 			}
 
