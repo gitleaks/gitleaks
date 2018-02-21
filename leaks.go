@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // LeakElem contains the line and commit of a leak
@@ -25,14 +26,25 @@ func start(opts *Options) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
+	//get current working directory
+	dir,err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	repoName := getLocalRepoName(opts.RepoURL)
 	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	err := exec.Command("git", "clone", opts.RepoURL).Run()
+	r,err := git.PlainClone(dir + "/" + repoName, false, &git.CloneOptions{
+		URL:               opts.RepoURL,
+		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+	})
+	log.Printf("Cloned the repo::",r)
 	if err != nil {
 		log.Printf("failed to clone repo %v", err)
 		return
 	}
 	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
 	}
