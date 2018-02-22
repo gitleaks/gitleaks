@@ -19,6 +19,7 @@ Options:
 	-s 			Strict mode uses stopwords in checks.go
 	-e 			Base64 entropy cutoff, default is 70
 	-x 			Hex entropy cutoff, default is 40
+	-t 			GitHub OAuth Token
 	-h --help 		Display this message
 `
 
@@ -30,6 +31,7 @@ type Options struct {
 	UserURL          string
 	OrgURL           string
 	RepoURL          string
+	Token			 string
 	Strict           bool
 }
 
@@ -92,6 +94,8 @@ func parseOptions(args []string) *Options {
 			opts.UserURL = optionsNextString(args, &i)
 		case "-r":
 			opts.RepoURL = optionsNextString(args, &i)
+		case "-t":
+			opts.Token = optionsNextString(args, &i)
 		case "-h", "--help":
 			help()
 			return nil
