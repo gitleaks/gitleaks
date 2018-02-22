@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"strconv"
 )
 
 var (
@@ -68,7 +69,9 @@ func repoScan(opts *Options) []RepoElem {
 		targetURL  string
 		target     string
 		targetType string
+		token 	   string
 		repoList   []RepoElem
+		maxPage    int
 	)
 
 	if opts.UserURL != "" {
@@ -81,11 +84,49 @@ func repoScan(opts *Options) []RepoElem {
 	splitTargetURL := strings.Split(targetURL, "/")
 	target = splitTargetURL[len(splitTargetURL)-1]
 
-	resp, err := http.Get(fmt.Sprintf("https://api.github.com/%s/%s/repos", targetType, target))
-	if err != nil {
-		log.Fatal(err)
+	if opts.Token != "" {
+		token = fmt.Sprintf("access_token=%s&", opts.Token)
 	}
-	defer resp.Body.Close()
-	json.NewDecoder(resp.Body).Decode(&repoList)
+
+	curPage := 1
+	perPage := 100
+
+	for {
+		resp, err := http.Get(fmt.Sprintf("https://api.github.com/%s/%s/repos?%sper_page=%v&page=%v", targetType, target, token, perPage, curPage))
+		if err != nil || resp.StatusCode != 200{
+			log.Fatal(err)
+		}
+
+		if curPage == 1 {
+			maxPage = getMaxPages(resp.Header.Get("Link"))
+		}
+		
+		defer resp.Body.Close()
+		var partsRepoList []RepoElem
+		json.NewDecoder(resp.Body).Decode(&partsRepoList)
+		repoList = append(repoList, partsRepoList...)
+
+		if curPage == maxPage {
+			break
+		}
+		curPage += 1
+	}
+	fmt.Printf("Found %d repositories for \x1b[37;1m%s\x1b[0m\n", len(repoList), target)
 	return repoList
+}
+
+func getMaxPages(linkHeader string) int {
+	links := strings.Split(linkHeader, ",")
+
+	re_last := regexp.MustCompile(`rel="last"`)
+	re_page := regexp.MustCompile(`[?&]page=(\d+)`)
+	var max_page int
+	for _, link := range links {
+		if re_last.MatchString(link) {
+			max_pages_s := re_page.FindStringSubmatch(link)
+			max_page, _ = strconv.Atoi(max_pages_s[1])
+		}
+	}
+
+	return max_page
 }

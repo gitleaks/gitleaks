@@ -51,6 +51,7 @@ Options:
 	-s 			Strict mode uses stopwords in checks.go
 	-e 			Base64 entropy cutoff, default is 70
 	-x 			Hex entropy cutoff, default is 40
+	-t 			GitHub OAuth Token
 	-h --help 		Display this message
 ```
 NOTE: your mileage may vary so if you aren't getting the results you expected try tweaking the entropy cutoffs and stopwords. Entropy cutoff for base64 alphabets seemed to give good results around 70 and hex alphabets seemed to give good results around 40. Entropy is calculated using http://www.bearcave.com/misl/misl_tech/wavelets/compression/shannon.html
