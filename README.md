@@ -64,10 +64,11 @@ Please read https://help.github.com/articles/removing-sensitive-data-from-a-repo
 Simply run `docker run --rm --name=gitleaks raphaelareya/gitleaks https://github.com/zricethezav/gitleaks`
 
 Or build the image yourself to get the latest version :
-`
+
+```
 docker build -t gitleaks .
 docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
-`
+```
 
 #### TODO
 
