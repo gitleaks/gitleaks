@@ -37,21 +37,30 @@ Gitleaks scans all lines of all commits and checks if there are any regular expr
 ```bash
 ./gitleaks -o {org git url}
 ```
+##### gitLeaks local repository
+```bash
+# Delete repo after scan
+./gitleaks -d {path to repo}
+
+# Don't delete repo after scan
+./gitleaks -d {path to repo} -p
+```
 
 #### Help
 ```
-usage: gitleaks [options] [git url]
-
+usage: gitleaks [git link] [options]
 
 Options:
-	-c 			Concurrency factor (potential number of git files open)
-	-u 		 	Git user url
-	-r 			Git repo url
-	-o 			Git organization url
-	-s 			Strict mode uses stopwords in checks.go
-	-e 			Base64 entropy cutoff, default is 70
-	-x 			Hex entropy cutoff, default is 40
-	-h --help 		Display this message
+        -c                       Concurrency factor (potential number of git files open)
+        -u                      Git user url
+        -r                      Git repo url
+        -o                      Git organization url
+        -d --dir                Local path to git repo
+        -p --persist            Persist repo and don't remove after scan
+        -s                      Strict mode uses stopwords in checks.go
+        -e                      Base64 entropy cutoff, default is 70
+        -x                      Hex entropy cutoff, default is 40
+        -h --help               Display this message
 ```
 NOTE: your mileage may vary so if you aren't getting the results you expected try tweaking the entropy cutoffs and stopwords. Entropy cutoff for base64 alphabets seemed to give good results around 70 and hex alphabets seemed to give good results around 40. Entropy is calculated using [Shannon entropy](http://www.bearcave.com/misl/misl_tech/wavelets/compression/shannon.html).
 
