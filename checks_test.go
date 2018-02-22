@@ -17,6 +17,7 @@ func TestCheckRegex(t *testing.T) {
 		"heroku_client_secret := \"afewafewafewafewaf\"":                                                 1,
 		"reddit_api_secreit = \"Fwe4fa431FgklreF\"":                                                      1,
 		"+ * [Github Help: Managing Deploy Keys](https://help.github.com/articles/managing-deploy-keys)": 0,
+		"||| a == some expression":                                                                       0,
 	}
 
 	for k, v := range checks {
