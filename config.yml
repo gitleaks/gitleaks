@@ -1,0 +1,23 @@
+regexes:
+    - '[g|G][i|I][t|T][h|H][u|U][b|B].*(=|:=|<-).*\w+.*'
+    - '[a|A][w|W][s|S].*(=|:=|:|<-).*\w+.*'
+    - '[h|H][e|E][r|R][o|O][k|K][u|U].*(=|:=|<-).*\w+.*'
+    - '[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*(=|:=|<-).*\w+.*'
+    - '[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*(=|:=|<-).*\w+.*'
+    - '[r|R][e|E][d|D][d|D][i|I][t|T].*(=|:=|<-).*\w+.*'
+    - '[t|T][w|W][i|I][l|L][i|I][o|O].*(=|:=|<-).*\w+.*'
+
+stopwords:
+    - 'setting'
+    - 'Setting'
+    - 'SETTING'
+    - 'info'
+    - 'Info'
+    - 'INFO'
+    - 'env'
+    - 'Env'
+    - 'ENV'
+    - 'environment'
+    - 'Environment'
+    - 'ENVIRONMENT'
+

@@ -3,44 +3,64 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	_ "io/ioutil"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
+	"gopkg.in/yaml.v2"
 )
 
 var (
 	appRoot     string
-	regexes     map[string]*regexp.Regexp
+	regexes     []*regexp.Regexp
+	stopWords 	[]string
 	assignRegex *regexp.Regexp
 	base64Chars string
 	hexChars    string
 )
 
+// config
+type conf struct {
+	Regexes []string `yaml:"regexes"`
+	StopWords []string	`yaml:"stopwords"`
+}
+
+// RepoElem used for parsing json from github api
+type RepoElem struct {
+	RepoURL string `json:"html_url"`
+}
+
 func init() {
-	var err error
+	var (
+		err error
+		c conf
+	)
+
 	appRoot, err = os.Getwd()
 	if err != nil {
 		log.Fatalf("Can't get working dir: %s", err)
 	}
-
-	// TODO update regex to look for things like:
-	// TODO ability to add/filter regex
-	// client("AKAI32fJ334...",
-	regexes = map[string]*regexp.Regexp{
-		"github":   regexp.MustCompile(`[g|G][i|I][t|T][h|H][u|U][b|B].*(=|:=|<-).*\w+.*`),
-		"aws":      regexp.MustCompile(`[a|A][w|W][s|S].*(=|:=|:|<-).*\w+.*`),
-		"heroku":   regexp.MustCompile(`[h|H][e|E][r|R][o|O][k|K][u|U].*(=|:=|<-).*\w+.*`),
-		"facebook": regexp.MustCompile(`[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*(=|:=|<-).*\w+.*`),
-		"twitter":  regexp.MustCompile(`[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*(=|:=|<-).*\w+.*`),
-		"reddit":   regexp.MustCompile(`[r|R][e|E][d|D][d|D][i|I][t|T].*(=|:=|<-).*\w+.*`),
-		"twilio":   regexp.MustCompile(`[t|T][w|W][i|I][l|L][i|I][o|O].*(=|:=|<-).*\w+.*`),
-	}
-	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
 	base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 	hexChars = "1234567890abcdefABCDEF"
+
+	// read config
+	ymlFile, err := ioutil.ReadFile("config.yml")
+	if err != nil {
+		log.Printf("could not load config.yml #%v ", err)
+	}
+	err = yaml.Unmarshal(ymlFile, &c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	// regex from config
+	stopWords = c.StopWords
+	for _, re := range c.Regexes {
+		regexes = append(regexes, regexp.MustCompile(re))
+	}
+	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
 }
 
 func main() {
@@ -57,10 +77,6 @@ func main() {
 	}
 }
 
-// RepoElem used for parsing json from github api
-type RepoElem struct {
-	RepoURL string `json:"html_url"`
-}
 
 // repoScan attempts to parse all repo urls from an organization or user
 func repoScan(opts *Options) []RepoElem {

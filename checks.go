@@ -83,21 +83,6 @@ func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff in
 
 // containsStopWords checks if there are any stop words in target
 func containsStopWords(target string) bool {
-	stopWords := []string{
-		"setting",
-		"Setting",
-		"SETTING",
-		"info",
-		"Info",
-		"INFO",
-		"env",
-		"Env",
-		"ENV",
-		"environment",
-		"Environment",
-		"ENVIRONMENT",
-	}
-
 	for _, stopWord := range stopWords {
 		if strings.Contains(target, stopWord) {
 			return true

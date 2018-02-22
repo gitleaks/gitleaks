@@ -6,19 +6,16 @@ import (
 	"strconv"
 )
 
-// TODO regex on type.. user/organization can be treated as the same:
-// 	hittps://github.com/<user or org>
-// 	hittps://github.com/<user or org>/repo
-const usage = `usage: gitleaks [git link] [options]
+const usage = `usage: gitleaks [options] <url>
 
 Options:
-	-c 			Concurrency factor (potential number of git files open)
-	-u 		 	Git user url
-	-r 			Git repo url
-	-o 			Git organization url
-	-s 			Strict mode uses stopwords in checks.go
-	-e 			Base64 entropy cutoff, default is 70
-	-x 			Hex entropy cutoff, default is 40
+	-c 			Concurrency factor 
+	-u --user 		Git user url
+	-r --repo 		Git repo url
+	-o --org 		Git organization url
+	-s --strict 		Strict mode uses stopwords in config.yml 
+	-e --b64Entropy 	Base64 entropy cutoff, default is 70
+	-x --hexEntropy  	Hex entropy cutoff, default is 40
 	-h --help 		Display this message
 `
 
@@ -78,19 +75,19 @@ func parseOptions(args []string) *Options {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-s":
+		case "-s", "--strict":
 			opts.Strict = true
-		case "-e":
+		case "-e", "--b64Entropy":
 			opts.B64EntropyCutoff = optionsNextInt(args, &i)
-		case "-x":
+		case "-x", "--hexEntropy":
 			opts.HexEntropyCutoff = optionsNextInt(args, &i)
 		case "-c":
 			opts.Concurrency = optionsNextInt(args, &i)
-		case "-o":
+		case "-o", "--org":
 			opts.OrgURL = optionsNextString(args, &i)
-		case "-u":
+		case "-u", "--user":
 			opts.UserURL = optionsNextString(args, &i)
-		case "-r":
+		case "-r", "--repo":
 			opts.RepoURL = optionsNextString(args, &i)
 		case "-h", "--help":
 			help()
