@@ -59,6 +59,17 @@ NOTE: your mileage may vary so if you aren't getting the results you expected tr
 ### If you find a valid leak in a repo
 Please read the [Github article on removing sensitive data from a repository](https://help.github.com/articles/removing-sensitive-data-from-a-repository/) to remove the sensitive information from your history.
 
+### Run me with docker
+
+Simply run `docker run --rm --name=gitleaks raphaelareya/gitleaks https://github.com/zricethezav/gitleaks`
+
+Or build the image yourself to get the latest version :
+
+```
+docker build -t gitleaks .
+docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
+```
+
 #### TODO
 
 * Specify a target branch
