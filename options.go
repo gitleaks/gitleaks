@@ -1,6 +1,8 @@
 package main
 
 import (
+	"regexp"
+	"fmt"
 	"log"
 	"flag"
 )
@@ -16,6 +18,7 @@ var (
 )
 
 func parseOptions() {
+	flag.Usage = usage
 	flag.Parse()
 
 	if *concurrency < 1 {
@@ -23,6 +26,37 @@ func parseOptions() {
 	}
 
 	if *userURL == "" && *repoURL == "" && *orgURL == "" {
-		log.Fatal("No repository specified")
+		if flag.NArg() != 0 && isGithubURL(flag.Arg(0)) {
+			*repoURL = flag.Arg(0)
+		} else {
+			flag.Usage()
+			log.Fatal("No repository specified")
+		}
 	}
+
+	if *userURL != "" && !isGithubURL(*userURL) {
+		flag.Usage()
+		log.Fatalf("%s is not a valid URL!", userURL)
+	}
+
+	if *orgURL != "" && !isGithubURL(*orgURL) {
+		flag.Usage()
+		log.Fatalf("%s is not a valid URL!", orgURL)
+	}
+
+	if *repoURL != "" && !isGithubURL(*repoURL) {
+		flag.Usage()
+		log.Fatalf("%s is not a valid URL!", repoURL)
+	}
+}
+
+func isGithubURL(url string) bool {
+	re := regexp.MustCompile("^https?:\\/\\/github\\.com\\/")
+	return re.MatchString(url)
+}
+
+func usage() {
+	// https://stackoverflow.com/questions/31873183/how-to-print-usage-for-positional-argument-with-gos-flag-package
+	fmt.Print("Usage: gitleaks [options] [git url]\n\nOptions:\n")
+	flag.PrintDefaults()
 }
