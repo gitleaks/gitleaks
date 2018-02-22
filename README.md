@@ -27,7 +27,7 @@ go get -u github.com/zricethezav/gitleaks
 ```
 
 This example will clone the target `{git url}` and run a diff on all commits. A report will be output to `{repo_name}_leaks.json`
-Gitleaks scans all lines of all commits and checks if there are any regular expression matches. The regexs are defined in `main.go`. For example if a line in a commit diff like `AWS_KEY='AKAI...'` exists then the value after the assignment operator will be checked for entropy. If the value is above a certain entropy threshold then we assume that the line contains a key/secret. Work largely based on  [https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf](https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf)
+Gitleaks scans all lines of all commits and checks if there are any regular expression matches. The regexs are defined in `main.go`. For example if a line in a commit diff like `AWS_KEY='AKAI...'` exists then the value after the assignment operator will be checked for entropy. If the value is above a certain entropy threshold then we assume that the line contains a key/secret. Work largely based on  [https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf](https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf) and https://github.com/dxa4481/truffleHog.
 
 ##### gitLeaks User
 ```bash
@@ -56,9 +56,12 @@ Options:
 NOTE: your mileage may vary so if you aren't getting the results you expected try tweaking the entropy cutoffs and stopwords. Entropy cutoff for base64 alphabets seemed to give good results around 70 and hex alphabets seemed to give good results around 40. Entropy is calculated using http://www.bearcave.com/misl/misl_tech/wavelets/compression/shannon.html
 
 
+### If you find a valid leak in a repo
+Please read https://help.github.com/articles/removing-sensitive-data-from-a-repository/ to remove the sensitive information from your history
+
 #### TODO
 
 * Specify a target branch
 * Support for custom regex
 * Filter regex
-* Modify entropy cutoff
+* ~~Modify entropy cutoff~~
