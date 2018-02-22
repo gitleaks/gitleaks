@@ -117,6 +117,9 @@ func repoScan(opts *Options) []RepoElem {
 
 func getMaxPages(linkHeader string) int {
 	links := strings.Split(linkHeader, ",")
+	if len(links) == 1 {
+		return 1
+	}
 
 	re_last := regexp.MustCompile(`rel="last"`)
 	re_page := regexp.MustCompile(`[?&]page=(\d+)`)
