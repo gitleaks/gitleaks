@@ -35,12 +35,12 @@ func start(opts *Options) {
 
 	repoName := getLocalRepoName(opts.RepoURL)
 	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	r,err := git.PlainClone(dir + "/" + repoName, false, &git.CloneOptions{
+	_, err = git.PlainClone(dir + "/" + repoName, false, &git.CloneOptions{
 		URL:               opts.RepoURL,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 	})
-	log.Printf("Cloned the repo::",r)
 	if err != nil {
+		cleanup(repoName)
 		log.Printf("failed to clone repo %v", err)
 		return
 	}
