@@ -26,16 +26,9 @@ func start(opts *Options) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	//get current working directory
-	appRoot, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	repoName := getLocalRepoName(opts.RepoURL)
 	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
-	_, err = git.PlainClone(appRoot + "/" + repoName, false, &git.CloneOptions{
+	_, err := git.PlainClone(appRoot + "/" + repoName, false, &git.CloneOptions{
 		URL:               opts.RepoURL,
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 	})
