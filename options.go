@@ -16,7 +16,7 @@ Options:
 	-s --strict 		Strict mode uses stopwords in config.yml 
 	-b --b64Entropy 	Base64 entropy cutoff (default is 70)
 	-x --hexEntropy  	Hex entropy cutoff (default is 40)
-	-e --entropy	Enable entropy		
+	-e --entropy		Enable entropy		
 	-h --help 		Display this message
 `
 
