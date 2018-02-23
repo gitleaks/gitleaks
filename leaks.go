@@ -16,8 +16,10 @@ import (
 
 // LeakElem contains the line and commit of a leak
 type LeakElem struct {
-	Content string `json:"content"`
-	Commit  string `json:"commit"`
+	Line     string `json:"line"`
+	Commit   string `json:"commit"`
+	Offender string `json:"string"`
+	Reason   string `json:"reason"`
 }
 
 // start clones and determines if there are any leaks
@@ -90,7 +92,11 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
-			fmt.Printf("commit: %s\ncontent: %s\n\n", gitLeak.Commit, gitLeak.Content)
+			b, err := json.MarshalIndent(gitLeak, "", "   ")
+			if err != nil {
+				fmt.Println("failed to output leak:", err)
+			}
+			fmt.Println(string(b))
 			report = append(report, gitLeak)
 			gitLeakReceiverWG.Done()
 		}
@@ -130,13 +136,13 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 				return
 			}
 
-			lines := doChecks(string(out))
-			if len(lines) == 0 {
+			leaks := doChecks(string(out), currCommit)
+			if len(leaks) == 0 {
 				return
 			}
-			for _, line := range lines {
+			for _, leak := range leaks {
 				gitLeakReceiverWG.Add(1)
-				gitLeaks <- LeakElem{line, currCommit}
+				gitLeaks <- leak
 			}
 
 		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG)

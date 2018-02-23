@@ -29,7 +29,7 @@ type Options struct {
 	OrgURL           string
 	RepoURL          string
 	Strict           bool
-	Entropy bool
+	Entropy          bool
 }
 
 // help prints the usage string and exits
@@ -70,7 +70,7 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		Entropy: false,
+		Entropy:          false,
 	}
 
 	for i := 0; i < len(args); i++ {

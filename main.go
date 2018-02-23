@@ -12,7 +12,7 @@ import (
 
 var (
 	appRoot     string
-	regexes     []*regexp.Regexp
+	regexes     map[string]*regexp.Regexp
 	stopWords   []string
 	base64Chars string
 	hexChars    string
@@ -40,15 +40,16 @@ func init() {
 	stopWords = []string{"setting", "Setting", "SETTING", "info",
 		"Info", "INFO", "env", "Env", "ENV", "environment", "Environment", "ENVIRONMENT"}
 
-	regexes = []*regexp.Regexp{
-		regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
-		regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
-		regexp.MustCompile("[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*['|\"][0-9a-f]{32}['|\"]"),
-		regexp.MustCompile("[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*['|\"][0-9a-zA-Z]{35,44}['|\"]"),
-		regexp.MustCompile("[g|G][i|I][t|T][h|H][u|U][b|B].*[['|\"]0-9a-zA-Z]{35,40}['|\"]"),
-		regexp.MustCompile("AKIA[0-9A-Z]{16}"),
-		regexp.MustCompile("[r|R][e|E][d|D][d|D][i|I][t|T].*['|\"][0-9a-zA-Z]{14}['|\"]"),
-		regexp.MustCompile("[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
+	regexes = map[string]*regexp.Regexp{
+		"RSA":      regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
+		"SSH":      regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
+		"Facebook": regexp.MustCompile("[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*['|\"][0-9a-f]{32}['|\"]"),
+		"Twitter":  regexp.MustCompile("[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*['|\"][0-9a-zA-Z]{35,44}['|\"]"),
+		"Github":   regexp.MustCompile("[g|G][i|I][t|T][h|H][u|U][b|B].*[['|\"]0-9a-zA-Z]{35,40}['|\"]"),
+		"AWS":      regexp.MustCompile("AKIA[0-9A-Z]{16}"),
+		"Reddit":   regexp.MustCompile("[r|R][e|E][d|D][d|D][i|I][t|T].*['|\"][0-9a-zA-Z]{14}['|\"]"),
+		"Heroku":   regexp.MustCompile("[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
+		// "Custom": regexp.MustCompile(".*")
 	}
 	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
 }

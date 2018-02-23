@@ -4,24 +4,24 @@ import (
 	"testing"
 )
 
-func init(){
+func init() {
 	opts = &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		Entropy: false,
+		Entropy:          false,
 	}
 }
 
 func TestCheckRegex(t *testing.T) {
-	var results []string
+	var results []LeakElem
 	checks := map[string]int{
 		"aws=\"AKIALALEMEL33243OLIAE": 1,
-		"aws\"afewafewafewafewaf\"": 0,
+		"aws\"afewafewafewafewaf\"":   0,
 	}
 
 	for k, v := range checks {
-		results = doChecks(k)
+		results = doChecks(k, "commit")
 		if v != len(results) {
 			t.Errorf("regexCheck failed on string %s", k)
 		}

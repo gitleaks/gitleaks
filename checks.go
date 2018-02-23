@@ -5,22 +5,32 @@ import (
 	"strings"
 )
 
-func doChecks(diff string) []string {
+// checks Regex and if enabled, entropy and stopwords
+func doChecks(diff string, commit string) []LeakElem {
 	var match string
-	var results []string
+	var leaks []LeakElem
+	var leak LeakElem
 	lines := strings.Split(diff, "\n")
 	for _, line := range lines {
-		for _, re := range regexes {
+		for leakType, re := range regexes {
 			match = re.FindString(line)
 			if len(match) == 0 ||
 				(opts.Strict && containsStopWords(line)) ||
 				(opts.Entropy && !checkShannonEntropy(line)) {
 				continue
 			}
-			results = append(results, line)
+
+			leak = LeakElem{
+				Line:     line,
+				Commit:   commit,
+				Offender: match,
+				Reason:   leakType,
+			}
+
+			leaks = append(leaks, leak)
 		}
 	}
-	return results
+	return leaks
 
 }
 
