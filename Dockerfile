@@ -1,16 +1,23 @@
-FROM golang:1.10.0-alpine3.7
+FROM golang:1.10.0 AS build
 
-WORKDIR /app
+ENV PROJECT /go/src/github.com/zricethezav/gitleaks
+
+RUN mkdir -p $PROJECT
+
+WORKDIR ${PROJECT}
+
+RUN git clone https://github.com/zricethezav/gitleaks.git . \
+  && CGO_ENABLED=0 go build -o bin/gitleaks *.go
+
+FROM alpine:3.7
+
+ENV PROJECT /go/src/github.com/zricethezav/gitleaks
 
 RUN apk update && apk upgrade && apk add --no-cache bash git openssh
 
-COPY . ./
-
-RUN go get -u github.com/zricethezav/gitleaks
-RUN go build
+COPY --from=build $PROJECT/bin/* /usr/bin/
 
 ENTRYPOINT ["gitleaks"]
-
 
 # How to use me :
 
