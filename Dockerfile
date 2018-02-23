@@ -13,6 +13,8 @@ FROM alpine:3.7
 
 ENV PROJECT /go/src/github.com/zricethezav/gitleaks
 
+WORKDIR /app
+
 RUN apk update && apk upgrade && apk add --no-cache bash git openssh
 
 COPY --from=build $PROJECT/bin/* /usr/bin/
