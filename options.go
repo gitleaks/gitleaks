@@ -9,13 +9,14 @@ import (
 const usage = `usage: gitleaks [options] <url>
 
 Options:
-	-c 			Concurrency factor 
+	-c 			Concurrency factor (default is 10)
 	-u --user 		Git user url
 	-r --repo 		Git repo url
 	-o --org 		Git organization url
 	-s --strict 		Strict mode uses stopwords in config.yml 
-	-e --b64Entropy 	Base64 entropy cutoff, default is 70
-	-x --hexEntropy  	Hex entropy cutoff, default is 40
+	-b --b64Entropy 	Base64 entropy cutoff (default is 70)
+	-x --hexEntropy  	Hex entropy cutoff (default is 40)
+	-e --entropy	Enable entropy		
 	-h --help 		Display this message
 `
 
@@ -28,6 +29,7 @@ type Options struct {
 	OrgURL           string
 	RepoURL          string
 	Strict           bool
+	Entropy bool
 }
 
 // help prints the usage string and exits
@@ -36,8 +38,7 @@ func help() {
 	os.Exit(1)
 }
 
-// optionsNextInt is a parseOptions helper that returns the value (int) of an option
-// if valid.
+// optionsNextInt is a parseOptions helper that returns the value (int) of an option if valid
 func optionsNextInt(args []string, i *int) int {
 	if len(args) > *i+1 {
 		*i++
@@ -52,8 +53,7 @@ func optionsNextInt(args []string, i *int) int {
 	return argInt
 }
 
-// optionsNextString is a parseOptions helper that returns the value (string) of an option
-// if valid.
+// optionsNextString is a parseOptions helper that returns the value (string) of an option if valid
 func optionsNextString(args []string, i *int) string {
 	if len(args) > *i+1 {
 		*i++
@@ -70,6 +70,7 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
+		Entropy: false,
 	}
 
 	for i := 0; i < len(args); i++ {
@@ -77,10 +78,12 @@ func parseOptions(args []string) *Options {
 		switch arg {
 		case "-s", "--strict":
 			opts.Strict = true
-		case "-e", "--b64Entropy":
+		case "-b", "--b64Entropy":
 			opts.B64EntropyCutoff = optionsNextInt(args, &i)
 		case "-x", "--hexEntropy":
 			opts.HexEntropyCutoff = optionsNextInt(args, &i)
+		case "-e", "--entropy":
+			opts.Entropy = true
 		case "-c":
 			opts.Concurrency = optionsNextInt(args, &i)
 		case "-o", "--org":

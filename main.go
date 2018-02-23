@@ -16,9 +16,10 @@ var (
 	appRoot     string
 	regexes     []*regexp.Regexp
 	stopWords 	[]string
-	assignRegex *regexp.Regexp
 	base64Chars string
 	hexChars    string
+	opts *Options
+	assignRegex *regexp.Regexp
 )
 
 // config
@@ -55,7 +56,6 @@ func init() {
 		log.Fatalf("Unmarshal: %v", err)
 	}
 
-	// regex from config
 	stopWords = c.StopWords
 	for _, re := range c.Regexes {
 		regexes = append(regexes, regexp.MustCompile(re))
@@ -65,7 +65,7 @@ func init() {
 
 func main() {
 	args := os.Args[1:]
-	opts := parseOptions(args)
+	opts = parseOptions(args)
 	if opts.RepoURL != "" {
 		start(opts)
 	} else if opts.UserURL != "" || opts.OrgURL != "" {

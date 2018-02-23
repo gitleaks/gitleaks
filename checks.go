@@ -5,30 +5,27 @@ import (
 	"strings"
 )
 
-// check each line of a diff and see if there are any potential secrets
-// [1] https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf
-func checkRegex(diff string) []string {
+func doChecks(diff string) []string {
 	var match string
 	var results []string
 	lines := strings.Split(diff, "\n")
 	for _, line := range lines {
-		// doubtful a leak would be on a line > 120 characters
-		if len(line) == 0 || len(line) > 120 {
-			continue
-		}
 		for _, re := range regexes {
 			match = re.FindString(line)
-			if len(match) == 0 {
+			if len(match) == 0 ||
+				(opts.Strict && containsStopWords(line)) ||
+				(opts.Entropy && !checkShannonEntropy(line)) {
 				continue
 			}
 			results = append(results, line)
 		}
 	}
 	return results
+
 }
 
 // checkShannonEntropy checks entropy of target
-func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff int) bool {
+func checkShannonEntropy(target string) bool {
 	var (
 		sum             float64
 		targetBase64Len int
@@ -38,7 +35,6 @@ func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff in
 		bits            int
 	)
 
-	// get assignment value
 	index := assignRegex.FindStringIndex(target)
 	if len(index) == 0 {
 		return false
@@ -61,7 +57,7 @@ func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff in
 	}
 
 	bits = int(math.Ceil(sum*-1)) * targetBase64Len
-	if bits > entropy64Cutoff {
+	if bits > opts.B64EntropyCutoff {
 		return true
 	}
 
@@ -78,7 +74,7 @@ func checkShannonEntropy(target string, entropy64Cutoff int, entropyHexCutoff in
 		sum += f * math.Log2(f)
 	}
 	bits = int(math.Ceil(sum*-1)) * targetHexLen
-	return bits > entropyHexCutoff
+	return bits > opts.HexEntropyCutoff
 }
 
 // containsStopWords checks if there are any stop words in target
