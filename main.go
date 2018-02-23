@@ -3,30 +3,22 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
-	"gopkg.in/yaml.v2"
 )
 
 var (
 	appRoot     string
 	regexes     []*regexp.Regexp
-	stopWords 	[]string
+	stopWords   []string
 	base64Chars string
 	hexChars    string
-	opts *Options
+	opts        *Options
 	assignRegex *regexp.Regexp
 )
-
-// config
-type conf struct {
-	Regexes []string `yaml:"regexes"`
-	StopWords []string	`yaml:"stopwords"`
-}
 
 // RepoElem used for parsing json from github api
 type RepoElem struct {
@@ -36,7 +28,6 @@ type RepoElem struct {
 func init() {
 	var (
 		err error
-		c conf
 	)
 
 	appRoot, err = os.Getwd()
@@ -46,19 +37,18 @@ func init() {
 	base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 	hexChars = "1234567890abcdefABCDEF"
 
-	// read config
-	ymlFile, err := ioutil.ReadFile("config.yml")
-	if err != nil {
-		log.Printf("could not load config.yml #%v ", err)
-	}
-	err = yaml.Unmarshal(ymlFile, &c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-	}
+	stopWords = []string{"setting", "Setting", "SETTING", "info",
+		"Info", "INFO", "env", "Env", "ENV", "environment", "Environment", "ENVIRONMENT"}
 
-	stopWords = c.StopWords
-	for _, re := range c.Regexes {
-		regexes = append(regexes, regexp.MustCompile(re))
+	regexes = []*regexp.Regexp{
+		regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
+		regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
+		regexp.MustCompile("[f|F][a|A][c|C][e|E][b|B][o|O][o|O][k|K].*['|\"][0-9a-f]{32}['|\"]"),
+		regexp.MustCompile("[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*['|\"][0-9a-zA-Z]{35,44}['|\"]"),
+		regexp.MustCompile("[g|G][i|I][t|T][h|H][u|U][b|B].*[['|\"]0-9a-zA-Z]{35,40}['|\"]"),
+		regexp.MustCompile("AKIA[0-9A-Z]{16}"),
+		regexp.MustCompile("[r|R][e|E][d|D][d|D][i|I][t|T].*['|\"][0-9a-zA-Z]{14}['|\"]"),
+		regexp.MustCompile("[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
 	}
 	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
 }
@@ -76,7 +66,6 @@ func main() {
 		}
 	}
 }
-
 
 // repoScan attempts to parse all repo urls from an organization or user
 func repoScan(opts *Options) []RepoElem {
