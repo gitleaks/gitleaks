@@ -107,10 +107,9 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 		currCommit := string(currCommitB)
 
 		go func(currCommit string, repoName string, commitWG *sync.WaitGroup,
-			gitLeakReceiverWG *sync.WaitGroup, opts *Options) {
+			gitLeakReceiverWG *sync.WaitGroup) {
 
 			defer commitWG.Done()
-			var leakPrs bool
 
 			if currCommit == "" {
 				return
@@ -131,22 +130,16 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 				return
 			}
 
-			lines := checkRegex(string(out))
+			lines := doChecks(string(out))
 			if len(lines) == 0 {
 				return
 			}
-
 			for _, line := range lines {
-				leakPrs = checkShannonEntropy(line, opts.B64EntropyCutoff, opts.HexEntropyCutoff)
-				if leakPrs {
-					if opts.Strict && containsStopWords(line) {
-						continue
-					}
-					gitLeakReceiverWG.Add(1)
-					gitLeaks <- LeakElem{line, currCommit}
-				}
+				gitLeakReceiverWG.Add(1)
+				gitLeaks <- LeakElem{line, currCommit}
 			}
-		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG, opts)
+
+		}(currCommit, repoName, &commitWG, &gitLeakReceiverWG)
 	}
 
 	commitWG.Wait()
