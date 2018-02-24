@@ -9,15 +9,16 @@ import (
 const usage = `usage: gitleaks [options] <url>
 
 Options:
-	-c 			Concurrency factor (default is 10)
-	-u --user 		Git user url
-	-r --repo 		Git repo url
-	-o --org 		Git organization url
-	-s --strict 		Strict mode uses stopwords in config.yml 
-	-b --b64Entropy 	Base64 entropy cutoff (default is 70)
-	-x --hexEntropy  	Hex entropy cutoff (default is 40)
-	-e --entropy	Enable entropy		
-	-h --help 		Display this message
+ -c 			Concurrency factor (default is 10)
+ -u --user 		Git user url
+ -r --repo 		Git repo url
+ -o --org 		Git organization url
+ -s --since 		Commit to stop at
+ -b --b64Entropy 	Base64 entropy cutoff (default is 70)
+ -x --hexEntropy  	Hex entropy cutoff (default is 40)
+ -e --entropy		Enable entropy		
+ -h --help 		Display this message
+ --strict 		Enables stopwords
 `
 
 // Options for gitleaks
@@ -30,6 +31,7 @@ type Options struct {
 	RepoURL          string
 	Strict           bool
 	Entropy          bool
+	SinceCommit      string
 }
 
 // help prints the usage string and exits
@@ -73,10 +75,16 @@ func parseOptions(args []string) *Options {
 		Entropy:          false,
 	}
 
+	if len(args) == 0 {
+		help()
+	}
+
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-s", "--strict":
+		case "-s", "--since":
+			opts.SinceCommit = optionsNextString(args, &i)
+		case "--strict":
 			opts.Strict = true
 		case "-b", "--b64Entropy":
 			opts.B64EntropyCutoff = optionsNextInt(args, &i)
@@ -102,7 +110,6 @@ func parseOptions(args []string) *Options {
 			} else {
 				fmt.Printf("Uknown option %s\n\n", arg)
 				help()
-				return nil
 			}
 		}
 	}

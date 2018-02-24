@@ -108,18 +108,20 @@ func getLeaks(repoName string, opts *Options) []LeakElem {
 	}
 
 	commits := bytes.Split(out, []byte("\n"))
-	commitWG.Add(len(commits))
 	for _, currCommitB := range commits {
 		currCommit := string(currCommitB)
+		if currCommit == "" {
+			continue
+		}
+		if currCommit == opts.SinceCommit {
+			break
+		}
 
+		commitWG.Add(1)
 		go func(currCommit string, repoName string, commitWG *sync.WaitGroup,
 			gitLeakReceiverWG *sync.WaitGroup) {
 
 			defer commitWG.Done()
-
-			if currCommit == "" {
-				return
-			}
 
 			if err := os.Chdir(fmt.Sprintf("%s/%s", appRoot, repoName)); err != nil {
 				log.Fatal(err)
