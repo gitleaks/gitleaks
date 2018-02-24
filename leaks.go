@@ -27,13 +27,13 @@ func start(opts *Options) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
-	// fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
+	fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	err := exec.Command("git", "clone", opts.RepoURL).Run()
 	if err != nil {
 		log.Printf("failed to clone repo %v", err)
 		return
 	}
-	// fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
+	fmt.Printf("Evaluating \x1b[37;1m%s\x1b[0m...\n", opts.RepoURL)
 	repoName := getLocalRepoName(opts.RepoURL)
 	if err = os.Chdir(repoName); err != nil {
 		log.Fatal(err)
@@ -46,7 +46,7 @@ func start(opts *Options) {
 
 	report := getLeaks(repoName, opts)
 	if len(report) == 0 {
-		// fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
+		fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", opts.RepoURL)
 	}
 	cleanup(repoName)
 	reportJSON, _ := json.MarshalIndent(report, "", "\t")
