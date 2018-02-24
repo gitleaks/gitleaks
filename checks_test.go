@@ -4,24 +4,21 @@ import (
 	"testing"
 )
 
-func init() {
-	opts = &Options{
+func TestCheckRegex(t *testing.T) {
+	var results []LeakElem
+	opts := &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
 		Entropy:          false,
 	}
-}
-
-func TestCheckRegex(t *testing.T) {
-	var results []LeakElem
 	checks := map[string]int{
 		"aws=\"AKIALALEMEL33243OLIAE": 1,
 		"aws\"afewafewafewafewaf\"":   0,
 	}
 
 	for k, v := range checks {
-		results = doChecks(k, "commit")
+		results = doChecks(k, "commit", opts)
 		if v != len(results) {
 			t.Errorf("regexCheck failed on string %s", k)
 		}
@@ -30,6 +27,12 @@ func TestCheckRegex(t *testing.T) {
 
 func TestEntropy(t *testing.T) {
 	var enoughEntropy bool
+	opts := &Options{
+		Concurrency:      10,
+		B64EntropyCutoff: 70,
+		HexEntropyCutoff: 40,
+		Entropy:          false,
+	}
 	checks := map[string]bool{
 		"reddit_api_secret = settings./.http}":           false,
 		"heroku_client_secret = simple":                  false,
@@ -37,7 +40,7 @@ func TestEntropy(t *testing.T) {
 		"aws_secret= \"AKIAIMNOJVGFDXXFE4OA\"":           true,
 	}
 	for k, v := range checks {
-		enoughEntropy = checkShannonEntropy(k)
+		enoughEntropy = checkShannonEntropy(k, opts)
 		if v != enoughEntropy {
 			t.Errorf("checkEntropy failed for %s. Expected %t, got %t", k, v, enoughEntropy)
 		}

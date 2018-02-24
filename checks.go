@@ -6,7 +6,7 @@ import (
 )
 
 // checks Regex and if enabled, entropy and stopwords
-func doChecks(diff string, commit string) []LeakElem {
+func doChecks(diff string, commit string, opts *Options) []LeakElem {
 	var match string
 	var leaks []LeakElem
 	var leak LeakElem
@@ -16,7 +16,7 @@ func doChecks(diff string, commit string) []LeakElem {
 			match = re.FindString(line)
 			if len(match) == 0 ||
 				(opts.Strict && containsStopWords(line)) ||
-				(opts.Entropy && !checkShannonEntropy(line)) {
+				(opts.Entropy && !checkShannonEntropy(line, opts)) {
 				continue
 			}
 
@@ -35,7 +35,7 @@ func doChecks(diff string, commit string) []LeakElem {
 }
 
 // checkShannonEntropy checks entropy of target
-func checkShannonEntropy(target string) bool {
+func checkShannonEntropy(target string, opts *Options) bool {
 	var (
 		sum             float64
 		targetBase64Len int

@@ -9,10 +9,10 @@ import (
 const usage = `usage: gitleaks [options] <url>
 
 Options:
- -c 			Concurrency factor (default is 10)
- -u --user 		Git user url
- -r --repo 		Git repo url
- -o --org 		Git organization url
+ -c --concurrency 	Concurrency factor (default is 10)
+ -u --user 			Git user url
+ -r --repo 			Git repo url
+ -o --org 			Git organization url
  -s --since 		Commit to stop at
  -b --b64Entropy 	Base64 entropy cutoff (default is 70)
  -x --hexEntropy  	Hex entropy cutoff (default is 40)
@@ -32,6 +32,12 @@ type Options struct {
 	Strict           bool
 	Entropy          bool
 	SinceCommit      string
+	Persist          bool
+	IncludeForks     bool
+	Tmp              bool
+	EnableJSON       bool
+	Token            string
+	Verbose 		 bool
 }
 
 // help prints the usage string and exits
@@ -72,7 +78,6 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		Entropy:          false,
 	}
 
 	if len(args) == 0 {
@@ -92,14 +97,26 @@ func parseOptions(args []string) *Options {
 			opts.HexEntropyCutoff = optionsNextInt(args, &i)
 		case "-e", "--entropy":
 			opts.Entropy = true
-		case "-c":
+		case "-c", "--concurrency":
 			opts.Concurrency = optionsNextInt(args, &i)
 		case "-o", "--org":
 			opts.OrgURL = optionsNextString(args, &i)
 		case "-u", "--user":
 			opts.UserURL = optionsNextString(args, &i)
+		case "-p", "--persist":
+			opts.UserURL = optionsNextString(args, &i)
 		case "-r", "--repo":
 			opts.RepoURL = optionsNextString(args, &i)
+		case "-f", "--forks":
+			opts.IncludeForks = true
+		case "-t", "--temporary":
+			opts.Tmp = true
+		case "-gt", "--token":
+			opts.Token = optionsNextString(args, &i)
+		case "-j", "--json":
+			opts.EnableJSON = true
+		case "-v", "--verbose":
+			opts.Verbose = true
 		case "-h", "--help":
 			help()
 			return nil
