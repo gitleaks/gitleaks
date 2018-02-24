@@ -108,7 +108,7 @@ func parseOptions(args []string) *Options {
 				opts.UserURL == "" {
 				opts.RepoURL = arg
 			} else {
-				fmt.Printf("Uknown option %s\n\n", arg)
+				fmt.Printf("Unknown option %s\n\n", arg)
 				help()
 			}
 		}
