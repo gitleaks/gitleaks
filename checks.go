@@ -89,6 +89,9 @@ func checkShannonEntropy(target string) bool {
 
 // containsStopWords checks if there are any stop words in target
 func containsStopWords(target string) bool {
+	// Convert to lowercase to reduce the number of loops needed.
+	target = strings.ToLower(target)
+	
 	for _, stopWord := range stopWords {
 		if strings.Contains(target, stopWord) {
 			return true
