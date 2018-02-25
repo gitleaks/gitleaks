@@ -46,8 +46,7 @@ func init() {
 	base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 	hexChars = "1234567890abcdefABCDEF"
 
-	stopWords = []string{"setting", "Setting", "SETTING", "info",
-		"Info", "INFO", "env", "Env", "ENV", "environment", "Environment", "ENVIRONMENT"}
+	stopWords = []string{"setting", "info", "env", "environment"}
 
 	regexes = map[string]*regexp.Regexp{
 		"PKCS8":    regexp.MustCompile("-----BEGIN PRIVATE KEY-----"),
