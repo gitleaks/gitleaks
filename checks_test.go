@@ -12,13 +12,17 @@ func TestCheckRegex(t *testing.T) {
 		HexEntropyCutoff: 40,
 		Entropy:          false,
 	}
+	repo := RepoDesc{
+		url: "someurl",
+	}
+	commit := Commit{}
 	checks := map[string]int{
 		"aws=\"AKIALALEMEL33243OLIAE": 1,
 		"aws\"afewafewafewafewaf\"":   0,
 	}
 
 	for k, v := range checks {
-		results = doChecks(k, "commit", opts)
+		results = doChecks(k, commit, opts, repo)
 		if v != len(results) {
 			t.Errorf("regexCheck failed on string %s", k)
 		}

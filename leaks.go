@@ -10,9 +10,9 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
-	"strings"
 )
 
 // LeakElem contains the line and commit of a leak
@@ -21,24 +21,24 @@ type LeakElem struct {
 	Commit   string `json:"commit"`
 	Offender string `json:"string"`
 	Reason   string `json:"reason"`
-	Msg 	 string `json:"commitMsg"`
-	Time 	 string `json:"time"`
+	Msg      string `json:"commitMsg"`
+	Time     string `json:"time"`
 	Author   string `json:"author"`
 	File     string `json:"file"`
 	RepoURL  string `json:"repoURL"`
 }
 
 type Commit struct {
-	Hash string
+	Hash   string
 	Author string
-	Time string
-	Msg string
+	Time   string
+	Msg    string
 }
 
-func rmTmp(owner *Owner){
+func rmTmp(owner *Owner) {
 	if _, err := os.Stat(owner.path); err == nil {
 		err := os.RemoveAll(owner.path)
-		log.Printf("Cleaning up tmp repos in %s\n", owner.path)
+		log.Printf("\nCleaning up tmp repos in %s\n", owner.path)
 		if err != nil {
 			log.Printf("failed to properly remove tmp gitleaks dir: %v", err)
 		}
@@ -49,7 +49,7 @@ func rmTmp(owner *Owner){
 // start
 func start(repos []RepoDesc, owner *Owner, opts *Options) {
 	var report []LeakElem
-	if opts.Tmp{
+	if opts.Tmp {
 		defer rmTmp(owner)
 	}
 
@@ -87,7 +87,7 @@ func start(repos []RepoDesc, owner *Owner, opts *Options) {
 			fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", repo.url)
 			err := exec.Command("git", "clone", repo.url).Run()
 			if err != nil {
-				log.Printf("failed to clone repo %v", err)
+				fmt.Printf("failed to clone repo %v", err)
 				return
 			}
 			report = getLeaks(repo, owner, opts)
@@ -116,6 +116,7 @@ func outputGitLeaksReport(report []LeakElem, repo RepoDesc, opts *Options) {
 	if err != nil {
 		log.Fatalf("Can't write to file: %s", err)
 	}
+	fmt.Printf("Report written to %s\n", reportFile)
 }
 
 // getLeaks will attempt to find gitleaks
@@ -129,9 +130,6 @@ func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
 		report            []LeakElem
 	)
 	semaphoreChan := make(chan struct{}, opts.Concurrency)
-	if opts.Tmp{
-		defer rmTmp(owner)
-	}
 
 	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
 		for gitLeak := range gitLeaks {
@@ -163,9 +161,6 @@ func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
 		if commit.Hash == "" {
 			continue
 		}
-		if commit.Hash == opts.SinceCommit {
-			break
-		}
 
 		commitWG.Add(1)
 		go func(currCommit Commit, repoName string, commitWG *sync.WaitGroup,
@@ -181,8 +176,8 @@ func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
 			<-semaphoreChan
 
 			if err != nil {
-				if strings.Contains(err.Error(), "too many files open"){
-					fmt.Printf("error retrieving diff for commit %s. Try turning concurrency down. %v\n", currCommit, err)
+				if strings.Contains(err.Error(), "too many files open") {
+					log.Printf("error retrieving diff for commit %s. Try turning concurrency down. %v\n", currCommit, err)
 				}
 				if opts.Tmp {
 					rmTmp(owner)
@@ -199,6 +194,10 @@ func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
 			}
 
 		}(commit, repo.name, &commitWG, &gitLeakReceiverWG, opts)
+
+		if commit.Hash == opts.SinceCommit {
+			break
+		}
 	}
 
 	commitWG.Wait()
@@ -208,12 +207,12 @@ func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
 
 func parseFormattedRevList(revList [][]byte) []Commit {
 	var commits []Commit
-	for i := 0; i < len(revList)-1; i=i+5 {
+	for i := 0; i < len(revList)-1; i = i + 5 {
 		commit := Commit{
-			Hash: string(revList[i+1]),
+			Hash:   string(revList[i+1]),
 			Author: string(revList[i+2]),
-			Msg: string(revList[i+3]),
-			Time: string(revList[i+4]),
+			Msg:    string(revList[i+3]),
+			Time:   string(revList[i+4]),
 		}
 		commits = append(commits, commit)
 	}

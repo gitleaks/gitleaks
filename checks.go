@@ -1,12 +1,10 @@
 package main
 
 import (
+	_ "fmt"
 	"math"
 	"strings"
-	_"fmt"
-	"regexp"
 )
-
 
 // TODO LOCAL REPO!!!!
 
@@ -19,12 +17,13 @@ func doChecks(diff string, commit Commit, opts *Options, repo RepoDesc) []LeakEl
 	)
 
 	lines := strings.Split(diff, "\n")
-	file := ""
+	file := "unable to determine file"
 	for _, line := range lines {
-		if strings.Contains(line, "diff --git a"){
-			re := regexp.MustCompile("diff --git a.+b/")
-			idx := re.FindStringIndex(line)
-			file = line[idx[1]:]
+		if strings.Contains(line, "diff --git a") {
+			idx := fileDiffRegex.FindStringIndex(line)
+			if len(idx) == 2 {
+				file = line[idx[1]:]
+			}
 		}
 
 		for leakType, re := range regexes {
@@ -40,11 +39,11 @@ func doChecks(diff string, commit Commit, opts *Options, repo RepoDesc) []LeakEl
 				Commit:   commit.Hash,
 				Offender: match,
 				Reason:   leakType,
-				Msg: commit.Msg,
-				Time: commit.Time,
-				Author: commit.Author,
-				File: file,
-				RepoURL: repo.url,
+				Msg:      commit.Msg,
+				Time:     commit.Time,
+				Author:   commit.Author,
+				File:     file,
+				RepoURL:  repo.url,
 			}
 			leaks = append(leaks, leak)
 		}

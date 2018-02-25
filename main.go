@@ -16,13 +16,14 @@ import (
 )
 
 var (
-	regexes      map[string]*regexp.Regexp
-	stopWords    []string
-	base64Chars  string
-	hexChars     string
-	assignRegex  *regexp.Regexp
-	gitLeaksPath string
-	gitLeaksClonePath string
+	regexes            map[string]*regexp.Regexp
+	stopWords          []string
+	base64Chars        string
+	hexChars           string
+	assignRegex        *regexp.Regexp
+	fileDiffRegex      *regexp.Regexp
+	gitLeaksPath       string
+	gitLeaksClonePath  string
 	gitLeaksReportPath string
 )
 
@@ -38,7 +39,7 @@ type Owner struct {
 	url         string
 	accountType string
 	path        string
-	reportPath string
+	reportPath  string
 }
 
 func init() {
@@ -55,11 +56,12 @@ func init() {
 		"Twitter":  regexp.MustCompile("(?i)twitter.*['|\"][0-9a-zA-Z]{35,44}['|\"]"),
 		"Github":   regexp.MustCompile("(?i)github.*[['|\"]0-9a-zA-Z]{35,40}['|\"]"),
 		"Reddit":   regexp.MustCompile("(?i)reddit.*['|\"][0-9a-zA-Z]{14}['|\"]"),
-		"Heroku": regexp.MustCompile("(?i)heroku.*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
+		"Heroku":   regexp.MustCompile("(?i)heroku.*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
 		"AWS":      regexp.MustCompile("AKIA[0-9A-Z]{16}"),
 		// "Custom": regexp.MustCompile(".*")
 	}
 	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
+	fileDiffRegex = regexp.MustCompile("diff --git a.+b/")
 	homeDir, err := homedir.Dir()
 	if err != nil {
 		log.Fatal("Cant find home dir")
