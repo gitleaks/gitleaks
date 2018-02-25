@@ -9,7 +9,7 @@ import (
 const usage = `usage: gitleaks [options] <url>
 
 Options:
- -c 			Concurrency factor (default is 10)
+ -c --concurrency 	Upper bound on concurrent diffs
  -u --user 		Git user url
  -r --repo 		Git repo url
  -o --org 		Git organization url
@@ -17,7 +17,9 @@ Options:
  -b --b64Entropy 	Base64 entropy cutoff (default is 70)
  -x --hexEntropy  	Hex entropy cutoff (default is 40)
  -e --entropy		Enable entropy		
+ -j --json 		Output gitleaks report
  -h --help 		Display this message
+ --token    		Github API token
  --strict 		Enables stopwords
 `
 
@@ -32,6 +34,12 @@ type Options struct {
 	Strict           bool
 	Entropy          bool
 	SinceCommit      string
+	Persist          bool
+	IncludeForks     bool
+	Tmp              bool
+	EnableJSON       bool
+	Token            string
+	Verbose          bool
 }
 
 // help prints the usage string and exits
@@ -72,7 +80,6 @@ func parseOptions(args []string) *Options {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		Entropy:          false,
 	}
 
 	if len(args) == 0 {
@@ -92,7 +99,7 @@ func parseOptions(args []string) *Options {
 			opts.HexEntropyCutoff = optionsNextInt(args, &i)
 		case "-e", "--entropy":
 			opts.Entropy = true
-		case "-c":
+		case "-c", "--concurrency":
 			opts.Concurrency = optionsNextInt(args, &i)
 		case "-o", "--org":
 			opts.OrgURL = optionsNextString(args, &i)
@@ -100,6 +107,12 @@ func parseOptions(args []string) *Options {
 			opts.UserURL = optionsNextString(args, &i)
 		case "-r", "--repo":
 			opts.RepoURL = optionsNextString(args, &i)
+		case "-t", "--temporary":
+			opts.Tmp = true
+		case "--token":
+			opts.Token = optionsNextString(args, &i)
+		case "-j", "--json":
+			opts.EnableJSON = true
 		case "-h", "--help":
 			help()
 			return nil
@@ -112,6 +125,11 @@ func parseOptions(args []string) *Options {
 				help()
 			}
 		}
+	}
+
+	// "guards"
+	if opts.Tmp && opts.EnableJSON {
+		fmt.Println("Report generation with temporary clones not supported")
 	}
 
 	return opts
