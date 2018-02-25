@@ -90,7 +90,7 @@ func checkShannonEntropy(target string) bool {
 // containsStopWords checks if there are any stop words in target
 func containsStopWords(target string) bool {
 	for _, stopWord := range stopWords {
-		if strings.Contains(target, stopWord) {
+		if strings.EqualFold(target, stopWord) {
 			return true
 		}
 	}
