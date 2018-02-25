@@ -50,14 +50,15 @@ func init() {
 		"Info", "INFO", "env", "Env", "ENV", "environment", "Environment", "ENVIRONMENT"}
 
 	regexes = map[string]*regexp.Regexp{
+		"PKCS8":    regexp.MustCompile("-----BEGIN PRIVATE KEY-----"),
 		"RSA":      regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
 		"SSH":      regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
 		"Facebook": regexp.MustCompile("(?i)facebook.*['|\"][0-9a-f]{32}['|\"]"),
 		"Twitter":  regexp.MustCompile("(?i)twitter.*['|\"][0-9a-zA-Z]{35,44}['|\"]"),
 		"Github":   regexp.MustCompile("(?i)github.*[['|\"]0-9a-zA-Z]{35,40}['|\"]"),
+		"AWS":      regexp.MustCompile("AKIA[0-9A-Z]{16}"),
 		"Reddit":   regexp.MustCompile("(?i)reddit.*['|\"][0-9a-zA-Z]{14}['|\"]"),
 		"Heroku":   regexp.MustCompile("(?i)heroku.*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"),
-		"AWS":      regexp.MustCompile("AKIA[0-9A-Z]{16}"),
 		// "Custom": regexp.MustCompile(".*")
 	}
 	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
