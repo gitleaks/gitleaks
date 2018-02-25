@@ -3,15 +3,30 @@ package main
 import (
 	"math"
 	"strings"
+	_"fmt"
+	"regexp"
 )
 
+
+// TODO LOCAL REPO!!!!
+
 // checks Regex and if enabled, entropy and stopwords
-func doChecks(diff string, commit string, opts *Options) []LeakElem {
-	var match string
-	var leaks []LeakElem
-	var leak LeakElem
+func doChecks(diff string, commit Commit, opts *Options, repo RepoDesc) []LeakElem {
+	var (
+		match string
+		leaks []LeakElem
+		leak  LeakElem
+	)
+
 	lines := strings.Split(diff, "\n")
+	file := ""
 	for _, line := range lines {
+		if strings.Contains(line, "diff --git a"){
+			re := regexp.MustCompile("diff --git a.+b/")
+			idx := re.FindStringIndex(line)
+			file = line[idx[1]:]
+		}
+
 		for leakType, re := range regexes {
 			match = re.FindString(line)
 			if len(match) == 0 ||
@@ -22,11 +37,15 @@ func doChecks(diff string, commit string, opts *Options) []LeakElem {
 
 			leak = LeakElem{
 				Line:     line,
-				Commit:   commit,
+				Commit:   commit.Hash,
 				Offender: match,
 				Reason:   leakType,
+				Msg: commit.Msg,
+				Time: commit.Time,
+				Author: commit.Author,
+				File: file,
+				RepoURL: repo.url,
 			}
-
 			leaks = append(leaks, leak)
 		}
 	}
