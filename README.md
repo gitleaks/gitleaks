@@ -29,7 +29,7 @@ Gitleaks will clone the target `<git url>` to `$HOME/.gitleaks/clones/<repo name
    "repoURL": "https://github.com/zricethezav/gronit"
 }
 ``` 
-Gitleaks will not re-clone repos unless the temporary flag is set (see Options section), instead gitleaks will `fetch` all new changes before the scan. This works for users and organization repos as well. Regex's for the scan are defined in `main.go`, feel free to open a PR and contribute if you have additional regex you want included. Work largely based on  [https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf](https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf) and regexes from https://github.com/dxa4481/truffleHog and https://github.com/anshumanbh/git-all-secrets.
+Gitleaks will not re-clone repos unless the temporary flag is set (see Options section), instead gitleaks will `fetch` all new changes before the scan. This works for users and organization repos as well. Regex's for the scan are defined in `main.go`. Feel free to open a PR and contribute if you have additional regex you want included. Work largely based on  [https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf](https://people.eecs.berkeley.edu/~rohanpadhye/files/key_leaks-msr15.pdf) and regexes from https://github.com/dxa4481/truffleHog and https://github.com/anshumanbh/git-all-secrets.
 
 #### Example with Report
 ```bash
