@@ -1,8 +1,4 @@
-# GitLeaks
-
-
-[![Build Status](https://travis-ci.org/zricethezav/gitleaks.svg?branch=master)](https://travis-ci.org/zricethezav/gitleaks)
-
+![Alt Text](https://github.com/zricethezav/gifs/blob/master/gitleaks1.png) [![Build Status](https://travis-ci.org/zricethezav/gitleaks.svg?branch=master)](https://travis-ci.org/zricethezav/gitleaks)
 ## Check git repos for secrets and keys
 
 #### Installing
@@ -110,3 +106,10 @@ docker build -t gitleaks .
 docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
 ```
 
+### cypherphunky
+BTC: 1H2rSXDJZxWcTk2Ugr5P9r9m93m2NhL4xj
+BCH: qp4mdaef04g5d0xpgecx78fmruk6vgl4pgqtetrl9h
+ETH: 0xe48b4Fce6A1C1a9C780376032895b06b1709AddF
+LTC: LRhDzMyGos5CtZMoSTEx5rdLksPUwSrtuz
+
+s/o to @jlakowski for the gimp skillz
