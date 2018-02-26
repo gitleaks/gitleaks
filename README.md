@@ -97,7 +97,7 @@ Please read the [Github article on removing sensitive data from a repository](ht
 
 ### Run me with docker
 
-Simply run `docker run --rm --name=gitleaks raphaelareya/gitleaks https://github.com/zricethezav/gitleaks`
+Simply run `docker run --rm --name=gitleaks zricethezav/gitleaks https://github.com/zricethezav/gitleaks`
 
 Or build the image yourself to get the latest version :
 
