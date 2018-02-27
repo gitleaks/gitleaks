@@ -97,7 +97,7 @@ func start(repos []RepoDesc, owner *Owner, opts *Options) {
 			fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n\n", repo.url)
 		}
 
-		if opts.EnableJSON {
+		if opts.EnableJSON && len(report) != 0 {
 			outputGitLeaksReport(report, repo, opts)
 		}
 	}
