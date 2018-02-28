@@ -1,66 +1,25 @@
 package main
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"os/exec"
-	"os/signal"
-	"path/filepath"
-	"strings"
-	"sync"
-	"syscall"
-)
+// TODO https://medium.com/@sebdah/go-best-practices-error-handling-2d15e1f0c5ee
+// implement better error handling
 
-// LeakElem contains the line and commit of a leak
-type LeakElem struct {
-	Line     string `json:"line"`
-	Commit   string `json:"commit"`
-	Offender string `json:"string"`
-	Reason   string `json:"reason"`
-	Msg      string `json:"commitMsg"`
-	Time     string `json:"time"`
-	Author   string `json:"author"`
-	File     string `json:"file"`
-	RepoURL  string `json:"repoURL"`
-}
+// Commit is so and so
 
-type Commit struct {
-	Hash   string
-	Author string
-	Time   string
-	Msg    string
-}
-
-func rmTmp(owner *Owner) {
-	if _, err := os.Stat(owner.path); err == nil {
-		err := os.RemoveAll(owner.path)
-		log.Printf("\nCleaning up tmp repos in %s\n", owner.path)
-		if err != nil {
-			log.Printf("failed to properly remove tmp gitleaks dir: %v", err)
-		}
-	}
-	os.Exit(1)
-}
-
-// start
-func start(repos []RepoDesc, owner *Owner, opts *Options) {
-	var report []LeakElem
-	if opts.Tmp {
-		defer rmTmp(owner)
-	}
+/*
+// start kicks off the audit
+func start(repos []Repo, owner *Owner, opts *Options) error {
+	var (
+		report []Leak
+		err error
+	)
+	defer rmTmpDirs(owner, opts)
 
 	// interrupt handling
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		if opts.Tmp {
-			rmTmp(owner)
-		}
+		rmTmpDirs(owner, opts)
 		os.Exit(1)
 	}()
 
@@ -73,24 +32,23 @@ func start(repos []RepoDesc, owner *Owner, opts *Options) {
 			}
 			// use pre-cloned repo
 			fmt.Printf("Checking \x1b[37;1m%s\x1b[0m...\n", repo.url)
-			err := exec.Command("git", "fetch").Run()
-			if err != nil {
-				log.Printf("failed to fetch repo %v", err)
-				return
-			}
-			report = getLeaks(repo, owner, opts)
+			err = exec.Command("git", "fetch").Run()
 		} else {
 			// no repo present, clone it
 			if err := os.Chdir(fmt.Sprintf(owner.path)); err != nil {
 				log.Fatal(err)
 			}
 			fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", repo.url)
-			err := exec.Command("git", "clone", repo.url).Run()
-			if err != nil {
-				fmt.Printf("failed to clone repo %v", err)
-				return
-			}
-			report = getLeaks(repo, owner, opts)
+			err = exec.Command("git", "clone", repo.url).Run()
+		}
+		if err != nil {
+			log.Printf("failed to fetch repo %v", err)
+			return nil
+		}
+
+		report, err = audit(&repo, opts)
+		if err != nil {
+			return nil
 		}
 
 		if len(report) == 0 {
@@ -98,123 +56,14 @@ func start(repos []RepoDesc, owner *Owner, opts *Options) {
 		}
 
 		if opts.EnableJSON && len(report) != 0 {
-			outputGitLeaksReport(report, repo, opts)
+			writeReport(report, repo)
 		}
 	}
+	return nil
 }
+*/
 
-// outputGitLeaksReport
-func outputGitLeaksReport(report []LeakElem, repo RepoDesc, opts *Options) {
-	reportJSON, _ := json.MarshalIndent(report, "", "\t")
-	if _, err := os.Stat(repo.owner.reportPath); os.IsNotExist(err) {
-		os.Mkdir(repo.owner.reportPath, os.ModePerm)
-	}
+// Used by start, writeReport will generate a report and write it out to
+// $GITLEAKS_HOME/report/<owner>/<repo>. No report will be generated if
+// no leaks have been found
 
-	reportFileName := fmt.Sprintf("%s_leaks.json", repo.name)
-	reportFile := filepath.Join(repo.owner.reportPath, reportFileName)
-	err := ioutil.WriteFile(reportFile, reportJSON, 0644)
-	if err != nil {
-		log.Fatalf("Can't write to file: %s", err)
-	}
-	fmt.Printf("Report written to %s\n", reportFile)
-}
-
-// getLeaks will attempt to find gitleaks
-func getLeaks(repo RepoDesc, owner *Owner, opts *Options) []LeakElem {
-	var (
-		out               []byte
-		err               error
-		commitWG          sync.WaitGroup
-		gitLeakReceiverWG sync.WaitGroup
-		gitLeaks          = make(chan LeakElem)
-		report            []LeakElem
-	)
-	semaphoreChan := make(chan struct{}, opts.Concurrency)
-
-	go func(commitWG *sync.WaitGroup, gitLeakReceiverWG *sync.WaitGroup) {
-		for gitLeak := range gitLeaks {
-			b, err := json.MarshalIndent(gitLeak, "", "   ")
-			if err != nil {
-				fmt.Println("failed to output leak:", err)
-			}
-			fmt.Println(string(b))
-			report = append(report, gitLeak)
-			gitLeakReceiverWG.Done()
-		}
-	}(&commitWG, &gitLeakReceiverWG)
-
-	if err := os.Chdir(fmt.Sprintf(repo.path)); err != nil {
-		log.Fatal(err)
-	}
-
-	gitFormat := "--format=%H%n%an%n%s%n%ci"
-	out, err = exec.Command("git", "rev-list", "--all",
-		"--remotes", "--topo-order", gitFormat).Output()
-	if err != nil {
-		log.Fatalf("error retrieving commits%v\n", err)
-	}
-
-	revListLines := bytes.Split(out, []byte("\n"))
-	commits := parseFormattedRevList(revListLines)
-
-	for _, commit := range commits {
-		if commit.Hash == "" {
-			continue
-		}
-
-		commitWG.Add(1)
-		go func(currCommit Commit, repoName string, commitWG *sync.WaitGroup,
-			gitLeakReceiverWG *sync.WaitGroup, opts *Options) {
-			defer commitWG.Done()
-			if err := os.Chdir(fmt.Sprintf(repo.path)); err != nil {
-				log.Fatal(err)
-			}
-
-			commitCmp := fmt.Sprintf("%s^!", currCommit.Hash)
-			semaphoreChan <- struct{}{}
-			out, err := exec.Command("git", "diff", commitCmp).Output()
-			<-semaphoreChan
-
-			if err != nil {
-				if strings.Contains(err.Error(), "too many files open") {
-					log.Printf("error retrieving diff for commit %s. Try turning concurrency down. %v\n", currCommit, err)
-				}
-				if opts.Tmp {
-					rmTmp(owner)
-				}
-			}
-
-			leaks := doChecks(string(out), currCommit, opts, repo)
-			if len(leaks) == 0 {
-				return
-			}
-			for _, leak := range leaks {
-				gitLeakReceiverWG.Add(1)
-				gitLeaks <- leak
-			}
-
-		}(commit, repo.name, &commitWG, &gitLeakReceiverWG, opts)
-
-		if commit.Hash == opts.SinceCommit {
-			break
-		}
-	}
-
-	commitWG.Wait()
-	gitLeakReceiverWG.Wait()
-	return report
-}
-
-func parseFormattedRevList(revList [][]byte) []Commit {
-	var commits []Commit
-	for i := 0; i < len(revList)-1; i = i + 5 {
-		commit := Commit{
-			Hash:   string(revList[i+1]),
-			Author: string(revList[i+2]),
-			Msg:    string(revList[i+3]),
-			Time:   string(revList[i+4]),
-		}
-		commits = append(commits, commit)
-	}
-	return commits
-}

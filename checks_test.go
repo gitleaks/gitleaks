@@ -5,14 +5,14 @@ import (
 )
 
 func TestCheckRegex(t *testing.T) {
-	var results []LeakElem
+	var results []Leak
 	opts := &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
 		Entropy:          false,
 	}
-	repo := RepoDesc{
+	repo := Repo{
 		url: "someurl",
 	}
 	commit := Commit{}
