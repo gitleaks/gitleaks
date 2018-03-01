@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	_ "fmt"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -11,7 +12,6 @@ import (
 	"os/signal"
 	"path"
 	"strings"
-	"fmt"
 )
 
 type Owner struct {
@@ -25,8 +25,8 @@ type Owner struct {
 
 // newOwner instantiates an owner and creates any necessary resources for said owner.
 // newOwner returns a Owner struct pointer
-func newOwner() (*Owner)  {
-	name  := ownerName()
+func newOwner() *Owner {
+	name := ownerName()
 	owner := &Owner{
 		name:        name,
 		url:         opts.URL,
@@ -43,7 +43,6 @@ func newOwner() (*Owner)  {
 		<-sigC
 		owner.rmTmp()
 	}()
-
 
 	// if running on local repo, just go right to it.
 	if opts.LocalMode {
@@ -162,14 +161,14 @@ func (owner *Owner) addRepos(githubRepos []*github.Repository) {
 }
 
 // auditRepos
-func (owner *Owner) auditRepos() (int) {
+func (owner *Owner) auditRepos() int {
 	exitCode := EXIT_CLEAN
 	for _, repo := range owner.repos {
 		leaksPst, err := repo.audit(owner)
 		if err != nil {
 			failF("%v\n", err)
 		}
-		if leaksPst{
+		if leaksPst {
 			exitCode = EXIT_LEAKS
 		}
 	}
@@ -190,8 +189,7 @@ func (owner *Owner) setupDir() error {
 	if opts.Tmp {
 		dir, err := ioutil.TempDir("", owner.name)
 		if err != nil {
-			return err
-			owner.failF("Unabled to create temp directories for cloning")
+			fmt.Errorf("unable to create temp directories for cloning")
 		}
 		owner.path = dir
 	} else {
@@ -200,9 +198,6 @@ func (owner *Owner) setupDir() error {
 		}
 	}
 	return nil
-
-	// TODO could be handled via option
-	// owner.reportPath = filepath.Join(gitLeaksPath, "report", owner.name)
 }
 
 // rmTmp removes the temporary repo
@@ -226,11 +221,11 @@ func ownerType() string {
 // ownerName returns the owner name extracted from the urls provided in opts.
 // If no RepoURL, OrgURL, or UserURL is provided, then owner will log an error
 // and gitleaks will exit.
-func ownerName() (string) {
+func ownerName() string {
 	if opts.RepoMode {
 		splitSlashes := strings.Split(opts.URL, "/")
 		return splitSlashes[len(splitSlashes)-2]
-	} else if opts.UserMode|| opts.OrgMode {
+	} else if opts.UserMode || opts.OrgMode {
 		_, ownerName := path.Split(opts.URL)
 		return ownerName
 	}

@@ -1,13 +1,13 @@
 package main
 
 import (
+	"fmt"
 	_ "fmt"
 	"go.uber.org/zap"
 	_ "io/ioutil"
 	"os"
 	"regexp"
 	_ "time"
-	"fmt"
 )
 
 const EXIT_CLEAN = 0
@@ -23,7 +23,7 @@ var (
 	assignRegex   *regexp.Regexp
 	fileDiffRegex *regexp.Regexp
 	logger        *zap.Logger
-	opts 		  *Options
+	opts          *Options
 )
 
 func init() {
@@ -58,5 +58,3 @@ func failF(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	os.Exit(EXIT_FAILURE)
 }
-
-

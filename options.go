@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	"regexp"
 	"github.com/mitchellh/go-homedir"
-	"path/filepath"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const DEBUG = 0
@@ -43,42 +43,42 @@ Other
  -h --help 		Display this message
  --token=<STR>    	Github API token
  --stopwords  		Enables stopwords
+ --pretty 		Enables pretty printing for humans, otherwise you'll get logs'
 
 `
-
 
 // Options for gitleaks. need to support remote repo/owner
 // and local repo/owner mode
 type Options struct {
-	URL 			 string
-	RepoPath 	     string
+	URL      string
+	RepoPath string
 
-	ClonePath 		 string
-	ReportPath 	     string
+	ClonePath  string
+	ReportPath string
 
 	Concurrency      int
 	B64EntropyCutoff int
 	HexEntropyCutoff int
 
 	// MODES
-	UserMode         bool
-	OrgMode          bool
-	RepoMode       	 bool
-	LocalMode 		 bool
+	UserMode  bool
+	OrgMode   bool
+	RepoMode  bool
+	LocalMode bool
 
 	// OPTS
-	Strict           bool
-	Entropy          bool
-	SinceCommit      string
-	Persist          bool
-	IncludeForks     bool
-	Tmp              bool
-	ReportOut 		 bool
-	Token            string
+	Strict       bool
+	Entropy      bool
+	SinceCommit  string
+	Persist      bool
+	IncludeForks bool
+	Tmp          bool
+	ReportOut    bool
+	Token        string
 
 	// LOGS/REPORT
-	Verbose          bool
-	LogLevel 		 int
+	LogLevel    int
+	PrettyPrint bool
 }
 
 // help prints the usage string and exits
@@ -135,13 +135,13 @@ func (opts *Options) optInt(arg string, prefixes ...string) (bool, int) {
 }
 
 // newOpts generates opts and parses arguments
-func newOpts(args []string) (*Options) {
+func newOpts(args []string) *Options {
 	opts, err := defaultOptions()
-	if err != nil{
+	if err != nil {
 		opts.failF("%v", err)
 	}
 	err = opts.parseOptions(args)
-	if err != nil{
+	if err != nil {
 		opts.failF("%v", err)
 	}
 	opts.setupLogger()
@@ -171,9 +171,9 @@ func defaultOptions() (*Options, error) {
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		LogLevel: INFO,
-		ClonePath: filepath.Join(gitleaksHome, "clone"),
-		ReportPath: filepath.Join(gitleaksHome, "report"),
+		LogLevel:         INFO,
+		ClonePath:        filepath.Join(gitleaksHome, "clone"),
+		ReportPath:       filepath.Join(gitleaksHome, "report"),
 	}, nil
 }
 
@@ -211,6 +211,8 @@ func (opts *Options) parseOptions(args []string) error {
 
 		case "--report-out":
 			opts.ReportOut = true
+		case "--pretty":
+			opts.PrettyPrint = true
 
 		case "-t", "--temp":
 			opts.Tmp = true
@@ -222,7 +224,6 @@ func (opts *Options) parseOptions(args []string) error {
 		default:
 			// TARGETS
 			if i == len(args)-1 {
-				fmt.Println(arg[i])
 				if opts.LocalMode {
 					opts.RepoPath = args[i]
 				} else {
@@ -250,7 +251,7 @@ func (opts *Options) parseOptions(args []string) error {
 		}
 	}
 	err := opts.guards()
-	if err != nil{
+	if err != nil {
 		fmt.Printf("%v", err)
 	}
 	return err
@@ -275,7 +276,7 @@ func (opts *Options) guards() error {
 		return fmt.Errorf("Cannot run Gitleaks on more than one mode\n")
 	} else if (opts.OrgMode || opts.UserMode) && opts.RepoMode {
 		return fmt.Errorf("Cannot run Gitleaks on more than one mode\n")
-	} else if (opts.OrgMode || opts.RepoMode) && opts.UserMode{
+	} else if (opts.OrgMode || opts.RepoMode) && opts.UserMode {
 		return fmt.Errorf("Cannot run Gitleaks on more than one mode\n")
 	} else if opts.LocalMode && opts.Tmp {
 		return fmt.Errorf("Cannot run Gitleaks with temp settings and local mode\n")
@@ -305,6 +306,11 @@ func (opts *Options) setupLogger() {
 	case INFO:
 		atom.SetLevel(zap.InfoLevel)
 	case ERROR:
+		atom.SetLevel(zap.ErrorLevel)
+	}
+
+	// set to ErrorLevel if pretty printing
+	if opts.PrettyPrint{
 		atom.SetLevel(zap.ErrorLevel)
 	}
 }
