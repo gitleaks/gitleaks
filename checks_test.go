@@ -5,14 +5,14 @@ import (
 )
 
 func TestCheckRegex(t *testing.T) {
-	var results []LeakElem
-	opts := &Options{
+	var results []Leak
+	opts = &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
 		Entropy:          false,
 	}
-	repo := RepoDesc{
+	repo := Repo{
 		url: "someurl",
 	}
 	commit := Commit{}
@@ -22,7 +22,7 @@ func TestCheckRegex(t *testing.T) {
 	}
 
 	for k, v := range checks {
-		results = doChecks(k, commit, opts, repo)
+		results = doChecks(k, commit, &repo)
 		if v != len(results) {
 			t.Errorf("regexCheck failed on string %s", k)
 		}
