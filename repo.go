@@ -228,7 +228,6 @@ func reportAggregator(gitLeakReceiverWG *sync.WaitGroup, gitLeaks chan Leak, lea
 			}
 			fmt.Println(string(b))
 		}
-
 		gitLeakReceiverWG.Done()
 	}
 }

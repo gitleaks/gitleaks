@@ -317,6 +317,6 @@ func (opts *Options) setupLogger() {
 
 // isGithubTarget checks if url is a valid github target
 func isGithubTarget(url string) bool {
-	re := regexp.MustCompile("github\\.com\\/")
+	re := regexp.MustCompile("github.com")
 	return re.MatchString(url)
 }
