@@ -6,10 +6,8 @@ import (
 	"strings"
 )
 
-// TODO LOCAL REPO!!!!
-
 // checks Regex and if enabled, entropy and stopwords
-func doChecks(diff string, commit Commit, opts *Options, repo *Repo) []Leak {
+func doChecks(diff string, commit Commit, repo *Repo) []Leak {
 	var (
 		match string
 		leaks []Leak

@@ -1,18 +1,17 @@
 package main
 
 import (
-	"path"
-	"io/ioutil"
-	"path/filepath"
-	"os"
-	"github.com/google/go-github/github"
-	"strings"
 	"context"
+	_ "fmt"
+	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"io/ioutil"
 	"net/http"
-	"log"
+	"os"
 	"os/signal"
-	_"fmt"
+	"path"
+	"strings"
+	"fmt"
 )
 
 type Owner struct {
@@ -21,21 +20,17 @@ type Owner struct {
 	accountType string
 	path        string
 	reportPath  string
-	repos      []Repo
+	repos       []Repo
 }
 
 // newOwner instantiates an owner and creates any necessary resources for said owner.
 // newOwner returns a Owner struct pointer
-func newOwner(opts *Options) *Owner {
-	name, err := ownerName(opts)
+func newOwner() (*Owner)  {
+	name  := ownerName()
 	owner := &Owner{
 		name:        name,
-		url:         opts.UserURL,
-		accountType: ownerType(opts),
-	}
-
-	if err != nil {
-		owner.failf()
+		url:         opts.URL,
+		accountType: ownerType(),
 	}
 
 	// listen for ctrl-c
@@ -49,8 +44,23 @@ func newOwner(opts *Options) *Owner {
 		owner.rmTmp()
 	}()
 
-	owner.setupDir(opts)
-	owner.fetchRepos(opts)
+
+	// if running on local repo, just go right to it.
+	if opts.LocalMode {
+		repo := newLocalRepo(opts.RepoPath)
+		owner.repos = append(owner.repos, *repo)
+		return owner
+	}
+
+	err := owner.setupDir()
+	if err != nil {
+		owner.failF("%v", err)
+	}
+
+	err = owner.fetchRepos()
+	if err != nil {
+		owner.failF("%v", err)
+	}
 	return owner
 }
 
@@ -58,16 +68,17 @@ func newOwner(opts *Options) *Owner {
 // of the owner's repos. If opts.RepoURL is not the empty string then fetchRepos will
 // only grab the repo specified in opts.RepoURL. Otherwise, fetchRepos will reach out to
 // github's api and grab all repos associated with owner.
-func (owner *Owner) fetchRepos(opts *Options) {
+func (owner *Owner) fetchRepos() error {
+	var err error
 	ctx := context.Background()
 	if owner.accountType == "" {
 		// single repo, ambiguous account type
-		_, repoName := path.Split(opts.RepoURL)
-		repo := newRepo(owner, repoName, opts.RepoURL)
+		_, repoName := path.Split(opts.URL)
+		repo := newRepo(repoName, opts.URL)
 		owner.repos = append(owner.repos, *repo)
 	} else {
 		// org or user account type, would fail if not valid before
-		tokenClient := githubTokenClient(opts)
+		tokenClient := githubTokenClient()
 		gitClient := github.NewClient(tokenClient)
 
 		if owner.accountType == "org" {
@@ -75,26 +86,27 @@ func (owner *Owner) fetchRepos(opts *Options) {
 			orgOpt := &github.RepositoryListByOrgOptions{
 				ListOptions: github.ListOptions{PerPage: 10},
 			}
-			owner.fetchOrgRepos(orgOpt, gitClient, ctx)
+			err = owner.fetchOrgRepos(orgOpt, gitClient, ctx)
 		} else {
 			// user account type
 			userOpt := &github.RepositoryListOptions{
 				ListOptions: github.ListOptions{PerPage: 10},
 			}
-			owner.fetchUserRepos(userOpt, gitClient, ctx)
+			err = owner.fetchUserRepos(userOpt, gitClient, ctx)
 		}
 	}
+	return err
 }
 
 // fetchOrgRepos used by fetchRepos is responsible for parsing github's org repo response. If no
 // github token is available then fetchOrgRepos might run into a rate limit in which case owner will
 // log an error and gitleaks will exit. The rate limit for no token is 50 req/hour... not much.
 func (owner *Owner) fetchOrgRepos(orgOpts *github.RepositoryListByOrgOptions, gitClient *github.Client,
-	ctx context.Context) {
+	ctx context.Context) error {
 	var (
-		githubRepos     []*github.Repository
-		resp 			 *github.Response
-		err 			error
+		githubRepos []*github.Repository
+		resp        *github.Response
+		err         error
 	)
 
 	for {
@@ -102,16 +114,15 @@ func (owner *Owner) fetchOrgRepos(orgOpts *github.RepositoryListByOrgOptions, gi
 			ctx, owner.name, orgOpts)
 		owner.addRepos(githubRepos)
 		if _, ok := err.(*github.RateLimitError); ok {
-			log.Println("hit rate limit")
-			break
+			logger.Info("hit rate limit")
 		} else if err != nil {
-			log.Println("other error")
-			break
+			return fmt.Errorf("failed fetching org repos, bad request")
 		} else if resp.NextPage == 0 {
 			break
 		}
 		orgOpts.Page = resp.NextPage
 	}
+	return nil
 }
 
 // fetchUserRepos used by fetchRepos is responsible for parsing github's user repo response. If no
@@ -119,74 +130,79 @@ func (owner *Owner) fetchOrgRepos(orgOpts *github.RepositoryListByOrgOptions, gi
 // log an error and gitleaks will exit. The rate limit for no token is 50 req/hour... not much.
 // sorry for the redundancy
 func (owner *Owner) fetchUserRepos(userOpts *github.RepositoryListOptions, gitClient *github.Client,
-	ctx context.Context) {
+	ctx context.Context) error {
 	var (
-		githubRepos     []*github.Repository
-		resp 			 *github.Response
-		err 			error
+		githubRepos []*github.Repository
+		resp        *github.Response
+		err         error
 	)
 	for {
 		githubRepos, resp, err = gitClient.Repositories.List(
 			ctx, owner.name, userOpts)
 		owner.addRepos(githubRepos)
 		if _, ok := err.(*github.RateLimitError); ok {
-			log.Println("hit rate limit")
+			logger.Info("hit rate limit")
 			break
 		} else if err != nil {
-			log.Println("other error")
-			break
+			return fmt.Errorf("failed fetching user repos, bad request")
 		} else if resp.NextPage == 0 {
 			break
 		}
 		userOpts.Page = resp.NextPage
 	}
+	return nil
 }
 
 // addRepos used by fetchUserRepos and fetchOrgRepos appends new repos from
 // github's org/user response.
-func (owner *Owner) addRepos (githubRepos []*github.Repository) {
+func (owner *Owner) addRepos(githubRepos []*github.Repository) {
 	for _, repo := range githubRepos {
-		owner.repos = append(owner.repos, *newRepo(owner, *repo.Name, *repo.CloneURL))
+		owner.repos = append(owner.repos, *newRepo(*repo.Name, *repo.CloneURL))
 	}
 }
 
 // auditRepos
-func (owner *Owner) auditRepos(opts *Options) {
+func (owner *Owner) auditRepos() (int) {
+	exitCode := EXIT_CLEAN
 	for _, repo := range owner.repos {
-		err := repo.audit(owner, opts)
+		leaksPst, err := repo.audit(owner)
 		if err != nil {
-			owner.failf()
+			failF("%v\n", err)
+		}
+		if leaksPst{
+			exitCode = EXIT_LEAKS
 		}
 	}
+	return exitCode
 }
 
-// failf
-func (owner *Owner) failf() {
-	// TODO
-}
-
-// exitNow
-func (owner *Owner) exitNow() {
-
+// failF prints a failure message out to stderr
+// and exits with a exit code 2
+func (owner *Owner) failF(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(EXIT_FAILURE)
 }
 
 // setupDir sets up the owner's directory for clones and reports.
 // If the temporary option is set then a temporary directory will be
 // used for the owner repo clones.
-func (owner *Owner) setupDir(opts *Options) {
+func (owner *Owner) setupDir() error {
 	if opts.Tmp {
 		dir, err := ioutil.TempDir("", owner.name)
 		if err != nil {
-			owner.failf()
+			return err
+			owner.failF("Unabled to create temp directories for cloning")
 		}
 		owner.path = dir
 	} else {
-		owner.path = filepath.Join(gitLeaksClonePath, owner.name)
-		if _, err := os.Stat(owner.path); os.IsNotExist(err) {
+		if _, err := os.Stat(opts.ClonePath); os.IsNotExist(err) {
 			os.Mkdir(owner.path, os.ModePerm)
 		}
 	}
-	owner.reportPath = filepath.Join(gitLeaksPath, "report", owner.name)
+	return nil
+
+	// TODO could be handled via option
+	// owner.reportPath = filepath.Join(gitLeaksPath, "report", owner.name)
 }
 
 // rmTmp removes the temporary repo
@@ -198,11 +214,10 @@ func (owner *Owner) rmTmp() {
 // ownerType returns the owner type extracted from opts.
 // If no owner type is provided, gitleaks assumes the owner is ambiguous
 // and the user is running gitleaks on a single repo
-func ownerType(opts *Options) string {
-	if opts.OrgURL != "" {
+func ownerType() string {
+	if opts.OrgMode {
 		return "org"
-
-	} else if opts.UserURL != "" {
+	} else if opts.UserMode {
 		return "user"
 	}
 	return ""
@@ -211,28 +226,24 @@ func ownerType(opts *Options) string {
 // ownerName returns the owner name extracted from the urls provided in opts.
 // If no RepoURL, OrgURL, or UserURL is provided, then owner will log an error
 // and gitleaks will exit.
-func ownerName(opts *Options) (string, error) {
-	if opts.RepoURL != "" {
-		splitSlashes := strings.Split(opts.RepoURL, "/")
-		return splitSlashes[len(splitSlashes)-2], nil
-	} else if opts.UserURL != "" {
-		_, ownerName := path.Split(opts.UserURL)
-		return ownerName, nil
-	} else if opts.OrgURL != "" {
-		_, ownerName := path.Split(opts.OrgURL)
-		return ownerName, nil
+func ownerName() (string) {
+	if opts.RepoMode {
+		splitSlashes := strings.Split(opts.URL, "/")
+		return splitSlashes[len(splitSlashes)-2]
+	} else if opts.UserMode|| opts.OrgMode {
+		_, ownerName := path.Split(opts.URL)
+		return ownerName
 	}
-
-	// TODO error
-	return "", nil
+	// local repo
+	return ""
 }
 
 // githubTokenClient creates an oauth client from your github access token.
 // Gitleaks will attempt to retrieve your github access token from a cli argument
 // or an env var - "GITHUB_TOKEN".
-// Might be good to eventually parse the token from a config or creds file in
+// Might be good to eventually parse the token from a Config or creds file in
 // $GITLEAKS_HOME
-func githubTokenClient(opts *Options) *http.Client {
+func githubTokenClient() *http.Client {
 	var token string
 	if opts.Token != "" {
 		token = opts.Token
