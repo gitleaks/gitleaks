@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	_ "fmt"
-	"go.uber.org/zap"
 	_ "io/ioutil"
 	"os"
 	"regexp"
@@ -22,7 +21,6 @@ var (
 	hexChars      string
 	assignRegex   *regexp.Regexp
 	fileDiffRegex *regexp.Regexp
-	logger        *zap.Logger
 	opts          *Options
 )
 

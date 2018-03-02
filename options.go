@@ -2,19 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-homedir"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"path/filepath"
 )
-
-const DEBUG = 0
-const INFO = 1
-const ERROR = 2
 
 const usage = `usage: gitleaks [options] <URL>/<path_to_repo>
 
@@ -53,7 +46,6 @@ type Options struct {
 	URL      string
 	RepoPath string
 
-	ClonePath  string
 	ReportPath string
 
 	Concurrency      int
@@ -144,12 +136,12 @@ func newOpts(args []string) *Options {
 	if err != nil {
 		opts.failF("%v", err)
 	}
-	opts.setupLogger()
 	return opts
 }
 
 // deafultOptions provides the default options
 func defaultOptions() (*Options, error) {
+	/*
 	// default GITLEAKS_HOME is $HOME/.gitleaks
 	// gitleaks will use this location for clones if
 	// no clone-path is provided
@@ -166,14 +158,12 @@ func defaultOptions() (*Options, error) {
 	if _, err := os.Stat(gitleaksHome); os.IsNotExist(err) {
 		os.Mkdir(gitleaksHome, os.ModePerm)
 	}
+	*/
 
 	return &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
 		HexEntropyCutoff: 40,
-		LogLevel:         INFO,
-		ClonePath:        filepath.Join(gitleaksHome, "clone"),
-		ReportPath:       filepath.Join(gitleaksHome, "report"),
 	}, nil
 }
 
@@ -225,7 +215,7 @@ func (opts *Options) parseOptions(args []string) error {
 			// TARGETS
 			if i == len(args)-1 {
 				if opts.LocalMode {
-					opts.RepoPath = args[i]
+					opts.RepoPath = filepath.Clean(args[i])
 				} else {
 					opts.URL = args[i]
 				}
@@ -235,8 +225,6 @@ func (opts *Options) parseOptions(args []string) error {
 				opts.SinceCommit = value
 			} else if match, value := opts.optString(arg, "--report-path="); match {
 				opts.ReportPath = value
-			} else if match, value := opts.optString(arg, "--clone-path="); match {
-				opts.ClonePath = value
 			} else if match, value := opts.optInt(arg, "--log="); match {
 				opts.LogLevel = value
 			} else if match, value := opts.optInt(arg, "--b64Entropy="); match {
@@ -251,8 +239,8 @@ func (opts *Options) parseOptions(args []string) error {
 		}
 	}
 	err := opts.guards()
-	if err != nil {
-		fmt.Printf("%v", err)
+	if !opts.RepoMode && !opts.UserMode && !opts.OrgMode && !opts.LocalMode {
+		opts.RepoMode = true
 	}
 	return err
 }
@@ -268,10 +256,10 @@ func (opts *Options) failF(format string, args ...interface{}) {
 // guards will prevent gitleaks from continuing if any invalid options
 // are found.
 func (opts *Options) guards() error {
-	if (opts.RepoMode || opts.OrgMode || opts.UserMode) && !isGithubTarget(opts.URL) {
-		return fmt.Errorf("Not valid github target %s\n", opts.URL)
-	} else if (opts.RepoMode || opts.OrgMode || opts.UserMode) && opts.LocalMode {
+	if (opts.RepoMode || opts.OrgMode || opts.UserMode) && opts.LocalMode {
 		return fmt.Errorf("Cannot run Gitleaks on repo/user/org mode and local mode\n")
+	} else if (opts.RepoMode || opts.OrgMode || opts.UserMode) && !isGithubTarget(opts.URL) {
+		return fmt.Errorf("Not valid github target %s\n", opts.URL)
 	} else if (opts.RepoMode || opts.UserMode) && opts.OrgMode {
 		return fmt.Errorf("Cannot run Gitleaks on more than one mode\n")
 	} else if (opts.OrgMode || opts.UserMode) && opts.RepoMode {
@@ -285,34 +273,6 @@ func (opts *Options) guards() error {
 	}
 
 	return nil
-}
-
-// setupLogger initiates the logger and sets the logging level
-// based on what is set in arguments. Default logging level is
-// INFO
-func (opts *Options) setupLogger() {
-	atom := zap.NewAtomicLevel()
-	encoderCfg := zap.NewProductionEncoderConfig()
-	encoderCfg.TimeKey = ""
-	logger = zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderCfg),
-		zapcore.Lock(os.Stdout),
-		atom,
-	))
-
-	switch opts.LogLevel {
-	case DEBUG:
-		atom.SetLevel(zap.DebugLevel)
-	case INFO:
-		atom.SetLevel(zap.InfoLevel)
-	case ERROR:
-		atom.SetLevel(zap.ErrorLevel)
-	}
-
-	// set to ErrorLevel if pretty printing
-	if opts.PrettyPrint{
-		atom.SetLevel(zap.ErrorLevel)
-	}
 }
 
 // isGithubTarget checks if url is a valid github target

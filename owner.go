@@ -12,6 +12,9 @@ import (
 	"os/signal"
 	"path"
 	"strings"
+	"github.com/mitchellh/go-homedir"
+	"path/filepath"
+	"log"
 )
 
 type Owner struct {
@@ -23,14 +26,42 @@ type Owner struct {
 	repos       []Repo
 }
 
+func ownerPath(ownerName string) (string, error){
+	if opts.Tmp {
+		fmt.Println("creating tmp")
+		dir, err := ioutil.TempDir("", ownerName)
+		return dir, err
+	}
+
+	gitleaksHome := os.Getenv("GITLEAKS_HOME")
+	if gitleaksHome == "" {
+		homeDir, err := homedir.Dir()
+		if err != nil {
+			return "", fmt.Errorf("could not find system home dir")
+		}
+		gitleaksHome = filepath.Join(homeDir, ".gitleaks")
+	}
+
+	// make sure gitleaks home exists
+	if _, err := os.Stat(gitleaksHome); os.IsNotExist(err) {
+		os.Mkdir(gitleaksHome, os.ModePerm)
+	}
+	return gitleaksHome + "/" + ownerName, nil
+}
+
 // newOwner instantiates an owner and creates any necessary resources for said owner.
 // newOwner returns a Owner struct pointer
 func newOwner() *Owner {
 	name := ownerName()
+	ownerPath, err := ownerPath(name)
+	if err != nil{
+		failF("%v", err)
+	}
 	owner := &Owner{
 		name:        name,
 		url:         opts.URL,
 		accountType: ownerType(),
+		path: ownerPath,
 	}
 
 	// listen for ctrl-c
@@ -51,11 +82,11 @@ func newOwner() *Owner {
 		return owner
 	}
 
+	/*
 	err := owner.setupDir()
 	if err != nil {
 		owner.failF("%v", err)
-	}
-
+	}*/
 	err = owner.fetchRepos()
 	if err != nil {
 		owner.failF("%v", err)
@@ -73,7 +104,7 @@ func (owner *Owner) fetchRepos() error {
 	if owner.accountType == "" {
 		// single repo, ambiguous account type
 		_, repoName := path.Split(opts.URL)
-		repo := newRepo(repoName, opts.URL)
+		repo := newRepo(repoName, opts.URL, owner.path + "/" + repoName)
 		owner.repos = append(owner.repos, *repo)
 	} else {
 		// org or user account type, would fail if not valid before
@@ -113,7 +144,7 @@ func (owner *Owner) fetchOrgRepos(orgOpts *github.RepositoryListByOrgOptions, gi
 			ctx, owner.name, orgOpts)
 		owner.addRepos(githubRepos)
 		if _, ok := err.(*github.RateLimitError); ok {
-			logger.Info("hit rate limit")
+			fmt.Println("Hit rate limit")
 		} else if err != nil {
 			return fmt.Errorf("failed fetching org repos, bad request")
 		} else if resp.NextPage == 0 {
@@ -140,7 +171,7 @@ func (owner *Owner) fetchUserRepos(userOpts *github.RepositoryListOptions, gitCl
 			ctx, owner.name, userOpts)
 		owner.addRepos(githubRepos)
 		if _, ok := err.(*github.RateLimitError); ok {
-			logger.Info("hit rate limit")
+			fmt.Println("Hit rate limit")
 			break
 		} else if err != nil {
 			return fmt.Errorf("failed fetching user repos, bad request")
@@ -156,7 +187,7 @@ func (owner *Owner) fetchUserRepos(userOpts *github.RepositoryListOptions, gitCl
 // github's org/user response.
 func (owner *Owner) addRepos(githubRepos []*github.Repository) {
 	for _, repo := range githubRepos {
-		owner.repos = append(owner.repos, *newRepo(*repo.Name, *repo.CloneURL))
+		owner.repos = append(owner.repos, *newRepo(*repo.Name, *repo.CloneURL, owner.path + "/" + *repo.Name))
 	}
 }
 
@@ -169,7 +200,10 @@ func (owner *Owner) auditRepos() int {
 			failF("%v\n", err)
 		}
 		if leaksPst {
+			log.Printf("\x1b[31;2mLEAKS DETECTED for %s\x1b[0m!\n", repo.name)
 			exitCode = EXIT_LEAKS
+		} else {
+			log.Printf("No Leaks detected for \x1b[32;2m%s\x1b[0m\n", repo.name)
 		}
 	}
 	return exitCode
@@ -187,13 +221,14 @@ func (owner *Owner) failF(format string, args ...interface{}) {
 // used for the owner repo clones.
 func (owner *Owner) setupDir() error {
 	if opts.Tmp {
+		fmt.Println("creating tmp")
 		dir, err := ioutil.TempDir("", owner.name)
 		if err != nil {
 			fmt.Errorf("unable to create temp directories for cloning")
 		}
 		owner.path = dir
 	} else {
-		if _, err := os.Stat(opts.ClonePath); os.IsNotExist(err) {
+		if _, err := os.Stat(owner.path); os.IsNotExist(err) {
 			os.Mkdir(owner.path, os.ModePerm)
 		}
 	}
@@ -202,6 +237,7 @@ func (owner *Owner) setupDir() error {
 
 // rmTmp removes the temporary repo
 func (owner *Owner) rmTmp() {
+	log.Printf("removing tmp gitleaks repo for %s\n", owner.name)
 	os.RemoveAll(owner.path)
 	os.Exit(EXIT_FAILURE)
 }

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"sync"
+	"log"
 )
 
 type Repo struct {
@@ -19,6 +19,7 @@ type Repo struct {
 	path   string
 	status string // TODO
 	leaks  []Leak
+	reportPath string
 }
 
 type Leak struct {
@@ -46,33 +47,21 @@ func newLocalRepo(repoPath string) *Repo {
 	repo := &Repo{
 		name: name,
 		path: repoPath,
+		reportPath: opts.ReportPath,
 	}
 	return repo
 
 }
 
-func newRepo(name string, url string) *Repo {
+func newRepo(name string, url string, path string) *Repo {
 	repo := &Repo{
 		name: name,
 		url:  url,
 		// TODO handle existing one
-		path: opts.ClonePath + "/" + name,
+		path: path,
+		reportPath: opts.ReportPath,
 	}
 	return repo
-}
-
-func (repo *Repo) Info(msg string) {
-	// logger should have these infos: msg, repo, owner, time
-	logger.Info(msg,
-		zap.String("repo", repo.name),
-		zap.String("repo_path", repo.path),
-	)
-}
-
-func (repo *Repo) PrettyPrintF(format string, args ...interface{}) {
-	if opts.PrettyPrint {
-		fmt.Fprintf(os.Stderr, format, args...)
-	}
 }
 
 // Audit operates on a single repo and searches the full or partial history of the repo.
@@ -102,15 +91,13 @@ func (repo *Repo) audit(owner *Owner) (bool, error) {
 			return false, fmt.Errorf("%s does not exist", repo.path)
 		}
 		// no repo present, clone it
-		repo.Info("cloning")
-		repo.PrettyPrintF("Cloning \x1b[37;1m%s\x1b[0m...\n", repo.url)
+		log.Printf("Cloning \x1b[37;1m%s\x1b[0m into %s...\n", repo.url, repo.path)
 		err = exec.Command("git", "clone", repo.url, repo.path).Run()
 		if err != nil {
 			return false, fmt.Errorf("cannot clone %s into %s", repo.url, repo.path)
 		}
 	} else {
-		repo.Info("fetching")
-		repo.PrettyPrintF("Fetching \x1b[37;1m%s\x1b[0m...\n", repo.url)
+		log.Printf("Fetching \x1b[37;1m%s\x1b[0m from %s ...\n", repo.name, repo.path)
 		err = exec.Command("git", "fetch").Run()
 		if err != nil {
 			return false, fmt.Errorf("cannot fetch %s from %s", repo.url, repo.path)
@@ -171,14 +158,13 @@ func (repo *Repo) writeReport() error {
 	if _, err := os.Stat(opts.ReportPath); os.IsNotExist(err) {
 		os.Mkdir(opts.ReportPath, os.ModePerm)
 	}
-
 	reportFileName := fmt.Sprintf("%s_leaks.json", repo.name)
-	reportFile := filepath.Join(opts.ReportPath, reportFileName)
+	reportFile := filepath.Join(repo.reportPath, reportFileName)
 	err := ioutil.WriteFile(reportFile, reportJSON, 0644)
 	if err != nil {
 		return err
 	}
-	repo.Info(fmt.Sprintf("Report written to %s\n", reportFile))
+	log.Printf("report for %s written to %s", repo.name, reportFileName)
 	return nil
 }
 
@@ -209,22 +195,12 @@ func parseRevList(revList [][]byte) []Commit {
 // reportAggregator is a go func responsible for ...
 func reportAggregator(gitLeakReceiverWG *sync.WaitGroup, gitLeaks chan Leak, leaks *[]Leak) {
 	for gitLeak := range gitLeaks {
-		logger.Info("leak",
-			zap.String("line", gitLeak.Line),
-			zap.String("commit", gitLeak.Commit),
-			zap.String("offender", gitLeak.Offender),
-			zap.String("Reason", gitLeak.Reason),
-			zap.String("author", gitLeak.Author),
-			zap.String("file", gitLeak.File),
-			zap.String("repoURL", gitLeak.RepoURL),
-			zap.String("timeOfCommit", gitLeak.Time),
-		)
 		*leaks = append(*leaks, gitLeak)
 		if opts.PrettyPrint {
 			b, err := json.MarshalIndent(gitLeak, "", "   ")
 			if err != nil {
 				// handle this?
-				fmt.Println("failed to output leak:", err)
+				fmt.Printf("failed to output leak: %v", err)
 			}
 			fmt.Println(string(b))
 		}

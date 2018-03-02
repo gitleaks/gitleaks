@@ -12,6 +12,7 @@ func TestNewLocalRepo(t *testing.T) {
 
 func TestWriteReport(t *testing.T) {
 	// TODO
+	/*
 	opts, err := defaultOptions()
 	r := newRepo("fakerepo", "github.com")
 	sampleLeak := Leak{
@@ -26,4 +27,5 @@ func TestWriteReport(t *testing.T) {
 	}
 	r.leaks = []Leak{sampleLeak, sampleLeak}
 	r.writeReport()
+	*/
 }
