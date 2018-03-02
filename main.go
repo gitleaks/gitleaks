@@ -22,6 +22,7 @@ var (
 	assignRegex   *regexp.Regexp
 	fileDiffRegex *regexp.Regexp
 	opts          *Options
+	pwd 		  string
 )
 
 func init() {

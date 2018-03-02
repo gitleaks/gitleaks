@@ -171,7 +171,8 @@ func defaultOptions() (*Options, error) {
 func (opts *Options) parseOptions(args []string) error {
 
 	if len(args) == 0 {
-		help()
+		opts.LocalMode = true
+		opts.RepoPath, _ = os.Getwd()
 	}
 
 	for i := 0; i < len(args); i++ {
