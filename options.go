@@ -193,7 +193,7 @@ func (opts *Options) parseOptions(args []string) error {
 			opts.LogLevel = opts.nextInt(args, &i)
 		case "-h", "--help":
 			help()
-			os.Exit(EXIT_CLEAN)
+			os.Exit(ExitClean)
 		default:
 			if match, value := opts.optString(arg, "--token="); match {
 				opts.Token = value
@@ -219,7 +219,7 @@ func (opts *Options) parseOptions(args []string) error {
 					} else {
 						fmt.Printf("Unknown option %s\n\n", arg)
 						help()
-						os.Exit(EXIT_CLEAN)
+						os.Exit(ExitClean)
 					}
 				}
 			} else {
@@ -242,7 +242,7 @@ func (opts *Options) parseOptions(args []string) error {
 
 		if _, err := os.Stat(dotGitPath); os.IsNotExist(err) {
 			fmt.Printf("gitleaks has no target")
-			os.Exit(EXIT_CLEAN)
+			os.Exit(ExitClean)
 		} else {
 			opts.LocalMode = true
 			opts.RepoPath = pwd
@@ -258,7 +258,7 @@ func (opts *Options) parseOptions(args []string) error {
 func (opts *Options) failF(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	help()
-	os.Exit(EXIT_FAILURE)
+	os.Exit(ExitFailure)
 }
 
 // guards will prevent gitleaks from continuing if any invalid options

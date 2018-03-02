@@ -9,9 +9,14 @@ import (
 	_ "time"
 )
 
-const EXIT_CLEAN = 0
-const EXIT_FAILURE = 1
-const EXIT_LEAKS = 2
+// ExitClean : no leaks have been found
+const ExitClean = 0
+
+// ExitFailure : gitleaks has encountered an error or SIGINT
+const ExitFailure = 1
+
+// ExitLeaks : leaks are present in scanned repos
+const ExitLeaks = 2
 
 // package globals
 var (
@@ -55,5 +60,5 @@ func main() {
 
 func failF(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(EXIT_FAILURE)
+	os.Exit(ExitFailure)
 }

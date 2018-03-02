@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "fmt"
 	"math"
 	"strings"
 )

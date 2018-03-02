@@ -13,6 +13,7 @@ import (
 	"sync"
 )
 
+// Repo is
 type Repo struct {
 	name       string
 	url        string
@@ -22,6 +23,7 @@ type Repo struct {
 	reportPath string
 }
 
+// Leak is
 type Leak struct {
 	Line     string `json:"line"`
 	Commit   string `json:"commit"`
@@ -34,6 +36,7 @@ type Leak struct {
 	RepoURL  string `json:"repoURL"`
 }
 
+// Commit is
 type Commit struct {
 	Hash   string
 	Author string
@@ -41,7 +44,7 @@ type Commit struct {
 	Msg    string
 }
 
-// running gitleaks on local repo
+// newLocalRepo will such and such
 func newLocalRepo(repoPath string) *Repo {
 	_, name := path.Split(repoPath)
 	repo := &Repo{
@@ -53,15 +56,21 @@ func newLocalRepo(repoPath string) *Repo {
 
 }
 
+// newRepo
 func newRepo(name string, url string, path string) *Repo {
 	repo := &Repo{
-		name: name,
-		url:  url,
-		// TODO handle existing one
+		name:       name,
+		url:        url,
 		path:       path,
 		reportPath: opts.ReportPath,
 	}
 	return repo
+}
+
+// rmTmp
+func (repo *Repo) rmTmp() {
+	log.Printf("removing tmp gitleaks repo %s\n", repo.path)
+	os.Remove(repo.path)
 }
 
 // Audit operates on a single repo and searches the full or partial history of the repo.
@@ -82,6 +91,10 @@ func (repo *Repo) audit() (bool, error) {
 		leaksPst          bool
 	)
 
+	if opts.Tmp {
+		defer repo.rmTmp()
+	}
+
 	dotGitPath := filepath.Join(repo.path, ".git")
 
 	// Navigate to proper location to being audit. Clone repo
@@ -91,13 +104,13 @@ func (repo *Repo) audit() (bool, error) {
 			return false, fmt.Errorf("%s does not exist", repo.path)
 		}
 		// no repo present, clone it
-		log.Printf("Cloning \x1b[37;1m%s\x1b[0m into %s...\n", repo.url, repo.path)
+		log.Printf("cloning \x1b[37;1m%s\x1b[0m into %s...\n", repo.url, repo.path)
 		err = exec.Command("git", "clone", repo.url, repo.path).Run()
 		if err != nil {
 			return false, fmt.Errorf("cannot clone %s into %s", repo.url, repo.path)
 		}
 	} else {
-		log.Printf("Fetching \x1b[37;1m%s\x1b[0m from %s ...\n", repo.name, repo.path)
+		log.Printf("fetching \x1b[37;1m%s\x1b[0m from %s ...\n", repo.name, repo.path)
 		err = exec.Command("git", "fetch").Run()
 		if err != nil {
 			return false, fmt.Errorf("cannot fetch %s from %s", repo.url, repo.path)
@@ -138,10 +151,13 @@ func (repo *Repo) audit() (bool, error) {
 	gitLeakReceiverWG.Wait()
 	if len(leaks) != 0 {
 		leaksPst = true
+		log.Printf("\x1b[31;2mLEAKS DETECTED for %s\x1b[0m!\n", repo.name)
+	} else {
+		log.Printf("No Leaks detected for \x1b[32;2m%s\x1b[0m\n", repo.name)
 	}
 
 	if (opts.ReportPath != "" || opts.ReportOut) && len(leaks) != 0 {
-		err = repo.writeReport()
+		err = repo.writeReport(leaks)
 		if err != nil {
 			return leaksPst, fmt.Errorf("could not write report to %s", opts.ReportPath)
 		}
@@ -150,12 +166,13 @@ func (repo *Repo) audit() (bool, error) {
 }
 
 // Used by audit, writeReport will generate a report and write it out to
-// $GITLEAKS_HOME/report/<owner>/<repo>. No report will be generated if
-// no leaks have been found
-func (repo *Repo) writeReport() error {
-	reportJSON, _ := json.MarshalIndent(repo.leaks, "", "\t")
+// --report-path=<path> if specified, otherwise a report will be generated to
+// $PWD/<repo_name>_leaks.json. No report will be generated if
+// no leaks have been found or --report-out is not set.
+func (repo *Repo) writeReport(leaks []Leak) error {
+	reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
 	if _, err := os.Stat(opts.ReportPath); os.IsNotExist(err) {
-		os.Mkdir(opts.ReportPath, os.ModePerm)
+		os.MkdirAll(opts.ReportPath, os.ModePerm)
 	}
 	reportFileName := fmt.Sprintf("%s_leaks.json", repo.name)
 	reportFile := filepath.Join(repo.reportPath, reportFileName)
@@ -163,7 +180,7 @@ func (repo *Repo) writeReport() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("report for %s written to %s", repo.name, reportFileName)
+	log.Printf("report for %s written to %s", repo.name, reportFile)
 	return nil
 }
 
@@ -218,7 +235,7 @@ func auditDiff(currCommit Commit, repo *Repo, commitWG *sync.WaitGroup,
 
 	if err := os.Chdir(fmt.Sprintf(repo.path)); err != nil {
 		// TODO handle this better
-		os.Exit(EXIT_FAILURE)
+		os.Exit(ExitFailure)
 	}
 
 	commitCmp := fmt.Sprintf("%s^!", currCommit.Hash)
@@ -227,7 +244,7 @@ func auditDiff(currCommit Commit, repo *Repo, commitWG *sync.WaitGroup,
 	<-semaphoreChan
 
 	if err != nil {
-		os.Exit(EXIT_FAILURE)
+		os.Exit(ExitFailure)
 	}
 
 	leaks := doChecks(string(out), currCommit, repo)

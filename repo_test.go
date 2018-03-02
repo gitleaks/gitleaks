@@ -1,17 +1,20 @@
 package main
 
 import (
-	"testing"
+	_ "fmt"
 	"os"
-	"fmt"
+	"testing"
 )
 
-func TestNewRepo(t *testing.T) {
-	// TODO
-}
-
 func TestNewLocalRepo(t *testing.T) {
-	// TODO
+	r := newLocalRepo("")
+	if r.path != "" {
+		t.Error()
+	}
+	r = newLocalRepo("some/path")
+	if r.name != "path" || r.path != "some/path" {
+		t.Error()
+	}
 }
 
 func TestWriteReport(t *testing.T) {
@@ -32,20 +35,32 @@ func TestAudit(t *testing.T) {
 	opts.Tmp = true
 	opts.URL = "https://github.com/zricethezav/gronit"
 	owner := newOwner()
-	r := newRepo("gronit", "https://github.com/zricethezav/gronit", owner.path)
-	r.audit()
+	r := newRepo("gronit", opts.URL, owner.path)
+	leaksPst, _ := r.audit()
+	if !leaksPst {
+		// TODO setup actual test repo
+		t.Error()
+	}
 
+	// new owner
+	opts.URL = "https://github.com/kelseyhightower/nocode"
+	owner = newOwner()
+	r = newRepo("nocode", opts.URL, owner.path)
+	leaksPst, _ = r.audit()
+	if leaksPst {
+		t.Error()
+	}
 }
 
 func sampleLeak() *Leak {
 	return &Leak{
-		Line: "yoo",
-		Commit: "mycommit",
+		Line:     "yoo",
+		Commit:   "mycommit",
 		Offender: "oh boy",
-		Reason: "hello",
-		Msg: "msg",
-		Time: "time",
-		Author: "lol",
-		RepoURL: "yooo",
+		Reason:   "hello",
+		Msg:      "msg",
+		Time:     "time",
+		Author:   "lol",
+		RepoURL:  "yooo",
 	}
 }
