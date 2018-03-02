@@ -71,7 +71,10 @@ func newOwner() *Owner {
 	signal.Notify(sigC, os.Interrupt, os.Interrupt)
 	go func() {
 		<-sigC
-		owner.rmTmp()
+		if opts.Tmp {
+			owner.rmTmp()
+		}
+		os.Exit(ExitFailure)
 	}()
 
 	// if running on local repo, just go right to it.
@@ -203,6 +206,9 @@ func (owner *Owner) auditRepos() int {
 			exitCode = ExitLeaks
 		}
 	}
+	if opts.Tmp {
+		owner.rmTmp()
+	}
 	return exitCode
 }
 
@@ -218,7 +224,6 @@ func (owner *Owner) failF(format string, args ...interface{}) {
 func (owner *Owner) rmTmp() {
 	log.Printf("removing tmp gitleaks repo for %s\n", owner.name)
 	os.RemoveAll(owner.path)
-	os.Exit(ExitFailure)
 }
 
 // ownerType returns the owner type extracted from opts.

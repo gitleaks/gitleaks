@@ -21,7 +21,7 @@ func TestWriteReport(t *testing.T) {
 	opts, _ = defaultOptions()
 	r := newRepo("fakerepo", "github.com", "")
 	r.leaks = []Leak{*sampleLeak(), *sampleLeak()}
-	r.writeReport()
+	r.writeReport(r.leaks)
 	if _, err := os.Stat("fakerepo_leaks.json"); os.IsNotExist(err) {
 		t.Error()
 	} else {
