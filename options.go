@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"path/filepath"
 )
 
 const usage = `usage: gitleaks [options] <URL>/<path_to_repo>
@@ -47,6 +47,7 @@ type Options struct {
 	RepoPath string
 
 	ReportPath string
+	ClonePath  string
 
 	Concurrency      int
 	B64EntropyCutoff int
@@ -141,25 +142,6 @@ func newOpts(args []string) *Options {
 
 // deafultOptions provides the default options
 func defaultOptions() (*Options, error) {
-	/*
-	// default GITLEAKS_HOME is $HOME/.gitleaks
-	// gitleaks will use this location for clones if
-	// no clone-path is provided
-	gitleaksHome := os.Getenv("GITLEAKS_HOME")
-	if gitleaksHome == "" {
-		homeDir, err := homedir.Dir()
-		if err != nil {
-			return nil, fmt.Errorf("could not find system home dir")
-		}
-		gitleaksHome = filepath.Join(homeDir, ".gitleaks")
-	}
-
-	// make sure gitleaks home exists
-	if _, err := os.Stat(gitleaksHome); os.IsNotExist(err) {
-		os.Mkdir(gitleaksHome, os.ModePerm)
-	}
-	*/
-
 	return &Options{
 		Concurrency:      10,
 		B64EntropyCutoff: 70,
@@ -213,25 +195,33 @@ func (opts *Options) parseOptions(args []string) error {
 			help()
 			os.Exit(EXIT_CLEAN)
 		default:
-			// TARGETS
-			if i == len(args)-1 {
-				if opts.LocalMode {
-					opts.RepoPath = filepath.Clean(args[i])
-				} else {
-					opts.URL = args[i]
-				}
-			} else if match, value := opts.optString(arg, "--token="); match {
+			if match, value := opts.optString(arg, "--token="); match {
 				opts.Token = value
 			} else if match, value := opts.optString(arg, "--since="); match {
 				opts.SinceCommit = value
 			} else if match, value := opts.optString(arg, "--report-path="); match {
 				opts.ReportPath = value
+			} else if match, value := opts.optString(arg, "--clone-path="); match {
+				opts.ClonePath = value
 			} else if match, value := opts.optInt(arg, "--log="); match {
 				opts.LogLevel = value
 			} else if match, value := opts.optInt(arg, "--b64Entropy="); match {
 				opts.B64EntropyCutoff = value
 			} else if match, value := opts.optInt(arg, "--hexEntropy="); match {
 				opts.HexEntropyCutoff = value
+			} else if i == len(args)-1 {
+				fmt.Println(args[i])
+				if opts.LocalMode {
+					opts.RepoPath = filepath.Clean(args[i])
+				} else {
+					if isGithubTarget(args[i]) {
+						opts.URL = args[i]
+					} else {
+						fmt.Printf("Unknown option %s\n\n", arg)
+						help()
+						os.Exit(EXIT_CLEAN)
+					}
+				}
 			} else {
 				fmt.Printf("Unknown option %s\n\n", arg)
 				help()
@@ -239,9 +229,26 @@ func (opts *Options) parseOptions(args []string) error {
 			}
 		}
 	}
+
 	err := opts.guards()
 	if !opts.RepoMode && !opts.UserMode && !opts.OrgMode && !opts.LocalMode {
-		opts.RepoMode = true
+		if opts.URL != "" {
+			opts.RepoMode = true
+			return nil
+		}
+		pwd, _ = os.Getwd()
+		// check if pwd contains a .git, if it does, run local mode
+		dotGitPath := filepath.Join(pwd, ".git")
+
+		if _, err := os.Stat(dotGitPath); os.IsNotExist(err) {
+			fmt.Printf("gitleaks has no target")
+			os.Exit(EXIT_CLEAN)
+		} else {
+			opts.LocalMode = true
+			opts.RepoPath = pwd
+			opts.RepoMode = false
+		}
+
 	}
 	return err
 }

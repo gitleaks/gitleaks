@@ -76,13 +76,13 @@ func TestParseOptions(t *testing.T) {
 }
 
 func TestGithubTarget(t *testing.T) {
-	if !isGithubTarget("github.com"){
+	if !isGithubTarget("github.com") {
 		t.Error()
 	}
-	if !isGithubTarget("https://github.com/"){
+	if !isGithubTarget("https://github.com/") {
 		t.Error()
 	}
-	if !isGithubTarget("git@github.com:zricethezav/gitleaks.git"){
+	if !isGithubTarget("git@github.com:zricethezav/gitleaks.git") {
 		t.Error()
 	}
 

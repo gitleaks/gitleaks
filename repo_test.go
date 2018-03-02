@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+	"os"
+	"fmt"
+)
 
 func TestNewRepo(t *testing.T) {
 	// TODO
@@ -11,11 +15,30 @@ func TestNewLocalRepo(t *testing.T) {
 }
 
 func TestWriteReport(t *testing.T) {
-	// TODO
-	/*
-	opts, err := defaultOptions()
-	r := newRepo("fakerepo", "github.com")
-	sampleLeak := Leak{
+	opts, _ = defaultOptions()
+	r := newRepo("fakerepo", "github.com", "")
+	r.leaks = []Leak{*sampleLeak(), *sampleLeak()}
+	r.writeReport()
+	if _, err := os.Stat("fakerepo_leaks.json"); os.IsNotExist(err) {
+		t.Error()
+	} else {
+		os.Remove("fakerepo_leaks.json")
+	}
+}
+
+func TestAudit(t *testing.T) {
+	opts, _ = defaultOptions()
+	opts.RepoMode = true
+	opts.Tmp = true
+	opts.URL = "https://github.com/zricethezav/gronit"
+	owner := newOwner()
+	r := newRepo("gronit", "https://github.com/zricethezav/gronit", owner.path)
+	r.audit()
+
+}
+
+func sampleLeak() *Leak {
+	return &Leak{
 		Line: "yoo",
 		Commit: "mycommit",
 		Offender: "oh boy",
@@ -25,7 +48,4 @@ func TestWriteReport(t *testing.T) {
 		Author: "lol",
 		RepoURL: "yooo",
 	}
-	r.leaks = []Leak{sampleLeak, sampleLeak}
-	r.writeReport()
-	*/
 }

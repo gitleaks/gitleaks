@@ -7,14 +7,12 @@ import (
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"path"
 	"strings"
-	"github.com/mitchellh/go-homedir"
-	"path/filepath"
-	"log"
 )
 
 type Owner struct {
@@ -26,27 +24,20 @@ type Owner struct {
 	repos       []Repo
 }
 
-func ownerPath(ownerName string) (string, error){
+func ownerPath(ownerName string) (string, error) {
 	if opts.Tmp {
 		fmt.Println("creating tmp")
 		dir, err := ioutil.TempDir("", ownerName)
 		return dir, err
-	}
-
-	gitleaksHome := os.Getenv("GITLEAKS_HOME")
-	if gitleaksHome == "" {
-		homeDir, err := homedir.Dir()
-		if err != nil {
-			return "", fmt.Errorf("could not find system home dir")
+	} else if opts.ClonePath != "" {
+		if _, err := os.Stat(opts.ClonePath); os.IsNotExist(err) {
+			os.Mkdir(opts.ClonePath, os.ModePerm)
 		}
-		gitleaksHome = filepath.Join(homeDir, ".gitleaks")
+		return opts.ClonePath, nil
+	} else {
+		return os.Getwd()
 	}
 
-	// make sure gitleaks home exists
-	if _, err := os.Stat(gitleaksHome); os.IsNotExist(err) {
-		os.Mkdir(gitleaksHome, os.ModePerm)
-	}
-	return gitleaksHome + "/" + ownerName, nil
 }
 
 // newOwner instantiates an owner and creates any necessary resources for said owner.
@@ -54,14 +45,14 @@ func ownerPath(ownerName string) (string, error){
 func newOwner() *Owner {
 	name := ownerName()
 	ownerPath, err := ownerPath(name)
-	if err != nil{
+	if err != nil {
 		failF("%v", err)
 	}
 	owner := &Owner{
 		name:        name,
 		url:         opts.URL,
 		accountType: ownerType(),
-		path: ownerPath,
+		path:        ownerPath,
 	}
 
 	// listen for ctrl-c
@@ -83,10 +74,10 @@ func newOwner() *Owner {
 	}
 
 	/*
-	err := owner.setupDir()
-	if err != nil {
-		owner.failF("%v", err)
-	}*/
+		err := owner.setupDir()
+		if err != nil {
+			owner.failF("%v", err)
+		}*/
 	err = owner.fetchRepos()
 	if err != nil {
 		owner.failF("%v", err)
@@ -104,7 +95,7 @@ func (owner *Owner) fetchRepos() error {
 	if owner.accountType == "" {
 		// single repo, ambiguous account type
 		_, repoName := path.Split(opts.URL)
-		repo := newRepo(repoName, opts.URL, owner.path + "/" + repoName)
+		repo := newRepo(repoName, opts.URL, owner.path+"/"+repoName)
 		owner.repos = append(owner.repos, *repo)
 	} else {
 		// org or user account type, would fail if not valid before
@@ -187,7 +178,7 @@ func (owner *Owner) fetchUserRepos(userOpts *github.RepositoryListOptions, gitCl
 // github's org/user response.
 func (owner *Owner) addRepos(githubRepos []*github.Repository) {
 	for _, repo := range githubRepos {
-		owner.repos = append(owner.repos, *newRepo(*repo.Name, *repo.CloneURL, owner.path + "/" + *repo.Name))
+		owner.repos = append(owner.repos, *newRepo(*repo.Name, *repo.CloneURL, owner.path+"/"+*repo.Name))
 	}
 }
 
@@ -195,7 +186,7 @@ func (owner *Owner) addRepos(githubRepos []*github.Repository) {
 func (owner *Owner) auditRepos() int {
 	exitCode := EXIT_CLEAN
 	for _, repo := range owner.repos {
-		leaksPst, err := repo.audit(owner)
+		leaksPst, err := repo.audit()
 		if err != nil {
 			failF("%v\n", err)
 		}
@@ -214,25 +205,6 @@ func (owner *Owner) auditRepos() int {
 func (owner *Owner) failF(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	os.Exit(EXIT_FAILURE)
-}
-
-// setupDir sets up the owner's directory for clones and reports.
-// If the temporary option is set then a temporary directory will be
-// used for the owner repo clones.
-func (owner *Owner) setupDir() error {
-	if opts.Tmp {
-		fmt.Println("creating tmp")
-		dir, err := ioutil.TempDir("", owner.name)
-		if err != nil {
-			fmt.Errorf("unable to create temp directories for cloning")
-		}
-		owner.path = dir
-	} else {
-		if _, err := os.Stat(owner.path); os.IsNotExist(err) {
-			os.Mkdir(owner.path, os.ModePerm)
-		}
-	}
-	return nil
 }
 
 // rmTmp removes the temporary repo

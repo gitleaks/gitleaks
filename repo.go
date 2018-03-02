@@ -5,20 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"sync"
-	"log"
 )
 
 type Repo struct {
-	name   string
-	url    string
-	path   string
-	status string // TODO
-	leaks  []Leak
+	name       string
+	url        string
+	path       string
+	status     string // TODO
+	leaks      []Leak
 	reportPath string
 }
 
@@ -45,8 +45,8 @@ type Commit struct {
 func newLocalRepo(repoPath string) *Repo {
 	_, name := path.Split(repoPath)
 	repo := &Repo{
-		name: name,
-		path: repoPath,
+		name:       name,
+		path:       repoPath,
 		reportPath: opts.ReportPath,
 	}
 	return repo
@@ -58,7 +58,7 @@ func newRepo(name string, url string, path string) *Repo {
 		name: name,
 		url:  url,
 		// TODO handle existing one
-		path: path,
+		path:       path,
 		reportPath: opts.ReportPath,
 	}
 	return repo
@@ -70,7 +70,7 @@ func newRepo(name string, url string, path string) *Repo {
 // commands so that users could opt for doing all clones/diffs in memory.
 // Audit also declares two WaitGroups, one for distributing regex/entropy checks, and one for receiving
 // the leaks if there are any. This could be done a little more elegantly in the future.
-func (repo *Repo) audit(owner *Owner) (bool, error) {
+func (repo *Repo) audit() (bool, error) {
 	var (
 		out               []byte
 		err               error
@@ -140,7 +140,7 @@ func (repo *Repo) audit(owner *Owner) (bool, error) {
 		leaksPst = true
 	}
 
-	if opts.ReportPath != "" && len(leaks) != 0 {
+	if (opts.ReportPath != "" || opts.ReportOut) && len(leaks) != 0 {
 		err = repo.writeReport()
 		if err != nil {
 			return leaksPst, fmt.Errorf("could not write report to %s", opts.ReportPath)
@@ -154,7 +154,6 @@ func (repo *Repo) audit(owner *Owner) (bool, error) {
 // no leaks have been found
 func (repo *Repo) writeReport() error {
 	reportJSON, _ := json.MarshalIndent(repo.leaks, "", "\t")
-
 	if _, err := os.Stat(opts.ReportPath); os.IsNotExist(err) {
 		os.Mkdir(opts.ReportPath, os.ModePerm)
 	}
