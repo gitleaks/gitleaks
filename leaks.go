@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -47,7 +48,7 @@ func rmTmp(owner *Owner) {
 }
 
 // start
-func start(repos []RepoDesc, owner *Owner, opts *Options) {
+func start(repos []RepoDesc, owner *Owner, opts *Options) error {
 	var report []LeakElem
 	if opts.Tmp {
 		defer rmTmp(owner)
@@ -65,42 +66,52 @@ func start(repos []RepoDesc, owner *Owner, opts *Options) {
 	}()
 
 	// run checks on repos
+	leaksFound := false
 	for _, repo := range repos {
 		dotGitPath := filepath.Join(repo.path, ".git")
 		if _, err := os.Stat(dotGitPath); err == nil {
 			if err := os.Chdir(fmt.Sprintf(repo.path)); err != nil {
-				log.Fatal(err)
+				return err
 			}
 			// use pre-cloned repo
 			fmt.Printf("Checking \x1b[37;1m%s\x1b[0m...\n", repo.url)
-			err := exec.Command("git", "fetch").Run()
-			if err != nil {
-				log.Printf("failed to fetch repo %v", err)
-				return
+
+			if err := exec.Command("git", "fetch").Run(); err != nil {
+				return fmt.Errorf("failed to fetch repo %v", err)
 			}
+
 			report = getLeaks(repo, owner, opts)
 		} else {
 			// no repo present, clone it
 			if err := os.Chdir(fmt.Sprintf(owner.path)); err != nil {
-				log.Fatal(err)
+				return err
 			}
+
 			fmt.Printf("Cloning \x1b[37;1m%s\x1b[0m...\n", repo.url)
-			err := exec.Command("git", "clone", repo.url).Run()
-			if err != nil {
-				fmt.Printf("failed to clone repo %v", err)
-				return
+
+			if err := exec.Command("git", "clone", repo.url).Run(); err != nil {
+				return fmt.Errorf("failed to clone repo %v", err)
 			}
+
 			report = getLeaks(repo, owner, opts)
 		}
 
 		if len(report) == 0 {
 			fmt.Printf("No Leaks detected for \x1b[35;2m%s\x1b[0m...\n", repo.url)
-		}
+		} else {
+			leaksFound = true
 
-		if opts.EnableJSON && len(report) != 0 {
-			outputGitLeaksReport(report, repo, opts)
+			if opts.EnableJSON {
+				outputGitLeaksReport(report, repo, opts)
+			}
 		}
 	}
+
+	if leaksFound {
+		return errors.New("Leaks were found!")
+	}
+
+	return nil
 }
 
 // outputGitLeaksReport

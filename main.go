@@ -2,9 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/google/go-github/github"
-	"github.com/mitchellh/go-homedir"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/google/go-github/github"
+	"github.com/mitchellh/go-homedir"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -217,5 +218,8 @@ func main() {
 	opts := parseOptions(args)
 	owner := getOwner(opts)
 	repos := getRepos(opts, owner)
-	start(repos, owner, opts)
+
+	if err := start(repos, owner, opts); err != nil {
+		log.Fatal(err)
+	}
 }
