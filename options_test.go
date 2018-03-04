@@ -85,5 +85,4 @@ func TestGithubTarget(t *testing.T) {
 	if !isGithubTarget("git@github.com:zricethezav/gitleaks.git") {
 		t.Error()
 	}
-
 }

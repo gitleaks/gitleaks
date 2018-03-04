@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	_ "fmt"
-	_ "io/ioutil"
 	"os"
 	"regexp"
-	_ "time"
 )
 
 // ExitClean : no leaks have been found

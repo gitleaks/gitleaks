@@ -28,7 +28,7 @@ Locations
 
 Other
  -t --temp 		Clone to temporary directory
- -c <INT> 		Upper bound on concurrent diffs
+ --concurrency=<INT> 	Upper bound on concurrent diffs
  --since=<STR> 		Commit to stop at
  --b64Entropy=<INT> 	Base64 entropy cutoff (default is 70)
  --hexEntropy=<INT>  	Hex entropy cutoff (default is 40)
@@ -160,19 +160,12 @@ func (opts *Options) parseOptions(args []string) error {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-s":
-			opts.SinceCommit = opts.nextString(args, &i)
 		case "--strict":
 			opts.Strict = true
-		case "-b", "--b64Entropy":
-			opts.B64EntropyCutoff = opts.nextInt(args, &i)
-		case "-x", "--hexEntropy":
-			opts.HexEntropyCutoff = opts.nextInt(args, &i)
 		case "-e", "--entropy":
 			opts.Entropy = true
 		case "-c":
 			opts.Concurrency = opts.nextInt(args, &i)
-
 		case "-o", "--org":
 			opts.OrgMode = true
 		case "-u", "--user":
@@ -181,12 +174,10 @@ func (opts *Options) parseOptions(args []string) error {
 			opts.RepoMode = true
 		case "-l", "--local":
 			opts.LocalMode = true
-
 		case "--report-out":
 			opts.ReportOut = true
 		case "--pretty":
 			opts.PrettyPrint = true
-
 		case "-t", "--temp":
 			opts.Tmp = true
 		case "-ll":
@@ -217,38 +208,44 @@ func (opts *Options) parseOptions(args []string) error {
 					if isGithubTarget(args[i]) {
 						opts.URL = args[i]
 					} else {
-						fmt.Printf("Unknown option %s\n\n", arg)
 						help()
-						os.Exit(ExitClean)
+						return fmt.Errorf("Unknown option %s\n", arg)
 					}
 				}
 			} else {
-				fmt.Printf("Unknown option %s\n\n", arg)
 				help()
-				return fmt.Errorf("Unknown option %s\n\n", arg)
+				return fmt.Errorf("Unknown option %s\n", arg)
 			}
 		}
 	}
 
-	err := opts.guards()
+	// TODO cleanup this logic
 	if !opts.RepoMode && !opts.UserMode && !opts.OrgMode && !opts.LocalMode {
 		if opts.URL != "" {
 			opts.RepoMode = true
+			err := opts.guards()
+			if err != nil{
+				return err
+			}
 			return nil
 		}
+
 		pwd, _ = os.Getwd()
 		// check if pwd contains a .git, if it does, run local mode
 		dotGitPath := filepath.Join(pwd, ".git")
 
 		if _, err := os.Stat(dotGitPath); os.IsNotExist(err) {
-			fmt.Printf("gitleaks has no target")
-			os.Exit(ExitClean)
+			return fmt.Errorf("gitleaks has no target: %v", err)
 		} else {
 			opts.LocalMode = true
 			opts.RepoPath = pwd
 			opts.RepoMode = false
 		}
+	}
 
+	err := opts.guards()
+	if err != nil{
+		return err
 	}
 	return err
 }
