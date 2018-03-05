@@ -175,7 +175,6 @@ func (opts *Options) parseOptions(args []string) error {
 			} else if match, value := opts.optInt(arg, "--concurrency="); match {
 				opts.Concurrency = value
 			} else if i == len(args)-1 {
-				fmt.Println(args[i])
 				if opts.LocalMode {
 					opts.RepoPath = filepath.Clean(args[i])
 				} else {
