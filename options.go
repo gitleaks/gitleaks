@@ -188,8 +188,6 @@ func (opts *Options) parseOptions(args []string) error {
 				opts.ReportPath = value
 			} else if match, value := opts.optString(arg, "--clone-path="); match {
 				opts.ClonePath = value
-			} else if match, value := opts.optInt(arg, "--log="); match {
-				opts.LogLevel = value
 			} else if match, value := opts.optInt(arg, "--b64Entropy="); match {
 				opts.B64EntropyCutoff = value
 			} else if match, value := opts.optInt(arg, "--hexEntropy="); match {

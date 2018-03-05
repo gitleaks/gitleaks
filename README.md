@@ -22,22 +22,14 @@ Gitleaks audits local and remote repos by running regex checks against all commi
 usage: gitleaks [options] <URL>/<path_to_repo>
 
 Options:
-Modes
  -u --user              Git user mode
  -r --repo              Git repo mode
  -o --org               Git organization mode
  -l --local             Local mode, gitleaks will look for local repo in <path>
-
-Logging
- --log=<INT>            0: Debug, 1: Info, 3: Error
+ -t --temp              Clone to temporary directory
  -v --verbose           Verbose mode, will output leaks as gitleaks finds them
-
-Locations
  --report_path=<STR>    Report output, default $GITLEAKS_HOME/report
  --clone_path=<STR>     Gitleaks will clone repos here, default $GITLEAKS_HOME/clones
-
-Other
- -t --temp              Clone to temporary directory
  --concurrency=<INT>    Upper bound on concurrent diffs
  --since=<STR>          Commit to stop at
  --b64Entropy=<INT>     Base64 entropy cutoff (default is 70)
