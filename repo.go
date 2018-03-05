@@ -111,6 +111,10 @@ func (repo *Repo) audit() (bool, error) {
 		}
 	} else {
 		log.Printf("fetching \x1b[37;1m%s\x1b[0m from %s ...\n", repo.name, repo.path)
+		err = os.Chdir(fmt.Sprintf(repo.path))
+		if err != nil {
+			return false, fmt.Errorf("cannot navigate to %s", repo.path)
+		}
 		err = exec.Command("git", "fetch").Run()
 		if err != nil {
 			return false, fmt.Errorf("cannot fetch %s from %s", repo.url, repo.path)
