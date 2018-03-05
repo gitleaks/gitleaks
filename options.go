@@ -13,21 +13,13 @@ const usage = `
 usage: gitleaks [options] <URL>/<path_to_repo>
 
 Options:
-Modes
  -u --user 		Git user mode
  -r --repo 		Git repo mode
  -o --org 		Git organization mode
  -l --local 		Local mode, gitleaks will look for local repo in <path>
-
-Logging
- -ll <INT> --log=<INT> 	0: Debug, 1: Info, 3: Error
  -v --verbose 		Verbose mode, will output leaks as gitleaks finds them
-
-Locations
- --report_path=<STR> 	Report output, default $GITLEAKS_HOME/report
- --clone_path=<STR>	Gitleaks will clone repos here, default $GITLEAKS_HOME/clones
-
-Other
+ --report-path=<STR> 	Report output, default $GITLEAKS_HOME/report
+ --clone-path=<STR>	Gitleaks will clone repos here, default $GITLEAKS_HOME/clones
  -t --temp 		Clone to temporary directory
  --concurrency=<INT> 	Upper bound on concurrent diffs
  --since=<STR> 		Commit to stop at
@@ -37,7 +29,6 @@ Other
  -h --help 		Display this message
  --token=<STR>    	Github API token
  --stopwords  		Enables stopwords
- --pretty 		Enables pretty printing for humans, otherwise you'll get logs'
 
 `
 
@@ -46,29 +37,20 @@ Other
 type Options struct {
 	URL      string
 	RepoPath string
-
 	ReportPath string
 	ClonePath  string
-
 	Concurrency      int
 	B64EntropyCutoff int
 	HexEntropyCutoff int
-
-	// MODES
 	UserMode  bool
 	OrgMode   bool
 	RepoMode  bool
 	LocalMode bool
-
-	// OPTS
 	Strict       bool
 	Entropy      bool
 	SinceCommit  string
 	Tmp          bool
 	Token        string
-
-	// LOGS/REPORT
-	LogLevel int
 	Verbose  bool
 }
 
@@ -162,8 +144,6 @@ func (opts *Options) parseOptions(args []string) error {
 			opts.Strict = true
 		case "-e", "--entropy":
 			opts.Entropy = true
-		case "-c":
-			opts.Concurrency = opts.nextInt(args, &i)
 		case "-o", "--org":
 			opts.OrgMode = true
 		case "-u", "--user":
@@ -192,6 +172,8 @@ func (opts *Options) parseOptions(args []string) error {
 				opts.B64EntropyCutoff = value
 			} else if match, value := opts.optInt(arg, "--hexEntropy="); match {
 				opts.HexEntropyCutoff = value
+			} else if match, value := opts.optInt(arg, "--concurrency="); match {
+				opts.Concurrency = value
 			} else if i == len(args)-1 {
 				fmt.Println(args[i])
 				if opts.LocalMode {

@@ -28,8 +28,8 @@ Options:
  -l --local             Local mode, gitleaks will look for local repo in <path>
  -t --temp              Clone to temporary directory
  -v --verbose           Verbose mode, will output leaks as gitleaks finds them
- --report_path=<STR>    Report output, default $GITLEAKS_HOME/report
- --clone_path=<STR>     Gitleaks will clone repos here, default $GITLEAKS_HOME/clones
+ --report-path=<STR>    Save report to path, gitleaks default behavior is to save report to pwd
+ --clone-path=<STR>     Gitleaks will clone repos here, default pwd
  --concurrency=<INT>    Upper bound on concurrent diffs
  --since=<STR>          Commit to stop at
  --b64Entropy=<INT>     Base64 entropy cutoff (default is 70)
@@ -39,6 +39,42 @@ Options:
  --token=<STR>          Github API token
  --stopwords            Enables stopwords
 ```
+
+#### Exit Codes 
+Use these codes to hook gitleaks into whatever pipeline you're running
+| code | explanation |
+| ------------- | ------------- |
+| 0 | Gitleaks succeeded with no leaks |
+| 1 | Gitleaks failed or wasn't attempted due to execution failure |
+| 2 | Gitleaks succeeded and leaks were present during the audit |
+
+#### Examples
+```bash
+gitleaks
+```
+Run audit on current working directory if `.git` is present |
+
+```bash
+gitleaks https://github.com/some/repo
+```
+Run audit on `github.com/some/repo.git` and clone repo to 
+
+```bash
+gitleaks --clone-path=$HOME/Desktop/audits https://github.com/some/repo
+```
+Run audit on `github.com/some/repo.git` and clone repo to $HOME/Desktop/audits 
+
+```bash
+gitleaks --temp https://github.com/some/repo
+```
+Run audit on `github.com/some/repo.git` and clone repo to $TMPDIR (this will remove repos after audit is complete)
+
+```bash
+gitleaks --temp -u https://github.com/some-user
+```
+Run audit on all of `some-user`'s repos. Again, `--temp` flag will clone all repos into $TMPDIR after be removed after audit 
+
+
 
 
 ### If you find a valid leak in a repo
