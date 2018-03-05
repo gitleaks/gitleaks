@@ -41,12 +41,13 @@ Options:
 ```
 
 #### Exit Codes 
-Use these codes to hook gitleaks into whatever pipeline you're running
 code | explanation
  -------------|-------------
 0 | Gitleaks succeeded with no leaks
 1 | Gitleaks failed or wasn't attempted due to execution failure
 2 | Gitleaks succeeded and leaks were present during the audit
+
+Use these codes to hook gitleaks into whatever pipeline you're running
 
 #### Examples
 ```bash
