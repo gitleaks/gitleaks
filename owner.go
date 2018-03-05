@@ -222,7 +222,7 @@ func (owner *Owner) failF(format string, args ...interface{}) {
 // rmTmp removes the owner's temporary repo. rmTmp will only get called if temporary
 // mode is set. rmTmp is called on a SIGINT and after the audits have finished
 func (owner *Owner) rmTmp() {
-	log.Printf("removing tmp gitleaks repo for %s\n", owner.name)
+	log.Printf("removing tmp gitleaks repo for %s\n", owner.path)
 	os.RemoveAll(owner.path)
 }
 

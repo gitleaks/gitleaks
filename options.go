@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-const usage = `usage: gitleaks [options] <URL>/<path_to_repo>
+const usage = `
+usage: gitleaks [options] <URL>/<path_to_repo>
 
 Options:
 Modes
@@ -63,15 +64,12 @@ type Options struct {
 	Strict       bool
 	Entropy      bool
 	SinceCommit  string
-	Persist      bool
-	IncludeForks bool
 	Tmp          bool
-	ReportOut    bool
 	Token        string
 
 	// LOGS/REPORT
-	LogLevel    int
-	PrettyPrint bool
+	LogLevel int
+	Verbose  bool
 }
 
 // help prints the usage string and exits
@@ -160,7 +158,7 @@ func (opts *Options) parseOptions(args []string) error {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "--strict":
+		case "--stopwords":
 			opts.Strict = true
 		case "-e", "--entropy":
 			opts.Entropy = true
@@ -174,14 +172,10 @@ func (opts *Options) parseOptions(args []string) error {
 			opts.RepoMode = true
 		case "-l", "--local":
 			opts.LocalMode = true
-		case "--report-out":
-			opts.ReportOut = true
-		case "--pretty":
-			opts.PrettyPrint = true
+		case "-v", "--verbose":
+			opts.Verbose = true
 		case "-t", "--temp":
 			opts.Tmp = true
-		case "-ll":
-			opts.LogLevel = opts.nextInt(args, &i)
 		case "-h", "--help":
 			help()
 			os.Exit(ExitClean)
@@ -275,6 +269,8 @@ func (opts *Options) guards() error {
 		return fmt.Errorf("Cannot run Gitleaks with temp settings and local mode\n")
 	} else if opts.SinceCommit != "" && (opts.OrgMode || opts.UserMode) {
 		return fmt.Errorf("Cannot run Gitleaks with since commit flag and a owner mode\n")
+	} else if opts.ClonePath != "" && opts.Tmp {
+		return fmt.Errorf("Cannot run Gitleaks with --clone-path set and temporary repo\n")
 	}
 
 	return nil

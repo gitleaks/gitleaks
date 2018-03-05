@@ -156,7 +156,7 @@ func (repo *Repo) audit() (bool, error) {
 		log.Printf("No Leaks detected for \x1b[32;2m%s\x1b[0m\n", repo.name)
 	}
 
-	if (opts.ReportPath != "" || opts.ReportOut) && len(leaks) != 0 {
+	if opts.ReportPath != "" && len(leaks) != 0 {
 		err = repo.writeReport(leaks)
 		if err != nil {
 			return leaksPst, fmt.Errorf("could not write report to %s", opts.ReportPath)
@@ -212,7 +212,7 @@ func parseRevList(revList [][]byte) []Commit {
 func reportAggregator(gitLeakReceiverWG *sync.WaitGroup, gitLeaks chan Leak, leaks *[]Leak) {
 	for gitLeak := range gitLeaks {
 		*leaks = append(*leaks, gitLeak)
-		if opts.PrettyPrint {
+		if opts.Verbose {
 			b, err := json.MarshalIndent(gitLeak, "", "   ")
 			if err != nil {
 				// handle this?
