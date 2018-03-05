@@ -42,17 +42,22 @@ Options:
 
 #### Exit Codes 
 Use these codes to hook gitleaks into whatever pipeline you're running
-| code | explanation |
-| ------------- | ------------- |
-| 0 | Gitleaks succeeded with no leaks |
-| 1 | Gitleaks failed or wasn't attempted due to execution failure |
-| 2 | Gitleaks succeeded and leaks were present during the audit |
+code | explanation
+ -------------|-------------
+0 | Gitleaks succeeded with no leaks
+1 | Gitleaks failed or wasn't attempted due to execution failure
+2 | Gitleaks succeeded and leaks were present during the audit
 
 #### Examples
 ```bash
 gitleaks
 ```
-Run audit on current working directory if `.git` is present |
+Run audit on current working directory if `.git` is present 
+
+```bash
+gitleaks --local $HOME/audits/some/repo
+```
+Run audit on repo located in `HOME/audits/some/repo` if `.git` is present 
 
 ```bash
 gitleaks https://github.com/some/repo
