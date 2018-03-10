@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"bufio"
 )
 
 const usage = `
@@ -52,6 +53,7 @@ type Options struct {
 	Tmp          bool
 	Token        string
 	Verbose  bool
+	RegexFile string
 }
 
 // help prints the usage string and exits
@@ -174,6 +176,8 @@ func (opts *Options) parseOptions(args []string) error {
 				opts.HexEntropyCutoff = value
 			} else if match, value := opts.optInt(arg, "--concurrency="); match {
 				opts.Concurrency = value
+			} else if match, value := opts.optString(arg, "--regex-file="); match {
+				opts.RegexFile = value
 			} else if i == len(args)-1 {
 				if opts.LocalMode {
 					opts.RepoPath = filepath.Clean(args[i])
@@ -192,7 +196,14 @@ func (opts *Options) parseOptions(args []string) error {
 		}
 	}
 
-	// TODO cleanup this logic
+	if opts.RegexFile != "" {
+		err := opts.loadExternalRegex()
+		if err != nil {
+			return fmt.Errorf("unable to load regex from file %s: %v",
+				opts.RegexFile, err)
+		}
+	}
+
 	if !opts.RepoMode && !opts.UserMode && !opts.OrgMode && !opts.LocalMode {
 		if opts.URL != "" {
 			opts.RepoMode = true
@@ -223,6 +234,22 @@ func (opts *Options) parseOptions(args []string) error {
 	return err
 }
 
+// loadExternalRegex
+func (opts *Options) loadExternalRegex() error {
+	file, err := os.Open(opts.RegexFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		externalRegex = append(externalRegex, regexp.MustCompile(scanner.Text()))
+	}
+
+	return nil
+}
+
 // failF prints a failure message out to stderr, displays help
 // and exits with a exit code 2
 func (opts *Options) failF(format string, args ...interface{}) {
@@ -251,7 +278,6 @@ func (opts *Options) guards() error {
 	} else if opts.ClonePath != "" && opts.Tmp {
 		return fmt.Errorf("Cannot run Gitleaks with --clone-path set and temporary repo\n")
 	}
-
 	return nil
 }
 

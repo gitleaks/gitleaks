@@ -18,6 +18,7 @@ const ExitLeaks = 2
 // package globals
 var (
 	regexes       map[string]*regexp.Regexp
+	externalRegex []*regexp.Regexp
 	stopWords     []string
 	base64Chars   string
 	hexChars      string
@@ -38,7 +39,7 @@ func init() {
 	regexes = map[string]*regexp.Regexp{
 		"PKCS8":    regexp.MustCompile("-----BEGIN PRIVATE KEY-----"),
 		"RSA":      regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
-                "DSA":      regexp.MustCompile("-----BEGIN DSA PRIVATE KEY-----"),
+		"DSA":      regexp.MustCompile("-----BEGIN DSA PRIVATE KEY-----"),
 		"SSH":      regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
 		"Facebook": regexp.MustCompile("(?i)facebook.*['\"][0-9a-f]{32}['\"]"),
 		"Twitter":  regexp.MustCompile("(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]"),

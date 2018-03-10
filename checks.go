@@ -22,7 +22,6 @@ func doChecks(diff string, commit Commit, repo *Repo) []Leak {
 				file = line[idx[1]:]
 			}
 		}
-
 		for leakType, re := range regexes {
 			match = re.FindString(line)
 			if len(match) == 0 ||
@@ -43,6 +42,31 @@ func doChecks(diff string, commit Commit, repo *Repo) []Leak {
 				RepoURL:  repo.url,
 			}
 			leaks = append(leaks, leak)
+		}
+
+		// Check for external regex matches
+		if externalRegex != nil {
+			for _, re := range externalRegex {
+				match = re.FindString(line)
+				if len(match) == 0 ||
+					(opts.Strict && containsStopWords(line)) ||
+					(opts.Entropy && !checkShannonEntropy(line, opts)) {
+					continue
+				}
+
+				leak = Leak{
+					Line:     line,
+					Commit:   commit.Hash,
+					Offender: match,
+					Reason:   "match: " + re.String(),
+					Msg:      commit.Msg,
+					Time:     commit.Time,
+					Author:   commit.Author,
+					File:     file,
+					RepoURL:  repo.url,
+				}
+				leaks = append(leaks, leak)
+			}
 		}
 	}
 	return leaks
