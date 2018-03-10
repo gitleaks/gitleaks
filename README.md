@@ -1,4 +1,10 @@
-![Alt Text](https://github.com/zricethezav/gifs/blob/master/gitleaks1.png) [![Build Status](https://travis-ci.org/zricethezav/gitleaks.svg?branch=master)](https://travis-ci.org/zricethezav/gitleaks)
+<p align="center">
+  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaks4.png" height="140" />
+  <p align="center">
+      <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
+  </p>
+</p>
+
 ## Audit git repos for secrets and keys
 
 #### Installing
@@ -31,6 +37,7 @@ Options:
  --report-path=<STR>    Save report to path, gitleaks default behavior is to save report to pwd
  --clone-path=<STR>     Gitleaks will clone repos here, default pwd
  --concurrency=<INT>    Upper bound on concurrent diffs
+ --regex-file=<STR>     Path to regex file for external regex matching
  --since=<STR>          Commit to stop at
  --b64Entropy=<INT>     Base64 entropy cutoff (default is 70)
  --hexEntropy=<INT>     Hex entropy cutoff (default is 40)
@@ -97,13 +104,6 @@ docker build -t gitleaks .
 docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
 ```
 
-### cypherphunky
+##### Support
 BTC: 1H2rSXDJZxWcTk2Ugr5P9r9m93m2NhL4xj
 
-BCH: qp4mdaef04g5d0xpgecx78fmruk6vgl4pgqtetrl9h
-
-ETH: 0xe48b4Fce6A1C1a9C780376032895b06b1709AddF
-
-LTC: LRhDzMyGos5CtZMoSTEx5rdLksPUwSrtuz
-
-s/o to @jlakowski for the gimp skillz

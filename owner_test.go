@@ -15,11 +15,12 @@ func TestOwnerPath(t *testing.T) {
 	if pwd != p {
 		t.Error()
 	}
-	opts.ClonePath = "test"
+	opts.ClonePath = "gitleaksTestClonePath"
 	p, err = ownerPath("nameToIgnore")
-	if p != "test" {
+	if p != "gitleaksTestClonePath" {
 		t.Error()
 	}
+	os.Remove("gitleaksTestClonePath")
 }
 
 func TestNewOwner(t *testing.T) {
