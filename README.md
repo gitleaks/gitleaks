@@ -105,5 +105,7 @@ docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
 ```
 
 ##### Support
-BTC: 1H2rSXDJZxWcTk2Ugr5P9r9m93m2NhL4xj
+BTC: 397zNMQnSUzGaqYw8XVa9YjNPiRpSZWkhX
+
+ETH: 0x07eFa8c73235e18C9D7E7A1679751Aa9363CD99B
 
