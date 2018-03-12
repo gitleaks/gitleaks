@@ -87,6 +87,17 @@ gitleaks --temp -u https://github.com/some-user
 ```
 Run audit on all of `some-user`'s repos. Again, `--temp` flag will clone all repos into $TMPDIR after be removed after audit 
 
+```bash
+gitleaks --regex-file=myregex.txt
+```
+Run audit on current working directory if `.git` is present and check for additional external regexes defined in `myregex.txt`. myregex.txt is just a text file containing a regular experession per line.
+Sample external `regex-file`: 
+
+```
+[a-z0-9_-]{3,16}
+[a-z]{3,16}
+```
+
 
 
 
