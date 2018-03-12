@@ -12,6 +12,7 @@
 ```bash
 go get -u github.com/zricethezav/gitleaks
 ```
+Or download from release binaries [here](https://github.com/zricethezav/gitleaks/releases)
 
 #### Usage and Explanation
 

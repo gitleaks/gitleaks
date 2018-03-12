@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
-	"os"
 	"bufio"
 	"fmt"
+	"os"
+	"testing"
 )
 
 func TestCheckRegex(t *testing.T) {
@@ -50,7 +50,7 @@ func TestExternalRegex(t *testing.T) {
 	opts.RegexFile = "testregex.txt"
 	opts.loadExternalRegex()
 	leaks := doChecks("aws=\"AKIALALEMEL33243OLIAE",
-		Commit{}, &Repo{url:"someurl"})
+		Commit{}, &Repo{url: "someurl"})
 	if len(leaks) != 2 {
 		// leak from default regex, leak from external
 		t.Error()

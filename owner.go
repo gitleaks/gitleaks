@@ -14,7 +14,11 @@ import (
 	"strings"
 )
 
-// Owner blah blah
+// Owner represents the owner of a repo or group of repos.
+// Owners can fall under three categories depending on how
+// Gitleaks is ran; ambiguous, user, or organization.
+// An ambiguous implies that gitleaks is running on a single
+// repo from github or locally.
 type Owner struct {
 	name        string
 	url         string
@@ -54,7 +58,7 @@ func newOwner() *Owner {
 	name := ownerName()
 	ownerPath, err := ownerPath(name)
 	if err != nil {
-		failF("%v", err)
+		log.Fatal(err)
 	}
 	owner := &Owner{
 		name:        name,
@@ -77,16 +81,9 @@ func newOwner() *Owner {
 		os.Exit(ExitFailure)
 	}()
 
-	// if running on local repo, just go right to it.
-	if opts.LocalMode {
-		repo := newLocalRepo(opts.RepoPath)
-		owner.repos = append(owner.repos, *repo)
-		return owner
-	}
-
 	err = owner.fetchRepos()
 	if err != nil {
-		owner.failF("%v", err)
+		log.Fatal(err)
 	}
 	return owner
 }
@@ -98,6 +95,15 @@ func newOwner() *Owner {
 func (owner *Owner) fetchRepos() error {
 	var err error
 	ctx := context.Background()
+
+	// local mode, single repo, ambiguous account type
+	if opts.LocalMode {
+		_, repoName := path.Split(opts.RepoPath)
+		repo := newRepo(repoName, "", opts.RepoPath)
+		owner.repos = append(owner.repos, *repo)
+		return nil
+	}
+
 	if owner.accountType == "" {
 		// single repo, ambiguous account type
 		_, repoName := path.Split(opts.URL)
@@ -200,7 +206,7 @@ func (owner *Owner) auditRepos() int {
 	for _, repo := range owner.repos {
 		leaksPst, err := repo.audit()
 		if err != nil {
-			failF("%v", err)
+			log.Fatal(err)
 		}
 		if leaksPst {
 			exitCode = ExitLeaks
@@ -210,13 +216,6 @@ func (owner *Owner) auditRepos() int {
 		owner.rmTmp()
 	}
 	return exitCode
-}
-
-// failF prints a failure message out to stderr
-// and exits with a exit code 2
-func (owner *Owner) failF(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(ExitFailure)
 }
 
 // rmTmp removes the owner's temporary repo. rmTmp will only get called if temporary
