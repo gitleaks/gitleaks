@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	"bufio"
 )
 
 const usage = `
@@ -22,7 +22,7 @@ Options:
  --report-path=<STR> 	Report output, default $GITLEAKS_HOME/report
  --clone-path=<STR>	Gitleaks will clone repos here, default $GITLEAKS_HOME/clones
  -t --temp 		Clone to temporary directory
- --concurrency=<INT> 	Upper bound on concurrent diffs
+ --concurrency=<INT> 	Upper bound on concurrent "git diff"
  --since=<STR> 		Commit to stop at
  --b64Entropy=<INT> 	Base64 entropy cutoff (default is 70)
  --hexEntropy=<INT>  	Hex entropy cutoff (default is 40)
@@ -33,27 +33,26 @@ Options:
 
 `
 
-// Options for gitleaks. need to support remote repo/owner
-// and local repo/owner mode
+// Options for gitleaks
 type Options struct {
-	URL      string
-	RepoPath string
-	ReportPath string
-	ClonePath  string
+	URL              string
+	RepoPath         string
+	ReportPath       string
+	ClonePath        string
 	Concurrency      int
 	B64EntropyCutoff int
 	HexEntropyCutoff int
-	UserMode  bool
-	OrgMode   bool
-	RepoMode  bool
-	LocalMode bool
-	Strict       bool
-	Entropy      bool
-	SinceCommit  string
-	Tmp          bool
-	Token        string
-	Verbose  bool
-	RegexFile string
+	UserMode         bool
+	OrgMode          bool
+	RepoMode         bool
+	LocalMode        bool
+	Strict           bool
+	Entropy          bool
+	SinceCommit      string
+	Tmp              bool
+	Token            string
+	Verbose          bool
+	RegexFile        string
 }
 
 // help prints the usage string and exits
@@ -122,7 +121,7 @@ func newOpts(args []string) *Options {
 	return opts
 }
 
-// deafultOptions provides the default options
+// deafultOptions provides the default options used by newOpts
 func defaultOptions() (*Options, error) {
 	return &Options{
 		Concurrency:      10,
@@ -131,9 +130,8 @@ func defaultOptions() (*Options, error) {
 	}, nil
 }
 
-// parseOptions
+// parseOptions will parse options supplied by the user.
 func (opts *Options) parseOptions(args []string) error {
-
 	if len(args) == 0 {
 		opts.LocalMode = true
 		opts.RepoPath, _ = os.Getwd()
@@ -208,7 +206,7 @@ func (opts *Options) parseOptions(args []string) error {
 		if opts.URL != "" {
 			opts.RepoMode = true
 			err := opts.guards()
-			if err != nil{
+			if err != nil {
 				return err
 			}
 			return nil
@@ -228,13 +226,13 @@ func (opts *Options) parseOptions(args []string) error {
 	}
 
 	err := opts.guards()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return err
 }
 
-// loadExternalRegex
+// loadExternalRegex loads regexes from a text file if available.
 func (opts *Options) loadExternalRegex() error {
 	file, err := os.Open(opts.RegexFile)
 	if err != nil {

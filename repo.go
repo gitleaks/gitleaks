@@ -8,12 +8,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"sync"
 )
 
-// Repo is
+// Repo represents a git repo
 type Repo struct {
 	name       string
 	url        string
@@ -23,7 +22,7 @@ type Repo struct {
 	reportPath string
 }
 
-// Leak is
+// Leak struct for reporting
 type Leak struct {
 	Line     string `json:"line"`
 	Commit   string `json:"commit"`
@@ -36,7 +35,7 @@ type Leak struct {
 	RepoURL  string `json:"repoURL"`
 }
 
-// Commit is
+// Commit represents a git commit
 type Commit struct {
 	Hash   string
 	Author string
@@ -44,19 +43,7 @@ type Commit struct {
 	Msg    string
 }
 
-// newLocalRepo will such and such
-func newLocalRepo(repoPath string) *Repo {
-	_, name := path.Split(repoPath)
-	repo := &Repo{
-		name:       name,
-		path:       repoPath,
-		reportPath: opts.ReportPath,
-	}
-	return repo
-
-}
-
-// newRepo
+// newRepo creates a new repo based on name, url, and a clone path
 func newRepo(name string, url string, path string) *Repo {
 	repo := &Repo{
 		name:       name,
@@ -67,7 +54,7 @@ func newRepo(name string, url string, path string) *Repo {
 	return repo
 }
 
-// rmTmp
+// rmTmp removes the temporary directory: repo.path
 func (repo *Repo) rmTmp() {
 	log.Printf("removing tmp gitleaks repo %s\n", repo.path)
 	os.Remove(repo.path)
@@ -212,14 +199,13 @@ func parseRevList(revList [][]byte) []Commit {
 	return commits
 }
 
-// reportAggregator is a go func responsible for ...
+// reportAggregator is will consume Leak messages from the gitLeaks channel and report them
 func reportAggregator(gitLeakReceiverWG *sync.WaitGroup, gitLeaks chan Leak, leaks *[]Leak) {
 	for gitLeak := range gitLeaks {
 		*leaks = append(*leaks, gitLeak)
 		if opts.Verbose {
 			b, err := json.MarshalIndent(gitLeak, "", "   ")
 			if err != nil {
-				// handle this?
 				fmt.Printf("failed to output leak: %v", err)
 			}
 			fmt.Println(string(b))
@@ -238,8 +224,7 @@ func auditDiff(currCommit Commit, repo *Repo, commitWG *sync.WaitGroup,
 	defer commitWG.Done()
 
 	if err := os.Chdir(fmt.Sprintf(repo.path)); err != nil {
-		// TODO handle this better
-		os.Exit(ExitFailure)
+		log.Fatalf("unable to navigate to %s", repo.path)
 	}
 
 	commitCmp := fmt.Sprintf("%s^!", currCommit.Hash)
@@ -248,7 +233,7 @@ func auditDiff(currCommit Commit, repo *Repo, commitWG *sync.WaitGroup,
 	<-semaphoreChan
 
 	if err != nil {
-		os.Exit(ExitFailure)
+		log.Fatalf("unable to diff for %s: %v", currCommit.Hash, err)
 	}
 
 	leaks := doChecks(string(out), currCommit, repo)

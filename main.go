@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 )
@@ -34,8 +33,6 @@ func init() {
 	stopWords = []string{"setting", "info", "env", "environment"}
 	fileDiffRegex = regexp.MustCompile("diff --git a.+b/")
 	assignRegex = regexp.MustCompile(`(=|:|:=|<-)`)
-
-	// TODO Externalize regex... this is tricky making it yml compliant
 	regexes = map[string]*regexp.Regexp{
 		"PKCS8":    regexp.MustCompile("-----BEGIN PRIVATE KEY-----"),
 		"RSA":      regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
@@ -55,9 +52,4 @@ func main() {
 	opts = newOpts(args)
 	owner := newOwner()
 	os.Exit(owner.auditRepos())
-}
-
-func failF(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-	os.Exit(ExitFailure)
 }

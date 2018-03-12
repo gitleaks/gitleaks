@@ -5,13 +5,16 @@ import (
 	"testing"
 )
 
-func TestNewLocalRepo(t *testing.T) {
-	r := newLocalRepo("")
-	if r.path != "" {
+func TestNewRepo(t *testing.T) {
+	// local mode
+	r := newRepo("repo", "", "some/repo")
+	if r.name != "repo" || r.path != "some/repo" {
 		t.Error()
 	}
-	r = newLocalRepo("some/path")
-	if r.name != "path" || r.path != "some/path" {
+
+	// repo/owner mode
+	r = newRepo("repo", "github.com/owner/repo", "some/repo")
+	if r.name != "repo" || r.path != "some/repo" {
 		t.Error()
 	}
 }
