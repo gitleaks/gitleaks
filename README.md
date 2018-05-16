@@ -116,6 +116,9 @@ docker build -t gitleaks .
 docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
 ```
 
+##### Consider using Gitleaks-CI
+[Gitleaks-CI](https://github.com/zricethezav/gitleaks-ci) is 50 lines of bash code that checks your PRs for secrets you probably shouldn't be commiting
+
 ##### Support
 BTC: 397zNMQnSUzGaqYw8XVa9YjNPiRpSZWkhX
 
