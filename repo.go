@@ -102,10 +102,6 @@ func (repo *Repo) audit() (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("cannot navigate to %s", repo.path)
 		}
-		err = exec.Command("git", "fetch").Run()
-		if err != nil {
-			return false, fmt.Errorf("cannot fetch %s from %s", repo.url, repo.path)
-		}
 	}
 
 	err = os.Chdir(fmt.Sprintf(repo.path))
