@@ -16,89 +16,41 @@ Or download from release binaries [here](https://github.com/zricethezav/gitleaks
 
 #### Usage and Explanation
 
-![Alt Text](https://github.com/zricethezav/gifs/blob/master/gitleaks.gif)
-
 ```bash
-./gitleaks [options] <url/path>
+./gitleaks [Options]
 ```
 
-Gitleaks audits local and remote repos by running regex checks against all commits.
+Gitleaks audits local and remote repos by running regex checks against all commits against HEAD or optionally against all branches.
 
 #### Options
 ```
-usage: gitleaks [options] <URL>/<path_to_repo>
+Usage:
+  gitleaks-ng [OPTIONS]
 
-Options:
- -u --user              Git user mode
- -r --repo              Git repo mode
- -o --org               Git organization mode
- -l --local             Local mode, gitleaks will look for local repo in <path>
- -t --temp              Clone to temporary directory
- -v --verbose           Verbose mode, will output leaks as gitleaks finds them
- --report-path=<STR>    Save report to path, gitleaks default behavior is to save report to pwd
- --clone-path=<STR>     Gitleaks will clone repos here, default pwd
- --concurrency=<INT>    Upper bound on concurrent diffs
- --regex-file=<STR>     Path to regex file for external regex matching
- --since=<STR>          Commit to stop at
- --b64Entropy=<INT>     Base64 entropy cutoff (default is 70)
- --hexEntropy=<INT>     Hex entropy cutoff (default is 40)
- -e --entropy           Enable entropy
- -h --help              Display this message
- --token=<STR>          Github API token
- --stopwords            Enables stopwords
+Application Options:
+  -r, --repo=          Repo url to audit
+      --github-user=   User url to audit
+      --github-org=    Organization url to audit
+      --private        Include private repos in audit
+  -b, --branch=        branch name to audit (defaults to all branches)
+      --commit=        sha of commit to stop at
+      --repo-path=     Path to repo
+      --owner-path=    Path to owner directory (repos discovered)
+      --max-go=        Maximum number of concurrent go-routines gitleaks spawns
+      --in-memory      Run gitleaks in memory
+      --single-search= single regular expression to search for
+      --deep           run audit on all branches
+      --config=        path to gitleaks config
+      --ssh-key=       path to ssh key
+      --log-level=     log level
+  -v, --verbose        Show verbose output from gitleaks audit
+      --report=        path to report
+
+Help Options:
+  -h, --help           Show this help message
 ```
-
-#### Exit Codes 
-code | explanation
- -------------|-------------
-0 | Gitleaks succeeded with no leaks
-1 | Gitleaks failed or wasn't attempted due to execution failure
-2 | Gitleaks succeeded and leaks were present during the audit
-
-Use these codes to hook gitleaks into whatever pipeline you're running
 
 #### Examples
-```bash
-gitleaks
-```
-Run audit on current working directory if `.git` is present 
-
-```bash
-gitleaks --local $HOME/audits/some/repo
-```
-Run audit on repo located in `HOME/audits/some/repo` if `.git` is present 
-
-```bash
-gitleaks https://github.com/some/repo
-```
-Run audit on `github.com/some/repo.git` and clone repo to 
-
-```bash
-gitleaks --clone-path=$HOME/Desktop/audits https://github.com/some/repo
-```
-Run audit on `github.com/some/repo.git` and clone repo to $HOME/Desktop/audits 
-
-```bash
-gitleaks --temp https://github.com/some/repo
-```
-Run audit on `github.com/some/repo.git` and clone repo to $TMPDIR (this will remove repos after audit is complete)
-
-```bash
-gitleaks --temp -u https://github.com/some-user
-```
-Run audit on all of `some-user`'s repos. Again, `--temp` flag will clone all repos into $TMPDIR after be removed after audit 
-
-```bash
-gitleaks --regex-file=myregex.txt
-```
-Run audit on current working directory if `.git` is present and check for additional external regexes defined in `myregex.txt`. myregex.txt is just a text file containing a regular experession per line.
-Sample external `regex-file`: 
-
-```
-[a-z0-9_-]{3,16}
-[a-z]{3,16}
-```
-
 
 
 
@@ -109,12 +61,6 @@ Please read the [Github article on removing sensitive data from a repository](ht
 
 Simply run `docker run --rm --name=gitleaks zricethezav/gitleaks https://github.com/zricethezav/gitleaks`
 
-Or build the image yourself to get the latest version :
-
-```
-docker build -t gitleaks .
-docker run --rm --name=gitleaks gitleaks https://github.com/zricethezav/gitleaks
-```
 
 ##### Consider using Gitleaks-CI
 [Gitleaks-CI](https://github.com/zricethezav/gitleaks-ci) is 50 lines of bash code that checks your PRs for secrets you probably shouldn't be commiting
