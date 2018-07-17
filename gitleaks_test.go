@@ -96,6 +96,7 @@ func TestGetRepo(t *testing.T) {
 }
 
 func TestGetOwnerRepo(t *testing.T) {
+	t.Skip()
 	var err error
 	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
 	defer os.RemoveAll(dir)
