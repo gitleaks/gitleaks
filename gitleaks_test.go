@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/franela/goblin"
@@ -123,6 +124,15 @@ func TestGetOwnerRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
+				GithubUser: "gitleakstest",
+				InMem:      true,
+			},
+			description:    "test github user in mem",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
 				GithubOrg: "gitleakstestorg",
 			},
 			description:    "test github org",
@@ -214,6 +224,14 @@ func TestAuditRepo(t *testing.T) {
 			numLeaks:    2,
 		},
 		{
+			repo:        leaksRepo,
+			description: "two leaks present limit goroutines",
+			numLeaks:    2,
+			testOpts: Options{
+				MaxGoRoutines: 2,
+			},
+		},
+		{
 			repo:        cleanRepo,
 			description: "no leaks present",
 			numLeaks:    0,
@@ -234,10 +252,11 @@ func TestAuditRepo(t *testing.T) {
 
 func TestOptionGuard(t *testing.T) {
 	var tests = []struct {
-		testOpts       Options
-		githubToken    bool
-		description    string
-		expectedErrMsg string
+		testOpts            Options
+		githubToken         bool
+		description         string
+		expectedErrMsg      string
+		expectedErrMsgFuzzy string
 	}{
 		{
 			testOpts:       Options{},
@@ -294,8 +313,8 @@ func TestOptionGuard(t *testing.T) {
 				GithubUser:   "fakeUser",
 				SingleSearch: "*/./....",
 			},
-			description:    "single search invalid regex gaurd",
-			expectedErrMsg: "unable to compile regex: */./...., error parsing regexp: missing argument to repetition operator: `*`",
+			description:         "single search invalid regex gaurd",
+			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
 		},
 		{
 			testOpts: Options{
@@ -317,7 +336,11 @@ func TestOptionGuard(t *testing.T) {
 				}
 				err := optsGuard()
 				if err != nil {
-					g.Assert(err.Error()).Equal(test.expectedErrMsg)
+					if test.expectedErrMsgFuzzy != "" {
+						g.Assert(strings.Contains(err.Error(), test.expectedErrMsgFuzzy)).Equal(true)
+					} else {
+						g.Assert(err.Error()).Equal(test.expectedErrMsg)
+					}
 				} else {
 					g.Assert("").Equal(test.expectedErrMsg)
 				}

@@ -83,6 +83,7 @@ type Options struct {
 	SingleSearch     string `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath       string `long:"config" description:"path to gitleaks config"`
 	SSHKey           string `long:"ssh-key" description:"path to ssh key"`
+	IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
 	LogLevel string `long:"log-level" description:"log level"`
@@ -102,7 +103,6 @@ type Config struct {
 		Regexes  []string
 		Commits  []string
 		Branches []string
-		Messages []string
 	}
 }
 
@@ -146,14 +146,6 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 #  "BADHA5H2",
 #]
 
-#messages = [
-#	"eat more veggies"
-#	"call your mom"
-#	"stretch"
-#	"no soda!"
-#	"adding tests"
-#]
-
 #branches = [
 #	"dev/STUPDIFKNFEATURE"
 #]
@@ -166,7 +158,6 @@ var (
 	whiteListRegexes  []*regexp.Regexp
 	whiteListFiles    []*regexp.Regexp
 	whiteListCommits  map[string]bool
-	whiteListMessages map[string]bool
 	whiteListBranches []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
@@ -315,6 +306,9 @@ func auditBranch(r *git.Repository, ref *plumbing.Reference, leaks []Leak, commi
 		return err
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
+		if whiteListCommits[c.Hash.String()] {
+			return nil
+		}
 		if limitGoRoutines {
 			semaphore <- true
 		}
@@ -766,9 +760,6 @@ func loadToml() error {
 	whiteListBranches = config.Whitelist.Branches
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
-	}
-	for _, message := range config.Whitelist.Messages {
-		whiteListCommits[message] = true
 	}
 	for _, regex := range config.Whitelist.Files {
 		whiteListFiles = append(whiteListFiles, regexp.MustCompile(regex))
