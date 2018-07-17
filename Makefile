@@ -1,6 +1,7 @@
 .PHONY: test build-all release
 
 test:
+	go get github.com/golang/lint/golint
 	go fmt
 	golint
 	go test --race -cover
