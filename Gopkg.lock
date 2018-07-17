@@ -9,14 +9,7 @@
 
 [[projects]]
   name = "github.com/emirpasic/gods"
-  packages = [
-    "containers",
-    "lists",
-    "lists/arraylist",
-    "trees",
-    "trees/binaryheap",
-    "utils"
-  ]
+  packages = ["containers","lists","lists/arraylist","trees","trees/binaryheap","utils"]
   revision = "f6c17b524822278a87e3b3bd809fec33b51f5b46"
   version = "v1.9.0"
 
@@ -88,12 +81,7 @@
 
 [[projects]]
   name = "github.com/src-d/gcfg"
-  packages = [
-    ".",
-    "scanner",
-    "token",
-    "types"
-  ]
+  packages = [".","scanner","token","types"]
   revision = "f187355171c936ac84a82793659ebb4936bc1c23"
   version = "v1.3.0"
 
@@ -106,137 +94,48 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = [
-    "cast5",
-    "curve25519",
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "internal/chacha20",
-    "internal/subtle",
-    "openpgp",
-    "openpgp/armor",
-    "openpgp/elgamal",
-    "openpgp/errors",
-    "openpgp/packet",
-    "openpgp/s2k",
-    "poly1305",
-    "ssh",
-    "ssh/agent",
-    "ssh/knownhosts",
-    "ssh/terminal"
-  ]
+  packages = ["cast5","curve25519","ed25519","ed25519/internal/edwards25519","internal/chacha20","internal/subtle","openpgp","openpgp/armor","openpgp/elgamal","openpgp/errors","openpgp/packet","openpgp/s2k","poly1305","ssh","ssh/agent","ssh/knownhosts","ssh/terminal"]
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp"
-  ]
+  packages = ["context","context/ctxhttp"]
   revision = "d0887baf81f4598189d4e12a37c6da86f0bba4d0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
-  packages = [
-    ".",
-    "internal"
-  ]
+  packages = [".","internal"]
   revision = "ef147856a6ddbb60760db74283d2424e98c87bff"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows"
-  ]
+  packages = ["unix","windows"]
   revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = [
-    "internal/gen",
-    "internal/triegen",
-    "internal/ucd",
-    "transform",
-    "unicode/cldr",
-    "unicode/norm"
-  ]
+  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = [
-    "internal",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/remote_api",
-    "internal/urlfetch",
-    "urlfetch"
-  ]
+  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
   version = "v1.1.0"
 
 [[projects]]
   name = "gopkg.in/src-d/go-billy.v4"
-  packages = [
-    ".",
-    "helper/chroot",
-    "helper/polyfill",
-    "osfs",
-    "util"
-  ]
+  packages = [".","helper/chroot","helper/polyfill","osfs","util"]
   revision = "83cf655d40b15b427014d7875d10850f96edba14"
   version = "v4.2.0"
 
 [[projects]]
   name = "gopkg.in/src-d/go-git.v4"
-  packages = [
-    ".",
-    "config",
-    "internal/revision",
-    "plumbing",
-    "plumbing/cache",
-    "plumbing/filemode",
-    "plumbing/format/config",
-    "plumbing/format/diff",
-    "plumbing/format/gitignore",
-    "plumbing/format/idxfile",
-    "plumbing/format/index",
-    "plumbing/format/objfile",
-    "plumbing/format/packfile",
-    "plumbing/format/pktline",
-    "plumbing/object",
-    "plumbing/protocol/packp",
-    "plumbing/protocol/packp/capability",
-    "plumbing/protocol/packp/sideband",
-    "plumbing/revlist",
-    "plumbing/storer",
-    "plumbing/transport",
-    "plumbing/transport/client",
-    "plumbing/transport/file",
-    "plumbing/transport/git",
-    "plumbing/transport/http",
-    "plumbing/transport/internal/common",
-    "plumbing/transport/server",
-    "plumbing/transport/ssh",
-    "storage",
-    "storage/filesystem",
-    "storage/filesystem/dotgit",
-    "storage/memory",
-    "utils/binary",
-    "utils/diff",
-    "utils/ioutil",
-    "utils/merkletrie",
-    "utils/merkletrie/filesystem",
-    "utils/merkletrie/index",
-    "utils/merkletrie/internal/frame",
-    "utils/merkletrie/noder"
-  ]
+  packages = [".","config","internal/revision","plumbing","plumbing/cache","plumbing/filemode","plumbing/format/config","plumbing/format/diff","plumbing/format/gitignore","plumbing/format/idxfile","plumbing/format/index","plumbing/format/objfile","plumbing/format/packfile","plumbing/format/pktline","plumbing/object","plumbing/protocol/packp","plumbing/protocol/packp/capability","plumbing/protocol/packp/sideband","plumbing/revlist","plumbing/storer","plumbing/transport","plumbing/transport/client","plumbing/transport/file","plumbing/transport/git","plumbing/transport/http","plumbing/transport/internal/common","plumbing/transport/server","plumbing/transport/ssh","storage","storage/filesystem","storage/filesystem/dotgit","storage/memory","utils/binary","utils/diff","utils/ioutil","utils/merkletrie","utils/merkletrie/filesystem","utils/merkletrie/index","utils/merkletrie/internal/frame","utils/merkletrie/noder"]
   revision = "3bd5e82b2512d85becae9677fa06b5a973fd4cfb"
   version = "v4.5.0"
 
@@ -249,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f95192b514c86c1159c7968015749b6e398a15881a131b93d8995108647ead1a"
+  inputs-digest = "5af7c639081bd99afc4a673e96079d2ed9e76d0e1bf0d2cc5ad9c71274beaa86"
   solver-name = "gps-cdcl"
   solver-version = 1

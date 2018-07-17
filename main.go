@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"gopkg.in/src-d/go-git.v4/plumbing"
+
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -35,6 +37,7 @@ type Leak struct {
 	Message  string `json:"commitMsg"`
 	Author   string `json:"author"`
 	File     string `json:"file"`
+	Branch   string `json:"branch"`
 }
 
 // Repo contains the actual git repository and meta data about the repo
@@ -66,7 +69,7 @@ type Options struct {
 		GitLabOrg  string `long:"gitlab-org" description:"Organization url to audit"`
 	*/
 
-	Branch string `short:"b" long:"branch" description:"branch name to audit (defaults to all branches)"`
+	Branch string `short:"b" long:"branch" description:"branch name to audit (defaults to HEAD)"`
 	Commit string `long:"commit" description:"sha of commit to stop at"`
 
 	// local target option
@@ -74,21 +77,18 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	MaxGoRoutines int  `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	InMem         bool `long:"in-memory" description:"Run gitleaks in memory"`
-
-	// TODO ITEMS
-	SingleSearch string `long:"single-search" description:"single regular expression to search for"`
-	DeepAudit    bool   `long:"deep" description:"run audit on all branches"`
-
-	// DONE TODO ITEMS
-	ConfigPath string `long:"config" description:"path to gitleaks config"`
-	SSHKey     string `long:"ssh-key" description:"path to ssh key"`
+	MaxGoRoutines    int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
+	InMem            bool   `long:"in-memory" description:"Run gitleaks in memory"`
+	AuditAllBranches bool   `long:"branches-all" description:"run audit on all branches"`
+	SingleSearch     string `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath       string `long:"config" description:"path to gitleaks config"`
+	SSHKey           string `long:"ssh-key" description:"path to ssh key"`
 
 	// Output options
 	LogLevel string `long:"log-level" description:"log level"`
 	Verbose  bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
 	Report   string `long:"report" description:"path to report"`
+	Redact   string `long:"redact" description:"redact secrets from log messages and report"`
 }
 
 // Config struct for regexes matching and whitelisting
@@ -98,9 +98,11 @@ type Config struct {
 		Regex       string
 	}
 	Whitelist struct {
-		Files   []string
-		Regexes []string
-		Commits []string
+		Files    []string
+		Regexes  []string
+		Commits  []string
+		Branches []string
+		Messages []string
 	}
 }
 
@@ -122,25 +124,39 @@ regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
 [[regexes]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-[[facebook]]
+[[regexes]]
 description = "Facebook"
 regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
-[[twitter]]
+[[regexes]]
 description = "Facebook"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 
 [whitelist]
-regexes = [
-  "AKAIMYFAKEAWKKEY",
-]
-files = [
-  "(.*?)(jpg|gif|doc|pdf|bin)$"
-]
-commits = [
-  "commithash1",
-  "commithash2",
-  "commithashetc",
-]
+
+#regexes = [
+#  "AKAIMYFAKEAWKKEY",
+#]
+
+#files = [
+#  "(.*?)(jpg|gif|doc|pdf|bin)$"
+#]
+
+#commits = [
+#  "BADHA5H1",
+#  "BADHA5H2",
+#]
+
+#messages = [
+#	"eat more veggies"
+#	"call your mom"
+#	"stretch"
+#	"no soda!"
+#	"adding tests"
+#]
+
+#branches = [
+#	"dev/STUPDIFKNFEATURE"
+#]
 `
 
 var (
@@ -149,7 +165,9 @@ var (
 	singleSearchRegex *regexp.Regexp
 	whiteListRegexes  []*regexp.Regexp
 	whiteListFiles    []*regexp.Regexp
-	whiteListCommits  []string
+	whiteListCommits  map[string]bool
+	whiteListMessages map[string]bool
+	whiteListBranches []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
@@ -279,24 +297,14 @@ func getRepo() (Repo, error) {
 	}, nil
 }
 
-// auditRepo performs an audit on a repository checking for regex matching and ignoring
-// files and regexes that are whitelisted
-func auditRepo(r *git.Repository) ([]Leak, error) {
+func auditBranch(r *git.Repository, ref *plumbing.Reference, leaks []Leak, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
 	var (
 		err             error
-		leaks           []Leak
-		commitWg        sync.WaitGroup
 		prevTree        *object.Tree
-		semaphore       chan bool
 		limitGoRoutines bool
+		semaphore       chan bool
 	)
-	ref, err := r.Head()
-	if err != nil {
-		return leaks, err
-	}
 
-	// leak messaging
-	commitChan := make(chan []Leak, 1)
 	// goroutine limiting
 	if opts.MaxGoRoutines != 0 {
 		semaphore = make(chan bool, opts.MaxGoRoutines)
@@ -304,7 +312,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 	}
 	cIter, err := r.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
-		return leaks, err
+		return err
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if limitGoRoutines {
@@ -312,6 +320,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 		}
 		commitWg.Add(1)
 		go func(c *object.Commit, prevTree *object.Tree) {
+
 			var leaksL []Leak
 			tree, err := c.Tree()
 			if err != nil {
@@ -358,7 +367,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 
 				chunks := f.Chunks()
 				for _, chunk := range chunks {
-					leaksL = append(leaksL, checkDiff(chunk.Content(), c, filePath)...)
+					leaksL = append(leaksL, checkDiff(chunk.Content(), c, filePath, string(ref.Name()))...)
 				}
 			}
 			if limitGoRoutines {
@@ -370,6 +379,48 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 		prevTree, _ = c.Tree()
 		return nil
 	})
+	return nil
+}
+
+// auditRepo performs an audit on a repository checking for regex matching and ignoring
+// files and regexes that are whitelisted
+func auditRepo(r *git.Repository) ([]Leak, error) {
+	var (
+		err      error
+		leaks    []Leak
+		commitWg sync.WaitGroup
+	)
+
+	ref, err := r.Head()
+	if err != nil {
+		return leaks, err
+	}
+
+	// leak messaging
+	commitChan := make(chan []Leak, 1)
+
+	if opts.AuditAllBranches || opts.Branch != "" {
+		skipBranch := false
+		refs, err := r.Storer.IterReferences()
+		if err != nil {
+			return leaks, err
+		}
+		err = refs.ForEach(func(ref *plumbing.Reference) error {
+			for _, b := range whiteListBranches {
+				if strings.HasSuffix(string(ref.Name()), b) {
+					skipBranch = true
+				}
+			}
+			if skipBranch {
+				skipBranch = false
+				return nil
+			}
+			auditBranch(r, ref, leaks, &commitWg, commitChan)
+			return nil
+		})
+	} else {
+		auditBranch(r, ref, leaks, &commitWg, commitChan)
+	}
 
 	go func() {
 		for commitLeaks := range commitChan {
@@ -390,7 +441,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 
 // checkDiff accepts a string diff and commit object then performs a
 // regex check
-func checkDiff(diff string, commit *object.Commit, filePath string) []Leak {
+func checkDiff(diff string, commit *object.Commit, filePath string, branch string) []Leak {
 	lines := strings.Split(diff, "\n")
 	var (
 		leaks       []Leak
@@ -424,6 +475,7 @@ func checkDiff(diff string, commit *object.Commit, filePath string) []Leak {
 				Message:  commit.Message,
 				Author:   commit.Author.String(),
 				File:     filePath,
+				Branch:   branch,
 			}
 			leak.log()
 			leaks = append(leaks, leak)
@@ -711,8 +763,12 @@ func loadToml() error {
 			regexes[regex.Description] = regexp.MustCompile(regex.Regex)
 		}
 	}
+	whiteListBranches = config.Whitelist.Branches
 	for _, commit := range config.Whitelist.Commits {
-		whiteListCommits = append(whiteListCommits, commit)
+		whiteListCommits[commit] = true
+	}
+	for _, message := range config.Whitelist.Messages {
+		whiteListCommits[message] = true
 	}
 	for _, regex := range config.Whitelist.Files {
 		whiteListFiles = append(whiteListFiles, regexp.MustCompile(regex))
