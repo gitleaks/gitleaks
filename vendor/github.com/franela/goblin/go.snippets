@@ -1,0 +1,36 @@
+snippet gd
+	g.Describe("${1:name}", func() {
+		${2}
+	})
+	${0}
+snippet git 
+	g.It("${1:name}", func() {
+		${2}
+	})
+	${0}
+snippet gait 
+	g.It("${1:name}", func(done Done) {
+		done()
+		${2}
+	})
+	${0}
+snippet gb 
+	g.Before(func() {
+		${1}
+	})
+	${0}
+snippet gbe 
+	g.BeforeEach(func() {
+		${1}
+	})
+	${0}
+snippet ga 
+	g.After(func() {
+		${1}
+	})
+	${0}
+snippet gae 
+	g.AfterEach(func() {
+		${1}
+	})
+	${0}
