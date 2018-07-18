@@ -7,9 +7,7 @@ test:
 	go test --race -cover
 deploy:
 	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	export REPO=zricethezav/gitleaks
-	docker build -f Dockerfile -t $(REPO):$(COMMIT) .
-	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
+	docker build -f Dockerfile -t $(REPO):$(TAG) .
 	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
 	docker push $(REPO)
 
