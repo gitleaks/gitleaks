@@ -6,12 +6,12 @@ test:
 	golint
 	go test --race -cover
 deploy:
-	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	@export REPO=zricethezav/gitleaks
-	@export TAG= bash `if [ "$(TRAVIS_BRANCH)" == "master" ]; then echo "latest"; else echo $(TRAVIS_BRANCH); fi`
-	@docker build -f Dockerfile -t $(REPO):$(COMMIT) .
-	@docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
-	@echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
+	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+	export REPO=zricethezav/gitleaks
+	export TAG=/bin/bash `if [ "$(TRAVIS_BRANCH)" == "master" ]; then echo "latest"; else echo $(TRAVIS_BRANCH); fi`
+	docker build -f Dockerfile -t $(REPO):$(COMMIT) .
+	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
+	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
 	# docker push $(REPO)
 
 build-all:
