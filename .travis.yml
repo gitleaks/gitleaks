@@ -8,6 +8,7 @@ script:
 - make test
 after_success:
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH; fi`
+- echo tag pls $TAG
 - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make deploy; fi'
 env:
   global:
