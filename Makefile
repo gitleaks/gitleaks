@@ -6,7 +6,7 @@ test:
 	golint
 	go test --race -cover
 deploy:
-	echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
 	docker build -f Dockerfile -t $(REPO):$(TAG) .
 	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
 	docker push $(REPO)
