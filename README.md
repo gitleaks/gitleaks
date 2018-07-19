@@ -1,11 +1,11 @@
 <p align="center">
-  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaks4.png" height="140" />
+  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaks5.png" height="140" />
   <p align="center">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
   </p>
 </p>
 
-## Audit git repos for secrets and keys
+## Audit git repos for secrets, keys, and whatever
 
 #### Installing
 
@@ -20,34 +20,37 @@ Or download from release binaries [here](https://github.com/zricethezav/gitleaks
 ./gitleaks [Options]
 ```
 
-Gitleaks audits local and remote repos by running regex checks against all commits against HEAD or optionally against all branches.
+Gitleaks audits local and remote repos by running regex checks against all commits against origin/HEAD or optionally against all git references.
 
 #### Options
 ```
 Usage:
-  gitleaks-ng [OPTIONS]
+  gitleaks [OPTIONS]
 
 Application Options:
   -r, --repo=          Repo url to audit
       --github-user=   User url to audit
       --github-org=    Organization url to audit
       --private        Include private repos in audit
-  -b, --branch=        branch name to audit (defaults to all branches)
+  -b, --branch=        branch name to audit (defaults to HEAD)
       --commit=        sha of commit to stop at
       --repo-path=     Path to repo
       --owner-path=    Path to owner directory (repos discovered)
       --max-go=        Maximum number of concurrent go-routines gitleaks spawns
       --in-memory      Run gitleaks in memory
+      --branches-all   run audit on all branches
       --single-search= single regular expression to search for
-      --deep           run audit on all branches
       --config=        path to gitleaks config
       --ssh-key=       path to ssh key
+      --messages=      include commit messages in audit
       --log-level=     log level
   -v, --verbose        Show verbose output from gitleaks audit
       --report=        path to report
+      --redact=        redact secrets from log messages and report
 
 Help Options:
   -h, --help           Show this help message
+
 ```
 
 #### Examples
