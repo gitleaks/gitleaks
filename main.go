@@ -32,7 +32,7 @@ import (
 type Leak struct {
 	Line     string `json:"line"`
 	Commit   string `json:"commit"`
-	Offender string `json:"string"`
+	Offender string `json:"offender"`
 	Type     string `json:"reason"`
 	Message  string `json:"commitMsg"`
 	Author   string `json:"author"`
@@ -65,6 +65,7 @@ type Options struct {
 	IncludePrivate bool   `long:"private" description:"Include private repos in audit"`
 
 	/*
+		TODO:
 		GitLabUser string `long:"gitlab-user" description:"User url to audit"`
 		GitLabOrg  string `long:"gitlab-org" description:"Organization url to audit"`
 	*/
@@ -83,13 +84,13 @@ type Options struct {
 	SingleSearch     string `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath       string `long:"config" description:"path to gitleaks config"`
 	SSHKey           string `long:"ssh-key" description:"path to ssh key"`
-	IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
+	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
-	LogLevel string `long:"log-level" description:"log level"`
-	Verbose  bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report   string `long:"report" description:"path to report"`
-	Redact   string `long:"redact" description:"redact secrets from log messages and report"`
+	Log     string `long:"log" description:"log level"`
+	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
+	Report  string `long:"report" description:"path to report"`
+	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
 }
 
 // Config struct for regexes matching and whitelisting
@@ -162,11 +163,13 @@ var (
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
+	fileNameRegex     *regexp.Regexp
 )
 
 func init() {
 	log.SetOutput(os.Stdout)
 	regexes = make(map[string]*regexp.Regexp)
+	fileDiffRegex = regexp.MustCompile("diff --git a.+b/")
 }
 
 func main() {
@@ -203,7 +206,7 @@ func main() {
 		dir, err = ioutil.TempDir("", "gitleaks")
 		defer os.RemoveAll(dir)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 
@@ -234,13 +237,17 @@ func main() {
 	}
 }
 
+// writeReport writes a report to opts.Report in JSON.
+// TODO support yaml
 func writeReport(leaks []Leak) error {
+	log.Info("writing report to %s", opts.Report)
 	reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
 	err := ioutil.WriteFile(opts.Report, reportJSON, 0644)
 	return err
 }
 
-// getRepo is responsible for cloning a repository specified in opts.
+// getRepo is responsible for cloning a repo in-memory or to disk, or opening a local repo and creating
+// a repo object
 func getRepo() (Repo, error) {
 	var (
 		err error
@@ -288,10 +295,14 @@ func getRepo() (Repo, error) {
 	}, nil
 }
 
-func auditBranch(r *git.Repository, ref *plumbing.Reference, leaks []Leak, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
+// auditRef audits a git reference
+// TODO: need to add a layer of parallelism here and a cache for parent+child commits so we don't
+// double dip
+func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
 	var (
-		err             error
-		prevTree        *object.Tree
+		err error
+		// prevTree        *object.Tree
+		prevCommit      *object.Commit
 		limitGoRoutines bool
 		semaphore       chan bool
 	)
@@ -307,40 +318,25 @@ func auditBranch(r *git.Repository, ref *plumbing.Reference, leaks []Leak, commi
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if whiteListCommits[c.Hash.String()] {
+			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
 		if limitGoRoutines {
 			semaphore <- true
 		}
+		if prevCommit == nil {
+			prevCommit = c
+		}
 		commitWg.Add(1)
-		go func(c *object.Commit, prevTree *object.Tree) {
-
-			var leaksL []Leak
-			tree, err := c.Tree()
-			if err != nil {
-				if limitGoRoutines {
-					<-semaphore
-				}
-				commitChan <- nil
-				log.Error("unable to get tree for commit %s, err: %v", c.Hash, err)
-				return
-			}
-			treeChanges, err := tree.Diff(prevTree)
-			if err != nil {
-				if limitGoRoutines {
-					<-semaphore
-				}
-				commitChan <- nil
-				log.Error("unable to get tree for commit %s, err: %v", c.Hash, err)
-				return
-			}
-
-			patch, _ := treeChanges.Patch()
-
-			var filePath string
-			filePatches := patch.FilePatches()
-			for _, f := range filePatches {
-				skipFile := false
+		go func(c *object.Commit, prevCommit *object.Commit) {
+			var (
+				leaks    []Leak
+				filePath string
+				skipFile bool
+			)
+			patch, _ := c.Patch(prevCommit)
+			for _, f := range patch.FilePatches() {
+				skipFile = false
 				from, to := f.Files()
 				if from != nil {
 					filePath = from.Path()
@@ -353,24 +349,28 @@ func auditBranch(r *git.Repository, ref *plumbing.Reference, leaks []Leak, commi
 				for _, re := range whiteListFiles {
 					if re.FindString(filePath) != "" {
 						skipFile = true
+						break
 					}
 				}
 				if skipFile {
 					continue
 				}
-
 				chunks := f.Chunks()
 				for _, chunk := range chunks {
-					leaksL = append(leaksL, checkDiff(chunk.Content(), c, filePath, string(ref.Name()))...)
+					if chunk.Type() == 1 || chunk.Type() == 2 {
+						// only check if adding or removing
+						leaks = append(leaks, checkDiff(chunk.Content(), c, filePath, string(ref.Name()))...)
+					}
 				}
 			}
+
 			if limitGoRoutines {
 				<-semaphore
 			}
-			commitChan <- leaksL
-		}(c, prevTree)
+			commitChan <- leaks
+		}(c, prevCommit)
 
-		prevTree, _ = c.Tree()
+		prevCommit = c
 		return nil
 	})
 	return nil
@@ -409,11 +409,11 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 				skipBranch = false
 				return nil
 			}
-			auditBranch(r, ref, leaks, &commitWg, commitChan)
+			auditRef(r, ref, &commitWg, commitChan)
 			return nil
 		})
 	} else {
-		auditBranch(r, ref, leaks, &commitWg, commitChan)
+		auditRef(r, ref, &commitWg, commitChan)
 	}
 
 	go func() {
@@ -436,15 +436,15 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 // checkDiff accepts a string diff and commit object then performs a
 // regex check
 func checkDiff(diff string, commit *object.Commit, filePath string, branch string) []Leak {
+	if commit.Hash.String() == "eaeffdc65b4c73ccb67e75d96bd8743be2c85973" {
+		fmt.Println("DIFFF", diff)
+	}
 	lines := strings.Split(diff, "\n")
-	var (
-		leaks       []Leak
-		ignoreMatch bool
-	)
+	var leaks []Leak
 
 	for _, line := range lines {
+	NEXTLINE:
 		for leakType, re := range regexes {
-			ignoreMatch = false
 			match := re.FindString(line)
 			if match == "" {
 				continue
@@ -454,11 +454,8 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 			for _, wRe := range whiteListRegexes {
 				whitelistMatch := wRe.FindString(line)
 				if whitelistMatch != "" {
-					ignoreMatch = true
+					goto NEXTLINE
 				}
-			}
-			if ignoreMatch {
-				continue
 			}
 
 			leak := Leak{
@@ -471,7 +468,12 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				File:     filePath,
 				Branch:   branch,
 			}
-			leak.log()
+			if opts.Verbose {
+				leak.log()
+			}
+			if opts.Redact {
+				leak.Offender = "REDACTED"
+			}
 			leaks = append(leaks, leak)
 		}
 	}
@@ -582,8 +584,6 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 	)
 
 	for {
-		// iterate through organization's repo descriptors, open git repos on disk or in mem
-		// depending on what options have been set
 		rs, resp, err := client.Repositories.ListByOrg(ctx, opts.GithubOrg, listOpts)
 		for _, rDesc := range rs {
 			log.Debugf("Cloning: %s from %s", *rDesc.Name, *rDesc.SSHURL)
@@ -641,7 +641,6 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 	return repos, err
 }
 
-// gets github client
 func githubToken() *http.Client {
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
@@ -653,7 +652,7 @@ func githubToken() *http.Client {
 	return oauth2.NewClient(context.Background(), ts)
 }
 
-// discoverRepos looks navigates all the directories of `path`. If a child directory
+// discoverRepos walks all the children of `path`. If a child directory
 // contain a .git file then that repo will be added
 func discoverRepos(ownerPath string) ([]Repo, error) {
 	var (
@@ -683,7 +682,7 @@ func discoverRepos(ownerPath string) ([]Repo, error) {
 
 // setLogLevel sets log level for gitleaks. Default is Warning
 func setLogLevel() {
-	switch opts.LogLevel {
+	switch opts.Log {
 	case "info":
 		log.SetLevel(log.InfoLevel)
 	case "debug":

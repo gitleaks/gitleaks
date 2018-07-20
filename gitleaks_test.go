@@ -22,7 +22,7 @@ func TestGetRepo(t *testing.T) {
 		panic(err)
 	}
 	_, err = git.PlainClone(dir, false, &git.CloneOptions{
-		URL: "https://github.com/zricethezav/gronit",
+		URL: "https://github.com/gitleakstest/gronit",
 	})
 
 	if err != nil {
@@ -36,14 +36,14 @@ func TestGetRepo(t *testing.T) {
 	}{
 		{
 			testOpts: Options{
-				Repo: "https://github.com/zricethezav/gronit",
+				Repo: "https://github.com/gitleakstest/gronit",
 			},
 			description:    "test plain clone remote repo",
 			expectedErrMsg: "",
 		},
 		{
 			testOpts: Options{
-				Repo:  "https://github.com/zricethezav/gronit",
+				Repo:  "https://github.com/gitleakstest/gronit",
 				InMem: true,
 			},
 			description:    "test inmem clone remote repo",
@@ -58,14 +58,14 @@ func TestGetRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo: "https://github.com/zricethezav/nope",
+				Repo: "https://github.com/gitleakstest/nope",
 			},
 			description:    "test no repo",
 			expectedErrMsg: "authentication required",
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/zricethezav/private",
+				Repo:           "https://github.com/gitleakstest/private",
 				IncludePrivate: true,
 			},
 			description:    "test private repo",
@@ -73,7 +73,7 @@ func TestGetRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/zricethezav/private",
+				Repo:           "https://github.com/gitleakstest/private",
 				IncludePrivate: true,
 				InMem:          true,
 			},
@@ -103,10 +103,10 @@ func TestGetOwnerRepo(t *testing.T) {
 		panic(err)
 	}
 	git.PlainClone(dir+"/gronit", false, &git.CloneOptions{
-		URL: "https://github.com/zricethezav/gronit",
+		URL: "https://github.com/gitleakstest/gronit",
 	})
 	git.PlainClone(dir+"/h1domains", false, &git.CloneOptions{
-		URL: "https://github.com/zricethezav/h1domains",
+		URL: "https://github.com/gitleakstest/h1domains",
 	})
 	var tests = []struct {
 		testOpts       Options
@@ -191,6 +191,54 @@ func TestGetOwnerRepo(t *testing.T) {
 	}
 }
 
+func TestWriteReport(t *testing.T) {
+	tmpDir, _ := ioutil.TempDir("", "reportDir")
+	reportFile := path.Join(tmpDir, "report.json")
+	defer os.RemoveAll(tmpDir)
+	leaks := []Leak{
+		{
+			Line:     "eat",
+			Commit:   "your",
+			Offender: "veggies",
+			Type:     "and",
+			Message:  "get",
+			Author:   "some",
+			File:     "sleep",
+			Branch:   "thxu",
+		},
+	}
+
+	var tests = []struct {
+		leaks       []Leak
+		reportFile  string
+		fileName    string
+		description string
+		testOpts    Options
+	}{
+		{
+			leaks:       leaks,
+			reportFile:  reportFile,
+			fileName:    "report.json",
+			description: "can we write a file",
+			testOpts: Options{
+				Report: reportFile,
+			},
+		},
+	}
+	g := goblin.Goblin(t)
+	for _, test := range tests {
+		g.Describe("TestWriteReport", func() {
+			g.It(test.description, func() {
+				opts = test.testOpts
+				writeReport(test.leaks)
+				f, _ := os.Stat(test.reportFile)
+				g.Assert(f.Name()).Equal(test.fileName)
+			})
+		})
+	}
+
+}
+
 func TestAuditRepo(t *testing.T) {
 	var leaks []Leak
 	err := loadToml()
@@ -212,11 +260,14 @@ func TestAuditRepo(t *testing.T) {
 	}
 
 	var tests = []struct {
-		testOpts       Options
-		description    string
-		expectedErrMsg string
-		numLeaks       int
-		repo           *git.Repository
+		testOpts          Options
+		description       string
+		expectedErrMsg    string
+		numLeaks          int
+		repo              *git.Repository
+		whiteListFiles    []*regexp.Regexp
+		whiteListCommits  map[string]bool
+		whiteListBranches []string
 	}{
 		{
 			repo:        leaksRepo,
@@ -232,9 +283,30 @@ func TestAuditRepo(t *testing.T) {
 			},
 		},
 		{
+			repo:        leaksRepo,
+			description: "two leaks present limit goroutines",
+			numLeaks:    2,
+		},
+		{
 			repo:        cleanRepo,
 			description: "no leaks present",
 			numLeaks:    0,
+		},
+		{
+			repo:        leaksRepo,
+			description: "two leaks present whitelist go files",
+			whiteListFiles: []*regexp.Regexp{
+				regexp.MustCompile(".go"),
+			},
+			numLeaks: 0,
+		},
+		{
+			repo:        leaksRepo,
+			description: "two leaks present whitelist bad commit",
+			whiteListCommits: map[string]bool{
+				"eaeffdc65b4c73ccb67e75d96bd8743be2c85973": true,
+			},
+			numLeaks: 1,
 		},
 	}
 
@@ -243,6 +315,16 @@ func TestAuditRepo(t *testing.T) {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
+				if test.whiteListFiles != nil {
+					whiteListFiles = test.whiteListFiles
+				} else {
+					whiteListFiles = nil
+				}
+				if test.whiteListCommits != nil {
+					whiteListCommits = test.whiteListCommits
+				} else {
+					whiteListCommits = nil
+				}
 				leaks, err = auditRepo(test.repo)
 				g.Assert(len(leaks)).Equal(test.numLeaks)
 			})
