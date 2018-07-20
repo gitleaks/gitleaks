@@ -338,13 +338,11 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 			for _, f := range patch.FilePatches() {
 				skipFile = false
 				from, to := f.Files()
+				filePath = "???"
 				if from != nil {
 					filePath = from.Path()
 				} else if to != nil {
 					filePath = to.Path()
-				} else {
-					log.Debug("unable to determine file for commit %s", c.Hash)
-					filePath = ""
 				}
 				for _, re := range whiteListFiles {
 					if re.FindString(filePath) != "" {
@@ -436,14 +434,14 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 // checkDiff accepts a string diff and commit object then performs a
 // regex check
 func checkDiff(diff string, commit *object.Commit, filePath string, branch string) []Leak {
-	if commit.Hash.String() == "eaeffdc65b4c73ccb67e75d96bd8743be2c85973" {
-		fmt.Println("DIFFF", diff)
-	}
 	lines := strings.Split(diff, "\n")
-	var leaks []Leak
+	var (
+		leaks    []Leak
+		skipLine bool
+	)
 
 	for _, line := range lines {
-	NEXTLINE:
+		skipLine = false
 		for leakType, re := range regexes {
 			match := re.FindString(line)
 			if match == "" {
@@ -454,8 +452,12 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 			for _, wRe := range whiteListRegexes {
 				whitelistMatch := wRe.FindString(line)
 				if whitelistMatch != "" {
-					goto NEXTLINE
+					skipLine = true
+					break
 				}
+			}
+			if skipLine {
+				break
 			}
 
 			leak := Leak{

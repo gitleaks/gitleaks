@@ -268,6 +268,7 @@ func TestAuditRepo(t *testing.T) {
 		whiteListFiles    []*regexp.Regexp
 		whiteListCommits  map[string]bool
 		whiteListBranches []string
+		whiteListRegexes  []*regexp.Regexp
 	}{
 		{
 			repo:        leaksRepo,
@@ -281,6 +282,33 @@ func TestAuditRepo(t *testing.T) {
 			testOpts: Options{
 				MaxGoRoutines: 2,
 			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "audit all branch",
+			numLeaks:    6,
+			testOpts: Options{
+				AuditAllBranches: true,
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "audit all branch whitelist 1",
+			numLeaks:    4,
+			testOpts: Options{
+				AuditAllBranches: true,
+			},
+			whiteListBranches: []string{
+				"origin/master",
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "two leaks present whitelist AWS.. no leaks",
+			whiteListRegexes: []*regexp.Regexp{
+				regexp.MustCompile("AKIA"),
+			},
+			numLeaks: 0,
 		},
 		{
 			repo:        leaksRepo,
@@ -308,6 +336,14 @@ func TestAuditRepo(t *testing.T) {
 			},
 			numLeaks: 1,
 		},
+		{
+			repo:        leaksRepo,
+			description: "redact",
+			testOpts: Options{
+				Redact: true,
+			},
+			numLeaks: 2,
+		},
 	}
 
 	g := goblin.Goblin(t)
@@ -325,7 +361,21 @@ func TestAuditRepo(t *testing.T) {
 				} else {
 					whiteListCommits = nil
 				}
+				if test.whiteListBranches != nil {
+					whiteListBranches = test.whiteListBranches
+				} else {
+					whiteListBranches = nil
+				}
+				if test.whiteListRegexes != nil {
+					whiteListRegexes = test.whiteListRegexes
+				} else {
+					whiteListRegexes = nil
+				}
 				leaks, err = auditRepo(test.repo)
+
+				if opts.Redact {
+					g.Assert(leaks[0].Offender).Equal("REDACTED")
+				}
 				g.Assert(len(leaks)).Equal(test.numLeaks)
 			})
 		})
