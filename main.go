@@ -158,18 +158,17 @@ var (
 	singleSearchRegex *regexp.Regexp
 	whiteListRegexes  []*regexp.Regexp
 	whiteListFiles    []*regexp.Regexp
-	whiteListCommits  map[string]bool
+	whiteListCommits  = make(map[string]bool)
 	whiteListBranches []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
-	fileNameRegex     *regexp.Regexp
 )
 
 func init() {
 	log.SetOutput(os.Stdout)
 	regexes = make(map[string]*regexp.Regexp)
-	fileDiffRegex = regexp.MustCompile("diff --git a.+b/")
+	whiteListCommits = make(map[string]bool)
 }
 
 func main() {
@@ -746,7 +745,6 @@ func loadToml() error {
 		if err != nil {
 			return fmt.Errorf("problem loading default config: %v", err)
 		}
-
 	}
 
 	// load up regexes

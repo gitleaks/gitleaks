@@ -14,6 +14,48 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
+const testWhitelistCommit = `
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[whitelist]
+commits = [
+  "eaeffdc65b4c73ccb67e75d96bd8743be2c85973",
+]
+`
+const testWhitelistFile = `
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[whitelist]
+files = [
+  ".go",
+]
+`
+const testWhitelistBranch = `
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[whitelist]
+branches = [
+  "origin/master",
+]
+`
+
+const testWhitelistRegex = `
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[whitelist]
+regexes= [
+  "AKIA",
+]
+`
+
 func TestGetRepo(t *testing.T) {
 	var err error
 	dir, err = ioutil.TempDir("", "gitleaksTestRepo")
@@ -239,9 +281,21 @@ func TestWriteReport(t *testing.T) {
 
 }
 
+func testTomlLoader() string {
+	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
+	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "branch"), []byte(testWhitelistBranch), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
+	return tmpDir
+}
+
 func TestAuditRepo(t *testing.T) {
 	var leaks []Leak
 	err := loadToml()
+	configsDir := testTomlLoader()
+	defer os.RemoveAll(configsDir)
+
 	if err != nil {
 		panic(err)
 	}
@@ -269,6 +323,7 @@ func TestAuditRepo(t *testing.T) {
 		whiteListCommits  map[string]bool
 		whiteListBranches []string
 		whiteListRegexes  []*regexp.Regexp
+		configPath        string
 	}{
 		{
 			repo:        leaksRepo,
@@ -344,13 +399,42 @@ func TestAuditRepo(t *testing.T) {
 			},
 			numLeaks: 2,
 		},
+		{
+			repo:        leaksRepo,
+			description: "toml whitelist regex",
+			configPath:  path.Join(configsDir, "regex"),
+			numLeaks:    0,
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml whitelist branch",
+			configPath:  path.Join(configsDir, "branch"),
+			testOpts: Options{
+				AuditAllBranches: true,
+			},
+			numLeaks: 4,
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml whitelist file",
+			configPath:  path.Join(configsDir, "file"),
+			numLeaks:    0,
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml whitelist commit",
+			configPath:  path.Join(configsDir, "commit"),
+			numLeaks:    0,
+		},
 	}
 
+	whiteListCommits = make(map[string]bool)
 	g := goblin.Goblin(t)
 	for _, test := range tests {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
+				// settin da globs
 				if test.whiteListFiles != nil {
 					whiteListFiles = test.whiteListFiles
 				} else {
@@ -371,6 +455,13 @@ func TestAuditRepo(t *testing.T) {
 				} else {
 					whiteListRegexes = nil
 				}
+
+				// config paths
+				if test.configPath != "" {
+					os.Setenv("GITLEAKS_CONFIG", test.configPath)
+					loadToml()
+				}
+
 				leaks, err = auditRepo(test.repo)
 
 				if opts.Redact {
