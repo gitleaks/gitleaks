@@ -62,7 +62,7 @@ type Options struct {
 	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
 	GithubUser     string `long:"github-user" description:"User url to audit"`
 	GithubOrg      string `long:"github-org" description:"Organization url to audit"`
-	IncludePrivate bool   `long:"private" description:"Include private repos in audit"`
+	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
 	/*
 		TODO:
@@ -71,7 +71,7 @@ type Options struct {
 	*/
 
 	Branch string `short:"b" long:"branch" description:"branch name to audit (defaults to HEAD)"`
-	Commit string `long:"commit" description:"sha of commit to stop at"`
+	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -79,7 +79,7 @@ type Options struct {
 
 	// Process options
 	MaxGoRoutines    int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	InMem            bool   `long:"in-memory" description:"Run gitleaks in memory"`
+	InMem            bool   `short:"m" long:"in-memory" description:"Run gitleaks in memory"`
 	AuditAllBranches bool   `long:"branches-all" description:"run audit on all branches"`
 	SingleSearch     string `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath       string `long:"config" description:"path to gitleaks config"`
@@ -87,9 +87,9 @@ type Options struct {
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
-	Log     string `long:"log" description:"log level"`
+	Log     string `short:"l" long:"log" description:"log level"`
 	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report  string `long:"report" description:"path to report"`
+	Report  string `long:"report" description:"path to write report file"`
 	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
 }
 
@@ -316,6 +316,9 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 		return err
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
+		if c.Hash.String() == opts.Commit {
+			cIter.Close()
+		}
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
@@ -326,6 +329,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 		if prevCommit == nil {
 			prevCommit = c
 		}
+
 		commitWg.Add(1)
 		go func(c *object.Commit, prevCommit *object.Commit) {
 			var (
