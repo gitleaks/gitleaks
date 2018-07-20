@@ -424,7 +424,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "toml whitelist commit",
 			configPath:  path.Join(configsDir, "commit"),
-			numLeaks:    0,
+			numLeaks:    1,
 		},
 	}
 

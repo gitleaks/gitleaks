@@ -158,7 +158,7 @@ var (
 	singleSearchRegex *regexp.Regexp
 	whiteListRegexes  []*regexp.Regexp
 	whiteListFiles    []*regexp.Regexp
-	whiteListCommits  = make(map[string]bool)
+	whiteListCommits  map[string]bool
 	whiteListBranches []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
@@ -757,6 +757,7 @@ func loadToml() error {
 		}
 	}
 	whiteListBranches = config.Whitelist.Branches
+	whiteListCommits = make(map[string]bool)
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
 	}
