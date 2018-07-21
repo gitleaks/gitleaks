@@ -231,8 +231,9 @@ func main() {
 		writeReport(leaks)
 	}
 
-	if err != nil {
-		log.Fatal(err)
+	if len(leaks) != 0 {
+		log.Debug("leaks detected")
+		os.Exit(1)
 	}
 }
 

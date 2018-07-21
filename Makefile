@@ -12,9 +12,10 @@ deploy:
 	docker push $(REPO)
 
 build-all:
-	env GOOS="windows" GOARCH="amd64" go build -o "gitleaks-windows-amd64.exe"
-	env GOOS="windows" GOARCH="386" go build -o "gitleaks-windows-386.exe"
-	env GOOS="linux" GOARCH="amd64" go build -o "gitleaks-linux-amd64"
-	env GOOS="linux" GOARCH="arm" go build -o "gitleaks-linux-arm"
-	env GOOS="linux" GOARCH="mips" go build -o "gitleaks-linux-mips"
-	env GOOS="linux" GOARCH="mips" go build -o "gitleaks-linux-mips"
+	mkdir build
+	env GOOS="windows" GOARCH="amd64" go build -o "build/gitleaks-windows-amd64.exe"
+	env GOOS="windows" GOARCH="386" go build -o "build/gitleaks-windows-386.exe"
+	env GOOS="linux" GOARCH="amd64" go build -o "build/gitleaks-linux-amd64"
+	env GOOS="linux" GOARCH="arm" go build -o "build/gitleaks-linux-arm"
+	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
+	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
