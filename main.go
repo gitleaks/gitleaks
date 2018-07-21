@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -180,7 +181,7 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	setLogLevel()
+	setLogs()
 
 	err = optsGuard()
 	if err != nil {
@@ -221,6 +222,11 @@ func main() {
 	}
 	for _, r := range repos {
 		l, err := auditRepo(r.repository)
+		if len(l) == 0 {
+			log.Infof("\x1b[32;2m%s\x1b[0m found for repo %s", "no leaks", r.name)
+		} else {
+			log.Warnf("\x1b[31;2m%s\x1b[0m found for repo %s", "leaks", r.name)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -254,6 +260,7 @@ func getRepo() (Repo, error) {
 		r   *git.Repository
 	)
 
+	log.Infof("cloning %s", opts.Repo)
 	if opts.Disk {
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if opts.IncludePrivate {
@@ -292,6 +299,7 @@ func getRepo() (Repo, error) {
 		repository: r,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
+		name:       filepath.Base(opts.Repo),
 	}, nil
 }
 
@@ -300,8 +308,7 @@ func getRepo() (Repo, error) {
 // double dip
 func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
 	var (
-		err error
-		// prevTree        *object.Tree
+		err             error
 		prevCommit      *object.Commit
 		limitGoRoutines bool
 		semaphore       chan bool
@@ -431,7 +438,6 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 	}()
 
 	commitWg.Wait()
-
 	return leaks, err
 }
 
@@ -452,7 +458,7 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				continue
 			}
 
-			// whitelists
+			// if offender matches whitelist regex, ignore it
 			for _, wRe := range whiteListRegexes {
 				whitelistMatch := wRe.FindString(line)
 				if whitelistMatch != "" {
@@ -516,7 +522,7 @@ func getOwnerRepos() ([]Repo, error) {
 	return repos, err
 }
 
-// getUserGithubRepos
+// getUserGithubRepos grabs all github user's public and/or private repos
 func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOptions, client *github.Client) ([]Repo, error) {
 	var (
 		err   error
@@ -534,7 +540,7 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 		}
 
 		for _, rDesc := range rs {
-			log.Debugf("Cloning: %s from %s", *rDesc.Name, *rDesc.SSHURL)
+			log.Infof("cloning: %s", *rDesc.Name)
 			if opts.Disk {
 				ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
 				if err != nil {
@@ -580,7 +586,7 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 	return repos, err
 }
 
-// getOrgGithubRepos
+// getOrgGithubRepos grabs all of org's public and/or private repos
 func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrgOptions, client *github.Client) ([]Repo, error) {
 	var (
 		err      error
@@ -592,7 +598,7 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 	for {
 		rs, resp, err := client.Repositories.ListByOrg(ctx, opts.GithubOrg, listOpts)
 		for _, rDesc := range rs {
-			log.Debugf("Cloning: %s from %s", *rDesc.Name, *rDesc.SSHURL)
+			log.Infof("cloning: %s", *rDesc.Name)
 			if opts.Disk {
 				ownerDir, err = ioutil.TempDir(dir, opts.GithubUser)
 				if err != nil {
@@ -647,6 +653,7 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 	return repos, err
 }
 
+// githubToken returns a oauth2 client for the github api to consume
 func githubToken() *http.Client {
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
@@ -687,7 +694,7 @@ func discoverRepos(ownerPath string) ([]Repo, error) {
 }
 
 // setLogLevel sets log level for gitleaks. Default is Warning
-func setLogLevel() {
+func setLogs() {
 	switch opts.Log {
 	case "info":
 		log.SetLevel(log.InfoLevel)
@@ -696,8 +703,11 @@ func setLogLevel() {
 	case "warn":
 		log.SetLevel(log.WarnLevel)
 	default:
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(log.InfoLevel)
 	}
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
 }
 
 // optsGuard prevents invalid options
@@ -723,7 +733,7 @@ func optsGuard() error {
 	return nil
 }
 
-// loadToml loads of the toml config containing regexes.
+// loadToml loads of the toml config containing regexes and whitelists
 // 1. look for config path
 // 2. two, look for gitleaks config env var
 func loadToml() error {
