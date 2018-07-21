@@ -223,9 +223,9 @@ func main() {
 	for _, r := range repos {
 		l, err := auditRepo(r.repository)
 		if len(l) == 0 {
-			log.Infof("\x1b[32;2m%s\x1b[0m found for repo %s", "no leaks", r.name)
+			log.Infof("no leaks found for repo %s", r.name)
 		} else {
-			log.Warnf("\x1b[31;2m%s\x1b[0m found for repo %s", "leaks", r.name)
+			log.Warnf("leaks found for repo %s", r.name)
 		}
 		if err != nil {
 			log.Fatal(err)
