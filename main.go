@@ -368,7 +368,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 				for _, chunk := range chunks {
 					if chunk.Type() == 1 || chunk.Type() == 2 {
 						// only check if adding or removing
-						leaks = append(leaks, checkDiff(chunk.Content(), c, filePath, string(ref.Name()))...)
+						leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()))...)
 					}
 				}
 			}
