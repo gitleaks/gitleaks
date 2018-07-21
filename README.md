@@ -56,4 +56,4 @@ Check the wiki [here](https://github.com/zricethezav/gitleaks/wiki)
 Please read this [Github article on removing sensitive data from a repository](https://help.github.com/articles/removing-sensitive-data-from-a-repository/) to remove the sensitive information from your history.
 
 ### Run me with docker
-Simply run `docker run --rm --name=gitleaks zricethezav/gitleaks https://github.com/zricethezav/gitleaks`
+Simply run `docker run --rm --name=gitleaks zricethezav/gitleaks --help`
