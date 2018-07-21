@@ -5,7 +5,7 @@
   </p>
 </p>
 
-## Audit git repos for secrets, keys, and whatever.
+## Audit git repos for secrets
 ### Powered by src-d's [go-git](https://github.com/src-d/go-git)
 
 #### Installing
