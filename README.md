@@ -30,7 +30,7 @@ Application Options:
       --repo-path=     Path to repo
       --owner-path=    Path to owner directory (repos discovered)
       --max-go=        Maximum number of concurrent go-routines gitleaks spawns
-  -m, --in-memory      Run gitleaks in memory
+      --disk           Clones repo(s) to disk
       --all-refs       run audit on all refs
       --single-search= single regular expression to search for
       --config=        path to gitleaks config

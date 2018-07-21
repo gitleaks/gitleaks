@@ -85,10 +85,10 @@ func TestGetRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo:  "https://github.com/gitleakstest/gronit",
-				InMem: true,
+				Repo: "https://github.com/gitleakstest/gronit",
+				Disk: true,
 			},
-			description:    "test inmem clone remote repo",
+			description:    "test on disk clone remote repo",
 			expectedErrMsg: "",
 		},
 		{
@@ -117,7 +117,7 @@ func TestGetRepo(t *testing.T) {
 			testOpts: Options{
 				Repo:           "https://github.com/gitleakstest/private",
 				IncludePrivate: true,
-				InMem:          true,
+				Disk:           true,
 			},
 			description:    "test private repo",
 			expectedErrMsg: "invalid auth method",
@@ -167,9 +167,9 @@ func TestGetOwnerRepo(t *testing.T) {
 		{
 			testOpts: Options{
 				GithubUser: "gitleakstest",
-				InMem:      true,
+				Disk:       true,
 			},
-			description:    "test github user in mem",
+			description:    "test github user on disk ",
 			numRepos:       2,
 			expectedErrMsg: "",
 		},
@@ -201,9 +201,9 @@ func TestGetOwnerRepo(t *testing.T) {
 		{
 			testOpts: Options{
 				GithubOrg: "gitleakstestorg",
-				InMem:     true,
+				Disk:      true,
 			},
-			description:    "test org in mem",
+			description:    "test org on disk",
 			numRepos:       2,
 			expectedErrMsg: "",
 		},
@@ -211,9 +211,9 @@ func TestGetOwnerRepo(t *testing.T) {
 			testOpts: Options{
 				GithubOrg:      "gitleakstestorg",
 				IncludePrivate: true,
-				InMem:          true,
+				Disk:           true,
 			},
-			description:    "test private org in mem no ssh",
+			description:    "test private org on disk no ssh",
 			numRepos:       0,
 			expectedErrMsg: "no ssh auth available",
 		},
