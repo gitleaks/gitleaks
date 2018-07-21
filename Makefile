@@ -19,3 +19,4 @@ build-all:
 	env GOOS="linux" GOARCH="arm" go build -o "build/gitleaks-linux-arm"
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
+	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64"

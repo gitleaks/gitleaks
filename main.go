@@ -79,7 +79,7 @@ type Options struct {
 
 	// Process options
 	MaxGoRoutines int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	InMem         bool   `short:"m" long:"in-memory" description:"Run gitleaks in memory"`
+	Disk          bool   `long:"disk" description:"Clones repo(s) to disk"`
 	AuditAllRefs  bool   `long:"all-refs" description:"run audit on all refs"`
 	SingleSearch  string `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath    string `long:"config" description:"path to gitleaks config"`
@@ -200,7 +200,7 @@ func main() {
 		}
 	}
 
-	if !opts.InMem {
+	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
 		dir, err = ioutil.TempDir("", "gitleaks")
 		defer os.RemoveAll(dir)
@@ -254,23 +254,7 @@ func getRepo() (Repo, error) {
 		r   *git.Repository
 	)
 
-	if opts.InMem {
-		if opts.IncludePrivate {
-			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-				URL:      opts.Repo,
-				Progress: os.Stdout,
-				Auth:     sshAuth,
-			})
-		} else {
-			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-				URL:      opts.Repo,
-				Progress: os.Stdout,
-			})
-		}
-	} else if opts.RepoPath != "" {
-		// use existing repo
-		r, err = git.PlainOpen(opts.RepoPath)
-	} else {
+	if opts.Disk {
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if opts.IncludePrivate {
 			r, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
@@ -280,6 +264,22 @@ func getRepo() (Repo, error) {
 			})
 		} else {
 			r, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+				URL:      opts.Repo,
+				Progress: os.Stdout,
+			})
+		}
+	} else if opts.RepoPath != "" {
+		// use existing repo
+		r, err = git.PlainOpen(opts.RepoPath)
+	} else {
+		if opts.IncludePrivate {
+			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+				URL:      opts.Repo,
+				Progress: os.Stdout,
+				Auth:     sshAuth,
+			})
+		} else {
+			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			})
@@ -535,18 +535,7 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 
 		for _, rDesc := range rs {
 			log.Debugf("Cloning: %s from %s", *rDesc.Name, *rDesc.SSHURL)
-			if opts.InMem {
-				if opts.IncludePrivate {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-				}
-			} else {
+			if opts.Disk {
 				ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
 				if err != nil {
 					return repos, fmt.Errorf("unable to generater owner temp dir: %v", err)
@@ -561,6 +550,17 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 						URL: *rDesc.CloneURL,
 					})
 
+				}
+			} else {
+				if opts.IncludePrivate {
+					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+						URL:  *rDesc.SSHURL,
+						Auth: sshAuth,
+					})
+				} else {
+					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+						URL: *rDesc.CloneURL,
+					})
 				}
 			}
 			if err != nil {
@@ -593,21 +593,7 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 		rs, resp, err := client.Repositories.ListByOrg(ctx, opts.GithubOrg, listOpts)
 		for _, rDesc := range rs {
 			log.Debugf("Cloning: %s from %s", *rDesc.Name, *rDesc.SSHURL)
-			if opts.InMem {
-				if opts.IncludePrivate {
-					if sshAuth == nil {
-						return nil, fmt.Errorf("no ssh auth available")
-					}
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-				}
-			} else {
+			if opts.Disk {
 				ownerDir, err = ioutil.TempDir(dir, opts.GithubUser)
 				if err != nil {
 					return repos, fmt.Errorf("unable to generater owner temp dir: %v", err)
@@ -625,6 +611,20 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 						URL: *rDesc.CloneURL,
 					})
 
+				}
+			} else {
+				if opts.IncludePrivate {
+					if sshAuth == nil {
+						return nil, fmt.Errorf("no ssh auth available")
+					}
+					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+						URL:  *rDesc.SSHURL,
+						Auth: sshAuth,
+					})
+				} else {
+					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+						URL: *rDesc.CloneURL,
+					})
 				}
 			}
 			if err != nil {
