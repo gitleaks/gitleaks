@@ -26,13 +26,12 @@ Application Options:
       --github-user=   User url to audit
       --github-org=    Organization url to audit
   -p, --private        Include private repos in audit
-  -b, --branch=        branch name to audit (defaults to HEAD)
   -c, --commit=        sha of commit to stop at
       --repo-path=     Path to repo
       --owner-path=    Path to owner directory (repos discovered)
       --max-go=        Maximum number of concurrent go-routines gitleaks spawns
   -m, --in-memory      Run gitleaks in memory
-      --branches-all   run audit on all branches
+      --all-refs       run audit on all refs
       --single-search= single regular expression to search for
       --config=        path to gitleaks config
       --ssh-key=       path to ssh key
@@ -51,7 +50,7 @@ Help Options:
 ```
 
 #### Additional Examples and Explanations
-Check the wiki here: {some url}
+Check the wiki [here](https://github.com/zricethezav/gitleaks/wiki)
 
 ### If you find a valid leak in a repo
 Please read this [Github article on removing sensitive data from a repository](https://help.github.com/articles/removing-sensitive-data-from-a-repository/) to remove the sensitive information from your history.

@@ -343,7 +343,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "audit all branch",
 			numLeaks:    6,
 			testOpts: Options{
-				AuditAllBranches: true,
+				AuditAllRefs: true,
 			},
 		},
 		{
@@ -351,7 +351,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "audit all branch whitelist 1",
 			numLeaks:    4,
 			testOpts: Options{
-				AuditAllBranches: true,
+				AuditAllRefs: true,
 			},
 			whiteListBranches: []string{
 				"origin/master",
@@ -410,7 +410,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "toml whitelist branch",
 			configPath:  path.Join(configsDir, "branch"),
 			testOpts: Options{
-				AuditAllBranches: true,
+				AuditAllRefs: true,
 			},
 			numLeaks: 4,
 		},

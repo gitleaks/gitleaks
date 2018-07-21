@@ -78,12 +78,12 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	MaxGoRoutines    int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	InMem            bool   `short:"m" long:"in-memory" description:"Run gitleaks in memory"`
-	AuditAllBranches bool   `long:"branches-all" description:"run audit on all branches"`
-	SingleSearch     string `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath       string `long:"config" description:"path to gitleaks config"`
-	SSHKey           string `long:"ssh-key" description:"path to ssh key"`
+	MaxGoRoutines int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
+	InMem         bool   `short:"m" long:"in-memory" description:"Run gitleaks in memory"`
+	AuditAllRefs  bool   `long:"all-refs" description:"run audit on all refs"`
+	SingleSearch  string `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath    string `long:"config" description:"path to gitleaks config"`
+	SSHKey        string `long:"ssh-key" description:"path to ssh key"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -394,7 +394,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 	// leak messaging
 	commitChan := make(chan []Leak, 1)
 
-	if opts.AuditAllBranches || opts.Branch != "" {
+	if opts.AuditAllRefs {
 		skipBranch := false
 		refs, err := r.Storer.IterReferences()
 		if err != nil {
