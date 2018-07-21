@@ -1,0 +1,30 @@
+title = "gitleaks config"
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+[[regexes]]
+description = "RKCS8"
+regex = '''-----BEGIN PRIVATE KEY-----'''
+[[regexes]]
+description = "RSA"
+regex = '''-----BEGIN RSA PRIVATE KEY-----'''
+[[regexes]]
+description = "Github"
+regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
+[[regexes]]
+description = "SSH"
+regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+[[regexes]]
+description = "Facebook"
+regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
+[[regexes]]
+description = "Facebook"
+regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
+
+[whitelist]
+regexes = [
+  "AKIA.*",
+]
+files = [
+  "(.*?)(jpg|gif|doc|pdf|bin|go)$"
+]
