@@ -129,7 +129,7 @@ regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
 description = "Facebook"
 regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
 [[regexes]]
-description = "Facebook"
+description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 
 [whitelist]
