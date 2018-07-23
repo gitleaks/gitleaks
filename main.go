@@ -92,6 +92,7 @@ type Options struct {
 	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
 	Report  string `long:"report" description:"path to write report file"`
 	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
+	Version bool   `long:"version" description:"version number"`
 }
 
 // Config struct for regexes matching and whitelisting
@@ -108,6 +109,7 @@ type Config struct {
 	}
 }
 
+const version = "1.1.2"
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
@@ -178,6 +180,10 @@ func main() {
 		repos []Repo
 	)
 	_, err := flags.Parse(&opts)
+	if opts.Version {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 	if err != nil {
 		os.Exit(1)
 	}
