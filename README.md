@@ -7,6 +7,9 @@
 
 ## Audit git repos for secrets
 ### Powered by src-d's [go-git](https://github.com/src-d/go-git)
+<p align="center">
+    <img src="https://cdn.rawgit.com/zricethezav/5bf8259b7fea0170becffc06b8588edb/raw/f762769fe20ef3669bff34612b1bede6457631e6/termtosvg_je8bp82s.svg">
+</p>
 
 #### Installing
 
