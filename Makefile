@@ -1,4 +1,4 @@
-.PHONY: test build-all release
+.PHONY: test build-all deploy
 
 test:
 	go get github.com/golang/lint/golint
@@ -12,6 +12,7 @@ deploy:
 	docker push $(REPO)
 
 build-all:
+	rm -rf build
 	mkdir build
 	env GOOS="windows" GOARCH="amd64" go build -o "build/gitleaks-windows-amd64.exe"
 	env GOOS="windows" GOARCH="386" go build -o "build/gitleaks-windows-386.exe"
