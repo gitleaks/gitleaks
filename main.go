@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path"
@@ -63,6 +64,7 @@ type Options struct {
 	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
 	GithubUser     string `long:"github-user" description:"User url to audit"`
 	GithubOrg      string `long:"github-org" description:"Organization url to audit"`
+	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
 	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
 	/*
@@ -109,6 +111,7 @@ type Config struct {
 	}
 }
 
+const defaultGithubURL = "https://api.github.com/"
 const version = "1.1.2"
 const defaultConfig = `
 title = "gitleaks config"
@@ -510,12 +513,22 @@ func getOwnerRepos() ([]Repo, error) {
 		repos, err = discoverRepos(opts.OwnerPath)
 	} else if opts.GithubOrg != "" {
 		githubClient := github.NewClient(githubToken())
+		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+			ghURL, _ := url.Parse(opts.GithubURL)
+			githubClient.BaseURL = ghURL
+		}
+
 		githubOptions := github.RepositoryListByOrgOptions{
 			ListOptions: github.ListOptions{PerPage: 10},
 		}
 		repos, err = getOrgGithubRepos(ctx, &githubOptions, githubClient)
 	} else if opts.GithubUser != "" {
 		githubClient := github.NewClient(githubToken())
+		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+			ghURL, _ := url.Parse(opts.GithubURL)
+			githubClient.BaseURL = ghURL
+		}
+
 		githubOptions := github.RepositoryListOptions{
 			Affiliation: "owner",
 			ListOptions: github.ListOptions{
@@ -727,6 +740,18 @@ func optsGuard() error {
 		return fmt.Errorf("github user set and local owner path")
 	} else if opts.IncludePrivate && os.Getenv("GITHUB_TOKEN") == "" && (opts.GithubOrg != "" || opts.GithubUser != "") {
 		return fmt.Errorf("user/organization private repos require env var GITHUB_TOKEN to be set")
+	}
+
+	// do the URL Parse and error checking here, so we can skip it later
+	// empty string is OK, it will default to the public github URL.
+	if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+		if !strings.HasSuffix(opts.GithubURL, "/") {
+			opts.GithubURL += "/"
+		}
+		_, err := url.Parse(opts.GithubURL)
+		if err != nil {
+			return err
+		}
 	}
 
 	if opts.SingleSearch != "" {
