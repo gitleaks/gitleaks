@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
@@ -748,9 +750,18 @@ func optsGuard() error {
 		if !strings.HasSuffix(opts.GithubURL, "/") {
 			opts.GithubURL += "/"
 		}
-		_, err := url.Parse(opts.GithubURL)
+		ghURL, err := url.Parse(opts.GithubURL)
 		if err != nil {
 			return err
+		}
+		tcpPort := "443"
+		if ghURL.Scheme == "http" {
+			tcpPort = "80"
+		}
+		timeout := time.Duration(1 * time.Second)
+		_, err = net.DialTimeout("tcp", ghURL.Host+":"+tcpPort, timeout)
+		if err != nil {
+			return fmt.Errorf("%s unreachable, error: %s", ghURL.Host, err)
 		}
 	}
 
