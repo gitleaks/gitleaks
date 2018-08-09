@@ -51,6 +51,7 @@ type Repo struct {
 	name       string
 	leaks      []Leak
 	repository *git.Repository
+	err        error
 }
 
 // Owner contains a collection of repos. This could represent an org or user.
@@ -232,6 +233,10 @@ func main() {
 		repos, err = getOwnerRepos()
 	}
 	for _, r := range repos {
+		if r.err != nil {
+			log.Warnf("skipping audit for repo %s due to cloning error: %s", r.name, r.err)
+			continue
+		}
 		l, err := auditRepo(r.repository)
 		if len(l) == 0 {
 			log.Infof("no leaks found for repo %s", r.name)
@@ -239,7 +244,7 @@ func main() {
 			log.Warnf("leaks found for repo %s", r.name)
 		}
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("error during audit: %s", err)
 		}
 		leaks = append(leaks, l...)
 	}
@@ -249,7 +254,7 @@ func main() {
 	}
 
 	if len(leaks) != 0 {
-		log.Debug("leaks detected")
+		log.Errorf("leaks detected")
 		os.Exit(1)
 	}
 }
@@ -303,14 +308,12 @@ func getRepo() (Repo, error) {
 			})
 		}
 	}
-	if err != nil {
-		return Repo{}, err
-	}
 	return Repo{
 		repository: r,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
 		name:       filepath.Base(opts.Repo),
+		err:        err,
 	}, nil
 }
 
@@ -590,13 +593,11 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 					})
 				}
 			}
-			if err != nil {
-				return repos, fmt.Errorf("problem cloning %s -- %v", *rDesc.Name, err)
-			}
 			repos = append(repos, Repo{
 				name:       *rDesc.Name,
 				url:        *rDesc.SSHURL,
 				repository: r,
+				err:        err,
 			})
 		}
 		if resp.NextPage == 0 {
@@ -654,18 +655,14 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 					})
 				}
 			}
-			if err != nil {
-				return nil, err
-			}
 			repos = append(repos, Repo{
 				url:        *rDesc.SSHURL,
 				name:       *rDesc.Name,
 				repository: r,
+				err:        err,
 			})
 		}
-		if err != nil {
-			return nil, err
-		} else if resp.NextPage == 0 {
+		if resp.NextPage == 0 {
 			break
 		}
 		listOpts.Page = resp.NextPage
