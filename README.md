@@ -28,7 +28,9 @@ Application Options:
   -r, --repo=          Repo url to audit
       --github-user=   User url to audit
       --github-org=    Organization url to audit
+      --github-url=    GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
   -p, --private        Include private repos in audit
+  -b, --branch=        branch name to audit (defaults to HEAD)
   -c, --commit=        sha of commit to stop at
       --repo-path=     Path to repo
       --owner-path=    Path to owner directory (repos discovered)
@@ -42,6 +44,7 @@ Application Options:
   -v, --verbose        Show verbose output from gitleaks audit
       --report=        path to write report file
       --redact         redact secrets from log messages and report
+      --version        version number
 
 Help Options:
   -h, --help           Show this help message

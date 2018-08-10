@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/user"
 	"path"
@@ -14,6 +16,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
@@ -48,6 +51,7 @@ type Repo struct {
 	name       string
 	leaks      []Leak
 	repository *git.Repository
+	err        error
 }
 
 // Owner contains a collection of repos. This could represent an org or user.
@@ -63,6 +67,7 @@ type Options struct {
 	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
 	GithubUser     string `long:"github-user" description:"User url to audit"`
 	GithubOrg      string `long:"github-org" description:"Organization url to audit"`
+	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
 	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
 	/*
@@ -109,6 +114,7 @@ type Config struct {
 	}
 }
 
+const defaultGithubURL = "https://api.github.com/"
 const version = "1.1.2"
 const defaultConfig = `
 title = "gitleaks config"
@@ -227,6 +233,10 @@ func main() {
 		repos, err = getOwnerRepos()
 	}
 	for _, r := range repos {
+		if r.err != nil {
+			log.Warnf("skipping audit for repo %s due to cloning error: %s", r.name, r.err)
+			continue
+		}
 		l, err := auditRepo(r.repository)
 		if len(l) == 0 {
 			log.Infof("no leaks found for repo %s", r.name)
@@ -234,7 +244,7 @@ func main() {
 			log.Warnf("leaks found for repo %s", r.name)
 		}
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("error during audit: %s", err)
 		}
 		leaks = append(leaks, l...)
 	}
@@ -244,7 +254,7 @@ func main() {
 	}
 
 	if len(leaks) != 0 {
-		log.Debug("leaks detected")
+		log.Errorf("leaks detected")
 		os.Exit(1)
 	}
 }
@@ -298,14 +308,12 @@ func getRepo() (Repo, error) {
 			})
 		}
 	}
-	if err != nil {
-		return Repo{}, err
-	}
 	return Repo{
 		repository: r,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
 		name:       filepath.Base(opts.Repo),
+		err:        err,
 	}, nil
 }
 
@@ -510,12 +518,22 @@ func getOwnerRepos() ([]Repo, error) {
 		repos, err = discoverRepos(opts.OwnerPath)
 	} else if opts.GithubOrg != "" {
 		githubClient := github.NewClient(githubToken())
+		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+			ghURL, _ := url.Parse(opts.GithubURL)
+			githubClient.BaseURL = ghURL
+		}
+
 		githubOptions := github.RepositoryListByOrgOptions{
 			ListOptions: github.ListOptions{PerPage: 10},
 		}
 		repos, err = getOrgGithubRepos(ctx, &githubOptions, githubClient)
 	} else if opts.GithubUser != "" {
 		githubClient := github.NewClient(githubToken())
+		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+			ghURL, _ := url.Parse(opts.GithubURL)
+			githubClient.BaseURL = ghURL
+		}
+
 		githubOptions := github.RepositoryListOptions{
 			Affiliation: "owner",
 			ListOptions: github.ListOptions{
@@ -575,13 +593,11 @@ func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOpti
 					})
 				}
 			}
-			if err != nil {
-				return repos, fmt.Errorf("problem cloning %s -- %v", *rDesc.Name, err)
-			}
 			repos = append(repos, Repo{
 				name:       *rDesc.Name,
 				url:        *rDesc.SSHURL,
 				repository: r,
+				err:        err,
 			})
 		}
 		if resp.NextPage == 0 {
@@ -639,18 +655,14 @@ func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrg
 					})
 				}
 			}
-			if err != nil {
-				return nil, err
-			}
 			repos = append(repos, Repo{
 				url:        *rDesc.SSHURL,
 				name:       *rDesc.Name,
 				repository: r,
+				err:        err,
 			})
 		}
-		if err != nil {
-			return nil, err
-		} else if resp.NextPage == 0 {
+		if resp.NextPage == 0 {
 			break
 		}
 		listOpts.Page = resp.NextPage
@@ -727,6 +739,27 @@ func optsGuard() error {
 		return fmt.Errorf("github user set and local owner path")
 	} else if opts.IncludePrivate && os.Getenv("GITHUB_TOKEN") == "" && (opts.GithubOrg != "" || opts.GithubUser != "") {
 		return fmt.Errorf("user/organization private repos require env var GITHUB_TOKEN to be set")
+	}
+
+	// do the URL Parse and error checking here, so we can skip it later
+	// empty string is OK, it will default to the public github URL.
+	if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
+		if !strings.HasSuffix(opts.GithubURL, "/") {
+			opts.GithubURL += "/"
+		}
+		ghURL, err := url.Parse(opts.GithubURL)
+		if err != nil {
+			return err
+		}
+		tcpPort := "443"
+		if ghURL.Scheme == "http" {
+			tcpPort = "80"
+		}
+		timeout := time.Duration(1 * time.Second)
+		_, err = net.DialTimeout("tcp", ghURL.Host+":"+tcpPort, timeout)
+		if err != nil {
+			return fmt.Errorf("%s unreachable, error: %s", ghURL.Host, err)
+		}
 	}
 
 	if opts.SingleSearch != "" {

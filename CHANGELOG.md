@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.2.0
+-----
+- Added support for providing an alternate GitHub URL to support scanning GitHub Enteprise repositories
+
 1.1.2
 -----
 - Added version option
