@@ -276,8 +276,8 @@ func getRepo() (Repo, error) {
 		r   *git.Repository
 	)
 
-	log.Infof("cloning %s", opts.Repo)
 	if opts.Disk {
+		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if opts.IncludePrivate {
 			r, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
@@ -293,8 +293,10 @@ func getRepo() (Repo, error) {
 		}
 	} else if opts.RepoPath != "" {
 		// use existing repo
+		log.Infof("opening %s", opts.Repo)
 		r, err = git.PlainOpen(opts.RepoPath)
 	} else {
+		log.Infof("cloning %s", opts.Repo)
 		if opts.IncludePrivate {
 			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
@@ -351,7 +353,6 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 		if prevCommit == nil {
 			prevCommit = c
 		}
-
 		commitWg.Add(1)
 		go func(c *object.Commit, prevCommit *object.Commit) {
 			var (
@@ -359,7 +360,15 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 				filePath string
 				skipFile bool
 			)
-			patch, _ := c.Patch(prevCommit)
+			patch, err := c.Patch(prevCommit)
+			if err != nil {
+				log.Infof("problem generating patch for commit: %s\n", c.Hash.String())
+				if limitGoRoutines {
+					<-semaphore
+				}
+				commitChan <- leaks
+				return
+			}
 			for _, f := range patch.FilePatches() {
 				skipFile = false
 				from, to := f.Files()
