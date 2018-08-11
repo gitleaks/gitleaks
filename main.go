@@ -362,7 +362,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 			)
 			patch, err := c.Patch(prevCommit)
 			if err != nil {
-				log.Infof("problem generating patch for commit: %s\n", c.Hash.String())
+				log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
 				if limitGoRoutines {
 					<-semaphore
 				}
