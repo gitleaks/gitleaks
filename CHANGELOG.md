@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.2.1
+-----
+- Check errors when generating commit patch
+
 1.2.0
 -----
 - Added support for providing an alternate GitHub URL to support scanning GitHub Enteprise repositories
