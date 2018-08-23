@@ -445,19 +445,21 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 			return nil
 		})
 	} else {
-		foundBranch := false
-		refs, _ := r.Storer.IterReferences()
-		branch := strings.Split(opts.Branch, "/")[len(strings.Split(opts.Branch, "/"))-1]
-		err = refs.ForEach(func(refBranch *plumbing.Reference) error {
-			if strings.Split(refBranch.Name().String(), "/")[len(strings.Split(refBranch.Name().String(), "/"))-1] == branch {
-				foundBranch = true
-				ref = refBranch
+		if opts.Branch != "" {
+			foundBranch := false
+			refs, _ := r.Storer.IterReferences()
+			branch := strings.Split(opts.Branch, "/")[len(strings.Split(opts.Branch, "/"))-1]
+			err = refs.ForEach(func(refBranch *plumbing.Reference) error {
+				if strings.Split(refBranch.Name().String(), "/")[len(strings.Split(refBranch.Name().String(), "/"))-1] == branch {
+					foundBranch = true
+					ref = refBranch
+				}
+				return nil
+			})
+			if foundBranch == false {
+				log.Fatalf("No branch with name", opts.Branch)
+				return nil, nil
 			}
-			return nil
-		})
-		if foundBranch == false {
-			log.Fatalf("No branch with name", opts.Branch)
-			return nil, nil
 		}
 		auditRef(r, ref, &commitWg, commitChan)
 	}
