@@ -26,16 +26,32 @@
 
 
 [[constraint]]
-  name = "github.com/boltdb/bolt"
-  version = "1.3.1"
+  name = "github.com/BurntSushi/toml"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "github.com/franela/goblin"
+  version = "0.0.2"
 
 [[constraint]]
   name = "github.com/google/go-github"
   version = "15.0.0"
 
 [[constraint]]
+  name = "github.com/jessevdk/go-flags"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
   branch = "master"
   name = "golang.org/x/oauth2"
+
+[[constraint]]
+  name = "gopkg.in/src-d/go-git.v4"
+  version = "4.5.0"
 
 [prune]
   go-tests = true

@@ -4,22 +4,16 @@ go:
 - 1.9
 services:
 - docker
-branches:
-- master
-- develop
 script:
-- go test -v
+- make test
 after_success:
-- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - export REPO=zricethezav/gitleaks
-- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-- docker build -f Dockerfile -t $REPO:$COMMIT .
-- docker tag $REPO:$COMMIT $REPO:$TAG
-- docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-- echo "Pushing $REPO:$COMMIT $REPO:$TAG"
-- docker push $REPO
+- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH;
+  fi`
+- if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make deploy; fi
 env:
   global:
   - secure: kUjq6Jgnm57V+ikDoYJ4IrFu4bLMHkaBb9uLtbQj0A545zZt4Dbooarnwqbfz2efqqMDZ9TXP6kN6677yWm0DyvFOCYx/Xq2innnVbBJczQciEUb5PI/9fcmLOfTe/QgGNi0GZOCdIOGlki2sbKxob6tTOUsm52ugRSJU92cXkX8w+Gzc6pC6fAb4moLE2QpwK1xWDHm2sHiZYExpBOH8eidSH5VPGVdNE9QmUA/FwwJ9NFGsZ8BgWCJPy7IJreyixsv2nNpiZNHoj0UgKe4wylzceu4sG/yQDIYk3fLVWBXSm/nSA17QYIjVMzQFjSAVC5dRqzq8HzFYiAYLKzkoOtrbBqEGtXzYZMN6yC8zEedk9gX6P6mvGpWYBy280uumcpGl6eoKYj5ke2H6kfcCUhMNTGZP17nmnTa1KFLAz1nxB1jfJwwO6v1l+xdytju5yAhm049Af7VyDM5GmE2x5ha48uKvK7wHtv+IKiZbbcR9ExsXvm21+7NVjQvRPzAw4/Sor9SG/yjoA/Sf7e4evy1w3fALv4WlaSisj5Yalmv7mzeeFZaIB7EIq6OryeRld2Rr1MZwwhZgIs7+SWwpjKfwhkfLVEUvSWCdnS2tnTydK6R6OFxfG5TGfR/WHooXLHEv5gMuKhUu/CqnbLyvI+8IOH2ybz2AtZWjf5n7oY=
   - secure: cIxKSkBNkPFAn243eHtwHJb8z6Uty1cZ43ZK/UABjwJoSrhu/roK4soqdZLwdVRA/0QswAlp6AC25Zs3ngLKGxxFHoeB8Tx6VLanE1zoi8OT0I2KbT92FdrLV4HlcRshKZtTFoTCfgVKPnWNKC+hil97CQzQPGRpZLBSfNefk5uCMnQiAzaJ5lyWPx+sjLHzpVlGA6aQx9ZeBQqngQJoDHKc0K3hKwug4h9mkkhyaYE3kgxtsdOYlHvOtQgVk+Zih5uW7ABOQCyAOaQVipXBC+uiuNf2DeAuGDaX69DTRKqPzuIasbhwyGqlfsr2JeofEWgZGmTaWGKMi03hnIY+U9+lHjygBW1qqVglODboouUrV3LwER9kqrT+ZFTM5Ca8VB+Gx5khkknbjWd06jpzRQxNXdukYN89kEaAHkBH844G99pMDqcZ32lHK7lpCu8n1H/Liz3ygoV6ScJXnYAP6y9rrd3bb9KEmnKhmFacVLRIAUw1vN/cgspJpl/Mk6s5rvGwsbQih1OxGyooOLxGjEGWqVDFgHFtyiwX9s9kT+hNTwKgbhp7Ragk/QuDYUPZ3Vum7HoiNPS9KpQNstLvDckdtd8h13JIw6nX+xdWbNKjjdYbAZRstJHUROQtNq3XdWNQ9YjqbCoybaxCOwOUTwOiTSWNKXjTFbFI5mR/ZO0=
   - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: o6uPX071qGRKgOQmitxiDr1j+KRW8W6ru0wmKNBFuUlZvQudwCUZMnVfk6OeofT1IgLCHmLS8ST81cTyeXqOQhYVZrlxTmEUpDHHRTu6dOj3eqRzdJow1LIWNpw5xfOaqXUdQ8+SQ47ZeSFapsmaY9oeRDvSJ8zLS4qUdgUylvZFJWjSrjzi2xemJa1l3MDdZRhEaNkfMliDGCv2vuUFp7tYz0QtyqBkBMORQl53dzgrcQcsRjDSE274WJl9CUg1l0pNMFsAbVCUGwUqCmKace9LXZ9JV00TRdg4EpryDsUCi23q0THnwstvRffwyJrw+xbhY/X3GKC4zOKqiCLJ4MTPQEIKlpVJQ9e9lWJ8FYhpUrl3QaHfEPINJ0taUfGhCyNzi5QBkSWbTcWVmRMmu+QIy7moW9crcz2xmVEUey7AaGwZT2Kk6JGw26w5q9IUy1Z9mwaljmHrUTqZrOX4Hj3UblpkHN+mGkoia/ipta5KhN5lTTIs4N3V+El7O2R2GggBrVHNiSualfydo+RX8k/S6PM1/C88IQO3Y2utoJrr415CznncvhF9Sc6tncZcShcNQj1iEOSsGxY2noW265eHzTMKJ/xuN6Bp9OXVK+8iOcUsz1T7F0UqwY3xnD8F7fBZ7IGG41DsXBDIcPmb+SIYbhv0uJjm3BEuv4TzIU0=
