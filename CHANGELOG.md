@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.3.0
+-----
+- Target specific branch
+
 1.2.1
 -----
 - Check errors when generating commit patch

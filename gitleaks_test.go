@@ -341,6 +341,22 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "audit specific bad branch",
+			numLeaks:    2,
+			testOpts: Options{
+				Branch: "master",
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "audit specific good branch",
+			numLeaks:    0,
+			testOpts: Options{
+				Branch: "dev",
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "audit all branch",
 			numLeaks:    6,
 			testOpts: Options{
