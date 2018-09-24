@@ -262,7 +262,7 @@ func main() {
 // writeReport writes a report to opts.Report in JSON.
 // TODO support yaml
 func writeReport(leaks []Leak) error {
-	log.Info("writing report to %s", opts.Report)
+	log.Info("writing report to ", opts.Report)
 	reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
 	err := ioutil.WriteFile(opts.Report, reportJSON, 0644)
 	return err
@@ -457,7 +457,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 				return nil
 			})
 			if foundBranch == false {
-				log.Fatalf("No branch with name", opts.Branch)
+				log.Fatalf("No branch with name %s", opts.Branch)
 				return nil, nil
 			}
 		}
