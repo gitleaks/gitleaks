@@ -301,7 +301,7 @@ func TestAuditRepo(t *testing.T) {
 		panic(err)
 	}
 	leaksRepo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: "https://github.com/zricethezav/gronit.git",
+		URL: "https://github.com/gitleakstest/gronit.git",
 	})
 	if err != nil {
 		panic(err)
