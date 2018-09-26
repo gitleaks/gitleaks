@@ -22,10 +22,33 @@ type Storage struct {
 	ModuleStorage
 }
 
+// Options holds configuration for the storage.
+type Options struct {
+	// ExclusiveAccess means that the filesystem is not modified externally
+	// while the repo is open.
+	ExclusiveAccess bool
+	// KeepDescriptors makes the file descriptors to be reused but they will
+	// need to be manually closed calling Close().
+	KeepDescriptors bool
+}
+
 // NewStorage returns a new Storage backed by a given `fs.Filesystem`
 func NewStorage(fs billy.Filesystem) (*Storage, error) {
-	dir := dotgit.New(fs)
-	o, err := NewObjectStorage(dir)
+	return NewStorageWithOptions(fs, Options{})
+}
+
+// NewStorageWithOptions returns a new Storage backed by a given `fs.Filesystem`
+func NewStorageWithOptions(
+	fs billy.Filesystem,
+	ops Options,
+) (*Storage, error) {
+	dirOps := dotgit.Options{
+		ExclusiveAccess: ops.ExclusiveAccess,
+		KeepDescriptors: ops.KeepDescriptors,
+	}
+
+	dir := dotgit.NewWithOptions(fs, dirOps)
+	o, err := NewObjectStorageWithOptions(dir, ops)
 	if err != nil {
 		return nil, err
 	}

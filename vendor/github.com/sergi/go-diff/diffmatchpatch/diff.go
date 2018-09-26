@@ -408,7 +408,7 @@ func (dmp *DiffMatchPatch) DiffCharsToLines(diffs []Diff, lineArray []string) []
 	hydrated := make([]Diff, 0, len(diffs))
 	for _, aDiff := range diffs {
 		chars := aDiff.Text
-		text := make([]string, len(chars))
+		text := make([]string, len(chars)+1)
 
 		for i, r := range chars {
 			text[i] = lineArray[r]

@@ -1,7 +1,10 @@
 package git
 
-import "fmt"
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"path/filepath"
+)
 
 // Status represents the current status of a Worktree.
 // The key of the map is the path of the file.
@@ -15,6 +18,12 @@ func (s Status) File(path string) *FileStatus {
 	}
 
 	return s[path]
+}
+
+// IsUntracked checks if file for given path is 'Untracked'
+func (s Status) IsUntracked(path string) bool {
+	stat, ok := (s)[filepath.ToSlash(path)]
+	return ok && stat.Worktree == Untracked
 }
 
 // IsClean returns true if all the files aren't in Unmodified status.

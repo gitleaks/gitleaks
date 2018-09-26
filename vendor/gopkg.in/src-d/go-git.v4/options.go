@@ -4,6 +4,7 @@ import (
 	"errors"
 	"regexp"
 
+	"golang.org/x/crypto/openpgp"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -347,6 +348,9 @@ type CommitOptions struct {
 	// Parents are the parents commits for the new commit, by default when
 	// len(Parents) is zero, the hash of HEAD reference is used.
 	Parents []plumbing.Hash
+	// A key to sign the commit with. A nil value here means the commit will not
+	// be signed. The private key must be present and already decrypted.
+	SignKey *openpgp.Entity
 }
 
 // Validate validates the fields and sets the default values.
