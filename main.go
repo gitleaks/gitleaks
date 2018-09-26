@@ -360,7 +360,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 			if prevCommit == nil {
 				t, _ := c.Tree()
 				files := t.Files()
-				err = files.ForEach(func(file *object.File) error {
+				err := files.ForEach(func(file *object.File) error {
 					content, err := file.Contents()
 					if err != nil {
 						return err
@@ -539,7 +539,6 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				leak.Offender = "REDACTED"
 				leak.Line = "REDACTED"
 			}
-			leak.log()
 			if opts.Verbose {
 				leak.log()
 			}
