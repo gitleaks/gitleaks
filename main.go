@@ -418,7 +418,6 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 			}
 			commitChan <- leaks
 		}(c, prevCommit)
-
 		prevCommit = c
 		return nil
 	})
@@ -536,11 +535,13 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				File:     filePath,
 				Branch:   branch,
 			}
-			if opts.Verbose {
-				leak.log()
-			}
 			if opts.Redact {
 				leak.Offender = "REDACTED"
+				leak.Line = "REDACTED"
+			}
+			leak.log()
+			if opts.Verbose {
+				leak.log()
 			}
 			leaks = append(leaks, leak)
 		}
