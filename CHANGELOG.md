@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.4.0
+-----
+- Support for single commit repos
+- Bumped go-git version from 4.5.0 to 4.7.0
+
 1.3.0
 -----
 - Target specific branch

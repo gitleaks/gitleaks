@@ -350,9 +350,6 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 		if limitGoRoutines {
 			semaphore <- true
 		}
-		if prevCommit == nil {
-			prevCommit = c
-		}
 		commitWg.Add(1)
 		go func(c *object.Commit, prevCommit *object.Commit) {
 			var (
@@ -360,48 +357,67 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 				filePath string
 				skipFile bool
 			)
-			patch, err := c.Patch(prevCommit)
-			if err != nil {
-				log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
-				if limitGoRoutines {
-					<-semaphore
+			if prevCommit == nil {
+				t, _ := c.Tree()
+				files := t.Files()
+				err := files.ForEach(func(file *object.File) error {
+					content, err := file.Contents()
+					if err != nil {
+						return err
+					}
+					leaks = append(leaks, checkDiff(content, c, file.Name, string(ref.Name()))...)
+					return nil
+				})
+				if err != nil {
+					log.Warnf("problem generating diff for commit: %s\n", c.Hash.String())
+					if limitGoRoutines {
+						<-semaphore
+					}
+					commitChan <- leaks
+					return
 				}
-				commitChan <- leaks
-				return
-			}
-			for _, f := range patch.FilePatches() {
-				skipFile = false
-				from, to := f.Files()
-				filePath = "???"
-				if from != nil {
-					filePath = from.Path()
-				} else if to != nil {
-					filePath = to.Path()
+			} else {
+				patch, err := c.Patch(prevCommit)
+				if err != nil {
+					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
+					if limitGoRoutines {
+						<-semaphore
+					}
+					commitChan <- leaks
+					return
 				}
-				for _, re := range whiteListFiles {
-					if re.FindString(filePath) != "" {
-						skipFile = true
-						break
+				for _, f := range patch.FilePatches() {
+					skipFile = false
+					from, to := f.Files()
+					filePath = "???"
+					if from != nil {
+						filePath = from.Path()
+					} else if to != nil {
+						filePath = to.Path()
+					}
+					for _, re := range whiteListFiles {
+						if re.FindString(filePath) != "" {
+							skipFile = true
+							break
+						}
+					}
+					if skipFile {
+						continue
+					}
+					chunks := f.Chunks()
+					for _, chunk := range chunks {
+						if chunk.Type() == 1 || chunk.Type() == 2 {
+							// only check if adding or removing
+							leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()))...)
+						}
 					}
 				}
-				if skipFile {
-					continue
-				}
-				chunks := f.Chunks()
-				for _, chunk := range chunks {
-					if chunk.Type() == 1 || chunk.Type() == 2 {
-						// only check if adding or removing
-						leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()))...)
-					}
-				}
 			}
-
 			if limitGoRoutines {
 				<-semaphore
 			}
 			commitChan <- leaks
 		}(c, prevCommit)
-
 		prevCommit = c
 		return nil
 	})
@@ -519,11 +535,12 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				File:     filePath,
 				Branch:   branch,
 			}
-			if opts.Verbose {
-				leak.log()
-			}
 			if opts.Redact {
 				leak.Offender = "REDACTED"
+				leak.Line = "REDACTED"
+			}
+			if opts.Verbose {
+				leak.log()
 			}
 			leaks = append(leaks, leak)
 		}

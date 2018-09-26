@@ -235,9 +235,8 @@ func PlainOpen(path string) (*Repository, error) {
 	return PlainOpenWithOptions(path, &PlainOpenOptions{})
 }
 
-// PlainOpen opens a git repository from the given path. It detects if the
-// repository is bare or a normal one. If the path doesn't contain a valid
-// repository ErrRepositoryNotExists is returned
+// PlainOpenWithOptions opens a git repository from the given path with specific
+// options. See PlainOpen for more info.
 func PlainOpenWithOptions(path string, o *PlainOpenOptions) (*Repository, error) {
 	dot, wt, err := dotGitToOSFilesystems(path, o.DetectDotGit)
 	if err != nil {
@@ -583,7 +582,7 @@ func (r *Repository) clone(ctx context.Context, o *CloneOptions) error {
 }
 
 const (
-	refspecTagWithDepth     = "+refs/tags/%s:refs/tags/%[1]s"
+	refspecTag              = "+refs/tags/%s:refs/tags/%[1]s"
 	refspecSingleBranch     = "+refs/heads/%s:refs/remotes/%s/%[1]s"
 	refspecSingleBranchHEAD = "+HEAD:refs/remotes/%s/HEAD"
 )
@@ -592,8 +591,8 @@ func (r *Repository) cloneRefSpec(o *CloneOptions, c *config.RemoteConfig) []con
 	var rs string
 
 	switch {
-	case o.ReferenceName.IsTag() && o.Depth > 0:
-		rs = fmt.Sprintf(refspecTagWithDepth, o.ReferenceName.Short())
+	case o.ReferenceName.IsTag():
+		rs = fmt.Sprintf(refspecTag, o.ReferenceName.Short())
 	case o.SingleBranch && o.ReferenceName == plumbing.HEAD:
 		rs = fmt.Sprintf(refspecSingleBranchHEAD, c.Name)
 	case o.SingleBranch:
@@ -845,8 +844,9 @@ func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
 	return nil, fmt.Errorf("invalid Order=%v", o.Order)
 }
 
-// Tags returns all the References from Tags. This method returns all the tag
-// types, lightweight, and annotated ones.
+// Tags returns all the References from Tags. This method returns only lightweight
+// tags. Note that not all the tags are lightweight ones. To return annotated tags
+// too, you need to call TagObjects() method.
 func (r *Repository) Tags() (storer.ReferenceIter, error) {
 	refIter, err := r.Storer.IterReferences()
 	if err != nil {
@@ -872,7 +872,8 @@ func (r *Repository) Branches() (storer.ReferenceIter, error) {
 		}, refIter), nil
 }
 
-// Notes returns all the References that are Branches.
+// Notes returns all the References that are notes. For more information:
+// https://git-scm.com/docs/git-notes
 func (r *Repository) Notes() (storer.ReferenceIter, error) {
 	refIter, err := r.Storer.IterReferences()
 	if err != nil {

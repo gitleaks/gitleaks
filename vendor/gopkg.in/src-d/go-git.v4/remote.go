@@ -619,7 +619,7 @@ func getHaves(
 	return result, nil
 }
 
-const refspecTag = "+refs/tags/*:refs/tags/*"
+const refspecAllTags = "+refs/tags/*:refs/tags/*"
 
 func calculateRefs(
 	spec []config.RefSpec,
@@ -627,7 +627,7 @@ func calculateRefs(
 	tagMode TagMode,
 ) (memory.ReferenceStorage, error) {
 	if tagMode == AllTags {
-		spec = append(spec, refspecTag)
+		spec = append(spec, refspecAllTags)
 	}
 
 	refs := make(memory.ReferenceStorage)

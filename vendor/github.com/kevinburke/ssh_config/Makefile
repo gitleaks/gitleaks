@@ -13,12 +13,15 @@ lint: $(MEGACHECK)
 
 test: lint
 	@# the timeout helps guard against infinite recursion
-	go test -timeout=50ms ./...
+	go test -timeout=250ms ./...
+
+race-test: lint
+	go test -timeout=500ms -race ./...
 
 $(BUMP_VERSION):
-	go get github.com/Shyp/bump_version
+	go get -u github.com/kevinburke/bump_version
 
-release: $(BUMP_VERSION)
+release: test | $(BUMP_VERSION)
 	$(BUMP_VERSION) minor config.go
 
 force: ;
