@@ -223,43 +223,9 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
-	// start audits
-	if opts.Repo != "" || opts.RepoPath != "" {
-		repo, err := getRepo()
-		if err != nil {
-			log.Fatal(err)
-		}
-		leaks, err = auditRepo(repo)
-	} else if opts.OwnerPath != "" {
-		repos, err := discoverRepos(opts.OwnerPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, repo := range repos {
-			leaksFromRepo, err := auditRepo(repo)
-			if err != nil {
-				log.Fatal(err)
-			}
-			leaks = append(leaksFromRepo, leaks...)
-		}
-	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
-		githubRepos, err := getGithubRepos()
-		if err != nil {
-			log.Fatalf("unable to get github repos: %s", err)
-		}
-		for _, githubRepo := range githubRepos {
-			leaksFromRepo, err := auditGithubRepo(githubRepo)
-			if len(leaksFromRepo) == 0 {
-				log.Infof("no leaks found for repo %s", *githubRepo.Name)
-			} else {
-				log.Warnf("leaks found for repo %s", *githubRepo.Name)
-			}
-			if err != nil {
-				log.Fatalf("error during audit: %s", err)
-			}
-			leaks = append(leaks, leaksFromRepo...)
-		}
+	leaks, err = startAudits()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if opts.Report != "" {
@@ -270,6 +236,48 @@ func main() {
 		log.Errorf("leaks detected")
 		os.Exit(1)
 	}
+}
+
+func startAudits() ([]Leak, error) {
+	var leaks []Leak
+	// start audits
+	if opts.Repo != "" || opts.RepoPath != "" {
+		repo, err := getRepo()
+		if err != nil {
+			return leaks, err
+		}
+		return auditRepo(repo)
+	} else if opts.OwnerPath != "" {
+		repos, err := discoverRepos(opts.OwnerPath)
+		if err != nil {
+			return leaks, err
+		}
+		for _, repo := range repos {
+			leaksFromRepo, err := auditRepo(repo)
+			if err != nil {
+				return leaks, err
+			}
+			leaks = append(leaksFromRepo, leaks...)
+		}
+	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
+		githubRepos, err := getGithubRepos()
+		if err != nil {
+			return leaks, err
+		}
+		for _, githubRepo := range githubRepos {
+			leaksFromRepo, err := auditGithubRepo(githubRepo)
+			if len(leaksFromRepo) == 0 {
+				log.Infof("no leaks found for repo %s", *githubRepo.Name)
+			} else {
+				log.Warnf("leaks found for repo %s", *githubRepo.Name)
+			}
+			if err != nil {
+				return leaks, err
+			}
+			leaks = append(leaks, leaksFromRepo...)
+		}
+	}
+	return leaks, nil
 }
 
 // writeReport writes a report to opts.Report in JSON.
@@ -646,7 +654,6 @@ func getGithubRepos() ([]*github.Repository, error) {
 			log.Infof("staging repo %s", *githubRepo.Name)
 		}
 	}
-	return githubRepos, err
 }
 
 // auditGithubRepo clones repos from github
@@ -663,6 +670,9 @@ func auditGithubRepo(githubRepo *github.Repository) ([]Leak, error) {
 			return leaks, fmt.Errorf("unable to generater owner temp dir: %v", err)
 		}
 		if opts.IncludePrivate {
+			if sshAuth == nil {
+				return leaks, fmt.Errorf("no ssh auth available")
+			}
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,
@@ -674,6 +684,9 @@ func auditGithubRepo(githubRepo *github.Repository) ([]Leak, error) {
 		}
 	} else {
 		if opts.IncludePrivate {
+			if sshAuth == nil {
+				return leaks, fmt.Errorf("no ssh auth available")
+			}
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,
