@@ -137,106 +137,107 @@ func TestGetRepo(t *testing.T) {
 	}
 }
 
-// func TestGetOwnerRepo(t *testing.T) {
-// 	var err error
+func TestAuditGithubRepo(t *testing.T) {
+	var err error
 
-// 	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
-// 	defer os.RemoveAll(dir)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	git.PlainClone(dir+"/gronit", false, &git.CloneOptions{
-// 		URL: "https://github.com/gitleakstest/gronit",
-// 	})
-// 	git.PlainClone(dir+"/h1domains", false, &git.CloneOptions{
-// 		URL: "https://github.com/gitleakstest/h1domains",
-// 	})
-// 	var tests = []struct {
-// 		testOpts       Options
-// 		description    string
-// 		expectedErrMsg string
-// 		numRepos       int
-// 	}{
-// 		{
-// 			testOpts: Options{
-// 				GithubUser: "gitleakstest",
-// 			},
-// 			description:    "test github user",
-// 			numRepos:       2,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubUser: "gitleakstest",
-// 				Disk:       true,
-// 			},
-// 			description:    "test github user on disk ",
-// 			numRepos:       2,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg: "gitleakstestorg",
-// 			},
-// 			description:    "test github org",
-// 			numRepos:       2,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				OwnerPath: dir,
-// 			},
-// 			description:    "test plain clone remote repo",
-// 			numRepos:       2,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg:      "gitleakstestorg",
-// 				IncludePrivate: true,
-// 			},
-// 			description:    "test private org no ssh",
-// 			numRepos:       0,
-// 			expectedErrMsg: "no ssh auth available",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg: "gitleakstestorg",
-// 				Disk:      true,
-// 			},
-// 			description:    "test org on disk",
-// 			numRepos:       2,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg:      "gitleakstestorg",
-// 				IncludePrivate: true,
-// 				Disk:           true,
-// 			},
-// 			description:    "test private org on disk no ssh",
-// 			numRepos:       0,
-// 			expectedErrMsg: "no ssh auth available",
-// 		},
-// 	}
-// 	g := goblin.Goblin(t)
-// 	for _, test := range tests {
-// 		g.Describe("TestGetOwnerRepo", func() {
-// 			g.It(test.description, func() {
-// 				opts = test.testOpts
-// 				repos, err := getOwnerRepos()
-// 				if err != nil {
-// 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
-// 				}
-// 				g.Assert(len(repos)).Equal(test.numRepos)
-// 			})
-// 		})
-// 	}
-// }
+	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
+	defer os.RemoveAll(dir)
+	if err != nil {
+		panic(err)
+	}
+	git.PlainClone(dir+"/gronit", false, &git.CloneOptions{
+		URL: "https://github.com/gitleakstest/gronit",
+	})
+	git.PlainClone(dir+"/h1domains", false, &git.CloneOptions{
+		URL: "https://github.com/gitleakstest/h1domains",
+	})
+	var tests = []struct {
+		testOpts       Options
+		description    string
+		expectedErrMsg string
+		numRepos       int
+	}{
+		{
+			testOpts: Options{
+				GithubUser: "gitleakstest",
+			},
+			description:    "test github user",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubUser: "gitleakstest",
+				Disk:       true,
+			},
+			description:    "test github user on disk ",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "gitleakstestorg",
+			},
+			description:    "test github org",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				OwnerPath: dir,
+			},
+			description:    "test plain clone remote repo",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg:      "gitleakstestorg",
+				IncludePrivate: true,
+			},
+			description:    "test private org no ssh",
+			numRepos:       0,
+			expectedErrMsg: "no ssh auth available",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "gitleakstestorg",
+				Disk:      true,
+			},
+			description:    "test org on disk",
+			numRepos:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg:      "gitleakstestorg",
+				IncludePrivate: true,
+				Disk:           true,
+			},
+			description:    "test private org on disk no ssh",
+			numRepos:       0,
+			expectedErrMsg: "no ssh auth available",
+		},
+	}
+	g := goblin.Goblin(t)
+	for _, test := range tests {
+		g.Describe("TestGetOwnerRepo", func() {
+			g.It(test.description, func() {
+				opts = test.testOpts
+				leaks, err := auditGithubRepo(test.)
+				if err != nil {
+					g.Assert(err.Error()).Equal(test.expectedErrMsg)
+				}
+				g.Assert(len(leaks)).Equal(test.numLeaks)
+			})
+		})
+	}
+}
 
 func TestWriteReport(t *testing.T) {
 	tmpDir, _ := ioutil.TempDir("", "reportDir")
-	reportFile := path.Join(tmpDir, "report.json")
+	reportJson := path.Join(tmpDir, "report.json")
+	reportCSV := path.Join(tmpDir, "report.csv")
 	defer os.RemoveAll(tmpDir)
 	leaks := []Leak{
 		{
@@ -260,11 +261,21 @@ func TestWriteReport(t *testing.T) {
 	}{
 		{
 			leaks:       leaks,
-			reportFile:  reportFile,
+			reportFile:  reportJson,
 			fileName:    "report.json",
 			description: "can we write a file",
 			testOpts: Options{
-				Report: reportFile,
+				Report: reportJson,
+			},
+		},
+		{
+			leaks:       leaks,
+			reportFile:  reportCSV,
+			fileName:    "report.csv",
+			description: "can we write a file",
+			testOpts: Options{
+				Report: reportCSV,
+				CSV:    true,
 			},
 		},
 	}
