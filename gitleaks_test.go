@@ -137,7 +137,7 @@ func TestGetRepo(t *testing.T) {
 	}
 }
 
-func TestAuditGithubRepo(t *testing.T) {
+func TestStartAudit(t *testing.T) {
 	err := loadToml()
 	configsDir := testTomlLoader()
 	defer os.RemoveAll(configsDir)
@@ -211,6 +211,14 @@ func TestAuditGithubRepo(t *testing.T) {
 			description:    "test private org on disk no ssh",
 			numLeaks:       0,
 			expectedErrMsg: "no ssh auth available",
+		},
+		{
+			testOpts: Options{
+				OwnerPath: dir,
+			},
+			description:    "test owner path",
+			numLeaks:       2,
+			expectedErrMsg: "",
 		},
 	}
 	g := goblin.Goblin(t)
