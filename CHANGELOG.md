@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.5.0
+-----
+- Support for CSV reporting
+- Refactoring github user/owner audits
+
 1.4.0
 -----
 - Support for single commit repos

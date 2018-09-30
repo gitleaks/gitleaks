@@ -137,8 +137,10 @@ func TestGetRepo(t *testing.T) {
 	}
 }
 
-func TestGetOwnerRepo(t *testing.T) {
-	var err error
+func TestStartAudit(t *testing.T) {
+	err := loadToml()
+	configsDir := testTomlLoader()
+	defer os.RemoveAll(configsDir)
 
 	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
 	defer os.RemoveAll(dir)
@@ -155,14 +157,14 @@ func TestGetOwnerRepo(t *testing.T) {
 		testOpts       Options
 		description    string
 		expectedErrMsg string
-		numRepos       int
+		numLeaks       int
 	}{
 		{
 			testOpts: Options{
 				GithubUser: "gitleakstest",
 			},
 			description:    "test github user",
-			numRepos:       2,
+			numLeaks:       2,
 			expectedErrMsg: "",
 		},
 		{
@@ -171,7 +173,7 @@ func TestGetOwnerRepo(t *testing.T) {
 				Disk:       true,
 			},
 			description:    "test github user on disk ",
-			numRepos:       2,
+			numLeaks:       2,
 			expectedErrMsg: "",
 		},
 		{
@@ -179,15 +181,7 @@ func TestGetOwnerRepo(t *testing.T) {
 				GithubOrg: "gitleakstestorg",
 			},
 			description:    "test github org",
-			numRepos:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				OwnerPath: dir,
-			},
-			description:    "test plain clone remote repo",
-			numRepos:       2,
+			numLeaks:       2,
 			expectedErrMsg: "",
 		},
 		{
@@ -196,7 +190,7 @@ func TestGetOwnerRepo(t *testing.T) {
 				IncludePrivate: true,
 			},
 			description:    "test private org no ssh",
-			numRepos:       0,
+			numLeaks:       0,
 			expectedErrMsg: "no ssh auth available",
 		},
 		{
@@ -205,7 +199,7 @@ func TestGetOwnerRepo(t *testing.T) {
 				Disk:      true,
 			},
 			description:    "test org on disk",
-			numRepos:       2,
+			numLeaks:       2,
 			expectedErrMsg: "",
 		},
 		{
@@ -215,20 +209,28 @@ func TestGetOwnerRepo(t *testing.T) {
 				Disk:           true,
 			},
 			description:    "test private org on disk no ssh",
-			numRepos:       0,
+			numLeaks:       0,
 			expectedErrMsg: "no ssh auth available",
+		},
+		{
+			testOpts: Options{
+				OwnerPath: dir,
+			},
+			description:    "test owner path",
+			numLeaks:       2,
+			expectedErrMsg: "",
 		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
-		g.Describe("TestGetOwnerRepo", func() {
+		g.Describe("TestStartAudit", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
-				repos, err := getOwnerRepos()
+				leaks, err := startAudits()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
 				}
-				g.Assert(len(repos)).Equal(test.numRepos)
+				g.Assert(len(leaks)).Equal(test.numLeaks)
 			})
 		})
 	}
@@ -236,7 +238,8 @@ func TestGetOwnerRepo(t *testing.T) {
 
 func TestWriteReport(t *testing.T) {
 	tmpDir, _ := ioutil.TempDir("", "reportDir")
-	reportFile := path.Join(tmpDir, "report.json")
+	reportJSON := path.Join(tmpDir, "report.json")
+	reportCSV := path.Join(tmpDir, "report.csv")
 	defer os.RemoveAll(tmpDir)
 	leaks := []Leak{
 		{
@@ -260,11 +263,21 @@ func TestWriteReport(t *testing.T) {
 	}{
 		{
 			leaks:       leaks,
-			reportFile:  reportFile,
+			reportFile:  reportJSON,
 			fileName:    "report.json",
 			description: "can we write a file",
 			testOpts: Options{
-				Report: reportFile,
+				Report: reportJSON,
+			},
+		},
+		{
+			leaks:       leaks,
+			reportFile:  reportCSV,
+			fileName:    "report.csv",
+			description: "can we write a file",
+			testOpts: Options{
+				Report: reportCSV,
+				CSV:    true,
 			},
 		},
 	}
@@ -300,18 +313,26 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	leaksRepo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+	leaksR, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: "https://github.com/gitleakstest/gronit.git",
 	})
 	if err != nil {
 		panic(err)
 	}
+	leaksRepo := Repo{
+		repository: leaksR,
+		name:       "gronit",
+	}
 
-	cleanRepo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+	cleanR, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: "https://github.com/gitleakstest/h1domains.git",
 	})
 	if err != nil {
 		panic(err)
+	}
+	cleanRepo := Repo{
+		repository: cleanR,
+		name:       "h1domains",
 	}
 
 	var tests = []struct {
@@ -319,7 +340,7 @@ func TestAuditRepo(t *testing.T) {
 		description       string
 		expectedErrMsg    string
 		numLeaks          int
-		repo              *git.Repository
+		repo              Repo
 		whiteListFiles    []*regexp.Regexp
 		whiteListCommits  map[string]bool
 		whiteListBranches []string

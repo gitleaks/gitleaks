@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/md5"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -42,6 +43,7 @@ type Leak struct {
 	Author   string `json:"author"`
 	File     string `json:"file"`
 	Branch   string `json:"branch"`
+	Repo     string `json:"repo"`
 }
 
 // Repo contains the actual git repository and meta data about the repo
@@ -65,8 +67,8 @@ type Owner struct {
 type Options struct {
 	// remote target options
 	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
-	GithubUser     string `long:"github-user" description:"User url to audit"`
-	GithubOrg      string `long:"github-org" description:"Organization url to audit"`
+	GithubUser     string `long:"github-user" description:"Github user to audit"`
+	GithubOrg      string `long:"github-org" description:"Github organization to audit"`
 	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
 	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
@@ -96,6 +98,7 @@ type Options struct {
 	Log     string `short:"l" long:"log" description:"log level"`
 	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
 	Report  string `long:"report" description:"path to write report file"`
+	CSV     bool   `long:"csv" description:"report output to csv"`
 	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
 	Version bool   `long:"version" description:"version number"`
 }
@@ -115,7 +118,7 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.3.0"
+const version = "1.5.0"
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
@@ -183,7 +186,6 @@ func init() {
 func main() {
 	var (
 		leaks []Leak
-		repos []Repo
 	)
 	_, err := flags.Parse(&opts)
 	if opts.Version {
@@ -221,32 +223,9 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
-	// start audits
-	if opts.Repo != "" || opts.RepoPath != "" {
-		r, err := getRepo()
-		if err != nil {
-			log.Fatal(err)
-		}
-		repos = append(repos, r)
-	} else if ownerTarget() {
-		repos, err = getOwnerRepos()
-	}
-	for _, r := range repos {
-		if r.err != nil {
-			log.Warnf("skipping audit for repo %s due to cloning error: %s", r.name, r.err)
-			continue
-		}
-		l, err := auditRepo(r.repository)
-		if len(l) == 0 {
-			log.Infof("no leaks found for repo %s", r.name)
-		} else {
-			log.Warnf("leaks found for repo %s", r.name)
-		}
-		if err != nil {
-			log.Fatalf("error during audit: %s", err)
-		}
-		leaks = append(leaks, l...)
+	leaks, err = startAudits()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if opts.Report != "" {
@@ -259,12 +238,68 @@ func main() {
 	}
 }
 
+func startAudits() ([]Leak, error) {
+	var leaks []Leak
+	// start audits
+	if opts.Repo != "" || opts.RepoPath != "" {
+		repo, err := getRepo()
+		if err != nil {
+			return leaks, err
+		}
+		return auditRepo(repo)
+	} else if opts.OwnerPath != "" {
+		repos, err := discoverRepos(opts.OwnerPath)
+		if err != nil {
+			return leaks, err
+		}
+		for _, repo := range repos {
+			leaksFromRepo, err := auditRepo(repo)
+			if err != nil {
+				return leaks, err
+			}
+			leaks = append(leaksFromRepo, leaks...)
+		}
+	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
+		githubRepos, err := getGithubRepos()
+		if err != nil {
+			return leaks, err
+		}
+		for _, githubRepo := range githubRepos {
+			leaksFromRepo, err := auditGithubRepo(githubRepo)
+			if len(leaksFromRepo) == 0 {
+				log.Infof("no leaks found for repo %s", *githubRepo.Name)
+			} else {
+				log.Warnf("leaks found for repo %s", *githubRepo.Name)
+			}
+			if err != nil {
+				return leaks, err
+			}
+			leaks = append(leaks, leaksFromRepo...)
+		}
+	}
+	return leaks, nil
+}
+
 // writeReport writes a report to opts.Report in JSON.
-// TODO support yaml
 func writeReport(leaks []Leak) error {
-	log.Info("writing report to %s", opts.Report)
-	reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
-	err := ioutil.WriteFile(opts.Report, reportJSON, 0644)
+	var err error
+	log.Infof("writing report to %s", opts.Report)
+	if opts.CSV {
+		f, err := os.Create(opts.Report)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		w := csv.NewWriter(f)
+		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "branch"})
+		for _, leak := range leaks {
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Branch})
+		}
+		w.Flush()
+	} else {
+		reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
+		err = ioutil.WriteFile(opts.Report, reportJSON, 0644)
+	}
 	return err
 }
 
@@ -272,21 +307,21 @@ func writeReport(leaks []Leak) error {
 // a repo object
 func getRepo() (Repo, error) {
 	var (
-		err error
-		r   *git.Repository
+		err  error
+		repo *git.Repository
 	)
 
 	if opts.Disk {
 		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if opts.IncludePrivate {
-			r, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 				Auth:     sshAuth,
 			})
 		} else {
-			r, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			})
@@ -294,24 +329,24 @@ func getRepo() (Repo, error) {
 	} else if opts.RepoPath != "" {
 		// use existing repo
 		log.Infof("opening %s", opts.Repo)
-		r, err = git.PlainOpen(opts.RepoPath)
+		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
 		log.Infof("cloning %s", opts.Repo)
 		if opts.IncludePrivate {
-			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 				Auth:     sshAuth,
 			})
 		} else {
-			r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			})
 		}
 	}
 	return Repo{
-		repository: r,
+		repository: repo,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
 		name:       filepath.Base(opts.Repo),
@@ -322,20 +357,23 @@ func getRepo() (Repo, error) {
 // auditRef audits a git reference
 // TODO: need to add a layer of parallelism here and a cache for parent+child commits so we don't
 // double dip
-func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
+func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
 	var (
 		err             error
 		prevCommit      *object.Commit
 		limitGoRoutines bool
 		semaphore       chan bool
+		repoName        string
 	)
+
+	repoName = repo.name
 
 	// goroutine limiting
 	if opts.MaxGoRoutines != 0 {
 		semaphore = make(chan bool, opts.MaxGoRoutines)
 		limitGoRoutines = true
 	}
-	cIter, err := r.Log(&git.LogOptions{From: ref.Hash()})
+	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return err
 	}
@@ -365,7 +403,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 					if err != nil {
 						return err
 					}
-					leaks = append(leaks, checkDiff(content, c, file.Name, string(ref.Name()))...)
+					leaks = append(leaks, checkDiff(content, c, file.Name, string(ref.Name()), repoName)...)
 					return nil
 				})
 				if err != nil {
@@ -408,7 +446,7 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 					for _, chunk := range chunks {
 						if chunk.Type() == 1 || chunk.Type() == 2 {
 							// only check if adding or removing
-							leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()))...)
+							leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)...)
 						}
 					}
 				}
@@ -426,14 +464,14 @@ func auditRef(r *git.Repository, ref *plumbing.Reference, commitWg *sync.WaitGro
 
 // auditRepo performs an audit on a repository checking for regex matching and ignoring
 // files and regexes that are whitelisted
-func auditRepo(r *git.Repository) ([]Leak, error) {
+func auditRepo(repo Repo) ([]Leak, error) {
 	var (
 		err      error
 		leaks    []Leak
 		commitWg sync.WaitGroup
 	)
 
-	ref, err := r.Head()
+	ref, err := repo.repository.Head()
 	if err != nil {
 		return leaks, err
 	}
@@ -443,7 +481,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 
 	if opts.AuditAllRefs {
 		skipBranch := false
-		refs, err := r.Storer.IterReferences()
+		refs, err := repo.repository.Storer.IterReferences()
 		if err != nil {
 			return leaks, err
 		}
@@ -457,13 +495,13 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 				skipBranch = false
 				return nil
 			}
-			auditRef(r, ref, &commitWg, commitChan)
+			auditRef(repo, ref, &commitWg, commitChan)
 			return nil
 		})
 	} else {
 		if opts.Branch != "" {
 			foundBranch := false
-			refs, _ := r.Storer.IterReferences()
+			refs, _ := repo.repository.Storer.IterReferences()
 			branch := strings.Split(opts.Branch, "/")[len(strings.Split(opts.Branch, "/"))-1]
 			err = refs.ForEach(func(refBranch *plumbing.Reference) error {
 				if strings.Split(refBranch.Name().String(), "/")[len(strings.Split(refBranch.Name().String(), "/"))-1] == branch {
@@ -477,7 +515,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 				return nil, nil
 			}
 		}
-		auditRef(r, ref, &commitWg, commitChan)
+		auditRef(repo, ref, &commitWg, commitChan)
 	}
 
 	go func() {
@@ -498,7 +536,7 @@ func auditRepo(r *git.Repository) ([]Leak, error) {
 
 // checkDiff accepts a string diff and commit object then performs a
 // regex check
-func checkDiff(diff string, commit *object.Commit, filePath string, branch string) []Leak {
+func checkDiff(diff string, commit *object.Commit, filePath string, branch string, repo string) []Leak {
 	lines := strings.Split(diff, "\n")
 	var (
 		leaks    []Leak
@@ -534,6 +572,7 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 				Author:   commit.Author.String(),
 				File:     filePath,
 				Branch:   branch,
+				Repo:     repo,
 			}
 			if opts.Redact {
 				leak.Offender = "REDACTED"
@@ -549,168 +588,122 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 }
 
 // auditOwner audits all of the owner's(user or org) repos
-func getOwnerRepos() ([]Repo, error) {
+func getGithubRepos() ([]*github.Repository, error) {
 	var (
-		err   error
-		repos []Repo
+		err              error
+		githubRepos      []*github.Repository
+		rs               []*github.Repository
+		resp             *github.Response
+		githubClient     *github.Client
+		githubOrgOptions *github.RepositoryListByOrgOptions
+		githubOptions    *github.RepositoryListOptions
 	)
 	ctx := context.Background()
 
-	if opts.OwnerPath != "" {
-		repos, err = discoverRepos(opts.OwnerPath)
-	} else if opts.GithubOrg != "" {
-		githubClient := github.NewClient(githubToken())
+	if opts.GithubOrg != "" {
+		githubClient = github.NewClient(githubToken())
 		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
 			ghURL, _ := url.Parse(opts.GithubURL)
 			githubClient.BaseURL = ghURL
 		}
-
-		githubOptions := github.RepositoryListByOrgOptions{
+		githubOrgOptions = &github.RepositoryListByOrgOptions{
 			ListOptions: github.ListOptions{PerPage: 10},
 		}
-		repos, err = getOrgGithubRepos(ctx, &githubOptions, githubClient)
 	} else if opts.GithubUser != "" {
-		githubClient := github.NewClient(githubToken())
+		githubClient = github.NewClient(githubToken())
 		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
 			ghURL, _ := url.Parse(opts.GithubURL)
 			githubClient.BaseURL = ghURL
 		}
 
-		githubOptions := github.RepositoryListOptions{
+		githubOptions = &github.RepositoryListOptions{
 			Affiliation: "owner",
 			ListOptions: github.ListOptions{
 				PerPage: 10,
 			},
 		}
-		repos, err = getUserGithubRepos(ctx, &githubOptions, githubClient)
 	}
 
-	return repos, err
+	for {
+		if opts.GithubUser != "" {
+			if opts.IncludePrivate {
+				rs, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
+			} else {
+				rs, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
+			}
+			if err != nil {
+				return nil, err
+			}
+			githubOptions.Page = resp.NextPage
+			githubRepos = append(githubRepos, rs...)
+			if resp.NextPage == 0 {
+				return githubRepos, err
+			}
+		} else if opts.GithubOrg != "" {
+			rs, resp, err := githubClient.Repositories.ListByOrg(ctx, opts.GithubOrg, githubOrgOptions)
+			if err != nil {
+				return nil, err
+			}
+			githubOrgOptions.Page = resp.NextPage
+			githubRepos = append(githubRepos, rs...)
+			if resp.NextPage == 0 {
+				return githubRepos, err
+			}
+		}
+		for _, githubRepo := range githubRepos {
+			log.Infof("staging repo %s", *githubRepo.Name)
+		}
+	}
 }
 
-// getUserGithubRepos grabs all github user's public and/or private repos
-func getUserGithubRepos(ctx context.Context, listOpts *github.RepositoryListOptions, client *github.Client) ([]Repo, error) {
+// auditGithubRepo clones repos from github
+func auditGithubRepo(githubRepo *github.Repository) ([]Leak, error) {
 	var (
+		leaks []Leak
+		repo  *git.Repository
 		err   error
-		repos []Repo
-		r     *git.Repository
-		rs    []*github.Repository
-		resp  *github.Response
 	)
-
-	for {
+	log.Infof("cloning: %s", *githubRepo.Name)
+	if opts.Disk {
+		ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
+		if err != nil {
+			return leaks, fmt.Errorf("unable to generater owner temp dir: %v", err)
+		}
 		if opts.IncludePrivate {
-			rs, resp, err = client.Repositories.List(ctx, "", listOpts)
+			if sshAuth == nil {
+				return leaks, fmt.Errorf("no ssh auth available")
+			}
+			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
+				URL:  *githubRepo.SSHURL,
+				Auth: sshAuth,
+			})
 		} else {
-			rs, resp, err = client.Repositories.List(ctx, opts.GithubUser, listOpts)
-		}
-
-		for _, rDesc := range rs {
-			log.Infof("cloning: %s", *rDesc.Name)
-			if opts.Disk {
-				ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
-				if err != nil {
-					return repos, fmt.Errorf("unable to generater owner temp dir: %v", err)
-				}
-				if opts.IncludePrivate {
-					r, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *rDesc.Name), false, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *rDesc.Name), false, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-
-				}
-			} else {
-				if opts.IncludePrivate {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-				}
-			}
-			repos = append(repos, Repo{
-				name:       *rDesc.Name,
-				url:        *rDesc.SSHURL,
-				repository: r,
-				err:        err,
+			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
+				URL: *githubRepo.CloneURL,
 			})
 		}
-		if resp.NextPage == 0 {
-			break
-		}
-		listOpts.Page = resp.NextPage
-	}
-	return repos, err
-}
-
-// getOrgGithubRepos grabs all of org's public and/or private repos
-func getOrgGithubRepos(ctx context.Context, listOpts *github.RepositoryListByOrgOptions, client *github.Client) ([]Repo, error) {
-	var (
-		err      error
-		repos    []Repo
-		r        *git.Repository
-		ownerDir string
-	)
-
-	for {
-		rs, resp, err := client.Repositories.ListByOrg(ctx, opts.GithubOrg, listOpts)
-		for _, rDesc := range rs {
-			log.Infof("cloning: %s", *rDesc.Name)
-			if opts.Disk {
-				ownerDir, err = ioutil.TempDir(dir, opts.GithubUser)
-				if err != nil {
-					return repos, fmt.Errorf("unable to generater owner temp dir: %v", err)
-				}
-				if opts.IncludePrivate {
-					if sshAuth == nil {
-						return nil, fmt.Errorf("no ssh auth available")
-					}
-					r, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *rDesc.Name), false, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *rDesc.Name), false, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-
-				}
-			} else {
-				if opts.IncludePrivate {
-					if sshAuth == nil {
-						return nil, fmt.Errorf("no ssh auth available")
-					}
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL:  *rDesc.SSHURL,
-						Auth: sshAuth,
-					})
-				} else {
-					r, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-						URL: *rDesc.CloneURL,
-					})
-				}
+	} else {
+		if opts.IncludePrivate {
+			if sshAuth == nil {
+				return leaks, fmt.Errorf("no ssh auth available")
 			}
-			repos = append(repos, Repo{
-				url:        *rDesc.SSHURL,
-				name:       *rDesc.Name,
-				repository: r,
-				err:        err,
+			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+				URL:  *githubRepo.SSHURL,
+				Auth: sshAuth,
+			})
+		} else {
+			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+				URL: *githubRepo.CloneURL,
 			})
 		}
-		if resp.NextPage == 0 {
-			break
-		}
-		listOpts.Page = resp.NextPage
 	}
-
-	return repos, err
+	if err != nil {
+		return leaks, err
+	}
+	return auditRepo(Repo{
+		repository: repo,
+		name:       *githubRepo.Name,
+	})
 }
 
 // githubToken returns a oauth2 client for the github api to consume
@@ -865,16 +858,6 @@ func loadToml() error {
 	}
 
 	return nil
-}
-
-// ownerTarget checks if we are dealing with a remote owner
-func ownerTarget() bool {
-	if opts.GithubOrg != "" ||
-		opts.GithubUser != "" ||
-		opts.OwnerPath != "" {
-		return true
-	}
-	return false
 }
 
 // getSSHAuth generates ssh auth
