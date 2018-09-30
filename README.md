@@ -43,6 +43,7 @@ Application Options:
   -l, --log=           log level
   -v, --verbose        Show verbose output from gitleaks audit
       --report=        path to write report file
+      --csv            report output to csv
       --redact         redact secrets from log messages and report
       --version        version number
 
