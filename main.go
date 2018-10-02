@@ -194,10 +194,6 @@ func main() {
 		fmt.Println(version)
 		os.Exit(0)
 	}
-	if err != nil {
-		log.Error(err)
-		os.Exit(errExit)
-	}
 	leaks, err := run()
 	if err != nil {
 		log.Error(err)
@@ -245,7 +241,13 @@ func run() ([]Leak, error) {
 func startAudits() ([]Leak, error) {
 	var leaks []Leak
 	// start audits
-	if opts.OwnerPath != "" {
+	if opts.Repo != "" || opts.RepoPath != "" {
+		repo, err := getRepo()
+		if err != nil {
+			return leaks, err
+		}
+		return auditRepo(repo)
+	} else if opts.OwnerPath != "" {
 		repos, err := discoverRepos(opts.OwnerPath)
 		if err != nil {
 			return leaks, err

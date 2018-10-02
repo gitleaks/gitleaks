@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.1
+-----
+- Fixing bug where single repos were not being audited
+
 1.7.0
 -----
 - Exit code == 2 on error

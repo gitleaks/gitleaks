@@ -239,6 +239,30 @@ func TestRunAudit(t *testing.T) {
 			numLeaks:       0,
 			expectedErrMsg: "unable to generate ssh key: open reallyreallyreallyreallywrongpath: no such file or directory",
 		},
+		{
+			testOpts: Options{
+				Repo: "https://github.com/gitleakstest/gronit.git",
+			},
+			description:    "test leak",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				Repo: "https://github.com/gitleakstest/h1domains.git",
+			},
+			description:    "test clean",
+			numLeaks:       0,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				Repo: "https://github.com/gitleakstest/empty.git",
+			},
+			description:    "test empty",
+			numLeaks:       0,
+			expectedErrMsg: "reference not found",
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
