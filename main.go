@@ -15,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -118,7 +119,7 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.5.0"
+const version = "1.6.0"
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
@@ -175,10 +176,12 @@ var (
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
+	maxGo             int
 )
 
 func init() {
 	log.SetOutput(os.Stdout)
+	maxGo = runtime.GOMAXPROCS(0) / 2
 	regexes = make(map[string]*regexp.Regexp)
 	whiteListCommits = make(map[string]bool)
 }
@@ -359,20 +362,16 @@ func getRepo() (Repo, error) {
 // double dip
 func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
 	var (
-		err             error
-		prevCommit      *object.Commit
-		limitGoRoutines bool
-		semaphore       chan bool
-		repoName        string
+		err        error
+		prevCommit *object.Commit
+		semaphore  chan bool
+		repoName   string
 	)
-
 	repoName = repo.name
-
-	// goroutine limiting
 	if opts.MaxGoRoutines != 0 {
-		semaphore = make(chan bool, opts.MaxGoRoutines)
-		limitGoRoutines = true
+		maxGo = opts.MaxGoRoutines
 	}
+	semaphore = make(chan bool, maxGo)
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return err
@@ -385,9 +384,8 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
-		if limitGoRoutines {
-			semaphore <- true
-		}
+
+		semaphore <- true
 		commitWg.Add(1)
 		go func(c *object.Commit, prevCommit *object.Commit) {
 			var (
@@ -408,9 +406,7 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 				})
 				if err != nil {
 					log.Warnf("problem generating diff for commit: %s\n", c.Hash.String())
-					if limitGoRoutines {
-						<-semaphore
-					}
+					<-semaphore
 					commitChan <- leaks
 					return
 				}
@@ -418,9 +414,7 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 				patch, err := c.Patch(prevCommit)
 				if err != nil {
 					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
-					if limitGoRoutines {
-						<-semaphore
-					}
+					<-semaphore
 					commitChan <- leaks
 					return
 				}
@@ -451,9 +445,7 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 					}
 				}
 			}
-			if limitGoRoutines {
-				<-semaphore
-			}
+			<-semaphore
 			commitChan <- leaks
 		}(c, prevCommit)
 		prevCommit = c
@@ -666,6 +658,7 @@ func auditGithubRepo(githubRepo *github.Repository) ([]Leak, error) {
 	log.Infof("cloning: %s", *githubRepo.Name)
 	if opts.Disk {
 		ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
+		defer os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		if err != nil {
 			return leaks, fmt.Errorf("unable to generater owner temp dir: %v", err)
 		}

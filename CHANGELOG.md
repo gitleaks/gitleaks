@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.6.0
+-----
+- Default maximum goroutines spawned is number of cores your cpu run with. See benchmarks in wiki.
+- Cleanup after each repo audit for organizations rather than waiting for the entire organization to complete. Eliminates risk of running out of disk space.
+
+
 1.5.0
 -----
 - Support for CSV reporting
