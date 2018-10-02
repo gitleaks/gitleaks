@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.6.1
+-----
+- Recover from panic when diffing
+
 1.6.0
 -----
 - Default maximum goroutines spawned is number of cores your cpu run with. See benchmarks in wiki.

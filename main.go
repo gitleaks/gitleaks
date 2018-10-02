@@ -119,7 +119,7 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.6.0"
+const version = "1.6.1"
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
@@ -393,6 +393,14 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 				filePath string
 				skipFile bool
 			)
+			defer func() {
+				<-semaphore
+				commitChan <- leaks
+				if r := recover(); r != nil {
+					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+				}
+			}()
+
 			if prevCommit == nil {
 				t, _ := c.Tree()
 				files := t.Files()
@@ -406,16 +414,12 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 				})
 				if err != nil {
 					log.Warnf("problem generating diff for commit: %s\n", c.Hash.String())
-					<-semaphore
-					commitChan <- leaks
 					return
 				}
 			} else {
 				patch, err := c.Patch(prevCommit)
 				if err != nil {
 					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
-					<-semaphore
-					commitChan <- leaks
 					return
 				}
 				for _, f := range patch.FilePatches() {
@@ -445,8 +449,6 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 					}
 				}
 			}
-			<-semaphore
-			commitChan <- leaks
 		}(c, prevCommit)
 		prevCommit = c
 		return nil
