@@ -119,7 +119,7 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.6.1"
+const version = "1.7.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
