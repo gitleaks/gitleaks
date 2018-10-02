@@ -56,6 +56,35 @@ regexes= [
 ]
 `
 
+var benchmarkRepo *Repo
+var benchmarkLeaksRepo *Repo
+
+func getBenchmarkLeaksRepo() *Repo {
+	if benchmarkLeaksRepo != nil {
+		return benchmarkLeaksRepo
+	}
+	leaksR, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+		URL: "https://github.com/gitleakstest/gronit.git",
+	})
+	benchmarkLeaksRepo = &Repo{
+		repository: leaksR,
+	}
+	return benchmarkLeaksRepo
+}
+
+func getBenchmarkRepo() *Repo {
+	if benchmarkRepo != nil {
+		return benchmarkRepo
+	}
+	bmRepo, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+		URL: "https://github.com/apple/swift-package-manager.git",
+	})
+	benchmarkRepo = &Repo{
+		repository: bmRepo,
+	}
+	return benchmarkRepo
+}
+
 func TestGetRepo(t *testing.T) {
 	var err error
 	dir, err = ioutil.TempDir("", "gitleaksTestRepo")
@@ -688,5 +717,162 @@ func TestLoadToml(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+func BenchmarkAuditRepo1Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 1
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo2Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 2
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo4Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 4
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo8Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 8
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo10Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 10
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo100Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 100
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+
+func BenchmarkAuditRepo1000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 1000
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+func BenchmarkAuditRepo10000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 10000
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+func BenchmarkAuditRepo100000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 100000
+	benchmarkRepo = getBenchmarkRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkRepo)
+	}
+}
+func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 1
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo2Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 2
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo4Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 4
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo8Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 8
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo10Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 10
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 100
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 1000
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo10000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 10000
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
+	}
+}
+
+func BenchmarkAuditLeakRepo100000Proc(b *testing.B) {
+	loadToml()
+	opts.MaxGoRoutines = 100000
+	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
+	for n := 0; n < b.N; n++ {
+		auditRepo(*benchmarkLeaksRepo)
 	}
 }
