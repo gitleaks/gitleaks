@@ -119,7 +119,7 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.5.0"
+const version = "1.6.0"
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
