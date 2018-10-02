@@ -165,6 +165,95 @@ func TestGetRepo(t *testing.T) {
 		})
 	}
 }
+func TestRunAudit(t *testing.T) {
+	err := loadToml()
+	configsDir := testTomlLoader()
+	defer os.RemoveAll(configsDir)
+
+	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
+	defer os.RemoveAll(dir)
+	if err != nil {
+		panic(err)
+	}
+	git.PlainClone(dir+"/gronit", false, &git.CloneOptions{
+		URL: "https://github.com/gitleakstest/gronit",
+	})
+	git.PlainClone(dir+"/h1domains", false, &git.CloneOptions{
+		URL: "https://github.com/gitleakstest/h1domains",
+	})
+	var tests = []struct {
+		testOpts       Options
+		description    string
+		expectedErrMsg string
+		numLeaks       int
+	}{
+		{
+			testOpts: Options{
+				GithubUser: "gitleakstest",
+			},
+			description:    "test github user",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubUser: "gitleakstest",
+				Disk:       true,
+			},
+			description:    "test github user on disk ",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "gitleakstestorg",
+			},
+			description:    "test github org",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "gitleakstestorg",
+				Disk:      true,
+			},
+			description:    "test org on disk",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				OwnerPath: dir,
+			},
+			description:    "test owner path",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg:      "gitleakstestorg",
+				IncludePrivate: true,
+				SSHKey:         "reallyreallyreallyreallywrongpath",
+			},
+			description:    "test private org no ssh",
+			numLeaks:       0,
+			expectedErrMsg: "unable to generate ssh key: open reallyreallyreallyreallywrongpath: no such file or directory",
+		},
+	}
+	g := goblin.Goblin(t)
+	for _, test := range tests {
+		g.Describe("TestRunAudit", func() {
+			g.It(test.description, func() {
+				opts = test.testOpts
+				leaks, err := run()
+				if err != nil {
+					g.Assert(err.Error()).Equal(test.expectedErrMsg)
+				}
+				g.Assert(len(leaks)).Equal(test.numLeaks)
+			})
+		})
+	}
+}
 
 func TestStartAudit(t *testing.T) {
 	err := loadToml()
