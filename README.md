@@ -52,8 +52,9 @@ Help Options:
 ```
 #### Exit Codes
 ```
-1: leaks present
 0: no leaks
+1: leaks present
+2: error encountered
 ```
 
 #### Additional Examples and Explanations

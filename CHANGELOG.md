@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.7.0
+-----
+- Exit code == 2 on error
+- Cleaning up some logs
+- Removing some unreachable code
+
 1.6.1
 -----
 - Recover from panic when diffing

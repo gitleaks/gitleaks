@@ -119,7 +119,9 @@ type Config struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.6.1"
+const version = "1.7.0"
+const errExit = 2
+const leakExit = 1
 const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
@@ -187,70 +189,63 @@ func init() {
 }
 
 func main() {
-	var (
-		leaks []Leak
-	)
 	_, err := flags.Parse(&opts)
 	if opts.Version {
 		fmt.Println(version)
 		os.Exit(0)
 	}
 	if err != nil {
-		os.Exit(1)
+		log.Error(err)
+		os.Exit(errExit)
 	}
-	setLogs()
-
-	err = optsGuard()
+	leaks, err := run()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(errExit)
 	}
-
-	err = loadToml()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if opts.IncludePrivate {
-		// if including private repos use ssh as authentication
-		sshAuth, err = getSSHAuth()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	if opts.Disk {
-		// temporary directory where all the gitleaks plain clones will reside
-		dir, err = ioutil.TempDir("", "gitleaks")
-		defer os.RemoveAll(dir)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	leaks, err = startAudits()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
 
 	if len(leaks) != 0 {
-		log.Errorf("leaks detected")
-		os.Exit(1)
+		log.Warnf("leaks detected")
+		os.Exit(leakExit)
 	}
+}
+
+// run parses options and kicks off the audit
+func run() ([]Leak, error) {
+	setLogs()
+	err := optsGuard()
+	if err != nil {
+		return nil, err
+	}
+	err = loadToml()
+	if err != nil {
+		return nil, err
+	}
+	if opts.IncludePrivate {
+		// if including private repos use ssh as authentication
+		sshAuth, err = getSSHAuth()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if opts.Disk {
+		// temporary directory where all the gitleaks plain clones will reside
+		dir, err = ioutil.TempDir("", "gitleaks")
+		defer os.RemoveAll(dir)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return startAudits()
 }
 
 func startAudits() ([]Leak, error) {
 	var leaks []Leak
 	// start audits
-	if opts.Repo != "" || opts.RepoPath != "" {
-		repo, err := getRepo()
-		if err != nil {
-			return leaks, err
-		}
-		return auditRepo(repo)
-	} else if opts.OwnerPath != "" {
+	if opts.OwnerPath != "" {
 		repos, err := discoverRepos(opts.OwnerPath)
 		if err != nil {
 			return leaks, err
@@ -275,7 +270,7 @@ func startAudits() ([]Leak, error) {
 				log.Warnf("leaks found for repo %s", *githubRepo.Name)
 			}
 			if err != nil {
-				return leaks, err
+				log.Warn(err)
 			}
 			leaks = append(leaks, leaksFromRepo...)
 		}
@@ -505,7 +500,6 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				return nil
 			})
 			if foundBranch == false {
-				log.Fatalf("No branch with name", opts.Branch)
 				return nil, nil
 			}
 		}
@@ -601,7 +595,7 @@ func getGithubRepos() ([]*github.Repository, error) {
 			githubClient.BaseURL = ghURL
 		}
 		githubOrgOptions = &github.RepositoryListByOrgOptions{
-			ListOptions: github.ListOptions{PerPage: 10},
+			ListOptions: github.ListOptions{PerPage: 100},
 		}
 	} else if opts.GithubUser != "" {
 		githubClient = github.NewClient(githubToken())
@@ -613,7 +607,7 @@ func getGithubRepos() ([]*github.Repository, error) {
 		githubOptions = &github.RepositoryListOptions{
 			Affiliation: "owner",
 			ListOptions: github.ListOptions{
-				PerPage: 10,
+				PerPage: 100,
 			},
 		}
 	}
@@ -634,7 +628,7 @@ func getGithubRepos() ([]*github.Repository, error) {
 				return githubRepos, err
 			}
 		} else if opts.GithubOrg != "" {
-			rs, resp, err := githubClient.Repositories.ListByOrg(ctx, opts.GithubOrg, githubOrgOptions)
+			rs, resp, err = githubClient.Repositories.ListByOrg(ctx, opts.GithubOrg, githubOrgOptions)
 			if err != nil {
 				return nil, err
 			}
@@ -644,8 +638,10 @@ func getGithubRepos() ([]*github.Repository, error) {
 				return githubRepos, err
 			}
 		}
-		for _, githubRepo := range githubRepos {
-			log.Infof("staging repo %s", *githubRepo.Name)
+		if opts.Log == "Debug" || opts.Log == "debug" {
+			for _, githubRepo := range rs {
+				log.Debugf("staging repos %s", *githubRepo.Name)
+			}
 		}
 	}
 }
