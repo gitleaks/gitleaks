@@ -383,7 +383,7 @@ func TestWriteReport(t *testing.T) {
 	reportJSON := path.Join(tmpDir, "report.json")
 	reportCSV := path.Join(tmpDir, "report.csv")
 	defer os.RemoveAll(tmpDir)
-	leaks := []Leak{
+	leaks := []*Leak{
 		{
 			Line:     "eat",
 			Commit:   "your",
@@ -397,7 +397,7 @@ func TestWriteReport(t *testing.T) {
 	}
 
 	var tests = []struct {
-		leaks       []Leak
+		leaks       []*Leak
 		reportFile  string
 		fileName    string
 		description string
@@ -447,7 +447,7 @@ func testTomlLoader() string {
 }
 
 func TestAuditRepo(t *testing.T) {
-	var leaks []Leak
+	var leaks []*Leak
 	err := loadToml()
 	configsDir := testTomlLoader()
 	defer os.RemoveAll(configsDir)
@@ -499,7 +499,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "two leaks present limit goroutines",
 			numLeaks:    2,
 			testOpts: Options{
-				MaxGoRoutines: 2,
+				MaxGoRoutines: 4,
 			},
 		},
 		{

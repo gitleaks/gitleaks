@@ -357,7 +357,7 @@ func getRepo() (Repo, error) {
 // auditRef audits a git reference
 // TODO: need to add a layer of parallelism here and a cache for parent+child commits so we don't
 // double dip
-func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, commitChan chan []Leak) error {
+func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leakChan chan Leak) error {
 	var (
 		err        error
 		prevCommit *object.Commit
@@ -374,6 +374,9 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 		return err
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
+		var mem runtime.MemStats
+		runtime.ReadMemStats(&mem)
+		log.Printf("Allocated memory: %fMB. Number of goroutines: %d", float32(mem.Alloc)/1024.0/1024.0, runtime.NumGoroutine())
 		if c.Hash.String() == opts.Commit {
 			cIter.Close()
 		}
@@ -381,18 +384,16 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
-
 		semaphore <- true
 		commitWg.Add(1)
-		go func(c *object.Commit, prevCommit *object.Commit) {
+		go func(c *object.Commit, prevCommit *object.Commit, leakChan chan Leak, semaphore chan bool) {
 			var (
-				leaks    []Leak
 				filePath string
 				skipFile bool
 			)
 			defer func() {
 				<-semaphore
-				commitChan <- leaks
+				commitWg.Done()
 				if r := recover(); r != nil {
 					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
 				}
@@ -406,7 +407,10 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 					if err != nil {
 						return err
 					}
-					leaks = append(leaks, checkDiff(content, c, file.Name, string(ref.Name()), repoName)...)
+					leaks := checkDiff(content, c, file.Name, string(ref.Name()), repoName)
+					for _, leak := range leaks {
+						leakChan <- leak
+					}
 					return nil
 				})
 				if err != nil {
@@ -441,12 +445,15 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, comm
 					for _, chunk := range chunks {
 						if chunk.Type() == 1 || chunk.Type() == 2 {
 							// only check if adding or removing
-							leaks = append(leaks, checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)...)
+							leaks := checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)
+							for _, leak := range leaks {
+								leakChan <- leak
+							}
 						}
 					}
 				}
 			}
-		}(c, prevCommit)
+		}(c, prevCommit, leakChan, semaphore)
 		prevCommit = c
 		return nil
 	})
@@ -468,7 +475,7 @@ func auditRepo(repo Repo) ([]Leak, error) {
 	}
 
 	// leak messaging
-	commitChan := make(chan []Leak, 1)
+	commitChan := make(chan Leak)
 
 	if opts.AuditAllRefs {
 		skipBranch := false
@@ -509,16 +516,12 @@ func auditRepo(repo Repo) ([]Leak, error) {
 	}
 
 	go func() {
-		for commitLeaks := range commitChan {
-			if commitLeaks != nil {
-				for _, leak := range commitLeaks {
-					leaks = append(leaks, leak)
-				}
-
-			}
-			commitWg.Done()
+		fmt.Println("entering next gorotuine")
+		for leak := range commitChan {
+			leaks = append(leaks, leak)
 		}
 	}()
+	fmt.Println("DONE")
 
 	commitWg.Wait()
 	return leaks, err
@@ -871,7 +874,7 @@ func getSSHAuth() (*ssh.PublicKeys, error) {
 	return sshAuth, err
 }
 
-func (leak *Leak) log() {
+func (leak Leak) log() {
 	b, _ := json.MarshalIndent(leak, "", "   ")
 	fmt.Println(string(b))
 }
