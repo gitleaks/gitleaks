@@ -411,7 +411,7 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 					for _, leak := range chunkLeaks {
 						mutex.Lock()
 						leaks = append(leaks, leak)
-						mutex.Lock()
+						mutex.Unlock()
 					}
 					return nil
 				})
