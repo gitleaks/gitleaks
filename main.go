@@ -310,7 +310,6 @@ func getRepo() (Repo, error) {
 		err  error
 		repo *git.Repository
 	)
-
 	if opts.Disk {
 		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
@@ -365,22 +364,19 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 		repoName   string
 		leaks      []Leak
 		commitWg   sync.WaitGroup
+		mutex      = &sync.Mutex{}
 	)
 	repoName = repo.name
 	if opts.MaxGoRoutines != 0 {
 		maxGo = opts.MaxGoRoutines
 	}
-	// leak messaging
-	leakChan := make(chan *Leak)
+
 	semaphore = make(chan bool, maxGo)
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		var mem runtime.MemStats
-		runtime.ReadMemStats(&mem)
-		// log.Printf("Allocated memory: %fMB. Number of goroutines: %d", float32(mem.Alloc)/1024.0/1024.0, runtime.NumGoroutine())
 		if c.Hash.String() == opts.Commit {
 			cIter.Close()
 		}
@@ -398,9 +394,9 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 			defer func() {
 				commitWg.Done()
 				<-semaphore
-				// if r := recover(); r != nil {
-				// 	log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
-				// }
+				if r := recover(); r != nil {
+					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+				}
 			}()
 
 			if prevCommit == nil {
@@ -411,9 +407,11 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 					if err != nil {
 						return err
 					}
-					leaks := checkDiff(content, c, file.Name, string(ref.Name()), repoName)
-					for _, leak := range leaks {
-						leakChan <- &leak
+					chunkLeaks := checkDiff(content, c, file.Name, string(ref.Name()), repoName)
+					for _, leak := range chunkLeaks {
+						mutex.Lock()
+						leaks = append(leaks, leak)
+						mutex.Lock()
 					}
 					return nil
 				})
@@ -449,9 +447,11 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 					for _, chunk := range chunks {
 						if chunk.Type() == 1 || chunk.Type() == 2 {
 							// only check if adding or removing
-							leaks := checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)
-							for _, leak := range leaks {
-								leakChan <- &leak
+							chunkLeaks := checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)
+							for _, leak := range chunkLeaks {
+								mutex.Lock()
+								leaks = append(leaks, leak)
+								mutex.Unlock()
 							}
 						}
 					}
@@ -461,12 +461,6 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 		prevCommit = c
 		return nil
 	})
-	go func() {
-		// open up the consumer immidiately
-		for leak := range leakChan {
-			leaks = append(leaks, *leak)
-		}
-	}()
 	commitWg.Wait()
 	return leaks
 }
@@ -500,7 +494,10 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				skipBranch = false
 				return nil
 			}
-			leaks = auditRef(repo, ref)
+			branchLeaks := auditRef(repo, ref)
+			for _, leak := range branchLeaks {
+				leaks = append(leaks, leak)
+			}
 			return nil
 		})
 	} else {
@@ -875,3 +872,28 @@ func (leak Leak) log() {
 	b, _ := json.MarshalIndent(leak, "", "   ")
 	fmt.Println(string(b))
 }
+
+// go test -run=Benchmark -bench=. -benchtime=5s
+// goos: darwin
+// goarch: amd64
+// pkg: github.com/zricethezav/gitleaks
+// BenchmarkAuditRepo1Proc-8                      1        16515816305 ns/op
+// BenchmarkAuditRepo2Proc-8                      1        8313648949 ns/op
+// BenchmarkAuditRepo4Proc-8                      1        5351982911 ns/op
+// BenchmarkAuditRepo8Proc-8                      2        4964450249 ns/op
+// BenchmarkAuditRepo10Proc-8                     2        4884234681 ns/op
+// BenchmarkAuditRepo100Proc-8                    2        4964564477 ns/op
+// BenchmarkAuditRepo1000Proc-8                   2        4875219068 ns/op
+// BenchmarkAuditRepo10000Proc-8                  2        4944909262 ns/op
+// BenchmarkAuditRepo100000Proc-8                 1        5236275503 ns/op
+// BenchmarkAuditLeakRepo1Proc-8                300          24281907 ns/op
+// BenchmarkAuditLeakRepo2Proc-8                500          15922697 ns/op
+// BenchmarkAuditLeakRepo4Proc-8                500          12194260 ns/op
+// BenchmarkAuditLeakRepo8Proc-8               1000          11212528 ns/op
+// BenchmarkAuditLeakRepo10Proc-8              1000          10504852 ns/op
+// BenchmarkAuditLeakRepo100Proc-8             1000           9431540 ns/op
+// BenchmarkAuditLeakRepo1000Proc-8            1000           9426364 ns/op
+// BenchmarkAuditLeakRepo10000Proc-8           1000           9931688 ns/op
+// BenchmarkAuditLeakRepo100000Proc-8          1000           9538288 ns/op
+// PASS
+// ok      github.com/zricethezav/gitleaks 200.652s
