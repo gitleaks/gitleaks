@@ -872,28 +872,3 @@ func (leak Leak) log() {
 	b, _ := json.MarshalIndent(leak, "", "   ")
 	fmt.Println(string(b))
 }
-
-// go test -run=Benchmark -bench=. -benchtime=5s
-// goos: darwin
-// goarch: amd64
-// pkg: github.com/zricethezav/gitleaks
-// BenchmarkAuditRepo1Proc-8                      1        16515816305 ns/op
-// BenchmarkAuditRepo2Proc-8                      1        8313648949 ns/op
-// BenchmarkAuditRepo4Proc-8                      1        5351982911 ns/op
-// BenchmarkAuditRepo8Proc-8                      2        4964450249 ns/op
-// BenchmarkAuditRepo10Proc-8                     2        4884234681 ns/op
-// BenchmarkAuditRepo100Proc-8                    2        4964564477 ns/op
-// BenchmarkAuditRepo1000Proc-8                   2        4875219068 ns/op
-// BenchmarkAuditRepo10000Proc-8                  2        4944909262 ns/op
-// BenchmarkAuditRepo100000Proc-8                 1        5236275503 ns/op
-// BenchmarkAuditLeakRepo1Proc-8                300          24281907 ns/op
-// BenchmarkAuditLeakRepo2Proc-8                500          15922697 ns/op
-// BenchmarkAuditLeakRepo4Proc-8                500          12194260 ns/op
-// BenchmarkAuditLeakRepo8Proc-8               1000          11212528 ns/op
-// BenchmarkAuditLeakRepo10Proc-8              1000          10504852 ns/op
-// BenchmarkAuditLeakRepo100Proc-8             1000           9431540 ns/op
-// BenchmarkAuditLeakRepo1000Proc-8            1000           9426364 ns/op
-// BenchmarkAuditLeakRepo10000Proc-8           1000           9931688 ns/op
-// BenchmarkAuditLeakRepo100000Proc-8          1000           9538288 ns/op
-// PASS
-// ok      github.com/zricethezav/gitleaks 200.652s
