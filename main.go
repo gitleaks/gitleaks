@@ -357,21 +357,25 @@ func getRepo() (Repo, error) {
 // auditRef audits a git reference
 // TODO: need to add a layer of parallelism here and a cache for parent+child commits so we don't
 // double dip
-func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leakChan chan Leak) error {
+func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 	var (
 		err        error
 		prevCommit *object.Commit
 		semaphore  chan bool
 		repoName   string
+		leaks      []Leak
+		commitWg   sync.WaitGroup
 	)
 	repoName = repo.name
 	if opts.MaxGoRoutines != 0 {
 		maxGo = opts.MaxGoRoutines
 	}
+	// leak messaging
+	leakChan := make(chan *Leak)
 	semaphore = make(chan bool, maxGo)
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
-		return err
+		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
 		var mem runtime.MemStats
@@ -394,9 +398,9 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leak
 			defer func() {
 				commitWg.Done()
 				<-semaphore
-				if r := recover(); r != nil {
-					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
-				}
+				// if r := recover(); r != nil {
+				// 	log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+				// }
 			}()
 
 			if prevCommit == nil {
@@ -409,7 +413,7 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leak
 					}
 					leaks := checkDiff(content, c, file.Name, string(ref.Name()), repoName)
 					for _, leak := range leaks {
-						leakChan <- leak
+						leakChan <- &leak
 					}
 					return nil
 				})
@@ -447,7 +451,7 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leak
 							// only check if adding or removing
 							leaks := checkDiff(chunk.Content(), prevCommit, filePath, string(ref.Name()), repoName)
 							for _, leak := range leaks {
-								leakChan <- leak
+								leakChan <- &leak
 							}
 						}
 					}
@@ -457,31 +461,28 @@ func auditRef(repo Repo, ref *plumbing.Reference, commitWg *sync.WaitGroup, leak
 		prevCommit = c
 		return nil
 	})
-	return nil
+	go func() {
+		// open up the consumer immidiately
+		for leak := range leakChan {
+			leaks = append(leaks, *leak)
+		}
+	}()
+	commitWg.Wait()
+	return leaks
 }
 
 // auditRepo performs an audit on a repository checking for regex matching and ignoring
 // files and regexes that are whitelisted
 func auditRepo(repo Repo) ([]Leak, error) {
 	var (
-		err      error
-		leaks    []Leak
-		commitWg sync.WaitGroup
+		err   error
+		leaks []Leak
 	)
 
 	ref, err := repo.repository.Head()
 	if err != nil {
 		return leaks, err
 	}
-
-	// leak messaging
-	commitChan := make(chan Leak)
-
-	go func() {
-		for leak := range commitChan {
-			leaks = append(leaks, leak)
-		}
-	}()
 
 	if opts.AuditAllRefs {
 		skipBranch := false
@@ -499,7 +500,7 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				skipBranch = false
 				return nil
 			}
-			auditRef(repo, ref, &commitWg, commitChan)
+			leaks = auditRef(repo, ref)
 			return nil
 		})
 	} else {
@@ -518,7 +519,7 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				return nil, nil
 			}
 		}
-		auditRef(repo, ref, &commitWg, commitChan)
+		leaks = auditRef(repo, ref)
 	}
 	return leaks, err
 }
