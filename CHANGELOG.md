@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.2
+-----
+- Fixing dangling goroutines, removing channel messaging
+
 1.7.1
 -----
 - Fixing bug where single repos were not being audited

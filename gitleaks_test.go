@@ -499,7 +499,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "two leaks present limit goroutines",
 			numLeaks:    2,
 			testOpts: Options{
-				MaxGoRoutines: 2,
+				MaxGoRoutines: 4,
 			},
 		},
 		{
