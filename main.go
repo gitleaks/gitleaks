@@ -34,7 +34,9 @@ import (
 	git "gopkg.in/src-d/go-git.v4"
 )
 
-// Leak represents a leaked secret or regex match. This will be output to stdout and/or the report
+// Leak represents a leaked secret or regex match.
+// Leak can output to stdout as json if the --verbose option is set or
+// as a csv if the --csv and --report options are set.
 type Leak struct {
 	Line     string `json:"line"`
 	Commit   string `json:"commit"`
@@ -47,12 +49,11 @@ type Leak struct {
 	Repo     string `json:"repo"`
 }
 
-// Repo contains the actual git repository and meta data about the repo
-type Repo struct {
+// RepoDescriptor contains a src-d git repository and other data about the repo
+type RepoDescriptor struct {
 	path       string
 	url        string
 	name       string
-	leaks      []Leak
 	repository *git.Repository
 	err        error
 }
@@ -61,7 +62,7 @@ type Repo struct {
 type Owner struct {
 	path  string
 	url   string
-	repos []Repo
+	repos []RepoDescriptor
 }
 
 // Options for gitleaks
@@ -211,6 +212,7 @@ func main() {
 
 // run parses options and kicks off the audit
 func run() ([]Leak, error) {
+	var leaks []Leak
 	setLogs()
 	err := optsGuard()
 	if err != nil {
@@ -235,19 +237,18 @@ func run() ([]Leak, error) {
 			return nil, err
 		}
 	}
-	return startAudits()
-}
 
-func startAudits() ([]Leak, error) {
-	var leaks []Leak
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
+		// Audit a single remote repo or a local repo.
 		repo, err := getRepo()
 		if err != nil {
 			return leaks, err
 		}
 		return auditRepo(repo)
 	} else if opts.OwnerPath != "" {
+		// Audit local repos. Gitleaks will look for all child directories of OwnerPath for
+		// git repos and perform an audit on said repos.
 		repos, err := discoverRepos(opts.OwnerPath)
 		if err != nil {
 			return leaks, err
@@ -260,27 +261,18 @@ func startAudits() ([]Leak, error) {
 			leaks = append(leaksFromRepo, leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
-		githubRepos, err := getGithubRepos()
+		// Audit a github owner -- a user or organization. If you want to include
+		// private repos you must pass a --private/-p option and have your ssh keys set
+		leaks, err = auditGithubRepos()
 		if err != nil {
 			return leaks, err
-		}
-		for _, githubRepo := range githubRepos {
-			leaksFromRepo, err := auditGithubRepo(githubRepo)
-			if len(leaksFromRepo) == 0 {
-				log.Infof("no leaks found for repo %s", *githubRepo.Name)
-			} else {
-				log.Warnf("leaks found for repo %s", *githubRepo.Name)
-			}
-			if err != nil {
-				log.Warn(err)
-			}
-			leaks = append(leaks, leaksFromRepo...)
 		}
 	}
 	return leaks, nil
 }
 
-// writeReport writes a report to opts.Report in JSON.
+// writeReport writes a report to a file specified in the --report= option.
+// Default format for report is JSON. You can use the --csv option to write the report as a csv
 func writeReport(leaks []Leak) error {
 	var err error
 	log.Infof("writing report to %s", opts.Report)
@@ -303,9 +295,10 @@ func writeReport(leaks []Leak) error {
 	return err
 }
 
-// getRepo is responsible for cloning a repo in-memory or to disk, or opening a local repo and creating
-// a repo object
-func getRepo() (Repo, error) {
+// getRepoDescriptor clones a repo to memory(default) or to disk if the --disk option is set. If you want to
+// clone a private repo you must set the --private/-p option, use a ssh target, and have your ssh keys
+// configured. If you want to audit a local repo, getRepo will load up a repo located at --repo-path
+func getRepoDescriptor() (RepoDescriptor, error) {
 	var (
 		err  error
 		repo *git.Repository
@@ -326,7 +319,6 @@ func getRepo() (Repo, error) {
 			})
 		}
 	} else if opts.RepoPath != "" {
-		// use existing repo
 		log.Infof("opening %s", opts.Repo)
 		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
@@ -344,7 +336,7 @@ func getRepo() (Repo, error) {
 			})
 		}
 	}
-	return Repo{
+	return RepoDescriptor{
 		repository: repo,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
@@ -353,10 +345,10 @@ func getRepo() (Repo, error) {
 	}, nil
 }
 
-// auditRef audits a git reference
-// TODO: need to add a layer of parallelism here and a cache for parent+child commits so we don't
-// double dip
-func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
+// auditGitReference beings the audit for a git reference. This function will
+// traverse the git reference and audit each line of each diff. Set maximum concurrency with
+// the --max-go option (default is set to the number of cores on your cpu).
+func auditGitReference(repo RepoDescriptor, ref *plumbing.Reference) []Leak {
 	var (
 		err        error
 		prevCommit *object.Commit
@@ -465,14 +457,13 @@ func auditRef(repo Repo, ref *plumbing.Reference) []Leak {
 	return leaks
 }
 
-// auditRepo performs an audit on a repository checking for regex matching and ignoring
-// files and regexes that are whitelisted
-func auditRepo(repo Repo) ([]Leak, error) {
+// auditGitRepo beings an audit on a git repository by checking the default HEAD branch, all branches, or
+// a single branch depending on what gitleaks is configured to do.
+func auditGitRepo(repo RepoDescriptor) ([]Leak, error) {
 	var (
 		err   error
 		leaks []Leak
 	)
-
 	ref, err := repo.repository.Head()
 	if err != nil {
 		return leaks, err
@@ -494,7 +485,7 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				skipBranch = false
 				return nil
 			}
-			branchLeaks := auditRef(repo, ref)
+			branchLeaks := auditGitReference(repo, ref)
 			for _, leak := range branchLeaks {
 				leaks = append(leaks, leak)
 			}
@@ -516,13 +507,14 @@ func auditRepo(repo Repo) ([]Leak, error) {
 				return nil, nil
 			}
 		}
-		leaks = auditRef(repo, ref)
+		leaks = auditGitReference(repo, ref)
 	}
 	return leaks, err
 }
 
 // checkDiff accepts a string diff and commit object then performs a
 // regex check
+// checkDiff
 func checkDiff(diff string, commit *object.Commit, filePath string, branch string, repo string) []Leak {
 	lines := strings.Split(diff, "\n")
 	var (
@@ -575,7 +567,7 @@ func checkDiff(diff string, commit *object.Commit, filePath string, branch strin
 }
 
 // auditOwner audits all of the owner's(user or org) repos
-func getGithubRepos() ([]*github.Repository, error) {
+func auditGithubRepos() ([]Leak, error) {
 	var (
 		err              error
 		githubRepos      []*github.Repository
@@ -584,6 +576,8 @@ func getGithubRepos() ([]*github.Repository, error) {
 		githubClient     *github.Client
 		githubOrgOptions *github.RepositoryListByOrgOptions
 		githubOptions    *github.RepositoryListOptions
+		done             bool
+		leaks            []Leak
 	)
 	ctx := context.Background()
 
@@ -612,6 +606,9 @@ func getGithubRepos() ([]*github.Repository, error) {
 	}
 
 	for {
+		if done {
+			break
+		}
 		if opts.GithubUser != "" {
 			if opts.IncludePrivate {
 				rs, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
@@ -619,22 +616,22 @@ func getGithubRepos() ([]*github.Repository, error) {
 				rs, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
 			}
 			if err != nil {
-				return nil, err
+				done = true
 			}
 			githubOptions.Page = resp.NextPage
 			githubRepos = append(githubRepos, rs...)
 			if resp.NextPage == 0 {
-				return githubRepos, err
+				done = true
 			}
 		} else if opts.GithubOrg != "" {
 			rs, resp, err = githubClient.Repositories.ListByOrg(ctx, opts.GithubOrg, githubOrgOptions)
 			if err != nil {
-				return nil, err
+				done = true
 			}
 			githubOrgOptions.Page = resp.NextPage
 			githubRepos = append(githubRepos, rs...)
 			if resp.NextPage == 0 {
-				return githubRepos, err
+				done = true
 			}
 		}
 		if opts.Log == "Debug" || opts.Log == "debug" {
@@ -643,6 +640,23 @@ func getGithubRepos() ([]*github.Repository, error) {
 			}
 		}
 	}
+	if err != nil {
+		return leaks, err
+	}
+	for _, githubRepo := range githubRepos {
+		leaksFromRepo, err := auditGithubRepo(githubRepo)
+		if len(leaksFromRepo) == 0 {
+			log.Infof("no leaks found for repo %s", *githubRepo.Name)
+		} else {
+			log.Warnf("leaks found for repo %s", *githubRepo.Name)
+		}
+		if err != nil {
+			log.Warn(err)
+		}
+		leaks = append(leaks, leaksFromRepo...)
+	}
+	fmt.Println(leaks)
+	return leaks, nil
 }
 
 // auditGithubRepo clones repos from github
