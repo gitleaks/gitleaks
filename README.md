@@ -46,6 +46,7 @@ Application Options:
       --csv            report output to csv
       --redact         redact secrets from log messages and report
       --version        version number
+      --sample-config  prints a sample config file
 
 Help Options:
   -h, --help           Show this help message

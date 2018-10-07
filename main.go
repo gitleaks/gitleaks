@@ -90,12 +90,13 @@ type Options struct {
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
-	Log     string `short:"l" long:"log" description:"log level"`
-	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report  string `long:"report" description:"path to write report file"`
-	CSV     bool   `long:"csv" description:"report output to csv"`
-	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
-	Version bool   `long:"version" description:"version number"`
+	Log          string `short:"l" long:"log" description:"log level"`
+	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
+	Report       string `long:"report" description:"path to write report file"`
+	CSV          bool   `long:"csv" description:"report output to csv"`
+	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
+	Version      bool   `long:"version" description:"version number"`
+	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
 }
 
 // Config struct for regexes matching and whitelisting
@@ -109,6 +110,7 @@ type Config struct {
 		Regexes  []string
 		Commits  []string
 		Branches []string
+		Repos    []string
 	}
 }
 
@@ -121,10 +123,16 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.7.3"
+const version = "1.8.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
+# This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
+# The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
+# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
+# configurations from that path. Gitleaks does not whitelist anything by default.
+
+
 title = "gitleaks config"
 # add regexes to the regex table
 [[regexes]]
@@ -150,7 +158,6 @@ description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 
 [whitelist]
-
 #regexes = [
 #  "AKAIMYFAKEAWKKEY",
 #]
@@ -167,6 +174,10 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 #branches = [
 #	"dev/STUPDIFKNFEATURE"
 #]
+
+#repos = [
+#	"someYugeRepoWeKnowIsCLEAR"
+#]
 `
 
 var (
@@ -177,6 +188,7 @@ var (
 	whiteListFiles    []*regexp.Regexp
 	whiteListCommits  map[string]bool
 	whiteListBranches []string
+	whiteListRepos    []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
@@ -194,6 +206,10 @@ func main() {
 	_, err := flags.Parse(&opts)
 	if opts.Version {
 		fmt.Println(version)
+		os.Exit(0)
+	}
+	if opts.SampleConfig {
+		fmt.Println(defaultConfig)
 		os.Exit(0)
 	}
 	leaks, err := run()
@@ -354,6 +370,11 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		err   error
 		leaks []Leak
 	)
+	for _, repoName := range whiteListRepos {
+		if repoName == repo.name {
+			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+		}
+	}
 	ref, err := repo.repository.Head()
 	if err != nil {
 		return leaks, err
@@ -694,6 +715,11 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		repo *git.Repository
 		err  error
 	)
+	for _, repoName := range whiteListRepos {
+		if repoName == *githubRepo.Name {
+			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+		}
+	}
 	log.Infof("cloning: %s", *githubRepo.Name)
 	if opts.Disk {
 		ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
@@ -878,6 +904,7 @@ func loadToml() error {
 		}
 	}
 	whiteListBranches = config.Whitelist.Branches
+	whiteListRepos = config.Whitelist.Repos
 	whiteListCommits = make(map[string]bool)
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
