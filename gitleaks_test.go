@@ -56,6 +56,17 @@ regexes= [
 ]
 `
 
+const testWhitelistRepo = `
+[[regexes]]
+description = "AWS"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[whitelist]
+repos = [
+  "gronit",
+]
+`
+
 var benchmarkRepo *RepoDescriptor
 var benchmarkLeaksRepo *RepoDescriptor
 
@@ -166,9 +177,8 @@ func TestGetRepo(t *testing.T) {
 	}
 }
 func TestRun(t *testing.T) {
-	err := loadToml()
+	var err error
 	configsDir := testTomlLoader()
-	defer os.RemoveAll(configsDir)
 
 	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
 	defer os.RemoveAll(dir)
@@ -185,7 +195,9 @@ func TestRun(t *testing.T) {
 		testOpts       Options
 		description    string
 		expectedErrMsg string
+		whiteListRepos []string
 		numLeaks       int
+		configPath     string
 	}{
 		{
 			testOpts: Options{
@@ -263,11 +275,23 @@ func TestRun(t *testing.T) {
 			numLeaks:       0,
 			expectedErrMsg: "reference not found",
 		},
+		{
+			testOpts: Options{
+				GithubOrg: "gitleakstestorg",
+			},
+			description:    "test github org",
+			numLeaks:       0,
+			expectedErrMsg: "",
+			configPath:     path.Join(configsDir, "repo"),
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
 		g.Describe("TestRun", func() {
 			g.It(test.description, func() {
+				if test.configPath != "" {
+					os.Setenv("GITLEAKS_CONFIG", test.configPath)
+				}
 				opts = test.testOpts
 				leaks, err := run()
 				if err != nil {
@@ -344,6 +368,7 @@ func testTomlLoader() string {
 	ioutil.WriteFile(path.Join(tmpDir, "branch"), []byte(testWhitelistBranch), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "repo"), []byte(testWhitelistRepo), 0644)
 	return tmpDir
 }
 
@@ -387,6 +412,7 @@ func TestAuditRepo(t *testing.T) {
 		whiteListFiles    []*regexp.Regexp
 		whiteListCommits  map[string]bool
 		whiteListBranches []string
+		whiteListRepos    []string
 		whiteListRegexes  []*regexp.Regexp
 		configPath        string
 	}{
@@ -511,6 +537,20 @@ func TestAuditRepo(t *testing.T) {
 			configPath:  path.Join(configsDir, "commit"),
 			numLeaks:    2,
 		},
+		{
+			repo:        leaksRepo,
+			description: "audit whitelist repo",
+			numLeaks:    0,
+			whiteListRepos: []string{
+				"gronit",
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml whitelist repo",
+			numLeaks:    0,
+			configPath:  path.Join(configsDir, "repo"),
+		},
 	}
 
 	whiteListCommits = make(map[string]bool)
@@ -539,6 +579,11 @@ func TestAuditRepo(t *testing.T) {
 					whiteListRegexes = test.whiteListRegexes
 				} else {
 					whiteListRegexes = nil
+				}
+				if test.whiteListRepos != nil {
+					whiteListRepos = test.whiteListRepos
+				} else {
+					whiteListRepos = nil
 				}
 
 				// config paths

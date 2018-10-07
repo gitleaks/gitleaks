@@ -109,6 +109,7 @@ type Config struct {
 		Regexes  []string
 		Commits  []string
 		Branches []string
+		Repos    []string
 	}
 }
 
@@ -167,6 +168,10 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 #branches = [
 #	"dev/STUPDIFKNFEATURE"
 #]
+
+#repos = [
+#	"someYugeRepoWeKnowIsCLEAR"
+#]
 `
 
 var (
@@ -177,6 +182,7 @@ var (
 	whiteListFiles    []*regexp.Regexp
 	whiteListCommits  map[string]bool
 	whiteListBranches []string
+	whiteListRepos    []string
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
@@ -354,6 +360,11 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		err   error
 		leaks []Leak
 	)
+	for _, repoName := range whiteListRepos {
+		if repoName == repo.name {
+			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+		}
+	}
 	ref, err := repo.repository.Head()
 	if err != nil {
 		return leaks, err
@@ -694,6 +705,11 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		repo *git.Repository
 		err  error
 	)
+	for _, repoName := range whiteListRepos {
+		if repoName == *githubRepo.Name {
+			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+		}
+	}
 	log.Infof("cloning: %s", *githubRepo.Name)
 	if opts.Disk {
 		ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
@@ -878,6 +894,7 @@ func loadToml() error {
 		}
 	}
 	whiteListBranches = config.Whitelist.Branches
+	whiteListRepos = config.Whitelist.Repos
 	whiteListCommits = make(map[string]bool)
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
