@@ -56,30 +56,30 @@ regexes= [
 ]
 `
 
-var benchmarkRepo *Repo
-var benchmarkLeaksRepo *Repo
+var benchmarkRepo *RepoDescriptor
+var benchmarkLeaksRepo *RepoDescriptor
 
-func getBenchmarkLeaksRepo() *Repo {
+func getBenchmarkLeaksRepo() *RepoDescriptor {
 	if benchmarkLeaksRepo != nil {
 		return benchmarkLeaksRepo
 	}
 	leaksR, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: "https://github.com/gitleakstest/gronit.git",
 	})
-	benchmarkLeaksRepo = &Repo{
+	benchmarkLeaksRepo = &RepoDescriptor{
 		repository: leaksR,
 	}
 	return benchmarkLeaksRepo
 }
 
-func getBenchmarkRepo() *Repo {
+func getBenchmarkRepo() *RepoDescriptor {
 	if benchmarkRepo != nil {
 		return benchmarkRepo
 	}
 	bmRepo, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: "https://github.com/apple/swift-package-manager.git",
 	})
-	benchmarkRepo = &Repo{
+	benchmarkRepo = &RepoDescriptor{
 		repository: bmRepo,
 	}
 	return benchmarkRepo
@@ -157,7 +157,7 @@ func TestGetRepo(t *testing.T) {
 		g.Describe("TestGetRepo", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
-				_, err := getRepo()
+				_, err := cloneRepo()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
 				}
@@ -165,7 +165,7 @@ func TestGetRepo(t *testing.T) {
 		})
 	}
 }
-func TestRunAudit(t *testing.T) {
+func TestRun(t *testing.T) {
 	err := loadToml()
 	configsDir := testTomlLoader()
 	defer os.RemoveAll(configsDir)
@@ -266,109 +266,10 @@ func TestRunAudit(t *testing.T) {
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
-		g.Describe("TestRunAudit", func() {
+		g.Describe("TestRun", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
 				leaks, err := run()
-				if err != nil {
-					g.Assert(err.Error()).Equal(test.expectedErrMsg)
-				}
-				g.Assert(len(leaks)).Equal(test.numLeaks)
-			})
-		})
-	}
-}
-
-func TestStartAudit(t *testing.T) {
-	err := loadToml()
-	configsDir := testTomlLoader()
-	defer os.RemoveAll(configsDir)
-
-	dir, err = ioutil.TempDir("", "gitleaksTestOwner")
-	defer os.RemoveAll(dir)
-	if err != nil {
-		panic(err)
-	}
-	git.PlainClone(dir+"/gronit", false, &git.CloneOptions{
-		URL: "https://github.com/gitleakstest/gronit",
-	})
-	git.PlainClone(dir+"/h1domains", false, &git.CloneOptions{
-		URL: "https://github.com/gitleakstest/h1domains",
-	})
-	var tests = []struct {
-		testOpts       Options
-		description    string
-		expectedErrMsg string
-		numLeaks       int
-	}{
-		{
-			testOpts: Options{
-				GithubUser: "gitleakstest",
-			},
-			description:    "test github user",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubUser: "gitleakstest",
-				Disk:       true,
-			},
-			description:    "test github user on disk ",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubOrg: "gitleakstestorg",
-			},
-			description:    "test github org",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubOrg:      "gitleakstestorg",
-				IncludePrivate: true,
-			},
-			description:    "test private org no ssh",
-			numLeaks:       0,
-			expectedErrMsg: "no ssh auth available",
-		},
-		{
-			testOpts: Options{
-				GithubOrg: "gitleakstestorg",
-				Disk:      true,
-			},
-			description:    "test org on disk",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubOrg:      "gitleakstestorg",
-				IncludePrivate: true,
-				Disk:           true,
-			},
-			description:    "test private org on disk no ssh",
-			numLeaks:       0,
-			expectedErrMsg: "no ssh auth available",
-		},
-		{
-			testOpts: Options{
-				OwnerPath: dir,
-			},
-			description:    "test owner path",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-	}
-	g := goblin.Goblin(t)
-	for _, test := range tests {
-		g.Describe("TestStartAudit", func() {
-			g.It(test.description, func() {
-				opts = test.testOpts
-				leaks, err := startAudits()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
 				}
@@ -461,7 +362,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	leaksRepo := Repo{
+	leaksRepo := &RepoDescriptor{
 		repository: leaksR,
 		name:       "gronit",
 	}
@@ -472,7 +373,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cleanRepo := Repo{
+	cleanRepo := &RepoDescriptor{
 		repository: cleanR,
 		name:       "h1domains",
 	}
@@ -482,7 +383,7 @@ func TestAuditRepo(t *testing.T) {
 		description       string
 		expectedErrMsg    string
 		numLeaks          int
-		repo              Repo
+		repo              *RepoDescriptor
 		whiteListFiles    []*regexp.Regexp
 		whiteListCommits  map[string]bool
 		whiteListBranches []string
@@ -646,7 +547,7 @@ func TestAuditRepo(t *testing.T) {
 					loadToml()
 				}
 
-				leaks, err = auditRepo(test.repo)
+				leaks, err = auditGitRepo(test.repo)
 
 				if opts.Redact {
 					g.Assert(leaks[0].Offender).Equal("REDACTED")
@@ -838,7 +739,7 @@ func BenchmarkAuditRepo1Proc(b *testing.B) {
 	opts.MaxGoRoutines = 1
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -847,7 +748,7 @@ func BenchmarkAuditRepo2Proc(b *testing.B) {
 	opts.MaxGoRoutines = 2
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -856,7 +757,7 @@ func BenchmarkAuditRepo4Proc(b *testing.B) {
 	opts.MaxGoRoutines = 4
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -865,7 +766,7 @@ func BenchmarkAuditRepo8Proc(b *testing.B) {
 	opts.MaxGoRoutines = 8
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -874,7 +775,7 @@ func BenchmarkAuditRepo10Proc(b *testing.B) {
 	opts.MaxGoRoutines = 10
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -883,7 +784,7 @@ func BenchmarkAuditRepo100Proc(b *testing.B) {
 	opts.MaxGoRoutines = 100
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -892,7 +793,7 @@ func BenchmarkAuditRepo1000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 1000
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 func BenchmarkAuditRepo10000Proc(b *testing.B) {
@@ -900,7 +801,7 @@ func BenchmarkAuditRepo10000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 10000
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 func BenchmarkAuditRepo100000Proc(b *testing.B) {
@@ -908,7 +809,7 @@ func BenchmarkAuditRepo100000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 100000
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
@@ -916,7 +817,7 @@ func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
 	opts.MaxGoRoutines = 1
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -925,7 +826,7 @@ func BenchmarkAuditLeakRepo2Proc(b *testing.B) {
 	opts.MaxGoRoutines = 2
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -934,7 +835,7 @@ func BenchmarkAuditLeakRepo4Proc(b *testing.B) {
 	opts.MaxGoRoutines = 4
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -943,7 +844,7 @@ func BenchmarkAuditLeakRepo8Proc(b *testing.B) {
 	opts.MaxGoRoutines = 8
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -952,7 +853,7 @@ func BenchmarkAuditLeakRepo10Proc(b *testing.B) {
 	opts.MaxGoRoutines = 10
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
@@ -960,7 +861,7 @@ func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
 	opts.MaxGoRoutines = 100
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
@@ -968,7 +869,7 @@ func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 1000
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -977,7 +878,7 @@ func BenchmarkAuditLeakRepo10000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 10000
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
 
@@ -986,6 +887,6 @@ func BenchmarkAuditLeakRepo100000Proc(b *testing.B) {
 	opts.MaxGoRoutines = 100000
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
-		auditRepo(*benchmarkLeaksRepo)
+		auditGitRepo(benchmarkRepo)
 	}
 }
