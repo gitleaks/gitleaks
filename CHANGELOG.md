@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.9.0
+-----
+- exclude fork option
+
 1.8.0
 -----
 - whitelist repos

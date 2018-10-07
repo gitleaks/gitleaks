@@ -279,10 +279,19 @@ func TestRun(t *testing.T) {
 			testOpts: Options{
 				GithubOrg: "gitleakstestorg",
 			},
-			description:    "test github org",
+			description:    "test github org, whitelist repo",
 			numLeaks:       0,
 			expectedErrMsg: "",
 			configPath:     path.Join(configsDir, "repo"),
+		},
+		{
+			testOpts: Options{
+				GithubOrg:    "gitleakstestorg",
+				ExcludeForks: true,
+			},
+			description:    "test github org, exclude forks",
+			numLeaks:       0,
+			expectedErrMsg: "",
 		},
 	}
 	g := goblin.Goblin(t)
