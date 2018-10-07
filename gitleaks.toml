@@ -23,7 +23,7 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 
 [whitelist]
 regexes = [
-  "AKIA.*",
+  # "AKIA.*EXAMPLE",
 ]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin|go)$"

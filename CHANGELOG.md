@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.7.3
+-----
+- style points
+
 1.7.2
 -----
 - Fixing dangling goroutines, removing channel messaging
