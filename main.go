@@ -87,6 +87,7 @@ type Options struct {
 	SingleSearch  string `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath    string `long:"config" description:"path to gitleaks config"`
 	SSHKey        string `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks  bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -123,7 +124,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.8.0"
+const version = "1.9.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -715,6 +716,9 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		repo *git.Repository
 		err  error
 	)
+	if opts.ExcludeForks && githubRepo.GetFork() {
+		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
+	}
 	for _, repoName := range whiteListRepos {
 		if repoName == *githubRepo.Name {
 			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
