@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.8.0
+-----
+- whitelist repos
+- sample config option
+
 1.7.3
 -----
 - style points

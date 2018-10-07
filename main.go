@@ -90,12 +90,13 @@ type Options struct {
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
-	Log     string `short:"l" long:"log" description:"log level"`
-	Verbose bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report  string `long:"report" description:"path to write report file"`
-	CSV     bool   `long:"csv" description:"report output to csv"`
-	Redact  bool   `long:"redact" description:"redact secrets from log messages and report"`
-	Version bool   `long:"version" description:"version number"`
+	Log          string `short:"l" long:"log" description:"log level"`
+	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
+	Report       string `long:"report" description:"path to write report file"`
+	CSV          bool   `long:"csv" description:"report output to csv"`
+	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
+	Version      bool   `long:"version" description:"version number"`
+	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
 }
 
 // Config struct for regexes matching and whitelisting
@@ -122,10 +123,16 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.7.3"
+const version = "1.8.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
+# This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
+# The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
+# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
+# configurations from that path. Gitleaks does not whitelist anything by default.
+
+
 title = "gitleaks config"
 # add regexes to the regex table
 [[regexes]]
@@ -151,7 +158,6 @@ description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 
 [whitelist]
-
 #regexes = [
 #  "AKAIMYFAKEAWKKEY",
 #]
@@ -200,6 +206,10 @@ func main() {
 	_, err := flags.Parse(&opts)
 	if opts.Version {
 		fmt.Println(version)
+		os.Exit(0)
+	}
+	if opts.SampleConfig {
+		fmt.Println(defaultConfig)
 		os.Exit(0)
 	}
 	leaks, err := run()
