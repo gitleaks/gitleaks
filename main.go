@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -89,7 +90,7 @@ type Options struct {
 	ConfigPath    string  `long:"config" description:"path to gitleaks config"`
 	SSHKey        string  `long:"ssh-key" description:"path to ssh key"`
 	ExcludeForks  bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy       float64 `long:"entropy" short:"e" description:"Report a finding when a string has at least the entropy level you defined"`
+	Entropy       float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -452,6 +453,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if c.Hash.String() == opts.Commit {
 			cIter.Close()
+			return errors.New("ErrStop")
 		}
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
@@ -593,6 +595,7 @@ func inspect(diff gitDiff) []Leak {
 	return leaks
 }
 
+// getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
 func getShannonEntropy(data string) (entropy float64) {
 	if data == "" {
 		return 0
@@ -612,6 +615,7 @@ func getShannonEntropy(data string) (entropy float64) {
 	return entropy
 }
 
+// addLeak is helper for func inspect() to append leaks if found during a diff check.
 func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
 	leak := Leak{
 		Line:     line,
