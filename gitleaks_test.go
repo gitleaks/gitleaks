@@ -560,6 +560,14 @@ func TestAuditRepo(t *testing.T) {
 			numLeaks:    0,
 			configPath:  path.Join(configsDir, "repo"),
 		},
+		{
+			repo:        leaksRepo,
+			description: "Audit until specific commit",
+			numLeaks:    1,
+			testOpts: Options{
+				Commit: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
+			},
+		},
 	}
 
 	whiteListCommits = make(map[string]bool)
