@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -450,6 +451,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if c.Hash.String() == opts.Commit {
 			cIter.Close()
+			return errors.New("ErrStop")
 		}
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
