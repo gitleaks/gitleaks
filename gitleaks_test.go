@@ -562,6 +562,14 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "leaks present with entropy",
+			testOpts: Options{
+				Entropy: 4.7,
+			},
+			numLeaks: 7,
+		},
+		{
+			repo:        leaksRepo,
 			description: "Audit until specific commit",
 			numLeaks:    1,
 			testOpts: Options{
@@ -693,6 +701,14 @@ func TestOptionGuard(t *testing.T) {
 			},
 			description:    "single search regex gaurd",
 			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "fakeOrg",
+				Entropy:   9,
+			},
+			description:    "Invalid entropy level guard",
+			expectedErrMsg: "The maximum level of entropy is 8",
 		},
 	}
 	g := goblin.Goblin(t)

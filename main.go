@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -82,13 +83,14 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	MaxGoRoutines int    `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	Disk          bool   `long:"disk" description:"Clones repo(s) to disk"`
-	AuditAllRefs  bool   `long:"all-refs" description:"run audit on all refs"`
-	SingleSearch  string `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath    string `long:"config" description:"path to gitleaks config"`
-	SSHKey        string `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks  bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	MaxGoRoutines int     `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
+	Disk          bool    `long:"disk" description:"Clones repo(s) to disk"`
+	AuditAllRefs  bool    `long:"all-refs" description:"run audit on all refs"`
+	SingleSearch  string  `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath    string  `long:"config" description:"path to gitleaks config"`
+	SSHKey        string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks  bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy       float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -125,7 +127,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.9.0"
+const version = "1.10.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -578,27 +580,65 @@ func inspect(diff gitDiff) []Leak {
 				break
 			}
 
-			leak := Leak{
-				Line:     line,
-				Commit:   diff.commit.Hash.String(),
-				Offender: match,
-				Type:     leakType,
-				Message:  diff.commit.Message,
-				Author:   diff.commit.Author.String(),
-				File:     diff.filePath,
-				Branch:   diff.branchName,
-				Repo:     diff.repoName,
+			leaks = addLeak(leaks, line, match, leakType, diff)
+		}
+
+		if opts.Entropy > 0 {
+			words := strings.Fields(line)
+			for _, word := range words {
+				if getShannonEntropy(word) >= opts.Entropy {
+					leaks = addLeak(leaks, line, word, "High Entropy", diff)
+				}
 			}
-			if opts.Redact {
-				leak.Offender = "REDACTED"
-				leak.Line = "REDACTED"
-			}
-			if opts.Verbose {
-				leak.log()
-			}
-			leaks = append(leaks, leak)
 		}
 	}
+	return leaks
+}
+
+// getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
+func getShannonEntropy(data string) (entropy float64) {
+	if data == "" {
+		return 0
+	}
+
+	charCounts := make(map[rune]int)
+	for _, char := range data {
+		charCounts[char]++
+	}
+
+	invLength := 1.0 / float64(len(data))
+	for _, count := range charCounts {
+		freq := float64(count) * invLength
+		entropy -= freq * math.Log2(freq)
+	}
+
+	return entropy
+}
+
+// addLeak is helper for func inspect() to append leaks if found during a diff check.
+func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
+	leak := Leak{
+		Line:     line,
+		Commit:   diff.commit.Hash.String(),
+		Offender: offender,
+		Type:     leakType,
+		Message:  diff.commit.Message,
+		Author:   diff.commit.Author.String(),
+		File:     diff.filePath,
+		Branch:   diff.branchName,
+		Repo:     diff.repoName,
+	}
+
+	if opts.Redact {
+		leak.Offender = "REDACTED"
+		leak.Line = "REDACTED"
+	}
+
+	if opts.Verbose {
+		leak.log()
+	}
+
+	leaks = append(leaks, leak)
 	return leaks
 }
 
@@ -866,6 +906,10 @@ func optsGuard() error {
 		if err != nil {
 			return fmt.Errorf("unable to compile regex: %s, %v", opts.SingleSearch, err)
 		}
+	}
+
+	if opts.Entropy > 8 {
+		return fmt.Errorf("The maximum level of entropy is 8")
 	}
 
 	return nil
