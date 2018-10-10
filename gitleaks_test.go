@@ -576,6 +576,22 @@ func TestAuditRepo(t *testing.T) {
 				Commit: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
 			},
 		},
+		{
+			repo:        leaksRepo,
+			description: "commit depth = 1, no leaks",
+			numLeaks:    0,
+			testOpts: Options{
+				Depth: 1,
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "commit depth = 2, one leak",
+			numLeaks:    1,
+			testOpts: Options{
+				Depth: 2,
+			},
+		},
 	}
 
 	whiteListCommits = make(map[string]bool)
@@ -874,22 +890,6 @@ func BenchmarkAuditRepo1000Proc(b *testing.B) {
 		auditGitRepo(benchmarkRepo)
 	}
 }
-func BenchmarkAuditRepo10000Proc(b *testing.B) {
-	loadToml()
-	opts.MaxGoRoutines = 10000
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-func BenchmarkAuditRepo100000Proc(b *testing.B) {
-	loadToml()
-	opts.MaxGoRoutines = 100000
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
 func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
 	loadToml()
 	opts.MaxGoRoutines = 1
@@ -945,24 +945,6 @@ func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
 func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
 	loadToml()
 	opts.MaxGoRoutines = 1000
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo10000Proc(b *testing.B) {
-	loadToml()
-	opts.MaxGoRoutines = 10000
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo100000Proc(b *testing.B) {
-	loadToml()
-	opts.MaxGoRoutines = 100000
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)

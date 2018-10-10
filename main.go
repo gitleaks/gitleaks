@@ -77,6 +77,7 @@ type Options struct {
 
 	Branch string `short:"b" long:"branch" description:"branch name to audit (defaults to HEAD)"`
 	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
+	Depth  int    `long:"depth" description:"maximum commit depth"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -127,7 +128,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.10.0"
+const version = "1.11.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -197,6 +198,7 @@ var (
 	sshAuth           *ssh.PublicKeys
 	dir               string
 	maxGo             int
+	totalCommits      int64
 )
 
 func init() {
@@ -225,6 +227,7 @@ func main() {
 		writeReport(leaks)
 	}
 
+	log.Infof("%d commits inspected, %d leaks detected", totalCommits, len(leaks))
 	if len(leaks) != 0 {
 		log.Warnf("leaks detected")
 		os.Exit(leakExit)
@@ -432,13 +435,14 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 // the --max-go option (default is set to the number of cores on your cpu).
 func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	var (
-		err        error
-		prevCommit *object.Commit
-		semaphore  chan bool
-		repoName   string
-		leaks      []Leak
-		commitWg   sync.WaitGroup
-		mutex      = &sync.Mutex{}
+		err         error
+		prevCommit  *object.Commit
+		semaphore   chan bool
+		repoName    string
+		leaks       []Leak
+		commitWg    sync.WaitGroup
+		mutex       = &sync.Mutex{}
+		commitCount int
 	)
 	repoName = repo.name
 	if opts.MaxGoRoutines != 0 {
@@ -451,10 +455,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c.Hash.String() == opts.Commit {
+		if c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
+		commitCount = commitCount + 1
+		totalCommits = totalCommits + 1
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
@@ -546,6 +552,11 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	})
 	commitWg.Wait()
+
+	if opts.Verbose {
+		log.Infof("%d commits inspected for %s", commitCount, repo.name)
+	}
+
 	return leaks
 }
 
