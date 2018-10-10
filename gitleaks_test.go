@@ -500,14 +500,12 @@ func TestAuditRepo(t *testing.T) {
 			numLeaks: 0,
 		},
 		{
-			// note this double counts the first commit since we are whitelisting
-			// a "bad" first commit
 			repo:        leaksRepo,
 			description: "two leaks present whitelist bad commit",
 			whiteListCommits: map[string]bool{
 				"eaeffdc65b4c73ccb67e75d96bd8743be2c85973": true,
 			},
-			numLeaks: 2,
+			numLeaks: 1,
 		},
 		{
 			repo:        leaksRepo,
@@ -539,12 +537,10 @@ func TestAuditRepo(t *testing.T) {
 			numLeaks:    0,
 		},
 		{
-			// note this double counts the first commit since we are whitelisting
-			// a "bad" first commit
 			repo:        leaksRepo,
 			description: "toml whitelist commit",
 			configPath:  path.Join(configsDir, "commit"),
-			numLeaks:    2,
+			numLeaks:    1,
 		},
 		{
 			repo:        leaksRepo,
