@@ -128,7 +128,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.11.0"
+const version = "1.11.1"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -462,6 +462,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		commitCount = commitCount + 1
 		totalCommits = totalCommits + 1
 		if whiteListCommits[c.Hash.String()] {
+			prevCommit = c
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
@@ -552,11 +553,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	})
 	commitWg.Wait()
-
-	if opts.Verbose {
-		log.Infof("%d commits inspected for %s", commitCount, repo.name)
-	}
-
 	return leaks
 }
 
