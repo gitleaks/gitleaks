@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.11.0
+1.11.1
 -----
 - Commit depth option
 - Commit stats output
