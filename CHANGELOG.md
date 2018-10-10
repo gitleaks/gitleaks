@@ -2,6 +2,10 @@ CHANGELOG
 =========
 
 1.11.1
+----
+- fix commit whitelist logic
+
+1.11.0
 -----
 - Commit depth option
 - Commit stats output
