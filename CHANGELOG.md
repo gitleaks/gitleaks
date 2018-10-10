@@ -1,9 +1,15 @@
 CHANGELOG
 =========
 
+1.11.0
+-----
+- Commit depth option
+- Commit stats output
+
 1.10.0
 -----
 - Add entropy option
+
 1.9.0
 -----
 - exclude fork option
