@@ -466,6 +466,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
+		if prevCommit != nil {
+			if whiteListCommits[prevCommit.Hash.String()] {
+				prevCommit = c
+				log.Infof("skipping commit: %s\n", c.Hash.String())
+				return nil
+			}
+		}
+
 		commitWg.Add(1)
 		semaphore <- true
 		go func(c *object.Commit, prevCommit *object.Commit) {
