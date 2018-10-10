@@ -227,9 +227,9 @@ func main() {
 		writeReport(leaks)
 	}
 
-	log.Infof("%d commits inspected, %d leaks detected", totalCommits, len(leaks))
+	log.Infof("%d commits inspected", totalCommits)
 	if len(leaks) != 0 {
-		log.Warnf("leaks detected")
+		log.Warnf("%d leaks detected", len(leaks))
 		os.Exit(leakExit)
 	}
 }
