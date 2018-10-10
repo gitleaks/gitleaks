@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+1.11.2
+----
+- Validate report option
 1.11.1
 ----
 - fix commit whitelist logic

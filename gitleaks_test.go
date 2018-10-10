@@ -722,6 +722,22 @@ func TestOptionGuard(t *testing.T) {
 			description:    "Invalid entropy level guard",
 			expectedErrMsg: "The maximum level of entropy is 8",
 		},
+		{
+			testOpts: Options{
+				GithubOrg: "fakeOrg",
+				Report:    "/tmp",
+			},
+			description:    "Report not pointing to a .json file",
+			expectedErrMsg: "Report should be a .json file",
+		},
+		{
+			testOpts: Options{
+				GithubOrg: "fakeOrg",
+				Report:    "/fake/foo.json",
+			},
+			description:    "Report pointing to a directory that does not exist",
+			expectedErrMsg: "/fake does not exist",
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {

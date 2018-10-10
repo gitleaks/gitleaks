@@ -128,7 +128,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.11.1"
+const version = "1.11.2"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -925,6 +925,17 @@ func optsGuard() error {
 
 	if opts.Entropy > 8 {
 		return fmt.Errorf("The maximum level of entropy is 8")
+	}
+
+	if opts.Report != "" {
+		if !strings.HasSuffix(opts.Report, ".json") {
+			return fmt.Errorf("Report should be a .json file")
+		}
+
+		dirPath := filepath.Dir(opts.Report)
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			return fmt.Errorf("%s does not exist", dirPath)
+		}
 	}
 
 	return nil
