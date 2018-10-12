@@ -1,7 +1,7 @@
 .PHONY: test build-all deploy
 
 test:
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint
 	go fmt
 	golint
 	go test --race --cover -run=Test$
