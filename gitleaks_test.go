@@ -315,6 +315,8 @@ func TestRun(t *testing.T) {
 func TestWriteReport(t *testing.T) {
 	tmpDir, _ := ioutil.TempDir("", "reportDir")
 	reportJSON := path.Join(tmpDir, "report.json")
+	reportJASON := path.Join(tmpDir, "report.jason")
+	reportVOID := path.Join("thereIsNoWay", "thisReportWillGetWritten.json")
 	reportCSV := path.Join(tmpDir, "report.csv")
 	defer os.RemoveAll(tmpDir)
 	leaks := []Leak{
@@ -331,17 +333,18 @@ func TestWriteReport(t *testing.T) {
 	}
 
 	var tests = []struct {
-		leaks       []Leak
-		reportFile  string
-		fileName    string
-		description string
-		testOpts    Options
+		leaks          []Leak
+		reportFile     string
+		fileName       string
+		description    string
+		testOpts       Options
+		expectedErrMsg string
 	}{
 		{
 			leaks:       leaks,
 			reportFile:  reportJSON,
 			fileName:    "report.json",
-			description: "can we write a file",
+			description: "can we write a json file",
 			testOpts: Options{
 				Report: reportJSON,
 			},
@@ -350,10 +353,29 @@ func TestWriteReport(t *testing.T) {
 			leaks:       leaks,
 			reportFile:  reportCSV,
 			fileName:    "report.csv",
-			description: "can we write a file",
+			description: "can we write a csv file",
 			testOpts: Options{
 				Report: reportCSV,
-				CSV:    true,
+			},
+		},
+		{
+			leaks:          leaks,
+			reportFile:     reportJASON,
+			fileName:       "report.jason",
+			description:    "bad file",
+			expectedErrMsg: "Report should be a .json or .csv file",
+			testOpts: Options{
+				Report: reportJASON,
+			},
+		},
+		{
+			leaks:          leaks,
+			reportFile:     reportVOID,
+			fileName:       "report.jason",
+			description:    "bad dir",
+			expectedErrMsg: "thereIsNoWay does not exist",
+			testOpts: Options{
+				Report: reportVOID,
 			},
 		},
 	}
@@ -362,9 +384,14 @@ func TestWriteReport(t *testing.T) {
 		g.Describe("TestWriteReport", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
-				writeReport(test.leaks)
-				f, _ := os.Stat(test.reportFile)
-				g.Assert(f.Name()).Equal(test.fileName)
+				err := optsGuard()
+				if err != nil {
+					g.Assert(err.Error()).Equal(test.expectedErrMsg)
+				} else {
+					writeReport(test.leaks)
+					f, _ := os.Stat(test.reportFile)
+					g.Assert(f.Name()).Equal(test.fileName)
+				}
 			})
 		})
 	}

@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.12.0
+----
+- removing --csv option
+- --report option now requires .json or .csv in filename
+- adding total time to audit in logs
+
 1.11.1
 ----
 - fix commit whitelist logic

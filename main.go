@@ -31,14 +31,13 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/google/go-github/github"
+	"github.com/hako/durafmt"
 	flags "github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
 )
 
 // Leak represents a leaked secret or regex match.
-// Output to stdout as json if the --verbose option is set or
-// as a csv if the --csv and --report options are set.
 type Leak struct {
 	Line     string `json:"line"`
 	Commit   string `json:"commit"`
@@ -97,8 +96,7 @@ type Options struct {
 	// Output options
 	Log          string `short:"l" long:"log" description:"log level"`
 	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report       string `long:"report" description:"path to write report file"`
-	CSV          bool   `long:"csv" description:"report output to csv"`
+	Report       string `long:"report" description:"path to write report file. Needs to be csv or json"`
 	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
 	Version      bool   `long:"version" description:"version number"`
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
@@ -218,6 +216,7 @@ func main() {
 		fmt.Println(defaultConfig)
 		os.Exit(0)
 	}
+	now := time.Now()
 	leaks, err := run()
 	if err != nil {
 		log.Error(err)
@@ -227,7 +226,7 @@ func main() {
 		writeReport(leaks)
 	}
 
-	log.Infof("%d commits inspected", totalCommits)
+	log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 	if len(leaks) != 0 {
 		log.Warnf("%d leaks detected", len(leaks))
 		os.Exit(leakExit)
@@ -300,7 +299,7 @@ func run() ([]Leak, error) {
 func writeReport(leaks []Leak) error {
 	var err error
 	log.Infof("writing report to %s", opts.Report)
-	if opts.CSV {
+	if strings.HasSuffix(opts.Report, ".csv") {
 		f, err := os.Create(opts.Report)
 		if err != nil {
 			return err
@@ -925,6 +924,15 @@ func optsGuard() error {
 
 	if opts.Entropy > 8 {
 		return fmt.Errorf("The maximum level of entropy is 8")
+	}
+	if opts.Report != "" {
+		if !strings.HasSuffix(opts.Report, ".json") && !strings.HasSuffix(opts.Report, ".csv") {
+			return fmt.Errorf("Report should be a .json or .csv file")
+		}
+		dirPath := filepath.Dir(opts.Report)
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			return fmt.Errorf("%s does not exist", dirPath)
+		}
 	}
 
 	return nil
