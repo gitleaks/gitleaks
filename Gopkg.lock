@@ -45,6 +45,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/hako/durafmt"
+  packages = ["."]
+  revision = "7b7ae1e72eade09dbc9c2cfba3e6c4bae7b8bcac"
+  version = "1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/jbenet/go-context"
   packages = ["io"]
@@ -249,6 +255,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8185a08afcb3ad854f58b49061fb70c57e7b64244abb43a08714d55cac7a97f9"
+  inputs-digest = "ad1b6855b3c8b3e1303f29123160cde693d39d6724682ce1cd246cd1a2343c7c"
   solver-name = "gps-cdcl"
   solver-version = 1
