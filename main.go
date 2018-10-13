@@ -126,7 +126,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.11.1"
+const version = "1.12.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
