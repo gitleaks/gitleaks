@@ -126,7 +126,7 @@ type gitDiff struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.12.0"
+const version = "1.12.1"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -207,7 +207,20 @@ func init() {
 }
 
 func main() {
-	_, err := flags.Parse(&opts)
+	parser := flags.NewParser(&opts, flags.Default)
+	_, err := parser.Parse()
+
+	if err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		}
+	}
+
+	if len(os.Args) == 1 {
+		parser.WriteHelp(os.Stdout)
+		os.Exit(0)
+	}
+
 	if opts.Version {
 		fmt.Println(version)
 		os.Exit(0)
