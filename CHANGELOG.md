@@ -1,6 +1,9 @@
 CHANGELOG
 =========
-
+1.12.1
+----
+- Show program usage when no arguments are provided
+- Exit program after the -h or --help options are used
 1.12.0
 ----
 - removing --csv option
