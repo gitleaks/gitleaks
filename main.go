@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -66,6 +67,7 @@ type Options struct {
 	GithubUser     string `long:"github-user" description:"Github user to audit"`
 	GithubOrg      string `long:"github-org" description:"Github organization to audit"`
 	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
+	GithubPR       string `long:"github-pr" description:"Github PR number to audit. This does not clone the repo."`
 	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
 	/*
@@ -239,11 +241,35 @@ func main() {
 		writeReport(leaks)
 	}
 
-	log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
+	if opts.GithubPR != "" {
+		log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
+	}
 	if len(leaks) != 0 {
 		log.Warnf("%d leaks detected", len(leaks))
 		os.Exit(leakExit)
 	}
+}
+
+// auditPR audits a single github PR
+func auditGithubPR() ([]Leak, error) {
+	ctx := context.Background()
+	githubClient := github.NewClient(githubToken())
+	splits := strings.Split(opts.GithubPR, "/")
+	owner := splits[len(splits)-4]
+	repo := splits[len(splits)-3]
+	prNum, err := strconv.Atoi(splits[len(splits)-1])
+	if err != nil {
+		return nil, err
+	}
+	content, _, err := githubClient.PullRequests.GetRaw(ctx, owner, repo, prNum, github.RawOptions{Type: 1})
+	if err != nil {
+		return nil, err
+	}
+	diff := gitDiff{
+		content:  content,
+		repoName: repo,
+	}
+	return inspect(diff), nil
 }
 
 // run parses options and kicks off the audit
@@ -303,6 +329,8 @@ func run() ([]Leak, error) {
 		if err != nil {
 			return leaks, err
 		}
+	} else if opts.GithubPR != "" {
+		return auditGithubPR()
 	}
 	return leaks, nil
 }
@@ -644,16 +672,26 @@ func getShannonEntropy(data string) (entropy float64) {
 
 // addLeak is helper for func inspect() to append leaks if found during a diff check.
 func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
-	leak := Leak{
-		Line:     line,
-		Commit:   diff.commit.Hash.String(),
-		Offender: offender,
-		Type:     leakType,
-		Message:  diff.commit.Message,
-		Author:   diff.commit.Author.String(),
-		File:     diff.filePath,
-		Branch:   diff.branchName,
-		Repo:     diff.repoName,
+	var leak Leak
+	if diff.commit != nil {
+		leak = Leak{
+			Line:     line,
+			Commit:   diff.commit.Hash.String(),
+			Offender: offender,
+			Type:     leakType,
+			Message:  diff.commit.Message,
+			Author:   diff.commit.Author.String(),
+			File:     diff.filePath,
+			Branch:   diff.branchName,
+			Repo:     diff.repoName,
+		}
+	} else {
+		// running gitleaks against a github PR... not full repo scan. log light
+		leak = Leak{
+			Line:     line,
+			Offender: offender,
+			Type:     leakType,
+		}
 	}
 
 	if opts.Redact {
@@ -679,7 +717,6 @@ func auditGithubRepos() ([]Leak, error) {
 		githubRepos      []*github.Repository
 		pagedGithubRepos []*github.Repository
 		resp             *github.Response
-		githubClient     *github.Client
 		githubOrgOptions *github.RepositoryListByOrgOptions
 		githubOptions    *github.RepositoryListOptions
 		done             bool
@@ -687,9 +724,9 @@ func auditGithubRepos() ([]Leak, error) {
 		ownerDir         string
 	)
 	ctx := context.Background()
+	githubClient := github.NewClient(githubToken())
 
 	if opts.GithubOrg != "" {
-		githubClient = github.NewClient(githubToken())
 		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
 			ghURL, _ := url.Parse(opts.GithubURL)
 			githubClient.BaseURL = ghURL
@@ -698,7 +735,6 @@ func auditGithubRepos() ([]Leak, error) {
 			ListOptions: github.ListOptions{PerPage: 100},
 		}
 	} else if opts.GithubUser != "" {
-		githubClient = github.NewClient(githubToken())
 		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
 			ghURL, _ := url.Parse(opts.GithubURL)
 			githubClient.BaseURL = ghURL
