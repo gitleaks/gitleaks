@@ -120,11 +120,15 @@ type Config struct {
 }
 
 type gitDiff struct {
-	content    string
-	commit     *object.Commit
-	filePath   string
-	branchName string
-	repoName   string
+	content      string
+	commit       *object.Commit
+	filePath     string
+	branchName   string
+	repoName     string
+	githubCommit *github.RepositoryCommit
+	sha          string
+	message      string
+	author       string
 }
 
 const defaultGithubURL = "https://api.github.com/"
@@ -248,28 +252,6 @@ func main() {
 		log.Warnf("%d leaks detected", len(leaks))
 		os.Exit(leakExit)
 	}
-}
-
-// auditPR audits a single github PR
-func auditGithubPR() ([]Leak, error) {
-	ctx := context.Background()
-	githubClient := github.NewClient(githubToken())
-	splits := strings.Split(opts.GithubPR, "/")
-	owner := splits[len(splits)-4]
-	repo := splits[len(splits)-3]
-	prNum, err := strconv.Atoi(splits[len(splits)-1])
-	if err != nil {
-		return nil, err
-	}
-	content, _, err := githubClient.PullRequests.GetRaw(ctx, owner, repo, prNum, github.RawOptions{Type: 1})
-	if err != nil {
-		return nil, err
-	}
-	diff := gitDiff{
-		content:  content,
-		repoName: repo,
-	}
-	return inspect(diff), nil
 }
 
 // run parses options and kicks off the audit
@@ -409,6 +391,42 @@ func cloneRepo() (*RepoDescriptor, error) {
 	}, nil
 }
 
+// auditPR audits a single github PR
+func auditGithubPR() ([]Leak, error) {
+	var leaks []Leak
+	ctx := context.Background()
+	githubClient := github.NewClient(githubToken())
+	splits := strings.Split(opts.GithubPR, "/")
+	owner := splits[len(splits)-4]
+	repo := splits[len(splits)-3]
+	prNum, err := strconv.Atoi(splits[len(splits)-1])
+	if err != nil {
+		return nil, err
+	}
+	commits, _, err := githubClient.PullRequests.ListCommits(ctx, owner, repo, prNum, &github.ListOptions{PerPage: 100})
+	for _, commit := range commits {
+		// actually get commit here
+		commit, _, err := githubClient.Repositories.GetCommit(ctx, owner, repo, *commit.SHA)
+		if err != nil {
+			continue
+		}
+		fmt.Println(commit.GetCommitter())
+		files := commit.Files
+		for _, f := range files {
+			diff := gitDiff{
+				sha:          commit.GetSHA(),
+				content:      *f.Patch,
+				filePath:     *f.Filename,
+				repoName:     repo,
+				githubCommit: commit,
+				author:       commit.GetCommitter().GetLogin(),
+			}
+			leaks = append(leaks, inspect(diff)...)
+		}
+	}
+	return leaks, nil
+}
+
 // auditGitRepo beings an audit on a git repository by checking the default HEAD branch, all branches, or
 // a single branch depending on what gitleaks is configured to do. Note when I say branch I really
 // mean reference as these branches are read only.
@@ -528,11 +546,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
 				}
 			}()
-			diff := gitDiff{
-				commit:     prevCommit,
-				branchName: string(ref.Name()),
-				repoName:   repoName,
-			}
 
 			if prevCommit == nil {
 				t, _ := c.Tree()
@@ -542,9 +555,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					if err != nil {
 						return err
 					}
-					diff.filePath = file.Name
-					diff.content = content
-					diff.commit = c
+					diff := gitDiff{
+						branchName: string(ref.Name()),
+						repoName:   repoName,
+						filePath:   file.Name,
+						content:    content,
+						sha:        c.Hash.String(),
+						author:     c.Author.String(),
+					}
 					chunkLeaks := inspect(diff)
 					for _, leak := range chunkLeaks {
 						mutex.Lock()
@@ -572,7 +590,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					} else if to != nil {
 						filePath = to.Path()
 					}
-					diff.filePath = filePath
 					for _, re := range whiteListFiles {
 						if re.FindString(filePath) != "" {
 							skipFile = true
@@ -585,7 +602,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == 1 || chunk.Type() == 2 {
-							diff.content = chunk.Content()
+							diff := gitDiff{
+								branchName: string(ref.Name()),
+								repoName:   repoName,
+								filePath:   filePath,
+								content:    chunk.Content(),
+								sha:        prevCommit.Hash.String(),
+								author:     prevCommit.Author.String(),
+							}
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
 								mutex.Lock()
@@ -650,6 +674,35 @@ func inspect(diff gitDiff) []Leak {
 	return leaks
 }
 
+// addLeak is helper for func inspect() to append leaks if found during a diff check.
+func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
+	leak := Leak{
+		Line:     line,
+		Commit:   diff.sha,
+		Offender: offender,
+		Type:     leakType,
+		Author:   diff.author,
+		File:     diff.filePath,
+		Branch:   diff.branchName,
+		Repo:     diff.repoName,
+	}
+	if diff.commit != nil {
+		leak.Message = diff.commit.Message
+	}
+
+	if opts.Redact {
+		leak.Offender = "REDACTED"
+		leak.Line = "REDACTED"
+	}
+
+	if opts.Verbose {
+		leak.log()
+	}
+
+	leaks = append(leaks, leak)
+	return leaks
+}
+
 // getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
 func getShannonEntropy(data string) (entropy float64) {
 	if data == "" {
@@ -668,43 +721,6 @@ func getShannonEntropy(data string) (entropy float64) {
 	}
 
 	return entropy
-}
-
-// addLeak is helper for func inspect() to append leaks if found during a diff check.
-func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
-	var leak Leak
-	if diff.commit != nil {
-		leak = Leak{
-			Line:     line,
-			Commit:   diff.commit.Hash.String(),
-			Offender: offender,
-			Type:     leakType,
-			Message:  diff.commit.Message,
-			Author:   diff.commit.Author.String(),
-			File:     diff.filePath,
-			Branch:   diff.branchName,
-			Repo:     diff.repoName,
-		}
-	} else {
-		// running gitleaks against a github PR... not full repo scan. log light
-		leak = Leak{
-			Line:     line,
-			Offender: offender,
-			Type:     leakType,
-		}
-	}
-
-	if opts.Redact {
-		leak.Offender = "REDACTED"
-		leak.Line = "REDACTED"
-	}
-
-	if opts.Verbose {
-		leak.log()
-	}
-
-	leaks = append(leaks, leak)
-	return leaks
 }
 
 // auditGithubRepos kicks off audits if --github-user or --github-org options are set.
