@@ -4,6 +4,7 @@ CHANGELOG
 1.13.0
 ----
 - Github PR support
+- Github has its own go file. All other services, bitbucket, gitlab, etc should follow this convention
 
 1.12.1
 ----

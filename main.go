@@ -63,7 +63,7 @@ type Options struct {
 	GithubUser     string `long:"github-user" description:"Github user to audit"`
 	GithubOrg      string `long:"github-org" description:"Github organization to audit"`
 	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
-	GithubPR       string `long:"github-pr" description:"Github PR number to audit. This does not clone the repo."`
+	GithubPR       string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
 	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
 
 	/*
@@ -240,10 +240,11 @@ func main() {
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
-	log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 	if len(leaks) != 0 {
-		log.Warnf("%d leaks detected", len(leaks))
+		log.Warnf("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 		os.Exit(leakExit)
+	} else {
+		log.Infof("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 	}
 }
 
