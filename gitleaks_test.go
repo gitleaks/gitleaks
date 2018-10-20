@@ -198,6 +198,7 @@ func TestRun(t *testing.T) {
 		whiteListRepos []string
 		numLeaks       int
 		configPath     string
+		commitPerPage  int
 	}{
 		{
 			testOpts: Options{
@@ -293,6 +294,23 @@ func TestRun(t *testing.T) {
 			numLeaks:       0,
 			expectedErrMsg: "",
 		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/1",
+			},
+			description:    "test github pr",
+			numLeaks:       4,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/1",
+			},
+			description:    "test github pr",
+			numLeaks:       4,
+			expectedErrMsg: "",
+			commitPerPage:  1,
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -301,12 +319,16 @@ func TestRun(t *testing.T) {
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
 				}
+				if test.commitPerPage != 0 {
+					githubPages = test.commitPerPage
+				}
 				opts = test.testOpts
 				leaks, err := run()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
 				}
 				g.Assert(len(leaks)).Equal(test.numLeaks)
+				githubPages = 100
 			})
 		})
 	}
