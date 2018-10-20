@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/json"
@@ -10,7 +9,6 @@ import (
 	"io/ioutil"
 	"math"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"os/user"
@@ -18,14 +16,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
-	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -244,10 +240,7 @@ func main() {
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
-
-	if opts.GithubPR != "" {
-		log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
-	}
+	log.Infof("%d commits inspected in %s", totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 	if len(leaks) != 0 {
 		log.Warnf("%d leaks detected", len(leaks))
 		os.Exit(leakExit)
@@ -391,42 +384,6 @@ func cloneRepo() (*RepoDescriptor, error) {
 	}, nil
 }
 
-// auditPR audits a single github PR
-func auditGithubPR() ([]Leak, error) {
-	var leaks []Leak
-	ctx := context.Background()
-	githubClient := github.NewClient(githubToken())
-	splits := strings.Split(opts.GithubPR, "/")
-	owner := splits[len(splits)-4]
-	repo := splits[len(splits)-3]
-	prNum, err := strconv.Atoi(splits[len(splits)-1])
-	if err != nil {
-		return nil, err
-	}
-	commits, _, err := githubClient.PullRequests.ListCommits(ctx, owner, repo, prNum, &github.ListOptions{PerPage: 100})
-	for _, commit := range commits {
-		// actually get commit here
-		commit, _, err := githubClient.Repositories.GetCommit(ctx, owner, repo, *commit.SHA)
-		if err != nil {
-			continue
-		}
-		fmt.Println(commit.GetCommitter())
-		files := commit.Files
-		for _, f := range files {
-			diff := gitDiff{
-				sha:          commit.GetSHA(),
-				content:      *f.Patch,
-				filePath:     *f.Filename,
-				repoName:     repo,
-				githubCommit: commit,
-				author:       commit.GetCommitter().GetLogin(),
-			}
-			leaks = append(leaks, inspect(diff)...)
-		}
-	}
-	return leaks, nil
-}
-
 // auditGitRepo beings an audit on a git repository by checking the default HEAD branch, all branches, or
 // a single branch depending on what gitleaks is configured to do. Note when I say branch I really
 // mean reference as these branches are read only.
@@ -562,6 +519,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 						content:    content,
 						sha:        c.Hash.String(),
 						author:     c.Author.String(),
+						message:    c.Message,
 					}
 					chunkLeaks := inspect(diff)
 					for _, leak := range chunkLeaks {
@@ -609,6 +567,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 								content:    chunk.Content(),
 								sha:        prevCommit.Hash.String(),
 								author:     prevCommit.Author.String(),
+								message:    prevCommit.Message,
 							}
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
@@ -685,11 +644,8 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 		File:     diff.filePath,
 		Branch:   diff.branchName,
 		Repo:     diff.repoName,
+		Message:  diff.message,
 	}
-	if diff.commit != nil {
-		leak.Message = diff.commit.Message
-	}
-
 	if opts.Redact {
 		leak.Offender = "REDACTED"
 		leak.Line = "REDACTED"
@@ -721,184 +677,6 @@ func getShannonEntropy(data string) (entropy float64) {
 	}
 
 	return entropy
-}
-
-// auditGithubRepos kicks off audits if --github-user or --github-org options are set.
-// First, we gather all the github repositories from the github api (this doesnt actually clone the repo).
-// After all the repos have been pulled from github's api we proceed to audit the repos by calling auditGithubRepo.
-// If an error occurs during an audit of a repo, that error is logged but won't break the execution cycle.
-func auditGithubRepos() ([]Leak, error) {
-	var (
-		err              error
-		githubRepos      []*github.Repository
-		pagedGithubRepos []*github.Repository
-		resp             *github.Response
-		githubOrgOptions *github.RepositoryListByOrgOptions
-		githubOptions    *github.RepositoryListOptions
-		done             bool
-		leaks            []Leak
-		ownerDir         string
-	)
-	ctx := context.Background()
-	githubClient := github.NewClient(githubToken())
-
-	if opts.GithubOrg != "" {
-		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
-			ghURL, _ := url.Parse(opts.GithubURL)
-			githubClient.BaseURL = ghURL
-		}
-		githubOrgOptions = &github.RepositoryListByOrgOptions{
-			ListOptions: github.ListOptions{PerPage: 100},
-		}
-	} else if opts.GithubUser != "" {
-		if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
-			ghURL, _ := url.Parse(opts.GithubURL)
-			githubClient.BaseURL = ghURL
-		}
-
-		githubOptions = &github.RepositoryListOptions{
-			Affiliation: "owner",
-			ListOptions: github.ListOptions{
-				PerPage: 100,
-			},
-		}
-	}
-
-	for {
-		if done {
-			break
-		}
-		if opts.GithubUser != "" {
-			if opts.IncludePrivate {
-				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
-			} else {
-				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
-			}
-			if err != nil {
-				done = true
-			}
-			githubOptions.Page = resp.NextPage
-			githubRepos = append(githubRepos, pagedGithubRepos...)
-			if resp.NextPage == 0 {
-				done = true
-			}
-		} else if opts.GithubOrg != "" {
-			pagedGithubRepos, resp, err = githubClient.Repositories.ListByOrg(ctx, opts.GithubOrg, githubOrgOptions)
-			if err != nil {
-				done = true
-			}
-			githubOrgOptions.Page = resp.NextPage
-			githubRepos = append(githubRepos, pagedGithubRepos...)
-			if resp.NextPage == 0 {
-				done = true
-			}
-		}
-		if opts.Log == "Debug" || opts.Log == "debug" {
-			for _, githubRepo := range pagedGithubRepos {
-				log.Debugf("staging repos %s", *githubRepo.Name)
-			}
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if opts.Disk {
-		ownerDir, err = ioutil.TempDir(dir, opts.GithubUser)
-		os.RemoveAll(ownerDir)
-	}
-	for _, githubRepo := range githubRepos {
-		repo, err := cloneGithubRepo(githubRepo)
-		if err != nil {
-			log.Warn(err)
-			continue
-		}
-		leaksFromRepo, err := auditGitRepo(repo)
-		if opts.Disk {
-			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
-		}
-		if len(leaksFromRepo) == 0 {
-			log.Infof("no leaks found for repo %s", *githubRepo.Name)
-		} else {
-			log.Warnf("leaks found for repo %s", *githubRepo.Name)
-		}
-		if err != nil {
-			log.Warn(err)
-		}
-		leaks = append(leaks, leaksFromRepo...)
-	}
-	return leaks, nil
-}
-
-// cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
-// will be cloned to disk if --disk is set. If the repo is private, you must include the
-// --private/-p option. After the repo is clone, an audit will begin.
-func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
-	var (
-		repo *git.Repository
-		err  error
-	)
-	if opts.ExcludeForks && githubRepo.GetFork() {
-		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
-	}
-	for _, repoName := range whiteListRepos {
-		if repoName == *githubRepo.Name {
-			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
-		}
-	}
-	log.Infof("cloning: %s", *githubRepo.Name)
-	if opts.Disk {
-		ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
-		if err != nil {
-			return nil, fmt.Errorf("unable to generater owner temp dir: %v", err)
-		}
-		if opts.IncludePrivate {
-			if sshAuth == nil {
-				return nil, fmt.Errorf("no ssh auth available")
-			}
-			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
-				URL:  *githubRepo.SSHURL,
-				Auth: sshAuth,
-			})
-		} else {
-			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
-				URL: *githubRepo.CloneURL,
-			})
-		}
-	} else {
-		if opts.IncludePrivate {
-			if sshAuth == nil {
-				return nil, fmt.Errorf("no ssh auth available")
-			}
-			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-				URL:  *githubRepo.SSHURL,
-				Auth: sshAuth,
-			})
-		} else {
-			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-				URL: *githubRepo.CloneURL,
-			})
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &RepoDescriptor{
-		repository: repo,
-		name:       *githubRepo.Name,
-	}, nil
-}
-
-// githubToken returns an oauth2 client for the github api to consume. This token is necessary
-// if you are running audits with --github-user or --github-org
-func githubToken() *http.Client {
-	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		return nil
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: githubToken},
-	)
-	return oauth2.NewClient(context.Background(), ts)
 }
 
 // discoverRepos walks all the children of `path`. If a child directory
