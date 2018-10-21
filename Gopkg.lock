@@ -104,6 +104,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  revision = "183a80bb43ec9746d72f7cb37116e756d075fb91"
+  version = "v0.11.3"
+
+[[projects]]
   name = "github.com/xanzy/ssh-agent"
   packages = ["."]
   revision = "640f0ab560aeb89d523bb6ac322b1244d5c3796c"
@@ -255,6 +261,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad1b6855b3c8b3e1303f29123160cde693d39d6724682ce1cd246cd1a2343c7c"
+  inputs-digest = "2f65be0be7c6fe6a209a87c7e8cf47d994af94a33c77478edb096a8e3b416d2d"
   solver-name = "gps-cdcl"
   solver-version = 1
