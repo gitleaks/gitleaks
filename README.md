@@ -6,20 +6,58 @@
 </p>
 
 ## Audit git repos for secrets
-### Powered by src-d's [go-git](https://github.com/src-d/go-git)
-<p align="center">
+
+Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git source code repositories.
+
+As part of it's core functionality, it provides;
+* Github support including support for bulk organisation and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
+* Support for private repository scans, and repositories that require key based authentication
+* Output in CSV and JSON formats for consumption in other reporting tools and frameworks
+* Externalised configuration for environment specific customisation including regex rules
+* Customisable repository name, file type, commit ID, branchname and regex whitelisting to reduce false positives
+* High performance through the use of src-d's [go-git](https://github.com/src-d/go-git) framework
+
+
+It has been sucessfully used in a number of different scenarios, including;
+* Adhoc scans of local and remote repositories by filesystem path or clone URL
+* Automated scans of github users and organisations (Both public and enterprise platforms)
+* As part of a CICD workflow to identify secrets before they make it deeper into your codebase
+* As part of a wider secrets auditing automation capability for git data in large environments
+
+
+### Example execution
+
+
+<p align="left">
     <img src="https://cdn.rawgit.com/zricethezav/5bf8259b7fea0170becffc06b8588edb/raw/f762769fe20ef3669bff34612b1bede6457631e6/termtosvg_je8bp82s.svg">
 </p>
 
-#### Installing
+#### Installation
+Written in Go, gitleaks is available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks). Alternatively, executed via Docker or it can be installed using Go directly, as per the below;
+
+##### Docker 
+
+```bash
+# Run gitleaks against a public repository
+docker run --rm --name=gitleaks zricethezav/gitleaks -v -r  https://github.com/zricethezav/gitleaks.git
+
+# Run gitleaks against a local repository already cloned into /tmp/
+docker run --rm --name=gitleaks -v /tmp/:/code/  zricethezav/gitleaks -v --repo-path=/code/gitleaks
+
+# Run gitleaks against a specific Github Pull request
+docker run --rm --name=gitleaks -e GITHUB_TOKEN={your token} zricethezav/gitleaks --github-pr=https://github.com/owner/repo/pull/9000
+```
+
+##### Go
 
 ```bash
 go get -u github.com/zricethezav/gitleaks
 ```
-Or download from release binaries [here](https://github.com/zricethezav/gitleaks/releases)
-
 
 #### Usage and Options
+gitleaks has a wide range of configuration options that can be adjusted at runtime or via a configuration file based on your specific requirements.
+
+
 ```
 Usage:
   gitleaks [OPTIONS]
@@ -54,18 +92,34 @@ Application Options:
 Help Options:
   -h, --help           Show this help message
 ```
+
 #### Exit Codes
+Gitleaks provides consisten exist codes to assist in automation workflows such as CICD platforms and bulk scanning.
+
+These can be effectively used in conjunction with the report output file to detect and return meaningful data back to the user or external system about if leaks have been detected, and where they reside.
+
+The code return codes are:
+
 ```
 0: no leaks
 1: leaks present
 2: error encountered
 ```
 
-#### Additional Examples and Explanations
-Check the wiki [here](https://github.com/zricethezav/gitleaks/wiki)
+#### Additional information
+* Additional documentation about how gitleaks functions can be found on the [wiki page](https://github.com/zricethezav/gitleaks/wiki)
+* The below links detail the various approaches to remediating unwanted data in git repos
+    * [Removing sensitive data from a repository (github.com)](https://help.github.com/articles/removing-sensitive-data-from-a-repository/)
+    * [Removing sensitive files from commit history (atlassian.com)](https://community.atlassian.com/t5/Bitbucket-questions/Remove-sensitive-files-from-commit-history/qaq-p/243807)
+    * [Rewrite git history with the BFG (theguardian.com)](https://www.theguardian.com/info/developer-blog/2013/apr/29/rewrite-git-history-with-the-bfg)
+* [Auditing Bitbucket Server Data for Credentials in AWS (sourcedgroup.com)](https://www.sourcedgroup.com/blog/auditing-bitbucket-server-data-credentials-in-aws)
 
-### If you find a valid leak in a repo
-Please read this [Github article on removing sensitive data from a repository](https://help.github.com/articles/removing-sensitive-data-from-a-repository/) to remove the sensitive information from your history.
+    This blog post details how gitleaks was used to audit data in Atlassian Bitbucket server when hosted on AWS, and visualise the results in a compliance dashboard using Splunk.
 
-### Run me with docker
-Simply run `docker run --rm --name=gitleaks zricethezav/gitleaks --help`
+* How does gitleaks differ to github token scanning ?
+    * [Github recently announced](https://blog.github.com/2018-10-16-future-of-software/#github-token-scanning-for-public-repositories-public-beta) a new capbility to their cloud platform that detects exposed credentials for a number of common services and platforms and automatically notifies the provider for revocation or similar action. Gitleaks provides a similar detection capability for non-github cloud users, in which repositories can be easily audited and results provided in a number of formats.
+
+
+
+
+
