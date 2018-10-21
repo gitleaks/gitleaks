@@ -20,6 +20,11 @@ func auditGitlabRepos() ([]Leak, error) {
 	page := 1
 	cl := gitlab.NewClient(nil, os.Getenv("GITLAB_TOKEN"))
 
+	// if self hosted GitLab server
+	if url := os.Getenv("GITLAB_URL"); url != "" {
+		cl.SetBaseURL(url)
+	}
+
 	var (
 		ps   []*gitlab.Project
 		resp *gitlab.Response

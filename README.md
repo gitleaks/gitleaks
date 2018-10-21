@@ -107,6 +107,7 @@ The code return codes are:
 
 ### GitLab
 To audit public repositories for user on GitLab use `--gitlab-user=` and for group `--gitlab-org=`. For private repositories add `GITLAB_TOKEN` environment variable with your personal access token (is used to list all repositories via API) also add key `-p` with `--ssh-key=` for SSH key path (is used to clone repository).
+If self hosted GitLab server add `GITLAB_URL` environment variable with your URL.
 
 #### Additional information
 * Additional documentation about how gitleaks functions can be found on the [wiki page](https://github.com/zricethezav/gitleaks/wiki)
