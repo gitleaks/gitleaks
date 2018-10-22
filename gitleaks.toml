@@ -20,6 +20,9 @@ regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
 [[regexes]]
 description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
+[[regexes]]
+description = "Telegram bot API"
+regex = '''\d{5,}:A[a-zA-Z0-9_\-]{34,34}'''
 
 [whitelist]
 regexes = [
