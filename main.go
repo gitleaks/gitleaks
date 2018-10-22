@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -113,6 +114,9 @@ type Config struct {
 		Branches []string
 		Repos    []string
 	}
+	Misc struct {
+		Entropy []string
+	}
 }
 
 type gitDiff struct {
@@ -127,8 +131,13 @@ type gitDiff struct {
 	author       string
 }
 
+type entropyRange struct {
+	v1 float64
+	v2 float64
+}
+
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.13.0"
+const version = "1.14.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -177,11 +186,17 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 #]
 
 #branches = [
-#	"dev/STUPDIFKNFEATURE"
+#	"dev/goodrepo"
 #]
 
 #repos = [
-#	"someYugeRepoWeKnowIsCLEAR"
+#	"mygoodrepo"
+#]
+
+[misc]
+#entropy = [
+#	"3.3-4.30"
+#	"6.0-8.0
 #]
 `
 
@@ -194,6 +209,7 @@ var (
 	whiteListCommits  map[string]bool
 	whiteListBranches []string
 	whiteListRepos    []string
+	entropyRanges     []entropyRange
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
@@ -622,11 +638,24 @@ func inspect(diff gitDiff) []Leak {
 			leaks = addLeak(leaks, line, match, leakType, diff)
 		}
 
-		if opts.Entropy > 0 {
+		if opts.Entropy > 0 || len(entropyRanges) != 0 {
+			entropyLeak := false
 			words := strings.Fields(line)
 			for _, word := range words {
-				if getShannonEntropy(word) >= opts.Entropy {
-					leaks = addLeak(leaks, line, word, "High Entropy", diff)
+				entropy := getShannonEntropy(word)
+				if entropy >= opts.Entropy && len(entropyRanges) == 0 {
+					entropyLeak = true
+				}
+				if len(entropyRanges) != 0 {
+					for _, eR := range entropyRanges {
+						if entropy > eR.v1 && entropy < eR.v2 {
+							entropyLeak = true
+						}
+					}
+				}
+				if entropyLeak {
+					leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
+					entropyLeak = false
 				}
 			}
 		}
@@ -813,6 +842,13 @@ func loadToml() error {
 		}
 	}
 
+	if len(config.Misc.Entropy) != 0 {
+		err := entropyLimits(config.Misc.Entropy)
+		if err != nil {
+			return err
+		}
+	}
+
 	if singleSearchRegex != nil {
 		regexes["singleSearch"] = singleSearchRegex
 	} else {
@@ -833,6 +869,33 @@ func loadToml() error {
 		whiteListRegexes = append(whiteListRegexes, regexp.MustCompile(regex))
 	}
 
+	return nil
+}
+
+// entropyLimits hydrates entropyRanges which allows for fine tuning entropy checking
+func entropyLimits(entropyLimitStr []string) error {
+	for _, span := range entropyLimitStr {
+		split := strings.Split(span, "-")
+		v1, err := strconv.ParseFloat(split[0], 64)
+		if err != nil {
+			return err
+		}
+		v2, err := strconv.ParseFloat(split[1], 64)
+		if err != nil {
+			return err
+		}
+		if v1 > v2 {
+			return fmt.Errorf("entropy range must be ascending")
+		}
+		r := entropyRange{
+			v1: v1,
+			v2: v2,
+		}
+		if r.v1 > 8.0 || r.v1 < 0.0 || r.v2 > 8.0 || r.v2 < 0.0 {
+			return fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0")
+		}
+		entropyRanges = append(entropyRanges, r)
+	}
 	return nil
 }
 
