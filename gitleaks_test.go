@@ -67,6 +67,26 @@ repos = [
 ]
 `
 
+const testEntropyRange = `
+[misc]
+entropy = [
+  "7.5-8.0",
+  "3.3-3.4",
+]
+`
+const testBadEntropyRange = `
+[misc]
+entropy = [
+  "8.0-3.0",
+]
+`
+const testBadEntropyRange2 = `
+[misc]
+entropy = [
+  "8.0-8.9",
+]
+`
+
 var benchmarkRepo *RepoDescriptor
 var benchmarkLeaksRepo *RepoDescriptor
 
@@ -427,6 +447,9 @@ func testTomlLoader() string {
 	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "repo"), []byte(testWhitelistRepo), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "entropy"), []byte(testEntropyRange), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "badEntropy"), []byte(testBadEntropyRange), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "badEntropy2"), []byte(testBadEntropyRange2), 0644)
 	return tmpDir
 }
 
@@ -637,8 +660,27 @@ func TestAuditRepo(t *testing.T) {
 				Depth: 2,
 			},
 		},
+		{
+			repo:        leaksRepo,
+			description: "toml entropy range",
+			numLeaks:    422,
+			configPath:  path.Join(configsDir, "entropy"),
+		},
+		{
+			repo:           leaksRepo,
+			description:    "toml bad entropy range",
+			numLeaks:       0,
+			configPath:     path.Join(configsDir, "badEntropy"),
+			expectedErrMsg: "entropy range must be ascending",
+		},
+		{
+			repo:           leaksRepo,
+			description:    "toml bad entropy2 range",
+			numLeaks:       0,
+			configPath:     path.Join(configsDir, "badEntropy2"),
+			expectedErrMsg: "invalid entropy ranges, must be within 0.0-8.0",
+		},
 	}
-
 	whiteListCommits = make(map[string]bool)
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -671,19 +713,24 @@ func TestAuditRepo(t *testing.T) {
 				} else {
 					whiteListRepos = nil
 				}
-
+				skip := false
 				// config paths
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
-					loadToml()
+					err := loadToml()
+					if err != nil {
+						g.Assert(err.Error()).Equal(test.expectedErrMsg)
+						skip = true
+					}
 				}
+				if !skip {
+					leaks, err = auditGitRepo(test.repo)
 
-				leaks, err = auditGitRepo(test.repo)
-
-				if opts.Redact {
-					g.Assert(leaks[0].Offender).Equal("REDACTED")
+					if opts.Redact {
+						g.Assert(leaks[0].Offender).Equal("REDACTED")
+					}
+					g.Assert(len(leaks)).Equal(test.numLeaks)
 				}
-				g.Assert(len(leaks)).Equal(test.numLeaks)
 			})
 		})
 	}

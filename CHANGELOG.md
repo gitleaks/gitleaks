@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.14.0
+----
+- Entropy Range support in gitleaks config
+
 1.13.0
 ----
 - Github PR support
