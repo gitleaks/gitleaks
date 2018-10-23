@@ -493,7 +493,7 @@ func TestAuditRepo(t *testing.T) {
 		whiteListFiles    []*regexp.Regexp
 		whiteListCommits  map[string]bool
 		whiteListBranches []string
-		whiteListRepos    []string
+		whiteListRepos    []*regexp.Regexp
 		whiteListRegexes  []*regexp.Regexp
 		configPath        string
 	}{
@@ -618,8 +618,8 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "audit whitelist repo",
 			numLeaks:    0,
-			whiteListRepos: []string{
-				"gronit",
+			whiteListRepos: []*regexp.Regexp{
+				regexp.MustCompile("gronit"),
 			},
 		},
 		{

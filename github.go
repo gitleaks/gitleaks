@@ -188,9 +188,9 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 	if opts.ExcludeForks && githubRepo.GetFork() {
 		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
 	}
-	for _, repoName := range whiteListRepos {
-		if repoName == *githubRepo.Name {
-			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+	for _, re := range whiteListRepos {
+		if re.FindString(*githubRepo.Name) != "" {
+			return nil, fmt.Errorf("skipping %s, whitelisted", *githubRepo.Name)
 		}
 	}
 	log.Infof("cloning: %s", *githubRepo.Name)

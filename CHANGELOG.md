@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.15.0
+----
+- Whitelist repos use regex now
+- Whitelist repo check before clone
+
 1.14.0
 ----
 - Entropy Range support in gitleaks config

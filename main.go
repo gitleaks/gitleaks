@@ -137,7 +137,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.14.0"
+const version = "1.15.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -208,7 +208,7 @@ var (
 	whiteListFiles    []*regexp.Regexp
 	whiteListCommits  map[string]bool
 	whiteListBranches []string
-	whiteListRepos    []string
+	whiteListRepos    []*regexp.Regexp
 	entropyRanges     []entropyRange
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
@@ -250,6 +250,10 @@ func main() {
 	now := time.Now()
 	leaks, err := run()
 	if err != nil {
+		if strings.Contains(err.Error(), "whitelisted") {
+			log.Info(err.Error())
+			os.Exit(0)
+		}
 		log.Error(err)
 		os.Exit(errExit)
 	}
@@ -359,6 +363,12 @@ func cloneRepo() (*RepoDescriptor, error) {
 		err  error
 		repo *git.Repository
 	)
+	// check if whitelist
+	for _, re := range whiteListRepos {
+		if re.FindString(opts.Repo) != "" {
+			return nil, fmt.Errorf("skipping %s, whitelisted", opts.Repo)
+		}
+	}
 	if opts.Disk {
 		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
@@ -409,9 +419,9 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		err   error
 		leaks []Leak
 	)
-	for _, repoName := range whiteListRepos {
-		if repoName == repo.name {
-			return nil, fmt.Errorf("skipping %s, whitelisted", repoName)
+	for _, re := range whiteListRepos {
+		if re.FindString(repo.name) != "" {
+			return leaks, fmt.Errorf("skipping %s, whitelisted", repo.name)
 		}
 	}
 	ref, err := repo.repository.Head()
@@ -857,7 +867,6 @@ func loadToml() error {
 		}
 	}
 	whiteListBranches = config.Whitelist.Branches
-	whiteListRepos = config.Whitelist.Repos
 	whiteListCommits = make(map[string]bool)
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
@@ -867,6 +876,9 @@ func loadToml() error {
 	}
 	for _, regex := range config.Whitelist.Regexes {
 		whiteListRegexes = append(whiteListRegexes, regexp.MustCompile(regex))
+	}
+	for _, regex := range config.Whitelist.Repos {
+		whiteListRepos = append(whiteListRepos, regexp.MustCompile(regex))
 	}
 
 	return nil
