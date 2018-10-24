@@ -271,23 +271,6 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo: "git@github.com:gitleakstest/gronit.git",
-			},
-			description:    "test leak",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				Repo: "git@github.com:gitleakstest/gronit.git",
-				Disk: true,
-			},
-			description:    "test leak",
-			numLeaks:       2,
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
 				Repo: "https://github.com/gitleakstest/gronit.git",
 			},
 			description:    "test leak",
