@@ -72,14 +72,14 @@ CHANGELOG
 
 1.6.0
 -----
-- Default maximum goroutines spawned is number of cores your cpu run with. See benchmarks in wiki.
-- Cleanup after each repo audit for organizations rather than waiting for the entire organization to complete. Eliminates risk of running out of disk space.
+- Default maximum goroutines spawned is number of cores your CPU run with. See benchmarks in wiki.
+- Cleanup after each repo audit for organizations rather than waiting for the entire organization to complete. Eliminates the risk of running out of disk space.
 
 
 1.5.0
 -----
 - Support for CSV reporting
-- Refactoring github user/owner audits
+- Refactoring Github user/owner audits
 
 1.4.0
 -----
@@ -96,7 +96,7 @@ CHANGELOG
 
 1.2.0
 -----
-- Added support for providing an alternate GitHub URL to support scanning GitHub Enteprise repositories
+- Added support for providing an alternate GitHub URL to support scanning GitHub Enterprise repositories
 
 1.1.2
 -----
