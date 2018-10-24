@@ -18,7 +18,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -478,12 +477,8 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	var (
 		err         error
-		prevCommit  *object.Commit
-		semaphore   chan bool
 		repoName    string
 		leaks       []Leak
-		commitWg    sync.WaitGroup
-		mutex       = &sync.Mutex{}
 		commitCount int
 	)
 	repoName = repo.name
@@ -491,126 +486,78 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		maxGo = opts.MaxGoRoutines
 	}
 
-	semaphore = make(chan bool, maxGo)
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+			}
+		}()
+		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
 		commitCount = commitCount + 1
 		totalCommits = totalCommits + 1
 		if whiteListCommits[c.Hash.String()] {
-			prevCommit = c
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
-		if prevCommit != nil {
-			if whiteListCommits[prevCommit.Hash.String()] {
-				prevCommit = c
-				log.Infof("skipping commit: %s\n", c.Hash.String())
+
+		var (
+			filePath string
+			skipFile bool
+		)
+		err = c.Parents().ForEach(func(parent *object.Commit) error {
+			patch, err := c.Patch(parent)
+			if err != nil {
+				log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
 				return nil
 			}
-		}
-
-		commitWg.Add(1)
-		semaphore <- true
-		go func(c *object.Commit, prevCommit *object.Commit) {
-			var (
-				filePath string
-				skipFile bool
-			)
-			defer func() {
-				commitWg.Done()
-				<-semaphore
-				if r := recover(); r != nil {
-					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+			for _, f := range patch.FilePatches() {
+				skipFile = false
+				from, to := f.Files()
+				filePath = "???"
+				if from != nil {
+					filePath = from.Path()
+				} else if to != nil {
+					filePath = to.Path()
 				}
-			}()
-
-			if prevCommit == nil {
-				t, _ := c.Tree()
-				files := t.Files()
-				err := files.ForEach(func(file *object.File) error {
-					content, err := file.Contents()
-					if err != nil {
-						return err
+				for _, re := range whiteListFiles {
+					if re.FindString(filePath) != "" {
+						skipFile = true
+						break
 					}
-					diff := gitDiff{
-						branchName: string(ref.Name()),
-						repoName:   repoName,
-						filePath:   file.Name,
-						content:    content,
-						sha:        c.Hash.String(),
-						author:     c.Author.String(),
-						message:    c.Message,
-					}
-					chunkLeaks := inspect(diff)
-					for _, leak := range chunkLeaks {
-						mutex.Lock()
-						leaks = append(leaks, leak)
-						mutex.Unlock()
-					}
-					return nil
-				})
-				if err != nil {
-					log.Warnf("problem generating diff for commit: %s\n", c.Hash.String())
-					return
 				}
-			} else {
-				patch, err := c.Patch(prevCommit)
-				if err != nil {
-					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
-					return
+				if skipFile {
+					continue
 				}
-				for _, f := range patch.FilePatches() {
-					skipFile = false
-					from, to := f.Files()
-					filePath = "???"
-					if from != nil {
-						filePath = from.Path()
-					} else if to != nil {
-						filePath = to.Path()
-					}
-					for _, re := range whiteListFiles {
-						if re.FindString(filePath) != "" {
-							skipFile = true
-							break
+				chunks := f.Chunks()
+				for _, chunk := range chunks {
+					if chunk.Type() == 1 || chunk.Type() == 2 {
+						diff := gitDiff{
+							branchName: string(ref.Name()),
+							repoName:   repoName,
+							filePath:   filePath,
+							content:    chunk.Content(),
+							sha:        c.Hash.String(),
+							author:     c.Author.String(),
+							message:    c.Message,
 						}
-					}
-					if skipFile {
-						continue
-					}
-					chunks := f.Chunks()
-					for _, chunk := range chunks {
-						if chunk.Type() == 1 || chunk.Type() == 2 {
-							diff := gitDiff{
-								branchName: string(ref.Name()),
-								repoName:   repoName,
-								filePath:   filePath,
-								content:    chunk.Content(),
-								sha:        prevCommit.Hash.String(),
-								author:     prevCommit.Author.String(),
-								message:    prevCommit.Message,
-							}
-							chunkLeaks := inspect(diff)
-							for _, leak := range chunkLeaks {
-								mutex.Lock()
-								leaks = append(leaks, leak)
-								mutex.Unlock()
-							}
+						chunkLeaks := inspect(diff)
+						for _, leak := range chunkLeaks {
+							leaks = append(leaks, leak)
 						}
 					}
 				}
 			}
-		}(c, prevCommit)
-		prevCommit = c
+			return nil
+		})
 		return nil
 	})
-	commitWg.Wait()
 	return leaks
 }
 
