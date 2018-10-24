@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -81,13 +82,14 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
-	AuditAllRefs bool    `long:"all-refs" description:"run audit on all refs"`
-	SingleSearch string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
-	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	MaxGoRoutines int     `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
+	Disk          bool    `long:"disk" description:"Clones repo(s) to disk"`
+	AuditAllRefs  bool    `long:"all-refs" description:"run audit on all refs"`
+	SingleSearch  string  `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath    string  `long:"config" description:"path to gitleaks config"`
+	SSHKey        string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks  bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy       float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -383,7 +385,7 @@ func cloneRepo() (*RepoDescriptor, error) {
 			})
 		}
 	} else if opts.RepoPath != "" {
-		log.Infof("opening %s", opts.Repo)
+		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
 		log.Infof("cloning %s", opts.Repo)
@@ -478,19 +480,24 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		repoName    string
 		leaks       []Leak
 		commitCount int
+		commitWg    sync.WaitGroup
+		mutex       = &sync.Mutex{}
+		semaphore   chan bool
 	)
 	repoName = repo.name
+	if opts.MaxGoRoutines != 0 {
+		maxGo = opts.MaxGoRoutines
+	}
+	if opts.RepoPath != "" {
+		maxGo = 1
+	}
+	semaphore = make(chan bool, maxGo)
 
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		defer func() {
-			if r := recover(); r != nil {
-				log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
-			}
-		}()
 		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
@@ -502,57 +509,71 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			return nil
 		}
 
-		var (
-			filePath string
-			skipFile bool
-		)
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
-			patch, err := c.Patch(parent)
-			if err != nil {
-				log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
-				return nil
-			}
-			for _, f := range patch.FilePatches() {
-				skipFile = false
-				from, to := f.Files()
-				filePath = "???"
-				if from != nil {
-					filePath = from.Path()
-				} else if to != nil {
-					filePath = to.Path()
-				}
-				for _, re := range whiteListFiles {
-					if re.FindString(filePath) != "" {
-						skipFile = true
-						break
+			commitWg.Add(1)
+			semaphore <- true
+			go func(c *object.Commit, parent *object.Commit) {
+				var (
+					filePath string
+					skipFile bool
+				)
+				defer func() {
+					commitWg.Done()
+					<-semaphore
+					if r := recover(); r != nil {
+						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
+				}()
+				patch, err := c.Patch(parent)
+				if err != nil {
+					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
+					return
 				}
-				if skipFile {
-					continue
-				}
-				chunks := f.Chunks()
-				for _, chunk := range chunks {
-					if chunk.Type() == 1 || chunk.Type() == 2 {
-						diff := gitDiff{
-							branchName: string(ref.Name()),
-							repoName:   repoName,
-							filePath:   filePath,
-							content:    chunk.Content(),
-							sha:        c.Hash.String(),
-							author:     c.Author.String(),
-							message:    c.Message,
-						}
-						chunkLeaks := inspect(diff)
-						for _, leak := range chunkLeaks {
-							leaks = append(leaks, leak)
+				for _, f := range patch.FilePatches() {
+					skipFile = false
+					from, to := f.Files()
+					filePath = "???"
+					if from != nil {
+						filePath = from.Path()
+					} else if to != nil {
+						filePath = to.Path()
+					}
+					for _, re := range whiteListFiles {
+						if re.FindString(filePath) != "" {
+							skipFile = true
+							break
 						}
 					}
+					if skipFile {
+						continue
+					}
+					chunks := f.Chunks()
+					for _, chunk := range chunks {
+						if chunk.Type() == 1 || chunk.Type() == 2 {
+							diff := gitDiff{
+								branchName: string(ref.Name()),
+								repoName:   repoName,
+								filePath:   filePath,
+								content:    chunk.Content(),
+								sha:        c.Hash.String(),
+								author:     c.Author.String(),
+								message:    c.Message,
+							}
+							chunkLeaks := inspect(diff)
+							for _, leak := range chunkLeaks {
+								mutex.Lock()
+								leaks = append(leaks, leak)
+								mutex.Unlock()
+							}
+						}
+					}
 				}
-			}
+			}(c, parent)
 			return nil
 		})
 		return nil
 	})
+	commitWg.Wait()
 	return leaks
 }
 
