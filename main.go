@@ -81,14 +81,13 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	MaxGoRoutines int     `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	Disk          bool    `long:"disk" description:"Clones repo(s) to disk"`
-	AuditAllRefs  bool    `long:"all-refs" description:"run audit on all refs"`
-	SingleSearch  string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath    string  `long:"config" description:"path to gitleaks config"`
-	SSHKey        string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks  bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy       float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
+	AuditAllRefs bool    `long:"all-refs" description:"run audit on all refs"`
+	SingleSearch string  `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
+	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -136,7 +135,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.15.0"
+const version = "1.16.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -472,8 +471,7 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 }
 
 // auditGitReference beings the audit for a git reference. This function will
-// traverse the git reference and audit each line of each diff. Set maximum concurrency with
-// the --max-go option (default is set to the number of cores on your cpu).
+// traverse the git reference and audit each line of each diff.
 func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	var (
 		err         error
@@ -482,9 +480,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		commitCount int
 	)
 	repoName = repo.name
-	if opts.MaxGoRoutines != 0 {
-		maxGo = opts.MaxGoRoutines
-	}
 
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
