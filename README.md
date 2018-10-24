@@ -93,7 +93,7 @@ Help Options:
 ```
 
 #### Exit Codes
-Gitleaks provides consisten exist codes to assist in automation workflows such as CICD platforms and bulk scanning.
+Gitleaks provides consistent exist codes to assist in automation workflows such as CICD platforms and bulk scanning.
 
 These can be effectively used in conjunction with the report output file to detect and return meaningful data back to the user or external system about if leaks have been detected, and where they reside.
 
@@ -113,10 +113,10 @@ The code return codes are:
     * [Rewrite git history with the BFG (theguardian.com)](https://www.theguardian.com/info/developer-blog/2013/apr/29/rewrite-git-history-with-the-bfg)
 * [Auditing Bitbucket Server Data for Credentials in AWS (sourcedgroup.com)](https://www.sourcedgroup.com/blog/auditing-bitbucket-server-data-credentials-in-aws)
 
-    This blog post details how gitleaks was used to audit data in Atlassian Bitbucket server when hosted on AWS, and visualise the results in a compliance dashboard using Splunk.
+    This blog post details how gitleaks was used to audit data in Atlassian Bitbucket server when hosted on AWS and visualise the results in a compliance dashboard using Splunk.
 
-* How does gitleaks differ to github token scanning ?
-    * [Github recently announced](https://blog.github.com/2018-10-16-future-of-software/#github-token-scanning-for-public-repositories-public-beta) a new capbility to their cloud platform that detects exposed credentials for a number of common services and platforms and automatically notifies the provider for revocation or similar action. Gitleaks provides a similar detection capability for non-github cloud users, in which repositories can be easily audited and results provided in a number of formats.
+* How does gitleaks differ to Github token scanning?
+    * [Github recently announced](https://blog.github.com/2018-10-16-future-of-software/#github-token-scanning-for-public-repositories-public-beta) a new capability to their cloud platform that detects exposed credentials for a number of common services and platforms and automatically notifies the provider for revocation or similar action. Gitleaks provides a similar detection capability for non-Github cloud users, in which repositories can be easily audited and results provided in a number of formats.
 
 
 
