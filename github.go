@@ -117,11 +117,7 @@ func auditGithubRepos() ([]Leak, error) {
 			break
 		}
 		if opts.GithubUser != "" {
-			if opts.IncludePrivate {
-				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
-			} else {
-				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
-			}
+			pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
 			if err != nil {
 				done = true
 			}
@@ -199,10 +195,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to generater owner temp dir: %v", err)
 		}
-		if opts.IncludePrivate {
-			if sshAuth == nil {
-				return nil, fmt.Errorf("no ssh auth available")
-			}
+		if sshAuth != nil {
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,
@@ -213,10 +206,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 			})
 		}
 	} else {
-		if opts.IncludePrivate {
-			if sshAuth == nil {
-				return nil, fmt.Errorf("no ssh auth available")
-			}
+		if sshAuth != nil {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,

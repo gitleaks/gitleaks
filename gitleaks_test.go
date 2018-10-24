@@ -167,17 +167,15 @@ func TestGetRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/gitleakstest/private",
-				IncludePrivate: true,
+				Repo: "https://github.com/gitleakstest/private",
 			},
 			description:    "test private repo",
 			expectedErrMsg: "invalid auth method",
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/gitleakstest/private",
-				IncludePrivate: true,
-				Disk:           true,
+				Repo: "https://github.com/gitleakstest/private",
+				Disk: true,
 			},
 			description:    "test private repo",
 			expectedErrMsg: "invalid auth method",
@@ -264,13 +262,12 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				GithubOrg:      "gitleakstestorg",
-				IncludePrivate: true,
-				SSHKey:         "reallyreallyreallyreallywrongpath",
+				Repo:   "git@github.com:gitleakstest/gronit.git",
+				SSHKey: "trash",
 			},
-			description:    "test private org no ssh",
+			description:    "test leak",
 			numLeaks:       0,
-			expectedErrMsg: "unable to generate ssh key: open reallyreallyreallyreallywrongpath: no such file or directory",
+			expectedErrMsg: "unable to generate ssh key: open trash: no such file or directory",
 		},
 		{
 			testOpts: Options{
@@ -634,28 +631,28 @@ func TestAuditRepo(t *testing.T) {
 			testOpts: Options{
 				Entropy: 4.7,
 			},
-			numLeaks: 7,
+			numLeaks: 6,
 		},
 		{
 			repo:        leaksRepo,
 			description: "Audit until specific commit",
-			numLeaks:    1,
+			numLeaks:    2,
 			testOpts: Options{
 				Commit: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
 			},
 		},
 		{
 			repo:        leaksRepo,
-			description: "commit depth = 1, no leaks",
-			numLeaks:    0,
+			description: "commit depth = 1, one leak",
+			numLeaks:    1,
 			testOpts: Options{
 				Depth: 1,
 			},
 		},
 		{
 			repo:        leaksRepo,
-			description: "commit depth = 2, one leak",
-			numLeaks:    1,
+			description: "commit depth = 2, two leaks",
+			numLeaks:    2,
 			testOpts: Options{
 				Depth: 2,
 			},
@@ -663,7 +660,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    422,
+			numLeaks:    283,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
@@ -751,45 +748,24 @@ func TestOptionGuard(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubOrg:      "fakeOrg",
-			},
-			description:    "private org no githubtoken",
-			expectedErrMsg: "user/organization private repos require env var GITHUB_TOKEN to be set",
-			githubToken:    false,
-		},
-		{
-			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-			},
-			description:    "private user no githubtoken",
-			expectedErrMsg: "user/organization private repos require env var GITHUB_TOKEN to be set",
-			githubToken:    false,
-		},
-		{
-			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-				GithubOrg:      "fakeOrg",
+				GithubUser: "fakeUser",
+				GithubOrg:  "fakeOrg",
 			},
 			description:    "double owner",
 			expectedErrMsg: "github user and organization set",
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubOrg:      "fakeOrg",
-				OwnerPath:      "/dev/null",
+				GithubOrg: "fakeOrg",
+				OwnerPath: "/dev/null",
 			},
 			description:    "local and remote target",
 			expectedErrMsg: "github organization set and local owner path",
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-				OwnerPath:      "/dev/null",
+				GithubUser: "fakeUser",
+				OwnerPath:  "/dev/null",
 			},
 			description:    "local and remote target",
 			expectedErrMsg: "github user set and local owner path",

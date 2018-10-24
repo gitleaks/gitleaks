@@ -60,12 +60,11 @@ type RepoDescriptor struct {
 // Options for gitleaks
 type Options struct {
 	// remote target options
-	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
-	GithubUser     string `long:"github-user" description:"Github user to audit"`
-	GithubOrg      string `long:"github-org" description:"Github organization to audit"`
-	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
-	GithubPR       string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
-	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
+	Repo       string `short:"r" long:"repo" description:"Repo url to audit"`
+	GithubUser string `long:"github-user" description:"Github user to audit"`
+	GithubOrg  string `long:"github-org" description:"Github organization to audit"`
+	GithubURL  string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
+	GithubPR   string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
 
 	/*
 		TODO:
@@ -137,7 +136,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.15.0"
+const version = "1.16.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -280,13 +279,11 @@ func run() ([]Leak, error) {
 	if err != nil {
 		return nil, err
 	}
-	if opts.IncludePrivate {
-		// if including private repos use ssh as authentication
-		sshAuth, err = getSSHAuth()
-		if err != nil {
-			return nil, err
-		}
+	sshAuth, err = getSSHAuth()
+	if err != nil {
+		return leaks, err
 	}
+
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
 		dir, err = ioutil.TempDir("", "gitleaks")
@@ -319,8 +316,7 @@ func run() ([]Leak, error) {
 			leaks = append(leaksFromRepo, leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
-		// Audit a github owner -- a user or organization. If you want to include
-		// private repos you must pass a --private/-p option and have your ssh keys set
+		// Audit a github owner -- a user or organization.
 		leaks, err = auditGithubRepos()
 		if err != nil {
 			return leaks, err
@@ -355,9 +351,7 @@ func writeReport(leaks []Leak) error {
 	return err
 }
 
-// cloneRepo clones a repo to memory(default) or to disk if the --disk option is set. If you want to
-// clone a private repo you must set the --private/-p option, use a ssh target, and have your ssh keys
-// configured. If you want to audit a local repo, getRepo will load up a repo located at --repo-path
+// cloneRepo clones a repo to memory(default) or to disk if the --disk option is set.
 func cloneRepo() (*RepoDescriptor, error) {
 	var (
 		err  error
@@ -372,7 +366,7 @@ func cloneRepo() (*RepoDescriptor, error) {
 	if opts.Disk {
 		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
-		if opts.IncludePrivate {
+		if strings.HasPrefix(opts.Repo, "git") {
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
@@ -385,11 +379,11 @@ func cloneRepo() (*RepoDescriptor, error) {
 			})
 		}
 	} else if opts.RepoPath != "" {
-		log.Infof("opening %s", opts.Repo)
+		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
 		log.Infof("cloning %s", opts.Repo)
-		if opts.IncludePrivate {
+		if strings.HasPrefix(opts.Repo, "git") {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
@@ -473,95 +467,58 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 }
 
 // auditGitReference beings the audit for a git reference. This function will
-// traverse the git reference and audit each line of each diff. Set maximum concurrency with
-// the --max-go option (default is set to the number of cores on your cpu).
+// traverse the git reference and audit each line of each diff.
 func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	var (
 		err         error
-		prevCommit  *object.Commit
-		semaphore   chan bool
 		repoName    string
 		leaks       []Leak
+		commitCount int
 		commitWg    sync.WaitGroup
 		mutex       = &sync.Mutex{}
-		commitCount int
+		semaphore   chan bool
 	)
 	repoName = repo.name
 	if opts.MaxGoRoutines != 0 {
 		maxGo = opts.MaxGoRoutines
 	}
-
+	if opts.RepoPath != "" {
+		maxGo = 1
+	}
 	semaphore = make(chan bool, maxGo)
+
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
+		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
 		commitCount = commitCount + 1
 		totalCommits = totalCommits + 1
 		if whiteListCommits[c.Hash.String()] {
-			prevCommit = c
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
-		if prevCommit != nil {
-			if whiteListCommits[prevCommit.Hash.String()] {
-				prevCommit = c
-				log.Infof("skipping commit: %s\n", c.Hash.String())
-				return nil
-			}
-		}
 
-		commitWg.Add(1)
-		semaphore <- true
-		go func(c *object.Commit, prevCommit *object.Commit) {
-			var (
-				filePath string
-				skipFile bool
-			)
-			defer func() {
-				commitWg.Done()
-				<-semaphore
-				if r := recover(); r != nil {
-					log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
-				}
-			}()
-
-			if prevCommit == nil {
-				t, _ := c.Tree()
-				files := t.Files()
-				err := files.ForEach(func(file *object.File) error {
-					content, err := file.Contents()
-					if err != nil {
-						return err
+		err = c.Parents().ForEach(func(parent *object.Commit) error {
+			commitWg.Add(1)
+			semaphore <- true
+			go func(c *object.Commit, parent *object.Commit) {
+				var (
+					filePath string
+					skipFile bool
+				)
+				defer func() {
+					commitWg.Done()
+					<-semaphore
+					if r := recover(); r != nil {
+						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
-					diff := gitDiff{
-						branchName: string(ref.Name()),
-						repoName:   repoName,
-						filePath:   file.Name,
-						content:    content,
-						sha:        c.Hash.String(),
-						author:     c.Author.String(),
-						message:    c.Message,
-					}
-					chunkLeaks := inspect(diff)
-					for _, leak := range chunkLeaks {
-						mutex.Lock()
-						leaks = append(leaks, leak)
-						mutex.Unlock()
-					}
-					return nil
-				})
-				if err != nil {
-					log.Warnf("problem generating diff for commit: %s\n", c.Hash.String())
-					return
-				}
-			} else {
-				patch, err := c.Patch(prevCommit)
+				}()
+				patch, err := c.Patch(parent)
 				if err != nil {
 					log.Warnf("problem generating patch for commit: %s\n", c.Hash.String())
 					return
@@ -592,9 +549,9 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 								repoName:   repoName,
 								filePath:   filePath,
 								content:    chunk.Content(),
-								sha:        prevCommit.Hash.String(),
-								author:     prevCommit.Author.String(),
-								message:    prevCommit.Message,
+								sha:        c.Hash.String(),
+								author:     c.Author.String(),
+								message:    c.Message,
 							}
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
@@ -605,9 +562,9 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 						}
 					}
 				}
-			}
-		}(c, prevCommit)
-		prevCommit = c
+			}(c, parent)
+			return nil
+		})
 		return nil
 	})
 	commitWg.Wait()
@@ -773,8 +730,6 @@ func optsGuard() error {
 		return fmt.Errorf("github organization set and local owner path")
 	} else if opts.GithubUser != "" && opts.OwnerPath != "" {
 		return fmt.Errorf("github user set and local owner path")
-	} else if opts.IncludePrivate && os.Getenv("GITHUB_TOKEN") == "" && (opts.GithubOrg != "" || opts.GithubUser != "") {
-		return fmt.Errorf("user/organization private repos require env var GITHUB_TOKEN to be set")
 	}
 
 	// do the URL Parse and error checking here, so we can skip it later
@@ -926,9 +881,13 @@ func getSSHAuth() (*ssh.PublicKeys, error) {
 	}
 	sshAuth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, "")
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate ssh key: %v", err)
+		if strings.HasPrefix(opts.Repo, "git") {
+			// if you are attempting to clone a git repo via ssh and supply a bad ssh key,
+			// the clone will fail.
+			return nil, fmt.Errorf("unable to generate ssh key: %v", err)
+		}
 	}
-	return sshAuth, err
+	return sshAuth, nil
 }
 
 func (leak Leak) log() {
