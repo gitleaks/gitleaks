@@ -68,7 +68,6 @@ Application Options:
       --github-org=    Github organization to audit
       --github-url=    GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
       --github-pr=     Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
-  -p, --private        Include private repos in audit
   -b, --branch=        branch name to audit (defaults to HEAD)
   -c, --commit=        sha of commit to stop at
       --depth=         maximum commit depth

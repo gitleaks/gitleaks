@@ -372,7 +372,6 @@ func cloneRepo() (*RepoDescriptor, error) {
 				Progress: os.Stdout,
 				Auth:     sshAuth,
 			})
-
 		} else {
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
