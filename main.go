@@ -60,12 +60,11 @@ type RepoDescriptor struct {
 // Options for gitleaks
 type Options struct {
 	// remote target options
-	Repo           string `short:"r" long:"repo" description:"Repo url to audit"`
-	GithubUser     string `long:"github-user" description:"Github user to audit"`
-	GithubOrg      string `long:"github-org" description:"Github organization to audit"`
-	GithubURL      string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
-	GithubPR       string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
-	IncludePrivate bool   `short:"p" long:"private" description:"Include private repos in audit"`
+	Repo       string `short:"r" long:"repo" description:"Repo url to audit"`
+	GithubUser string `long:"github-user" description:"Github user to audit"`
+	GithubOrg  string `long:"github-org" description:"Github organization to audit"`
+	GithubURL  string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
+	GithubPR   string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
 
 	/*
 		TODO:
@@ -280,13 +279,11 @@ func run() ([]Leak, error) {
 	if err != nil {
 		return nil, err
 	}
-	if opts.IncludePrivate {
-		// if including private repos use ssh as authentication
-		sshAuth, err = getSSHAuth()
-		if err != nil {
-			return nil, err
-		}
+	sshAuth, err = getSSHAuth()
+	if err != nil {
+		return leaks, err
 	}
+
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
 		dir, err = ioutil.TempDir("", "gitleaks")
@@ -319,8 +316,7 @@ func run() ([]Leak, error) {
 			leaks = append(leaksFromRepo, leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
-		// Audit a github owner -- a user or organization. If you want to include
-		// private repos you must pass a --private/-p option and have your ssh keys set
+		// Audit a github owner -- a user or organization.
 		leaks, err = auditGithubRepos()
 		if err != nil {
 			return leaks, err
@@ -355,9 +351,7 @@ func writeReport(leaks []Leak) error {
 	return err
 }
 
-// cloneRepo clones a repo to memory(default) or to disk if the --disk option is set. If you want to
-// clone a private repo you must set the --private/-p option, use a ssh target, and have your ssh keys
-// configured. If you want to audit a local repo, getRepo will load up a repo located at --repo-path
+// cloneRepo clones a repo to memory(default) or to disk if the --disk option is set.
 func cloneRepo() (*RepoDescriptor, error) {
 	var (
 		err  error
@@ -372,12 +366,13 @@ func cloneRepo() (*RepoDescriptor, error) {
 	if opts.Disk {
 		log.Infof("cloning %s", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
-		if opts.IncludePrivate {
+		if strings.HasPrefix(opts.Repo, "git") {
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 				Auth:     sshAuth,
 			})
+
 		} else {
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
@@ -389,7 +384,7 @@ func cloneRepo() (*RepoDescriptor, error) {
 		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
 		log.Infof("cloning %s", opts.Repo)
-		if opts.IncludePrivate {
+		if strings.HasPrefix(opts.Repo, "git") {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
@@ -736,8 +731,6 @@ func optsGuard() error {
 		return fmt.Errorf("github organization set and local owner path")
 	} else if opts.GithubUser != "" && opts.OwnerPath != "" {
 		return fmt.Errorf("github user set and local owner path")
-	} else if opts.IncludePrivate && os.Getenv("GITHUB_TOKEN") == "" && (opts.GithubOrg != "" || opts.GithubUser != "") {
-		return fmt.Errorf("user/organization private repos require env var GITHUB_TOKEN to be set")
 	}
 
 	// do the URL Parse and error checking here, so we can skip it later
@@ -889,9 +882,13 @@ func getSSHAuth() (*ssh.PublicKeys, error) {
 	}
 	sshAuth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, "")
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate ssh key: %v", err)
+		if strings.HasPrefix(opts.Repo, "git") {
+			// if you are attempting to clone a git repo via ssh and supply a bad ssh key,
+			// the clone will fail.
+			return nil, fmt.Errorf("unable to generate ssh key: %v", err)
+		}
 	}
-	return sshAuth, err
+	return sshAuth, nil
 }
 
 func (leak Leak) log() {

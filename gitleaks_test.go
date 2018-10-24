@@ -167,17 +167,15 @@ func TestGetRepo(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/gitleakstest/private",
-				IncludePrivate: true,
+				Repo: "https://github.com/gitleakstest/private",
 			},
 			description:    "test private repo",
 			expectedErrMsg: "invalid auth method",
 		},
 		{
 			testOpts: Options{
-				Repo:           "https://github.com/gitleakstest/private",
-				IncludePrivate: true,
-				Disk:           true,
+				Repo: "https://github.com/gitleakstest/private",
+				Disk: true,
 			},
 			description:    "test private repo",
 			expectedErrMsg: "invalid auth method",
@@ -264,13 +262,29 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				GithubOrg:      "gitleakstestorg",
-				IncludePrivate: true,
-				SSHKey:         "reallyreallyreallyreallywrongpath",
+				Repo:   "git@github.com:gitleakstest/gronit.git",
+				SSHKey: "trash",
 			},
-			description:    "test private org no ssh",
+			description:    "test leak",
 			numLeaks:       0,
-			expectedErrMsg: "unable to generate ssh key: open reallyreallyreallyreallywrongpath: no such file or directory",
+			expectedErrMsg: "unable to generate ssh key: open trash: no such file or directory",
+		},
+		{
+			testOpts: Options{
+				Repo: "git@github.com:gitleakstest/gronit.git",
+			},
+			description:    "test leak",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
+				Repo: "git@github.com:gitleakstest/gronit.git",
+				Disk: true,
+			},
+			description:    "test leak",
+			numLeaks:       2,
+			expectedErrMsg: "",
 		},
 		{
 			testOpts: Options{
@@ -751,45 +765,24 @@ func TestOptionGuard(t *testing.T) {
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubOrg:      "fakeOrg",
-			},
-			description:    "private org no githubtoken",
-			expectedErrMsg: "user/organization private repos require env var GITHUB_TOKEN to be set",
-			githubToken:    false,
-		},
-		{
-			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-			},
-			description:    "private user no githubtoken",
-			expectedErrMsg: "user/organization private repos require env var GITHUB_TOKEN to be set",
-			githubToken:    false,
-		},
-		{
-			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-				GithubOrg:      "fakeOrg",
+				GithubUser: "fakeUser",
+				GithubOrg:  "fakeOrg",
 			},
 			description:    "double owner",
 			expectedErrMsg: "github user and organization set",
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubOrg:      "fakeOrg",
-				OwnerPath:      "/dev/null",
+				GithubOrg: "fakeOrg",
+				OwnerPath: "/dev/null",
 			},
 			description:    "local and remote target",
 			expectedErrMsg: "github organization set and local owner path",
 		},
 		{
 			testOpts: Options{
-				IncludePrivate: true,
-				GithubUser:     "fakeUser",
-				OwnerPath:      "/dev/null",
+				GithubUser: "fakeUser",
+				OwnerPath:  "/dev/null",
 			},
 			description:    "local and remote target",
 			expectedErrMsg: "github user set and local owner path",
