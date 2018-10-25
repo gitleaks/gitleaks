@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+1.16.1
+----
+- Fixing default ssh auth logic
+
+1.16.0
+----
+- Better commit coverage. Now iterates through each commit in git log and generates a patch with each commit's parent.
+- Removing the need for --private/-p option. Instead gitleaks will determine if the repo is private or not.
+
+
 1.15.0
 ----
 - Whitelist repos use regex now
