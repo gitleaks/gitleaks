@@ -136,7 +136,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.16.0"
+const version = "1.16.1"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -876,7 +876,11 @@ func getSSHAuth() (*ssh.PublicKeys, error) {
 	if opts.SSHKey != "" {
 		sshKeyPath = opts.SSHKey
 	} else {
-		c, _ := user.Current()
+		// try grabbing default
+		c, err := user.Current()
+		if err != nil {
+			return nil, nil
+		}
 		sshKeyPath = fmt.Sprintf("%s/.ssh/id_rsa", c.HomeDir)
 	}
 	sshAuth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, "")
