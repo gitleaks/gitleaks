@@ -143,12 +143,8 @@ func auditGithubRepos() ([]Leak, error) {
 			}
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
 	if opts.Disk {
-		ownerDir, err = ioutil.TempDir(dir, opts.GithubUser)
-		os.RemoveAll(ownerDir)
+		ownerDir, _ = ioutil.TempDir(dir, opts.GithubUser)
 	}
 	for _, githubRepo := range githubRepos {
 		repo, err := cloneGithubRepo(githubRepo)

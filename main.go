@@ -136,7 +136,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.16.1"
+const version = "1.17.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -145,53 +145,61 @@ const defaultConfig = `
 # is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
 # configurations from that path. Gitleaks does not whitelist anything by default.
 
-
 title = "gitleaks config"
 # add regexes to the regex table
 [[regexes]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 [[regexes]]
-description = "RKCS8"
+description = "PKCS8"
 regex = '''-----BEGIN PRIVATE KEY-----'''
 [[regexes]]
 description = "RSA"
 regex = '''-----BEGIN RSA PRIVATE KEY-----'''
 [[regexes]]
-description = "Github"
-regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
-[[regexes]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+[[regexes]]
+description = "PGP"
+regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
 description = "Facebook"
 regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
 [[regexes]]
 description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
+[[regexes]]
+description = "Github"
+regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
+[[regexes]]
+description = "Slack"
+regex = '''xoxo[bapr]-.*'''
+[[regexes]]
+description = "Telegram"
+regex = '''\d{5,}:A[a-zA-Z0-9_\-]{34,34}'''
 
 [whitelist]
-#regexes = [
-#  "AKAIMYFAKEAWKKEY",
-#]
-
-#files = [
-#  "(.*?)(jpg|gif|doc|pdf|bin)$"
-#]
-
+regexes = [
+  '''(?i)github.*ref.*['\"][0-9a-fA-F]{35,40}['\"]''',
+  '''(?i)shasum.*['\"][0-9a-fA-F]{40}['\"]''',
+  '''(?i)githead.*['\"][0-9a-fA-F]{40}['\"]''',
+  '''(?i)email_hash.*['\"][0-9a-fA-F]{40}['\"]''',
+  '''(?i)email_hash.*['\"][0-9a-fA-F]{32}['\"]''',
+  '''(?i)rev.*:.*['\"][0-9a-fA-F]{40}['\"]''',
+]
+files = [
+  "(.*?)(jpg|gif|doc|pdf|bin)$"
+]
 #commits = [
 #  "BADHA5H1",
 #  "BADHA5H2",
 #]
-
 #branches = [
 #	"dev/goodrepo"
 #]
-
 #repos = [
 #	"mygoodrepo"
 #]
-
 [misc]
 #entropy = [
 #	"3.3-4.30"
