@@ -23,6 +23,9 @@ regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 [[regexes]]
 description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
+[[regexes]]
+description = "Slack token"
+regex = '''xoxo[bapr]-.*'''
 
 [whitelist]
 regexes = [
