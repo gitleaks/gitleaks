@@ -20,6 +20,9 @@ regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
 [[regexes]]
 description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
+[[regexes]]
+description = "PGP"
+regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 
 [whitelist]
 regexes = [
