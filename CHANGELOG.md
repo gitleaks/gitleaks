@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.17.0
+----
+- Default regex added to search: slack, telegram.
+- Default whitelisting: bin, doc, jpeg, gif
+
 1.16.1
 ----
 - Fixing default ssh auth logic
