@@ -28,7 +28,7 @@ description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
 description = "Slack token"
-regex = '''xoxo[bapr]-.*'''
+regex = '''xox[baprs]-.*'''
 
 [whitelist]
 regexes = [
