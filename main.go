@@ -173,7 +173,7 @@ description = "Github"
 regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
 [[regexes]]
 description = "Slack"
-regex = '''xoxo[bapr]-.*'''
+regex = '''xox[baprs]-.*'''
 [[regexes]]
 description = "Telegram"
 regex = '''\d{5,}:A[a-zA-Z0-9_\-]{34,34}'''
