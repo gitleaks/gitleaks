@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.18.0
+----
+- fixing slack token
+- defaulting to single thread process
+- `--max-go=` --> `--threads=`
+- guarding `--threads=` > max threads available (you aint gettin any more performance)
+
 1.17.0
 ----
 - Default regex added to search: slack, telegram.

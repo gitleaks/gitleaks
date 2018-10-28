@@ -504,7 +504,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "two leaks present limit goroutines",
 			numLeaks:    2,
 			testOpts: Options{
-				MaxGoRoutines: 4,
+				Threads: 4,
 			},
 		},
 		{
@@ -898,7 +898,7 @@ func TestLoadToml(t *testing.T) {
 
 func BenchmarkAuditRepo1Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 1
+	opts.Threads = 1
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -907,7 +907,7 @@ func BenchmarkAuditRepo1Proc(b *testing.B) {
 
 func BenchmarkAuditRepo2Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 2
+	opts.Threads = 2
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -916,7 +916,7 @@ func BenchmarkAuditRepo2Proc(b *testing.B) {
 
 func BenchmarkAuditRepo4Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 4
+	opts.Threads = 4
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -925,7 +925,7 @@ func BenchmarkAuditRepo4Proc(b *testing.B) {
 
 func BenchmarkAuditRepo8Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 8
+	opts.Threads = 8
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -934,7 +934,7 @@ func BenchmarkAuditRepo8Proc(b *testing.B) {
 
 func BenchmarkAuditRepo10Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 10
+	opts.Threads = 10
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -943,7 +943,7 @@ func BenchmarkAuditRepo10Proc(b *testing.B) {
 
 func BenchmarkAuditRepo100Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 100
+	opts.Threads = 100
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -952,7 +952,7 @@ func BenchmarkAuditRepo100Proc(b *testing.B) {
 
 func BenchmarkAuditRepo1000Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 1000
+	opts.Threads = 1000
 	benchmarkRepo = getBenchmarkRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -960,7 +960,7 @@ func BenchmarkAuditRepo1000Proc(b *testing.B) {
 }
 func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 1
+	opts.Threads = 1
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -969,7 +969,7 @@ func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
 
 func BenchmarkAuditLeakRepo2Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 2
+	opts.Threads = 2
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -978,7 +978,7 @@ func BenchmarkAuditLeakRepo2Proc(b *testing.B) {
 
 func BenchmarkAuditLeakRepo4Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 4
+	opts.Threads = 4
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -987,7 +987,7 @@ func BenchmarkAuditLeakRepo4Proc(b *testing.B) {
 
 func BenchmarkAuditLeakRepo8Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 8
+	opts.Threads = 8
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -996,7 +996,7 @@ func BenchmarkAuditLeakRepo8Proc(b *testing.B) {
 
 func BenchmarkAuditLeakRepo10Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 10
+	opts.Threads = 10
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -1004,7 +1004,7 @@ func BenchmarkAuditLeakRepo10Proc(b *testing.B) {
 }
 func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 100
+	opts.Threads = 100
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
@@ -1012,7 +1012,7 @@ func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
 }
 func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
 	loadToml()
-	opts.MaxGoRoutines = 1000
+	opts.Threads = 1000
 	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
 	for n := 0; n < b.N; n++ {
 		auditGitRepo(benchmarkRepo)
