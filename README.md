@@ -73,7 +73,7 @@ Application Options:
       --depth=         maximum commit depth
       --repo-path=     Path to repo
       --owner-path=    Path to owner directory (repos discovered)
-      --max-go=        Maximum number of concurrent go-routines gitleaks spawns
+      --threads=       Maximum number of threads gitleaks spawns
       --disk           Clones repo(s) to disk
       --all-refs       run audit on all refs
       --single-search= single regular expression to search for

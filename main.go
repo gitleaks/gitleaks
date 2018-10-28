@@ -81,14 +81,14 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	MaxGoRoutines int     `long:"max-go" description:"Maximum number of concurrent go-routines gitleaks spawns"`
-	Disk          bool    `long:"disk" description:"Clones repo(s) to disk"`
-	AuditAllRefs  bool    `long:"all-refs" description:"run audit on all refs"`
-	SingleSearch  string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath    string  `long:"config" description:"path to gitleaks config"`
-	SSHKey        string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks  bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy       float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	Threads      int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
+	AuditAllRefs bool    `long:"all-refs" description:"run audit on all refs"`
+	SingleSearch string  `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
+	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -220,13 +220,14 @@ var (
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
-	maxGo             int
+	threads           int
 	totalCommits      int64
 )
 
 func init() {
 	log.SetOutput(os.Stdout)
-	maxGo = runtime.GOMAXPROCS(0) / 2
+	// threads = runtime.GOMAXPROCS(0) / 2
+	threads = 1
 	regexes = make(map[string]*regexp.Regexp)
 	whiteListCommits = make(map[string]bool)
 }
@@ -487,13 +488,13 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		semaphore   chan bool
 	)
 	repoName = repo.name
-	if opts.MaxGoRoutines != 0 {
-		maxGo = opts.MaxGoRoutines
+	if opts.Threads != 0 {
+		threads = opts.Threads
 	}
 	if opts.RepoPath != "" {
-		maxGo = 1
+		threads = 1
 	}
-	semaphore = make(chan bool, maxGo)
+	semaphore = make(chan bool, threads)
 
 	cIter, err := repo.repository.Log(&git.LogOptions{From: ref.Hash()})
 	if err != nil {
@@ -738,6 +739,10 @@ func optsGuard() error {
 		return fmt.Errorf("github organization set and local owner path")
 	} else if opts.GithubUser != "" && opts.OwnerPath != "" {
 		return fmt.Errorf("github user set and local owner path")
+	}
+
+	if opts.Threads > runtime.GOMAXPROCS(0) {
+		return fmt.Errorf("%d available threads", runtime.GOMAXPROCS(0))
 	}
 
 	// do the URL Parse and error checking here, so we can skip it later
