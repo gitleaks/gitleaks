@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/franela/goblin"
 	git "gopkg.in/src-d/go-git.v4"
@@ -368,6 +369,7 @@ func TestWriteReport(t *testing.T) {
 			Author:   "some",
 			File:     "sleep",
 			Branch:   "thxu",
+			Date:     time.Now(),
 		},
 	}
 

@@ -37,15 +37,16 @@ import (
 
 // Leak represents a leaked secret or regex match.
 type Leak struct {
-	Line     string `json:"line"`
-	Commit   string `json:"commit"`
-	Offender string `json:"offender"`
-	Type     string `json:"reason"`
-	Message  string `json:"commitMsg"`
-	Author   string `json:"author"`
-	File     string `json:"file"`
-	Branch   string `json:"branch"`
-	Repo     string `json:"repo"`
+	Line     string    `json:"line"`
+	Commit   string    `json:"commit"`
+	Offender string    `json:"offender"`
+	Type     string    `json:"reason"`
+	Message  string    `json:"commitMsg"`
+	Author   string    `json:"author"`
+	File     string    `json:"file"`
+	Branch   string    `json:"branch"`
+	Repo     string    `json:"repo"`
+	Date     time.Time `json:"date"`
 }
 
 // RepoDescriptor contains a src-d git repository and other data about the repo
@@ -128,6 +129,7 @@ type gitDiff struct {
 	sha          string
 	message      string
 	author       string
+	date         time.Time
 }
 
 type entropyRange struct {
@@ -348,9 +350,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "branch"})
+		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "branch", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Branch})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Branch, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -561,6 +563,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 								sha:        c.Hash.String(),
 								author:     c.Author.String(),
 								message:    c.Message,
+								date:       c.Author.When,
 							}
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
@@ -651,6 +654,7 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 		Branch:   diff.branchName,
 		Repo:     diff.repoName,
 		Message:  diff.message,
+		Date:     diff.date,
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
