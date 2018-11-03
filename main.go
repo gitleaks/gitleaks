@@ -44,7 +44,6 @@ type Leak struct {
 	Message  string    `json:"commitMsg"`
 	Author   string    `json:"author"`
 	File     string    `json:"file"`
-	Branch   string    `json:"branch"`
 	Repo     string    `json:"repo"`
 	Date     time.Time `json:"date"`
 }
@@ -330,9 +329,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "branch", "date"})
+		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Branch, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -396,9 +395,7 @@ func cloneRepo() (*RepoDescriptor, error) {
 	}, nil
 }
 
-// auditGitRepo beings an audit on a git repository by checking the default HEAD branch, all branches, or
-// a single branch depending on what gitleaks is configured to do. Note when I say branch I really
-// mean reference as these branches are read only.
+// auditGitRepo beings an audit on a git repository
 func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 	var (
 		err   error
