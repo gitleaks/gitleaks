@@ -35,16 +35,6 @@ files = [
   ".go",
 ]
 `
-const testWhitelistBranch = `
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-branches = [
-  "origin/master",
-]
-`
 
 const testWhitelistRegex = `
 [[regexes]]
@@ -87,35 +77,6 @@ entropy = [
   "8.0-8.9",
 ]
 `
-
-var benchmarkRepo *RepoDescriptor
-var benchmarkLeaksRepo *RepoDescriptor
-
-func getBenchmarkLeaksRepo() *RepoDescriptor {
-	if benchmarkLeaksRepo != nil {
-		return benchmarkLeaksRepo
-	}
-	leaksR, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: "https://github.com/gitleakstest/gronit.git",
-	})
-	benchmarkLeaksRepo = &RepoDescriptor{
-		repository: leaksR,
-	}
-	return benchmarkLeaksRepo
-}
-
-func getBenchmarkRepo() *RepoDescriptor {
-	if benchmarkRepo != nil {
-		return benchmarkRepo
-	}
-	bmRepo, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: "https://github.com/apple/swift-package-manager.git",
-	})
-	benchmarkRepo = &RepoDescriptor{
-		repository: bmRepo,
-	}
-	return benchmarkRepo
-}
 
 func TestGetRepo(t *testing.T) {
 	var err error
@@ -442,7 +403,6 @@ func TestWriteReport(t *testing.T) {
 func testTomlLoader() string {
 	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
 	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "branch"), []byte(testWhitelistBranch), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "repo"), []byte(testWhitelistRepo), 0644)
@@ -511,41 +471,6 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
-			description: "audit specific bad branch",
-			numLeaks:    2,
-			testOpts: Options{
-				Branch: "master",
-			},
-		},
-		{
-			repo:        leaksRepo,
-			description: "audit specific good branch",
-			numLeaks:    0,
-			testOpts: Options{
-				Branch: "dev",
-			},
-		},
-		{
-			repo:        leaksRepo,
-			description: "audit all branch",
-			numLeaks:    6,
-			testOpts: Options{
-				AuditAllRefs: true,
-			},
-		},
-		{
-			repo:        leaksRepo,
-			description: "audit all branch whitelist 1",
-			numLeaks:    4,
-			testOpts: Options{
-				AuditAllRefs: true,
-			},
-			whiteListBranches: []string{
-				"origin/master",
-			},
-		},
-		{
-			repo:        leaksRepo,
 			description: "two leaks present whitelist AWS.. no leaks",
 			whiteListRegexes: []*regexp.Regexp{
 				regexp.MustCompile("AKIA"),
@@ -591,15 +516,6 @@ func TestAuditRepo(t *testing.T) {
 			description: "toml whitelist regex",
 			configPath:  path.Join(configsDir, "regex"),
 			numLeaks:    0,
-		},
-		{
-			repo:        leaksRepo,
-			description: "toml whitelist branch",
-			configPath:  path.Join(configsDir, "branch"),
-			testOpts: Options{
-				AuditAllRefs: true,
-			},
-			numLeaks: 4,
 		},
 		{
 			repo:        leaksRepo,
@@ -662,7 +578,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    283,
+			numLeaks:    284,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
@@ -696,11 +612,6 @@ func TestAuditRepo(t *testing.T) {
 					whiteListCommits = test.whiteListCommits
 				} else {
 					whiteListCommits = nil
-				}
-				if test.whiteListBranches != nil {
-					whiteListBranches = test.whiteListBranches
-				} else {
-					whiteListBranches = nil
 				}
 				if test.whiteListRegexes != nil {
 					whiteListRegexes = test.whiteListRegexes
@@ -895,128 +806,5 @@ func TestLoadToml(t *testing.T) {
 				}
 			})
 		})
-	}
-}
-
-func BenchmarkAuditRepo1Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 1
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo2Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 2
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo4Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 4
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo8Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 8
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo10Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 10
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo100Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 100
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditRepo1000Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 1000
-	benchmarkRepo = getBenchmarkRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-func BenchmarkAuditLeakRepo1Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 1
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo2Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 2
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo4Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 4
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo8Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 8
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-
-func BenchmarkAuditLeakRepo10Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 10
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-func BenchmarkAuditLeakRepo100Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 100
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
-	}
-}
-func BenchmarkAuditLeakRepo1000Proc(b *testing.B) {
-	loadToml()
-	opts.Threads = 1000
-	benchmarkLeaksRepo = getBenchmarkLeaksRepo()
-	for n := 0; n < b.N; n++ {
-		auditGitRepo(benchmarkRepo)
 	}
 }

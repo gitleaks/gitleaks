@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.19.0
+----
+- removed `--all-refs`. By default gitleaks now scans all branches, remote and local.
+- added commit memoizer to prevent duplicate commit audits
+- removed branch whitelist
+- removed branch from report as a commit is an object independent of branch
+- Better regexes for facebook, github, twitter (no more unbounded wildcards)
+
 1.18.0
 ----
 - fixing slack token
