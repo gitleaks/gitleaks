@@ -73,7 +73,6 @@ type Options struct {
 		GitLabOrg  string `long:"gitlab-org" description:"Organization url to audit"`
 	*/
 
-	Branch string `short:"b" long:"branch" description:"branch name to audit (defaults to HEAD)"`
 	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
 	Depth  int    `long:"depth" description:"maximum commit depth"`
 
@@ -84,7 +83,6 @@ type Options struct {
 	// Process options
 	Threads      int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
 	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
-	AuditAllRefs bool    `long:"all-refs" description:"run audit on all refs"`
 	SingleSearch string  `long:"single-search" description:"single regular expression to search for"`
 	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
 	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
@@ -108,11 +106,10 @@ type Config struct {
 		Regex       string
 	}
 	Whitelist struct {
-		Files    []string
-		Regexes  []string
-		Commits  []string
-		Branches []string
-		Repos    []string
+		Files   []string
+		Regexes []string
+		Commits []string
+		Repos   []string
 	}
 	Misc struct {
 		Entropy []string
@@ -123,7 +120,6 @@ type gitDiff struct {
 	content      string
 	commit       *object.Commit
 	filePath     string
-	branchName   string
 	repoName     string
 	githubCommit *github.RepositoryCommit
 	sha          string
@@ -166,38 +162,21 @@ description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
 description = "Facebook"
-regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
+regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
 [[regexes]]
 description = "Twitter"
-regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
+regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
 [[regexes]]
 description = "Github"
-regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
+regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
 [[regexes]]
 description = "Slack"
-regex = '''xox[baprs]-.*'''
-[[regexes]]
-description = "Telegram"
-regex = '''\d{5,}:A[a-zA-Z0-9_\-]{34,34}'''
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
 [whitelist]
-regexes = [
-  '''(?i)github.*ref.*['\"][0-9a-fA-F]{35,40}['\"]''',
-  '''(?i)shasum.*['\"][0-9a-fA-F]{40}['\"]''',
-  '''(?i)githead.*['\"][0-9a-fA-F]{40}['\"]''',
-  '''(?i)email_hash.*['\"][0-9a-fA-F]{40}['\"]''',
-  '''(?i)email_hash.*['\"][0-9a-fA-F]{32}['\"]''',
-  '''(?i)rev.*:.*['\"][0-9a-fA-F]{40}['\"]''',
-]
-files = [
-  "(.*?)(jpg|gif|doc|pdf|bin)$"
-]
 #commits = [
 #  "BADHA5H1",
 #  "BADHA5H2",
-#]
-#branches = [
-#	"dev/goodrepo"
 #]
 #repos = [
 #	"mygoodrepo"
@@ -216,7 +195,6 @@ var (
 	whiteListRegexes  []*regexp.Regexp
 	whiteListFiles    []*regexp.Regexp
 	whiteListCommits  map[string]bool
-	whiteListBranches []string
 	whiteListRepos    []*regexp.Regexp
 	entropyRanges     []entropyRange
 	fileDiffRegex     *regexp.Regexp
@@ -224,6 +202,8 @@ var (
 	dir               string
 	threads           int
 	totalCommits      int64
+	commitMap         = make(map[string]bool)
+	cMutex            = &sync.Mutex{}
 )
 
 func init() {
@@ -429,51 +409,24 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 			return leaks, fmt.Errorf("skipping %s, whitelisted", repo.name)
 		}
 	}
-	ref, err := repo.repository.Head()
+
+	// clear commit cache
+	commitMap = make(map[string]bool)
+
+	refs, err := repo.repository.Storer.IterReferences()
 	if err != nil {
 		return leaks, err
 	}
-
-	if opts.AuditAllRefs {
-		skipBranch := false
-		refs, err := repo.repository.Storer.IterReferences()
-		if err != nil {
-			return leaks, err
-		}
-		err = refs.ForEach(func(ref *plumbing.Reference) error {
-			for _, b := range whiteListBranches {
-				if strings.HasSuffix(string(ref.Name()), b) {
-					skipBranch = true
-				}
-			}
-			if skipBranch {
-				skipBranch = false
-				return nil
-			}
-			branchLeaks := auditGitReference(repo, ref)
-			for _, leak := range branchLeaks {
-				leaks = append(leaks, leak)
-			}
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Name().IsTag() {
 			return nil
-		})
-	} else {
-		if opts.Branch != "" {
-			foundBranch := false
-			refs, _ := repo.repository.Storer.IterReferences()
-			branch := strings.Split(opts.Branch, "/")[len(strings.Split(opts.Branch, "/"))-1]
-			err = refs.ForEach(func(refBranch *plumbing.Reference) error {
-				if strings.Split(refBranch.Name().String(), "/")[len(strings.Split(refBranch.Name().String(), "/"))-1] == branch {
-					foundBranch = true
-					ref = refBranch
-				}
-				return nil
-			})
-			if foundBranch == false {
-				return nil, nil
-			}
 		}
-		leaks = auditGitReference(repo, ref)
-	}
+		branchLeaks := auditGitReference(repo, ref)
+		for _, leak := range branchLeaks {
+			leaks = append(leaks, leak)
+		}
+		return nil
+	})
 	return leaks, err
 }
 
@@ -503,6 +456,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
+		if commitMap[c.Hash.String()] {
+			return nil
+		}
+		cMutex.Lock()
+		commitMap[c.Hash.String()] = true
+		cMutex.Unlock()
 		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
@@ -535,6 +494,9 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					return
 				}
 				for _, f := range patch.FilePatches() {
+					if f.IsBinary() {
+						continue
+					}
 					skipFile = false
 					from, to := f.Files()
 					filePath = "???"
@@ -556,14 +518,13 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					for _, chunk := range chunks {
 						if chunk.Type() == 1 || chunk.Type() == 2 {
 							diff := gitDiff{
-								branchName: string(ref.Name()),
-								repoName:   repoName,
-								filePath:   filePath,
-								content:    chunk.Content(),
-								sha:        c.Hash.String(),
-								author:     c.Author.String(),
-								message:    c.Message,
-								date:       c.Author.When,
+								repoName: repoName,
+								filePath: filePath,
+								content:  chunk.Content(),
+								sha:      c.Hash.String(),
+								author:   c.Author.String(),
+								message:  c.Message,
+								date:     c.Author.When,
 							}
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
@@ -651,7 +612,6 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 		Type:     leakType,
 		Author:   diff.author,
 		File:     diff.filePath,
-		Branch:   diff.branchName,
 		Repo:     diff.repoName,
 		Message:  diff.message,
 		Date:     diff.date,
@@ -838,7 +798,6 @@ func loadToml() error {
 			regexes[regex.Description] = regexp.MustCompile(regex.Regex)
 		}
 	}
-	whiteListBranches = config.Whitelist.Branches
 	whiteListCommits = make(map[string]bool)
 	for _, commit := range config.Whitelist.Commits {
 		whiteListCommits[commit] = true
