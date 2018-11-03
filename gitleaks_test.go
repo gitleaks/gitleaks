@@ -329,7 +329,6 @@ func TestWriteReport(t *testing.T) {
 			Message:  "get",
 			Author:   "some",
 			File:     "sleep",
-			Branch:   "thxu",
 			Date:     time.Now(),
 		},
 	}
@@ -444,17 +443,16 @@ func TestAuditRepo(t *testing.T) {
 	}
 
 	var tests = []struct {
-		testOpts          Options
-		description       string
-		expectedErrMsg    string
-		numLeaks          int
-		repo              *RepoDescriptor
-		whiteListFiles    []*regexp.Regexp
-		whiteListCommits  map[string]bool
-		whiteListBranches []string
-		whiteListRepos    []*regexp.Regexp
-		whiteListRegexes  []*regexp.Regexp
-		configPath        string
+		testOpts         Options
+		description      string
+		expectedErrMsg   string
+		numLeaks         int
+		repo             *RepoDescriptor
+		whiteListFiles   []*regexp.Regexp
+		whiteListCommits map[string]bool
+		whiteListRepos   []*regexp.Regexp
+		whiteListRegexes []*regexp.Regexp
+		configPath       string
 	}{
 		{
 			repo:        leaksRepo,
