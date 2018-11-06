@@ -133,7 +133,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.19.0"
+const version = "1.19.1"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -173,6 +173,9 @@ description = "Slack"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
 [whitelist]
+files = [
+  "(.*?)(jpg|gif|doc|pdf|bin)$" 
+]
 #commits = [
 #  "BADHA5H1",
 #  "BADHA5H2",

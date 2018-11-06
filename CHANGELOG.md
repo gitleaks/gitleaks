@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.19.1
+----
+- mistakenly removed default whitelist files
+
 1.19.0
 ----
 - removed `--all-refs`. By default gitleaks now scans all branches, remote and local.
