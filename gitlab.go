@@ -11,12 +11,21 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
+// gitlabPages number of records per request
+const gitlabPages = 100
+
 // auditGitlabRepos kicks off audits if --gitlab-user or --gitlab-org options are set.
 // Getting all repositories from the GitLab API and run audit. If an error occurs during an audit of a repo,
 // that error is logged.
 func auditGitlabRepos() ([]Leak, error) {
+	var (
+		ps   []*gitlab.Project
+		resp *gitlab.Response
+		err  error
+	)
+
 	leaks := make([]Leak, 0)
-	repos := make([]*gitlab.Project, 0, 10)
+	repos := make([]*gitlab.Project, 0, gitlabPages)
 	page := 1
 	cl := gitlab.NewClient(nil, os.Getenv("GITLAB_TOKEN"))
 
@@ -25,17 +34,11 @@ func auditGitlabRepos() ([]Leak, error) {
 		cl.SetBaseURL(url)
 	}
 
-	var (
-		ps   []*gitlab.Project
-		resp *gitlab.Response
-		err  error
-	)
-
 	for {
 		if opts.GitLabOrg != "" {
 			opt := &gitlab.ListGroupProjectsOptions{
 				ListOptions: gitlab.ListOptions{
-					PerPage: 10,
+					PerPage: gitlabPages,
 					Page:    page,
 				},
 			}
@@ -44,7 +47,7 @@ func auditGitlabRepos() ([]Leak, error) {
 		} else if opts.GitLabUser != "" {
 			opt := &gitlab.ListProjectsOptions{
 				ListOptions: gitlab.ListOptions{
-					PerPage: 10,
+					PerPage: gitlabPages,
 					Page:    page,
 				},
 			}
@@ -65,11 +68,14 @@ func auditGitlabRepos() ([]Leak, error) {
 		page = resp.NextPage
 	}
 
-	log.Infof("found projects: %d", len(repos))
+	log.Debugf("found projects: %d", len(repos))
 
-	tempDir, err := createGitlabTempDir()
-	if err != nil {
-		log.Fatal("error creating temp directory: ", err)
+	var tempDir string
+
+	if opts.Disk {
+		if tempDir, err = createGitlabTempDir(); err != nil {
+			log.Fatal("error creating temp directory: ", err)
+		}
 	}
 
 	// TODO: use goroutines?
@@ -86,7 +92,7 @@ func auditGitlabRepos() ([]Leak, error) {
 		}
 
 		if opts.Disk {
-			os.RemoveAll(fmt.Sprintf("%s/%s", tempDir, p.ID))
+			os.RemoveAll(fmt.Sprintf("%s/%d", tempDir, p.ID))
 		}
 
 		if len(leaksFromRepo) == 0 {
@@ -102,10 +108,6 @@ func auditGitlabRepos() ([]Leak, error) {
 }
 
 func createGitlabTempDir() (string, error) {
-	if !opts.Disk {
-		return "", nil
-	}
-
 	pathName := opts.GitLabUser
 	if opts.GitLabOrg != "" {
 		pathName = opts.GitLabOrg
@@ -113,9 +115,9 @@ func createGitlabTempDir() (string, error) {
 
 	os.RemoveAll(fmt.Sprintf("%s/%s", dir, pathName))
 
-	ownerDir, err := ioutil.TempDir(dir, opts.GithubUser)
+	ownerDir, err := ioutil.TempDir(dir, pathName)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return ownerDir, nil
@@ -126,8 +128,8 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		return nil, fmt.Errorf("skipping %s, excluding forks", p.Name)
 	}
 
-	for _, repoName := range whiteListRepos {
-		if repoName == p.Name {
+	for _, re := range whiteListRepos {
+		if re.FindString(p.Name) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", p.Name)
 		}
 	}
@@ -136,11 +138,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		URL: p.HTTPURLToRepo,
 	}
 
-	if opts.IncludePrivate {
-		if sshAuth == nil {
-			return nil, fmt.Errorf("no ssh auth available")
-		}
-
+	if sshAuth != nil {
 		opt.URL = p.SSHURLToRepo
 		opt.Auth = sshAuth
 	}
@@ -151,7 +149,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 	var err error
 
 	if opts.Disk {
-		repo, err = git.PlainClone(fmt.Sprintf("%s/%s", tempDir, p.ID), false, opt)
+		repo, err = git.PlainClone(fmt.Sprintf("%s/%d", tempDir, p.ID), false, opt)
 	} else {
 		repo, err = git.Clone(memory.NewStorage(), nil, opt)
 	}
