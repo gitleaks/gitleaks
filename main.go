@@ -523,7 +523,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 								content:  chunk.Content(),
 								sha:      c.Hash.String(),
 								author:   c.Author.String(),
-								message:  c.Message,
+								message:  strings.Replace(c.Message, "\n", " ", -1),
 								date:     c.Author.When,
 							}
 							chunkLeaks := inspect(diff)
