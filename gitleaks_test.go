@@ -576,7 +576,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    284,
+			numLeaks:    354,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{

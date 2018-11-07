@@ -456,24 +456,64 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if commitMap[c.Hash.String()] {
-			return nil
-		}
-		cMutex.Lock()
-		commitMap[c.Hash.String()] = true
-		cMutex.Unlock()
 		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
-		commitCount = commitCount + 1
-		totalCommits = totalCommits + 1
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
 
+		// commits w/o parent (root of git the git ref)
+		if len(c.ParentHashes) == 0 {
+			fIter, err := c.Files()
+			if err != nil {
+				return nil
+			}
+			err = fIter.ForEach(func(f *object.File) error {
+				bin, err := f.IsBinary()
+				if bin || err != nil {
+					return nil
+				}
+				for _, re := range whiteListFiles {
+					if re.FindString(f.Name) != "" {
+						return nil
+					}
+				}
+				content, err := f.Contents()
+				if err != nil {
+					return nil
+				}
+				diff := gitDiff{
+					repoName: repoName,
+					filePath: f.Name,
+					content:  content,
+					sha:      c.Hash.String(),
+					author:   c.Author.String(),
+					message:  strings.Replace(c.Message, "\n", " ", -1),
+					date:     c.Author.When,
+				}
+				fileLeaks := inspect(diff)
+				mutex.Lock()
+				leaks = append(leaks, fileLeaks...)
+				mutex.Unlock()
+				return nil
+			})
+			return nil
+		}
+
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
+			// check if we've seen this diff before
+			if commitMap[c.Hash.String()+parent.Hash.String()] {
+				return nil
+			}
+			cMutex.Lock()
+			commitMap[c.Hash.String()+parent.Hash.String()] = true
+			cMutex.Unlock()
+			commitCount = commitCount + 1
+			totalCommits = totalCommits + 1
+
 			commitWg.Add(1)
 			semaphore <- true
 			go func(c *object.Commit, parent *object.Commit) {
