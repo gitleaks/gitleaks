@@ -560,7 +560,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "commit depth = 1, one leak",
-			numLeaks:    1,
+			numLeaks:    2,
 			testOpts: Options{
 				Depth: 1,
 			},

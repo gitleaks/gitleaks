@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.19.2
+----
+- fixed a bug where gitleaks was skipping the initial commit
+- commit cache now checks curr commit + parent commit hash
+- removed newlines from commit message
+
 1.19.1
 ----
 - mistakenly removed default whitelist files
