@@ -456,6 +456,14 @@ func TestAuditRepo(t *testing.T) {
 	}{
 		{
 			repo:        leaksRepo,
+			description: "commit depth = 1, one leak",
+			numLeaks:    1,
+			testOpts: Options{
+				Depth: 1,
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "two leaks present",
 			numLeaks:    2,
 		},
@@ -559,14 +567,6 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
-			description: "commit depth = 1, one leak",
-			numLeaks:    2,
-			testOpts: Options{
-				Depth: 1,
-			},
-		},
-		{
-			repo:        leaksRepo,
 			description: "commit depth = 2, two leaks",
 			numLeaks:    2,
 			testOpts: Options{
@@ -576,7 +576,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    354,
+			numLeaks:    298,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{

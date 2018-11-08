@@ -133,7 +133,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.19.2"
+const version = "1.19.3"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -460,6 +460,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
+		commitCount = commitCount + 1
 		if whiteListCommits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
@@ -467,6 +468,15 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 
 		// commits w/o parent (root of git the git ref)
 		if len(c.ParentHashes) == 0 {
+			if commitMap[c.Hash.String()] {
+				return nil
+			}
+			cMutex.Lock()
+			commitMap[c.Hash.String()] = true
+			cMutex.Unlock()
+
+			totalCommits = totalCommits + 1
+
 			fIter, err := c.Files()
 			if err != nil {
 				return nil
@@ -502,7 +512,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			})
 			return nil
 		}
-
+		skipCount := false
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
 			// check if we've seen this diff before
 			if commitMap[c.Hash.String()+parent.Hash.String()] {
@@ -511,8 +521,11 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			cMutex.Lock()
 			commitMap[c.Hash.String()+parent.Hash.String()] = true
 			cMutex.Unlock()
-			commitCount = commitCount + 1
-			totalCommits = totalCommits + 1
+
+			if !skipCount {
+				totalCommits = totalCommits + 1
+				skipCount = true
+			}
 
 			commitWg.Add(1)
 			semaphore <- true
