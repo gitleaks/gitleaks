@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.19.3
+----
+- memoizing root commit
+- only count commits (not commit + parent) for total commit number
+
 1.19.2
 ----
 - fixed a bug where gitleaks was skipping the initial commit
