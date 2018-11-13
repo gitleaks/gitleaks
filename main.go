@@ -66,11 +66,8 @@ type Options struct {
 	GithubURL  string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
 	GithubPR   string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
 
-	/*
-		TODO:
-		GitLabUser string `long:"gitlab-user" description:"User url to audit"`
-		GitLabOrg  string `long:"gitlab-org" description:"Organization url to audit"`
-	*/
+	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
+	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
 
 	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
 	Depth  int    `long:"depth" description:"maximum commit depth"`
@@ -311,6 +308,11 @@ func run() ([]Leak, error) {
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
 		// Audit a github owner -- a user or organization.
 		leaks, err = auditGithubRepos()
+		if err != nil {
+			return leaks, err
+		}
+	} else if opts.GitLabOrg != "" || opts.GitLabUser != "" {
+		leaks, err = auditGitlabRepos()
 		if err != nil {
 			return leaks, err
 		}

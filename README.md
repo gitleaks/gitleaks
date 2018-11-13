@@ -35,7 +35,7 @@ It has been sucessfully used in a number of different scenarios, including;
 #### Installation
 Written in Go, gitleaks is available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks). Alternatively, executed via Docker or it can be installed using Go directly, as per the below;
 
-##### Docker 
+##### Docker
 
 ```bash
 # Run gitleaks against a public repository
@@ -68,6 +68,8 @@ Application Options:
       --github-org=    Github organization to audit
       --github-url=    GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
       --github-pr=     Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
+      --gitlab-user=   GitLab user ID to audit
+      --gitlab-org=    GitLab group ID to audit
   -c, --commit=        sha of commit to stop at
       --depth=         maximum commit depth
       --repo-path=     Path to repo
@@ -102,6 +104,10 @@ The code return codes are:
 1: leaks present
 2: error encountered
 ```
+
+### GitLab
+To audit public repositories for user on GitLab use `--gitlab-user=` and for group `--gitlab-org=`. For private repositories add `GITLAB_TOKEN` environment variable with your personal access token (is used to list all repositories via API) and set `--ssh-key=` to SSH key path (is used to clone repository).
+If self hosted GitLab server add `GITLAB_URL` environment variable with your URL.
 
 #### Additional information
 * Additional documentation about how gitleaks functions can be found on the [wiki page](https://github.com/zricethezav/gitleaks/wiki)
