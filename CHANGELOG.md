@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.20.0
+----
+- adding gitlab user and group support
+
 1.19.3
 ----
 - memoizing root commit

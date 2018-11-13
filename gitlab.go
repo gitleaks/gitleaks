@@ -19,12 +19,13 @@ const gitlabPages = 100
 // that error is logged.
 func auditGitlabRepos() ([]Leak, error) {
 	var (
-		ps   []*gitlab.Project
-		resp *gitlab.Response
-		err  error
+		ps      []*gitlab.Project
+		resp    *gitlab.Response
+		leaks   []Leak
+		tempDir string
+		err     error
 	)
 
-	leaks := make([]Leak, 0)
 	repos := make([]*gitlab.Project, 0, gitlabPages)
 	page := 1
 	cl := gitlab.NewClient(nil, os.Getenv("GITLAB_TOKEN"))
@@ -70,15 +71,12 @@ func auditGitlabRepos() ([]Leak, error) {
 
 	log.Debugf("found projects: %d", len(repos))
 
-	var tempDir string
-
 	if opts.Disk {
 		if tempDir, err = createGitlabTempDir(); err != nil {
 			log.Fatal("error creating temp directory: ", err)
 		}
 	}
 
-	// TODO: use goroutines?
 	for _, p := range repos {
 		repo, err := cloneGitlabRepo(tempDir, p)
 		if err != nil {
@@ -124,6 +122,10 @@ func createGitlabTempDir() (string, error) {
 }
 
 func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error) {
+	var (
+		repo *git.Repository
+		err  error
+	)
 	if opts.ExcludeForks && p.ForkedFromProject != nil {
 		return nil, fmt.Errorf("skipping %s, excluding forks", p.Name)
 	}
@@ -144,9 +146,6 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 	}
 
 	log.Infof("cloning: %s", p.Name)
-
-	var repo *git.Repository
-	var err error
 
 	if opts.Disk {
 		repo, err = git.PlainClone(fmt.Sprintf("%s/%d", tempDir, p.ID), false, opt)

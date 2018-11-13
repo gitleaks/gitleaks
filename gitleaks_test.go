@@ -182,6 +182,14 @@ func TestRun(t *testing.T) {
 	}{
 		{
 			testOpts: Options{
+				GitLabUser: "gitleakstest",
+			},
+			description:    "test github user",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: Options{
 				GithubUser: "gitleakstest",
 			},
 			description:    "test github user",
