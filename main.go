@@ -247,9 +247,11 @@ func main() {
 		log.Error(err)
 		os.Exit(errExit)
 	}
+
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
+
 	if len(leaks) != 0 {
 		log.Warnf("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 		os.Exit(leakExit)
