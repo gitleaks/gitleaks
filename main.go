@@ -171,7 +171,7 @@ regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
 [whitelist]
 files = [
-  "(.*?)(jpg|gif|doc|pdf|bin)$" 
+  "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
 #commits = [
 #  "BADHA5H1",
