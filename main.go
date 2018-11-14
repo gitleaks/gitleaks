@@ -128,11 +128,12 @@ type entropyRange struct {
 	v2 float64
 }
 
-const defaultGithubURL = "https://api.github.com/"
-const version = "1.20.0"
-const errExit = 2
-const leakExit = 1
-const defaultConfig = `
+const (
+	defaultGithubURL = "https://api.github.com/"
+	version          = "1.20.0"
+	errExit          = 2
+	leakExit         = 1
+	defaultConfig    = `
 # This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
 # The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
 # is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
@@ -185,6 +186,7 @@ files = [
 #	"6.0-8.0
 #]
 `
+)
 
 var (
 	opts              Options
