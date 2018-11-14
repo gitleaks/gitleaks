@@ -105,11 +105,7 @@ The code return codes are:
 2: error encountered
 ```
 
-### GitLab
-To audit public repositories for user on GitLab use `--gitlab-user=` and for group `--gitlab-org=`. For private repositories add `GITLAB_TOKEN` environment variable with your personal access token (is used to list all repositories via API) and set `--ssh-key=` to SSH key path (is used to clone repository).
-If self hosted GitLab server add `GITLAB_URL` environment variable with your URL.
-
-#### Additional information
+### Additional information
 * Additional documentation about how gitleaks functions can be found on the [wiki page](https://github.com/zricethezav/gitleaks/wiki)
 * The below links detail the various approaches to remediating unwanted data in git repos
     * [Removing sensitive data from a repository (github.com)](https://help.github.com/articles/removing-sensitive-data-from-a-repository/)
@@ -122,6 +118,14 @@ If self hosted GitLab server add `GITLAB_URL` environment variable with your URL
 * How does gitleaks differ to Github token scanning?
     * [Github recently announced](https://blog.github.com/2018-10-16-future-of-software/#github-token-scanning-for-public-repositories-public-beta) a new capability to their cloud platform that detects exposed credentials for a number of common services and platforms and automatically notifies the provider for revocation or similar action. Gitleaks provides a similar detection capability for non-Github cloud users, in which repositories can be easily audited and results provided in a number of formats.
 
+### Give Thanks
+If using gitleaks has made you job easier consider donating to an organization, C-U at Home, who does vital work for those who most need it in the community of Champaign-Urbana, IL (my home).
+
+From C-U at Home:
+
+```C-U at Home is a grassroots, 501 c (3), faith-based homelessness ministry with facilities located in the Champaign-Urbana area. Due to our not-for-profit status, all gifts made to C-U at Home (both monetary and in-kind) are tax deductible. Our ministry is funded 100% by the community and we have made it a priority not to accept any state or federal funds. We feel that through community dollars, we can stay true to our mission. While our mission statement reads, “C-U at Home engages and mobilizes our community to house and support the most vulnerable homeless on their journey of healing and restoration,” our connection with those we serve goes much deeper.```
+
+<b>Donate</b>: https://www.cuathome.us/give/
 
 
 
