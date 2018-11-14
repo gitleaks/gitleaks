@@ -119,7 +119,7 @@ The code return codes are:
     * [Github recently announced](https://blog.github.com/2018-10-16-future-of-software/#github-token-scanning-for-public-repositories-public-beta) a new capability to their cloud platform that detects exposed credentials for a number of common services and platforms and automatically notifies the provider for revocation or similar action. Gitleaks provides a similar detection capability for non-Github cloud users, in which repositories can be easily audited and results provided in a number of formats.
 
 ### Give Thanks
-If using gitleaks has made you job easier consider donating to an organization, C-U at Home, who does vital work for those who most need it in the community of Champaign-Urbana, IL (my home).
+If using gitleaks has made you job easier consider donating to an organization, C-U at Home, that does vital work for those who most need it in the community of Champaign-Urbana, IL (my home).
 
 From C-U at Home:
 
