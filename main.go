@@ -54,7 +54,6 @@ type RepoDescriptor struct {
 	url        string
 	name       string
 	repository *git.Repository
-	err        error
 }
 
 // Options for gitleaks
@@ -391,12 +390,15 @@ func cloneRepo() (*RepoDescriptor, error) {
 			})
 		}
 	}
+	if err != nil {
+		return nil, fmt.Errorf("error cloning repo: %v", err)
+	}
+
 	return &RepoDescriptor{
 		repository: repo,
 		path:       opts.RepoPath,
 		url:        opts.Repo,
 		name:       filepath.Base(opts.Repo),
-		err:        err,
 	}, nil
 }
 
