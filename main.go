@@ -379,6 +379,9 @@ func cloneRepo() (*RepoDescriptor, error) {
 	} else if opts.RepoPath != "" {
 		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(opts.RepoPath)
+		if err != nil {
+			return nil, fmt.Errorf("error opening repo: %v", err)
+		}
 	} else {
 		log.Infof("cloning %s", opts.Repo)
 		if strings.HasPrefix(opts.Repo, "git") {
