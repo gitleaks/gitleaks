@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+1.21.0
+----
+- added support for cloning repositories using github api
+
 1.20.0
 ----
 - adding gitlab user and group support
