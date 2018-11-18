@@ -176,6 +176,7 @@ func TestRun(t *testing.T) {
 		description    string
 		expectedErrMsg string
 		whiteListRepos []string
+		whiteListFiles []*regexp.Regexp
 		numLeaks       int
 		configPath     string
 		commitPerPage  int
@@ -298,6 +299,18 @@ func TestRun(t *testing.T) {
 			expectedErrMsg: "",
 			commitPerPage:  1,
 		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/1",
+			},
+			description:    "test github pr with whitelisted files",
+			numLeaks:       0,
+			expectedErrMsg: "",
+			commitPerPage:  1,
+			whiteListFiles: []*regexp.Regexp{
+				regexp.MustCompile("main.go"),
+			},
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -308,6 +321,11 @@ func TestRun(t *testing.T) {
 				}
 				if test.commitPerPage != 0 {
 					githubPages = test.commitPerPage
+				}
+				if test.whiteListFiles != nil {
+					whiteListFiles = test.whiteListFiles
+				} else {
+					whiteListFiles = nil
 				}
 				opts = test.testOpts
 				leaks, err := run()

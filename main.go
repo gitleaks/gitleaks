@@ -171,7 +171,7 @@ regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
 [whitelist]
 files = [
-  "(.*?)(jpg|gif|doc|pdf|bin)$" 
+  "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
 #commits = [
 #  "BADHA5H1",
@@ -488,11 +488,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				if bin || err != nil {
 					return nil
 				}
-				for _, re := range whiteListFiles {
-					if re.FindString(f.Name) != "" {
-						return nil
-					}
-				}
 				content, err := f.Contents()
 				if err != nil {
 					return nil
@@ -560,12 +555,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					} else if to != nil {
 						filePath = to.Path()
 					}
-					for _, re := range whiteListFiles {
-						if re.FindString(filePath) != "" {
-							skipFile = true
-							break
-						}
-					}
 					if skipFile {
 						continue
 					}
@@ -604,11 +593,18 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
 func inspect(diff gitDiff) []Leak {
-	lines := strings.Split(diff.content, "\n")
 	var (
 		leaks    []Leak
 		skipLine bool
 	)
+
+	for _, re := range whiteListFiles {
+		if re.FindString(diff.filePath) != "" {
+			return leaks
+		}
+	}
+
+	lines := strings.Split(diff.content, "\n")
 
 	for _, line := range lines {
 		skipLine = false
