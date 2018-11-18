@@ -4,6 +4,7 @@ CHANGELOG
 1.21.0
 ----
 - added support for cloning repositories using github api
+- auditing PRs now allows for whitelisting files
 
 1.20.0
 ----
