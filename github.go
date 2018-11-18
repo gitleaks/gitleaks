@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	git "gopkg.in/src-d/go-git.v4"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -177,6 +178,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		repo *git.Repository
 		err  error
 	)
+	githubToken := os.Getenv("GITHUB_TOKEN")
 	if opts.ExcludeForks && githubRepo.GetFork() {
 		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
 	}
@@ -191,10 +193,18 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to generater owner temp dir: %v", err)
 		}
-		if sshAuth != nil {
+		if sshAuth != nil && githubToken == "" {
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,
+			})
+		} else if githubToken != "" {
+			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
+				URL: *githubRepo.CloneURL,
+				Auth: &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: githubToken,
+				},
 			})
 		} else {
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
@@ -202,10 +212,18 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 			})
 		}
 	} else {
-		if sshAuth != nil {
+		if sshAuth != nil && githubToken == "" {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
 				Auth: sshAuth,
+			})
+		} else if githubToken != "" {
+			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+				URL: *githubRepo.CloneURL,
+				Auth: &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: githubToken,
+				},
 			})
 		} else {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
