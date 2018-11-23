@@ -51,6 +51,10 @@ func auditGithubPR() ([]Leak, error) {
 			}
 			files := commit.Files
 			for _, f := range files {
+				if f.Patch == nil || f.Filename == nil {
+					continue
+				}
+
 				diff := gitDiff{
 					sha:          commit.GetSHA(),
 					content:      *f.Patch,
