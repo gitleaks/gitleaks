@@ -311,6 +311,15 @@ func TestRun(t *testing.T) {
 				regexp.MustCompile("main.go"),
 			},
 		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/2",
+			},
+			description:    "test github pr with commits without patch info",
+			numLeaks:       0,
+			expectedErrMsg: "",
+			commitPerPage:  1,
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
