@@ -63,6 +63,7 @@ func auditGithubPR() ([]Leak, error) {
 					githubCommit: commit,
 					author:       commit.GetCommitter().GetLogin(),
 					message:      *commit.Commit.Message,
+					date:         *commit.Commit.Committer.Date,
 				}
 				leaks = append(leaks, inspect(diff)...)
 			}
