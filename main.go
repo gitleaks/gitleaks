@@ -669,7 +669,7 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
-		leak.Line = "REDACTED"
+		leak.Line = strings.Replace(line, offender, "REDACTED", -1)
 	}
 
 	if opts.Verbose {
