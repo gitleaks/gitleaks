@@ -101,6 +101,9 @@ type Config struct {
 		Description string
 		Regex       string
 	}
+	Entropy struct {
+		LineRegexes []string
+	}
 	Whitelist struct {
 		Files   []string
 		Regexes []string
@@ -169,6 +172,21 @@ regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
 description = "Slack"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
+[entropy]
+lineregexes = [
+	"api",
+	"key",
+	"signature",
+	"secret",
+	"password",
+	"pass",
+	"pwd",
+	"token",
+	"curl",
+	"wget",
+	"https?",
+]
+
 [whitelist]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
@@ -196,6 +214,7 @@ var (
 	whiteListCommits  map[string]bool
 	whiteListRepos    []*regexp.Regexp
 	entropyRanges     []entropyRange
+	entropyRegexes    []*regexp.Regexp
 	fileDiffRegex     *regexp.Regexp
 	sshAuth           *ssh.PublicKeys
 	dir               string
@@ -630,23 +649,12 @@ func inspect(diff gitDiff) []Leak {
 		}
 
 		if opts.Entropy > 0 || len(entropyRanges) != 0 {
-			entropyLeak := false
 			words := strings.Fields(line)
 			for _, word := range words {
 				entropy := getShannonEntropy(word)
-				if entropy >= opts.Entropy && len(entropyRanges) == 0 {
-					entropyLeak = true
-				}
-				if len(entropyRanges) != 0 {
-					for _, eR := range entropyRanges {
-						if entropy > eR.v1 && entropy < eR.v2 {
-							entropyLeak = true
-						}
-					}
-				}
-				if entropyLeak {
+
+				if entropyIsHighEnough(entropy) && highEntropyLineIsALeak(line) {
 					leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
-					entropyLeak = false
 				}
 			}
 		}
@@ -698,6 +706,32 @@ func getShannonEntropy(data string) (entropy float64) {
 	}
 
 	return entropy
+}
+
+func entropyIsHighEnough(entropy float64) bool {
+	if entropy >= opts.Entropy && len(entropyRanges) == 0 {
+		return true
+	}
+
+	if len(entropyRanges) != 0 {
+		for _, eR := range entropyRanges {
+			if entropy > eR.v1 && entropy < eR.v2 {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func highEntropyLineIsALeak(line string) bool {
+	for _, re := range entropyRegexes {
+		if re.FindString(line) != "" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // discoverRepos walks all the children of `path`. If a child directory
@@ -840,6 +874,10 @@ func loadToml() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	for _, regex := range config.Entropy.LineRegexes {
+		entropyRegexes = append(entropyRegexes, regexp.MustCompile(regex))
 	}
 
 	if singleSearchRegex != nil {

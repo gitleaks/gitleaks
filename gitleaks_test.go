@@ -590,7 +590,7 @@ func TestAuditRepo(t *testing.T) {
 			testOpts: Options{
 				Entropy: 4.7,
 			},
-			numLeaks: 6,
+			numLeaks: 2,
 		},
 		{
 			repo:        leaksRepo,
@@ -611,7 +611,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    298,
+			numLeaks:    58,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
