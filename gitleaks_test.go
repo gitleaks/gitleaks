@@ -590,6 +590,15 @@ func TestAuditRepo(t *testing.T) {
 			testOpts: Options{
 				Entropy: 4.7,
 			},
+			numLeaks: 6,
+		},
+		{
+			repo:        leaksRepo,
+			description: "leaks present with entropy",
+			testOpts: Options{
+				Entropy:        4.7,
+				NoiseReduction: true,
+			},
 			numLeaks: 2,
 		},
 		{
@@ -610,6 +619,15 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "toml entropy range",
+			numLeaks:    298,
+			configPath:  path.Join(configsDir, "entropy"),
+		},
+		{
+			repo: leaksRepo,
+			testOpts: Options{
+				NoiseReduction: true,
+			},
 			description: "toml entropy range",
 			numLeaks:    58,
 			configPath:  path.Join(configsDir, "entropy"),

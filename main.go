@@ -77,13 +77,14 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	Threads      int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
-	SingleSearch string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
-	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	Threads        int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	Disk           bool    `long:"disk" description:"Clones repo(s) to disk"`
+	SingleSearch   string  `long:"single-search" description:"single regular expression to search for"`
+	ConfigPath     string  `long:"config" description:"path to gitleaks config"`
+	SSHKey         string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -725,6 +726,10 @@ func entropyIsHighEnough(entropy float64) bool {
 }
 
 func highEntropyLineIsALeak(line string) bool {
+	if !opts.NoiseReduction {
+		return true
+	}
+
 	for _, re := range entropyRegexes {
 		if re.FindString(line) != "" {
 			return true

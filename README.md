@@ -63,30 +63,31 @@ Usage:
   gitleaks [OPTIONS]
 
 Application Options:
-  -r, --repo=          Repo url to audit
-      --github-user=   Github user to audit
-      --github-org=    Github organization to audit
-      --github-url=    GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
-      --github-pr=     Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
-      --gitlab-user=   GitLab user ID to audit
-      --gitlab-org=    GitLab group ID to audit
-  -c, --commit=        sha of commit to stop at
-      --depth=         maximum commit depth
-      --repo-path=     Path to repo
-      --owner-path=    Path to owner directory (repos discovered)
-      --threads=       Maximum number of threads gitleaks spawns
-      --disk           Clones repo(s) to disk
-      --single-search= single regular expression to search for
-      --config=        path to gitleaks config
-      --ssh-key=       path to ssh key
-      --exclude-forks  exclude forks for organization/user audits
-  -e, --entropy=       Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)
-  -l, --log=           log level
-  -v, --verbose        Show verbose output from gitleaks audit
-      --report=        path to write report file
-      --redact         redact secrets from log messages and report
-      --version        version number
-      --sample-config  prints a sample config file
+  -r, --repo=           Repo url to audit
+      --github-user=    Github user to audit
+      --github-org=     Github organization to audit
+      --github-url=     GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
+      --github-pr=      Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
+      --gitlab-user=    GitLab user ID to audit
+      --gitlab-org=     GitLab group ID to audit
+  -c, --commit=         sha of commit to stop at
+      --depth=          maximum commit depth
+      --repo-path=      Path to repo
+      --owner-path=     Path to owner directory (repos discovered)
+      --threads=        Maximum number of threads gitleaks spawns
+      --disk            Clones repo(s) to disk
+      --single-search=  single regular expression to search for
+      --config=         path to gitleaks config
+      --ssh-key=        path to ssh key
+      --exclude-forks   exclude forks for organization/user audits
+  -e, --entropy=        Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)
+      --noise-reduction Reduce the number of finds when entropy checks are enabled
+  -l, --log=            log level
+  -v, --verbose         Show verbose output from gitleaks audit
+      --report=         path to write report file
+      --redact          redact secrets from log messages and report
+      --version         version number
+      --sample-config   prints a sample config file
 
 Help Options:
   -h, --help           Show this help message
