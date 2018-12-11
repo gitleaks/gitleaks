@@ -345,6 +345,10 @@ func run() ([]Leak, error) {
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
 func writeReport(leaks []Leak) error {
+	if len(leaks) == 0 {
+		return nil
+	}
+
 	var err error
 	log.Infof("writing report to %s", opts.Report)
 	if strings.HasSuffix(opts.Report, ".csv") {
