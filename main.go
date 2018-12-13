@@ -23,6 +23,7 @@ import (
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
+	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
@@ -30,9 +31,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/google/go-github/github"
 	"github.com/hako/durafmt"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // Leak represents a leaked secret or regex match.
@@ -575,12 +576,17 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					} else if to != nil {
 						filePath = to.Path()
 					}
+					for _, re := range whiteListFiles {
+						if re.FindString(filePath) != "" {
+							skipFile = true
+						}
+					}
 					if skipFile {
 						continue
 					}
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
-						if chunk.Type() == 1 || chunk.Type() == 2 {
+						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
 							diff := gitDiff{
 								repoName: repoName,
 								filePath: filePath,
@@ -618,12 +624,6 @@ func inspect(diff gitDiff) []Leak {
 		skipLine bool
 	)
 
-	for _, re := range whiteListFiles {
-		if re.FindString(diff.filePath) != "" {
-			return leaks
-		}
-	}
-
 	lines := strings.Split(diff.content, "\n")
 
 	for _, line := range lines {
@@ -633,34 +633,42 @@ func inspect(diff gitDiff) []Leak {
 			if match == "" {
 				continue
 			}
-
-			// if offender matches whitelist regex, ignore it
-			for _, wRe := range whiteListRegexes {
-				whitelistMatch := wRe.FindString(line)
-				if whitelistMatch != "" {
-					skipLine = true
-					break
-				}
-			}
-			if skipLine {
+			if skipLine = isLineWhitelisted(line); skipLine {
 				break
 			}
-
 			leaks = addLeak(leaks, line, match, leakType, diff)
 		}
 
-		if opts.Entropy > 0 || len(entropyRanges) != 0 {
+		if !skipLine && (opts.Entropy > 0 || len(entropyRanges) != 0) {
 			words := strings.Fields(line)
 			for _, word := range words {
 				entropy := getShannonEntropy(word)
-
-				if entropyIsHighEnough(entropy) && highEntropyLineIsALeak(line) {
-					leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
+				// Only check entropyRegexes and whiteListRegexes once per line, and only if an entropy leak type
+				// was found above, since regex checks are expensive.
+				if !entropyIsHighEnough(entropy) {
+					continue
 				}
+				// If either the line is whitelisted or the line fails the noiseReduction check (when enabled),
+				// then we can skip checking the rest of the line for high entropy words.
+				if skipLine = !highEntropyLineIsALeak(line) || isLineWhitelisted(line); skipLine {
+					break
+				}
+				leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
 			}
 		}
 	}
 	return leaks
+}
+
+// isLineWhitelisted returns true iff the line is matched by at least one of the whiteListRegexes.
+func isLineWhitelisted(line string) bool {
+	for _, wRe := range whiteListRegexes {
+		whitelistMatch := wRe.FindString(line)
+		if whitelistMatch != "" {
+			return true
+		}
+	}
+	return false
 }
 
 // addLeak is helper for func inspect() to append leaks if found during a diff check.
