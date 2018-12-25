@@ -128,6 +128,8 @@ From C-U at Home:
 
 <b>Donate</b>: https://www.cuathome.us/give/
 
+#### Speaking of Community
+Please read this https://corruptcu.com/
 
 
 
