@@ -29,6 +29,9 @@ regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
 description = "Slack token"
 regex = '''xox[baprs]-.*'''
+[[regexes]]
+description = "Strip API Key"
+regex = '''(?i)(sk|pk)_(test|live)_[0-9a-zA-Z]{10,32}'''
 
 [whitelist]
 regexes = [
