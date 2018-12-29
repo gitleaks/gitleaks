@@ -176,6 +176,7 @@ func TestRun(t *testing.T) {
 		description    string
 		expectedErrMsg string
 		whiteListRepos []string
+		whiteListFiles []*regexp.Regexp
 		numLeaks       int
 		configPath     string
 		commitPerPage  int
@@ -298,6 +299,27 @@ func TestRun(t *testing.T) {
 			expectedErrMsg: "",
 			commitPerPage:  1,
 		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/1",
+			},
+			description:    "test github pr with whitelisted files",
+			numLeaks:       0,
+			expectedErrMsg: "",
+			commitPerPage:  1,
+			whiteListFiles: []*regexp.Regexp{
+				regexp.MustCompile("main.go"),
+			},
+		},
+		{
+			testOpts: Options{
+				GithubPR: "https://github.com/gitleakstest/gronit/pull/2",
+			},
+			description:    "test github pr with commits without patch info",
+			numLeaks:       0,
+			expectedErrMsg: "",
+			commitPerPage:  1,
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -308,6 +330,11 @@ func TestRun(t *testing.T) {
 				}
 				if test.commitPerPage != 0 {
 					githubPages = test.commitPerPage
+				}
+				if test.whiteListFiles != nil {
+					whiteListFiles = test.whiteListFiles
+				} else {
+					whiteListFiles = nil
 				}
 				opts = test.testOpts
 				leaks, err := run()
@@ -567,6 +594,15 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "leaks present with entropy",
+			testOpts: Options{
+				Entropy:        4.7,
+				NoiseReduction: true,
+			},
+			numLeaks: 2,
+		},
+		{
+			repo:        leaksRepo,
 			description: "Audit until specific commit",
 			numLeaks:    2,
 			testOpts: Options{
@@ -585,6 +621,15 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "toml entropy range",
 			numLeaks:    298,
+			configPath:  path.Join(configsDir, "entropy"),
+		},
+		{
+			repo: leaksRepo,
+			testOpts: Options{
+				NoiseReduction: true,
+			},
+			description: "toml entropy range",
+			numLeaks:    58,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
