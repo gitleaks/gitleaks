@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+1.22.0
+----
+- context inclusion for redactions 
+- noise reduction for entropy signals
+
+1.21.0
+----
+- added support for cloning repositories using github api
+- auditing PRs now allows for whitelisting files
+
 1.20.0
 ----
 - adding gitlab user and group support
