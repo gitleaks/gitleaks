@@ -509,6 +509,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				if bin || err != nil {
 					return nil
 				}
+				for _, re := range whiteListFiles {
+					if re.FindString(f.Name) != "" {
+						log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+						return nil
+					}
+				}
 				content, err := f.Contents()
 				if err != nil {
 					return nil
@@ -578,7 +584,9 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					}
 					for _, re := range whiteListFiles {
 						if re.FindString(filePath) != "" {
+							log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
 							skipFile = true
+							break
 						}
 					}
 					if skipFile {
