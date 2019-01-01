@@ -51,7 +51,18 @@ func auditGithubPR() ([]Leak, error) {
 			}
 			files := commit.Files
 			for _, f := range files {
+				skipFile := false
 				if f.Patch == nil || f.Filename == nil {
+					continue
+				}
+				for _, re := range whiteListFiles {
+					if re.FindString(f.GetFilename()) != "" {
+						log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.GetFilename())
+						skipFile = true
+						break
+					}
+				}
+				if skipFile {
 					continue
 				}
 
