@@ -365,8 +365,41 @@ func writeReport(leaks []Leak) error {
 		}
 		w.Flush()
 	} else {
-		reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
-		err = ioutil.WriteFile(opts.Report, reportJSON, 0644)
+		var (
+			f       *os.File
+			encoder *json.Encoder
+		)
+		f, err := os.Create(opts.Report)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		encoder = json.NewEncoder(f)
+		encoder.SetIndent("", "\t")
+		if _, err := f.WriteString("[\n"); err != nil {
+			return err
+		}
+		for i := 0; i < len(leaks); i++ {
+			if err := encoder.Encode(leaks[i]); err != nil {
+				return err
+			}
+			// for all but the last leak, seek back and overwrite the newline appended by Encode() with comma & newline
+			if i+1 < len(leaks) {
+				if _, err := f.Seek(-1, 1); err != nil {
+					return err
+				}
+				if _, err := f.WriteString(",\n"); err != nil {
+					return err
+				}
+			}
+		}
+		if _, err := f.WriteString("]"); err != nil {
+			return err
+		}
+		if err := f.Sync(); err != nil {
+			log.Error(err)
+			return err
+		}
 	}
 	return err
 }
