@@ -566,7 +566,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					commitWg.Done()
 					<-semaphore
 					if r := recover(); r != nil {
-						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+						log.Warnf("recovering from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
 				}()
 				patch, err := c.Patch(parent)
