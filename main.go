@@ -86,6 +86,8 @@ type Options struct {
 	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
+	Fast           bool    `long:"fast" description:"Run gitleaks on fast mode. This does not include information about commits."`
+	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -437,6 +439,14 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		}
 	}
 
+	// check if target contains an external gitleaks toml
+	if opts.RepoConfig {
+		err := externalConfig(repo)
+		if err != nil {
+			return leaks, nil
+		}
+	}
+
 	// clear commit cache
 	commitMap = make(map[string]bool)
 
@@ -455,6 +465,27 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		return nil
 	})
 	return leaks, err
+}
+
+func externalConfig(repo *RepoDescriptor) error {
+	var config Config
+	wt, err := repo.repository.Worktree()
+	if err != nil {
+		return err
+	}
+	c, err := wt.Filesystem.Open("gitleaks.toml")
+	if err != nil {
+		return err
+	}
+	if _, err := toml.DecodeReader(c, &config); err != nil {
+		return fmt.Errorf("problem loading config: %v", err)
+	}
+	c.Close()
+	if err != nil {
+		return err
+	}
+	updateConfig(config)
+	return nil
 }
 
 // auditGitReference beings the audit for a git reference. This function will
@@ -566,7 +597,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					commitWg.Done()
 					<-semaphore
 					if r := recover(); r != nil {
-						log.Warnf("recovering from panic on commit %s, likely large diff causing panic", c.Hash.String())
+						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
 				}()
 				patch, err := c.Patch(parent)
@@ -900,6 +931,17 @@ func loadToml() error {
 			return err
 		}
 	}
+	return updateConfig(config)
+}
+
+// updateConfig will update a the global config values
+func updateConfig(config Config) error {
+	if len(config.Misc.Entropy) != 0 {
+		err := entropyLimits(config.Misc.Entropy)
+		if err != nil {
+			return err
+		}
+	}
 
 	for _, regex := range config.Entropy.LineRegexes {
 		entropyRegexes = append(entropyRegexes, regexp.MustCompile(regex))
@@ -927,6 +969,7 @@ func loadToml() error {
 	}
 
 	return nil
+
 }
 
 // entropyLimits hydrates entropyRanges which allows for fine tuning entropy checking
