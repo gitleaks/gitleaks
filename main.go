@@ -467,20 +467,22 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 	return leaks, err
 }
 
+// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
+// from a remote or local repo. Use the --repo-config option to trigger this.
 func externalConfig(repo *RepoDescriptor) error {
 	var config Config
 	wt, err := repo.repository.Worktree()
 	if err != nil {
 		return err
 	}
-	c, err := wt.Filesystem.Open("gitleaks.toml")
+	f, err := wt.Filesystem.Open(".gitleaks.toml")
 	if err != nil {
 		return err
 	}
-	if _, err := toml.DecodeReader(c, &config); err != nil {
+	if _, err := toml.DecodeReader(f, &config); err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
-	c.Close()
+	f.Close()
 	if err != nil {
 		return err
 	}
@@ -546,7 +548,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				}
 				for _, re := range whiteListFiles {
 					if re.FindString(f.Name) != "" {
-						log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+						log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
 						return nil
 					}
 				}
@@ -619,7 +621,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					}
 					for _, re := range whiteListFiles {
 						if re.FindString(filePath) != "" {
-							log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
+							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
 							skipFile = true
 							break
 						}
