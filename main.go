@@ -926,12 +926,6 @@ func loadToml() error {
 		}
 	}
 
-	if len(config.Misc.Entropy) != 0 {
-		err := entropyLimits(config.Misc.Entropy)
-		if err != nil {
-			return err
-		}
-	}
 	return updateConfig(config)
 }
 
