@@ -86,7 +86,6 @@ type Options struct {
 	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
-	Fast           bool    `long:"fast" description:"Run gitleaks on fast mode. This does not include information about commits."`
 	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
@@ -599,7 +598,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					commitWg.Done()
 					<-semaphore
 					if r := recover(); r != nil {
-						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+						log.Warnf("recovering from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
 				}()
 				patch, err := c.Patch(parent)
