@@ -21,9 +21,6 @@ regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
 description = "Twitter"
 regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 [[regexes]]
-description = "Telegram"
-regex = '''(?i)telegram.*['\"][0-9]{1,12}+:[0-9a-zA-Z-]{32,44}['\"]'''
-[[regexes]]
 description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
@@ -38,5 +35,5 @@ regexes = [
   # "AKIA.*EXAMPLE",
 ]
 files = [
-  "(.*?)(jpg|gif|doc|pdf|bin|go)$"
+  "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]

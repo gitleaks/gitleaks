@@ -86,6 +86,7 @@ type Options struct {
 	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
+	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -437,6 +438,14 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		}
 	}
 
+	// check if target contains an external gitleaks toml
+	if opts.RepoConfig {
+		err := externalConfig(repo)
+		if err != nil {
+			return leaks, nil
+		}
+	}
+
 	// clear commit cache
 	commitMap = make(map[string]bool)
 
@@ -455,6 +464,29 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		return nil
 	})
 	return leaks, err
+}
+
+// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
+// from a remote or local repo. Use the --repo-config option to trigger this.
+func externalConfig(repo *RepoDescriptor) error {
+	var config Config
+	wt, err := repo.repository.Worktree()
+	if err != nil {
+		return err
+	}
+	f, err := wt.Filesystem.Open(".gitleaks.toml")
+	if err != nil {
+		return err
+	}
+	if _, err := toml.DecodeReader(f, &config); err != nil {
+		return fmt.Errorf("problem loading config: %v", err)
+	}
+	f.Close()
+	if err != nil {
+		return err
+	}
+	updateConfig(config)
+	return nil
 }
 
 // auditGitReference beings the audit for a git reference. This function will
@@ -515,7 +547,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				}
 				for _, re := range whiteListFiles {
 					if re.FindString(f.Name) != "" {
-						log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+						log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
 						return nil
 					}
 				}
@@ -588,7 +620,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					}
 					for _, re := range whiteListFiles {
 						if re.FindString(filePath) != "" {
-							log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
+							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
 							skipFile = true
 							break
 						}
@@ -900,6 +932,17 @@ func loadToml() error {
 			return err
 		}
 	}
+	return updateConfig(config)
+}
+
+// updateConfig will update a the global config values
+func updateConfig(config Config) error {
+	if len(config.Misc.Entropy) != 0 {
+		err := entropyLimits(config.Misc.Entropy)
+		if err != nil {
+			return err
+		}
+	}
 
 	for _, regex := range config.Entropy.LineRegexes {
 		entropyRegexes = append(entropyRegexes, regexp.MustCompile(regex))
@@ -927,6 +970,7 @@ func loadToml() error {
 	}
 
 	return nil
+
 }
 
 // entropyLimits hydrates entropyRanges which allows for fine tuning entropy checking
