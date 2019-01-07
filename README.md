@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaks5.png" height="140" />
+  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaksnew2.gif"/>
   <p align="center">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
   </p>
