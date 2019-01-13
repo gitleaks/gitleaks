@@ -508,6 +508,14 @@ func TestAuditRepo(t *testing.T) {
 	}{
 		{
 			repo:        leaksRepo,
+			description: "pinned config",
+			numLeaks:    0,
+			testOpts: Options{
+				RepoConfig: true,
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "commit depth = 1, one leak",
 			numLeaks:    1,
 			testOpts: Options{

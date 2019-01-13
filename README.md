@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaks5.png" height="140" />
+  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaksnew2.gif"/>
   <p align="center">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
   </p>
@@ -82,6 +82,7 @@ Application Options:
       --exclude-forks   exclude forks for organization/user audits
   -e, --entropy=        Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)
       --noise-reduction Reduce the number of finds when entropy checks are enabled
+      --repo-config     Load config from target repo. Config file must be ".gitleaks.toml"
   -l, --log=            log level
   -v, --verbose         Show verbose output from gitleaks audit
       --report=         path to write report file
@@ -127,9 +128,6 @@ From C-U at Home:
 ```C-U at Home is a grassroots, 501 c (3), faith-based homelessness ministry with facilities located in the Champaign-Urbana area. Due to our not-for-profit status, all gifts made to C-U at Home (both monetary and in-kind) are tax deductible. Our ministry is funded 100% by the community and we have made it a priority not to accept any state or federal funds. We feel that through community dollars, we can stay true to our mission. While our mission statement reads, “C-U at Home engages and mobilizes our community to house and support the most vulnerable homeless on their journey of healing and restoration,” our connection with those we serve goes much deeper.```
 
 <b>Donate</b>: https://www.cuathome.us/give/
-
-#### Speaking of Community
-Please read this https://corruptcu.com/
 
 
 

@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
+
+	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -30,9 +32,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/google/go-github/github"
 	"github.com/hako/durafmt"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // Leak represents a leaked secret or regex match.
@@ -86,6 +88,7 @@ type Options struct {
 	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
+	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -135,7 +138,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.22.0"
+const version = "1.23.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -365,8 +368,41 @@ func writeReport(leaks []Leak) error {
 		}
 		w.Flush()
 	} else {
-		reportJSON, _ := json.MarshalIndent(leaks, "", "\t")
-		err = ioutil.WriteFile(opts.Report, reportJSON, 0644)
+		var (
+			f       *os.File
+			encoder *json.Encoder
+		)
+		f, err := os.Create(opts.Report)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		encoder = json.NewEncoder(f)
+		encoder.SetIndent("", "\t")
+		if _, err := f.WriteString("[\n"); err != nil {
+			return err
+		}
+		for i := 0; i < len(leaks); i++ {
+			if err := encoder.Encode(leaks[i]); err != nil {
+				return err
+			}
+			// for all but the last leak, seek back and overwrite the newline appended by Encode() with comma & newline
+			if i+1 < len(leaks) {
+				if _, err := f.Seek(-1, 1); err != nil {
+					return err
+				}
+				if _, err := f.WriteString(",\n"); err != nil {
+					return err
+				}
+			}
+		}
+		if _, err := f.WriteString("]"); err != nil {
+			return err
+		}
+		if err := f.Sync(); err != nil {
+			log.Error(err)
+			return err
+		}
 	}
 	return err
 }
@@ -438,6 +474,14 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		}
 	}
 
+	// check if target contains an external gitleaks toml
+	if opts.RepoConfig {
+		err := externalConfig(repo)
+		if err != nil {
+			return leaks, nil
+		}
+	}
+
 	// clear commit cache
 	commitMap = make(map[string]bool)
 
@@ -470,6 +514,29 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		return nil
 	})
 	return leaks, err
+}
+
+// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
+// from a remote or local repo. Use the --repo-config option to trigger this.
+func externalConfig(repo *RepoDescriptor) error {
+	var config Config
+	wt, err := repo.repository.Worktree()
+	if err != nil {
+		return err
+	}
+	f, err := wt.Filesystem.Open(".gitleaks.toml")
+	if err != nil {
+		return err
+	}
+	if _, err := toml.DecodeReader(f, &config); err != nil {
+		return fmt.Errorf("problem loading config: %v", err)
+	}
+	f.Close()
+	if err != nil {
+		return err
+	}
+	updateConfig(config)
+	return nil
 }
 
 // auditGitReference beings the audit for a git reference. This function will
@@ -528,6 +595,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				if bin || err != nil {
 					return nil
 				}
+				for _, re := range whiteListFiles {
+					if re.FindString(f.Name) != "" {
+						log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+						return nil
+					}
+				}
 				content, err := f.Contents()
 				if err != nil {
 					return nil
@@ -575,7 +648,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					commitWg.Done()
 					<-semaphore
 					if r := recover(); r != nil {
-						log.Warnf("recoverying from panic on commit %s, likely large diff causing panic", c.Hash.String())
+						log.Warnf("recovering from panic on commit %s, likely large diff causing panic", c.Hash.String())
 					}
 				}()
 				patch, err := c.Patch(parent)
@@ -595,12 +668,19 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					} else if to != nil {
 						filePath = to.Path()
 					}
+					for _, re := range whiteListFiles {
+						if re.FindString(filePath) != "" {
+							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
+							skipFile = true
+							break
+						}
+					}
 					if skipFile {
 						continue
 					}
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
-						if chunk.Type() == 1 || chunk.Type() == 2 {
+						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
 							diff := gitDiff{
 								repoName: repoName,
 								filePath: filePath,
@@ -638,12 +718,6 @@ func inspect(diff gitDiff) []Leak {
 		skipLine bool
 	)
 
-	for _, re := range whiteListFiles {
-		if re.FindString(diff.filePath) != "" {
-			return leaks
-		}
-	}
-
 	lines := strings.Split(diff.content, "\n")
 
 	for _, line := range lines {
@@ -653,34 +727,42 @@ func inspect(diff gitDiff) []Leak {
 			if match == "" {
 				continue
 			}
-
-			// if offender matches whitelist regex, ignore it
-			for _, wRe := range whiteListRegexes {
-				whitelistMatch := wRe.FindString(line)
-				if whitelistMatch != "" {
-					skipLine = true
-					break
-				}
-			}
-			if skipLine {
+			if skipLine = isLineWhitelisted(line); skipLine {
 				break
 			}
-
 			leaks = addLeak(leaks, line, match, leakType, diff)
 		}
 
-		if opts.Entropy > 0 || len(entropyRanges) != 0 {
+		if !skipLine && (opts.Entropy > 0 || len(entropyRanges) != 0) {
 			words := strings.Fields(line)
 			for _, word := range words {
 				entropy := getShannonEntropy(word)
-
-				if entropyIsHighEnough(entropy) && highEntropyLineIsALeak(line) {
-					leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
+				// Only check entropyRegexes and whiteListRegexes once per line, and only if an entropy leak type
+				// was found above, since regex checks are expensive.
+				if !entropyIsHighEnough(entropy) {
+					continue
 				}
+				// If either the line is whitelisted or the line fails the noiseReduction check (when enabled),
+				// then we can skip checking the rest of the line for high entropy words.
+				if skipLine = !highEntropyLineIsALeak(line) || isLineWhitelisted(line); skipLine {
+					break
+				}
+				leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
 			}
 		}
 	}
 	return leaks
+}
+
+// isLineWhitelisted returns true iff the line is matched by at least one of the whiteListRegexes.
+func isLineWhitelisted(line string) bool {
+	for _, wRe := range whiteListRegexes {
+		whitelistMatch := wRe.FindString(line)
+		if whitelistMatch != "" {
+			return true
+		}
+	}
+	return false
 }
 
 // addLeak is helper for func inspect() to append leaks if found during a diff check.
@@ -894,6 +976,11 @@ func loadToml() error {
 		}
 	}
 
+	return updateConfig(config)
+}
+
+// updateConfig will update a the global config values
+func updateConfig(config Config) error {
 	if len(config.Misc.Entropy) != 0 {
 		err := entropyLimits(config.Misc.Entropy)
 		if err != nil {
@@ -927,6 +1014,7 @@ func loadToml() error {
 	}
 
 	return nil
+
 }
 
 // entropyLimits hydrates entropyRanges which allows for fine tuning entropy checking
