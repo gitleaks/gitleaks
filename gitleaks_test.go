@@ -320,23 +320,6 @@ func TestRun(t *testing.T) {
 			expectedErrMsg: "",
 			commitPerPage:  1,
 		},
-		{
-			testOpts: Options{
-				Repo:   "https://github.com/gitleakstest/gronit.git",
-				Branch: "master",
-			},
-			description: "test github leaks on single branch - master",
-			numLeaks:    2,
-		},
-		{
-			testOpts: Options{
-				Repo:   "https://github.com/gitleakstest/gronit.git",
-				Branch: "nonExistingBranch",
-			},
-			description:    "test github leaks on single branch which doesn't exist",
-			numLeaks:       0,
-			expectedErrMsg: "reference not found",
-		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
