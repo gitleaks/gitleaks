@@ -170,10 +170,6 @@ func auditGithubRepos() ([]Leak, error) {
 			continue
 		}
 		leaksFromRepo, err := auditGitRepo(repo)
-		if err != nil {
-			log.Warn(err)
-			continue
-		}
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		}
