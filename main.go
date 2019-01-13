@@ -25,6 +25,7 @@ import (
 
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 
@@ -70,8 +71,9 @@ type Options struct {
 	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
 	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
 
-	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
-	Depth  int    `long:"depth" description:"maximum commit depth"`
+	Commit string                 `short:"c" long:"commit" description:"sha of commit to stop at"`
+	Depth  int                    `long:"depth" description:"maximum commit depth"`
+	Branch plumbing.ReferenceName `long:"branch" description:"scan remote branch only (default is all)"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -464,6 +466,7 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 	var (
 		err   error
 		leaks []Leak
+		refs  storer.ReferenceIter
 	)
 	for _, re := range whiteListRepos {
 		if re.FindString(repo.name) != "" {
@@ -482,7 +485,21 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 	// clear commit cache
 	commitMap = make(map[string]bool)
 
-	refs, err := repo.repository.Storer.IterReferences()
+	if opts.Branch != "" {
+		// var branchRef plumbing.ReferenceName
+		branchRef := "refs/remotes/origin/" + opts.Branch
+		log.Debugf("Auditing ref: %v", branchRef)
+		ref, err := repo.repository.Storer.Reference(branchRef)
+		if err != nil {
+			return leaks, err
+		}
+		branchLeaks := auditGitReference(repo, ref)
+		for _, leak := range branchLeaks {
+			leaks = append(leaks, leak)
+		}
+		return leaks, nil
+	}
+	refs, err = repo.repository.Storer.IterReferences()
 	if err != nil {
 		return leaks, err
 	}
