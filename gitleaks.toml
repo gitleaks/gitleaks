@@ -10,7 +10,7 @@ description = "RSA"
 regex = '''-----BEGIN RSA PRIVATE KEY-----'''
 [[regexes]]
 description = "Github"
-regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
+regex = '''(?!github.com\/)(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
 [[regexes]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
