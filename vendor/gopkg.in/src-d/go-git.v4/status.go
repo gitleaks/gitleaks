@@ -26,7 +26,7 @@ func (s Status) IsUntracked(path string) bool {
 	return ok && stat.Worktree == Untracked
 }
 
-// IsClean returns true if all the files aren't in Unmodified status.
+// IsClean returns true if all the files are in Unmodified status.
 func (s Status) IsClean() bool {
 	for _, status := range s {
 		if status.Worktree != Unmodified || status.Staging != Unmodified {

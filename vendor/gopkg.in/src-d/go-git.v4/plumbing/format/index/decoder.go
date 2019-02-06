@@ -21,7 +21,7 @@ var (
 	// ErrMalformedSignature is returned by Decode when the index header file is
 	// malformed
 	ErrMalformedSignature = errors.New("malformed index signature file")
-	// ErrInvalidChecksum is returned by Decode if the SHA1 hash missmatch with
+	// ErrInvalidChecksum is returned by Decode if the SHA1 hash mismatch with
 	// the read content
 	ErrInvalidChecksum = errors.New("invalid checksum")
 
@@ -261,6 +261,17 @@ func (d *Decoder) readExtension(idx *Index, header []byte) error {
 		if err := d.Decode(idx.ResolveUndo); err != nil {
 			return err
 		}
+	case bytes.Equal(header, endOfIndexEntryExtSignature):
+		r, err := d.getExtensionReader()
+		if err != nil {
+			return err
+		}
+
+		idx.EndOfIndexEntry = &EndOfIndexEntry{}
+		d := &endOfIndexEntryDecoder{r}
+		if err := d.Decode(idx.EndOfIndexEntry); err != nil {
+			return err
+		}
 	default:
 		return errUnknownExtension
 	}
@@ -448,4 +459,18 @@ func (d *resolveUndoDecoder) readStage(e *ResolveUndoEntry, s Stage) error {
 	}
 
 	return nil
+}
+
+type endOfIndexEntryDecoder struct {
+	r io.Reader
+}
+
+func (d *endOfIndexEntryDecoder) Decode(e *EndOfIndexEntry) error {
+	var err error
+	e.Offset, err = binary.ReadUint32(d.r)
+	if err != nil {
+		return err
+	}
+
+	return binary.Read(d.r, &e.Hash)
 }

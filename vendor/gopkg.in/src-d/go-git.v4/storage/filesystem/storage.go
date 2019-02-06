@@ -2,6 +2,7 @@
 package filesystem
 
 import (
+	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem/dotgit"
 
 	"gopkg.in/src-d/go-billy.v4"
@@ -32,38 +33,31 @@ type Options struct {
 	KeepDescriptors bool
 }
 
-// NewStorage returns a new Storage backed by a given `fs.Filesystem`
-func NewStorage(fs billy.Filesystem) (*Storage, error) {
-	return NewStorageWithOptions(fs, Options{})
+// NewStorage returns a new Storage backed by a given `fs.Filesystem` and cache.
+func NewStorage(fs billy.Filesystem, cache cache.Object) *Storage {
+	return NewStorageWithOptions(fs, cache, Options{})
 }
 
-// NewStorageWithOptions returns a new Storage backed by a given `fs.Filesystem`
-func NewStorageWithOptions(
-	fs billy.Filesystem,
-	ops Options,
-) (*Storage, error) {
+// NewStorageWithOptions returns a new Storage with extra options,
+// backed by a given `fs.Filesystem` and cache.
+func NewStorageWithOptions(fs billy.Filesystem, cache cache.Object, ops Options) *Storage {
 	dirOps := dotgit.Options{
 		ExclusiveAccess: ops.ExclusiveAccess,
 		KeepDescriptors: ops.KeepDescriptors,
 	}
-
 	dir := dotgit.NewWithOptions(fs, dirOps)
-	o, err := NewObjectStorageWithOptions(dir, ops)
-	if err != nil {
-		return nil, err
-	}
 
 	return &Storage{
 		fs:  fs,
 		dir: dir,
 
-		ObjectStorage:    o,
+		ObjectStorage:    *NewObjectStorageWithOptions(dir, cache, ops),
 		ReferenceStorage: ReferenceStorage{dir: dir},
 		IndexStorage:     IndexStorage{dir: dir},
 		ShallowStorage:   ShallowStorage{dir: dir},
 		ConfigStorage:    ConfigStorage{dir: dir},
 		ModuleStorage:    ModuleStorage{dir: dir},
-	}, nil
+	}
 }
 
 // Filesystem returns the underlying filesystem
@@ -71,6 +65,7 @@ func (s *Storage) Filesystem() billy.Filesystem {
 	return s.fs
 }
 
+// Init initializes .git directory
 func (s *Storage) Init() error {
 	return s.dir.Initialize()
 }

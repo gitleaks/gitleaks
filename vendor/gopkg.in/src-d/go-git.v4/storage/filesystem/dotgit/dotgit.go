@@ -92,8 +92,8 @@ func New(fs billy.Filesystem) *DotGit {
 	return NewWithOptions(fs, Options{})
 }
 
-// NewWithOptions creates a new DotGit and sets non default configuration
-// options. See New for complete help.
+// NewWithOptions sets non default configuration options.
+// See New for complete help.
 func NewWithOptions(fs billy.Filesystem, o Options) *DotGit {
 	return &DotGit{
 		options: o,

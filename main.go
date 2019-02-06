@@ -70,8 +70,9 @@ type Options struct {
 	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
 	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
 
-	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
-	Depth  int    `long:"depth" description:"maximum commit depth"`
+	CommitStop string `long:"commit-stop" description:"sha of commit to stop at"`
+	Commit     string `long:"commit" description:"sha of commit to investigate"`
+	Depth      int    `long:"depth" description:"maximum commit depth"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -548,7 +549,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
+		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) {
 			cIter.Close()
 			return errors.New("ErrStop")
 		}
@@ -558,8 +559,8 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			return nil
 		}
 
-		// commits w/o parent (root of git the git ref)
-		if len(c.ParentHashes) == 0 {
+		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
+		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
 			if commitMap[c.Hash.String()] {
 				return nil
 			}
@@ -605,6 +606,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			})
 			return nil
 		}
+
+		// single commit
+		if opts.Commit != "" {
+			return nil
+		}
+
 		skipCount := false
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
 			// check if we've seen this diff before
@@ -683,7 +690,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					}
 				}
 			}(c, parent)
+
+			// stop audit if we are at commitStop
+			if c.Hash.String() == opts.CommitStop {
+				cIter.Close()
+				return errors.New("ErrStop")
+			}
 			return nil
+
 		})
 		return nil
 	})

@@ -38,15 +38,14 @@ type Observer interface {
 // Parser decodes a packfile and calls any observer associated to it. Is used
 // to generate indexes.
 type Parser struct {
-	storage          storer.EncodedObjectStorer
-	scanner          *Scanner
-	count            uint32
-	oi               []*objectInfo
-	oiByHash         map[plumbing.Hash]*objectInfo
-	oiByOffset       map[int64]*objectInfo
-	hashOffset       map[plumbing.Hash]int64
-	pendingRefDeltas map[plumbing.Hash][]*objectInfo
-	checksum         plumbing.Hash
+	storage    storer.EncodedObjectStorer
+	scanner    *Scanner
+	count      uint32
+	oi         []*objectInfo
+	oiByHash   map[plumbing.Hash]*objectInfo
+	oiByOffset map[int64]*objectInfo
+	hashOffset map[plumbing.Hash]int64
+	checksum   plumbing.Hash
 
 	cache *cache.BufferLRU
 	// delta content by offset, only used if source is not seekable
@@ -78,13 +77,12 @@ func NewParserWithStorage(
 	}
 
 	return &Parser{
-		storage:          storage,
-		scanner:          scanner,
-		ob:               ob,
-		count:            0,
-		cache:            cache.NewBufferLRUDefault(),
-		pendingRefDeltas: make(map[plumbing.Hash][]*objectInfo),
-		deltas:           deltas,
+		storage: storage,
+		scanner: scanner,
+		ob:      ob,
+		count:   0,
+		cache:   cache.NewBufferLRUDefault(),
+		deltas:  deltas,
 	}, nil
 }
 
@@ -150,10 +148,6 @@ func (p *Parser) Parse() (plumbing.Hash, error) {
 		return plumbing.ZeroHash, err
 	}
 
-	if len(p.pendingRefDeltas) > 0 {
-		return plumbing.ZeroHash, ErrReferenceDeltaNotFound
-	}
-
 	if err := p.onFooter(p.checksum); err != nil {
 		return plumbing.ZeroHash, err
 	}
@@ -205,18 +199,21 @@ func (p *Parser) indexObjects() error {
 			parent.Children = append(parent.Children, ota)
 		case plumbing.REFDeltaObject:
 			delta = true
-
 			parent, ok := p.oiByHash[oh.Reference]
-			if ok {
-				ota = newDeltaObject(oh.Offset, oh.Length, t, parent)
-				parent.Children = append(parent.Children, ota)
-			} else {
-				ota = newBaseObject(oh.Offset, oh.Length, t)
-				p.pendingRefDeltas[oh.Reference] = append(
-					p.pendingRefDeltas[oh.Reference],
-					ota,
-				)
+			if !ok {
+				// can't find referenced object in this pack file
+				// this must be a "thin" pack.
+				parent = &objectInfo{ //Placeholder parent
+					SHA1:        oh.Reference,
+					ExternalRef: true, // mark as an external reference that must be resolved
+					Type:        plumbing.AnyObject,
+					DiskType:    plumbing.AnyObject,
+				}
+				p.oiByHash[oh.Reference] = parent
 			}
+			ota = newDeltaObject(oh.Offset, oh.Length, t, parent)
+			parent.Children = append(parent.Children, ota)
+
 		default:
 			ota = newBaseObject(oh.Offset, oh.Length, t)
 		}
@@ -297,16 +294,20 @@ func (p *Parser) resolveDeltas() error {
 	return nil
 }
 
-func (p *Parser) get(o *objectInfo) ([]byte, error) {
-	b, ok := p.cache.Get(o.Offset)
+func (p *Parser) get(o *objectInfo) (b []byte, err error) {
+	var ok bool
+	if !o.ExternalRef { // skip cache check for placeholder parents
+		b, ok = p.cache.Get(o.Offset)
+	}
+
 	// If it's not on the cache and is not a delta we can try to find it in the
-	// storage, if there's one.
+	// storage, if there's one. External refs must enter here.
 	if !ok && p.storage != nil && !o.Type.IsDelta() {
-		var err error
 		e, err := p.storage.EncodedObject(plumbing.AnyObject, o.SHA1)
 		if err != nil {
 			return nil, err
 		}
+		o.Type = e.Type()
 
 		r, err := e.Reader()
 		if err != nil {
@@ -323,6 +324,11 @@ func (p *Parser) get(o *objectInfo) ([]byte, error) {
 		return b, nil
 	}
 
+	if o.ExternalRef {
+		// we were not able to resolve a ref in a thin pack
+		return nil, ErrReferenceDeltaNotFound
+	}
+
 	var data []byte
 	if o.DiskType.IsDelta() {
 		base, err := p.get(o.Parent)
@@ -335,7 +341,6 @@ func (p *Parser) get(o *objectInfo) ([]byte, error) {
 			return nil, err
 		}
 	} else {
-		var err error
 		data, err = p.readData(o)
 		if err != nil {
 			return nil, err
@@ -367,14 +372,6 @@ func (p *Parser) resolveObject(
 		return nil, err
 	}
 
-	if pending, ok := p.pendingRefDeltas[o.SHA1]; ok {
-		for _, po := range pending {
-			po.Parent = o
-			o.Children = append(o.Children, po)
-		}
-		delete(p.pendingRefDeltas, o.SHA1)
-	}
-
 	if p.storage != nil {
 		obj := new(plumbing.MemoryObject)
 		obj.SetSize(o.Size())
@@ -401,11 +398,7 @@ func (p *Parser) readData(o *objectInfo) ([]byte, error) {
 		return data, nil
 	}
 
-	if _, err := p.scanner.SeekFromStart(o.Offset); err != nil {
-		return nil, err
-	}
-
-	if _, err := p.scanner.NextObjectHeader(); err != nil {
+	if _, err := p.scanner.SeekObjectHeader(o.Offset); err != nil {
 		return nil, err
 	}
 
@@ -447,10 +440,11 @@ func getSHA1(t plumbing.ObjectType, data []byte) (plumbing.Hash, error) {
 }
 
 type objectInfo struct {
-	Offset   int64
-	Length   int64
-	Type     plumbing.ObjectType
-	DiskType plumbing.ObjectType
+	Offset      int64
+	Length      int64
+	Type        plumbing.ObjectType
+	DiskType    plumbing.ObjectType
+	ExternalRef bool // indicates this is an external reference in a thin pack file
 
 	Crc32 uint32
 
