@@ -614,7 +614,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "Audit until specific commit",
 			numLeaks:    2,
 			testOpts: Options{
-				Commit: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
+				CommitStop: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
 			},
 		},
 		{

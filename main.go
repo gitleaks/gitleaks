@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -25,6 +24,7 @@ import (
 
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 
@@ -550,8 +550,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
 		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) {
-			cIter.Close()
-			return errors.New("ErrStop")
+			return storer.ErrStop
 		}
 		commitCount = commitCount + 1
 		if whiteListCommits[c.Hash.String()] {
@@ -567,7 +566,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			cMutex.Lock()
 			commitMap[c.Hash.String()] = true
 			cMutex.Unlock()
-
 			totalCommits = totalCommits + 1
 
 			fIter, err := c.Files()
@@ -691,14 +689,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				}
 			}(c, parent)
 
-			// stop audit if we are at commitStop
-			if c.Hash.String() == opts.CommitStop {
-				cIter.Close()
-				return errors.New("ErrStop")
-			}
 			return nil
-
 		})
+
+		// stop audit if we are at commitStop
+		if c.Hash.String() == opts.CommitStop {
+			return storer.ErrStop
+		}
+
 		return nil
 	})
 	commitWg.Wait()
