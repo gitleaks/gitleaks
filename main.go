@@ -72,7 +72,7 @@ type Options struct {
 
 	CommitStop string `long:"commit-stop" description:"sha of commit to stop at"`
 	Commit     string `long:"commit" description:"sha of commit to investigate"`
-	Depth      int    `long:"depth" description:"maximum commit depth"`
+	Depth      int64  `long:"depth" description:"maximum commit depth"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -509,7 +509,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		err         error
 		repoName    string
 		leaks       []Leak
-		commitCount int
+		commitCount int64
 		commitWg    sync.WaitGroup
 		mutex       = &sync.Mutex{}
 		semaphore   chan bool

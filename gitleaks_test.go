@@ -684,6 +684,7 @@ func TestAuditRepo(t *testing.T) {
 					whiteListRepos = nil
 				}
 				skip := false
+				totalCommits = 0
 				// config paths
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
@@ -695,11 +696,14 @@ func TestAuditRepo(t *testing.T) {
 				}
 				if !skip {
 					leaks, err = auditGitRepo(test.repo)
-
-					if opts.Redact {
-						g.Assert(leaks[0].Offender).Equal("REDACTED")
+					if test.testOpts.Depth != 0 {
+						g.Assert(totalCommits).Equal(test.testOpts.Depth)
+					} else {
+						if opts.Redact {
+							g.Assert(leaks[0].Offender).Equal("REDACTED")
+						}
+						g.Assert(len(leaks)).Equal(test.numLeaks)
 					}
-					g.Assert(len(leaks)).Equal(test.numLeaks)
 				}
 			})
 		})
