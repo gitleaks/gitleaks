@@ -70,7 +70,8 @@ Application Options:
       --github-pr=      Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
       --gitlab-user=    GitLab user ID to audit
       --gitlab-org=     GitLab group ID to audit
-  -c, --commit=         sha of commit to stop at
+      --commit-stop=    sha of commit to stop at
+      --commit=         sha of commit to audit
       --depth=          maximum commit depth
       --repo-path=      Path to repo
       --owner-path=     Path to owner directory (repos discovered)

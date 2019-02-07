@@ -71,7 +71,7 @@ type Options struct {
 	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
 
 	CommitStop string `long:"commit-stop" description:"sha of commit to stop at"`
-	Commit     string `long:"commit" description:"sha of commit to investigate"`
+	Commit     string `long:"commit" description:"sha of commit to audit"`
 	Depth      int64  `long:"depth" description:"maximum commit depth"`
 
 	// local target option
