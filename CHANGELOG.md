@@ -3,9 +3,9 @@ CHANGELOG
 
 1.24.0
 ----
--- `--commit` now allows users to target a specific commit to audit
--- `--commit-stop` audit all commits up to and including what is specified at `--commit-stop` 
--- Updated go-git version to 4.9.1
+- `--commit` now allows users to target a specific commit to audit
+- `--commit-stop` audit all commits up to and including what is specified at `--commit-stop` 
+- Updated go-git version to 4.9.1
 
 1.23.0
 ----
