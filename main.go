@@ -489,7 +489,6 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		return leaks, err
 	}
 	err = refs.ForEach(func(ref *plumbing.Reference) error {
-		fmt.Println(ref.Name())
 		if ref.Name().IsTag() {
 			return nil
 		}
@@ -556,7 +555,6 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			cMutex.Lock()
 			commitMap[c.Hash.String()] = true
 			cMutex.Unlock()
-			fmt.Println(c.Hash.String())
 			totalCommits = totalCommits + 1
 
 			fIter, err := c.Files()

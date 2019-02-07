@@ -562,6 +562,22 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "Audit a specific commit",
+			numLeaks:    1,
+			testOpts: Options{
+				Commit: "cb5599aeed261b2c038aa4729e2d53ca050a4988",
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "Audit a specific commit no leaks",
+			numLeaks:    0,
+			testOpts: Options{
+				Commit: "2b033e012eee364fc41b4ab7c5db1497399b8e67",
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "toml whitelist regex",
 			configPath:  path.Join(configsDir, "regex"),
 			numLeaks:    0,
