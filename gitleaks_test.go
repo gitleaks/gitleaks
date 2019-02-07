@@ -562,6 +562,22 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "Audit a specific commit",
+			numLeaks:    1,
+			testOpts: Options{
+				Commit: "cb5599aeed261b2c038aa4729e2d53ca050a4988",
+			},
+		},
+		{
+			repo:        leaksRepo,
+			description: "Audit a specific commit no leaks",
+			numLeaks:    0,
+			testOpts: Options{
+				Commit: "2b033e012eee364fc41b4ab7c5db1497399b8e67",
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "toml whitelist regex",
 			configPath:  path.Join(configsDir, "regex"),
 			numLeaks:    0,
@@ -614,7 +630,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "Audit until specific commit",
 			numLeaks:    2,
 			testOpts: Options{
-				Commit: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
+				CommitStop: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
 			},
 		},
 		{
@@ -660,6 +676,7 @@ func TestAuditRepo(t *testing.T) {
 	for _, test := range tests {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
+				auditDone = false
 				opts = test.testOpts
 				// settin da globs
 				if test.whiteListFiles != nil {
@@ -683,6 +700,7 @@ func TestAuditRepo(t *testing.T) {
 					whiteListRepos = nil
 				}
 				skip := false
+				totalCommits = 0
 				// config paths
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
@@ -694,11 +712,14 @@ func TestAuditRepo(t *testing.T) {
 				}
 				if !skip {
 					leaks, err = auditGitRepo(test.repo)
-
-					if opts.Redact {
-						g.Assert(leaks[0].Offender).Equal("REDACTED")
+					if test.testOpts.Depth != 0 {
+						g.Assert(totalCommits).Equal(test.testOpts.Depth)
+					} else {
+						if opts.Redact {
+							g.Assert(leaks[0].Offender).Equal("REDACTED")
+						}
+						g.Assert(len(leaks)).Equal(test.numLeaks)
 					}
-					g.Assert(len(leaks)).Equal(test.numLeaks)
 				}
 			})
 		})

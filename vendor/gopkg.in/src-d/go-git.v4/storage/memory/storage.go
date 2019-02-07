@@ -122,6 +122,16 @@ func (o *ObjectStorage) HasEncodedObject(h plumbing.Hash) (err error) {
 	return nil
 }
 
+func (o *ObjectStorage) EncodedObjectSize(h plumbing.Hash) (
+	size int64, err error) {
+	obj, ok := o.Objects[h]
+	if !ok {
+		return 0, plumbing.ErrObjectNotFound
+	}
+
+	return obj.Size(), nil
+}
+
 func (o *ObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash) (plumbing.EncodedObject, error) {
 	obj, ok := o.Objects[h]
 	if !ok || (plumbing.AnyObject != t && obj.Type() != t) {

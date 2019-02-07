@@ -87,6 +87,17 @@ func (t *Tree) File(path string) (*File, error) {
 	return NewFile(path, e.Mode, blob), nil
 }
 
+// Size returns the plaintext size of an object, without reading it
+// into memory.
+func (t *Tree) Size(path string) (int64, error) {
+	e, err := t.FindEntry(path)
+	if err != nil {
+		return 0, ErrEntryNotFound
+	}
+
+	return t.s.EncodedObjectSize(e.Hash)
+}
+
 // Tree returns the tree identified by the `path` argument.
 // The path is interpreted as relative to the tree receiver.
 func (t *Tree) Tree(path string) (*Tree, error) {

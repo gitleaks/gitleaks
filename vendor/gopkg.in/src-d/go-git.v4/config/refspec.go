@@ -15,7 +15,7 @@ const (
 
 var (
 	ErrRefSpecMalformedSeparator = errors.New("malformed refspec, separators are wrong")
-	ErrRefSpecMalformedWildcard  = errors.New("malformed refspec, missmatched number of wildcards")
+	ErrRefSpecMalformedWildcard  = errors.New("malformed refspec, mismatched number of wildcards")
 )
 
 // RefSpec is a mapping from local branches to remote references

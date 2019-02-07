@@ -51,7 +51,7 @@
 
 [[constraint]]
   name = "gopkg.in/src-d/go-git.v4"
-  version = "4.7.0"
+  version = "4.9.1"
 
 [prune]
   go-tests = true

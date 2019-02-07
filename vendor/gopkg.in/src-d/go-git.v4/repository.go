@@ -1,18 +1,23 @@
 package git
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	stdioutil "io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/openpgp"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/internal/revision"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/packfile"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
@@ -31,7 +36,14 @@ var (
 	// ErrBranchExists an error stating the specified branch already exists
 	ErrBranchExists = errors.New("branch already exists")
 	// ErrBranchNotFound an error stating the specified branch does not exist
-	ErrBranchNotFound            = errors.New("branch not found")
+	ErrBranchNotFound = errors.New("branch not found")
+	// ErrTagExists an error stating the specified tag already exists
+	ErrTagExists = errors.New("tag already exists")
+	// ErrTagNotFound an error stating the specified tag does not exist
+	ErrTagNotFound = errors.New("tag not found")
+	// ErrFetching is returned when the packfile could not be downloaded
+	ErrFetching = errors.New("unable to fetch packfile")
+
 	ErrInvalidReference          = errors.New("invalid reference, should be a tag or a branch")
 	ErrRepositoryNotExists       = errors.New("repository does not exist")
 	ErrRepositoryAlreadyExists   = errors.New("repository already exists")
@@ -166,15 +178,6 @@ func Open(s storage.Storer, worktree billy.Filesystem) (*Repository, error) {
 		return nil, err
 	}
 
-	cfg, err := s.Config()
-	if err != nil {
-		return nil, err
-	}
-
-	if !cfg.Core.IsBare && worktree == nil {
-		return nil, ErrWorktreeNotProvided
-	}
-
 	return newRepository(s, worktree), nil
 }
 
@@ -220,10 +223,7 @@ func PlainInit(path string, isBare bool) (*Repository, error) {
 		dot, _ = wt.Chroot(GitDirName)
 	}
 
-	s, err := filesystem.NewStorage(dot)
-	if err != nil {
-		return nil, err
-	}
+	s := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
 
 	return Init(s, wt)
 }
@@ -251,10 +251,7 @@ func PlainOpenWithOptions(path string, o *PlainOpenOptions) (*Repository, error)
 		return nil, err
 	}
 
-	s, err := filesystem.NewStorage(dot)
-	if err != nil {
-		return nil, err
-	}
+	s := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
 
 	return Open(s, wt)
 }
@@ -332,6 +329,8 @@ func dotGitFileToOSFilesystem(path string, fs billy.Filesystem) (bfs billy.Files
 // PlainClone a repository into the path with the given options, isBare defines
 // if the new repository will be bare or normal. If the path is not empty
 // ErrRepositoryAlreadyExists is returned.
+//
+// TODO(mcuadros): move isBare to CloneOptions in v5
 func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) {
 	return PlainCloneContext(context.Background(), path, isBare, o)
 }
@@ -343,13 +342,28 @@ func PlainClone(path string, isBare bool, o *CloneOptions) (*Repository, error) 
 // The provided Context must be non-nil. If the context expires before the
 // operation is complete, an error is returned. The context only affects to the
 // transport operations.
+//
+// TODO(mcuadros): move isBare to CloneOptions in v5
+// TODO(smola): refuse upfront to clone on a non-empty directory in v5, see #1027
 func PlainCloneContext(ctx context.Context, path string, isBare bool, o *CloneOptions) (*Repository, error) {
+	cleanup, cleanupParent, err := checkIfCleanupIsNeeded(path)
+	if err != nil {
+		return nil, err
+	}
+
 	r, err := PlainInit(path, isBare)
 	if err != nil {
 		return nil, err
 	}
 
-	return r, r.clone(ctx, o)
+	err = r.clone(ctx, o)
+	if err != nil && err != ErrRepositoryAlreadyExists {
+		if cleanup {
+			cleanUpDir(path, cleanupParent)
+		}
+	}
+
+	return r, err
 }
 
 func newRepository(s storage.Storer, worktree billy.Filesystem) *Repository {
@@ -358,6 +372,65 @@ func newRepository(s storage.Storer, worktree billy.Filesystem) *Repository {
 		wt:     worktree,
 		r:      make(map[string]*Remote),
 	}
+}
+
+func checkIfCleanupIsNeeded(path string) (cleanup bool, cleanParent bool, err error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, true, nil
+		}
+
+		return false, false, err
+	}
+
+	if !fi.IsDir() {
+		return false, false, fmt.Errorf("path is not a directory: %s", path)
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return false, false, err
+	}
+
+	defer ioutil.CheckClose(f, &err)
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true, false, nil
+	}
+
+	if err != nil {
+		return false, false, err
+	}
+
+	return false, false, nil
+}
+
+func cleanUpDir(path string, all bool) error {
+	if all {
+		return os.RemoveAll(path)
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	defer ioutil.CheckClose(f, &err)
+
+	names, err := f.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		if err := os.RemoveAll(filepath.Join(path, name)); err != nil {
+			return err
+		}
+	}
+
+	return err
 }
 
 // Config return the repository config
@@ -483,6 +556,139 @@ func (r *Repository) DeleteBranch(name string) error {
 	return r.Storer.SetConfig(cfg)
 }
 
+// CreateTag creates a tag. If opts is included, the tag is an annotated tag,
+// otherwise a lightweight tag is created.
+func (r *Repository) CreateTag(name string, hash plumbing.Hash, opts *CreateTagOptions) (*plumbing.Reference, error) {
+	rname := plumbing.ReferenceName(path.Join("refs", "tags", name))
+
+	_, err := r.Storer.Reference(rname)
+	switch err {
+	case nil:
+		// Tag exists, this is an error
+		return nil, ErrTagExists
+	case plumbing.ErrReferenceNotFound:
+		// Tag missing, available for creation, pass this
+	default:
+		// Some other error
+		return nil, err
+	}
+
+	var target plumbing.Hash
+	if opts != nil {
+		target, err = r.createTagObject(name, hash, opts)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		target = hash
+	}
+
+	ref := plumbing.NewHashReference(rname, target)
+	if err = r.Storer.SetReference(ref); err != nil {
+		return nil, err
+	}
+
+	return ref, nil
+}
+
+func (r *Repository) createTagObject(name string, hash plumbing.Hash, opts *CreateTagOptions) (plumbing.Hash, error) {
+	if err := opts.Validate(r, hash); err != nil {
+		return plumbing.ZeroHash, err
+	}
+
+	rawobj, err := object.GetObject(r.Storer, hash)
+	if err != nil {
+		return plumbing.ZeroHash, err
+	}
+
+	tag := &object.Tag{
+		Name:       name,
+		Tagger:     *opts.Tagger,
+		Message:    opts.Message,
+		TargetType: rawobj.Type(),
+		Target:     hash,
+	}
+
+	if opts.SignKey != nil {
+		sig, err := r.buildTagSignature(tag, opts.SignKey)
+		if err != nil {
+			return plumbing.ZeroHash, err
+		}
+
+		tag.PGPSignature = sig
+	}
+
+	obj := r.Storer.NewEncodedObject()
+	if err := tag.Encode(obj); err != nil {
+		return plumbing.ZeroHash, err
+	}
+
+	return r.Storer.SetEncodedObject(obj)
+}
+
+func (r *Repository) buildTagSignature(tag *object.Tag, signKey *openpgp.Entity) (string, error) {
+	encoded := &plumbing.MemoryObject{}
+	if err := tag.Encode(encoded); err != nil {
+		return "", err
+	}
+
+	rdr, err := encoded.Reader()
+	if err != nil {
+		return "", err
+	}
+
+	var b bytes.Buffer
+	if err := openpgp.ArmoredDetachSign(&b, signKey, rdr, nil); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
+}
+
+// Tag returns a tag from the repository.
+//
+// If you want to check to see if the tag is an annotated tag, you can call
+// TagObject on the hash of the reference in ForEach:
+//
+//   ref, err := r.Tag("v0.1.0")
+//   if err != nil {
+//     // Handle error
+//   }
+//
+//   obj, err := r.TagObject(ref.Hash())
+//   switch err {
+//   case nil:
+//     // Tag object present
+//   case plumbing.ErrObjectNotFound:
+//     // Not a tag object
+//   default:
+//     // Some other error
+//   }
+//
+func (r *Repository) Tag(name string) (*plumbing.Reference, error) {
+	ref, err := r.Reference(plumbing.ReferenceName(path.Join("refs", "tags", name)), false)
+	if err != nil {
+		if err == plumbing.ErrReferenceNotFound {
+			// Return a friendly error for this one, versus just ReferenceNotFound.
+			return nil, ErrTagNotFound
+		}
+
+		return nil, err
+	}
+
+	return ref, nil
+}
+
+// DeleteTag deletes a tag from the repository.
+func (r *Repository) DeleteTag(name string) error {
+	_, err := r.Tag(name)
+	if err != nil {
+		return err
+	}
+
+	return r.Storer.RemoveReference(plumbing.ReferenceName(path.Join("refs", "tags", name)))
+}
+
 func (r *Repository) resolveToCommitHash(h plumbing.Hash) (plumbing.Hash, error) {
 	obj, err := r.Storer.EncodedObject(plumbing.AnyObject, h)
 	if err != nil {
@@ -509,8 +715,9 @@ func (r *Repository) clone(ctx context.Context, o *CloneOptions) error {
 	}
 
 	c := &config.RemoteConfig{
-		Name: o.RemoteName,
-		URLs: []string{o.URL},
+		Name:  o.RemoteName,
+		URLs:  []string{o.URL},
+		Fetch: r.cloneRefSpec(o),
 	}
 
 	if _, err := r.CreateRemote(c); err != nil {
@@ -518,11 +725,12 @@ func (r *Repository) clone(ctx context.Context, o *CloneOptions) error {
 	}
 
 	ref, err := r.fetchAndUpdateReferences(ctx, &FetchOptions{
-		RefSpecs: r.cloneRefSpec(o, c),
-		Depth:    o.Depth,
-		Auth:     o.Auth,
-		Progress: o.Progress,
-		Tags:     o.Tags,
+		RefSpecs:   c.Fetch,
+		Depth:      o.Depth,
+		Auth:       o.Auth,
+		Progress:   o.Progress,
+		Tags:       o.Tags,
+		RemoteName: o.RemoteName,
 	}, o.ReferenceName)
 	if err != nil {
 		return err
@@ -587,21 +795,26 @@ const (
 	refspecSingleBranchHEAD = "+HEAD:refs/remotes/%s/HEAD"
 )
 
-func (r *Repository) cloneRefSpec(o *CloneOptions, c *config.RemoteConfig) []config.RefSpec {
-	var rs string
-
+func (r *Repository) cloneRefSpec(o *CloneOptions) []config.RefSpec {
 	switch {
 	case o.ReferenceName.IsTag():
-		rs = fmt.Sprintf(refspecTag, o.ReferenceName.Short())
+		return []config.RefSpec{
+			config.RefSpec(fmt.Sprintf(refspecTag, o.ReferenceName.Short())),
+		}
 	case o.SingleBranch && o.ReferenceName == plumbing.HEAD:
-		rs = fmt.Sprintf(refspecSingleBranchHEAD, c.Name)
+		return []config.RefSpec{
+			config.RefSpec(fmt.Sprintf(refspecSingleBranchHEAD, o.RemoteName)),
+			config.RefSpec(fmt.Sprintf(refspecSingleBranch, plumbing.Master.Short(), o.RemoteName)),
+		}
 	case o.SingleBranch:
-		rs = fmt.Sprintf(refspecSingleBranch, o.ReferenceName.Short(), c.Name)
+		return []config.RefSpec{
+			config.RefSpec(fmt.Sprintf(refspecSingleBranch, o.ReferenceName.Short(), o.RemoteName)),
+		}
 	default:
-		return c.Fetch
+		return []config.RefSpec{
+			config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, o.RemoteName)),
+		}
 	}
-
-	return []config.RefSpec{config.RefSpec(rs)}
 }
 
 func (r *Repository) setIsBare(isBare bool) error {
@@ -619,9 +832,7 @@ func (r *Repository) updateRemoteConfigIfNeeded(o *CloneOptions, c *config.Remot
 		return nil
 	}
 
-	c.Fetch = []config.RefSpec{config.RefSpec(fmt.Sprintf(
-		refspecSingleBranch, head.Name().Short(), c.Name,
-	))}
+	c.Fetch = r.cloneRefSpec(o)
 
 	cfg, err := r.Storer.Config()
 	if err != nil {
@@ -649,6 +860,8 @@ func (r *Repository) fetchAndUpdateReferences(
 	remoteRefs, err := remote.fetch(ctx, o)
 	if err == NoErrAlreadyUpToDate {
 		objsUpdated = false
+	} else if err == packfile.ErrEmptyPackfile {
+		return nil, ErrFetching
 	} else if err != nil {
 		return nil, err
 	}
@@ -814,8 +1027,36 @@ func (r *Repository) PushContext(ctx context.Context, o *PushOptions) error {
 
 // Log returns the commit history from the given LogOptions.
 func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
-	h := o.From
-	if o.From == plumbing.ZeroHash {
+	fn := commitIterFunc(o.Order)
+	if fn == nil {
+		return nil, fmt.Errorf("invalid Order=%v", o.Order)
+	}
+
+	var (
+		it  object.CommitIter
+		err error
+	)
+	if o.All {
+		it, err = r.logAll(fn)
+	} else {
+		it, err = r.log(o.From, fn)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if o.FileName != nil {
+		// for `git log --all` also check parent (if the next commit comes from the real parent)
+		it = r.logWithFile(*o.FileName, it, o.All)
+	}
+
+	return it, nil
+}
+
+func (r *Repository) log(from plumbing.Hash, commitIterFunc func(*object.Commit) object.CommitIter) (object.CommitIter, error) {
+	h := from
+	if from == plumbing.ZeroHash {
 		head, err := r.Head()
 		if err != nil {
 			return nil, err
@@ -828,25 +1069,68 @@ func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	switch o.Order {
-	case LogOrderDefault:
-		return object.NewCommitPreorderIter(commit, nil, nil), nil
-	case LogOrderDFS:
-		return object.NewCommitPreorderIter(commit, nil, nil), nil
-	case LogOrderDFSPost:
-		return object.NewCommitPostorderIter(commit, nil), nil
-	case LogOrderBSF:
-		return object.NewCommitIterBSF(commit, nil, nil), nil
-	case LogOrderCommitterTime:
-		return object.NewCommitIterCTime(commit, nil, nil), nil
-	}
-	return nil, fmt.Errorf("invalid Order=%v", o.Order)
+	return commitIterFunc(commit), nil
 }
 
-// Tags returns all the References from Tags. This method returns only lightweight
-// tags. Note that not all the tags are lightweight ones. To return annotated tags
-// too, you need to call TagObjects() method.
+func (r *Repository) logAll(commitIterFunc func(*object.Commit) object.CommitIter) (object.CommitIter, error) {
+	return object.NewCommitAllIter(r.Storer, commitIterFunc)
+}
+
+func (*Repository) logWithFile(fileName string, commitIter object.CommitIter, checkParent bool) object.CommitIter {
+	return object.NewCommitFileIterFromIter(fileName, commitIter, checkParent)
+}
+
+func commitIterFunc(order LogOrder) func(c *object.Commit) object.CommitIter {
+	switch order {
+	case LogOrderDefault:
+		return func(c *object.Commit) object.CommitIter {
+			return object.NewCommitPreorderIter(c, nil, nil)
+		}
+	case LogOrderDFS:
+		return func(c *object.Commit) object.CommitIter {
+			return object.NewCommitPreorderIter(c, nil, nil)
+		}
+	case LogOrderDFSPost:
+		return func(c *object.Commit) object.CommitIter {
+			return object.NewCommitPostorderIter(c, nil)
+		}
+	case LogOrderBSF:
+		return func(c *object.Commit) object.CommitIter {
+			return object.NewCommitIterBSF(c, nil, nil)
+		}
+	case LogOrderCommitterTime:
+		return func(c *object.Commit) object.CommitIter {
+			return object.NewCommitIterCTime(c, nil, nil)
+		}
+	}
+	return nil
+}
+
+// Tags returns all the tag References in a repository.
+//
+// If you want to check to see if the tag is an annotated tag, you can call
+// TagObject on the hash Reference passed in through ForEach:
+//
+//   iter, err := r.Tags()
+//   if err != nil {
+//     // Handle error
+//   }
+//
+//   if err := iter.ForEach(func (ref *plumbing.Reference) error {
+//     obj, err := r.TagObject(ref.Hash())
+//     switch err {
+//     case nil:
+//       // Tag object present
+//     case plumbing.ErrObjectNotFound:
+//       // Not a tag object
+//     default:
+//       // Some other error
+//       return err
+//     }
+//   }); err != nil {
+//     // Handle outer iterator error
+//   }
+//
 func (r *Repository) Tags() (storer.ReferenceIter, error) {
 	refIter, err := r.Storer.IterReferences()
 	if err != nil {
@@ -1005,7 +1289,18 @@ func (r *Repository) Worktree() (*Worktree, error) {
 	return &Worktree{r: r, Filesystem: r.wt}, nil
 }
 
-// ResolveRevision resolves revision to corresponding hash.
+func countTrue(vals ...bool) int {
+	sum := 0
+	for _, v := range vals {
+		if v {
+			sum++
+		}
+	}
+	return sum
+}
+
+// ResolveRevision resolves revision to corresponding hash. It will always
+// resolve to a commit hash, not a tree or annotated tag.
 //
 // Implemented resolvers : HEAD, branch, tag, heads/branch, refs/heads/branch,
 // refs/tags/tag, refs/remotes/origin/branch, refs/remotes/origin/HEAD, tilde and caret (HEAD~1, master~^, tag~2, ref/heads/master~1, ...), selection by text (HEAD^{/fix nasty bug})
@@ -1025,8 +1320,8 @@ func (r *Repository) ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, err
 		case revision.Ref:
 			revisionRef := item.(revision.Ref)
 			var ref *plumbing.Reference
-			var hashCommit, refCommit *object.Commit
-			var rErr, hErr error
+			var hashCommit, refCommit, tagCommit *object.Commit
+			var rErr, hErr, tErr error
 
 			for _, rule := range append([]string{"%s"}, plumbing.RefRevParseRules...) {
 				ref, err = storer.ResolveReference(r.Storer, plumbing.ReferenceName(fmt.Sprintf(rule, revisionRef)))
@@ -1037,24 +1332,38 @@ func (r *Repository) ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, err
 			}
 
 			if ref != nil {
+				tag, tObjErr := r.TagObject(ref.Hash())
+				if tObjErr != nil {
+					tErr = tObjErr
+				} else {
+					tagCommit, tErr = tag.Commit()
+				}
 				refCommit, rErr = r.CommitObject(ref.Hash())
 			} else {
 				rErr = plumbing.ErrReferenceNotFound
+				tErr = plumbing.ErrReferenceNotFound
 			}
 
-			isHash := plumbing.NewHash(string(revisionRef)).String() == string(revisionRef)
-
-			if isHash {
+			maybeHash := plumbing.NewHash(string(revisionRef)).String() == string(revisionRef)
+			if maybeHash {
 				hashCommit, hErr = r.CommitObject(plumbing.NewHash(string(revisionRef)))
+			} else {
+				hErr = plumbing.ErrReferenceNotFound
 			}
+
+			isTag := tErr == nil
+			isCommit := rErr == nil
+			isHash := hErr == nil
 
 			switch {
-			case rErr == nil && !isHash:
-				commit = refCommit
-			case rErr != nil && isHash && hErr == nil:
-				commit = hashCommit
-			case rErr == nil && isHash && hErr == nil:
+			case countTrue(isTag, isCommit, isHash) > 1:
 				return &plumbing.ZeroHash, fmt.Errorf(`refname "%s" is ambiguous`, revisionRef)
+			case isTag:
+				commit = tagCommit
+			case isCommit:
+				commit = refCommit
+			case isHash:
+				commit = hashCommit
 			default:
 				return &plumbing.ZeroHash, plumbing.ErrReferenceNotFound
 			}

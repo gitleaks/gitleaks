@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+1.24.0
+----
+-- `--commit` now allows users to target a specific commit to audit
+-- `--commit-stop` audit all commits up to and including what is specified at `--commit-stop` 
+-- Updated go-git version to 4.9.1
+
+1.23.0
+----
+-- `--repo-config` allows users to load configs specific to a repo target
+
 1.22.0
 ----
 - context inclusion for redactions 

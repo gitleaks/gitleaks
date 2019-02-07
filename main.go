@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -25,6 +24,7 @@ import (
 
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 
@@ -70,8 +70,9 @@ type Options struct {
 	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
 	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
 
-	Commit string `short:"c" long:"commit" description:"sha of commit to stop at"`
-	Depth  int    `long:"depth" description:"maximum commit depth"`
+	CommitStop string `long:"commit-stop" description:"sha of commit to stop at"`
+	Commit     string `long:"commit" description:"sha of commit to audit"`
+	Depth      int64  `long:"depth" description:"maximum commit depth"`
 
 	// local target option
 	RepoPath  string `long:"repo-path" description:"Path to repo"`
@@ -136,7 +137,7 @@ type entropyRange struct {
 }
 
 const defaultGithubURL = "https://api.github.com/"
-const version = "1.23.0"
+const version = "1.24.0"
 const errExit = 2
 const leakExit = 1
 const defaultConfig = `
@@ -225,6 +226,7 @@ var (
 	totalCommits      int64
 	commitMap         = make(map[string]bool)
 	cMutex            = &sync.Mutex{}
+	auditDone         bool
 )
 
 func init() {
@@ -499,29 +501,6 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 	return leaks, err
 }
 
-// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
-// from a remote or local repo. Use the --repo-config option to trigger this.
-func externalConfig(repo *RepoDescriptor) error {
-	var config Config
-	wt, err := repo.repository.Worktree()
-	if err != nil {
-		return err
-	}
-	f, err := wt.Filesystem.Open(".gitleaks.toml")
-	if err != nil {
-		return err
-	}
-	if _, err := toml.DecodeReader(f, &config); err != nil {
-		return fmt.Errorf("problem loading config: %v", err)
-	}
-	f.Close()
-	if err != nil {
-		return err
-	}
-	updateConfig(config)
-	return nil
-}
-
 // auditGitReference beings the audit for a git reference. This function will
 // traverse the git reference and audit each line of each diff.
 func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
@@ -529,11 +508,14 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		err         error
 		repoName    string
 		leaks       []Leak
-		commitCount int
+		commitCount int64
 		commitWg    sync.WaitGroup
 		mutex       = &sync.Mutex{}
 		semaphore   chan bool
 	)
+	if auditDone {
+		return nil
+	}
 	repoName = repo.name
 	if opts.Threads != 0 {
 		threads = opts.Threads
@@ -548,9 +530,11 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 		return nil
 	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || c.Hash.String() == opts.Commit || (opts.Depth != 0 && commitCount == opts.Depth) {
-			cIter.Close()
-			return errors.New("ErrStop")
+		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) || auditDone {
+			if commitCount == opts.Depth {
+				auditDone = true
+			}
+			return storer.ErrStop
 		}
 		commitCount = commitCount + 1
 		if whiteListCommits[c.Hash.String()] {
@@ -558,15 +542,19 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			return nil
 		}
 
-		// commits w/o parent (root of git the git ref)
-		if len(c.ParentHashes) == 0 {
+		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
+		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
 			if commitMap[c.Hash.String()] {
 				return nil
 			}
+
+			if opts.Commit == c.Hash.String() {
+				auditDone = true
+			}
+
 			cMutex.Lock()
 			commitMap[c.Hash.String()] = true
 			cMutex.Unlock()
-
 			totalCommits = totalCommits + 1
 
 			fIter, err := c.Files()
@@ -605,6 +593,12 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			})
 			return nil
 		}
+
+		// single commit
+		if opts.Commit != "" {
+			return nil
+		}
+
 		skipCount := false
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
 			// check if we've seen this diff before
@@ -683,8 +677,16 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					}
 				}
 			}(c, parent)
+
 			return nil
 		})
+
+		// stop audit if we are at commitStop
+		if c.Hash.String() == opts.CommitStop {
+			auditDone = true
+			return storer.ErrStop
+		}
+
 		return nil
 	})
 	commitWg.Wait()
@@ -850,6 +852,29 @@ func discoverRepos(ownerPath string) ([]*RepoDescriptor, error) {
 		}
 	}
 	return repos, err
+}
+
+// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
+// from a remote or local repo. Use the --repo-config option to trigger this.
+func externalConfig(repo *RepoDescriptor) error {
+	var config Config
+	wt, err := repo.repository.Worktree()
+	if err != nil {
+		return err
+	}
+	f, err := wt.Filesystem.Open(".gitleaks.toml")
+	if err != nil {
+		return err
+	}
+	if _, err := toml.DecodeReader(f, &config); err != nil {
+		return fmt.Errorf("problem loading config: %v", err)
+	}
+	f.Close()
+	if err != nil {
+		return err
+	}
+	updateConfig(config)
+	return nil
 }
 
 // setLogLevel sets log level for gitleaks. Default is Warning

@@ -21,6 +21,16 @@ var (
 	ErrZLib = NewError("zlib reading error")
 )
 
+// When reading small objects from packfile it is beneficial to do so at
+// once to exploit the buffered I/O. In many cases the objects are so small
+// that they were already loaded to memory when the object header was
+// loaded from the packfile. Wrapping in FSObject would cause this buffered
+// data to be thrown away and then re-read later, with the additional
+// seeking causing reloads from disk. Objects smaller than this threshold
+// are now always read into memory and stored in cache instead of being
+// wrapped in FSObject.
+const smallObjectThreshold = 16 * 1024
+
 // Packfile allows retrieving information from inside a packfile.
 type Packfile struct {
 	idxfile.Index
@@ -79,77 +89,37 @@ func (p *Packfile) GetByOffset(o int64) (plumbing.EncodedObject, error) {
 		}
 	}
 
+	return p.objectAtOffset(o)
+}
+
+// GetSizeByOffset retrieves the size of the encoded object from the
+// packfile with the given offset.
+func (p *Packfile) GetSizeByOffset(o int64) (size int64, err error) {
 	if _, err := p.s.SeekFromStart(o); err != nil {
 		if err == io.EOF || isInvalid(err) {
-			return nil, plumbing.ErrObjectNotFound
+			return 0, plumbing.ErrObjectNotFound
 		}
 
-		return nil, err
+		return 0, err
 	}
 
-	return p.nextObject()
+	h, err := p.nextObjectHeader()
+	if err != nil {
+		return 0, err
+	}
+	return h.Length, nil
+}
+
+func (p *Packfile) objectHeaderAtOffset(offset int64) (*ObjectHeader, error) {
+	h, err := p.s.SeekObjectHeader(offset)
+	p.s.pendingObject = nil
+	return h, err
 }
 
 func (p *Packfile) nextObjectHeader() (*ObjectHeader, error) {
 	h, err := p.s.NextObjectHeader()
 	p.s.pendingObject = nil
 	return h, err
-}
-
-func (p *Packfile) getObjectData(
-	h *ObjectHeader,
-) (typ plumbing.ObjectType, size int64, err error) {
-	switch h.Type {
-	case plumbing.CommitObject, plumbing.TreeObject, plumbing.BlobObject, plumbing.TagObject:
-		typ = h.Type
-		size = h.Length
-	case plumbing.REFDeltaObject, plumbing.OFSDeltaObject:
-		buf := bufPool.Get().(*bytes.Buffer)
-		buf.Reset()
-		defer bufPool.Put(buf)
-
-		_, _, err = p.s.NextObject(buf)
-		if err != nil {
-			return
-		}
-
-		delta := buf.Bytes()
-		_, delta = decodeLEB128(delta) // skip src size
-		sz, _ := decodeLEB128(delta)
-		size = int64(sz)
-
-		var offset int64
-		if h.Type == plumbing.REFDeltaObject {
-			offset, err = p.FindOffset(h.Reference)
-			if err != nil {
-				return
-			}
-		} else {
-			offset = h.OffsetReference
-		}
-
-		if baseType, ok := p.offsetToType[offset]; ok {
-			typ = baseType
-		} else {
-			if _, err = p.s.SeekFromStart(offset); err != nil {
-				return
-			}
-
-			h, err = p.nextObjectHeader()
-			if err != nil {
-				return
-			}
-
-			typ, _, err = p.getObjectData(h)
-			if err != nil {
-				return
-			}
-		}
-	default:
-		err = ErrInvalidObject.AddDetails("type %q", h.Type)
-	}
-
-	return
 }
 
 func (p *Packfile) getObjectSize(h *ObjectHeader) (int64, error) {
@@ -192,11 +162,7 @@ func (p *Packfile) getObjectType(h *ObjectHeader) (typ plumbing.ObjectType, err 
 		if baseType, ok := p.offsetToType[offset]; ok {
 			typ = baseType
 		} else {
-			if _, err = p.s.SeekFromStart(offset); err != nil {
-				return
-			}
-
-			h, err = p.nextObjectHeader()
+			h, err = p.objectHeaderAtOffset(offset)
 			if err != nil {
 				return
 			}
@@ -213,8 +179,8 @@ func (p *Packfile) getObjectType(h *ObjectHeader) (typ plumbing.ObjectType, err 
 	return
 }
 
-func (p *Packfile) nextObject() (plumbing.EncodedObject, error) {
-	h, err := p.nextObjectHeader()
+func (p *Packfile) objectAtOffset(offset int64) (plumbing.EncodedObject, error) {
+	h, err := p.objectHeaderAtOffset(offset)
 	if err != nil {
 		if err == io.EOF || isInvalid(err) {
 			return nil, plumbing.ErrObjectNotFound
@@ -225,6 +191,13 @@ func (p *Packfile) nextObject() (plumbing.EncodedObject, error) {
 	// If we have no filesystem, we will return a MemoryObject instead
 	// of an FSObject.
 	if p.fs == nil {
+		return p.getNextObject(h)
+	}
+
+	// If the object is not a delta and it's small enough then read it
+	// completely into memory now since it is already read from disk
+	// into buffer anyway.
+	if h.Length <= smallObjectThreshold && h.Type != plumbing.OFSDeltaObject && h.Type != plumbing.REFDeltaObject {
 		return p.getNextObject(h)
 	}
 
@@ -271,11 +244,7 @@ func (p *Packfile) getObjectContent(offset int64) (io.ReadCloser, error) {
 		}
 	}
 
-	if _, err := p.s.SeekFromStart(offset); err != nil {
-		return nil, err
-	}
-
-	h, err := p.nextObjectHeader()
+	h, err := p.objectHeaderAtOffset(offset)
 	if err != nil {
 		return nil, err
 	}
@@ -367,8 +336,6 @@ func (p *Packfile) fillOFSDeltaObjectContent(obj plumbing.EncodedObject, offset 
 		if err != nil {
 			return err
 		}
-
-		p.cachePut(base)
 	}
 
 	obj.SetType(base.Type())
