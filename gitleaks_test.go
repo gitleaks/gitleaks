@@ -660,6 +660,7 @@ func TestAuditRepo(t *testing.T) {
 	for _, test := range tests {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
+				auditDone = false
 				opts = test.testOpts
 				// settin da globs
 				if test.whiteListFiles != nil {
