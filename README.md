@@ -124,11 +124,10 @@ The code return codes are:
 ### Give Thanks
 If using gitleaks has made you job easier consider donating to an organization, C-U at Home, that does vital work for those who most need it in the community of Champaign-Urbana, IL (my home).
 
-From C-U at Home:
+Donate: https://www.cuathome.us/give/
 
-```C-U at Home is a grassroots, 501 c (3), faith-based homelessness ministry with facilities located in the Champaign-Urbana area. Due to our not-for-profit status, all gifts made to C-U at Home (both monetary and in-kind) are tax deductible. Our ministry is funded 100% by the community and we have made it a priority not to accept any state or federal funds. We feel that through community dollars, we can stay true to our mission. While our mission statement reads, “C-U at Home engages and mobilizes our community to house and support the most vulnerable homeless on their journey of healing and restoration,” our connection with those we serve goes much deeper.```
-
-<b>Donate</b>: https://www.cuathome.us/give/
+Or buy me a coffee
+https://cash.me/$zricethezav
 
 
 
