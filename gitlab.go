@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	"gopkg.in/src-d/go-git.v4"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -126,6 +127,9 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		repo *git.Repository
 		err  error
 	)
+
+	gitLabToken := os.Getenv("GITLAB_TOKEN")
+
 	if opts.ExcludeForks && p.ForkedFromProject != nil {
 		return nil, fmt.Errorf("skipping %s, excluding forks", p.Name)
 	}
@@ -140,9 +144,14 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		URL: p.HTTPURLToRepo,
 	}
 
-	if sshAuth != nil {
+	if sshAuth != nil && gitLabToken == "" {
 		opt.URL = p.SSHURLToRepo
 		opt.Auth = sshAuth
+	} else if gitLabToken != "" {
+		opt.Auth = &gitHttp.BasicAuth {
+			Username: "fakeUsername", // yes, this can be anything except an empty string
+			Password: gitLabToken,
+		}
 	}
 
 	log.Infof("cloning: %s", p.Name)
