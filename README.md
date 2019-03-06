@@ -1,12 +1,11 @@
 Gitleaks
 --------
-<p align="center">
+<p align="left">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
   </p>
-Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git source code repositories.
+Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git source code repositories. As part of it's core functionality, it provides;
 
-As part of it's core functionality, it provides;
-* Github support including support for bulk organization and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
+* Github and Gitlab support including support for bulk organization and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
 * Support for private repository scans, and repositories that require key based authentication
 * Output in CSV and JSON formats for consumption in other reporting tools and frameworks
 * Externalised configuration for environment specific customisation including regex rules
