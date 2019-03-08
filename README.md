@@ -1,26 +1,21 @@
-<p align="center">
-  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleaksnew1.gif"/>
-  <p align="center">
+Gitleaks
+--------
+<p align="left">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
   </p>
-</p>
+Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git source code repositories. As part of it's core functionality, it provides;
 
-## Audit git repos for secrets
-
-Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git source code repositories.
-
-As part of it's core functionality, it provides;
-* Github support including support for bulk organisation and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
+* Github and Gitlab support including support for bulk organization and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
 * Support for private repository scans, and repositories that require key based authentication
 * Output in CSV and JSON formats for consumption in other reporting tools and frameworks
 * Externalised configuration for environment specific customisation including regex rules
-* Customisable repository name, file type, commit ID, branchname and regex whitelisting to reduce false positives
+* Customizable repository name, file type, commit ID, branchname and regex whitelisting to reduce false positives
 * High performance through the use of src-d's [go-git](https://github.com/src-d/go-git) framework
 
 
 It has been sucessfully used in a number of different scenarios, including;
 * Adhoc scans of local and remote repositories by filesystem path or clone URL
-* Automated scans of github users and organisations (Both public and enterprise platforms)
+* Automated scans of github users and organizations (Both public and enterprise platforms)
 * As part of a CICD workflow to identify secrets before they make it deeper into your codebase
 * As part of a wider secrets auditing automation capability for git data in large environments
 
