@@ -148,7 +148,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		opt.URL = p.SSHURLToRepo
 		opt.Auth = sshAuth
 	} else if gitLabToken != "" {
-		opt.Auth = &gitHttp.BasicAuth {
+		opt.Auth = &gitHttp.BasicAuth{
 			Username: "fakeUsername", // yes, this can be anything except an empty string
 			Password: gitLabToken,
 		}

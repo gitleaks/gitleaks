@@ -1,5 +1,8 @@
 CHANGELOG
 =========
+x.xx.x
+---
+- uses the `GITLAB_TOKEN` to clone GitLab repos.
 
 1.24.0
 ----
