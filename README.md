@@ -126,8 +126,4 @@ If using gitleaks has made you job easier consider donating to an organization, 
 
 Donate: https://www.cuathome.us/give/
 
-Or buy me a coffee
-https://cash.me/$zricethezav
-
-
 
