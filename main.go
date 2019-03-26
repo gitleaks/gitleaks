@@ -6,34 +6,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
-	"net"
-	"net/url"
 	"os"
-	"os/user"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
+	"github.com/google/go-github/github"
+	"github.com/hako/durafmt"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-git.v4"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
-
-	"github.com/BurntSushi/toml"
-	"github.com/google/go-github/github"
-	"github.com/hako/durafmt"
-	"github.com/jessevdk/go-flags"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 // Leak represents a leaked secret or regex match.
@@ -58,67 +48,6 @@ type RepoDescriptor struct {
 	err        error
 }
 
-// Options for gitleaks
-type Options struct {
-	// remote target options
-	Repo       string `short:"r" long:"repo" description:"Repo url to audit"`
-	GithubUser string `long:"github-user" description:"Github user to audit"`
-	GithubOrg  string `long:"github-org" description:"Github organization to audit"`
-	GithubURL  string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
-	GithubPR   string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
-
-	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
-	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
-
-	CommitStop string `long:"commit-stop" description:"sha of commit to stop at"`
-	Commit     string `long:"commit" description:"sha of commit to audit"`
-	Depth      int64  `long:"depth" description:"maximum commit depth"`
-
-	// local target option
-	RepoPath  string `long:"repo-path" description:"Path to repo"`
-	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-
-	// Process options
-	Threads        int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	Disk           bool    `long:"disk" description:"Clones repo(s) to disk"`
-	SingleSearch   string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath     string  `long:"config" description:"path to gitleaks config"`
-	SSHKey         string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
-	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
-	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
-	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
-
-	// Output options
-	Log          string `short:"l" long:"log" description:"log level"`
-	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report       string `long:"report" description:"path to write report file. Needs to be csv or json"`
-	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
-	Version      bool   `long:"version" description:"version number"`
-	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
-}
-
-// Config struct for regexes matching and whitelisting
-type Config struct {
-	Regexes []struct {
-		Description string
-		Regex       string
-	}
-	Entropy struct {
-		LineRegexes []string
-	}
-	Whitelist struct {
-		Files   []string
-		Regexes []string
-		Commits []string
-		Repos   []string
-	}
-	Misc struct {
-		Entropy []string
-	}
-}
-
 type gitDiff struct {
 	content      string
 	commit       *object.Commit
@@ -131,135 +60,40 @@ type gitDiff struct {
 	date         time.Time
 }
 
-type entropyRange struct {
-	v1 float64
-	v2 float64
-}
-
 const defaultGithubURL = "https://api.github.com/"
 const version = "1.24.0"
 const errExit = 2
 const leakExit = 1
-const defaultConfig = `
-# This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
-# The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
-# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
-# configurations from that path. Gitleaks does not whitelist anything by default.
-
-title = "gitleaks config"
-# add regexes to the regex table
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-[[regexes]]
-description = "PKCS8"
-regex = '''-----BEGIN PRIVATE KEY-----'''
-[[regexes]]
-description = "RSA"
-regex = '''-----BEGIN RSA PRIVATE KEY-----'''
-[[regexes]]
-description = "SSH"
-regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-[[regexes]]
-description = "PGP"
-regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
-[[regexes]]
-description = "Facebook"
-regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
-[[regexes]]
-description = "Twitter"
-regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
-[[regexes]]
-description = "Github"
-regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
-[[regexes]]
-description = "Slack"
-regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
-
-[entropy]
-lineregexes = [
-	"api",
-	"key",
-	"signature",
-	"secret",
-	"password",
-	"pass",
-	"pwd",
-	"token",
-	"curl",
-	"wget",
-	"https?",
-]
-
-[whitelist]
-files = [
-  "(.*?)(jpg|gif|doc|pdf|bin)$"
-]
-#commits = [
-#  "BADHA5H1",
-#  "BADHA5H2",
-#]
-#repos = [
-#	"mygoodrepo"
-#]
-[misc]
-#entropy = [
-#	"3.3-4.30"
-#	"6.0-8.0
-#]
-`
 
 var (
-	opts              Options
-	regexes           map[string]*regexp.Regexp
+	opts              *Options
 	singleSearchRegex *regexp.Regexp
-	whiteListRegexes  []*regexp.Regexp
-	whiteListFiles    []*regexp.Regexp
-	whiteListCommits  map[string]bool
-	whiteListRepos    []*regexp.Regexp
-	entropyRanges     []entropyRange
-	entropyRegexes    []*regexp.Regexp
-	fileDiffRegex     *regexp.Regexp
-	sshAuth           *ssh.PublicKeys
 	dir               string
 	threads           int
 	totalCommits      int64
 	commitMap         = make(map[string]bool)
 	cMutex            = &sync.Mutex{}
 	auditDone         bool
+	config            *Config
 )
 
 func init() {
 	log.SetOutput(os.Stdout)
 	// threads = runtime.GOMAXPROCS(0) / 2
 	threads = 1
-	regexes = make(map[string]*regexp.Regexp)
-	whiteListCommits = make(map[string]bool)
 }
 
 func main() {
-	parser := flags.NewParser(&opts, flags.Default)
-	_, err := parser.Parse()
-
+	var err error
+	opts, err = setupOpts()
 	if err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			os.Exit(0)
-		}
+		log.Fatal(err)
+	}
+	config, err = newConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if len(os.Args) == 1 {
-		parser.WriteHelp(os.Stdout)
-		os.Exit(0)
-	}
-
-	if opts.Version {
-		fmt.Println(version)
-		os.Exit(0)
-	}
-	if opts.SampleConfig {
-		fmt.Println(defaultConfig)
-		os.Exit(0)
-	}
 	now := time.Now()
 	leaks, err := run()
 	if err != nil {
@@ -270,9 +104,11 @@ func main() {
 		log.Error(err)
 		os.Exit(errExit)
 	}
+
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
+
 	if len(leaks) != 0 {
 		log.Warnf("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
 		os.Exit(leakExit)
@@ -283,20 +119,10 @@ func main() {
 
 // run parses options and kicks off the audit
 func run() ([]Leak, error) {
-	var leaks []Leak
-	setLogs()
-	err := optsGuard()
-	if err != nil {
-		return nil, err
-	}
-	err = loadToml()
-	if err != nil {
-		return nil, err
-	}
-	sshAuth, err = getSSHAuth()
-	if err != nil {
-		return leaks, err
-	}
+	var (
+		leaks []Leak
+		err   error
+	)
 
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
@@ -306,6 +132,7 @@ func run() ([]Leak, error) {
 			return nil, err
 		}
 	}
+	fmt.Println(opts)
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
@@ -413,37 +240,43 @@ func cloneRepo() (*RepoDescriptor, error) {
 		err  error
 		repo *git.Repository
 	)
-	// check if whitelist
-	for _, re := range whiteListRepos {
+	// check if repo is whitelisted
+	for _, re := range config.WhiteList.repos {
 		if re.FindString(opts.Repo) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", opts.Repo)
 		}
 	}
+
+	// check if cloning to disk
 	if opts.Disk {
-		log.Infof("cloning %s", opts.Repo)
+		log.Infof("cloning %s to disk", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if strings.HasPrefix(opts.Repo, "git") {
+			// private
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-				Auth:     sshAuth,
+				Auth:     config.sshAuth,
 			})
 		} else {
+			// non-private
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			})
 		}
 	} else if opts.RepoPath != "" {
+		// local repo
 		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(opts.RepoPath)
 	} else {
+		// cloning to memory
 		log.Infof("cloning %s", opts.Repo)
 		if strings.HasPrefix(opts.Repo, "git") {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-				Auth:     sshAuth,
+				Auth:     config.sshAuth,
 			})
 		} else {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
@@ -467,7 +300,7 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 		err   error
 		leaks []Leak
 	)
-	for _, re := range whiteListRepos {
+	for _, re := range config.WhiteList.repos {
 		if re.FindString(repo.name) != "" {
 			return leaks, fmt.Errorf("skipping %s, whitelisted", repo.name)
 		}
@@ -475,7 +308,7 @@ func auditGitRepo(repo *RepoDescriptor) ([]Leak, error) {
 
 	// check if target contains an external gitleaks toml
 	if opts.RepoConfig {
-		err := externalConfig(repo)
+		err := config.updateFromRepo(repo)
 		if err != nil {
 			return leaks, nil
 		}
@@ -537,7 +370,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 			return storer.ErrStop
 		}
 		commitCount = commitCount + 1
-		if whiteListCommits[c.Hash.String()] {
+		if config.WhiteList.commits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
@@ -566,7 +399,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 				if bin || err != nil {
 					return nil
 				}
-				for _, re := range whiteListFiles {
+				for _, re := range config.WhiteList.files {
 					if re.FindString(f.Name) != "" {
 						log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
 						return nil
@@ -645,7 +478,7 @@ func auditGitReference(repo *RepoDescriptor, ref *plumbing.Reference) []Leak {
 					} else if to != nil {
 						filePath = to.Path()
 					}
-					for _, re := range whiteListFiles {
+					for _, re := range config.WhiteList.files {
 						if re.FindString(filePath) != "" {
 							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
 							skipFile = true
@@ -707,18 +540,18 @@ func inspect(diff gitDiff) []Leak {
 
 	for _, line := range lines {
 		skipLine = false
-		for leakType, re := range regexes {
-			match := re.FindString(line)
+		for _, re := range config.Regexes {
+			match := re.regex.FindString(line)
 			if match == "" {
 				continue
 			}
 			if skipLine = isLineWhitelisted(line); skipLine {
 				break
 			}
-			leaks = addLeak(leaks, line, match, leakType, diff)
+			leaks = addLeak(leaks, line, match, re.description, diff)
 		}
 
-		if !skipLine && (opts.Entropy > 0 || len(entropyRanges) != 0) {
+		if !skipLine && (opts.Entropy > 0 || len(config.Entropy.entropyRanges) != 0) {
 			words := strings.Fields(line)
 			for _, word := range words {
 				entropy := getShannonEntropy(word)
@@ -741,7 +574,7 @@ func inspect(diff gitDiff) []Leak {
 
 // isLineWhitelisted returns true iff the line is matched by at least one of the whiteListRegexes.
 func isLineWhitelisted(line string) bool {
-	for _, wRe := range whiteListRegexes {
+	for _, wRe := range config.WhiteList.regexes {
 		whitelistMatch := wRe.FindString(line)
 		if whitelistMatch != "" {
 			return true
@@ -776,56 +609,6 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 	return leaks
 }
 
-// getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
-func getShannonEntropy(data string) (entropy float64) {
-	if data == "" {
-		return 0
-	}
-
-	charCounts := make(map[rune]int)
-	for _, char := range data {
-		charCounts[char]++
-	}
-
-	invLength := 1.0 / float64(len(data))
-	for _, count := range charCounts {
-		freq := float64(count) * invLength
-		entropy -= freq * math.Log2(freq)
-	}
-
-	return entropy
-}
-
-func entropyIsHighEnough(entropy float64) bool {
-	if entropy >= opts.Entropy && len(entropyRanges) == 0 {
-		return true
-	}
-
-	if len(entropyRanges) != 0 {
-		for _, eR := range entropyRanges {
-			if entropy > eR.v1 && entropy < eR.v2 {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-func highEntropyLineIsALeak(line string) bool {
-	if !opts.NoiseReduction {
-		return true
-	}
-
-	for _, re := range entropyRegexes {
-		if re.FindString(line) != "" {
-			return true
-		}
-	}
-
-	return false
-}
-
 // discoverRepos walks all the children of `path`. If a child directory
 // contain a .git file then that repo will be added to the list of repos returned
 func discoverRepos(ownerPath string) ([]*RepoDescriptor, error) {
@@ -852,232 +635,6 @@ func discoverRepos(ownerPath string) ([]*RepoDescriptor, error) {
 		}
 	}
 	return repos, err
-}
-
-// externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
-// from a remote or local repo. Use the --repo-config option to trigger this.
-func externalConfig(repo *RepoDescriptor) error {
-	var config Config
-	wt, err := repo.repository.Worktree()
-	if err != nil {
-		return err
-	}
-	f, err := wt.Filesystem.Open(".gitleaks.toml")
-	if err != nil {
-		return err
-	}
-	if _, err := toml.DecodeReader(f, &config); err != nil {
-		return fmt.Errorf("problem loading config: %v", err)
-	}
-	f.Close()
-	if err != nil {
-		return err
-	}
-	updateConfig(config)
-	return nil
-}
-
-// setLogLevel sets log level for gitleaks. Default is Warning
-func setLogs() {
-	switch opts.Log {
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	default:
-		log.SetLevel(log.InfoLevel)
-	}
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-	})
-}
-
-// optsGuard prevents invalid options
-func optsGuard() error {
-	var err error
-	if opts.GithubOrg != "" && opts.GithubUser != "" {
-		return fmt.Errorf("github user and organization set")
-	} else if opts.GithubOrg != "" && opts.OwnerPath != "" {
-		return fmt.Errorf("github organization set and local owner path")
-	} else if opts.GithubUser != "" && opts.OwnerPath != "" {
-		return fmt.Errorf("github user set and local owner path")
-	}
-
-	if opts.Threads > runtime.GOMAXPROCS(0) {
-		return fmt.Errorf("%d available threads", runtime.GOMAXPROCS(0))
-	}
-
-	// do the URL Parse and error checking here, so we can skip it later
-	// empty string is OK, it will default to the public github URL.
-	if opts.GithubURL != "" && opts.GithubURL != defaultGithubURL {
-		if !strings.HasSuffix(opts.GithubURL, "/") {
-			opts.GithubURL += "/"
-		}
-		ghURL, err := url.Parse(opts.GithubURL)
-		if err != nil {
-			return err
-		}
-		tcpPort := "443"
-		if ghURL.Scheme == "http" {
-			tcpPort = "80"
-		}
-		timeout := time.Duration(1 * time.Second)
-		_, err = net.DialTimeout("tcp", ghURL.Host+":"+tcpPort, timeout)
-		if err != nil {
-			return fmt.Errorf("%s unreachable, error: %s", ghURL.Host, err)
-		}
-	}
-
-	if opts.SingleSearch != "" {
-		singleSearchRegex, err = regexp.Compile(opts.SingleSearch)
-		if err != nil {
-			return fmt.Errorf("unable to compile regex: %s, %v", opts.SingleSearch, err)
-		}
-	}
-
-	if opts.Entropy > 8 {
-		return fmt.Errorf("The maximum level of entropy is 8")
-	}
-	if opts.Report != "" {
-		if !strings.HasSuffix(opts.Report, ".json") && !strings.HasSuffix(opts.Report, ".csv") {
-			return fmt.Errorf("Report should be a .json or .csv file")
-		}
-		dirPath := filepath.Dir(opts.Report)
-		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-			return fmt.Errorf("%s does not exist", dirPath)
-		}
-	}
-
-	return nil
-}
-
-// loadToml loads of the toml config containing regexes and whitelists.
-// This function will first look if the configPath is set and load the config
-// from that file. Otherwise will then look for the path set by the GITHLEAKS_CONIFG
-// env var. If that is not set, then gitleaks will continue with the default configs
-// specified by the const var at the top `defaultConfig`
-func loadToml() error {
-	var (
-		config     Config
-		configPath string
-	)
-	if opts.ConfigPath != "" {
-		configPath = opts.ConfigPath
-		_, err := os.Stat(configPath)
-		if err != nil {
-			return fmt.Errorf("no gitleaks config at %s", configPath)
-		}
-	} else {
-		configPath = os.Getenv("GITLEAKS_CONFIG")
-	}
-
-	if configPath != "" {
-		if _, err := toml.DecodeFile(configPath, &config); err != nil {
-			return fmt.Errorf("problem loading config: %v", err)
-		}
-	} else {
-		_, err := toml.Decode(defaultConfig, &config)
-		if err != nil {
-			return fmt.Errorf("problem loading default config: %v", err)
-		}
-	}
-
-	return updateConfig(config)
-}
-
-// updateConfig will update a the global config values
-func updateConfig(config Config) error {
-	if len(config.Misc.Entropy) != 0 {
-		err := entropyLimits(config.Misc.Entropy)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, regex := range config.Entropy.LineRegexes {
-		entropyRegexes = append(entropyRegexes, regexp.MustCompile(regex))
-	}
-
-	if singleSearchRegex != nil {
-		regexes["singleSearch"] = singleSearchRegex
-	} else {
-		for _, regex := range config.Regexes {
-			regexes[regex.Description] = regexp.MustCompile(regex.Regex)
-		}
-	}
-	whiteListCommits = make(map[string]bool)
-	for _, commit := range config.Whitelist.Commits {
-		whiteListCommits[commit] = true
-	}
-	for _, regex := range config.Whitelist.Files {
-		whiteListFiles = append(whiteListFiles, regexp.MustCompile(regex))
-	}
-	for _, regex := range config.Whitelist.Regexes {
-		whiteListRegexes = append(whiteListRegexes, regexp.MustCompile(regex))
-	}
-	for _, regex := range config.Whitelist.Repos {
-		whiteListRepos = append(whiteListRepos, regexp.MustCompile(regex))
-	}
-
-	return nil
-
-}
-
-// entropyLimits hydrates entropyRanges which allows for fine tuning entropy checking
-func entropyLimits(entropyLimitStr []string) error {
-	for _, span := range entropyLimitStr {
-		split := strings.Split(span, "-")
-		v1, err := strconv.ParseFloat(split[0], 64)
-		if err != nil {
-			return err
-		}
-		v2, err := strconv.ParseFloat(split[1], 64)
-		if err != nil {
-			return err
-		}
-		if v1 > v2 {
-			return fmt.Errorf("entropy range must be ascending")
-		}
-		r := entropyRange{
-			v1: v1,
-			v2: v2,
-		}
-		if r.v1 > 8.0 || r.v1 < 0.0 || r.v2 > 8.0 || r.v2 < 0.0 {
-			return fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0")
-		}
-		entropyRanges = append(entropyRanges, r)
-	}
-	return nil
-}
-
-// getSSHAuth return an ssh auth use by go-git to clone repos behind authentication.
-// If --ssh-key is set then it will attempt to load the key from that path. If not,
-// gitleaks will use the default $HOME/.ssh/id_rsa key
-func getSSHAuth() (*ssh.PublicKeys, error) {
-	var (
-		sshKeyPath string
-	)
-	if opts.SSHKey != "" {
-		sshKeyPath = opts.SSHKey
-	} else {
-		// try grabbing default
-		c, err := user.Current()
-		if err != nil {
-			return nil, nil
-		}
-		sshKeyPath = fmt.Sprintf("%s/.ssh/id_rsa", c.HomeDir)
-	}
-	sshAuth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, "")
-	if err != nil {
-		if strings.HasPrefix(opts.Repo, "git") {
-			// if you are attempting to clone a git repo via ssh and supply a bad ssh key,
-			// the clone will fail.
-			return nil, fmt.Errorf("unable to generate ssh key: %v", err)
-		}
-	}
-	return sshAuth, nil
 }
 
 func (leak Leak) log() {

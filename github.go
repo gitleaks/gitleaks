@@ -55,7 +55,7 @@ func auditGithubPR() ([]Leak, error) {
 				if f.Patch == nil || f.Filename == nil {
 					continue
 				}
-				for _, re := range whiteListFiles {
+				for _, re := range config.WhiteList.files {
 					if re.FindString(f.GetFilename()) != "" {
 						log.Infof("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.GetFilename())
 						skipFile = true
@@ -187,8 +187,7 @@ func auditGithubRepos() ([]Leak, error) {
 }
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
-// will be cloned to disk if --disk is set. If the repo is private, you must include the
-// --private/-p option. After the repo is clone, an audit will begin.
+// will be cloned to disk if --disk is set.
 func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 	var (
 		repo *git.Repository
@@ -198,7 +197,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 	if opts.ExcludeForks && githubRepo.GetFork() {
 		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
 	}
-	for _, re := range whiteListRepos {
+	for _, re := range config.WhiteList.repos {
 		if re.FindString(*githubRepo.Name) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", *githubRepo.Name)
 		}
@@ -209,10 +208,10 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to generater owner temp dir: %v", err)
 		}
-		if sshAuth != nil && githubToken == "" {
+		if config.sshAuth != nil && githubToken == "" {
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
-				Auth: sshAuth,
+				Auth: config.sshAuth,
 			})
 		} else if githubToken != "" {
 			repo, err = git.PlainClone(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name), false, &git.CloneOptions{
@@ -228,10 +227,10 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 			})
 		}
 	} else {
-		if sshAuth != nil && githubToken == "" {
+		if config.sshAuth != nil && githubToken == "" {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:  *githubRepo.SSHURL,
-				Auth: sshAuth,
+				Auth: config.sshAuth,
 			})
 		} else if githubToken != "" {
 			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{

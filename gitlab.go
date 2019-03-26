@@ -130,7 +130,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		return nil, fmt.Errorf("skipping %s, excluding forks", p.Name)
 	}
 
-	for _, re := range whiteListRepos {
+	for _, re := range config.WhiteList.repos {
 		if re.FindString(p.Name) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", p.Name)
 		}
@@ -140,9 +140,9 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		URL: p.HTTPURLToRepo,
 	}
 
-	if sshAuth != nil {
+	if config.sshAuth != nil {
 		opt.URL = p.SSHURLToRepo
-		opt.Auth = sshAuth
+		opt.Auth = config.sshAuth
 	}
 
 	log.Infof("cloning: %s", p.Name)
