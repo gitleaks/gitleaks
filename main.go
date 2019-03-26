@@ -67,6 +67,7 @@ const leakExit = 1
 
 var (
 	opts              *Options
+	config            *Config
 	singleSearchRegex *regexp.Regexp
 	dir               string
 	threads           int
@@ -74,7 +75,6 @@ var (
 	commitMap         = make(map[string]bool)
 	cMutex            = &sync.Mutex{}
 	auditDone         bool
-	config            *Config
 )
 
 func init() {
@@ -132,7 +132,6 @@ func run() ([]Leak, error) {
 			return nil, err
 		}
 	}
-	fmt.Println(opts)
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
@@ -176,11 +175,12 @@ func run() ([]Leak, error) {
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
 func writeReport(leaks []Leak) error {
+	var err error
+
 	if len(leaks) == 0 {
 		return nil
 	}
 
-	var err error
 	log.Infof("writing report to %s", opts.Report)
 	if strings.HasSuffix(opts.Report, ".csv") {
 		f, err := os.Create(opts.Report)
