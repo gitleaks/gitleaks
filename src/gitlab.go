@@ -1,4 +1,4 @@
-package main
+package gitleaks
 
 import (
 	"fmt"
@@ -78,13 +78,13 @@ func auditGitlabRepos() ([]Leak, error) {
 	}
 
 	for _, p := range repos {
-		repo, err := cloneGitlabRepo(tempDir, p)
+		repoD, err := cloneGitlabRepo(tempDir, p)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
 
-		leaksFromRepo, err := auditGitRepo(repo)
+		leaksFromRepo, err := repoD.audit()
 		if err != nil {
 			log.Warn(err)
 		}

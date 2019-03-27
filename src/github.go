@@ -1,4 +1,4 @@
-package main
+package gitleaks
 
 import (
 	"context"
@@ -164,12 +164,12 @@ func auditGithubRepos() ([]Leak, error) {
 		ownerDir, _ = ioutil.TempDir(dir, opts.GithubUser)
 	}
 	for _, githubRepo := range githubRepos {
-		repo, err := cloneGithubRepo(githubRepo)
+		repoD, err := cloneGithubRepo(githubRepo)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
-		leaksFromRepo, err := auditGitRepo(repo)
+		leaksFromRepo, err := repoD.audit()
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		}
