@@ -3,6 +3,7 @@ module github.com/zricethezav/gitleaks
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/franela/goblin v0.0.0-20181003173013-ead4ad1d2727
 	github.com/google/go-github v15.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hako/durafmt v0.0.0-20180520121703-7b7ae1e72ead

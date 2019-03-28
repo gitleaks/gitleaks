@@ -57,13 +57,15 @@ func auditGitlabRepos() ([]Leak, error) {
 		}
 
 		if err != nil {
-			log.Fatal("error listing projects: ", err) // exit when can't make API call
+			// exit when can't make API call
+			log.Fatal("error listing projects: ", err) 
 		}
 
 		repos = append(repos, ps...)
 
 		if page >= resp.TotalPages {
-			break // exit when we've seen all pages
+			// exit when we've seen all pages
+			break 
 		}
 
 		page = resp.NextPage

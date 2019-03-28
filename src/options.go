@@ -45,6 +45,7 @@ type Options struct {
 	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
 	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
+	Branch 		   string  `long:"branch" description:"Branch to audit"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -56,6 +57,7 @@ type Options struct {
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
 }
 
+// ParseOpts parses the options
 func ParseOpts() (*Options) {
 	var opts Options
 	parser := flags.NewParser(&opts, flags.Default)

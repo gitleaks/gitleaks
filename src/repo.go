@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
@@ -38,18 +38,6 @@ type RepoInfo struct {
 	name       string
 	repository *git.Repository
 	err        error
-}
-
-type commitInfo struct {
-	content      string
-	commit       *object.Commit
-	filePath     string
-	repoName     string
-	githubCommit *github.RepositoryCommit
-	sha          string
-	message      string
-	author       string
-	date         time.Time
 }
 
 func newRepoInfo() (*RepoInfo, error) {
@@ -123,6 +111,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		commitWg    sync.WaitGroup
 		mutex       = &sync.Mutex{}
 		semaphore   chan bool
+		logOpts     git.LogOptions
 	)
 	for _, re := range config.WhiteList.repos {
 		if re.FindString(repoInfo.name) != "" {
@@ -138,10 +127,38 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		}
 	}
 
+	if opts.Branch != "" {
+		refs, err := repoInfo.repository.Storer.IterReferences()
+		if err != nil {
+			return leaks, err
+		}
+		err = refs.ForEach(func(ref *plumbing.Reference) error {
+			if ref.Name().IsTag() {
+				return nil
+			}
+			// check heads first
+			if ref.Name().String() == "refs/heads/"+opts.Branch {
+				logOpts = git.LogOptions{
+					From: ref.Hash(),
+				}
+				return nil
+			} else if ref.Name().String() == "refs/remotes/origin/"+opts.Branch {
+				logOpts = git.LogOptions{
+					From: ref.Hash(),
+				}
+				return nil
+			}
+			return nil
+		})
+	} else {
+		logOpts = git.LogOptions{
+			All: true,
+		}
+	}
+
 	// iterate all through commits
-	cIter, err := repoInfo.repository.Log(&git.LogOptions{
-		All: true,
-	})
+	cIter, err := repoInfo.repository.Log(&logOpts)
+
 	if err != nil {
 		return leaks, nil
 	}
@@ -247,23 +264,6 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 
 	commitWg.Wait()
 	return leaks, nil
-	// // clear commit cache
-	// commitMap = make(map[string]bool)
-
-	// refs, err := repoInfo.repository.Storer.IterReferences()
-	// if err != nil {
-	// 	return leaks, err
-	// }
-	// err = refs.ForEach(func(ref *plumbing.Reference) error {
-	// 	if ref.Name().IsTag() {
-	// 		return nil
-	// 	}
-	// 	branchLeaks := repoInfo.auditRef(ref)
-	// 	for _, leak := range branchLeaks {
-	// 		leaks = append(leaks, leak)
-	// 	}
-	// 	return nil
-	// })
 }
 
 func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit, mutex *sync.Mutex) []Leak {

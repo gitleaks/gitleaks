@@ -11,7 +11,19 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
+
+type commitInfo struct {
+	content  string
+	commit   *object.Commit
+	filePath string
+	repoName string
+	sha      string
+	message  string
+	author   string
+	date     time.Time
+}
 
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
