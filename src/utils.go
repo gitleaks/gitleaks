@@ -73,13 +73,13 @@ func writeReport(leaks []Leak) error {
 // a set of regexes set by the config (see gitleaks.toml for example). This function
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
-func inspect(diff gitDiff) []Leak {
+func inspect(commit commitInfo) []Leak {
 	var (
 		leaks    []Leak
 		skipLine bool
 	)
 
-	lines := strings.Split(diff.content, "\n")
+	lines := strings.Split(commit.content, "\n")
 
 	for _, line := range lines {
 		skipLine = false
@@ -91,7 +91,7 @@ func inspect(diff gitDiff) []Leak {
 			if skipLine = isLineWhitelisted(line); skipLine {
 				break
 			}
-			leaks = addLeak(leaks, line, match, re.description, diff)
+			leaks = addLeak(leaks, line, match, re.description, commit)
 		}
 
 		if !skipLine && (opts.Entropy > 0 || len(config.Entropy.entropyRanges) != 0) {
@@ -108,7 +108,7 @@ func inspect(diff gitDiff) []Leak {
 				if skipLine = !highEntropyLineIsALeak(line) || isLineWhitelisted(line); skipLine {
 					break
 				}
-				leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), diff)
+				leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), commit)
 			}
 		}
 	}
@@ -127,17 +127,17 @@ func isLineWhitelisted(line string) bool {
 }
 
 // addLeak is helper for func inspect() to append leaks if found during a diff check.
-func addLeak(leaks []Leak, line string, offender string, leakType string, diff gitDiff) []Leak {
+func addLeak(leaks []Leak, line string, offender string, leakType string, commit commitInfo) []Leak {
 	leak := Leak{
 		Line:     line,
-		Commit:   diff.sha,
+		Commit:   commit.sha,
 		Offender: offender,
 		Type:     leakType,
-		Author:   diff.author,
-		File:     diff.filePath,
-		Repo:     diff.repoName,
-		Message:  diff.message,
-		Date:     diff.date,
+		Author:   commit.author,
+		File:     commit.filePath,
+		Repo:     commit.repoName,
+		Message:  commit.message,
+		Date:     commit.date,
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
@@ -182,7 +182,6 @@ func (leak Leak) log() {
 
 func containsGit(repoPath string) bool {
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		// path/to/whatever does not exist
 		return false
 	}
 	return true

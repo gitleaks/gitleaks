@@ -8,36 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/github"
 	"github.com/hako/durafmt"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
-
-// Leak represents a leaked secret or regex match.
-type Leak struct {
-	Line     string    `json:"line"`
-	Commit   string    `json:"commit"`
-	Offender string    `json:"offender"`
-	Type     string    `json:"reason"`
-	Message  string    `json:"commitMsg"`
-	Author   string    `json:"author"`
-	File     string    `json:"file"`
-	Repo     string    `json:"repo"`
-	Date     time.Time `json:"date"`
-}
-
-type gitDiff struct {
-	content      string
-	commit       *object.Commit
-	filePath     string
-	repoName     string
-	githubCommit *github.RepositoryCommit
-	sha          string
-	message      string
-	author       string
-	date         time.Time
-}
 
 var (
 	opts              *Options
@@ -81,29 +54,29 @@ func Run(optsL *Options) {
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
-		repoD, err := newRepoInfo()
+		repoInfo, err := newRepoInfo()
 		if err != nil {
 			goto postAudit
 		}
-		err = repoD.clone()
+		err = repoInfo.clone()
 		if err != nil {
 			goto postAudit
 		}
-		leaks, err = repoD.audit()
+		leaks, err = repoInfo.audit()
 	} else if opts.OwnerPath != "" {
 		repoDs, err := discoverRepos(opts.OwnerPath)
 		if err != nil {
 			goto postAudit
 		}
-		for _, repoD := range repoDs {
-			err = repoD.clone()
+		for _, repoInfo := range repoDs {
+			err = repoInfo.clone()
 			if err != nil {
 				continue
 			}
-			leaksFromRepo, err := repoD.audit()
+			leaksFromRepo, err := repoInfo.audit()
 
 			if err != nil {
-				log.Warnf("error occured auditing repo: %s, continuing", repoD.name)
+				log.Warnf("error occured auditing repo: %s, continuing", repoInfo.name)
 			}
 			leaks = append(leaksFromRepo, leaks...)
 		}

@@ -43,13 +43,13 @@ func auditGithubPR() ([]Leak, error) {
 			return leaks, err
 		}
 
-		for _, commit := range commits {
+		for _, c := range commits {
 			totalCommits = totalCommits + 1
-			commit, _, err := githubClient.Repositories.GetCommit(ctx, owner, repo, *commit.SHA)
+			c, _, err := githubClient.Repositories.GetCommit(ctx, owner, repo, *c.SHA)
 			if err != nil {
 				continue
 			}
-			files := commit.Files
+			files := c.Files
 			for _, f := range files {
 				skipFile := false
 				if f.Patch == nil || f.Filename == nil {
@@ -66,17 +66,17 @@ func auditGithubPR() ([]Leak, error) {
 					continue
 				}
 
-				diff := gitDiff{
-					sha:          commit.GetSHA(),
+				commit := commitInfo{
+					sha:          c.GetSHA(),
 					content:      *f.Patch,
 					filePath:     *f.Filename,
 					repoName:     repo,
-					githubCommit: commit,
-					author:       commit.GetCommitter().GetLogin(),
-					message:      *commit.Commit.Message,
-					date:         *commit.Commit.Committer.Date,
+					githubCommit: c,
+					author:       c.GetCommitter().GetLogin(),
+					message:      *c.Commit.Message,
+					date:         *c.Commit.Committer.Date,
 				}
-				leaks = append(leaks, inspect(diff)...)
+				leaks = append(leaks, inspect(commit)...)
 			}
 		}
 		page = resp.NextPage

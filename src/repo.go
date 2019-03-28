@@ -7,15 +7,29 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
+
+// Leak represents a leaked secret or regex match.
+type Leak struct {
+	Line     string    `json:"line"`
+	Commit   string    `json:"commit"`
+	Offender string    `json:"offender"`
+	Type     string    `json:"reason"`
+	Message  string    `json:"commitMsg"`
+	Author   string    `json:"author"`
+	File     string    `json:"file"`
+	Repo     string    `json:"repo"`
+	Date     time.Time `json:"date"`
+}
 
 // RepoInfo contains a src-d git repository and other data about the repo
 type RepoInfo struct {
@@ -24,6 +38,18 @@ type RepoInfo struct {
 	name       string
 	repository *git.Repository
 	err        error
+}
+
+type commitInfo struct {
+	content      string
+	commit       *object.Commit
+	filePath     string
+	repoName     string
+	githubCommit *github.RepositoryCommit
+	sha          string
+	message      string
+	author       string
+	date         time.Time
 }
 
 func newRepoInfo() (*RepoInfo, error) {
@@ -39,7 +65,8 @@ func newRepoInfo() (*RepoInfo, error) {
 	}, nil
 }
 
-func (repoD *RepoInfo) clone() error {
+// clone will clone a repo
+func (repoInfo *RepoInfo) clone() error {
 	var (
 		err  error
 		repo *git.Repository
@@ -63,9 +90,9 @@ func (repoD *RepoInfo) clone() error {
 				Progress: os.Stdout,
 			})
 		}
-	} else if repoD.path != "" {
+	} else if repoInfo.path != "" {
 		log.Infof("opening %s", opts.RepoPath)
-		repo, err = git.PlainOpen(repoD.path)
+		repo, err = git.PlainOpen(repoInfo.path)
 	} else {
 		// cloning to memory
 		log.Infof("cloning %s", opts.Repo)
@@ -82,66 +109,43 @@ func (repoD *RepoInfo) clone() error {
 			})
 		}
 	}
-	repoD.repository = repo
-	repoD.err = err
+	repoInfo.repository = repo
+	repoInfo.err = err
 	return err
 }
 
-func (repoD *RepoInfo) audit() ([]Leak, error) {
-	var (
-		err   error
-		leaks []Leak
-	)
-	for _, re := range config.WhiteList.repos {
-		if re.FindString(repoD.name) != "" {
-			return leaks, fmt.Errorf("skipping %s, whitelisted", repoD.name)
-		}
-	}
-
-	// check if target contains an external gitleaks toml
-	if opts.RepoConfig {
-		err := config.updateFromRepo(repoD)
-		if err != nil {
-			return leaks, nil
-		}
-	}
-
-	// clear commit cache
-	commitMap = make(map[string]bool)
-
-	refs, err := repoD.repository.Storer.IterReferences()
-	if err != nil {
-		return leaks, err
-	}
-	err = refs.ForEach(func(ref *plumbing.Reference) error {
-		if ref.Name().IsTag() {
-			return nil
-		}
-		branchLeaks := repoD.auditRef(ref)
-		for _, leak := range branchLeaks {
-			leaks = append(leaks, leak)
-		}
-		return nil
-	})
-	return leaks, err
-}
-
-// auditGitReference beings the audit for a git reference. This function will
-// traverse the git reference and audit each line of each diff.
-func (repoD *RepoInfo) auditRef(ref *plumbing.Reference) []Leak {
+// audit performs an audit
+func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	var (
 		err         error
-		repoName    string
 		leaks       []Leak
 		commitCount int64
 		commitWg    sync.WaitGroup
 		mutex       = &sync.Mutex{}
 		semaphore   chan bool
 	)
-	if auditDone {
-		return nil
+	for _, re := range config.WhiteList.repos {
+		if re.FindString(repoInfo.name) != "" {
+			return leaks, fmt.Errorf("skipping %s, whitelisted", repoInfo.name)
+		}
 	}
-	repoName = repoD.name
+
+	// check if target contains an external gitleaks toml
+	if opts.RepoConfig {
+		err := config.updateFromRepo(repoInfo)
+		if err != nil {
+			return leaks, nil
+		}
+	}
+
+	// iterate all through commits
+	cIter, err := repoInfo.repository.Log(&git.LogOptions{
+		All: true,
+	})
+	if err != nil {
+		return leaks, nil
+	}
+
 	if opts.Threads != 0 {
 		threads = opts.Threads
 	}
@@ -150,95 +154,27 @@ func (repoD *RepoInfo) auditRef(ref *plumbing.Reference) []Leak {
 	}
 	semaphore = make(chan bool, threads)
 
-	cIter, err := repoD.repository.Log(&git.LogOptions{From: ref.Hash()})
-	if err != nil {
-		return nil
-	}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) || auditDone {
-			if commitCount == opts.Depth {
-				auditDone = true
-			}
+		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) {
 			return storer.ErrStop
 		}
-		commitCount = commitCount + 1
+
 		if config.WhiteList.commits[c.Hash.String()] {
 			log.Infof("skipping commit: %s\n", c.Hash.String())
 			return nil
 		}
 
+		commitCount = commitCount + 1
+		totalCommits = totalCommits + 1
+
 		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
 		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
-			if commitMap[c.Hash.String()] {
-				return nil
-			}
-
-			if opts.Commit == c.Hash.String() {
-				auditDone = true
-			}
-
-			cMutex.Lock()
-			commitMap[c.Hash.String()] = true
-			cMutex.Unlock()
-			totalCommits = totalCommits + 1
-
-			fIter, err := c.Files()
-			if err != nil {
-				return nil
-			}
-			err = fIter.ForEach(func(f *object.File) error {
-				bin, err := f.IsBinary()
-				if bin || err != nil {
-					return nil
-				}
-				for _, re := range config.WhiteList.files {
-					if re.FindString(f.Name) != "" {
-						log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
-						return nil
-					}
-				}
-				content, err := f.Contents()
-				if err != nil {
-					return nil
-				}
-				diff := gitDiff{
-					repoName: repoName,
-					filePath: f.Name,
-					content:  content,
-					sha:      c.Hash.String(),
-					author:   c.Author.String(),
-					message:  strings.Replace(c.Message, "\n", " ", -1),
-					date:     c.Author.When,
-				}
-				fileLeaks := inspect(diff)
-				mutex.Lock()
-				leaks = append(leaks, fileLeaks...)
-				mutex.Unlock()
-				return nil
-			})
+			leaks = append(repoInfo.auditSingleCommit(c, mutex), leaks...)
 			return nil
 		}
 
-		// single commit
-		if opts.Commit != "" {
-			return nil
-		}
-
-		skipCount := false
+		// regular commit audit
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
-			// check if we've seen this diff before
-			if commitMap[c.Hash.String()+parent.Hash.String()] {
-				return nil
-			}
-			cMutex.Lock()
-			commitMap[c.Hash.String()+parent.Hash.String()] = true
-			cMutex.Unlock()
-
-			if !skipCount {
-				totalCommits = totalCommits + 1
-				skipCount = true
-			}
-
 			commitWg.Add(1)
 			semaphore <- true
 			go func(c *object.Commit, parent *object.Commit) {
@@ -283,8 +219,8 @@ func (repoD *RepoInfo) auditRef(ref *plumbing.Reference) []Leak {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
-							diff := gitDiff{
-								repoName: repoName,
+							diff := commitInfo{
+								repoName: repoInfo.name,
 								filePath: filePath,
 								content:  chunk.Content(),
 								sha:      c.Hash.String(),
@@ -306,14 +242,65 @@ func (repoD *RepoInfo) auditRef(ref *plumbing.Reference) []Leak {
 			return nil
 		})
 
-		// stop audit if we are at commitStop
-		if c.Hash.String() == opts.CommitStop {
-			auditDone = true
-			return storer.ErrStop
-		}
-
 		return nil
 	})
+
 	commitWg.Wait()
+	return leaks, nil
+	// // clear commit cache
+	// commitMap = make(map[string]bool)
+
+	// refs, err := repoInfo.repository.Storer.IterReferences()
+	// if err != nil {
+	// 	return leaks, err
+	// }
+	// err = refs.ForEach(func(ref *plumbing.Reference) error {
+	// 	if ref.Name().IsTag() {
+	// 		return nil
+	// 	}
+	// 	branchLeaks := repoInfo.auditRef(ref)
+	// 	for _, leak := range branchLeaks {
+	// 		leaks = append(leaks, leak)
+	// 	}
+	// 	return nil
+	// })
+}
+
+func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit, mutex *sync.Mutex) []Leak {
+	var leaks []Leak
+	fIter, err := c.Files()
+	if err != nil {
+		return nil
+	}
+	err = fIter.ForEach(func(f *object.File) error {
+		bin, err := f.IsBinary()
+		if bin || err != nil {
+			return nil
+		}
+		for _, re := range config.WhiteList.files {
+			if re.FindString(f.Name) != "" {
+				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+				return nil
+			}
+		}
+		content, err := f.Contents()
+		if err != nil {
+			return nil
+		}
+		diff := commitInfo{
+			repoName: repoInfo.name,
+			filePath: f.Name,
+			content:  content,
+			sha:      c.Hash.String(),
+			author:   c.Author.String(),
+			message:  strings.Replace(c.Message, "\n", " ", -1),
+			date:     c.Author.When,
+		}
+		fileLeaks := inspect(diff)
+		mutex.Lock()
+		leaks = append(leaks, fileLeaks...)
+		mutex.Unlock()
+		return nil
+	})
 	return leaks
 }

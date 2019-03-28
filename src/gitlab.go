@@ -78,13 +78,13 @@ func auditGitlabRepos() ([]Leak, error) {
 	}
 
 	for _, p := range repos {
-		repoD, err := cloneGitlabRepo(tempDir, p)
+		repoInfo, err := cloneGitlabRepo(tempDir, p)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
 
-		leaksFromRepo, err := repoD.audit()
+		leaksFromRepo, err := repoInfo.audit()
 		if err != nil {
 			log.Warn(err)
 		}
