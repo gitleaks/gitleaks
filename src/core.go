@@ -57,15 +57,12 @@ func init() {
 }
 
 // Run is the entry point for gitleaks
-func Run() {
+func Run(optsL *Options) {
 	var (
 		leaks []Leak
 		err   error
 	)
-	opts, err = setupOpts()
-	if err != nil {
-		log.Fatal(err)
-	}
+	opts = optsL
 	config, err = newConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -84,7 +81,7 @@ func Run() {
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
-		repoD, err := newRepoD()
+		repoD, err := newRepoInfo()
 		if err != nil {
 			goto postAudit
 		}

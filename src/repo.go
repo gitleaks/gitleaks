@@ -17,8 +17,8 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-// RepoDescriptor contains a src-d git repository and other data about the repo
-type RepoDescriptor struct {
+// RepoInfo contains a src-d git repository and other data about the repo
+type RepoInfo struct {
 	path       string
 	url        string
 	name       string
@@ -26,20 +26,20 @@ type RepoDescriptor struct {
 	err        error
 }
 
-func newRepoD() (*RepoDescriptor, error) {
+func newRepoInfo() (*RepoInfo, error) {
 	for _, re := range config.WhiteList.repos {
 		if re.FindString(opts.Repo) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", opts.Repo)
 		}
 	}
-	return &RepoDescriptor{
+	return &RepoInfo{
 		path: opts.RepoPath,
 		url:  opts.Repo,
 		name: filepath.Base(opts.Repo),
 	}, nil
 }
 
-func (repoD *RepoDescriptor) clone() error {
+func (repoD *RepoInfo) clone() error {
 	var (
 		err  error
 		repo *git.Repository
@@ -57,7 +57,7 @@ func (repoD *RepoDescriptor) clone() error {
 				Auth:     config.sshAuth,
 			})
 		} else {
-			// non-private
+			// public
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
@@ -87,7 +87,7 @@ func (repoD *RepoDescriptor) clone() error {
 	return err
 }
 
-func (repoD *RepoDescriptor) audit() ([]Leak, error) {
+func (repoD *RepoInfo) audit() ([]Leak, error) {
 	var (
 		err   error
 		leaks []Leak
@@ -128,7 +128,7 @@ func (repoD *RepoDescriptor) audit() ([]Leak, error) {
 
 // auditGitReference beings the audit for a git reference. This function will
 // traverse the git reference and audit each line of each diff.
-func (repoD *RepoDescriptor) auditRef(ref *plumbing.Reference) []Leak {
+func (repoD *RepoInfo) auditRef(ref *plumbing.Reference) []Leak {
 	var (
 		err         error
 		repoName    string

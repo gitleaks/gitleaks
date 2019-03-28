@@ -154,10 +154,10 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, diff g
 
 // discoverRepos walks all the children of `path`. If a child directory
 // contain a .git subdirectory then that repo will be added to the list of repos returned
-func discoverRepos(ownerPath string) ([]*RepoDescriptor, error) {
+func discoverRepos(ownerPath string) ([]*RepoInfo, error) {
 	var (
 		err    error
-		repoDs []*RepoDescriptor
+		repoDs []*RepoInfo
 	)
 	files, err := ioutil.ReadDir(ownerPath)
 	if err != nil {
@@ -166,7 +166,7 @@ func discoverRepos(ownerPath string) ([]*RepoDescriptor, error) {
 	for _, f := range files {
 		repoPath := path.Join(ownerPath, f.Name())
 		if f.IsDir() && containsGit(repoPath) {
-			repoDs = append(repoDs, &RepoDescriptor{
+			repoDs = append(repoDs, &RepoInfo{
 				name: f.Name(),
 				path: repoPath,
 			})

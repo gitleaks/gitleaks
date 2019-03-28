@@ -121,7 +121,7 @@ func createGitlabTempDir() (string, error) {
 	return ownerDir, nil
 }
 
-func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error) {
+func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoInfo, error) {
 	var (
 		repo *git.Repository
 		err  error
@@ -157,7 +157,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoDescriptor, error)
 		return nil, err
 	}
 
-	return &RepoDescriptor{
+	return &RepoInfo{
 		repository: repo,
 		name:       p.Name,
 	}, nil

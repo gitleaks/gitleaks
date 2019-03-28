@@ -177,7 +177,7 @@ func (config *Config) updateEntropyRanges(entropyLimitStr []string) error {
 
 // externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
 // from a remote or local repo. Use the --repo-config option to trigger this.
-func (config *Config) updateFromRepo(repo *RepoDescriptor) error {
+func (config *Config) updateFromRepo(repo *RepoInfo) error {
 	var tomlConfig TomlConfig
 	wt, err := repo.repository.Worktree()
 	if err != nil {

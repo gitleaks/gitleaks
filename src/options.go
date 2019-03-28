@@ -56,7 +56,7 @@ type Options struct {
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
 }
 
-func setupOpts() (*Options, error) {
+func ParseOpts() (*Options) {
 	var opts Options
 	parser := flags.NewParser(&opts, flags.Default)
 	_, err := parser.Parse()
@@ -86,10 +86,9 @@ func setupOpts() (*Options, error) {
 
 	err = opts.guard()
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	return &opts, err
-
+	return &opts
 }
 
 // optsGuard prevents invalid options

@@ -188,7 +188,7 @@ func auditGithubRepos() ([]Leak, error) {
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
 // will be cloned to disk if --disk is set.
-func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
+func cloneGithubRepo(githubRepo *github.Repository) (*RepoInfo, error) {
 	var (
 		repo *git.Repository
 		err  error
@@ -249,7 +249,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoDescriptor, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RepoDescriptor{
+	return &RepoInfo{
 		repository: repo,
 		name:       *githubRepo.Name,
 	}, nil
