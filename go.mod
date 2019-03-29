@@ -7,6 +7,7 @@ require (
 	github.com/google/go-github v15.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hako/durafmt v0.0.0-20180520121703-7b7ae1e72ead
+	github.com/ipfs/go-ipfs v0.4.19 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect

@@ -90,7 +90,6 @@ func inspect(commit commitInfo) []Leak {
 		leaks    []Leak
 		skipLine bool
 	)
-
 	lines := strings.Split(commit.content, "\n")
 
 	for _, line := range lines {
