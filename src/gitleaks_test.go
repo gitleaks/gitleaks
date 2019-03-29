@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -59,21 +58,34 @@ repos = [
 `
 
 const testEntropyRange = `
-[misc]
-entropy = [
+[entropy]
+ranges = [
   "7.5-8.0",
   "3.3-3.4",
 ]
+lineregexes = [
+	"api",
+	"key",
+	"signature",
+	"secret",
+	"password",
+	"pass",
+	"pwd",
+	"token",
+	"curl",
+	"wget",
+	"https?",
+]
 `
 const testBadEntropyRange = `
-[misc]
-entropy = [
+[entropy]
+ranges = [
   "8.0-3.0",
 ]
 `
 const testBadEntropyRange2 = `
-[misc]
-entropy = [
+[entropy]
+ranges = [
   "8.0-8.9",
 ]
 `
@@ -447,20 +459,16 @@ func testTomlLoader() string {
 
 func TestAuditRepo(t *testing.T) {
 	var leaks []Leak
-	err := loadToml()
 	configsDir := testTomlLoader()
 	defer os.RemoveAll(configsDir)
 
-	if err != nil {
-		panic(err)
-	}
 	leaksR, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL: "https://github.com/gitleakstest/gronit.git",
 	})
 	if err != nil {
 		panic(err)
 	}
-	leaksRepo := &RepoDescriptor{
+	leaksRepo := &RepoInfo{
 		repository: leaksR,
 		name:       "gronit",
 	}
@@ -471,17 +479,17 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cleanRepo := &RepoDescriptor{
+	cleanRepo := &RepoInfo{
 		repository: cleanR,
 		name:       "h1domains",
 	}
 
 	var tests = []struct {
-		testOpts         Options
+		testOpts         *Options
 		description      string
 		expectedErrMsg   string
 		numLeaks         int
-		repo             *RepoDescriptor
+		repo             *RepoInfo
 		whiteListFiles   []*regexp.Regexp
 		whiteListCommits map[string]bool
 		whiteListRepos   []*regexp.Regexp
@@ -492,7 +500,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "pinned config",
 			numLeaks:    0,
-			testOpts: Options{
+			testOpts: &Options{
 				RepoConfig: true,
 			},
 		},
@@ -500,7 +508,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "commit depth = 1, one leak",
 			numLeaks:    1,
-			testOpts: Options{
+			testOpts: &Options{
 				Depth: 1,
 			},
 		},
@@ -508,53 +516,58 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "two leaks present",
 			numLeaks:    2,
+			testOpts:    &Options{},
 		},
 		{
 			repo:        leaksRepo,
 			description: "two leaks present limit goroutines",
 			numLeaks:    2,
-			testOpts: Options{
+			testOpts: &Options{
 				Threads: 4,
 			},
 		},
 		{
 			repo:        leaksRepo,
 			description: "two leaks present whitelist AWS.. no leaks",
-			whiteListRegexes: []*regexp.Regexp{
-				regexp.MustCompile("AKIA"),
-			},
-			numLeaks: 0,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "regex"),
+			numLeaks:    0,
 		},
 		{
 			repo:        leaksRepo,
 			description: "two leaks present limit goroutines",
-			numLeaks:    2,
+			testOpts: &Options{
+				Threads: 2,
+			},
+			numLeaks: 2,
 		},
 		{
 			repo:        cleanRepo,
 			description: "no leaks present",
+			testOpts:    &Options{},
 			numLeaks:    0,
 		},
 		{
 			repo:        leaksRepo,
 			description: "two leaks present whitelist go files",
-			whiteListFiles: []*regexp.Regexp{
-				regexp.MustCompile(".go"),
-			},
-			numLeaks: 0,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "file"),
+			numLeaks:    0,
 		},
 		{
 			repo:        leaksRepo,
 			description: "two leaks present whitelist bad commit",
-			whiteListCommits: map[string]bool{
-				"eaeffdc65b4c73ccb67e75d96bd8743be2c85973": true,
-			},
+			configPath:  path.Join(configsDir, "commit"),
+			testOpts:    &Options{},
+			// whiteListCommits: map[string]bool{
+			// 	"eaeffdc65b4c73ccb67e75d96bd8743be2c85973": true,
+			// },
 			numLeaks: 1,
 		},
 		{
 			repo:        leaksRepo,
 			description: "redact",
-			testOpts: Options{
+			testOpts: &Options{
 				Redact: true,
 			},
 			numLeaks: 2,
@@ -563,7 +576,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "Audit a specific commit",
 			numLeaks:    1,
-			testOpts: Options{
+			testOpts: &Options{
 				Commit: "cb5599aeed261b2c038aa4729e2d53ca050a4988",
 			},
 		},
@@ -571,7 +584,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "Audit a specific commit no leaks",
 			numLeaks:    0,
-			testOpts: Options{
+			testOpts: &Options{
 				Commit: "2b033e012eee364fc41b4ab7c5db1497399b8e67",
 			},
 		},
@@ -579,38 +592,41 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "toml whitelist regex",
 			configPath:  path.Join(configsDir, "regex"),
+			testOpts:    &Options{},
 			numLeaks:    0,
 		},
 		{
 			repo:        leaksRepo,
 			description: "toml whitelist file",
 			configPath:  path.Join(configsDir, "file"),
+			testOpts:    &Options{},
 			numLeaks:    0,
 		},
 		{
 			repo:        leaksRepo,
 			description: "toml whitelist commit",
 			configPath:  path.Join(configsDir, "commit"),
+			testOpts:    &Options{},
 			numLeaks:    1,
 		},
 		{
 			repo:        leaksRepo,
 			description: "audit whitelist repo",
 			numLeaks:    0,
-			whiteListRepos: []*regexp.Regexp{
-				regexp.MustCompile("gronit"),
-			},
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "repo"),
 		},
 		{
 			repo:        leaksRepo,
 			description: "toml whitelist repo",
 			numLeaks:    0,
+			testOpts:    &Options{},
 			configPath:  path.Join(configsDir, "repo"),
 		},
 		{
 			repo:        leaksRepo,
 			description: "leaks present with entropy",
-			testOpts: Options{
+			testOpts: &Options{
 				Entropy: 4.7,
 			},
 			numLeaks: 6,
@@ -618,7 +634,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "leaks present with entropy",
-			testOpts: Options{
+			testOpts: &Options{
 				Entropy:        4.7,
 				NoiseReduction: true,
 			},
@@ -628,7 +644,7 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "Audit until specific commit",
 			numLeaks:    2,
-			testOpts: Options{
+			testOpts: &Options{
 				CommitStop: "f6839959b7bbdcd23008f1fb16f797f35bcd3a0c",
 			},
 		},
@@ -636,29 +652,31 @@ func TestAuditRepo(t *testing.T) {
 			repo:        leaksRepo,
 			description: "commit depth = 2, two leaks",
 			numLeaks:    2,
-			testOpts: Options{
+			testOpts: &Options{
 				Depth: 2,
 			},
 		},
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    298,
+			numLeaks:    296,
+			testOpts:    &Options{},
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
 			repo: leaksRepo,
-			testOpts: Options{
+			testOpts: &Options{
 				NoiseReduction: true,
 			},
-			description: "toml entropy range",
-			numLeaks:    58,
+			description: "toml entropy noise reduction range",
+			numLeaks:    56,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
 			repo:           leaksRepo,
 			description:    "toml bad entropy range",
 			numLeaks:       0,
+			testOpts:       &Options{},
 			configPath:     path.Join(configsDir, "badEntropy"),
 			expectedErrMsg: "entropy range must be ascending",
 		},
@@ -666,151 +684,131 @@ func TestAuditRepo(t *testing.T) {
 			repo:           leaksRepo,
 			description:    "toml bad entropy2 range",
 			numLeaks:       0,
+			testOpts:       &Options{},
 			configPath:     path.Join(configsDir, "badEntropy2"),
 			expectedErrMsg: "invalid entropy ranges, must be within 0.0-8.0",
 		},
 	}
-	whiteListCommits = make(map[string]bool)
 	g := goblin.Goblin(t)
 	for _, test := range tests {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
 				auditDone = false
 				opts = test.testOpts
-				// settin da globs
-				if test.whiteListFiles != nil {
-					whiteListFiles = test.whiteListFiles
-				} else {
-					whiteListFiles = nil
-				}
-				if test.whiteListCommits != nil {
-					whiteListCommits = test.whiteListCommits
-				} else {
-					whiteListCommits = nil
-				}
-				if test.whiteListRegexes != nil {
-					whiteListRegexes = test.whiteListRegexes
-				} else {
-					whiteListRegexes = nil
-				}
-				if test.whiteListRepos != nil {
-					whiteListRepos = test.whiteListRepos
-				} else {
-					whiteListRepos = nil
-				}
-				skip := false
 				totalCommits = 0
+
+				config, err = newConfig()
 				// config paths
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
-					err := loadToml()
+					config, err = newConfig()
 					if err != nil {
 						g.Assert(err.Error()).Equal(test.expectedErrMsg)
-						skip = true
+						goto next
 					}
 				}
-				if !skip {
-					leaks, err = auditGitRepo(test.repo)
-					if test.testOpts.Depth != 0 {
-						g.Assert(totalCommits).Equal(test.testOpts.Depth)
-					} else {
-						if opts.Redact {
-							g.Assert(leaks[0].Offender).Equal("REDACTED")
-						}
-						g.Assert(len(leaks)).Equal(test.numLeaks)
-					}
-				}
-			})
-		})
-	}
-}
-
-func TestOptionGuard(t *testing.T) {
-	var tests = []struct {
-		testOpts            Options
-		githubToken         bool
-		description         string
-		expectedErrMsg      string
-		expectedErrMsgFuzzy string
-	}{
-		{
-			testOpts:       Options{},
-			description:    "default no opts",
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubUser: "fakeUser",
-				GithubOrg:  "fakeOrg",
-			},
-			description:    "double owner",
-			expectedErrMsg: "github user and organization set",
-		},
-		{
-			testOpts: Options{
-				GithubOrg: "fakeOrg",
-				OwnerPath: "/dev/null",
-			},
-			description:    "local and remote target",
-			expectedErrMsg: "github organization set and local owner path",
-		},
-		{
-			testOpts: Options{
-				GithubUser: "fakeUser",
-				OwnerPath:  "/dev/null",
-			},
-			description:    "local and remote target",
-			expectedErrMsg: "github user set and local owner path",
-		},
-		{
-			testOpts: Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "*/./....",
-			},
-			description:         "single search invalid regex gaurd",
-			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
-		},
-		{
-			testOpts: Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "mystring",
-			},
-			description:    "single search regex gaurd",
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: Options{
-				GithubOrg: "fakeOrg",
-				Entropy:   9,
-			},
-			description:    "Invalid entropy level guard",
-			expectedErrMsg: "The maximum level of entropy is 8",
-		},
-	}
-	g := goblin.Goblin(t)
-	for _, test := range tests {
-		g.Describe("Test Option Gaurd", func() {
-			g.It(test.description, func() {
-				os.Clearenv()
-				opts = test.testOpts
-				if test.githubToken {
-					os.Setenv("GITHUB_TOKEN", "fakeToken")
-				}
-				err := optsGuard()
-				if err != nil {
-					if test.expectedErrMsgFuzzy != "" {
-						g.Assert(strings.Contains(err.Error(), test.expectedErrMsgFuzzy)).Equal(true)
-					} else {
-						g.Assert(err.Error()).Equal(test.expectedErrMsg)
-					}
+				leaks, err = test.repo.audit()
+				if test.testOpts.Depth != 0 {
+					g.Assert(totalCommits).Equal(test.testOpts.Depth)
 				} else {
-					g.Assert("").Equal(test.expectedErrMsg)
+					if opts.Redact {
+						g.Assert(leaks[0].Offender).Equal("REDACTED")
+					}
+					g.Assert(len(leaks)).Equal(test.numLeaks)
 				}
-
+			next:
+				os.Setenv("GITLEAKS_CONFIG", "")
 			})
 		})
 	}
 }
+
+// func TestOptionGuard(t *testing.T) {
+// 	var tests = []struct {
+// 		testOpts            Options
+// 		githubToken         bool
+// 		description         string
+// 		expectedErrMsg      string
+// 		expectedErrMsgFuzzy string
+// 	}{
+// 		{
+// 			testOpts:       Options{},
+// 			description:    "default no opts",
+// 			expectedErrMsg: "",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubUser: "fakeUser",
+// 				GithubOrg:  "fakeOrg",
+// 			},
+// 			description:    "double owner",
+// 			expectedErrMsg: "github user and organization set",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubOrg: "fakeOrg",
+// 				OwnerPath: "/dev/null",
+// 			},
+// 			description:    "local and remote target",
+// 			expectedErrMsg: "github organization set and local owner path",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubUser: "fakeUser",
+// 				OwnerPath:  "/dev/null",
+// 			},
+// 			description:    "local and remote target",
+// 			expectedErrMsg: "github user set and local owner path",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubUser:   "fakeUser",
+// 				SingleSearch: "*/./....",
+// 			},
+// 			description:         "single search invalid regex gaurd",
+// 			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubUser:   "fakeUser",
+// 				SingleSearch: "mystring",
+// 			},
+// 			description:    "single search regex gaurd",
+// 			expectedErrMsg: "",
+// 		},
+// 		{
+// 			testOpts: Options{
+// 				GithubOrg: "fakeOrg",
+// 				Entropy:   9,
+// 			},
+// 			description:    "Invalid entropy level guard",
+// 			expectedErrMsg: "The maximum level of entropy is 8",
+// 		},
+// 	}
+// 	g := goblin.Goblin(t)
+// 	for _, test := range tests {
+// 		g.Describe("Test Option Gaurd", func() {
+// 			g.It(test.description, func() {
+// 				os.Clearenv()
+// 				opts = test.testOpts
+// 				if test.githubToken {
+// 					os.Setenv("GITHUB_TOKEN", "fakeToken")
+// 				}
+// 				err := optsGuard()
+// 				if err != nil {
+// 					if test.expectedErrMsgFuzzy != "" {
+// 						g.Assert(strings.Contains(err.Error(), test.expectedErrMsgFuzzy)).Equal(true)
+// 					} else {
+// 						g.Assert(err.Error()).Equal(test.expectedErrMsg)
+// 					}
+// 				} else {
+// 					g.Assert("").Equal(test.expectedErrMsg)
+// 				}
+
+// 			})
+// 		})
+// 	}
+// }
 
 // func TestLoadToml(t *testing.T) {
 // 	tmpDir, _ := ioutil.TempDir("", "gitleaksTestConfigDir")

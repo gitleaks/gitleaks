@@ -30,15 +30,13 @@ type TomlConfig struct {
 	}
 	Entropy struct {
 		LineRegexes []string
+		Ranges      []string
 	}
 	Whitelist struct {
 		Files   []string
 		Regexes []string
 		Commits []string
 		Repos   []string
-	}
-	Misc struct {
-		Entropy []string
 	}
 }
 
@@ -106,8 +104,8 @@ func newConfig() (*Config, error) {
 
 // updateConfig will update a the global config values
 func (config *Config) update(tomlConfig TomlConfig) error {
-	if len(tomlConfig.Misc.Entropy) != 0 {
-		err := config.updateEntropyRanges(tomlConfig.Misc.Entropy)
+	if len(tomlConfig.Entropy.Ranges) != 0 {
+		err := config.updateEntropyRanges(tomlConfig.Entropy.Ranges)
 		if err != nil {
 			return err
 		}

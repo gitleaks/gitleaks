@@ -1,6 +1,8 @@
 package gitleaks
 
-import "math"
+import (
+	"math"
+)
 
 // getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
 func getShannonEntropy(data string) (entropy float64) {
@@ -40,7 +42,6 @@ func highEntropyLineIsALeak(line string) bool {
 	if !opts.NoiseReduction {
 		return true
 	}
-
 	for _, re := range config.Entropy.regexes {
 		if re.FindString(line) != "" {
 			return true

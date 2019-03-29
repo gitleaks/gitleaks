@@ -187,6 +187,13 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
 		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
 			leaks = append(repoInfo.auditSingleCommit(c, mutex), leaks...)
+			if opts.Commit == c.Hash.String() {
+				return storer.ErrStop
+			}
+			return nil
+		}
+
+		if opts.Commit != "" {
 			return nil
 		}
 
