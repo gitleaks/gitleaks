@@ -29,19 +29,26 @@ func init() {
 	threads = defaultThreadNum
 }
 
+// Report is
+type Report struct {
+	Leaks    []Leak
+	Duration string
+	Commits  int64
+}
+
 // Run is the entry point for gitleaks
-func Run(optsL *Options) {
+func Run(optsL *Options) (*Report, error) {
 	var (
 		leaks []Leak
 		err   error
 	)
+
+	now := time.Now()
 	opts = optsL
 	config, err = newConfig()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-
-	now := time.Now()
 
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
@@ -95,17 +102,16 @@ postAudit:
 			os.Exit(0)
 		}
 		log.Error(err)
-		os.Exit(errExit)
+		os.Exit(ErrExit)
 	}
 
 	if opts.Report != "" {
 		writeReport(leaks)
 	}
 
-	if len(leaks) != 0 {
-		log.Warnf("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
-		os.Exit(leakExit)
-	} else {
-		log.Infof("%d leaks detected. %d commits inspected in %s", len(leaks), totalCommits, durafmt.Parse(time.Now().Sub(now)).String())
-	}
+	return &Report{
+		Leaks:    leaks,
+		Duration: durafmt.Parse(time.Now().Sub(now)).String(),
+		Commits:  totalCommits,
+	}, err
 }

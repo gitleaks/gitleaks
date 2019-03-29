@@ -4,8 +4,8 @@ const version = "1.25.0"
 
 const defaultGithubURL = "https://api.github.com/"
 const defaultThreadNum = 1
-const errExit = 2
-const leakExit = 1
+const ErrExit = 2
+const LeakExit = 1
 
 const defaultConfig = `
 # This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
