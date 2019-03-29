@@ -1,12 +1,14 @@
 sudo: required
 language: go
 go:
-- 1.9
+- 1.11
 services:
 - docker
 script:
+- env GO111MODULE=on go build
 - make test
 after_success:
+- env GO111MODULE=on go build
 - export REPO=zricethezav/gitleaks
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH;
   fi`
