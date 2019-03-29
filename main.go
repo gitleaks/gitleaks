@@ -10,7 +10,8 @@ import (
 func main() {
 	report, err := gitleaks.Run(gitleaks.ParseOpts())
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		os.Exit(gitleaks.ErrExit)
 	}
 
 	if len(report.Leaks) != 0 {

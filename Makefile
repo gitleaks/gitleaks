@@ -4,7 +4,7 @@ test:
 	go get golang.org/x/lint/golint
 	go fmt
 	golint
-	go test --race --cover -run=Test$
+	go test --race --cover github.com/zricethezav/gitleaks/src
 deploy:
 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
 	docker build -f Dockerfile -t $(REPO):$(TAG) .
