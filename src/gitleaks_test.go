@@ -522,6 +522,14 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "no leaks present on branch",
+			numLeaks:    0,
+			testOpts: &Options{
+				Branch: "dev",
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "two leaks present limit goroutines",
 			numLeaks:    2,
 			testOpts: &Options{
@@ -561,10 +569,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "two leaks present whitelist bad commit",
 			configPath:  path.Join(configsDir, "commit"),
 			testOpts:    &Options{},
-			// whiteListCommits: map[string]bool{
-			// 	"eaeffdc65b4c73ccb67e75d96bd8743be2c85973": true,
-			// },
-			numLeaks: 1,
+			numLeaks:    1,
 		},
 		{
 			repo:        leaksRepo,

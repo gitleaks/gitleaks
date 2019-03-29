@@ -26,6 +26,7 @@ type Leak struct {
 	Type     string    `json:"reason"`
 	Message  string    `json:"commitMsg"`
 	Author   string    `json:"author"`
+	Email    string    `json:"email"`
 	File     string    `json:"file"`
 	Repo     string    `json:"repo"`
 	Date     time.Time `json:"date"`
@@ -250,7 +251,8 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 								filePath: filePath,
 								content:  chunk.Content(),
 								sha:      c.Hash.String(),
-								author:   c.Author.String(),
+								author:   c.Author.Name,
+								email:    c.Author.Email,
 								message:  strings.Replace(c.Message, "\n", " ", -1),
 								date:     c.Author.When,
 							}
@@ -301,7 +303,8 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 			filePath: f.Name,
 			content:  content,
 			sha:      c.Hash.String(),
-			author:   c.Author.String(),
+			author:   c.Author.Name,
+			email:    c.Author.Email,
 			message:  strings.Replace(c.Message, "\n", " ", -1),
 			date:     c.Author.When,
 		}

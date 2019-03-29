@@ -22,6 +22,7 @@ type commitInfo struct {
 	sha      string
 	message  string
 	author   string
+	email    string
 	date     time.Time
 }
 
@@ -40,9 +41,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "file", "date"})
+		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "email", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.File, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -145,6 +146,7 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, commit
 		Offender: offender,
 		Type:     leakType,
 		Author:   commit.author,
+		Email:    commit.email,
 		File:     commit.filePath,
 		Repo:     commit.repoName,
 		Message:  commit.message,
