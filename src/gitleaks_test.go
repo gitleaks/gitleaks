@@ -1,10 +1,12 @@
 package gitleaks
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -658,8 +660,16 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
+			description: "toml entropy range from opts",
+			numLeaks:    454,
+			testOpts: &Options{
+				ConfigPath: path.Join(configsDir, "entropy"),
+			},
+		},
+		{
+			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    430,
+			numLeaks:    454,
 			testOpts:    &Options{},
 			configPath:  path.Join(configsDir, "entropy"),
 		},
@@ -714,11 +724,7 @@ func TestAuditRepo(t *testing.T) {
 					if opts.Redact {
 						g.Assert(leaks[0].Offender).Equal("REDACTED")
 					}
-					if test.description == "toml entropy range" {
-						g.Assert(len(leaks) > test.numLeaks).Equal(true)
-					} else {
-						g.Assert(len(leaks)).Equal(test.numLeaks)
-					}
+					g.Assert(len(leaks)).Equal(test.numLeaks)
 				}
 			next:
 				os.Setenv("GITLEAKS_CONFIG", "")
@@ -727,165 +733,165 @@ func TestAuditRepo(t *testing.T) {
 	}
 }
 
-// func TestOptionGuard(t *testing.T) {
-// 	var tests = []struct {
-// 		testOpts            Options
-// 		githubToken         bool
-// 		description         string
-// 		expectedErrMsg      string
-// 		expectedErrMsgFuzzy string
-// 	}{
-// 		{
-// 			testOpts:       Options{},
-// 			description:    "default no opts",
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubUser: "fakeUser",
-// 				GithubOrg:  "fakeOrg",
-// 			},
-// 			description:    "double owner",
-// 			expectedErrMsg: "github user and organization set",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg: "fakeOrg",
-// 				OwnerPath: "/dev/null",
-// 			},
-// 			description:    "local and remote target",
-// 			expectedErrMsg: "github organization set and local owner path",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubUser: "fakeUser",
-// 				OwnerPath:  "/dev/null",
-// 			},
-// 			description:    "local and remote target",
-// 			expectedErrMsg: "github user set and local owner path",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubUser:   "fakeUser",
-// 				SingleSearch: "*/./....",
-// 			},
-// 			description:         "single search invalid regex gaurd",
-// 			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubUser:   "fakeUser",
-// 				SingleSearch: "mystring",
-// 			},
-// 			description:    "single search regex gaurd",
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				GithubOrg: "fakeOrg",
-// 				Entropy:   9,
-// 			},
-// 			description:    "Invalid entropy level guard",
-// 			expectedErrMsg: "The maximum level of entropy is 8",
-// 		},
-// 	}
-// 	g := goblin.Goblin(t)
-// 	for _, test := range tests {
-// 		g.Describe("Test Option Gaurd", func() {
-// 			g.It(test.description, func() {
-// 				os.Clearenv()
-// 				opts = test.testOpts
-// 				if test.githubToken {
-// 					os.Setenv("GITHUB_TOKEN", "fakeToken")
-// 				}
-// 				err := optsGuard()
-// 				if err != nil {
-// 					if test.expectedErrMsgFuzzy != "" {
-// 						g.Assert(strings.Contains(err.Error(), test.expectedErrMsgFuzzy)).Equal(true)
-// 					} else {
-// 						g.Assert(err.Error()).Equal(test.expectedErrMsg)
-// 					}
-// 				} else {
-// 					g.Assert("").Equal(test.expectedErrMsg)
-// 				}
+func TestOptionGuard(t *testing.T) {
+	var tests = []struct {
+		testOpts            *Options
+		githubToken         bool
+		description         string
+		expectedErrMsg      string
+		expectedErrMsgFuzzy string
+	}{
+		{
+			testOpts:       &Options{},
+			description:    "default no opts",
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: &Options{
+				GithubUser: "fakeUser",
+				GithubOrg:  "fakeOrg",
+			},
+			description:    "double owner",
+			expectedErrMsg: "github user and organization set",
+		},
+		{
+			testOpts: &Options{
+				GithubOrg: "fakeOrg",
+				OwnerPath: "/dev/null",
+			},
+			description:    "local and remote target",
+			expectedErrMsg: "github organization set and local owner path",
+		},
+		{
+			testOpts: &Options{
+				GithubUser: "fakeUser",
+				OwnerPath:  "/dev/null",
+			},
+			description:    "local and remote target",
+			expectedErrMsg: "github user set and local owner path",
+		},
+		{
+			testOpts: &Options{
+				GithubUser:   "fakeUser",
+				SingleSearch: "*/./....",
+			},
+			description:         "single search invalid regex gaurd",
+			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
+		},
+		{
+			testOpts: &Options{
+				GithubUser:   "fakeUser",
+				SingleSearch: "mystring",
+			},
+			description:    "single search regex gaurd",
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: &Options{
+				GithubOrg: "fakeOrg",
+				Entropy:   9,
+			},
+			description:    "Invalid entropy level guard",
+			expectedErrMsg: "The maximum level of entropy is 8",
+		},
+	}
+	g := goblin.Goblin(t)
+	for _, test := range tests {
+		g.Describe("Test Option Gaurd", func() {
+			g.It(test.description, func() {
+				os.Clearenv()
+				opts = test.testOpts
+				if test.githubToken {
+					os.Setenv("GITHUB_TOKEN", "fakeToken")
+				}
+				err := opts.guard()
+				if err != nil {
+					if test.expectedErrMsgFuzzy != "" {
+						g.Assert(strings.Contains(err.Error(), test.expectedErrMsgFuzzy)).Equal(true)
+					} else {
+						g.Assert(err.Error()).Equal(test.expectedErrMsg)
+					}
+				} else {
+					g.Assert("").Equal(test.expectedErrMsg)
+				}
 
-// 			})
-// 		})
-// 	}
-// }
+			})
+		})
+	}
+}
 
-// func TestLoadToml(t *testing.T) {
-// 	tmpDir, _ := ioutil.TempDir("", "gitleaksTestConfigDir")
-// 	defer os.RemoveAll(tmpDir)
-// 	err := ioutil.WriteFile(path.Join(tmpDir, "gitleaksConfig"), []byte(defaultConfig), 0644)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func TestLoadToml(t *testing.T) {
+	tmpDir, _ := ioutil.TempDir("", "gitleaksTestConfigDir")
+	defer os.RemoveAll(tmpDir)
+	err := ioutil.WriteFile(path.Join(tmpDir, "gitleaksConfig"), []byte(defaultConfig), 0644)
+	if err != nil {
+		panic(err)
+	}
 
-// 	configPath := path.Join(tmpDir, "gitleaksConfig")
-// 	noConfigPath := path.Join(tmpDir, "gitleaksConfigNope")
+	configPath := path.Join(tmpDir, "gitleaksConfig")
+	noConfigPath := path.Join(tmpDir, "gitleaksConfigNope")
 
-// 	var tests = []struct {
-// 		testOpts       Options
-// 		description    string
-// 		configPath     string
-// 		expectedErrMsg string
-// 		singleSearch   bool
-// 	}{
-// 		{
-// 			testOpts: Options{
-// 				ConfigPath: configPath,
-// 			},
-// 			description: "path to config",
-// 		},
-// 		{
-// 			testOpts:     Options{},
-// 			description:  "env var path to no config",
-// 			singleSearch: true,
-// 		},
-// 		{
-// 			testOpts: Options{
-// 				ConfigPath: noConfigPath,
-// 			},
-// 			description:    "no path to config",
-// 			expectedErrMsg: fmt.Sprintf("no gitleaks config at %s", noConfigPath),
-// 		},
-// 		{
-// 			testOpts:       Options{},
-// 			description:    "env var path to config",
-// 			configPath:     configPath,
-// 			expectedErrMsg: "",
-// 		},
-// 		{
-// 			testOpts:       Options{},
-// 			description:    "env var path to no config",
-// 			configPath:     noConfigPath,
-// 			expectedErrMsg: fmt.Sprintf("problem loading config: open %s: no such file or directory", noConfigPath),
-// 		},
-// 	}
+	var tests = []struct {
+		testOpts       *Options
+		description    string
+		configPath     string
+		expectedErrMsg string
+		singleSearch   bool
+	}{
+		{
+			testOpts: &Options{
+				ConfigPath: configPath,
+			},
+			description: "path to config",
+		},
+		{
+			testOpts:     &Options{},
+			description:  "env var path to no config",
+			singleSearch: true,
+		},
+		{
+			testOpts: &Options{
+				ConfigPath: noConfigPath,
+			},
+			description:    "no path to config",
+			expectedErrMsg: fmt.Sprintf("no gitleaks config at %s", noConfigPath),
+		},
+		{
+			testOpts:       &Options{},
+			description:    "env var path to config",
+			configPath:     configPath,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts:       &Options{},
+			description:    "env var path to no config",
+			configPath:     noConfigPath,
+			expectedErrMsg: fmt.Sprintf("problem loading config: open %s: no such file or directory", noConfigPath),
+		},
+	}
 
-// 	g := goblin.Goblin(t)
-// 	for _, test := range tests {
-// 		g.Describe("TestLoadToml", func() {
-// 			g.It(test.description, func() {
-// 				opts = test.testOpts
-// 				if test.singleSearch {
-// 					singleSearchRegex = regexp.MustCompile("test")
-// 				} else {
-// 					singleSearchRegex = nil
-// 				}
-// 				if test.configPath != "" {
-// 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
-// 				} else {
-// 					os.Clearenv()
-// 				}
-// 				err := loadToml()
-// 				if err != nil {
-// 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
-// 				} else {
-// 					g.Assert("").Equal(test.expectedErrMsg)
-// 				}
-// 			})
-// 		})
-// 	}
-// }
+	g := goblin.Goblin(t)
+	for _, test := range tests {
+		g.Describe("TestLoadToml", func() {
+			g.It(test.description, func() {
+				opts = test.testOpts
+				if test.singleSearch {
+					singleSearchRegex = regexp.MustCompile("test")
+				} else {
+					singleSearchRegex = nil
+				}
+				if test.configPath != "" {
+					os.Setenv("GITLEAKS_CONFIG", test.configPath)
+				} else {
+					os.Clearenv()
+				}
+				_, err = newConfig()
+				if err != nil {
+					g.Assert(err.Error()).Equal(test.expectedErrMsg)
+				} else {
+					g.Assert("").Equal(test.expectedErrMsg)
+				}
+			})
+		})
+	}
+}

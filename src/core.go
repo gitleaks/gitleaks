@@ -20,8 +20,8 @@ var (
 	threads           int
 	totalCommits      int64
 	commitMap         = make(map[string]bool)
-	cMutex            = &sync.Mutex{}
 	auditDone         bool
+	mutex             = &sync.Mutex{}
 )
 
 func init() {

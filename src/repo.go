@@ -109,7 +109,6 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		leaks       []Leak
 		commitCount int64
 		commitWg    sync.WaitGroup
-		mutex       = &sync.Mutex{}
 		semaphore   chan bool
 		logOpts     git.LogOptions
 	)
@@ -186,7 +185,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 
 		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
 		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
-			leaks = append(repoInfo.auditSingleCommit(c, mutex), leaks...)
+			leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
+			mutex.Lock()
+			leaks = append(leaksFromSingleCommit, leaks...)
+			mutex.Unlock()
 			if opts.Commit == c.Hash.String() {
 				return storer.ErrStop
 			}
@@ -273,7 +275,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	return leaks, nil
 }
 
-func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit, mutex *sync.Mutex) []Leak {
+func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 	var leaks []Leak
 	fIter, err := c.Files()
 	if err != nil {
