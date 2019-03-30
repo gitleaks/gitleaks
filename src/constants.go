@@ -1,6 +1,6 @@
 package gitleaks
 
-const version = "1.25.0"
+const version = "1.25.1"
 
 const defaultGithubURL = "https://api.github.com/"
 const defaultThreadNum = 1
