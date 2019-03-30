@@ -84,6 +84,7 @@ Application Options:
   -e, --entropy=        Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)
       --noise-reduction Reduce the number of finds when entropy checks are enabled
       --repo-config     Load config from target repo. Config file must be ".gitleaks.toml"
+      --branch=         Branch to audit
   -l, --log=            log level
   -v, --verbose         Show verbose output from gitleaks audit
       --report=         path to write report file
