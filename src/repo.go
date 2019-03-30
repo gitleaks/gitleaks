@@ -181,11 +181,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 			return nil
 		}
 
-		commitCount = commitCount + 1
-		totalCommits = totalCommits + 1
-
 		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
-		if len(c.ParentHashes) == 0 || opts.Commit == c.Hash.String() {
+		if (len(c.ParentHashes) == 0 && opts.Commit == "") || (len(c.ParentHashes) == 0 && opts.Commit == c.Hash.String()) {
+			commitCount = commitCount + 1
+			totalCommits = totalCommits + 1
 			leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
 			mutex.Lock()
 			leaks = append(leaksFromSingleCommit, leaks...)
@@ -196,9 +195,12 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 			return nil
 		}
 
-		if opts.Commit != "" {
+		if opts.Commit != "" && opts.Commit != c.Hash.String() {
 			return nil
 		}
+
+		commitCount = commitCount + 1
+		totalCommits = totalCommits + 1
 
 		// regular commit audit
 		err = c.Parents().ForEach(func(parent *object.Commit) error {

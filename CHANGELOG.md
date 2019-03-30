@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+1.25.1
+----
+- Fixing #188
+
 1.25.0
 ----
 - Pretty big refactor, see `src` directory
