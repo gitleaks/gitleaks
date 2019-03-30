@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+1.25.0
+----
+- Pretty big refactor, see `src` directory
+- Dropping dep for go modules
+- Separating email and author
+- Readding branch support with `--branch=`
 
 1.24.0
 ----
