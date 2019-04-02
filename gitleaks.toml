@@ -1,6 +1,6 @@
 title = "gitleaks config"
 [[regexes]]
-description = "AWS"
+description = "AWS Identifier"
 regex = '''AKIA[0-9A-Z]{16}'''
 [[regexes]]
 description = "RKCS8"
