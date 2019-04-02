@@ -16,8 +16,11 @@ const defaultConfig = `
 title = "gitleaks config"
 # add regexes to the regex table
 [[regexes]]
-description = "AWS"
+description = "AWS Identifier"
 regex = '''AKIA[0-9A-Z]{16}'''
+[[regexes]]
+description = "AWS Secret"
+regex = '''(?i)aws_?([a-z0-9]+_?)*secret_?([a-z0-9]+_?)*\s*(:|=|=>)\s*('|")?[a-zA-Z0-9/+=]{38,}'''
 [[regexes]]
 description = "PKCS8"
 regex = '''-----BEGIN PRIVATE KEY-----'''
@@ -25,23 +28,26 @@ regex = '''-----BEGIN PRIVATE KEY-----'''
 description = "RSA"
 regex = '''-----BEGIN RSA PRIVATE KEY-----'''
 [[regexes]]
+description = "Github"
+regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
+[[regexes]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+[[regexes]]
+description = "Facebook"
+regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
+[[regexes]]
+description = "Twitter"
+regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
 [[regexes]]
 description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 [[regexes]]
-description = "Facebook"
-regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
+description = "Slack token"
+regex = '''xox[baprs]-.*'''
 [[regexes]]
-description = "Twitter"
-regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
-[[regexes]]
-description = "Github"
-regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
-[[regexes]]
-description = "Slack"
-regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
+description = "Stripe API Key"
+regex = '''(?i)(sk|pk)_(test|live)_[0-9a-zA-Z]{10,32}'''
 
 [entropy]
 lineregexes = [
