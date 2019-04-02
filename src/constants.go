@@ -51,17 +51,17 @@ regex = '''(?i)(sk|pk)_(test|live)_[0-9a-zA-Z]{10,32}'''
 
 [entropy]
 lineregexes = [
-	"api",
-	"key",
-	"signature",
-	"secret",
-	"password",
-	"pass",
-	"pwd",
-	"token",
-	"curl",
-	"wget",
-	"https?",
+	"(?i)api",
+	"(?i)key",
+	"(?i)signature",
+	"(?i)secret",
+	"(?i)password",
+	"(?i)pass",
+	"(?i)pwd",
+	"(?i)token",
+	"(?i)curl",
+	"(?i)wget",
+	"(?i)https?",
 ]
 
 [whitelist]
