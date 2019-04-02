@@ -3,6 +3,9 @@ title = "gitleaks config"
 description = "AWS Identifier"
 regex = '''AKIA[0-9A-Z]{16}'''
 [[regexes]]
+description = "AWS Secret"
+regex = '''(?i)aws_?([a-z0-9]+_?)*secret_?([a-z0-9]+_?)*\s*(:|=|=>)\s*('|")?[a-zA-Z0-9/+=]{38,}'''
+[[regexes]]
 description = "RKCS8"
 regex = '''-----BEGIN PRIVATE KEY-----'''
 [[regexes]]
