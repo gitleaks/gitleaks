@@ -3,7 +3,6 @@ package gitleaks
 import (
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -13,15 +12,14 @@ import (
 )
 
 var (
-	opts              *Options
-	config            *Config
-	singleSearchRegex *regexp.Regexp
-	dir               string
-	threads           int
-	totalCommits      int64
-	commitMap         = make(map[string]bool)
-	auditDone         bool
-	mutex             = &sync.Mutex{}
+	opts         *Options
+	config       *Config
+	dir          string
+	threads      int
+	totalCommits int64
+	commitMap    = make(map[string]bool)
+	auditDone    bool
+	mutex        = &sync.Mutex{}
 )
 
 func init() {
@@ -31,7 +29,7 @@ func init() {
 
 // Report is
 type Report struct {
-	Leaks    []Leak
+	Leaks    []*Leak
 	Duration string
 	Commits  int64
 }
@@ -39,7 +37,7 @@ type Report struct {
 // Run is the entry point for gitleaks
 func Run(optsL *Options) (*Report, error) {
 	var (
-		leaks []Leak
+		leaks []*Leak
 		err   error
 	)
 

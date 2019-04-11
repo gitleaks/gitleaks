@@ -21,8 +21,8 @@ import (
 var githubPages = 100
 
 // auditPR audits a single github PR
-func auditGithubPR() ([]Leak, error) {
-	var leaks []Leak
+func auditGithubPR() ([]*Leak, error) {
+	var leaks []*Leak
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
 	splits := strings.Split(opts.GithubPR, "/")
@@ -66,7 +66,7 @@ func auditGithubPR() ([]Leak, error) {
 					continue
 				}
 
-				commit := commitInfo{
+				commit := &commitInfo{
 					sha:      c.GetSHA(),
 					content:  *f.Patch,
 					filePath: *f.Filename,
@@ -91,7 +91,7 @@ func auditGithubPR() ([]Leak, error) {
 // First, we gather all the github repositories from the github api (this doesnt actually clone the repo).
 // After all the repos have been pulled from github's api we proceed to audit the repos by calling auditGithubRepo.
 // If an error occurs during an audit of a repo, that error is logged but won't break the execution cycle.
-func auditGithubRepos() ([]Leak, error) {
+func auditGithubRepos() ([]*Leak, error) {
 	var (
 		err              error
 		githubRepos      []*github.Repository
@@ -100,7 +100,7 @@ func auditGithubRepos() ([]Leak, error) {
 		githubOrgOptions *github.RepositoryListByOrgOptions
 		githubOptions    *github.RepositoryListOptions
 		done             bool
-		leaks            []Leak
+		leaks            []*Leak
 		ownerDir         string
 	)
 	ctx := context.Background()

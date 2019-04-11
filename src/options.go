@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -36,16 +35,14 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	Threads        int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	Disk           bool    `long:"disk" description:"Clones repo(s) to disk"`
-	SingleSearch   string  `long:"single-search" description:"single regular expression to search for"`
-	ConfigPath     string  `long:"config" description:"path to gitleaks config"`
-	SSHKey         string  `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks   bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy        float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
-	NoiseReduction bool    `long:"noise-reduction" description:"Reduce the number of finds when entropy checks are enabled"`
-	RepoConfig     bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
-	Branch         string  `long:"branch" description:"Branch to audit"`
+	Threads      int     `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	Disk         bool    `long:"disk" description:"Clones repo(s) to disk"`
+	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
+	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
+	RepoConfig   bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
+	Branch       string  `long:"branch" description:"Branch to audit"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -95,7 +92,6 @@ func ParseOpts() *Options {
 
 // optsGuard prevents invalid options
 func (opts *Options) guard() error {
-	var err error
 	if opts.GithubOrg != "" && opts.GithubUser != "" {
 		return fmt.Errorf("github user and organization set")
 	} else if opts.GithubOrg != "" && opts.OwnerPath != "" {
@@ -126,13 +122,6 @@ func (opts *Options) guard() error {
 		_, err = net.DialTimeout("tcp", ghURL.Host+":"+tcpPort, timeout)
 		if err != nil {
 			return fmt.Errorf("%s unreachable, error: %s", ghURL.Host, err)
-		}
-	}
-
-	if opts.SingleSearch != "" {
-		singleSearchRegex, err = regexp.Compile(opts.SingleSearch)
-		if err != nil {
-			return fmt.Errorf("unable to compile regex: %s, %v", opts.SingleSearch, err)
 		}
 	}
 

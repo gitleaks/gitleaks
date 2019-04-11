@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
@@ -17,20 +18,23 @@ type entropyRange struct {
 	v2 float64
 }
 
-type Regex struct {
+// Rule instructs how gitleaks should audit each line of code
+type Rule struct {
 	description string
 	regex       *regexp.Regexp
+	severity    string
+	tags        []string
+	entropies   []*entropyRange
 }
 
 // TomlConfig is used for loading gitleaks configs from a toml file
 type TomlConfig struct {
-	Regexes []struct {
+	Rules []struct {
 		Description string
 		Regex       string
-	}
-	Entropy struct {
-		LineRegexes []string
-		Ranges      []string
+		Entropies   []string
+		Tags        []string
+		Severity    string
 	}
 	Whitelist struct {
 		Files   []string
@@ -42,16 +46,12 @@ type TomlConfig struct {
 
 // Config contains gitleaks config
 type Config struct {
-	Regexes   []Regex
+	Rules     []*Rule
 	WhiteList struct {
 		regexes []*regexp.Regexp
 		files   []*regexp.Regexp
 		commits map[string]bool
 		repos   []*regexp.Regexp
-	}
-	Entropy struct {
-		entropyRanges []*entropyRange
-		regexes       []*regexp.Regexp
 	}
 	sshAuth *ssh.PublicKeys
 }
@@ -104,31 +104,39 @@ func newConfig() (*Config, error) {
 
 // updateConfig will update a the global config values
 func (config *Config) update(tomlConfig TomlConfig) error {
-	if len(tomlConfig.Entropy.Ranges) != 0 {
-		err := config.updateEntropyRanges(tomlConfig.Entropy.Ranges)
+	for _, rule := range tomlConfig.Rules {
+		re := regexp.MustCompile(rule.Regex)
+		ranges, err := getEntropyRanges(rule.Entropies)
 		if err != nil {
-			return err
+			log.Errorf("could not create entropy range for %s, skipping rule", rule.Description)
+			continue
 		}
-	}
-
-	for _, regex := range tomlConfig.Entropy.LineRegexes {
-		config.Entropy.regexes = append(config.Entropy.regexes, regexp.MustCompile(regex))
-	}
-
-	if singleSearchRegex != nil {
-		config.Regexes = append(config.Regexes, Regex{
-			description: "single search",
-			regex:       singleSearchRegex,
-		})
-	} else {
-		for _, regex := range tomlConfig.Regexes {
-			config.Regexes = append(config.Regexes, Regex{
-				description: regex.Description,
-				regex:       regexp.MustCompile(regex.Regex),
-			})
+		r := &Rule{
+			description: rule.Description,
+			regex:       re,
+			severity:    rule.Severity,
+			tags:        rule.Tags,
+			entropies:   ranges,
 		}
+		config.Rules = append(config.Rules, r)
 	}
 
+	// set stand alone rules from opts
+	if opts.Entropy != 0.0 {
+		ranges, err := getEntropyRanges([]string{fmt.Sprintf("0.0-%s", opts.Entropy)})
+		if err != nil {
+			log.Fatalf("could not create entropy range for %s", opts.Entropy)
+		}
+		r := &Rule{
+			description: "Entropy ",
+			severity:    "5",
+			tags:        []string{"entropy"},
+			entropies:   ranges,
+		}
+		config.Rules = append(config.Rules, r)
+	}
+
+	// set whitelists
 	config.WhiteList.commits = make(map[string]bool)
 	for _, commit := range tomlConfig.Whitelist.Commits {
 		config.WhiteList.commits[commit] = true
@@ -147,30 +155,31 @@ func (config *Config) update(tomlConfig TomlConfig) error {
 }
 
 // entropyRanges hydrates entropyRanges which allows for fine tuning entropy checking
-func (config *Config) updateEntropyRanges(entropyLimitStr []string) error {
+func getEntropyRanges(entropyLimitStr []string) ([]*entropyRange, error) {
+	var ranges []*entropyRange
 	for _, span := range entropyLimitStr {
 		split := strings.Split(span, "-")
 		v1, err := strconv.ParseFloat(split[0], 64)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		v2, err := strconv.ParseFloat(split[1], 64)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if v1 > v2 {
-			return fmt.Errorf("entropy range must be ascending")
+			return nil, fmt.Errorf("entropy range must be ascending")
 		}
 		r := &entropyRange{
 			v1: v1,
 			v2: v2,
 		}
 		if r.v1 > 8.0 || r.v1 < 0.0 || r.v2 > 8.0 || r.v2 < 0.0 {
-			return fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0")
+			return nil, fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0")
 		}
-		config.Entropy.entropyRanges = append(config.Entropy.entropyRanges, r)
+		ranges = append(ranges, r)
 	}
-	return nil
+	return ranges, nil
 }
 
 // externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file

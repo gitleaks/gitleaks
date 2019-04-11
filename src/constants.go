@@ -1,6 +1,6 @@
 package gitleaks
 
-const version = "1.25.1"
+const version = "2.0.0"
 
 const defaultGithubURL = "https://api.github.com/"
 const defaultThreadNum = 1
@@ -14,49 +14,14 @@ const defaultConfig = `
 # configurations from that path. Gitleaks does not whitelist anything by default.
 
 title = "gitleaks config"
-# add regexes to the regex table
-[[regexes]]
+# add rules to the rule table
+[[rules]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
-[[regexes]]
-description = "PKCS8"
-regex = '''-----BEGIN PRIVATE KEY-----'''
-[[regexes]]
-description = "RSA"
-regex = '''-----BEGIN RSA PRIVATE KEY-----'''
-[[regexes]]
-description = "SSH"
-regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-[[regexes]]
-description = "PGP"
-regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
-[[regexes]]
-description = "Facebook"
-regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
-[[regexes]]
-description = "Twitter"
-regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
-[[regexes]]
-description = "Github"
-regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
-[[regexes]]
-description = "Slack"
-regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
-
-[entropy]
-lineregexes = [
-	"api",
-	"key",
-	"signature",
-	"secret",
-	"password",
-	"pass",
-	"pwd",
-	"token",
-	"curl",
-	"wget",
-	"https?",
-]
+tags = ["key", "AWS"]
+entropies = [ "3.3-4.30" ]
+filetypes = [ "*.go" ]
+severity = "5"
 
 [whitelist]
 files = [

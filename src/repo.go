@@ -30,6 +30,8 @@ type Leak struct {
 	File     string    `json:"file"`
 	Repo     string    `json:"repo"`
 	Date     time.Time `json:"date"`
+	Tags     string    `json:"tags"`
+	Severity string    `json:"severity"`
 }
 
 // RepoInfo contains a src-d git repository and other data about the repo
@@ -104,10 +106,10 @@ func (repoInfo *RepoInfo) clone() error {
 }
 
 // audit performs an audit
-func (repoInfo *RepoInfo) audit() ([]Leak, error) {
+func (repoInfo *RepoInfo) audit() ([]*Leak, error) {
 	var (
 		err         error
-		leaks       []Leak
+		leaks       []*Leak
 		commitCount int64
 		commitWg    sync.WaitGroup
 		semaphore   chan bool
@@ -248,7 +250,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
-							diff := commitInfo{
+							diff := &commitInfo{
 								repoName: repoInfo.name,
 								filePath: filePath,
 								content:  chunk.Content(),
@@ -279,8 +281,8 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	return leaks, nil
 }
 
-func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
-	var leaks []Leak
+func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []*Leak {
+	var leaks []*Leak
 	fIter, err := c.Files()
 	if err != nil {
 		return nil
@@ -300,7 +302,7 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		if err != nil {
 			return nil
 		}
-		diff := commitInfo{
+		diff := &commitInfo{
 			repoName: repoInfo.name,
 			filePath: f.Name,
 			content:  content,
