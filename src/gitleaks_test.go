@@ -17,7 +17,7 @@ import (
 )
 
 const testWhitelistCommit = `
-[[regexes]]
+[[rules]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 
@@ -27,7 +27,7 @@ commits = [
 ]
 `
 const testWhitelistFile = `
-[[regexes]]
+[[rules]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 
@@ -38,7 +38,7 @@ files = [
 `
 
 const testWhitelistRegex = `
-[[regexes]]
+[[rules]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 
@@ -49,7 +49,7 @@ regexes= [
 `
 
 const testWhitelistRepo = `
-[[regexes]]
+[[rules]]
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 
@@ -60,34 +60,24 @@ repos = [
 `
 
 const testEntropyRange = `
-[entropy]
-ranges = [
+[[rules]]
+description = "Entropy ranges"
+entropies = [
   "7.5-8.0",
   "3.2-3.4",
 ]
-lineregexes = [
-	"(?i)api",
-	"(?i)key",
-	"signature",
-	"secret",
-	"password",
-	"pass",
-	"pwd",
-	"token",
-	"curl",
-	"wget",
-	"https?",
-]
 `
 const testBadEntropyRange = `
-[entropy]
-ranges = [
+[[rules]]
+description = "Bad entropy ranges"
+entropies = [
   "8.0-3.0",
 ]
 `
 const testBadEntropyRange2 = `
-[entropy]
-ranges = [
+[[rules]]
+description = "Bad entropy ranges"
+entropies = [
   "8.0-8.9",
 ]
 `
@@ -373,7 +363,7 @@ func TestWriteReport(t *testing.T) {
 			Line:     "eat",
 			Commit:   "your",
 			Offender: "veggies",
-			Type:     "and",
+			Rule:     "and",
 			Message:  "get",
 			Author:   "some",
 			File:     "sleep",
@@ -632,23 +622,6 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
-			description: "leaks present with entropy",
-			testOpts: &Options{
-				Entropy: 4.7,
-			},
-			numLeaks: 6,
-		},
-		{
-			repo:        leaksRepo,
-			description: "leaks present with entropy",
-			testOpts: &Options{
-				Entropy:        4.7,
-				NoiseReduction: true,
-			},
-			numLeaks: 2,
-		},
-		{
-			repo:        leaksRepo,
 			description: "Audit until specific commit",
 			numLeaks:    2,
 			testOpts: &Options{
@@ -666,7 +639,7 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range from opts",
-			numLeaks:    454,
+			numLeaks:    426,
 			testOpts: &Options{
 				ConfigPath: path.Join(configsDir, "entropy"),
 			},
@@ -674,17 +647,8 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range",
-			numLeaks:    454,
+			numLeaks:    426,
 			testOpts:    &Options{},
-			configPath:  path.Join(configsDir, "entropy"),
-		},
-		{
-			repo: leaksRepo,
-			testOpts: &Options{
-				NoiseReduction: true,
-			},
-			description: "toml entropy noise reduction range",
-			numLeaks:    64,
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
@@ -775,30 +739,6 @@ func TestOptionGuard(t *testing.T) {
 			description:    "local and remote target",
 			expectedErrMsg: "github user set and local owner path",
 		},
-		{
-			testOpts: &Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "*/./....",
-			},
-			description:         "single search invalid regex gaurd",
-			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
-		},
-		{
-			testOpts: &Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "mystring",
-			},
-			description:    "single search regex gaurd",
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: &Options{
-				GithubOrg: "fakeOrg",
-				Entropy:   9,
-			},
-			description:    "Invalid entropy level guard",
-			expectedErrMsg: "The maximum level of entropy is 8",
-		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -880,11 +820,6 @@ func TestLoadToml(t *testing.T) {
 		g.Describe("TestLoadToml", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
-				if test.singleSearch {
-					singleSearchRegex = regexp.MustCompile("test")
-				} else {
-					singleSearchRegex = nil
-				}
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
 				} else {

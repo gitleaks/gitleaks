@@ -27,9 +27,10 @@ func init() {
 	threads = defaultThreadNum
 }
 
-// Report is
+// Report can be exported as a json or csv. Used for logging informationn
+// about the audit, (duration and # of commits)
 type Report struct {
-	Leaks    []*Leak
+	Leaks    []Leak
 	Duration string
 	Commits  int64
 }
@@ -37,7 +38,7 @@ type Report struct {
 // Run is the entry point for gitleaks
 func Run(optsL *Options) (*Report, error) {
 	var (
-		leaks []*Leak
+		leaks []Leak
 		err   error
 	)
 
@@ -47,6 +48,10 @@ func Run(optsL *Options) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
+    if opts.ValidateConfig {
+        log.Info("valid gitleaks config")
+        return nil, nil
+    }
 
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside

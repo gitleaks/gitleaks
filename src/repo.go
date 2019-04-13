@@ -23,7 +23,8 @@ type Leak struct {
 	Line     string    `json:"line"`
 	Commit   string    `json:"commit"`
 	Offender string    `json:"offender"`
-	Type     string    `json:"reason"`
+	Rule string    `json:"rule"`
+	Info string    `json:"info"`
 	Message  string    `json:"commitMsg"`
 	Author   string    `json:"author"`
 	Email    string    `json:"email"`
@@ -106,10 +107,10 @@ func (repoInfo *RepoInfo) clone() error {
 }
 
 // audit performs an audit
-func (repoInfo *RepoInfo) audit() ([]*Leak, error) {
+func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	var (
 		err         error
-		leaks       []*Leak
+		leaks       []Leak
 		commitCount int64
 		commitWg    sync.WaitGroup
 		semaphore   chan bool
@@ -281,8 +282,8 @@ func (repoInfo *RepoInfo) audit() ([]*Leak, error) {
 	return leaks, nil
 }
 
-func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []*Leak {
-	var leaks []*Leak
+func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
+	var leaks []Leak
 	fIter, err := c.Files()
 	if err != nil {
 		return nil

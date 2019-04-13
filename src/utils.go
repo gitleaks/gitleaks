@@ -28,7 +28,7 @@ type commitInfo struct {
 
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
-func writeReport(leaks []*Leak) error {
+func writeReport(leaks []Leak) error {
 	if len(leaks) == 0 {
 		return nil
 	}
@@ -43,7 +43,7 @@ func writeReport(leaks []*Leak) error {
 		w := csv.NewWriter(f)
 		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "email", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -91,28 +91,41 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	)
 
 	if rule.entropies != nil {
-		words := strings.Fields(line)
-		for _, word := range words {
-			_entropy := getShannonEntropy(word)
-			for _, e := range rule.entropies {
-				if _entropy > e.v1 && _entropy < e.v2 {
-					entropy = _entropy
-					entropyWord = word
-				}
-			}
-		}
+        if rule.entropyROI == "line" {
+            _entropy := getShannonEntropy(line)
+            for _, e := range rule.entropies {
+                if _entropy > e.v1 && _entropy < e.v2 {
+                    entropy = _entropy
+                    entropyWord = line
+                    goto postEntropy
+                }
+            }
+        } else {
+            words := strings.Fields(line)
+            for _, word := range words {
+                _entropy := getShannonEntropy(word)
+                for _, e := range rule.entropies {
+                    if _entropy > e.v1 && _entropy < e.v2 {
+                        entropy = _entropy
+                        entropyWord = word
+                        goto postEntropy
+                    }
+                }
+            }
+        }
 	}
 
+postEntropy:
 	if rule.regex != nil {
 		match = rule.regex.FindString(line)
 	}
 
 	if match != "" && entropy != 0.0 {
-		return newLeak(line, entropyWord, rule, commit), nil
+		return newLeak(line, fmt.Sprintf("%s regex match and entropy met at %.2f", rule.regex.String(), entropy), entropyWord, rule, commit), nil
 	} else if match != "" && rule.entropies == nil {
-		return newLeak(line, match, rule, commit), nil
-	} else if entropy != 0.0 && rule.regex == nil {
-		return newLeak(line, entropyWord, rule, commit), nil
+		return newLeak(line, fmt.Sprintf("%s regex match", rule.regex.String()), match, rule, commit), nil
+	} else if entropy != 0.0 && rule.regex.String() == "" {
+		return newLeak(line, fmt.Sprintf("entropy met at %.2f", entropy), entropyWord, rule, commit), nil
 	}
 	return nil, nil
 }
@@ -121,8 +134,8 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 // a set of regexes set by the config (see gitleaks.toml for example). This function
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
-func inspect(commit *commitInfo) []*Leak {
-	var leaks []*Leak
+func inspect(commit *commitInfo) []Leak {
+	var leaks []Leak
 	lines := strings.Split(commit.content, "\n")
 
 	for _, line := range lines {
@@ -131,10 +144,10 @@ func inspect(commit *commitInfo) []*Leak {
 				break
 			}
 			leak, err := rule.check(line, commit)
-			if err != nil {
+			if err != nil || leak == nil {
 				continue
 			}
-			leaks = append(leaks, leak)
+			leaks = append(leaks, *leak)
 		}
 	}
 	return leaks
@@ -151,12 +164,13 @@ func isLineWhitelisted(line string) bool {
 	return false
 }
 
-func newLeak(line string, msg string, rule *Rule, commit *commitInfo) *Leak {
+func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo) *Leak {
 	leak := &Leak{
 		Line:     line,
 		Commit:   commit.sha,
-		Offender: msg,
-		Type:     rule.description,
+		Offender: offender,
+		Rule:     rule.description,
+        Info: info,
 		Author:   commit.author,
 		Email:    commit.email,
 		File:     commit.filePath,
@@ -168,7 +182,7 @@ func newLeak(line string, msg string, rule *Rule, commit *commitInfo) *Leak {
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
-		leak.Line = strings.Replace(line, msg, "REDACTED", -1)
+		leak.Line = strings.Replace(line, offender, "REDACTED", -1)
 	}
 
 	if opts.Verbose {

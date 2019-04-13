@@ -40,7 +40,6 @@ type Options struct {
 	ConfigPath   string  `long:"config" description:"path to gitleaks config"`
 	SSHKey       string  `long:"ssh-key" description:"path to ssh key"`
 	ExcludeForks bool    `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	Entropy      float64 `long:"entropy" short:"e" description:"Include entropy checks during audit. Entropy scale: 0.0(no entropy) - 8.0(max entropy)"`
 	RepoConfig   bool    `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	Branch       string  `long:"branch" description:"Branch to audit"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
@@ -52,6 +51,7 @@ type Options struct {
 	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
 	Version      bool   `long:"version" description:"version number"`
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
+    ValidateConfig bool `long:"validate-config" description:"validate gitleaks config"`
 }
 
 // ParseOpts parses the options
@@ -125,9 +125,9 @@ func (opts *Options) guard() error {
 		}
 	}
 
-	if opts.Entropy > 8 {
-		return fmt.Errorf("The maximum level of entropy is 8")
-	}
+	// if opts.Entropy > 8 {
+	// 	return fmt.Errorf("The maximum level of entropy is 8")
+	// }
 	if opts.Report != "" {
 		if !strings.HasSuffix(opts.Report, ".json") && !strings.HasSuffix(opts.Report, ".csv") {
 			return fmt.Errorf("Report should be a .json or .csv file")

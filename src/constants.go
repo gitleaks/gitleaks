@@ -15,13 +15,57 @@ const defaultConfig = `
 
 title = "gitleaks config"
 # add rules to the rule table
+# [[rules]]
+# description = "Generic Key"
+# regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
+# entropies = ["4.1-4.3"]
+# entropyROI = "line"
+# tags = ["key"]
+
 [[rules]]
-description = "AWS"
+description = "AWS Key"
 regex = '''AKIA[0-9A-Z]{16}'''
 tags = ["key", "AWS"]
-entropies = [ "3.3-4.30" ]
-filetypes = [ "*.go" ]
-severity = "5"
+
+[[rules]]
+description = "PKCS8"
+regex = '''-----BEGIN PRIVATE KEY-----'''
+tags = ["key", "PKCS8"]
+
+[[rules]]
+description = "RSA"
+regex = '''-----BEGIN RSA PRIVATE KEY-----'''
+tags = ["key", "RSA"]
+
+[[rules]]
+description = "SSH"
+regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+tags = ["key", "SSH"]
+
+[[rules]]
+description = "PGP"
+regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
+tags = ["key", "PGP"]
+
+[[rules]]
+description = "Facebook"
+regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
+tags = ["key", "Facebook"]
+
+[[rules]]
+description = "Twitter"
+regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
+tags = ["key", "Twitter"]
+
+[[rules]]
+description = "Github"
+regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
+tags = ["key", "Github"]
+
+[[rules]]
+description = "Slack"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
+tags = ["key", "Slack"]
 
 [whitelist]
 files = [

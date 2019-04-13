@@ -17,11 +17,11 @@ const gitlabPages = 100
 // auditGitlabRepos kicks off audits if --gitlab-user or --gitlab-org options are set.
 // Getting all repositories from the GitLab API and run audit. If an error occurs during an audit of a repo,
 // that error is logged.
-func auditGitlabRepos() ([]*Leak, error) {
+func auditGitlabRepos() ([]Leak, error) {
 	var (
 		ps      []*gitlab.Project
 		resp    *gitlab.Response
-		leaks   []*Leak
+		leaks   []Leak
 		tempDir string
 		err     error
 	)
