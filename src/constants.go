@@ -4,7 +4,11 @@ const version = "2.0.0"
 
 const defaultGithubURL = "https://api.github.com/"
 const defaultThreadNum = 1
+
+// ErrExit used to signal an error during gitleaks execution
 const ErrExit = 2
+
+// LeakExit used to signal leaks present in audit
 const LeakExit = 1
 
 const defaultConfig = `
@@ -14,14 +18,6 @@ const defaultConfig = `
 # configurations from that path. Gitleaks does not whitelist anything by default.
 
 title = "gitleaks config"
-# add rules to the rule table
-# [[rules]]
-# description = "Generic Key"
-# regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
-# entropies = ["4.1-4.3"]
-# entropyROI = "line"
-# tags = ["key"]
-
 [[rules]]
 description = "AWS Key"
 regex = '''AKIA[0-9A-Z]{16}'''
@@ -72,15 +68,10 @@ files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
 #commits = [
-#  "BADHA5H1",
-#  "BADHA5H2",
+#  "whitelisted-commit1",
+#  "whitelisted-commit2",
 #]
 #repos = [
-#	"mygoodrepo"
-#]
-[misc]
-#entropy = [
-#	"3.3-4.30"
-#	"6.0-8.0
+#	"whitelisted-repo"
 #]
 `

@@ -25,7 +25,7 @@ type Rule struct {
 	severity    string
 	tags        []string
 	entropies   []*entropyRange
-    entropyROI  string
+	entropyROI  string
 }
 
 // TomlConfig is used for loading gitleaks configs from a toml file
@@ -36,7 +36,7 @@ type TomlConfig struct {
 		Entropies   []string
 		Tags        []string
 		Severity    string
-        EntropyROI  string
+		EntropyROI  string
 	}
 	Whitelist struct {
 		Files   []string
@@ -119,26 +119,10 @@ func (config *Config) update(tomlConfig TomlConfig) error {
 			severity:    rule.Severity,
 			tags:        rule.Tags,
 			entropies:   ranges,
-            entropyROI:  rule.EntropyROI,
+			entropyROI:  rule.EntropyROI,
 		}
 		config.Rules = append(config.Rules, r)
 	}
-
-	// // set stand alone rules from opts
-	// if opts.Entropy != 0.0 {
-	// 	ranges, err := getEntropyRanges([]string{fmt.Sprintf("0.0-%s", opts.Entropy)})
-	// 	if err != nil {
-	// 		log.Fatalf("could not create entropy range for %s", opts.Entropy)
-	// 	}
-	// 	r := &Rule{
-	// 		description: "Entropy ",
-	// 		severity:    "5",
-	// 		tags:        []string{"entropy"},
-	// 		entropies:   ranges,
-    //         entropyROI:
-	// 	}
-	// 	config.Rules = append(config.Rules, r)
-	// }
 
 	// set whitelists
 	config.WhiteList.commits = make(map[string]bool)

@@ -1,39 +1,72 @@
-title = "gitleaks config"
-[[regexes]]
-description = "AWS"
+title = "sample gitleaks config"
+
+# This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
+# The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
+# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
+# configurations from that path. Gitleaks does not whitelist anything by default.
+
+[[rules]]
+description = "AWS Key"
 regex = '''AKIA[0-9A-Z]{16}'''
-[[regexes]]
-description = "RKCS8"
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "PKCS8"
 regex = '''-----BEGIN PRIVATE KEY-----'''
-[[regexes]]
+tags = ["key", "PKCS8"]
+
+[[rules]]
 description = "RSA"
 regex = '''-----BEGIN RSA PRIVATE KEY-----'''
-[[regexes]]
-description = "Github"
-regex = '''(?i)github.*['\"][0-9a-zA-Z]{35,40}['\"]'''
-[[regexes]]
+tags = ["key", "RSA"]
+
+[[rules]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-[[regexes]]
-description = "Facebook"
-regex = '''(?i)facebook.*['\"][0-9a-f]{32}['\"]'''
-[[regexes]]
-description = "Twitter"
-regex = '''(?i)twitter.*['\"][0-9a-zA-Z]{35,44}['\"]'''
-[[regexes]]
+tags = ["key", "SSH"]
+
+[[rules]]
 description = "PGP"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
-[[regexes]]
-description = "Slack token"
-regex = '''xox[baprs]-.*'''
-[[regexes]]
-description = "Strip API Key"
-regex = '''(?i)(sk|pk)_(test|live)_[0-9a-zA-Z]{10,32}'''
+tags = ["key", "PGP"]
+
+[[rules]]
+description = "Facebook"
+regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
+tags = ["key", "Facebook"]
+
+[[rules]]
+description = "Twitter"
+regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
+tags = ["key", "Twitter"]
+
+[[rules]]
+description = "Github"
+regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
+tags = ["key", "Github"]
+
+[[rules]]
+description = "Slack"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
+tags = ["key", "Slack"]
 
 [whitelist]
-regexes = [
-  # "AKIA.*EXAMPLE",
-]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
+#commits = [
+#  "whitelisted-commit1",
+#  "whitelisted-commit2",
+#]
+#repos = [
+#	"whitelisted-repo"
+#]
+
+# Additional Examples
+# [[rules]]
+# description = "Generic Key"
+# regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
+# entropies = ["4.1-4.3"]
+# entropyROI = "line"
+# tags = ["key"]
+

@@ -41,9 +41,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "email", "file", "date"})
+		w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "commitMsg", "author", "email", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -91,28 +91,28 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	)
 
 	if rule.entropies != nil {
-        if rule.entropyROI == "line" {
-            _entropy := getShannonEntropy(line)
-            for _, e := range rule.entropies {
-                if _entropy > e.v1 && _entropy < e.v2 {
-                    entropy = _entropy
-                    entropyWord = line
-                    goto postEntropy
-                }
-            }
-        } else {
-            words := strings.Fields(line)
-            for _, word := range words {
-                _entropy := getShannonEntropy(word)
-                for _, e := range rule.entropies {
-                    if _entropy > e.v1 && _entropy < e.v2 {
-                        entropy = _entropy
-                        entropyWord = word
-                        goto postEntropy
-                    }
-                }
-            }
-        }
+		if rule.entropyROI == "line" {
+			_entropy := getShannonEntropy(line)
+			for _, e := range rule.entropies {
+				if _entropy > e.v1 && _entropy < e.v2 {
+					entropy = _entropy
+					entropyWord = line
+					goto postEntropy
+				}
+			}
+		} else {
+			words := strings.Fields(line)
+			for _, word := range words {
+				_entropy := getShannonEntropy(word)
+				for _, e := range rule.entropies {
+					if _entropy > e.v1 && _entropy < e.v2 {
+						entropy = _entropy
+						entropyWord = word
+						goto postEntropy
+					}
+				}
+			}
+		}
 	}
 
 postEntropy:
@@ -170,7 +170,7 @@ func newLeak(line string, info string, offender string, rule *Rule, commit *comm
 		Commit:   commit.sha,
 		Offender: offender,
 		Rule:     rule.description,
-        Info: info,
+		Info:     info,
 		Author:   commit.author,
 		Email:    commit.email,
 		File:     commit.filePath,

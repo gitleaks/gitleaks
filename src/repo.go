@@ -23,8 +23,8 @@ type Leak struct {
 	Line     string    `json:"line"`
 	Commit   string    `json:"commit"`
 	Offender string    `json:"offender"`
-	Rule string    `json:"rule"`
-	Info string    `json:"info"`
+	Rule     string    `json:"rule"`
+	Info     string    `json:"info"`
 	Message  string    `json:"commitMsg"`
 	Author   string    `json:"author"`
 	Email    string    `json:"email"`

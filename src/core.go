@@ -48,10 +48,10 @@ func Run(optsL *Options) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
-    if opts.ValidateConfig {
-        log.Info("valid gitleaks config")
-        return nil, nil
-    }
+	if opts.ValidateConfig {
+		log.Info("valid gitleaks config")
+		return nil, nil
+	}
 
 	if opts.Disk {
 		// temporary directory where all the gitleaks plain clones will reside
