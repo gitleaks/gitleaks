@@ -125,9 +125,6 @@ func (opts *Options) guard() error {
 		}
 	}
 
-	// if opts.Entropy > 8 {
-	// 	return fmt.Errorf("The maximum level of entropy is 8")
-	// }
 	if opts.Report != "" {
 		if !strings.HasSuffix(opts.Report, ".json") && !strings.HasSuffix(opts.Report, ".csv") {
 			return fmt.Errorf("Report should be a .json or .csv file")

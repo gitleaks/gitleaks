@@ -67,6 +67,7 @@ tags = ["key", "Slack"]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
+
 #commits = [
 #  "whitelisted-commit1",
 #  "whitelisted-commit2",

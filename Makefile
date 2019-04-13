@@ -20,8 +20,3 @@ build-all:
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64"
-benchmark:
-	go test -run=Benchmark -bench=. -benchtime=5s
-benchmark-fast:
-	go test -bench=BenchmarkAuditLeakRepo -run=BenchmarkAuditLeakRepo$
-
