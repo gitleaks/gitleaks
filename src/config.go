@@ -26,6 +26,7 @@ type Rule struct {
 	tags        []string
 	entropies   []*entropyRange
 	entropyROI  string
+	fileTypes   []*regexp.Regexp
 }
 
 // TomlConfig is used for loading gitleaks configs from a toml file
@@ -37,6 +38,7 @@ type TomlConfig struct {
 		Tags        []string
 		Severity    string
 		EntropyROI  string
+		FileTypes   []string
 	}
 	Whitelist struct {
 		Files   []string
@@ -55,7 +57,8 @@ type Config struct {
 		commits map[string]bool
 		repos   []*regexp.Regexp
 	}
-	sshAuth *ssh.PublicKeys
+	FileRules []*Rule
+	sshAuth   *ssh.PublicKeys
 }
 
 // loadToml loads of the toml config containing regexes and whitelists.
@@ -109,10 +112,16 @@ func (config *Config) update(tomlConfig TomlConfig) error {
 	for _, rule := range tomlConfig.Rules {
 		re := regexp.MustCompile(rule.Regex)
 		ranges, err := getEntropyRanges(rule.Entropies)
+		var fileTypes = []*regexp.Regexp{}
+		for _, regex := range rule.FileTypes {
+			fileTypes = append(fileTypes, regexp.MustCompile(regex))
+		}
+
 		if err != nil {
 			log.Errorf("could not create entropy range for %s, skipping rule", rule.Description)
 			continue
 		}
+
 		r := &Rule{
 			description: rule.Description,
 			regex:       re,
@@ -120,8 +129,14 @@ func (config *Config) update(tomlConfig TomlConfig) error {
 			tags:        rule.Tags,
 			entropies:   ranges,
 			entropyROI:  rule.EntropyROI,
+			fileTypes:   fileTypes,
+		}
+
+		if len(rule.Entropies) == 0 && rule.Regex == "" && len(fileTypes) != 0 {
+			config.FileRules = append(config.FileRules, r)
 		}
 		config.Rules = append(config.Rules, r)
+
 	}
 
 	// set whitelists

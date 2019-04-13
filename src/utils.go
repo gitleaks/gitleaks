@@ -41,9 +41,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "commitMsg", "author", "email", "file", "date"})
+		w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "severity", "commitMsg", "author", "email", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Severity, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -86,9 +86,21 @@ func writeReport(leaks []Leak) error {
 func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	var (
 		match       string
+		fileMatch   string
 		entropy     float64
 		entropyWord string
 	)
+
+	for _, f := range rule.fileTypes {
+		fileMatch = f.FindString(commit.filePath)
+		if fileMatch != "" {
+			break
+		}
+	}
+
+	if fileMatch == "" && len(rule.fileTypes) != 0 {
+		return nil, nil
+	}
 
 	if rule.entropies != nil {
 		if rule.entropyROI == "line" {

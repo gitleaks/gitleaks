@@ -241,6 +241,27 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					} else if to != nil {
 						filePath = to.Path()
 					}
+
+					for _, fr := range config.FileRules {
+						for _, r := range fr.fileTypes {
+							if r.FindString(filePath) != "" {
+								commitInfo := &commitInfo{
+									repoName: repoInfo.name,
+									filePath: filePath,
+									sha:      c.Hash.String(),
+									author:   c.Author.Name,
+									email:    c.Author.Email,
+									message:  strings.Replace(c.Message, "\n", " ", -1),
+									date:     c.Author.When,
+								}
+								leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo)
+								mutex.Lock()
+								leaks = append(leaks, leak)
+								mutex.Unlock()
+							}
+						}
+					}
+
 					for _, re := range config.WhiteList.files {
 						if re.FindString(filePath) != "" {
 							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)

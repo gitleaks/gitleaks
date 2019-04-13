@@ -22,6 +22,7 @@ title = "gitleaks config"
 description = "AWS Key"
 regex = '''AKIA[0-9A-Z]{16}'''
 tags = ["key", "AWS"]
+severity = "high"
 
 [[rules]]
 description = "PKCS8"
@@ -62,6 +63,21 @@ tags = ["key", "Github"]
 description = "Slack"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 tags = ["key", "Slack"]
+
+[[rules]]
+description = "Generic Key"
+regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
+entropies = ["4.1-4.3"]
+filetypes = [".gee"]
+entropyROI = "line"
+tags = ["key"]
+severity = "medium"
+
+[[rules]]
+description = "Any go file"
+filetypes = [".go"]
+tags = ["go files"]
+severity = "low"
 
 [whitelist]
 files = [
