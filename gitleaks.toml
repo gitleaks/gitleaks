@@ -4,7 +4,6 @@ title = "sample gitleaks config"
 # The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
 # is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
 # configurations from that path. Gitleaks does not whitelist anything by default.
-
 [[rules]]
 description = "AWS Key"
 regex = '''AKIA[0-9A-Z]{16}'''

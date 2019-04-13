@@ -45,13 +45,12 @@ type Options struct {
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
-	Log            string `short:"l" long:"log" description:"log level"`
-	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report         string `long:"report" description:"path to write report file. Needs to be csv or json"`
-	Redact         bool   `long:"redact" description:"redact secrets from log messages and report"`
-	Version        bool   `long:"version" description:"version number"`
-	SampleConfig   bool   `long:"sample-config" description:"prints a sample config file"`
-	ValidateConfig bool   `long:"validate-config" description:"validate gitleaks config"`
+	Log          string `short:"l" long:"log" description:"log level"`
+	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
+	Report       string `long:"report" description:"path to write report file. Needs to be csv or json"`
+	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
+	Version      bool   `long:"version" description:"version number"`
+	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
 }
 
 // ParseOpts parses the options
