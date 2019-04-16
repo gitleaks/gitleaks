@@ -16,72 +16,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-const testWhitelistCommit = `
-[[rules]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-commits = [
-  "eaeffdc65b4c73ccb67e75d96bd8743be2c85973",
-]
-`
-const testWhitelistFile = `
-[[rules]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-files = [
-  ".go",
-]
-`
-
-const testWhitelistRegex = `
-[[rules]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-regexes= [
-  "AKIA",
-]
-`
-
-const testWhitelistRepo = `
-[[rules]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-repos = [
-  "gronit",
-]
-`
-
-const testEntropyRange = `
-[[rules]]
-description = "Entropy ranges"
-entropies = [
-  "7.5-8.0",
-  "3.2-3.4",
-]
-`
-const testBadEntropyRange = `
-[[rules]]
-description = "Bad entropy ranges"
-entropies = [
-  "8.0-3.0",
-]
-`
-const testBadEntropyRange2 = `
-[[rules]]
-description = "Bad entropy ranges"
-entropies = [
-  "8.0-8.9",
-]
-`
-
 func TestGetRepo(t *testing.T) {
 	var err error
 	dir, err = ioutil.TempDir("", "gitleaksTestRepo")
@@ -437,18 +371,6 @@ func TestWriteReport(t *testing.T) {
 
 }
 
-func testTomlLoader() string {
-	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
-	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "repo"), []byte(testWhitelistRepo), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "entropy"), []byte(testEntropyRange), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "badEntropy"), []byte(testBadEntropyRange), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "badEntropy2"), []byte(testBadEntropyRange2), 0644)
-	return tmpDir
-}
-
 func TestAuditRepo(t *testing.T) {
 	var leaks []Leak
 	configsDir := testTomlLoader()
@@ -652,6 +574,20 @@ func TestAuditRepo(t *testing.T) {
 			configPath:  path.Join(configsDir, "entropy"),
 		},
 		{
+			repo:        leaksRepo,
+			description: "toml entropy regex line range",
+			numLeaks:    2,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "entropyLineRegex"),
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml entropy regex range",
+			numLeaks:    0,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "entropyRegex"),
+		},
+		{
 			repo:           leaksRepo,
 			description:    "toml bad entropy range",
 			numLeaks:       0,
@@ -667,6 +603,20 @@ func TestAuditRepo(t *testing.T) {
 			configPath:     path.Join(configsDir, "badEntropy2"),
 			expectedErrMsg: "invalid entropy ranges, must be within 0.0-8.0",
 		},
+		{
+			repo:        leaksRepo,
+			description: "toml md files",
+			numLeaks:    5,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "mdFiles"),
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml entropys line regex go",
+			numLeaks:    2,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "entropyLineRegexGo"),
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -674,7 +624,6 @@ func TestAuditRepo(t *testing.T) {
 			g.It(test.description, func() {
 				auditDone = false
 				opts = test.testOpts
-				totalCommits = 0
 
 				config, err = newConfig()
 				// config paths
@@ -687,14 +636,10 @@ func TestAuditRepo(t *testing.T) {
 					}
 				}
 				leaks, err = test.repo.audit()
-				if test.testOpts.Depth != 0 {
-					g.Assert(totalCommits).Equal(test.testOpts.Depth)
-				} else {
-					if opts.Redact {
-						g.Assert(leaks[0].Offender).Equal("REDACTED")
-					}
-					g.Assert(len(leaks)).Equal(test.numLeaks)
+				if opts.Redact {
+					g.Assert(leaks[0].Offender).Equal("REDACTED")
 				}
+				g.Assert(len(leaks)).Equal(test.numLeaks)
 			next:
 				os.Setenv("GITLEAKS_CONFIG", "")
 			})

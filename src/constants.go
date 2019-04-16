@@ -14,7 +14,7 @@ const LeakExit = 1
 const defaultConfig = `
 # This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
 # The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
-# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
+# is set, gitleaks will load configurations from that path. If option --config is set, gitleaks will load
 # configurations from that path. Gitleaks does not whitelist anything by default.
 
 title = "gitleaks config"
@@ -63,21 +63,6 @@ tags = ["key", "Github"]
 description = "Slack"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 tags = ["key", "Slack"]
-
-[[rules]]
-description = "Generic Key"
-regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
-entropies = ["4.1-4.3"]
-filetypes = [".gee"]
-entropyROI = "line"
-tags = ["key"]
-severity = "medium"
-
-[[rules]]
-description = "Any go file"
-filetypes = [".go"]
-tags = ["go files"]
-severity = "low"
 
 [whitelist]
 files = [
