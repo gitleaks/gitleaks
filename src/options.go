@@ -60,13 +60,13 @@ func ParseOpts() *Options {
 	_, err := parser.Parse()
 
 	if err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			os.Exit(0)
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
+			parser.WriteHelp(os.Stdout)
 		}
+		os.Exit(0)
 	}
 
 	if len(os.Args) == 1 {
-		// TODO: this will be a feature, check locally
 		parser.WriteHelp(os.Stdout)
 		os.Exit(0)
 	}

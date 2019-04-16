@@ -103,16 +103,7 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	}
 
 	if rule.entropies != nil {
-		if rule.entropyROI == "line" {
-			_entropy := getShannonEntropy(line)
-			for _, e := range rule.entropies {
-				if _entropy > e.v1 && _entropy < e.v2 {
-					entropy = _entropy
-					entropyWord = line
-					goto postEntropy
-				}
-			}
-		} else {
+		if rule.entropyROI == "word" {
 			words := strings.Fields(line)
 			for _, word := range words {
 				_entropy := getShannonEntropy(word)
@@ -122,6 +113,15 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 						entropyWord = word
 						goto postEntropy
 					}
+				}
+			}
+		} else {
+			_entropy := getShannonEntropy(line)
+			for _, e := range rule.entropies {
+				if _entropy > e.v1 && _entropy < e.v2 {
+					entropy = _entropy
+					entropyWord = line
+					goto postEntropy
 				}
 			}
 		}

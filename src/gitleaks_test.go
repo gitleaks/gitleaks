@@ -561,29 +561,22 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range from opts",
-			numLeaks:    426,
+			numLeaks:    266,
 			testOpts: &Options{
 				ConfigPath: path.Join(configsDir, "entropy"),
 			},
 		},
 		{
 			repo:        leaksRepo,
-			description: "toml entropy range",
-			numLeaks:    426,
+			description: "toml entropy regex word range",
+			numLeaks:    0,
 			testOpts:    &Options{},
-			configPath:  path.Join(configsDir, "entropy"),
-		},
-		{
-			repo:        leaksRepo,
-			description: "toml entropy regex line range",
-			numLeaks:    2,
-			testOpts:    &Options{},
-			configPath:  path.Join(configsDir, "entropyLineRegex"),
+			configPath:  path.Join(configsDir, "entropyWordRegex"),
 		},
 		{
 			repo:        leaksRepo,
 			description: "toml entropy regex range",
-			numLeaks:    0,
+			numLeaks:    2,
 			testOpts:    &Options{},
 			configPath:  path.Join(configsDir, "entropyRegex"),
 		},
@@ -615,7 +608,7 @@ func TestAuditRepo(t *testing.T) {
 			description: "toml entropys line regex go",
 			numLeaks:    2,
 			testOpts:    &Options{},
-			configPath:  path.Join(configsDir, "entropyLineRegexGo"),
+			configPath:  path.Join(configsDir, "entropyRegexGo"),
 		},
 	}
 	g := goblin.Goblin(t)

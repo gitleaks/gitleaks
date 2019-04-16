@@ -66,10 +66,15 @@ files = [
 # [[rules]]
 # description = "Generic Key"
 # regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
-# entropies = ["4.1-4.3"]
+# entropies = [
+#     "4.1-4.3",
+#     "5.5-6.3",
+# ]
 # entropyROI = "line"
+# filetypes = [".go", ".py", ".c"]
 # tags = ["key"]
 # severity = "8"
+#
 #
 # [[rules]]
 # description = "Generic Key"
@@ -79,9 +84,9 @@ files = [
 # entropyROI = "line"
 # tags = ["key"]
 # severity = "medium"
-#
+
 # [[rules]]
-# description = "Any go file"
-# filetypes = [".go"]
-# tags = ["go files"]
-# severity = "low"
+# description = "Any pem file"
+# filetypes = [".key"]
+# tags = ["pem"]
+# severity = "high"

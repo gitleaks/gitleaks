@@ -9,4 +9,4 @@
 *.test
 *.out
 
-tmp
+examples

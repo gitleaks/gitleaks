@@ -71,14 +71,14 @@ entropies = [
 ]
 `
 
-const testEntropyLineRegexRange = `
+const testEntropyWordRegexRange = `
 [[rules]]
 description = "test entropy regex ranges"
 regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
 entropies = [
 	"4.1-4.3",
 ]
-entropyROI="line"
+entropyROI="word"
 `
 
 const testEntropyRegexRange = `
@@ -104,13 +104,12 @@ entropies = [
 	"4.1-4.3",
 ]
 filetypes = [".go"]
-entropyROI="line"
 `
 
 func testTomlLoader() string {
 	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
 	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "entropyLineRegex"), []byte(testEntropyLineRegexRange), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "entropyWordRegex"), []byte(testEntropyWordRegexRange), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "entropyRegex"), []byte(testEntropyRegexRange), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
@@ -119,6 +118,6 @@ func testTomlLoader() string {
 	ioutil.WriteFile(path.Join(tmpDir, "badEntropy"), []byte(testBadEntropyRange), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "badEntropy2"), []byte(testBadEntropyRange2), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "mdFiles"), []byte(testMDFileType), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "entropyLineRegexGo"), []byte(testEntropyRegexRangeGoFilter), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "entropyRegexGo"), []byte(testEntropyRegexRangeGoFilter), 0644)
 	return tmpDir
 }
