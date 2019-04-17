@@ -23,13 +23,16 @@ type Leak struct {
 	Line     string    `json:"line"`
 	Commit   string    `json:"commit"`
 	Offender string    `json:"offender"`
-	Type     string    `json:"reason"`
+	Rule     string    `json:"rule"`
+	Info     string    `json:"info"`
 	Message  string    `json:"commitMsg"`
 	Author   string    `json:"author"`
 	Email    string    `json:"email"`
 	File     string    `json:"file"`
 	Repo     string    `json:"repo"`
 	Date     time.Time `json:"date"`
+	Tags     string    `json:"tags"`
+	Severity string    `json:"severity"`
 }
 
 // RepoInfo contains a src-d git repository and other data about the repo
@@ -82,6 +85,9 @@ func (repoInfo *RepoInfo) clone() error {
 	} else if repoInfo.path != "" {
 		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(repoInfo.path)
+		if err != nil {
+			log.Errorf("unable to open %s", opts.RepoPath)
+		}
 	} else {
 		// cloning to memory
 		log.Infof("cloning %s", opts.Repo)
@@ -235,6 +241,27 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					} else if to != nil {
 						filePath = to.Path()
 					}
+
+					for _, fr := range config.FileRules {
+						for _, r := range fr.fileTypes {
+							if r.FindString(filePath) != "" {
+								commitInfo := &commitInfo{
+									repoName: repoInfo.name,
+									filePath: filePath,
+									sha:      c.Hash.String(),
+									author:   c.Author.Name,
+									email:    c.Author.Email,
+									message:  strings.Replace(c.Message, "\n", " ", -1),
+									date:     c.Author.When,
+								}
+								leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo)
+								mutex.Lock()
+								leaks = append(leaks, leak)
+								mutex.Unlock()
+							}
+						}
+					}
+
 					for _, re := range config.WhiteList.files {
 						if re.FindString(filePath) != "" {
 							log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), filePath)
@@ -248,7 +275,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
-							diff := commitInfo{
+							diff := &commitInfo{
 								repoName: repoInfo.name,
 								filePath: filePath,
 								content:  chunk.Content(),
@@ -300,7 +327,7 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		if err != nil {
 			return nil
 		}
-		diff := commitInfo{
+		diff := &commitInfo{
 			repoName: repoInfo.name,
 			filePath: f.Name,
 			content:  content,

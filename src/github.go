@@ -66,7 +66,7 @@ func auditGithubPR() ([]Leak, error) {
 					continue
 				}
 
-				commit := commitInfo{
+				commit := &commitInfo{
 					sha:      c.GetSHA(),
 					content:  *f.Patch,
 					filePath: *f.Filename,

@@ -41,9 +41,9 @@ func writeReport(leaks []Leak) error {
 		}
 		defer f.Close()
 		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "reason", "commitMsg", "author", "email", "file", "date"})
+		w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "severity", "commitMsg", "author", "email", "file", "date"})
 		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Type, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Severity, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 		}
 		w.Flush()
 	} else {
@@ -82,46 +82,84 @@ func writeReport(leaks []Leak) error {
 	return nil
 }
 
+// check rule will inspect a single line and return a leak if it encounters one
+func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
+	var (
+		match       string
+		fileMatch   string
+		entropy     float64
+		entropyWord string
+	)
+
+	for _, f := range rule.fileTypes {
+		fileMatch = f.FindString(commit.filePath)
+		if fileMatch != "" {
+			break
+		}
+	}
+
+	if fileMatch == "" && len(rule.fileTypes) != 0 {
+		return nil, nil
+	}
+
+	if rule.entropies != nil {
+		if rule.entropyROI == "word" {
+			words := strings.Fields(line)
+			for _, word := range words {
+				_entropy := getShannonEntropy(word)
+				for _, e := range rule.entropies {
+					if _entropy > e.v1 && _entropy < e.v2 {
+						entropy = _entropy
+						entropyWord = word
+						goto postEntropy
+					}
+				}
+			}
+		} else {
+			_entropy := getShannonEntropy(line)
+			for _, e := range rule.entropies {
+				if _entropy > e.v1 && _entropy < e.v2 {
+					entropy = _entropy
+					entropyWord = line
+					goto postEntropy
+				}
+			}
+		}
+	}
+
+postEntropy:
+	if rule.regex != nil {
+		match = rule.regex.FindString(line)
+	}
+
+	if match != "" && entropy != 0.0 {
+		return newLeak(line, fmt.Sprintf("%s regex match and entropy met at %.2f", rule.regex.String(), entropy), entropyWord, rule, commit), nil
+	} else if match != "" && rule.entropies == nil {
+		return newLeak(line, fmt.Sprintf("%s regex match", rule.regex.String()), match, rule, commit), nil
+	} else if entropy != 0.0 && rule.regex.String() == "" {
+		return newLeak(line, fmt.Sprintf("entropy met at %.2f", entropy), entropyWord, rule, commit), nil
+	}
+	return nil, nil
+}
+
 // inspect will parse each line of the git diff's content against a set of regexes or
 // a set of regexes set by the config (see gitleaks.toml for example). This function
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
-func inspect(commit commitInfo) []Leak {
-	var (
-		leaks    []Leak
-		skipLine bool
-	)
+func inspect(commit *commitInfo) []Leak {
+	var leaks []Leak
 	lines := strings.Split(commit.content, "\n")
 
 	for _, line := range lines {
-		skipLine = false
-		for _, re := range config.Regexes {
-			match := re.regex.FindString(line)
-			if match == "" {
-				continue
-			}
-			if skipLine = isLineWhitelisted(line); skipLine {
+		for _, rule := range config.Rules {
+			if isLineWhitelisted(line) {
 				break
 			}
-			leaks = addLeak(leaks, line, match, re.description, commit)
-		}
-
-		if !skipLine && (opts.Entropy > 0 || len(config.Entropy.entropyRanges) != 0) {
-			words := strings.Fields(line)
-			for _, word := range words {
-				entropy := getShannonEntropy(word)
-				// Only check entropyRegexes and whiteListRegexes once per line, and only if an entropy leak type
-				// was found above, since regex checks are expensive.
-				if !entropyIsHighEnough(entropy) {
-					continue
-				}
-				// If either the line is whitelisted or the line fails the noiseReduction check (when enabled),
-				// then we can skip checking the rest of the line for high entropy words.
-				if skipLine = !highEntropyLineIsALeak(line) || isLineWhitelisted(line); skipLine {
-					break
-				}
-				leaks = addLeak(leaks, line, word, fmt.Sprintf("Entropy: %.2f", entropy), commit)
+			leak, err := rule.check(line, commit)
+			if err != nil || leak == nil {
+				continue
 			}
+			leaks = append(leaks, *leak)
 		}
 	}
 	return leaks
@@ -138,19 +176,21 @@ func isLineWhitelisted(line string) bool {
 	return false
 }
 
-// addLeak is helper for func inspect() to append leaks if found during a diff check.
-func addLeak(leaks []Leak, line string, offender string, leakType string, commit commitInfo) []Leak {
-	leak := Leak{
+func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo) *Leak {
+	leak := &Leak{
 		Line:     line,
 		Commit:   commit.sha,
 		Offender: offender,
-		Type:     leakType,
+		Rule:     rule.description,
+		Info:     info,
 		Author:   commit.author,
 		Email:    commit.email,
 		File:     commit.filePath,
 		Repo:     commit.repoName,
 		Message:  commit.message,
 		Date:     commit.date,
+		Tags:     strings.Join(rule.tags, ", "),
+		Severity: rule.severity,
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
@@ -160,9 +200,7 @@ func addLeak(leaks []Leak, line string, offender string, leakType string, commit
 	if opts.Verbose {
 		leak.log()
 	}
-
-	leaks = append(leaks, leak)
-	return leaks
+	return leak
 }
 
 // discoverRepos walks all the children of `path`. If a child directory

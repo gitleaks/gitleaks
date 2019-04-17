@@ -1,5 +1,11 @@
 CHANGELOG
 =========
+2.0.0
+----
+- rules introduced in the gitleaks configurationn
+- removing `--entropy` option
+- removing `--single-search` option
+
 1.25.1
 ----
 - Fixing #188

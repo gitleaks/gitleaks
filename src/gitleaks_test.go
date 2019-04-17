@@ -16,82 +16,6 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-const testWhitelistCommit = `
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-commits = [
-  "eaeffdc65b4c73ccb67e75d96bd8743be2c85973",
-]
-`
-const testWhitelistFile = `
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-files = [
-  ".go",
-]
-`
-
-const testWhitelistRegex = `
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-regexes= [
-  "AKIA",
-]
-`
-
-const testWhitelistRepo = `
-[[regexes]]
-description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
-
-[whitelist]
-repos = [
-  "gronit",
-]
-`
-
-const testEntropyRange = `
-[entropy]
-ranges = [
-  "7.5-8.0",
-  "3.2-3.4",
-]
-lineregexes = [
-	"(?i)api",
-	"(?i)key",
-	"signature",
-	"secret",
-	"password",
-	"pass",
-	"pwd",
-	"token",
-	"curl",
-	"wget",
-	"https?",
-]
-`
-const testBadEntropyRange = `
-[entropy]
-ranges = [
-  "8.0-3.0",
-]
-`
-const testBadEntropyRange2 = `
-[entropy]
-ranges = [
-  "8.0-8.9",
-]
-`
-
 func TestGetRepo(t *testing.T) {
 	var err error
 	dir, err = ioutil.TempDir("", "gitleaksTestRepo")
@@ -373,7 +297,7 @@ func TestWriteReport(t *testing.T) {
 			Line:     "eat",
 			Commit:   "your",
 			Offender: "veggies",
-			Type:     "and",
+			Rule:     "and",
 			Message:  "get",
 			Author:   "some",
 			File:     "sleep",
@@ -445,18 +369,6 @@ func TestWriteReport(t *testing.T) {
 		})
 	}
 
-}
-
-func testTomlLoader() string {
-	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
-	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "commit"), []byte(testWhitelistCommit), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "file"), []byte(testWhitelistFile), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "repo"), []byte(testWhitelistRepo), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "entropy"), []byte(testEntropyRange), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "badEntropy"), []byte(testBadEntropyRange), 0644)
-	ioutil.WriteFile(path.Join(tmpDir, "badEntropy2"), []byte(testBadEntropyRange2), 0644)
-	return tmpDir
 }
 
 func TestAuditRepo(t *testing.T) {
@@ -632,23 +544,6 @@ func TestAuditRepo(t *testing.T) {
 		},
 		{
 			repo:        leaksRepo,
-			description: "leaks present with entropy",
-			testOpts: &Options{
-				Entropy: 4.7,
-			},
-			numLeaks: 6,
-		},
-		{
-			repo:        leaksRepo,
-			description: "leaks present with entropy",
-			testOpts: &Options{
-				Entropy:        4.7,
-				NoiseReduction: true,
-			},
-			numLeaks: 2,
-		},
-		{
-			repo:        leaksRepo,
 			description: "Audit until specific commit",
 			numLeaks:    2,
 			testOpts: &Options{
@@ -666,26 +561,24 @@ func TestAuditRepo(t *testing.T) {
 		{
 			repo:        leaksRepo,
 			description: "toml entropy range from opts",
-			numLeaks:    454,
+			numLeaks:    266,
 			testOpts: &Options{
 				ConfigPath: path.Join(configsDir, "entropy"),
 			},
 		},
 		{
 			repo:        leaksRepo,
-			description: "toml entropy range",
-			numLeaks:    454,
+			description: "toml entropy regex word range",
+			numLeaks:    0,
 			testOpts:    &Options{},
-			configPath:  path.Join(configsDir, "entropy"),
+			configPath:  path.Join(configsDir, "entropyWordRegex"),
 		},
 		{
-			repo: leaksRepo,
-			testOpts: &Options{
-				NoiseReduction: true,
-			},
-			description: "toml entropy noise reduction range",
-			numLeaks:    64,
-			configPath:  path.Join(configsDir, "entropy"),
+			repo:        leaksRepo,
+			description: "toml entropy regex range",
+			numLeaks:    2,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "entropyRegex"),
 		},
 		{
 			repo:           leaksRepo,
@@ -703,6 +596,20 @@ func TestAuditRepo(t *testing.T) {
 			configPath:     path.Join(configsDir, "badEntropy2"),
 			expectedErrMsg: "invalid entropy ranges, must be within 0.0-8.0",
 		},
+		{
+			repo:        leaksRepo,
+			description: "toml md files",
+			numLeaks:    5,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "mdFiles"),
+		},
+		{
+			repo:        leaksRepo,
+			description: "toml entropys line regex go",
+			numLeaks:    2,
+			testOpts:    &Options{},
+			configPath:  path.Join(configsDir, "entropyRegexGo"),
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -710,7 +617,6 @@ func TestAuditRepo(t *testing.T) {
 			g.It(test.description, func() {
 				auditDone = false
 				opts = test.testOpts
-				totalCommits = 0
 
 				config, err = newConfig()
 				// config paths
@@ -723,14 +629,10 @@ func TestAuditRepo(t *testing.T) {
 					}
 				}
 				leaks, err = test.repo.audit()
-				if test.testOpts.Depth != 0 {
-					g.Assert(totalCommits).Equal(test.testOpts.Depth)
-				} else {
-					if opts.Redact {
-						g.Assert(leaks[0].Offender).Equal("REDACTED")
-					}
-					g.Assert(len(leaks)).Equal(test.numLeaks)
+				if opts.Redact {
+					g.Assert(leaks[0].Offender).Equal("REDACTED")
 				}
+				g.Assert(len(leaks)).Equal(test.numLeaks)
 			next:
 				os.Setenv("GITLEAKS_CONFIG", "")
 			})
@@ -774,30 +676,6 @@ func TestOptionGuard(t *testing.T) {
 			},
 			description:    "local and remote target",
 			expectedErrMsg: "github user set and local owner path",
-		},
-		{
-			testOpts: &Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "*/./....",
-			},
-			description:         "single search invalid regex gaurd",
-			expectedErrMsgFuzzy: "unable to compile regex: */./...., ",
-		},
-		{
-			testOpts: &Options{
-				GithubUser:   "fakeUser",
-				SingleSearch: "mystring",
-			},
-			description:    "single search regex gaurd",
-			expectedErrMsg: "",
-		},
-		{
-			testOpts: &Options{
-				GithubOrg: "fakeOrg",
-				Entropy:   9,
-			},
-			description:    "Invalid entropy level guard",
-			expectedErrMsg: "The maximum level of entropy is 8",
 		},
 	}
 	g := goblin.Goblin(t)
@@ -880,11 +758,6 @@ func TestLoadToml(t *testing.T) {
 		g.Describe("TestLoadToml", func() {
 			g.It(test.description, func() {
 				opts = test.testOpts
-				if test.singleSearch {
-					singleSearchRegex = regexp.MustCompile("test")
-				} else {
-					singleSearchRegex = nil
-				}
 				if test.configPath != "" {
 					os.Setenv("GITLEAKS_CONFIG", test.configPath)
 				} else {

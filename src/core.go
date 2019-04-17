@@ -3,7 +3,6 @@ package gitleaks
 import (
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -13,15 +12,14 @@ import (
 )
 
 var (
-	opts              *Options
-	config            *Config
-	singleSearchRegex *regexp.Regexp
-	dir               string
-	threads           int
-	totalCommits      int64
-	commitMap         = make(map[string]bool)
-	auditDone         bool
-	mutex             = &sync.Mutex{}
+	opts         *Options
+	config       *Config
+	dir          string
+	threads      int
+	totalCommits int64
+	commitMap    = make(map[string]bool)
+	auditDone    bool
+	mutex        = &sync.Mutex{}
 )
 
 func init() {
@@ -29,7 +27,8 @@ func init() {
 	threads = defaultThreadNum
 }
 
-// Report is
+// Report can be exported as a json or csv. Used for logging informationn
+// about the audit, (duration and # of commits)
 type Report struct {
 	Leaks    []Leak
 	Duration string

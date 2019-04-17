@@ -23,30 +23,3 @@ func getShannonEntropy(data string) (entropy float64) {
 
 	return entropy
 }
-
-func entropyIsHighEnough(entropy float64) bool {
-	if entropy >= opts.Entropy && len(config.Entropy.entropyRanges) == 0 {
-		return true
-	}
-
-	for _, eR := range config.Entropy.entropyRanges {
-		if entropy > eR.v1 && entropy < eR.v2 {
-			return true
-		}
-	}
-
-	return false
-}
-
-func highEntropyLineIsALeak(line string) bool {
-	if !opts.NoiseReduction {
-		return true
-	}
-	for _, re := range config.Entropy.regexes {
-		if re.FindString(line) != "" {
-			return true
-		}
-	}
-
-	return false
-}
