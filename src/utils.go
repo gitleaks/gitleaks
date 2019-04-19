@@ -14,6 +14,13 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
+type pendingLeak struct {
+	leak   Leak
+	before int
+	after  int
+	wait   bool
+}
+
 type commitInfo struct {
 	content  string
 	commit   *object.Commit
@@ -85,7 +92,7 @@ func writeReport(leaks []Leak) error {
 // check rule will inspect a single line and return a leak if it encounters one
 func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	var (
-		match       string
+		match       []int
 		fileMatch   string
 		entropy     float64
 		entropyWord string
@@ -128,16 +135,16 @@ func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
 	}
 
 postEntropy:
-	if rule.regex != nil {
-		match = rule.regex.FindString(line)
+	if rule.regex != nil && rule.regex.String() != "" {
+		match = rule.regex.FindIndex([]byte(line))
 	}
 
-	if match != "" && entropy != 0.0 {
-		return newLeak(line, fmt.Sprintf("%s regex match and entropy met at %.2f", rule.regex.String(), entropy), entropyWord, rule, commit), nil
-	} else if match != "" && rule.entropies == nil {
-		return newLeak(line, fmt.Sprintf("%s regex match", rule.regex.String()), match, rule, commit), nil
+	if match != nil && entropy != 0.0 {
+		return newLeak(line, fmt.Sprintf("%s regex match and entropy met at %.2f", rule.regex.String(), entropy), entropyWord, rule, commit, 0), nil
+	} else if match != nil && rule.entropies == nil {
+		return newLeak(line, fmt.Sprintf("%s regex match", rule.regex.String()), line[match[0]:match[1]], rule, commit, match[0]), nil
 	} else if entropy != 0.0 && rule.regex.String() == "" {
-		return newLeak(line, fmt.Sprintf("entropy met at %.2f", entropy), entropyWord, rule, commit), nil
+		return newLeak(line, fmt.Sprintf("entropy met at %.2f", entropy), entropyWord, rule, commit, 0), nil
 	}
 	return nil, nil
 }
@@ -147,7 +154,12 @@ postEntropy:
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
 func inspect(commit *commitInfo) []Leak {
-	var leaks []Leak
+	var (
+		leaks   []Leak
+		pLeaks  []pendingLeak
+		context string
+	)
+
 	lines := strings.Split(commit.content, "\n")
 
 	for _, line := range lines {
@@ -159,10 +171,93 @@ func inspect(commit *commitInfo) []Leak {
 			if err != nil || leak == nil {
 				continue
 			}
-			leaks = append(leaks, *leak)
+
+			// Pending leaks are leaks that doesn't have their context filled (see Context option)
+			if opts.Context == 0 {
+				leaks = addLeak(leaks, *leak)
+			} else {
+				pLeaks = addPendingLeak(pLeaks, *leak)
+			}
+		}
+		if opts.Context > 0 {
+			updateContext(&context, line, &pLeaks, &leaks)
 		}
 	}
+
+	// Move all pending leaks left to leaks
+	for i := 0; i < len(pLeaks); i++ {
+		leaks = addLeak(leaks, pLeaks[i].leak)
+	}
+
 	return leaks
+}
+
+// Context is a buffer that stores the last characters read (defined by Context option)
+// The context is filled in two steps:
+// 1. Context[SIZE:] + Leak (One time)
+// 2. Leak + Line           (Until filled)
+func updateContext(context *string, line string, pLeaks *[]pendingLeak, leaks *[]Leak) {
+	// Iterate through the slice in reverse due to deletion
+	for i := len(*pLeaks) - 1; i >= 0; i-- {
+		if (*pLeaks)[i].after > 0 {
+			if (*pLeaks)[i].wait == false {
+				after := "\n" + line[:min(len(line), (*pLeaks)[i].after-1)]
+				(*pLeaks)[i].leak.Line = (*pLeaks)[i].leak.Line + after
+				(*pLeaks)[i].after -= len(after)
+			} else {
+				(*pLeaks)[i].wait = false
+			}
+		}
+
+		if (*pLeaks)[i].before > 0 {
+			(*pLeaks)[i].leak.Line = (*context)[max(0, len(*context)-(*pLeaks)[i].before):] + "\n" + (*pLeaks)[i].leak.Line
+			(*pLeaks)[i].before = 0
+		}
+
+		if (*pLeaks)[i].after <= 0 {
+			*leaks = addLeak(*leaks, (*pLeaks)[i].leak)
+			(*pLeaks) = append((*pLeaks)[:i], (*pLeaks)[i+1:]...)
+		}
+	}
+
+	// Update Context and add break line (if necessary)
+	if len(line) >= opts.Context {
+		*context = line[len(line)-opts.Context:]
+	} else if (len(line) + len(*context)) <= opts.Context {
+		if len(*context) > 0 {
+			*context = *context + "\n"
+		}
+		*context = *context + line
+	} else {
+		*context = (*context)[len(*context)-(opts.Context-len(line))+1:] + "\n" + line
+	}
+}
+
+func addPendingLeak(pLeaks []pendingLeak, leak Leak) []pendingLeak {
+	pLeak := pendingLeak{
+		leak:   leak,
+		before: opts.Context - leak.Index,
+		after:  opts.Context - (len(leak.Line) - (leak.Index + len(leak.Offender))),
+		wait:   true,
+	}
+
+	return append(pLeaks, pLeak)
+}
+
+func addLeak(leaks []Leak, leak Leak) []Leak {
+	if opts.After != "" {
+		leak.Line = leak.Line[:leak.Index+len(leak.Offender)] + opts.After + leak.Line[leak.Index+len(leak.Offender):]
+	}
+
+	if opts.Before != "" {
+		leak.Line = leak.Line[:leak.Index] + opts.Before + leak.Line[leak.Index:]
+	}
+
+	if opts.Verbose {
+		leak.log()
+	}
+
+	return append(leaks, leak)
 }
 
 // isLineWhitelisted returns true iff the line is matched by at least one of the whiteListRegexes.
@@ -176,7 +271,11 @@ func isLineWhitelisted(line string) bool {
 	return false
 }
 
-func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo) *Leak {
+func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo, index int) *Leak {
+	if opts.Context > 0 {
+		line = line[:min(len(line), index+len(offender)+opts.Context)]
+		line = line[max(index-opts.Context, 0):]
+	}
 	leak := &Leak{
 		Line:     line,
 		Commit:   commit.sha,
@@ -191,15 +290,13 @@ func newLeak(line string, info string, offender string, rule *Rule, commit *comm
 		Date:     commit.date,
 		Tags:     strings.Join(rule.tags, ", "),
 		Severity: rule.severity,
+		Index:    index,
 	}
 	if opts.Redact {
 		leak.Offender = "REDACTED"
 		leak.Line = strings.Replace(line, offender, "REDACTED", -1)
 	}
 
-	if opts.Verbose {
-		leak.log()
-	}
 	return leak
 }
 
@@ -236,4 +333,18 @@ func containsGit(repoPath string) bool {
 		return false
 	}
 	return true
+}
+
+func max(a, b int) int {
+	if a <= b {
+		return b
+	}
+	return a
+}
+
+func min(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
 }

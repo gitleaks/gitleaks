@@ -42,6 +42,7 @@ type Options struct {
 	ExcludeForks bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`
 	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	Branch       string `long:"branch" description:"Branch to audit"`
+	Context      int    `long:"context" description:"Number of characters to extract around a leak"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options

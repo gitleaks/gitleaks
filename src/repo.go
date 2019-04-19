@@ -34,6 +34,7 @@ type Leak struct {
 	Date     time.Time `json:"date"`
 	Tags     string    `json:"tags"`
 	Severity string    `json:"severity"`
+	Index    int       `json:"-"`
 }
 
 // RepoInfo contains a src-d git repository and other data about the repo
@@ -276,7 +277,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 									message:  strings.Replace(c.Message, "\n", " ", -1),
 									date:     c.Author.When,
 								}
-								leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo)
+								leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo, 0)
+								if opts.Verbose {
+									leak.log()
+								}
 								mutex.Lock()
 								leaks = append(leaks, leak)
 								mutex.Unlock()
