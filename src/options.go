@@ -35,15 +35,16 @@ type Options struct {
 	OwnerPath string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 
 	// Process options
-	Threads      int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	Disk         bool   `long:"disk" description:"Clones repo(s) to disk"`
-	ConfigPath   string `long:"config" description:"path to gitleaks config"`
-	SSHKey       string `long:"ssh-key" description:"path to ssh key"`
-	ExcludeForks bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`
-	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
-	Branch       string `long:"branch" description:"Branch to audit"`
-	Context      int    `long:"context" description:"Number of characters to extract around a leak"`
-	DateLimit    string `long:"date-limit" description:"Commit date limit"`
+	Threads       int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	Disk          bool   `long:"disk" description:"Clones repo(s) to disk"`
+	ConfigPath    string `long:"config" description:"path to gitleaks config"`
+	SSHKey        string `long:"ssh-key" description:"path to ssh key"`
+	ExcludeForks  bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`
+	RepoConfig    bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
+	Branch        string `long:"branch" description:"Branch to audit"`
+	Context       int    `long:"context" description:"Number of characters to extract around a leak"`
+	DateLimit     string `long:"date-limit" description:"Commit date limit"`
+	AdditionsOnly bool   `long:"adds-only" description:"Only inspect additions from diffs"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options

@@ -305,7 +305,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					}
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
-						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
+						if chunk.Type() == diffType.Delete || (!opts.AdditionsOnly && chunk.Type() == diffType.Add) {
 							diff := &commitInfo{
 								repoName: repoInfo.name,
 								filePath: filePath,
