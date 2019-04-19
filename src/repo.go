@@ -134,6 +134,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		commitWg    sync.WaitGroup
 		semaphore   chan bool
 		logOpts     git.LogOptions
+		commitDate  time.Time
 	)
 	for _, re := range config.WhiteList.repos {
 		if re.FindString(repoInfo.name) != "" {
@@ -192,6 +193,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		}
 	}
 
+	if opts.DateLimit != "" {
+		commitDate, _ = time.Parse("2006/01/02", opts.DateLimit)
+	}
+
 	// iterate all through commits
 	cIter, err := repoInfo.repository.Log(&logOpts)
 
@@ -208,7 +213,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	semaphore = make(chan bool, threads)
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) {
+		if c == nil || (opts.Depth != 0 && commitCount == opts.Depth) || (!commitDate.IsZero() && commitDate.After(c.Author.When)) {
 			return storer.ErrStop
 		}
 

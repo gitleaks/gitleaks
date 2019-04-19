@@ -43,6 +43,7 @@ type Options struct {
 	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\""`
 	Branch       string `long:"branch" description:"Branch to audit"`
 	Context      int    `long:"context" description:"Number of characters to extract around a leak"`
+	DateLimit    string `long:"date-limit" description:"Commit date limit"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -132,6 +133,13 @@ func (opts *Options) guard() error {
 		dirPath := filepath.Dir(opts.Report)
 		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 			return fmt.Errorf("%s does not exist", dirPath)
+		}
+	}
+
+	if opts.DateLimit != "" {
+		_, err := time.Parse("2006/01/02", opts.DateLimit)
+		if err != nil {
+			return fmt.Errorf("unable to parse date, must be in format YYYY/MM/DD")
 		}
 	}
 
