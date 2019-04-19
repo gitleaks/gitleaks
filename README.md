@@ -9,11 +9,11 @@ Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted
 * Support for private repository scans, and repositories that require key based authentication
 * Output in CSV and JSON formats for consumption in other reporting tools and frameworks
 * Externalised configuration for environment specific customisation including regex rules
-* Customizable repository name, file type, commit ID, branchname and regex whitelisting to reduce false positives
+* Customizable repository name, file type, commit ID, branch name and regex whitelisting to reduce false positives
 * High performance through the use of src-d's [go-git](https://github.com/src-d/go-git) framework
 
 
-It has been sucessfully used in a number of different scenarios, including;
+It has been successfully used in a number of different scenarios, including;
 * Adhoc scans of local and remote repositories by filesystem path or clone URL
 * Automated scans of github users and organizations (Both public and enterprise platforms)
 * As part of a CICD workflow to identify secrets before they make it deeper into your codebase
