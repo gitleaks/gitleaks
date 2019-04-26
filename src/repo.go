@@ -258,9 +258,6 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					return
 				}
 				for _, f := range patch.FilePatches() {
-					if f.IsBinary() {
-						continue
-					}
 					skipFile = false
 					from, to := f.Files()
 					filePath = "???"
@@ -291,6 +288,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 								mutex.Unlock()
 							}
 						}
+					}
+
+					if f.IsBinary() {
+						continue
 					}
 
 					for _, re := range config.WhiteList.files {
@@ -344,6 +345,29 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		return nil
 	}
 	err = fIter.ForEach(func(f *object.File) error {
+		for _, fr := range config.FileRules {
+			for _, r := range fr.fileTypes {
+				if r.FindString(f.Name) != "" {
+					commitInfo := &commitInfo{
+						repoName: repoInfo.name,
+						filePath: f.Name,
+						sha:      c.Hash.String(),
+						author:   c.Author.Name,
+						email:    c.Author.Email,
+						message:  strings.Replace(c.Message, "\n", " ", -1),
+						date:     c.Author.When,
+					}
+					leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo, 0)
+					if opts.Verbose {
+						leak.log()
+					}
+					mutex.Lock()
+					leaks = append(leaks, leak)
+					mutex.Unlock()
+				}
+			}
+		}
+
 		bin, err := f.IsBinary()
 		if bin || err != nil {
 			return nil
