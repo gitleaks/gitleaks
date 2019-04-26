@@ -48,6 +48,8 @@ type Options struct {
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
+	Before       string `long:"before" description:"Text to add before a leak"`
+	After        string `long:"after" description:"Text to add after a leak"`
 	Log          string `short:"l" long:"log" description:"log level"`
 	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
 	Report       string `long:"report" description:"path to write report file. Needs to be csv or json"`

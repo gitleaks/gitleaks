@@ -211,6 +211,7 @@ func updateContext(context *string, line string, pLeaks *[]pendingLeak, leaks *[
 
 		if (*pLeaks)[i].before > 0 {
 			(*pLeaks)[i].leak.Line = (*context)[max(0, len(*context)-(*pLeaks)[i].before):] + "\n" + (*pLeaks)[i].leak.Line
+			(*pLeaks)[i].leak.Index = (*pLeaks)[i].leak.Index + (*pLeaks)[i].before + 1
 			(*pLeaks)[i].before = 0
 		}
 
@@ -274,7 +275,9 @@ func isLineWhitelisted(line string) bool {
 func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo, index int) *Leak {
 	if opts.Context > 0 {
 		line = line[:min(len(line), index+len(offender)+opts.Context)]
-		line = line[max(index-opts.Context, 0):]
+		before := max(index-opts.Context, 0)
+		line = line[before:]
+		index = index - before
 	}
 	leak := &Leak{
 		Line:     line,
