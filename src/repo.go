@@ -78,7 +78,7 @@ func (repoInfo *RepoInfo) clone() error {
 					Auth:     config.sshAuth,
 			})
 			} else if githubToken != "" {
-            	repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+				repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 					URL:      opts.Repo,
 					Progress: os.Stdout,
 					Auth: &gitHttp.BasicAuth{
