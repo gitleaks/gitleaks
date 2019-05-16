@@ -83,10 +83,10 @@ func (repoInfo *RepoInfo) clone() error {
 			})
 		}
 	} else if repoInfo.path != "" {
-		log.Infof("opening %s", repoInfo.path)
+		log.Infof("opening %s", opts.RepoPath)
 		repo, err = git.PlainOpen(repoInfo.path)
 		if err != nil {
-			log.Errorf("unable to open %s", repoInfo.path)
+			log.Errorf("unable to open %s", opts.RepoPath)
 		}
 	} else {
 		// cloning to memory
