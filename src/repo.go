@@ -11,6 +11,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -63,24 +64,47 @@ func (repoInfo *RepoInfo) clone() error {
 		err  error
 		repo *git.Repository
 	)
-
+        githubToken := os.Getenv("GITHUB_TOKEN")
 	// check if cloning to disk
 	if opts.Disk {
 		log.Infof("cloning %s to disk", opts.Repo)
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if strings.HasPrefix(opts.Repo, "git") {
 			// private
-			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
-				URL:      opts.Repo,
-				Progress: os.Stdout,
-				Auth:     config.sshAuth,
+			if config.sshAuth != nil && githubToken == "" {
+				repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+					URL:      opts.Repo,
+					Progress: os.Stdout,
+					Auth:     config.sshAuth,
 			})
+			} else if githubToken != "" {
+            	repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+					URL:      opts.Repo,
+					Progress: os.Stdout,
+					Auth: &gitHttp.BasicAuth{
+						Username: "fakeUsername",
+						Password: githubToken,
+					},
+				})
+			}
 		} else {
 			// public
-			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
-				URL:      opts.Repo,
-				Progress: os.Stdout,
-			})
+			if githubToken == "" {
+				repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+					URL:      opts.Repo,
+					Progress: os.Stdout,
+				})
+			} else if githubToken != "" {
+				repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+					URL:      opts.Repo,
+					Progress: os.Stdout,
+					Auth: &gitHttp.BasicAuth{
+						Username: "fakeUsername",
+						Password: githubToken,
+					},
+				})
+
+			}
 		}
 	} else if repoInfo.path != "" {
 		log.Infof("opening %s", repoInfo.path)
