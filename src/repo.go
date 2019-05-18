@@ -209,13 +209,6 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 			mutex.Lock()
 			leaks = append(leaksFromSingleCommit, leaks...)
 			mutex.Unlock()
-			if opts.Commit == c.Hash.String() {
-				return storer.ErrStop
-			}
-			return nil
-		}
-
-		if opts.Commit != "" && opts.Commit != c.Hash.String() {
 			return nil
 		}
 
