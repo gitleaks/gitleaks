@@ -133,7 +133,21 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		}
 	}
 
-	if opts.Branch != "" {
+	if opts.Commit != "" {
+		h := plumbing.NewHash(opts.Commit)
+		c, err := repoInfo.repository.CommitObject(h)
+		if err != nil {
+			return leaks, nil
+		}
+
+		commitCount = commitCount + 1
+		totalCommits = totalCommits + 1
+		leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
+		mutex.Lock()
+		leaks = append(leaksFromSingleCommit, leaks...)
+		mutex.Unlock()
+		return leaks, err
+	} else if opts.Branch != "" {
 		refs, err := repoInfo.repository.Storer.IterReferences()
 		if err != nil {
 			return leaks, err
@@ -187,8 +201,8 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 			return nil
 		}
 
-		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
-		if (len(c.ParentHashes) == 0 && opts.Commit == "") || (len(c.ParentHashes) == 0 && opts.Commit == c.Hash.String()) {
+		// commits w/o parent (root of git the git ref)
+		if len(c.ParentHashes) == 0 {
 			commitCount = commitCount + 1
 			totalCommits = totalCommits + 1
 			leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
