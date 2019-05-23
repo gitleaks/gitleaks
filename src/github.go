@@ -133,7 +133,7 @@ func auditGithubRepos() ([]Leak, error) {
 			break
 		}
 		if opts.GithubUser != "" {
-			pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
+			pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
 			if err != nil {
 				done = true
 			}
