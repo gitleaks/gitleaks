@@ -102,6 +102,7 @@ func auditGithubRepos() ([]Leak, error) {
 		done             bool
 		leaks            []Leak
 		ownerDir         string
+                githubUser       *github.User
 	)
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -133,7 +134,13 @@ func auditGithubRepos() ([]Leak, error) {
 			break
 		}
 		if opts.GithubUser != "" {
-			pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
+			githubUser, resp, err = githubClient.Users.Get(ctx, "")
+			log.Debugf("authenticated user %s", *githubUser.Login)
+			if *githubUser.Login == opts.GithubUser {
+				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, "", githubOptions)
+			} else {
+				pagedGithubRepos, resp, err = githubClient.Repositories.List(ctx, opts.GithubUser, githubOptions)
+			}
 			if err != nil {
 				done = true
 			}
