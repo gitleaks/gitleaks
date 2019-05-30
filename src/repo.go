@@ -15,6 +15,7 @@ import (
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -98,10 +99,17 @@ func (repoInfo *RepoInfo) clone() error {
 				Auth:     config.sshAuth,
 			})
 		} else {
-			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			options := &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-			})
+			}
+			if os.Getenv("GITHUB_TOKEN") != "" {
+				options.Auth = &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: os.Getenv("GITHUB_TOKEN"),
+				}
+			}
+			repo, err = git.Clone(memory.NewStorage(), nil, options)
 		}
 	}
 	repoInfo.repository = repo
