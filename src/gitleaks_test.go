@@ -206,7 +206,7 @@ func TestRun(t *testing.T) {
 			},
 			description:    "test empty",
 			numLeaks:       0,
-			expectedErrMsg: "reference not found",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
