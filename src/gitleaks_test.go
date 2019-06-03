@@ -64,22 +64,22 @@ func TestGetRepo(t *testing.T) {
 				Repo: "https://github.com/gitleakstest/nope",
 			},
 			description:    "test no repo",
-			expectedErrMsg: "authentication required",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
 				Repo: "https://github.com/gitleakstest/private",
 			},
 			description:    "test private repo",
-			expectedErrMsg: "authentication required",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
 				Repo: "https://github.com/gitleakstest/private",
 				Disk: true,
 			},
-			description:    "test private repo",
-			expectedErrMsg: "authentication required",
+			description:    "test private repo disk",
+			expectedErrMsg: "repository not found",
 		},
 	}
 	g := goblin.Goblin(t)

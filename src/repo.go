@@ -78,10 +78,17 @@ func (repoInfo *RepoInfo) clone() error {
 			})
 		} else {
 			// public
-			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+			options := &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-			})
+			}
+			if os.Getenv("GITHUB_TOKEN") != "" {
+				options.Auth = &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: os.Getenv("GITHUB_TOKEN"),
+				}
+			}
+			repo, err = git.PlainClone(cloneTarget, false, options)
 		}
 	} else if repoInfo.path != "" {
 		log.Infof("opening %s", repoInfo.path)
