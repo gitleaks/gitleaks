@@ -3,7 +3,6 @@ package gitleaks
 import (
 	"io/ioutil"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -60,7 +59,8 @@ func Run(optsL *Options) (*Report, error) {
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
-		repoInfo, err := newRepoInfo()
+		var repoInfo *RepoInfo
+		repoInfo, err = newRepoInfo()
 		if err != nil {
 			goto postAudit
 		}
@@ -70,7 +70,8 @@ func Run(optsL *Options) (*Report, error) {
 		}
 		leaks, err = repoInfo.audit()
 	} else if opts.OwnerPath != "" {
-		repoDs, err := discoverRepos(opts.OwnerPath)
+		var repoDs []*RepoInfo
+		repoDs, err = discoverRepos(opts.OwnerPath)
 		if err != nil {
 			goto postAudit
 		}
@@ -96,12 +97,7 @@ func Run(optsL *Options) (*Report, error) {
 
 postAudit:
 	if err != nil {
-		if strings.Contains(err.Error(), "whitelisted") {
-			log.Info(err.Error())
-			os.Exit(0)
-		}
-		log.Error(err)
-		os.Exit(ErrExit)
+		return &Report{}, err
 	}
 
 	if opts.Report != "" {

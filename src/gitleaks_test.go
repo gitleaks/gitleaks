@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -63,22 +64,22 @@ func TestGetRepo(t *testing.T) {
 				Repo: "https://github.com/gitleakstest/nope",
 			},
 			description:    "test no repo",
-			expectedErrMsg: "authentication required",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
 				Repo: "https://github.com/gitleakstest/private",
 			},
 			description:    "test private repo",
-			expectedErrMsg: "authentication required",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
 				Repo: "https://github.com/gitleakstest/private",
 				Disk: true,
 			},
-			description:    "test private repo",
-			expectedErrMsg: "authentication required",
+			description:    "test private repo disk",
+			expectedErrMsg: "repository not found",
 		},
 	}
 	g := goblin.Goblin(t)
@@ -182,7 +183,7 @@ func TestRun(t *testing.T) {
 			},
 			description:    "test leak",
 			numLeaks:       0,
-			expectedErrMsg: "unable to generate ssh key: open trash: no such file or directory",
+			expectedErrMsg: fmt.Sprintf("unable to generate ssh key: open trash: %s", noSuchFileMessage()),
 		},
 		{
 			testOpts: &Options{
@@ -206,7 +207,7 @@ func TestRun(t *testing.T) {
 			},
 			description:    "test empty",
 			numLeaks:       0,
-			expectedErrMsg: "reference not found",
+			expectedErrMsg: "repository not found",
 		},
 		{
 			testOpts: &Options{
@@ -749,7 +750,7 @@ func TestLoadToml(t *testing.T) {
 			testOpts:       &Options{},
 			description:    "env var path to no config",
 			configPath:     noConfigPath,
-			expectedErrMsg: fmt.Sprintf("problem loading config: open %s: no such file or directory", noConfigPath),
+			expectedErrMsg: fmt.Sprintf("problem loading config: open %s: %s", noConfigPath, noSuchFileMessage()),
 		},
 	}
 
@@ -772,4 +773,12 @@ func TestLoadToml(t *testing.T) {
 			})
 		})
 	}
+}
+
+func noSuchFileMessage() string {
+	if runtime.GOOS == "windows" {
+		// Adapt to Windws
+		return "The system cannot find the file specified."
+	}
+	return "no such file or directory"
 }
