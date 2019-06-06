@@ -9,6 +9,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20180520121703-7b7ae1e72ead
 	github.com/ipfs/go-ipfs v0.4.19 // indirect
 	github.com/jessevdk/go-flags v1.4.0
+	github.com/mattn/go-colorable v0.1.2
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.0.6
@@ -17,7 +18,6 @@ require (
 	golang.org/x/net v0.0.0-20180925072008-f04abc6bdfa7 // indirect
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
-	golang.org/x/sys v0.0.0-20180925112736-b09afc3d579e // indirect
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect

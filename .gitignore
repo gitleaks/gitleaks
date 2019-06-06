@@ -10,3 +10,4 @@
 *.out
 
 examples
+src/gitleaksConfig
