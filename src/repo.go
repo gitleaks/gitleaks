@@ -15,6 +15,7 @@ import (
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -77,10 +78,17 @@ func (repoInfo *RepoInfo) clone() error {
 			})
 		} else {
 			// public
-			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+			options := &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-			})
+			}
+			if os.Getenv("GITHUB_TOKEN") != "" {
+				options.Auth = &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: os.Getenv("GITHUB_TOKEN"),
+				}
+			}
+			repo, err = git.PlainClone(cloneTarget, false, options)
 		}
 	} else if repoInfo.path != "" {
 		log.Infof("opening %s", repoInfo.path)
@@ -98,10 +106,17 @@ func (repoInfo *RepoInfo) clone() error {
 				Auth:     config.sshAuth,
 			})
 		} else {
-			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			options := &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
-			})
+			}
+			if os.Getenv("GITHUB_TOKEN") != "" {
+				options.Auth = &gitHttp.BasicAuth{
+					Username: "fakeUsername", // yes, this can be anything except an empty string
+					Password: os.Getenv("GITHUB_TOKEN"),
+				}
+			}
+			repo, err = git.Clone(memory.NewStorage(), nil, options)
 		}
 	}
 	repoInfo.repository = repo
@@ -133,7 +148,21 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		}
 	}
 
-	if opts.Branch != "" {
+	if opts.Commit != "" {
+		h := plumbing.NewHash(opts.Commit)
+		c, err := repoInfo.repository.CommitObject(h)
+		if err != nil {
+			return leaks, nil
+		}
+
+		commitCount = commitCount + 1
+		totalCommits = totalCommits + 1
+		leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
+		mutex.Lock()
+		leaks = append(leaksFromSingleCommit, leaks...)
+		mutex.Unlock()
+		return leaks, err
+	} else if opts.Branch != "" {
 		refs, err := repoInfo.repository.Storer.IterReferences()
 		if err != nil {
 			return leaks, err
@@ -187,21 +216,14 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 			return nil
 		}
 
-		// commits w/o parent (root of git the git ref) or option for single commit is not empty str
-		if (len(c.ParentHashes) == 0 && opts.Commit == "") || (len(c.ParentHashes) == 0 && opts.Commit == c.Hash.String()) {
+		// commits w/o parent (root of git the git ref)
+		if len(c.ParentHashes) == 0 {
 			commitCount = commitCount + 1
 			totalCommits = totalCommits + 1
 			leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
 			mutex.Lock()
 			leaks = append(leaksFromSingleCommit, leaks...)
 			mutex.Unlock()
-			if opts.Commit == c.Hash.String() {
-				return storer.ErrStop
-			}
-			return nil
-		}
-
-		if opts.Commit != "" && opts.Commit != c.Hash.String() {
 			return nil
 		}
 
