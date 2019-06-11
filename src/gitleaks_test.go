@@ -263,6 +263,25 @@ func TestRun(t *testing.T) {
 			expectedErrMsg: "",
 			commitPerPage:  1,
 		},
+		{
+			testOpts: &Options{
+				Repo:          "https://github.com/gitleakstest/gronit",
+				AdditionsOnly: true,
+			},
+			description:    "test additions only",
+			numLeaks:       1,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: &Options{
+				Repo:      "https://github.com/gitleakstest/gronit",
+				DateLimit: "2018/01/25",
+			},
+			description:    "test date limit",
+			numLeaks:       2,
+			expectedErrMsg: "",
+			configPath:     path.Join(configsDir, "dateLimit"),
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -611,6 +630,23 @@ func TestAuditRepo(t *testing.T) {
 			testOpts:    &Options{},
 			configPath:  path.Join(configsDir, "entropyRegexGo"),
 		},
+		{
+			repo: leaksRepo,
+			testOpts: &Options{
+				Before: "<gitleaks>",
+				After:  "</gitleaks>",
+			},
+			description: "test before & after",
+			numLeaks:    2,
+		},
+		{
+			repo: leaksRepo,
+			testOpts: &Options{
+				Context: 5,
+			},
+			description: "test context",
+			numLeaks:    2,
+		},
 	}
 	g := goblin.Goblin(t)
 	for _, test := range tests {
@@ -633,6 +669,13 @@ func TestAuditRepo(t *testing.T) {
 				if opts.Redact {
 					g.Assert(leaks[0].Offender).Equal("REDACTED")
 				}
+				if opts.Before != "" && opts.After != "" {
+					g.Assert(leaks[0].Line).Equal("const AWS_KEY = \"<gitleaks>AKIALALEMEL33243OLIAE</gitleaks>\"")
+				}
+				if opts.Context > 0 {
+					g.Assert(leaks[0].Line).Equal("Y = \"AKIALALEMEL33243OLIAE\"\ncon")
+				}
+
 				g.Assert(len(leaks)).Equal(test.numLeaks)
 			next:
 				os.Setenv("GITLEAKS_CONFIG", "")

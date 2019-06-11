@@ -106,6 +106,12 @@ entropies = [
 filetypes = [".go"]
 `
 
+const testDateLimit = `
+[[rules]]
+description = "test date limit"
+regex = '''HandleFunc'''
+`
+
 func testTomlLoader() string {
 	tmpDir, _ := ioutil.TempDir("", "whiteListConfigs")
 	ioutil.WriteFile(path.Join(tmpDir, "regex"), []byte(testWhitelistRegex), 0644)
@@ -119,5 +125,6 @@ func testTomlLoader() string {
 	ioutil.WriteFile(path.Join(tmpDir, "badEntropy2"), []byte(testBadEntropyRange2), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "mdFiles"), []byte(testMDFileType), 0644)
 	ioutil.WriteFile(path.Join(tmpDir, "entropyRegexGo"), []byte(testEntropyRegexRangeGoFilter), 0644)
+	ioutil.WriteFile(path.Join(tmpDir, "dateLimit"), []byte(testDateLimit), 0644)
 	return tmpDir
 }
