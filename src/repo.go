@@ -62,14 +62,20 @@ func newRepoInfo() (*RepoInfo, error) {
 // clone will clone a repo
 func (repoInfo *RepoInfo) clone() error {
 	var (
-		err  error
-		repo *git.Repository
+		err         error
+		repo        *git.Repository
+		cloneTarget string
 	)
 
 	// check if cloning to disk
 	if opts.Disk {
 		log.Infof("cloning %s to disk", opts.Repo)
-		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
+		if opts.Persist != "" {
+			splits := strings.Split(opts.Repo, "/")
+			cloneTarget = fmt.Sprintf("%s/%s", dir, strings.Join(splits[len(splits)-2:], "_"))
+		} else {
+			cloneTarget = fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
+		}
 		if strings.HasPrefix(opts.Repo, "git") {
 			// private
 			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{

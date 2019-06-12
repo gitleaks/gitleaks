@@ -265,7 +265,7 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: &Options{
-				Repo:          "https://github.com/gitleakstest/gronit",
+				Repo:          "https://github.com/gitleakstest/gronit.git",
 				AdditionsOnly: true,
 			},
 			description:    "test additions only",
@@ -274,7 +274,7 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: &Options{
-				Repo:      "https://github.com/gitleakstest/gronit",
+				Repo:      "https://github.com/gitleakstest/gronit.git",
 				DateLimit: "2018/01/25",
 			},
 			description:    "test date limit",

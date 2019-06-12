@@ -49,11 +49,15 @@ func Run(optsL *Options) (*Report, error) {
 	}
 
 	if opts.Disk {
-		// temporary directory where all the gitleaks plain clones will reside
-		dir, err = ioutil.TempDir("", "gitleaks")
-		defer os.RemoveAll(dir)
-		if err != nil {
-			goto postAudit
+		if opts.Persist != "" {
+			dir = opts.Persist
+		} else {
+			// temporary directory where all the gitleaks plain clones will reside
+			dir, err = ioutil.TempDir("", "gitleaks")
+			defer os.RemoveAll(dir)
+			if err != nil {
+				goto postAudit
+			}
 		}
 	}
 

@@ -45,6 +45,7 @@ type Options struct {
 	Context       int    `long:"context" description:"Number of characters to extract around a leak"`
 	DateLimit     string `long:"date-limit" description:"Commit date limit"`
 	AdditionsOnly bool   `long:"adds-only" description:"Only inspect additions from diffs"`
+	Persist       string `long:"persist" description:"Persistent repository. Must be cloned to disk"`
 	// TODO: IncludeMessages  string `long:"messages" description:"include commit messages in audit"`
 
 	// Output options
@@ -143,6 +144,13 @@ func (opts *Options) guard() error {
 		_, err := time.Parse("2006/01/02", opts.DateLimit)
 		if err != nil {
 			return fmt.Errorf("unable to parse date, must be in format YYYY/MM/DD")
+		}
+	}
+
+	if opts.Persist != "" {
+		dirPath := filepath.Dir(opts.Report)
+		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+			return fmt.Errorf("%s does not exist", dirPath)
 		}
 	}
 
