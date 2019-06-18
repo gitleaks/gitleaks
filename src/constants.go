@@ -16,13 +16,24 @@ const defaultConfig = `
 # The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
 # is set, gitleaks will load configurations from that path. If option --config is set, gitleaks will load
 # configurations from that path. Gitleaks does not whitelist anything by default.
+# - https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
+# - https://github.com/dxa4481/truffleHogRegexes/blob/master/truffleHogRegexes/regexes.json
 
 title = "gitleaks config"
 [[rules]]
-description = "AWS Key"
-regex = '''AKIA[0-9A-Z]{16}'''
+description = "AWS Client ID"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 tags = ["key", "AWS"]
-severity = "high"
+
+[[rules]]
+description = "AWS Secret Key"
+regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "AWS MWS key"
+regex = '''amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
+tags = ["key", "AWS", "MWS"]
 
 [[rules]]
 description = "PKCS8"
@@ -45,19 +56,44 @@ regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 tags = ["key", "PGP"]
 
 [[rules]]
-description = "Facebook"
-regex = '''(?i)facebook(.{0,4})?['\"][0-9a-f]{32}['\"]'''
+description = "Facebook Secret Key"
+regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
 tags = ["key", "Facebook"]
 
 [[rules]]
-description = "Twitter"
-regex = '''(?i)twitter(.{0,4})?['\"][0-9a-zA-Z]{35,44}['\"]'''
+description = "Facebook Client ID"
+regex = '''(?i)(facebook|fb)(.{0,20})?['\"][0-9]{13,17}['\"]'''
+tags = ["key", "Facebook"]
+
+[[rules]]
+description = "Facebook access token"
+regex = '''EAACEdEose0cBA[0-9A-Za-z]+'''
+tags = ["key", "Facebook"]
+
+[[rules]]
+description = "Twitter Secret Key"
+regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{35,44}['\"]'''
 tags = ["key", "Twitter"]
 
 [[rules]]
+description = "Twitter Client ID"
+regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{18,25}['\"]'''
+tags = ["client", "Twitter"]
+
+[[rules]]
 description = "Github"
-regex = '''(?i)github(.{0,4})?['\"][0-9a-zA-Z]{35,40}['\"]'''
+regex = '''(?i)github(.{0,20})?(?-i)['\"][0-9a-zA-Z]{35,40}['\"]'''
 tags = ["key", "Github"]
+
+[[rules]]
+description = "LinkedIn Client ID"
+regex = '''(?i)linkedin(.{0,20})?(?-i)['\"][0-9a-z]{12}['\"]'''
+tags = ["client", "Twitter"]
+
+[[rules]]
+description = "LinkedIn Secret Key"
+regex = '''(?i)linkedin(.{0,20})?['\"][0-9a-z]{16}['\"]'''
+tags = ["secret", "Twitter"]
 
 [[rules]]
 description = "Slack"
@@ -68,16 +104,6 @@ tags = ["key", "Slack"]
 description = "EC"
 regex = '''-----BEGIN EC PRIVATE KEY-----'''
 tags = ["key", "EC"]
-
-[[rules]]
-description = "AWS MWS key"
-regex = '''amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
-tags = ["key", "AWS", "MWS"]
-
-[[rules]]
-description = "Facebook access token"
-regex = '''EAACEdEose0cBA[0-9A-Za-z]+'''
-tags = ["key", "Facebook"]
 
 [[rules]]
 description = "Generic API key"
@@ -95,8 +121,13 @@ regex = '''AIza[0-9A-Za-z\\-_]{35}'''
 tags = ["key", "Google"]
 
 [[rules]]
+description = "Google Cloud Platform API key"
+regex = '''(?i)(google|gcp|youtube|drive|yt)(.{0,20})?['\"][AIza[0-9a-z\\-_]{35}]['\"]'''
+tags = ["key", "Google", "GCP"]
+
+[[rules]]
 description = "Google OAuth"
-regex = '''[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com'''
+regex = '''(?i)(google|gcp|auth)(.{0,20})?['"][0-9]+-[0-9a-z_]{32}\.apps\.googleusercontent\.com['"]'''
 tags = ["key", "Google", "OAuth"]
 
 [[rules]]
@@ -106,17 +137,17 @@ tags = ["key", "Google", "OAuth"]
 
 [[rules]]
 description = "Heroku API key"
-regex = '''[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}'''
+regex = '''(?i)heroku(.{0,20})?['"][0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}['"]'''
 tags = ["key", "Heroku"]
 
 [[rules]]
 description = "MailChimp API key"
-regex = '''[0-9a-f]{32}-us[0-9]{1,2}'''
+regex = '''(?i)(mailchimp|mc)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]'''
 tags = ["key", "Mailchimp"]
 
 [[rules]]
 description = "Mailgun API key"
-regex = '''key-[0-9a-zA-Z]{32}'''
+regex = '''(?i)(mailgun|mg)(.{0,20})?['"][0-9a-z]{32}['"]'''
 tags = ["key", "Mailgun"]
 
 [[rules]]
@@ -141,7 +172,7 @@ tags = ["key", "slack"]
 
 [[rules]]
 description = "Stripe API key"
-regex = '''[sk|rk]_live_[0-9a-zA-Z]{24}'''
+regex = '''(?i)stripe(.{0,20})?['\"][sk|rk]_live_[0-9a-zA-Z]{24}'''
 tags = ["key", "Stripe"]
 
 [[rules]]
@@ -156,7 +187,7 @@ tags = ["key", "square"]
 
 [[rules]]
 description = "Twilio API key"
-regex = '''SK[0-9a-fA-F]{32}'''
+regex = '''(?i)twilio(.{0,20})?['\"][0-9a-f]{32}['\"]'''
 tags = ["key", "twilio"]
 
 [whitelist]
