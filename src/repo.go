@@ -17,6 +17,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
+	"gopkg.in/src-d/go-git.v4/utils/merkletrie"
 )
 
 // Leak represents a leaked secret or regex match.
@@ -330,28 +331,53 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 
 func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 	var leaks []Leak
-	fIter, err := c.Files()
+	tree, err := c.Tree()
 	if err != nil {
 		return nil
 	}
-	err = fIter.ForEach(func(f *object.File) error {
-		bin, err := f.IsBinary()
-		if bin || err != nil {
-			return nil
-		}
-		for _, re := range config.WhiteList.files {
-			if re.FindString(f.Name) != "" {
-				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
-				return nil
-			}
-		}
-		content, err := f.Contents()
+
+	// Get previous state in order to get list of modified/added files
+	prevCommitObject, err := c.Parents().Next()
+	prevDirState, err := prevCommitObject.Tree()
+	changes, err := prevDirState.Diff(tree)
+	if err != nil {
+		return nil
+	}
+
+	// Run through each change
+	for _, change := range changes {
+		//fmt.Printf("Change: %s\n", change)
+
+		// Ignore deleted files
+		action, err := change.Action()
 		if err != nil {
 			return nil
 		}
+		if action == merkletrie.Delete {
+			continue
+		}
+
+		// Get list of involved files
+		_, to, err := change.Files()
+		bin, err := to.IsBinary()
+		if bin || err != nil {
+			return nil
+		}
+
+		for _, re := range config.WhiteList.files {
+			if re.FindString(to.Name) != "" {
+				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), to.Name)
+				return nil
+			}
+		}
+		content, err := to.Contents()
+		if err != nil {
+			return nil
+		}
+
 		diff := &commitInfo{
 			repoName: repoInfo.name,
-			filePath: f.Name,
+			filePath: to.Name,
 			content:  content,
 			sha:      c.Hash.String(),
 			author:   c.Author.Name,
@@ -363,7 +389,6 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		mutex.Lock()
 		leaks = append(leaks, fileLeaks...)
 		mutex.Unlock()
-		return nil
-	})
+	}
 	return leaks
 }
