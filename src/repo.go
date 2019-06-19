@@ -331,22 +331,74 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 
 func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 	var leaks []Leak
-	tree, err := c.Tree()
+	var prevCommitObject *object.Commit
+	fIter, err := c.Files()
 	if err != nil {
 		return nil
 	}
 
-	// Get previous state in order to get list of modified/added files
-	prevCommitObject, err := c.Parents().Next()
-	prevDirState, err := prevCommitObject.Tree()
-	changes, err := prevDirState.Diff(tree)
+	// If current commit has parents then search for leaks in tree change,
+	// that means scan in changed/modified files from one commit to another.
+	if len(c.ParentHashes) > 0 {
+		prevCommitObject, err = c.Parents().Next()
+		return repoInfo.auditTreeChange(prevCommitObject, c)
+	}
+
+	// Scan for leaks in files related to current commit
+	err = fIter.ForEach(func(f *object.File) error {
+		bin, err := f.IsBinary()
+		if bin || err != nil {
+			return nil
+		}
+		for _, re := range config.WhiteList.files {
+			if re.FindString(f.Name) != "" {
+				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), f.Name)
+				return nil
+			}
+		}
+		content, err := f.Contents()
+		if err != nil {
+			return nil
+		}
+		diff := &commitInfo{
+			repoName: repoInfo.name,
+			filePath: f.Name,
+			content:  content,
+			sha:      c.Hash.String(),
+			author:   c.Author.Name,
+			email:    c.Author.Email,
+			message:  strings.Replace(c.Message, "\n", " ", -1),
+			date:     c.Author.When,
+		}
+		fileLeaks := inspect(diff)
+		mutex.Lock()
+		leaks = append(leaks, fileLeaks...)
+		mutex.Unlock()
+		return nil
+	})
+	return leaks
+}
+
+// auditTreeChange will search for leaks in changed/modified files from one
+// commit to another
+func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
+	var leaks []Leak
+
+	// Get state of src commit
+	srcState, err := src.Tree()
 	if err != nil {
 		return nil
 	}
+
+	// Get state of destination commit
+	dstState, err := dst.Tree()
+	if err != nil {
+		return nil
+	}
+	changes, err := srcState.Diff(dstState)
 
 	// Run through each change
 	for _, change := range changes {
-		//fmt.Printf("Change: %s\n", change)
 
 		// Ignore deleted files
 		action, err := change.Action()
@@ -379,11 +431,11 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 			repoName: repoInfo.name,
 			filePath: to.Name,
 			content:  content,
-			sha:      c.Hash.String(),
-			author:   c.Author.Name,
-			email:    c.Author.Email,
-			message:  strings.Replace(c.Message, "\n", " ", -1),
-			date:     c.Author.When,
+			sha:      dst.Hash.String(),
+			author:   dst.Author.Name,
+			email:    dst.Author.Email,
+			message:  strings.Replace(dst.Message, "\n", " ", -1),
+			date:     dst.Author.When,
 		}
 		fileLeaks := inspect(diff)
 		mutex.Lock()
@@ -391,4 +443,5 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		mutex.Unlock()
 	}
 	return leaks
+
 }
