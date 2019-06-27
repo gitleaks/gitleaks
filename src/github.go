@@ -21,7 +21,7 @@ import (
 var githubPages = 100
 
 // auditPR audits a single github PR
-func auditGithubPR() ([]Leak, error) {
+func auditGithubPR() error {
 	var leaks []Leak
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -30,7 +30,7 @@ func auditGithubPR() ([]Leak, error) {
 	repo := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	page := 1
@@ -40,7 +40,7 @@ func auditGithubPR() ([]Leak, error) {
 			Page:    page,
 		})
 		if err != nil {
-			return leaks, err
+			return err
 		}
 
 		for _, c := range commits {
@@ -84,14 +84,14 @@ func auditGithubPR() ([]Leak, error) {
 		}
 	}
 
-	return leaks, nil
+	return nil
 }
 
 // auditGithubRepos kicks off audits if --github-user or --github-org options are set.
 // First, we gather all the github repositories from the github api (this doesnt actually clone the repo).
 // After all the repos have been pulled from github's api we proceed to audit the repos by calling auditGithubRepo.
 // If an error occurs during an audit of a repo, that error is logged but won't break the execution cycle.
-func auditGithubRepos() ([]Leak, error) {
+func auditGithubRepos() error {
 	var (
 		err              error
 		githubRepos      []*github.Repository
@@ -100,7 +100,6 @@ func auditGithubRepos() ([]Leak, error) {
 		githubOrgOptions *github.RepositoryListByOrgOptions
 		githubOptions    *github.RepositoryListOptions
 		done             bool
-		leaks            []Leak
 		ownerDir         string
 	)
 	ctx := context.Background()
@@ -163,31 +162,30 @@ func auditGithubRepos() ([]Leak, error) {
 		ownerDir, _ = ioutil.TempDir(dir, opts.GithubUser)
 	}
 	for _, githubRepo := range githubRepos {
-		repoD, err := cloneGithubRepo(githubRepo)
+		repo, err := cloneGithubRepo(githubRepo)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
-		leaksFromRepo, err := repoD.audit()
+		err = repo.audit()
+		if err != nil {
+			log.Warnf("error occurred during audit of repo: %s, err: %v, continuing github audit", repo.name, err)
+		}
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		}
-		if len(leaksFromRepo) == 0 {
+		if len(repo.leaks) == 0 {
 			log.Infof("no leaks found for repo %s", *githubRepo.Name)
 		} else {
 			log.Warnf("leaks found for repo %s", *githubRepo.Name)
 		}
-		if err != nil {
-			log.Warn(err)
-		}
-		leaks = append(leaks, leaksFromRepo...)
 	}
-	return leaks, nil
+	return nil
 }
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
 // will be cloned to disk if --disk is set.
-func cloneGithubRepo(githubRepo *github.Repository) (*RepoInfo, error) {
+func cloneGithubRepo(githubRepo *github.Repository) (*Repo, error) {
 	var (
 		repo *git.Repository
 		err  error
@@ -248,7 +246,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RepoInfo{
+	return &Repo{
 		repository: repo,
 		name:       *githubRepo.Name,
 	}, nil
