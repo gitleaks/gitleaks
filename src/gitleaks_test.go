@@ -91,7 +91,7 @@ func TestGetRepo(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				repo, _ := newRepoInfo()
+				repo, _ := newRepo()
 				err := repo.clone()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
@@ -383,7 +383,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	leaksRepo := &RepoInfo{
+	leaksRepo := &Repo{
 		repository: leaksR,
 		name:       "gronit",
 	}
@@ -394,7 +394,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cleanRepo := &RepoInfo{
+	cleanRepo := &Repo{
 		repository: cleanR,
 		name:       "h1domains",
 	}
@@ -404,7 +404,7 @@ func TestAuditRepo(t *testing.T) {
 		description      string
 		expectedErrMsg   string
 		numLeaks         int
-		repo             *RepoInfo
+		repo             *Repo
 		whiteListFiles   []*regexp.Regexp
 		whiteListCommits map[string]bool
 		whiteListRepos   []*regexp.Regexp
