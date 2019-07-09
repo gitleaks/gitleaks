@@ -17,6 +17,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/storer"
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
+	"gopkg.in/src-d/go-git.v4/utils/merkletrie"
 )
 
 // Leak represents a leaked secret or regex match.
@@ -330,10 +331,20 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 
 func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 	var leaks []Leak
+	var prevCommitObject *object.Commit
 	fIter, err := c.Files()
 	if err != nil {
 		return nil
 	}
+
+	// If current commit has parents then search for leaks in tree change,
+	// that means scan in changed/modified files from one commit to another.
+	if len(c.ParentHashes) > 0 {
+		prevCommitObject, err = c.Parents().Next()
+		return repoInfo.auditTreeChange(prevCommitObject, c)
+	}
+
+	// Scan for leaks in files related to current commit
 	err = fIter.ForEach(func(f *object.File) error {
 		bin, err := f.IsBinary()
 		if bin || err != nil {
@@ -366,4 +377,71 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		return nil
 	})
 	return leaks
+}
+
+// auditTreeChange will search for leaks in changed/modified files from one
+// commit to another
+func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
+	var leaks []Leak
+
+	// Get state of src commit
+	srcState, err := src.Tree()
+	if err != nil {
+		return nil
+	}
+
+	// Get state of destination commit
+	dstState, err := dst.Tree()
+	if err != nil {
+		return nil
+	}
+	changes, err := srcState.Diff(dstState)
+
+	// Run through each change
+	for _, change := range changes {
+
+		// Ignore deleted files
+		action, err := change.Action()
+		if err != nil {
+			return nil
+		}
+		if action == merkletrie.Delete {
+			continue
+		}
+
+		// Get list of involved files
+		_, to, err := change.Files()
+		bin, err := to.IsBinary()
+		if bin || err != nil {
+			return nil
+		}
+
+		for _, re := range config.WhiteList.files {
+			if re.FindString(to.Name) != "" {
+				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), to.Name)
+				return nil
+			}
+		}
+		content, err := to.Contents()
+		if err != nil {
+			return nil
+		}
+
+		diff := &commitInfo{
+			repoName: repoInfo.name,
+			filePath: to.Name,
+			content:  content,
+			sha:      dst.Hash.String(),
+			author:   dst.Author.Name,
+			email:    dst.Author.Email,
+			message:  strings.Replace(dst.Message, "\n", " ", -1),
+			date:     dst.Author.When,
+		}
+		fileLeaks := inspect(diff)
+		mutex.Lock()
+		leaks = append(leaks, fileLeaks...)
+		mutex.Unlock()
+	}
+	return leaks
+
 }
