@@ -3,6 +3,7 @@ package gitleaks
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/hako/durafmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -39,12 +40,14 @@ type Leak struct {
 
 // Repo contains a src-d git repository and other data about the repo
 type Repo struct {
-	leaks      []Leak
-	path       string
-	url        string
-	name       string
-	repository *git.Repository
-	err        error
+	leaks         []Leak
+	path          string
+	url           string
+	name          string
+	repository    *git.Repository
+	err           error
+	auditDuration string
+	numCommits    int64
 }
 
 func newRepo() (*Repo, error) {
@@ -141,6 +144,8 @@ func (repo *Repo) audit() error {
 		}
 	}
 
+	start := time.Now()
+
 	// check if target contains an external gitleaks toml
 	if opts.RepoConfig {
 		err := config.updateFromRepo(repo)
@@ -157,6 +162,7 @@ func (repo *Repo) audit() error {
 		}
 
 		totalCommits = totalCommits + 1
+		repo.numCommits = 1
 		return repo.auditSingleCommit(c)
 	} else if opts.Branch != "" {
 		refs, err := repo.repository.Storer.IterReferences()
@@ -320,6 +326,9 @@ func (repo *Repo) audit() error {
 	})
 
 	commitWg.Wait()
+	repo.numCommits = commitCount
+	repo.auditDuration = durafmt.Parse(time.Now().Sub(start)).String()
+
 	return nil
 }
 
@@ -375,6 +384,11 @@ func (repo *Repo) auditSingleCommit(c *object.Commit) error {
 }
 
 func (repo *Repo) report() error {
+	if len(repo.leaks) != 0 {
+		log.Warnf("%d leaks detected. %d commits inspected in %s", len(repo.leaks), repo.numCommits, repo.auditDuration)
+	} else {
+		log.Infof("No leaks detected. %d commits inspected in %s", repo.numCommits, repo.auditDuration)
+	}
 	return nil
 }
 
@@ -424,7 +438,7 @@ func (repo *Repo) auditTreeChange(src, dst *object.Commit) error {
 			}
 		}
 
-		if skip{
+		if skip {
 			skip = false
 			continue
 		}

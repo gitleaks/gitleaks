@@ -33,7 +33,7 @@ type Report struct {
 func Run(optsL *Options) (int, error) {
 	var (
 		err   error
-		numLeaks int
+		leaks []Leak
 	)
 
 	opts = optsL
@@ -70,7 +70,7 @@ func Run(optsL *Options) (int, error) {
 		if err != nil {
 			return NoLeaks, err
 		}
-		numLeaks = len(repo.leaks)
+		leaks = repo.leaks
 	} else if opts.OwnerPath != "" {
 		var repos []*Repo
 		repos, err = discoverRepos(opts.OwnerPath)
@@ -92,7 +92,7 @@ func Run(optsL *Options) (int, error) {
 			if err != nil {
 				return NoLeaks, err
 			}
-			numLeaks += len(repo.leaks)
+			leaks = append(leaks, repo.leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
 		return auditGithubRepos()
@@ -102,5 +102,12 @@ func Run(optsL *Options) (int, error) {
 		return auditGithubPR()
 	}
 
-	return numLeaks, nil
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }

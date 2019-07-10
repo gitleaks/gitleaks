@@ -23,7 +23,7 @@ func auditGitlabRepos() (int, error) {
 		resp    *gitlab.Response
 		tempDir string
 		err     error
-		numLeaks int
+		leaks   []Leak
 	)
 
 	repos := make([]*gitlab.Project, 0, gitlabPages)
@@ -101,10 +101,17 @@ func auditGitlabRepos() (int, error) {
 		} else {
 			log.Warnf("leaks found for repo %s", p.Name)
 		}
-		numLeaks = len(repo.leaks)
+		leaks = append(leaks, repo.leaks...)
 	}
 
-	return numLeaks, nil
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }
 
 func createGitlabTempDir() (string, error) {

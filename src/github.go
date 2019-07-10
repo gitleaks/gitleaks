@@ -101,7 +101,7 @@ func auditGithubRepos() (int, error) {
 		githubOptions    *github.RepositoryListOptions
 		done             bool
 		ownerDir         string
-		numLeaks int
+		leaks            []Leak
 	)
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -180,10 +180,17 @@ func auditGithubRepos() (int, error) {
 		} else {
 			log.Warnf("leaks found for repo %s", *githubRepo.Name)
 		}
-		numLeaks += len(repo.leaks)
-
+		leaks = append(leaks, repo.leaks...)
 	}
-	return numLeaks, nil
+
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
