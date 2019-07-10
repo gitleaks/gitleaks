@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jessevdk/go-flags"
+	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -150,6 +151,11 @@ func (opts *Options) setLogs() {
 		log.SetLevel(log.InfoLevel)
 	}
 	log.SetFormatter(&log.TextFormatter{
+		ForceColors:   true,
 		FullTimestamp: true,
 	})
+	// Fix colors on Windows
+	if runtime.GOOS == "windows" {
+		log.SetOutput(colorable.NewColorableStdout())
+	}
 }

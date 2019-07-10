@@ -17,12 +17,13 @@ const gitlabPages = 100
 // auditGitlabRepos kicks off audits if --gitlab-user or --gitlab-org options are set.
 // Getting all repositories from the GitLab API and run audit. If an error occurs during an audit of a repo,
 // that error is logged.
-func auditGitlabRepos() error {
+func auditGitlabRepos() (int, error) {
 	var (
 		ps      []*gitlab.Project
 		resp    *gitlab.Response
 		tempDir string
 		err     error
+		numLeaks int
 	)
 
 	repos := make([]*gitlab.Project, 0, gitlabPages)
@@ -100,9 +101,10 @@ func auditGitlabRepos() error {
 		} else {
 			log.Warnf("leaks found for repo %s", p.Name)
 		}
+		numLeaks = len(repo.leaks)
 	}
 
-	return nil
+	return numLeaks, nil
 }
 
 func createGitlabTempDir() (string, error) {

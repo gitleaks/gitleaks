@@ -198,7 +198,7 @@ func (config *Config) updateFromRepo(repo *Repo) error {
 	if err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
-	if _, err := toml.DecodeReader(f, &config); err != nil {
+	if _, err := toml.DecodeReader(f, &tomlConfig); err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
 

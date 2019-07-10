@@ -2,6 +2,8 @@ package gitleaks
 
 const version = "2.0.0"
 
+const NoLeaks = 0
+
 const defaultGithubURL = "https://api.github.com/"
 const defaultThreadNum = 1
 

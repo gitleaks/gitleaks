@@ -21,7 +21,7 @@ import (
 var githubPages = 100
 
 // auditPR audits a single github PR
-func auditGithubPR() error {
+func auditGithubPR() (int, error) {
 	var leaks []Leak
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -30,7 +30,7 @@ func auditGithubPR() error {
 	repo := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
 	if err != nil {
-		return err
+		return NoLeaks, err
 	}
 
 	page := 1
@@ -40,7 +40,7 @@ func auditGithubPR() error {
 			Page:    page,
 		})
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 
 		for _, c := range commits {
@@ -84,14 +84,14 @@ func auditGithubPR() error {
 		}
 	}
 
-	return nil
+	return len(leaks), nil
 }
 
 // auditGithubRepos kicks off audits if --github-user or --github-org options are set.
 // First, we gather all the github repositories from the github api (this doesnt actually clone the repo).
 // After all the repos have been pulled from github's api we proceed to audit the repos by calling auditGithubRepo.
 // If an error occurs during an audit of a repo, that error is logged but won't break the execution cycle.
-func auditGithubRepos() error {
+func auditGithubRepos() (int, error) {
 	var (
 		err              error
 		githubRepos      []*github.Repository
@@ -101,6 +101,7 @@ func auditGithubRepos() error {
 		githubOptions    *github.RepositoryListOptions
 		done             bool
 		ownerDir         string
+		numLeaks int
 	)
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -179,8 +180,10 @@ func auditGithubRepos() error {
 		} else {
 			log.Warnf("leaks found for repo %s", *githubRepo.Name)
 		}
+		numLeaks += len(repo.leaks)
+
 	}
-	return nil
+	return numLeaks, nil
 }
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo

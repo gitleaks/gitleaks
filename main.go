@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	gitleaks "github.com/zricethezav/gitleaks/src"
+	"github.com/zricethezav/gitleaks/src"
 )
 
 func main() {
-	err := gitleaks.Run(gitleaks.ParseOpts())
+	_, err := gitleaks.Run(gitleaks.ParseOpts())
 	if err != nil {
 		if strings.Contains(err.Error(), "whitelisted") {
 			log.Info(err.Error())

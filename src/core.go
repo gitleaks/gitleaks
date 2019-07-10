@@ -30,15 +30,16 @@ type Report struct {
 }
 
 // Run is the entry point for gitleaks
-func Run(optsL *Options) error {
+func Run(optsL *Options) (int, error) {
 	var (
 		err   error
+		numLeaks int
 	)
 
 	opts = optsL
 	config, err = newConfig()
 	if err != nil {
-		return err
+		return NoLeaks, err
 	}
 
 	if opts.Disk {
@@ -46,7 +47,7 @@ func Run(optsL *Options) error {
 		dir, err = ioutil.TempDir("", "gitleaks")
 		defer os.RemoveAll(dir)
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 	}
 
@@ -55,25 +56,26 @@ func Run(optsL *Options) error {
 		var repo *Repo
 		repo, err = newRepo()
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 		err = repo.clone()
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 		err = repo.audit()
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 		err = repo.report()
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
+		numLeaks = len(repo.leaks)
 	} else if opts.OwnerPath != "" {
 		var repos []*Repo
 		repos, err = discoverRepos(opts.OwnerPath)
 		if err != nil {
-			return err
+			return NoLeaks, err
 		}
 		for _, repo := range repos {
 			err = repo.clone()
@@ -83,13 +85,14 @@ func Run(optsL *Options) error {
 			}
 			err = repo.audit()
 			if err != nil {
-				log.Warnf("error occured auditing repo: %s, continuing to next repo", repo.name)
+				log.Warnf("error occurred auditing repo: %s, continuing to next repo", repo.name)
 				continue
 			}
 			err = repo.report()
 			if err != nil {
-				return err
+				return NoLeaks, err
 			}
+			numLeaks += len(repo.leaks)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
 		return auditGithubRepos()
@@ -99,5 +102,5 @@ func Run(optsL *Options) error {
 		return auditGithubPR()
 	}
 
-	return nil
+	return numLeaks, nil
 }
