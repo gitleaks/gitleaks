@@ -3,6 +3,7 @@ package gitleaks
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/hako/durafmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	diffType "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -19,6 +20,20 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 	"gopkg.in/src-d/go-git.v4/utils/merkletrie"
 )
+
+// Commit represents a git commit
+type Commit struct {
+	content  string
+	commit   *object.Commit
+	filePath string
+	repoName string
+	sha      string
+	message  string
+	author   string
+	email    string
+	date     time.Time
+}
+
 
 // Leak represents a leaked secret or regex match.
 type Leak struct {
@@ -37,22 +52,25 @@ type Leak struct {
 	Severity string    `json:"severity"`
 }
 
-// RepoInfo contains a src-d git repository and other data about the repo
-type RepoInfo struct {
-	path       string
-	url        string
-	name       string
-	repository *git.Repository
-	err        error
+// Repo contains a src-d git repository and other data about the repo
+type Repo struct {
+	leaks         []Leak
+	path          string
+	url           string
+	name          string
+	repository    *git.Repository
+	err           error
+	auditDuration string
+	numCommits    int64
 }
 
-func newRepoInfo() (*RepoInfo, error) {
+func newRepo() (*Repo, error) {
 	for _, re := range config.WhiteList.repos {
 		if re.FindString(opts.Repo) != "" {
 			return nil, fmt.Errorf("skipping %s, whitelisted", opts.Repo)
 		}
 	}
-	return &RepoInfo{
+	return &Repo{
 		path: opts.RepoPath,
 		url:  opts.Repo,
 		name: filepath.Base(opts.Repo),
@@ -60,10 +78,10 @@ func newRepoInfo() (*RepoInfo, error) {
 }
 
 // clone will clone a repo
-func (repoInfo *RepoInfo) clone() error {
+func (repo *Repo) clone() error {
 	var (
-		err  error
-		repo *git.Repository
+		err        error
+		repository *git.Repository
 	)
 
 	// check if cloning to disk
@@ -72,7 +90,7 @@ func (repoInfo *RepoInfo) clone() error {
 		cloneTarget := fmt.Sprintf("%s/%x", dir, md5.Sum([]byte(fmt.Sprintf("%s%s", opts.GithubUser, opts.Repo))))
 		if strings.HasPrefix(opts.Repo, "git") {
 			// private
-			repo, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
+			repository, err = git.PlainClone(cloneTarget, false, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 				Auth:     config.sshAuth,
@@ -89,19 +107,19 @@ func (repoInfo *RepoInfo) clone() error {
 					Password: os.Getenv("GITHUB_TOKEN"),
 				}
 			}
-			repo, err = git.PlainClone(cloneTarget, false, options)
+			repository, err = git.PlainClone(cloneTarget, false, options)
 		}
-	} else if repoInfo.path != "" {
-		log.Infof("opening %s", repoInfo.path)
-		repo, err = git.PlainOpen(repoInfo.path)
+	} else if repo.path != "" {
+		log.Infof("opening %s", repo.path)
+		repository, err = git.PlainOpen(repo.path)
 		if err != nil {
-			log.Errorf("unable to open %s", repoInfo.path)
+			log.Errorf("unable to open %s", repo.path)
 		}
 	} else {
 		// cloning to memory
 		log.Infof("cloning %s", opts.Repo)
 		if strings.HasPrefix(opts.Repo, "git") {
-			repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			repository, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 				Auth:     config.sshAuth,
@@ -117,56 +135,53 @@ func (repoInfo *RepoInfo) clone() error {
 					Password: os.Getenv("GITHUB_TOKEN"),
 				}
 			}
-			repo, err = git.Clone(memory.NewStorage(), nil, options)
+			repository, err = git.Clone(memory.NewStorage(), nil, options)
 		}
 	}
-	repoInfo.repository = repo
-	repoInfo.err = err
+	repo.repository = repository
+	repo.err = err
 	return err
 }
 
 // audit performs an audit
-func (repoInfo *RepoInfo) audit() ([]Leak, error) {
+func (repo *Repo) audit() error {
 	var (
 		err         error
-		leaks       []Leak
 		commitCount int64
 		commitWg    sync.WaitGroup
 		semaphore   chan bool
 		logOpts     git.LogOptions
 	)
 	for _, re := range config.WhiteList.repos {
-		if re.FindString(repoInfo.name) != "" {
-			return leaks, fmt.Errorf("skipping %s, whitelisted", repoInfo.name)
+		if re.FindString(repo.name) != "" {
+			return fmt.Errorf("skipping %s, whitelisted", repo.name)
 		}
 	}
 
+	start := time.Now()
+
 	// check if target contains an external gitleaks toml
 	if opts.RepoConfig {
-		err := config.updateFromRepo(repoInfo)
+		err := config.updateFromRepo(repo)
 		if err != nil {
-			return leaks, nil
+			return err
 		}
 	}
 
 	if opts.Commit != "" {
 		h := plumbing.NewHash(opts.Commit)
-		c, err := repoInfo.repository.CommitObject(h)
+		c, err := repo.repository.CommitObject(h)
 		if err != nil {
-			return leaks, nil
+			return err
 		}
 
-		commitCount = commitCount + 1
 		totalCommits = totalCommits + 1
-		leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
-		mutex.Lock()
-		leaks = append(leaksFromSingleCommit, leaks...)
-		mutex.Unlock()
-		return leaks, err
+		repo.numCommits = 1
+		return repo.auditSingleCommit(c)
 	} else if opts.Branch != "" {
-		refs, err := repoInfo.repository.Storer.IterReferences()
+		refs, err := repo.repository.Storer.IterReferences()
 		if err != nil {
-			return leaks, err
+			return err
 		}
 		err = refs.ForEach(func(ref *plumbing.Reference) error {
 			if ref.Name().IsTag() {
@@ -193,10 +208,9 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	}
 
 	// iterate all through commits
-	cIter, err := repoInfo.repository.Log(&logOpts)
-
+	cIter, err := repo.repository.Log(&logOpts)
 	if err != nil {
-		return leaks, nil
+		return err
 	}
 
 	if opts.Threads != 0 {
@@ -221,10 +235,10 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 		if len(c.ParentHashes) == 0 {
 			commitCount = commitCount + 1
 			totalCommits = totalCommits + 1
-			leaksFromSingleCommit := repoInfo.auditSingleCommit(c)
-			mutex.Lock()
-			leaks = append(leaksFromSingleCommit, leaks...)
-			mutex.Unlock()
+			err := repo.auditSingleCommit(c)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 
@@ -268,8 +282,8 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					for _, fr := range config.FileRules {
 						for _, r := range fr.fileTypes {
 							if r.FindString(filePath) != "" {
-								commitInfo := &commitInfo{
-									repoName: repoInfo.name,
+								commitInfo := &Commit{
+									repoName: repo.name,
 									filePath: filePath,
 									sha:      c.Hash.String(),
 									author:   c.Author.Name,
@@ -279,7 +293,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 								}
 								leak := *newLeak("N/A", fmt.Sprintf("filetype %s found", r.String()), r.String(), fr, commitInfo)
 								mutex.Lock()
-								leaks = append(leaks, leak)
+								repo.leaks = append(repo.leaks, leak)
 								mutex.Unlock()
 							}
 						}
@@ -298,8 +312,8 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
-							diff := &commitInfo{
-								repoName: repoInfo.name,
+							diff := &Commit{
+								repoName: repo.name,
 								filePath: filePath,
 								content:  chunk.Content(),
 								sha:      c.Hash.String(),
@@ -311,7 +325,7 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 							chunkLeaks := inspect(diff)
 							for _, leak := range chunkLeaks {
 								mutex.Lock()
-								leaks = append(leaks, leak)
+								repo.leaks = append(repo.leaks, leak)
 								mutex.Unlock()
 							}
 						}
@@ -326,22 +340,26 @@ func (repoInfo *RepoInfo) audit() ([]Leak, error) {
 	})
 
 	commitWg.Wait()
-	return leaks, nil
+	repo.numCommits = commitCount
+	repo.auditDuration = durafmt.Parse(time.Now().Sub(start)).String()
+
+	return nil
 }
 
-func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
-	var leaks []Leak
-	var prevCommitObject *object.Commit
+func (repo *Repo) auditSingleCommit(c *object.Commit) error {
 	fIter, err := c.Files()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// If current commit has parents then search for leaks in tree change,
 	// that means scan in changed/modified files from one commit to another.
 	if len(c.ParentHashes) > 0 {
-		prevCommitObject, err = c.Parents().Next()
-		return repoInfo.auditTreeChange(prevCommitObject, c)
+		prevCommitObject, err := c.Parents().Next()
+		if err != nil {
+			return err
+		}
+		return repo.auditTreeChange(prevCommitObject, c)
 	}
 
 	// Scan for leaks in files related to current commit
@@ -360,8 +378,8 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		if err != nil {
 			return nil
 		}
-		diff := &commitInfo{
-			repoName: repoInfo.name,
+		diff := &Commit{
+			repoName: repo.name,
 			filePath: f.Name,
 			content:  content,
 			sha:      c.Hash.String(),
@@ -372,28 +390,38 @@ func (repoInfo *RepoInfo) auditSingleCommit(c *object.Commit) []Leak {
 		}
 		fileLeaks := inspect(diff)
 		mutex.Lock()
-		leaks = append(leaks, fileLeaks...)
+		repo.leaks = append(repo.leaks, fileLeaks...)
 		mutex.Unlock()
 		return nil
 	})
-	return leaks
+	return err
+}
+
+func (repo *Repo) report() {
+	if len(repo.leaks) != 0 {
+		log.Warnf("%d leaks detected. %d commits inspected in %s", len(repo.leaks), repo.numCommits, repo.auditDuration)
+	} else {
+		log.Infof("No leaks detected. %d commits inspected in %s", repo.numCommits, repo.auditDuration)
+	}
 }
 
 // auditTreeChange will search for leaks in changed/modified files from one
 // commit to another
-func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
-	var leaks []Leak
+func (repo *Repo) auditTreeChange(src, dst *object.Commit) error {
+	var (
+		skip bool
+	)
 
 	// Get state of src commit
 	srcState, err := src.Tree()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Get state of destination commit
 	dstState, err := dst.Tree()
 	if err != nil {
-		return nil
+		return err
 	}
 	changes, err := srcState.Diff(dstState)
 
@@ -403,7 +431,7 @@ func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
 		// Ignore deleted files
 		action, err := change.Action()
 		if err != nil {
-			return nil
+			return err
 		}
 		if action == merkletrie.Delete {
 			continue
@@ -413,22 +441,28 @@ func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
 		_, to, err := change.Files()
 		bin, err := to.IsBinary()
 		if bin || err != nil {
-			return nil
+			continue
 		}
 
 		for _, re := range config.WhiteList.files {
 			if re.FindString(to.Name) != "" {
 				log.Debugf("skipping whitelisted file (matched regex '%s'): %s", re.String(), to.Name)
-				return nil
+				skip = true
 			}
 		}
-		content, err := to.Contents()
-		if err != nil {
-			return nil
+
+		if skip {
+			skip = false
+			continue
 		}
 
-		diff := &commitInfo{
-			repoName: repoInfo.name,
+		content, err := to.Contents()
+		if err != nil {
+			return err
+		}
+
+		diff := &Commit{
+			repoName: repo.name,
 			filePath: to.Name,
 			content:  content,
 			sha:      dst.Hash.String(),
@@ -439,9 +473,9 @@ func (repoInfo *RepoInfo) auditTreeChange(src, dst *object.Commit) []Leak {
 		}
 		fileLeaks := inspect(diff)
 		mutex.Lock()
-		leaks = append(leaks, fileLeaks...)
+		repo.leaks = append(repo.leaks, fileLeaks...)
 		mutex.Unlock()
 	}
-	return leaks
+	return nil
 
 }

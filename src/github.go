@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
@@ -21,7 +21,7 @@ import (
 var githubPages = 100
 
 // auditPR audits a single github PR
-func auditGithubPR() ([]Leak, error) {
+func auditGithubPR() (int, error) {
 	var leaks []Leak
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -30,7 +30,7 @@ func auditGithubPR() ([]Leak, error) {
 	repo := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
 	if err != nil {
-		return nil, err
+		return NoLeaks, err
 	}
 
 	page := 1
@@ -40,7 +40,7 @@ func auditGithubPR() ([]Leak, error) {
 			Page:    page,
 		})
 		if err != nil {
-			return leaks, err
+			return NoLeaks, err
 		}
 
 		for _, c := range commits {
@@ -66,7 +66,7 @@ func auditGithubPR() ([]Leak, error) {
 					continue
 				}
 
-				commit := &commitInfo{
+				commit := &Commit{
 					sha:      c.GetSHA(),
 					content:  *f.Patch,
 					filePath: *f.Filename,
@@ -84,14 +84,25 @@ func auditGithubPR() ([]Leak, error) {
 		}
 	}
 
-	return leaks, nil
+	if len(leaks) != 0 {
+		log.Warnf("%d leaks detected. %d commits inspected for PR: %s", len(leaks), totalCommits, opts.GithubPR)
+	}
+
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }
 
 // auditGithubRepos kicks off audits if --github-user or --github-org options are set.
 // First, we gather all the github repositories from the github api (this doesnt actually clone the repo).
 // After all the repos have been pulled from github's api we proceed to audit the repos by calling auditGithubRepo.
 // If an error occurs during an audit of a repo, that error is logged but won't break the execution cycle.
-func auditGithubRepos() ([]Leak, error) {
+func auditGithubRepos() (int, error) {
 	var (
 		err              error
 		githubRepos      []*github.Repository
@@ -100,8 +111,8 @@ func auditGithubRepos() ([]Leak, error) {
 		githubOrgOptions *github.RepositoryListByOrgOptions
 		githubOptions    *github.RepositoryListOptions
 		done             bool
-		leaks            []Leak
 		ownerDir         string
+		leaks            []Leak
 	)
 	ctx := context.Background()
 	githubClient := github.NewClient(githubToken())
@@ -163,31 +174,37 @@ func auditGithubRepos() ([]Leak, error) {
 		ownerDir, _ = ioutil.TempDir(dir, opts.GithubUser)
 	}
 	for _, githubRepo := range githubRepos {
-		repoD, err := cloneGithubRepo(githubRepo)
+		repo, err := cloneGithubRepo(githubRepo)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
-		leaksFromRepo, err := repoD.audit()
+		err = repo.audit()
+		if err != nil {
+			log.Warnf("error occurred during audit of repo: %s, err: %v, continuing github audit", repo.name, err)
+		}
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		}
-		if len(leaksFromRepo) == 0 {
-			log.Infof("no leaks found for repo %s", *githubRepo.Name)
-		} else {
-			log.Warnf("leaks found for repo %s", *githubRepo.Name)
-		}
-		if err != nil {
-			log.Warn(err)
-		}
-		leaks = append(leaks, leaksFromRepo...)
+
+		repo.report()
+
+		leaks = append(leaks, repo.leaks...)
 	}
-	return leaks, nil
+
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }
 
 // cloneGithubRepo clones a repo from the url parsed from a github repo. The repo
 // will be cloned to disk if --disk is set.
-func cloneGithubRepo(githubRepo *github.Repository) (*RepoInfo, error) {
+func cloneGithubRepo(githubRepo *github.Repository) (*Repo, error) {
 	var (
 		repo *git.Repository
 		err  error
@@ -248,7 +265,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*RepoInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RepoInfo{
+	return &Repo{
 		repository: repo,
 		name:       *githubRepo.Name,
 	}, nil

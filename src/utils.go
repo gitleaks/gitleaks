@@ -11,20 +11,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
-
-type commitInfo struct {
-	content  string
-	commit   *object.Commit
-	filePath string
-	repoName string
-	sha      string
-	message  string
-	author   string
-	email    string
-	date     time.Time
-}
 
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
@@ -83,7 +70,7 @@ func writeReport(leaks []Leak) error {
 }
 
 // check rule will inspect a single line and return a leak if it encounters one
-func (rule *Rule) check(line string, commit *commitInfo) (*Leak, error) {
+func (rule *Rule) check(line string, commit *Commit) (*Leak, error) {
 	var (
 		match       string
 		fileMatch   string
@@ -146,7 +133,7 @@ postEntropy:
 // a set of regexes set by the config (see gitleaks.toml for example). This function
 // will skip lines that include a whitelisted regex. A list of leaks is returned.
 // If verbose mode (-v/--verbose) is set, then checkDiff will log leaks as they are discovered.
-func inspect(commit *commitInfo) []Leak {
+func inspect(commit *Commit) []Leak {
 	var leaks []Leak
 	lines := strings.Split(commit.content, "\n")
 
@@ -176,7 +163,7 @@ func isLineWhitelisted(line string) bool {
 	return false
 }
 
-func newLeak(line string, info string, offender string, rule *Rule, commit *commitInfo) *Leak {
+func newLeak(line string, info string, offender string, rule *Rule, commit *Commit) *Leak {
 	leak := &Leak{
 		Line:     line,
 		Commit:   commit.sha,
@@ -205,10 +192,10 @@ func newLeak(line string, info string, offender string, rule *Rule, commit *comm
 
 // discoverRepos walks all the children of `path`. If a child directory
 // contain a .git subdirectory then that repo will be added to the list of repos returned
-func discoverRepos(ownerPath string) ([]*RepoInfo, error) {
+func discoverRepos(ownerPath string) ([]*Repo, error) {
 	var (
 		err    error
-		repoDs []*RepoInfo
+		repoDs []*Repo
 	)
 	files, err := ioutil.ReadDir(ownerPath)
 	if err != nil {
@@ -217,7 +204,7 @@ func discoverRepos(ownerPath string) ([]*RepoInfo, error) {
 	for _, f := range files {
 		repoPath := path.Join(ownerPath, f.Name())
 		if f.IsDir() && containsGit(repoPath) {
-			repoDs = append(repoDs, &RepoInfo{
+			repoDs = append(repoDs, &Repo{
 				name: f.Name(),
 				path: repoPath,
 			})

@@ -17,13 +17,13 @@ const gitlabPages = 100
 // auditGitlabRepos kicks off audits if --gitlab-user or --gitlab-org options are set.
 // Getting all repositories from the GitLab API and run audit. If an error occurs during an audit of a repo,
 // that error is logged.
-func auditGitlabRepos() ([]Leak, error) {
+func auditGitlabRepos() (int, error) {
 	var (
 		ps      []*gitlab.Project
 		resp    *gitlab.Response
-		leaks   []Leak
 		tempDir string
 		err     error
+		leaks   []Leak
 	)
 
 	repos := make([]*gitlab.Project, 0, gitlabPages)
@@ -80,31 +80,34 @@ func auditGitlabRepos() ([]Leak, error) {
 	}
 
 	for _, p := range repos {
-		repoInfo, err := cloneGitlabRepo(tempDir, p)
+		repo, err := cloneGitlabRepo(tempDir, p)
 		if err != nil {
 			log.Warn(err)
 			continue
 		}
 
-		leaksFromRepo, err := repoInfo.audit()
+		err = repo.audit()
 		if err != nil {
 			log.Warn(err)
+			continue
 		}
 
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%d", tempDir, p.ID))
 		}
 
-		if len(leaksFromRepo) == 0 {
-			log.Infof("no leaks found for repo %s", p.Name)
-		} else {
-			log.Warnf("leaks found for repo %s", p.Name)
-		}
-
-		leaks = append(leaks, leaksFromRepo...)
+		repo.report()
+		leaks = append(leaks, repo.leaks...)
 	}
 
-	return leaks, nil
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
+	}
+
+	return len(leaks), nil
 }
 
 func createGitlabTempDir() (string, error) {
@@ -123,7 +126,7 @@ func createGitlabTempDir() (string, error) {
 	return ownerDir, nil
 }
 
-func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoInfo, error) {
+func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*Repo, error) {
 	var (
 		repo *git.Repository
 		err  error
@@ -159,7 +162,7 @@ func cloneGitlabRepo(tempDir string, p *gitlab.Project) (*RepoInfo, error) {
 		return nil, err
 	}
 
-	return &RepoInfo{
+	return &Repo{
 		repository: repo,
 		name:       p.Name,
 	}, nil

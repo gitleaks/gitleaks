@@ -187,23 +187,21 @@ func getEntropyRanges(entropyLimitStr []string) ([]*entropyRange, error) {
 
 // externalConfig will attempt to load a pinned ".gitleaks.toml" configuration file
 // from a remote or local repo. Use the --repo-config option to trigger this.
-func (config *Config) updateFromRepo(repo *RepoInfo) error {
+func (config *Config) updateFromRepo(repo *Repo) error {
 	var tomlConfig TomlConfig
 	wt, err := repo.repository.Worktree()
 	if err != nil {
 		return err
 	}
 	f, err := wt.Filesystem.Open(".gitleaks.toml")
+	defer f.Close()
 	if err != nil {
-		return err
+		return fmt.Errorf("problem loading config: %v", err)
 	}
 	if _, err := toml.DecodeReader(f, &tomlConfig); err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
-	f.Close()
-	if err != nil {
-		return err
-	}
+
 	return config.update(tomlConfig)
 }
 

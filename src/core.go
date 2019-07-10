@@ -1,13 +1,10 @@
 package gitleaks
 
 import (
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"sync"
-	"time"
-
-	"github.com/hako/durafmt"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,8 +13,6 @@ var (
 	dir          string
 	threads      int
 	totalCommits int64
-	commitMap    = make(map[string]bool)
-	auditDone    bool
 	mutex        = &sync.Mutex{}
 )
 
@@ -35,17 +30,16 @@ type Report struct {
 }
 
 // Run is the entry point for gitleaks
-func Run(optsL *Options) (*Report, error) {
+func Run(optsL *Options) (int, error) {
 	var (
-		leaks []Leak
 		err   error
+		leaks []Leak
 	)
 
-	now := time.Now()
 	opts = optsL
 	config, err = newConfig()
 	if err != nil {
-		return nil, err
+		return NoLeaks, err
 	}
 
 	if opts.Disk {
@@ -53,60 +47,61 @@ func Run(optsL *Options) (*Report, error) {
 		dir, err = ioutil.TempDir("", "gitleaks")
 		defer os.RemoveAll(dir)
 		if err != nil {
-			goto postAudit
+			return NoLeaks, err
 		}
 	}
 
 	// start audits
 	if opts.Repo != "" || opts.RepoPath != "" {
-		var repoInfo *RepoInfo
-		repoInfo, err = newRepoInfo()
+		var repo *Repo
+		repo, err = newRepo()
 		if err != nil {
-			goto postAudit
+			return NoLeaks, err
 		}
-		err = repoInfo.clone()
+		err = repo.clone()
 		if err != nil {
-			goto postAudit
+			return NoLeaks, err
 		}
-		leaks, err = repoInfo.audit()
+		err = repo.audit()
+		if err != nil {
+			return NoLeaks, err
+		}
+		repo.report()
+		leaks = repo.leaks
 	} else if opts.OwnerPath != "" {
-		var repoDs []*RepoInfo
-		repoDs, err = discoverRepos(opts.OwnerPath)
+		var repos []*Repo
+		repos, err = discoverRepos(opts.OwnerPath)
 		if err != nil {
-			goto postAudit
+			return NoLeaks, err
 		}
-		for _, repoInfo := range repoDs {
-			err = repoInfo.clone()
+		for _, repo := range repos {
+			err = repo.clone()
 			if err != nil {
+				log.Warnf("error occurred cloning repo: %s, continuing to next repo", repo.name)
 				continue
 			}
-			leaksFromRepo, err := repoInfo.audit()
-
+			err = repo.audit()
 			if err != nil {
-				log.Warnf("error occured auditing repo: %s, continuing", repoInfo.name)
+				log.Warnf("error occurred auditing repo: %s, continuing to next repo", repo.name)
+				continue
 			}
-			leaks = append(leaksFromRepo, leaks...)
+			repo.report()
+			leaks = append(leaks, repo.leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {
-		leaks, err = auditGithubRepos()
+		return auditGithubRepos()
 	} else if opts.GitLabOrg != "" || opts.GitLabUser != "" {
-		leaks, err = auditGitlabRepos()
+		return auditGitlabRepos()
 	} else if opts.GithubPR != "" {
-		leaks, err = auditGithubPR()
-	}
-
-postAudit:
-	if err != nil {
-		return &Report{}, err
+		return auditGithubPR()
 	}
 
 	if opts.Report != "" {
-		writeReport(leaks)
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
+		}
 	}
 
-	return &Report{
-		Leaks:    leaks,
-		Duration: durafmt.Parse(time.Now().Sub(now)).String(),
-		Commits:  totalCommits,
-	}, err
+	return len(leaks), nil
 }

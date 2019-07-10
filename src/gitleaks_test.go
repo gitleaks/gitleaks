@@ -91,7 +91,7 @@ func TestGetRepo(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				repo, _ := newRepoInfo()
+				repo, _ := newRepo()
 				err := repo.clone()
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
@@ -126,6 +126,14 @@ func TestRun(t *testing.T) {
 		configPath     string
 		commitPerPage  int
 	}{
+		{
+			testOpts: &Options{
+				Repo: "https://github.com/gitleakstest/gronit.git",
+			},
+			description:    "test leak",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
 		{
 			testOpts: &Options{
 				GitLabUser: "gitleakstest",
@@ -274,11 +282,11 @@ func TestRun(t *testing.T) {
 				if test.commitPerPage != 0 {
 					githubPages = test.commitPerPage
 				}
-				report, err := Run(test.testOpts)
+				numLeaks, err := Run(test.testOpts)
 				if err != nil {
 					g.Assert(err.Error()).Equal(test.expectedErrMsg)
 				} else {
-					g.Assert(len(report.Leaks)).Equal(test.numLeaks)
+					g.Assert(numLeaks).Equal(test.numLeaks)
 				}
 				githubPages = 100
 			})
@@ -373,7 +381,6 @@ func TestWriteReport(t *testing.T) {
 }
 
 func TestAuditRepo(t *testing.T) {
-	var leaks []Leak
 	configsDir := testTomlLoader()
 	defer os.RemoveAll(configsDir)
 
@@ -383,7 +390,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	leaksRepo := &RepoInfo{
+	leaksRepo := &Repo{
 		repository: leaksR,
 		name:       "gronit",
 	}
@@ -394,7 +401,7 @@ func TestAuditRepo(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	cleanRepo := &RepoInfo{
+	cleanRepo := &Repo{
 		repository: cleanR,
 		name:       "h1domains",
 	}
@@ -404,7 +411,7 @@ func TestAuditRepo(t *testing.T) {
 		description      string
 		expectedErrMsg   string
 		numLeaks         int
-		repo             *RepoInfo
+		repo             *Repo
 		whiteListFiles   []*regexp.Regexp
 		whiteListCommits map[string]bool
 		whiteListRepos   []*regexp.Regexp
@@ -616,7 +623,6 @@ func TestAuditRepo(t *testing.T) {
 	for _, test := range tests {
 		g.Describe("TestAuditRepo", func() {
 			g.It(test.description, func() {
-				auditDone = false
 				opts = test.testOpts
 
 				config, err = newConfig()
@@ -629,13 +635,14 @@ func TestAuditRepo(t *testing.T) {
 						goto next
 					}
 				}
-				leaks, err = test.repo.audit()
+				err = test.repo.audit()
 				if opts.Redact {
-					g.Assert(leaks[0].Offender).Equal("REDACTED")
+					g.Assert(test.repo.leaks[0].Offender).Equal("REDACTED")
 				}
-				g.Assert(len(leaks)).Equal(test.numLeaks)
+				g.Assert(len(test.repo.leaks)).Equal(test.numLeaks)
 			next:
 				os.Setenv("GITLEAKS_CONFIG", "")
+				test.repo.leaks = []Leak{}
 			})
 		})
 	}
