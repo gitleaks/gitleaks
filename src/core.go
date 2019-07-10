@@ -66,10 +66,7 @@ func Run(optsL *Options) (int, error) {
 		if err != nil {
 			return NoLeaks, err
 		}
-		err = repo.report()
-		if err != nil {
-			return NoLeaks, err
-		}
+		repo.report()
 		leaks = repo.leaks
 	} else if opts.OwnerPath != "" {
 		var repos []*Repo
@@ -88,10 +85,7 @@ func Run(optsL *Options) (int, error) {
 				log.Warnf("error occurred auditing repo: %s, continuing to next repo", repo.name)
 				continue
 			}
-			err = repo.report()
-			if err != nil {
-				return NoLeaks, err
-			}
+			repo.report()
 			leaks = append(leaks, repo.leaks...)
 		}
 	} else if opts.GithubOrg != "" || opts.GithubUser != "" {

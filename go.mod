@@ -14,8 +14,7 @@ require (
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.0.6
 	github.com/xanzy/go-gitlab v0.11.3
-	golang.org/x/crypto v0.0.0-20180910181607-0e37d006457b // indirect
-	golang.org/x/net v0.0.0-20180925072008-f04abc6bdfa7 // indirect
+	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
 	google.golang.org/appengine v1.2.0 // indirect

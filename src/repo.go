@@ -383,13 +383,12 @@ func (repo *Repo) auditSingleCommit(c *object.Commit) error {
 	return err
 }
 
-func (repo *Repo) report() error {
+func (repo *Repo) report() {
 	if len(repo.leaks) != 0 {
 		log.Warnf("%d leaks detected. %d commits inspected in %s", len(repo.leaks), repo.numCommits, repo.auditDuration)
 	} else {
 		log.Infof("No leaks detected. %d commits inspected in %s", repo.numCommits, repo.auditDuration)
 	}
-	return nil
 }
 
 // auditTreeChange will search for leaks in changed/modified files from one

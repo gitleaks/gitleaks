@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4"
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
@@ -81,6 +81,17 @@ func auditGithubPR() (int, error) {
 		page = resp.NextPage
 		if resp.LastPage == 0 {
 			break
+		}
+	}
+
+	if len(leaks) != 0 {
+		log.Warnf("%d leaks detected. %d commits inspected for PR: %s", len(leaks), totalCommits, opts.GithubPR)
+	}
+
+	if opts.Report != "" {
+		err = writeReport(leaks)
+		if err != nil {
+			return NoLeaks, err
 		}
 	}
 
@@ -175,11 +186,9 @@ func auditGithubRepos() (int, error) {
 		if opts.Disk {
 			os.RemoveAll(fmt.Sprintf("%s/%s", ownerDir, *githubRepo.Name))
 		}
-		if len(repo.leaks) == 0 {
-			log.Infof("no leaks found for repo %s", *githubRepo.Name)
-		} else {
-			log.Warnf("leaks found for repo %s", *githubRepo.Name)
-		}
+
+		repo.report()
+
 		leaks = append(leaks, repo.leaks...)
 	}
 

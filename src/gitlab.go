@@ -96,11 +96,7 @@ func auditGitlabRepos() (int, error) {
 			os.RemoveAll(fmt.Sprintf("%s/%d", tempDir, p.ID))
 		}
 
-		if len(repo.leaks) == 0 {
-			log.Infof("no leaks found for repo %s", p.Name)
-		} else {
-			log.Warnf("leaks found for repo %s", p.Name)
-		}
+		repo.report()
 		leaks = append(leaks, repo.leaks...)
 	}
 
