@@ -21,6 +21,20 @@ import (
 	"gopkg.in/src-d/go-git.v4/utils/merkletrie"
 )
 
+// Commit represents a git commit
+type Commit struct {
+	content  string
+	commit   *object.Commit
+	filePath string
+	repoName string
+	sha      string
+	message  string
+	author   string
+	email    string
+	date     time.Time
+}
+
+
 // Leak represents a leaked secret or regex match.
 type Leak struct {
 	Line     string    `json:"line"`
@@ -268,7 +282,7 @@ func (repo *Repo) audit() error {
 					for _, fr := range config.FileRules {
 						for _, r := range fr.fileTypes {
 							if r.FindString(filePath) != "" {
-								commitInfo := &commitInfo{
+								commitInfo := &Commit{
 									repoName: repo.name,
 									filePath: filePath,
 									sha:      c.Hash.String(),
@@ -298,7 +312,7 @@ func (repo *Repo) audit() error {
 					chunks := f.Chunks()
 					for _, chunk := range chunks {
 						if chunk.Type() == diffType.Add || chunk.Type() == diffType.Delete {
-							diff := &commitInfo{
+							diff := &Commit{
 								repoName: repo.name,
 								filePath: filePath,
 								content:  chunk.Content(),
@@ -364,7 +378,7 @@ func (repo *Repo) auditSingleCommit(c *object.Commit) error {
 		if err != nil {
 			return nil
 		}
-		diff := &commitInfo{
+		diff := &Commit{
 			repoName: repo.name,
 			filePath: f.Name,
 			content:  content,
@@ -447,7 +461,7 @@ func (repo *Repo) auditTreeChange(src, dst *object.Commit) error {
 			return err
 		}
 
-		diff := &commitInfo{
+		diff := &Commit{
 			repoName: repo.name,
 			filePath: to.Name,
 			content:  content,
