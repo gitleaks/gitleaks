@@ -93,12 +93,12 @@ tags = ["key", "EC"]
 
 [[rules]]
 description = "Generic API key"
-regex = '''[a|A][p|P][i|I][_]?[k|K][e|E][y|Y].*['|"][0-9a-zA-Z]{32,45}['|"]'''
+regex = '''(?i)api_key(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
 tags = ["key", "API", "generic"]
 
 [[rules]]
 description = "Generic Secret"
-regex = '''[s|S][e|E][c|C][r|R][e|E][t|T].*['|"][0-9a-zA-Z]{32,45}['|"]'''
+regex = '''(?i)secret(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
 tags = ["key", "Secret", "generic"]
 
 [[rules]]
