@@ -109,7 +109,7 @@ tags = ["key", "EC"]
 
 [[rules]]
 description = "Generic API key"
-regex = '''(?i)api_key(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
+regex = '''(?i)(api_key|apikey)(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
 tags = ["key", "API", "generic"]
 
 [[rules]]
