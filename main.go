@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	_, err := gitleaks.Run(gitleaks.ParseOpts())
+	leakCount, err := gitleaks.Run(gitleaks.ParseOpts())
 	if err != nil {
 		if strings.Contains(err.Error(), "whitelisted") {
 			log.Info(err.Error())
@@ -17,5 +17,11 @@ func main() {
 		}
 		log.Error(err)
 		os.Exit(gitleaks.ErrExit)
+	}
+
+	if leakCount == 0 {
+		os.Exit(gitleaks.NoLeaks)
+	} else {
+		os.Exit(gitleaks.LeakExit)
 	}
 }
