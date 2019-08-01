@@ -1,5 +1,15 @@
 CHANGELOG
 =========
+2.1.0
+- `--commit` does not iterate on commit history. Now it directly accesses the commit object.  https://github.com/zricethezav/gitleaks/pull/236
+- Fixing logging local repo path https://github.com/zricethezav/gitleaks/pull/204
+- Better README examples https://github.com/zricethezav/gitleaks/pull/202
+- Better logging on Windows https://github.com/zricethezav/gitleaks/pull/230
+- Better error messaging
+- Bunch new default rules https://github.com/zricethezav/gitleaks/pull/231 https://github.com/zricethezav/gitleaks/pull/241
+- `--repo-config` works on orgs and users now https://github.com/zricethezav/gitleaks/pull/239
+- Proper exit codes https://github.com/zricethezav/gitleaks/pull/244
+- Gitlab Token support https://github.com/zricethezav/gitleaks/pull/184
 
 2.0.0
 ----
