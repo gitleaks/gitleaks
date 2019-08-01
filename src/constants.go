@@ -1,11 +1,27 @@
-title = "sample gitleaks config"
+package gitleaks
 
+const version = "2.0.0"
+
+const NoLeaks = 0
+
+const defaultGithubURL = "https://api.github.com/"
+const defaultThreadNum = 1
+
+// ErrExit used to signal an error during gitleaks execution
+const ErrExit = 2
+
+// LeakExit used to signal leaks present in audit
+const LeakExit = 1
+
+const defaultConfig = `
 # This is a sample config file for gitleaks. You can configure gitleaks what to search for and what to whitelist.
 # The output you are seeing here is the default gitleaks config. If GITLEAKS_CONFIG environment variable
-# is set, gitleaks will load configurations from that path. If option --config-path is set, gitleaks will load
+# is set, gitleaks will load configurations from that path. If option --config is set, gitleaks will load
 # configurations from that path. Gitleaks does not whitelist anything by default.
 # - https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_04B-3_Meli_paper.pdf
 # - https://github.com/dxa4481/truffleHogRegexes/blob/master/truffleHogRegexes/regexes.json
+
+title = "gitleaks config"
 [[rules]]
 description = "AWS Client ID"
 regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
@@ -93,7 +109,7 @@ tags = ["key", "EC"]
 
 [[rules]]
 description = "Generic API key"
-regex = '''(?i)api_key(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
+regex = '''(?i)(api_key|apikey)(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
 tags = ["key", "API", "generic"]
 
 [[rules]]
@@ -180,6 +196,7 @@ tags = ["key", "twilio"]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
+
 #commits = [
 #  "whitelisted-commit1",
 #  "whitelisted-commit2",
@@ -187,33 +204,4 @@ files = [
 #repos = [
 #	"whitelisted-repo"
 #]
-
-# Additional Examples
-
-# [[rules]]
-# description = "Generic Key"
-# regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
-# entropies = [
-#     "4.1-4.3",
-#     "5.5-6.3",
-# ]
-# entropyROI = "line"
-# filetypes = [".go", ".py", ".c"]
-# tags = ["key"]
-# severity = "8"
-#
-#
-# [[rules]]
-# description = "Generic Key"
-# regex = '''(?i)key(.{0,6})?(:|=|=>|:=)'''
-# entropies = ["4.1-4.3"]
-# filetypes = [".gee"]
-# entropyROI = "line"
-# tags = ["key"]
-# severity = "medium"
-
-# [[rules]]
-# description = "Any pem file"
-# filetypes = [".key"]
-# tags = ["pem"]
-# severity = "high"
+`

@@ -9,4 +9,5 @@
 *.test
 *.out
 
-tmp
+examples
+src/gitleaksConfig

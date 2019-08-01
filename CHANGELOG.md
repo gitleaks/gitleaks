@@ -4,6 +4,23 @@ x.xx.x
 ---
 - uses the `GITLAB_TOKEN` to clone GitLab repos.
 
+2.0.0
+----
+- rules introduced in the gitleaks configurationn
+- removing `--entropy` option
+- removing `--single-search` option
+
+1.25.1
+----
+- Fixing #188
+
+1.25.0
+----
+- Pretty big refactor, see `src` directory
+- Dropping dep for go modules
+- Separating email and author
+- Readding branch support with `--branch=`
+
 1.24.0
 ----
 - `--commit` now allows users to target a specific commit to audit
