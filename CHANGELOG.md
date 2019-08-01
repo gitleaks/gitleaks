@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+x.xx.x
+---
+- uses the `GITLAB_TOKEN` to clone GitLab repos.
+
 2.0.0
 ----
 - rules introduced in the gitleaks configurationn
