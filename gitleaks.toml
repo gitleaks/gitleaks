@@ -180,6 +180,9 @@ tags = ["key", "twilio"]
 files = [
   "(.*?)(jpg|gif|doc|pdf|bin)$"
 ]
+#regexes = [
+#  "AKIAIOSFODNN7EXAMPLE"
+#]
 #commits = [
 #  "whitelisted-commit1",
 #  "whitelisted-commit2",
