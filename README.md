@@ -188,8 +188,5 @@ The code return codes are:
 
 ## Give Thanks
 
-If using gitleaks has made you job easier consider donating to an organization, C-U at Home, that does vital work for those who most need it in the community of Champaign-Urbana, IL (my home).
-
-Donate: https://www.cuathome.us/give/
-
+If using gitleaks has made you job easier consider donating to one of [Sam](https://www.flickr.com/photos/146541520@N08/albums/72157710121716312)'s favorite places, the Japan House on the University of Illinois at Urbana-Champaign's campus: https://japanhouse.illinois.edu/make-a-gift
 
