@@ -74,12 +74,12 @@ tags = ["key", "Github"]
 [[rules]]
 description = "LinkedIn Client ID"
 regex = '''(?i)linkedin(.{0,20})?(?-i)['\"][0-9a-z]{12}['\"]'''
-tags = ["client", "Twitter"]
+tags = ["client", "LinkedIn"]
 
 [[rules]]
 description = "LinkedIn Secret Key"
 regex = '''(?i)linkedin(.{0,20})?['\"][0-9a-z]{16}['\"]'''
-tags = ["secret", "Twitter"]
+tags = ["secret", "LinkedIn"]
 
 [[rules]]
 description = "Slack"
