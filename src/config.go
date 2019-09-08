@@ -194,10 +194,10 @@ func (config *Config) updateFromRepo(repo *Repo) error {
 		return err
 	}
 	f, err := wt.Filesystem.Open(".gitleaks.toml")
-	defer f.Close()
 	if err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
+	defer f.Close()
 	if _, err := toml.DecodeReader(f, &tomlConfig); err != nil {
 		return fmt.Errorf("problem loading config: %v", err)
 	}
