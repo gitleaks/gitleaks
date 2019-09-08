@@ -164,7 +164,7 @@ func (repo *Repo) audit() error {
 	if opts.RepoConfig {
 		err := config.updateFromRepo(repo)
 		if err != nil {
-			return err
+			log.Warn(err)
 		}
 	}
 
