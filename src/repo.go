@@ -34,7 +34,6 @@ type Commit struct {
 	date     time.Time
 }
 
-
 // Leak represents a leaked secret or regex match.
 type Leak struct {
 	Line     string    `json:"line"`
@@ -101,10 +100,10 @@ func (repo *Repo) clone() error {
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			}
-			if os.Getenv("GITHUB_TOKEN") != "" {
+			if opts.GithubToken != "" {
 				options.Auth = &gitHttp.BasicAuth{
 					Username: "fakeUsername", // yes, this can be anything except an empty string
-					Password: os.Getenv("GITHUB_TOKEN"),
+					Password: opts.GithubToken,
 				}
 			}
 			repository, err = git.PlainClone(cloneTarget, false, options)
@@ -129,10 +128,10 @@ func (repo *Repo) clone() error {
 				URL:      opts.Repo,
 				Progress: os.Stdout,
 			}
-			if os.Getenv("GITHUB_TOKEN") != "" {
+			if opts.GithubToken != "" {
 				options.Auth = &gitHttp.BasicAuth{
 					Username: "fakeUsername", // yes, this can be anything except an empty string
-					Password: os.Getenv("GITHUB_TOKEN"),
+					Password: opts.GithubToken,
 				}
 			}
 			repository, err = git.Clone(memory.NewStorage(), nil, options)

@@ -209,7 +209,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*Repo, error) {
 		repo *git.Repository
 		err  error
 	)
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	githubToken := opts.GithubToken
 	if opts.ExcludeForks && githubRepo.GetFork() {
 		return nil, fmt.Errorf("skipping %s, excluding forks", *githubRepo.Name)
 	}
@@ -274,7 +274,7 @@ func cloneGithubRepo(githubRepo *github.Repository) (*Repo, error) {
 // githubToken returns an oauth2 client for the github api to consume. This token is necessary
 // if you are running audits with --github-user or --github-org
 func githubToken() *http.Client {
-	githubToken := os.Getenv("GITHUB_TOKEN")
+	githubToken := opts.GithubToken
 	if githubToken == "" {
 		return nil
 	}

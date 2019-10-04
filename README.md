@@ -61,10 +61,11 @@ Usage:
 
 Application Options:
   -r, --repo=           Repo url to audit
+      --github-token=   Github personal access token
       --github-user=    Github user to audit
       --github-org=     Github organization to audit
       --github-url=     GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/ (default: https://api.github.com/)
-      --github-pr=      Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set
+      --github-pr=      Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set or passed as argument
       --gitlab-user=    GitLab user ID to audit
       --gitlab-org=     GitLab group ID to audit
       --commit-stop=    sha of commit to stop at

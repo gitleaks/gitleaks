@@ -18,11 +18,12 @@ import (
 // Options for gitleaks
 type Options struct {
 	// remote target options
-	Repo       string `short:"r" long:"repo" description:"Repo url to audit"`
-	GithubUser string `long:"github-user" description:"Github user to audit"`
-	GithubOrg  string `long:"github-org" description:"Github organization to audit"`
-	GithubURL  string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
-	GithubPR   string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
+	Repo        string `short:"r" long:"repo" description:"Repo url to audit"`
+	GithubToken string `long:"github-token" description:"Github personal access token"`
+	GithubUser  string `long:"github-user" description:"Github user to audit"`
+	GithubOrg   string `long:"github-org" description:"Github organization to audit"`
+	GithubURL   string `long:"github-url" default:"https://api.github.com/" description:"GitHub API Base URL, use for GitHub Enterprise. Example: https://github.example.com/api/v3/"`
+	GithubPR    string `long:"github-pr" description:"Github PR url to audit. This does not clone the repo. GITHUB_TOKEN must be set"`
 
 	GitLabUser string `long:"gitlab-user" description:"GitLab user ID to audit"`
 	GitLabOrg  string `long:"gitlab-org" description:"GitLab group ID to audit"`
@@ -102,6 +103,10 @@ func (opts *Options) guard() error {
 
 	if opts.Threads > runtime.GOMAXPROCS(0) {
 		return fmt.Errorf("%d available threads", runtime.GOMAXPROCS(0))
+	}
+
+	if opts.GithubToken == "" {
+		opts.GithubToken = os.Getenv("GITHUB_TOKEN")
 	}
 
 	// do the URL Parse and error checking here, so we can skip it later
