@@ -38,6 +38,7 @@ type Options struct {
 	// Process options
 	Threads      int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
 	Disk         bool   `long:"disk" description:"Clones repo(s) to disk"`
+	DiskPath     string `long:"disk-path" description:"If disk is set, path where repos are stored"`
 	ConfigPath   string `long:"config" description:"path to gitleaks config"`
 	SSHKey       string `long:"ssh-key" description:"path to ssh key"`
 	ExcludeForks bool   `long:"exclude-forks" description:"exclude forks for organization/user audits"`

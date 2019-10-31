@@ -14,12 +14,14 @@ require (
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.0.6
 	github.com/xanzy/go-gitlab v0.11.3
-	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
+	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
-	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
+	golang.org/x/tools v0.0.0-20191031160344-02d0efc0fb61 // indirect
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.0 // indirect
 	gopkg.in/src-d/go-git.v4 v4.9.1
 )
+
+go 1.13

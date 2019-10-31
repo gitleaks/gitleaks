@@ -43,8 +43,12 @@ func Run(optsL *Options) (int, error) {
 	}
 
 	if opts.Disk {
+		var DiskPath string = ""
+		if "" != opts.DiskPath {
+			DiskPath = opts.DiskPath
+		}
 		// temporary directory where all the gitleaks plain clones will reside
-		dir, err = ioutil.TempDir("", "gitleaks")
+		dir, err = ioutil.TempDir(DiskPath, "gitleaks")
 		defer os.RemoveAll(dir)
 		if err != nil {
 			return NoLeaks, err

@@ -1,5 +1,9 @@
 CHANGELOG
 =========
+2.2.0
+----
+- Adds `--disk-path` option
+
 2.1.0
 - `--commit` does not iterate on commit history. Now it directly accesses the commit object.  https://github.com/zricethezav/gitleaks/pull/236
 - Fixing logging local repo path https://github.com/zricethezav/gitleaks/pull/204

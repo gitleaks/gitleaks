@@ -161,6 +161,16 @@ func TestRun(t *testing.T) {
 		},
 		{
 			testOpts: &Options{
+				GithubUser: "gitleakstest",
+				Disk:       true,
+				DiskPath:   "./",
+			},
+			description:    "test github user on disk with disk path",
+			numLeaks:       2,
+			expectedErrMsg: "",
+		},
+		{
+			testOpts: &Options{
 				GithubOrg: "gitleakstestorg",
 			},
 			description:    "test github org",
