@@ -34,7 +34,6 @@ type Commit struct {
 	date     time.Time
 }
 
-
 // Leak represents a leaked secret or regex match.
 type Leak struct {
 	Line     string    `json:"line"`
