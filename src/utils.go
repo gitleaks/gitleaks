@@ -1,17 +1,136 @@
 package gitleaks
 
 import (
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	log "github.com/sirupsen/logrus"
 )
+
+//writeReportCSV writes a report to a file in CSV format
+func writeReportCSV(leaks []Leak, dest string) error {
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := csv.NewWriter(f)
+	w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "severity", "commitMsg", "author", "email", "file", "date"})
+	for _, leak := range leaks {
+		w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Severity, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+	}
+	w.Flush()
+	return nil
+}
+
+//writeReportJSON writes a report to a file in JSON format
+func writeReportJSON(leaks []Leak, dest string) error {
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "\t")
+	if _, err := f.WriteString("[\n"); err != nil {
+		return err
+	}
+	for i := 0; i < len(leaks); i++ {
+		if err := encoder.Encode(leaks[i]); err != nil {
+			return err
+		}
+		// for all but the last leak, seek back and overwrite the newline appended by Encode() with comma & newline
+		if i+1 < len(leaks) {
+			if _, err := f.Seek(-1, 1); err != nil {
+				return err
+			}
+			if _, err := f.WriteString(",\n"); err != nil {
+				return err
+			}
+		}
+	}
+	if _, err := f.WriteString("]"); err != nil {
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		log.Error(err)
+		return err
+	}
+	return nil
+}
+
+//writeReportS3 writes a report to a file in AWS S3 object storage in JSON format
+func writeReportS3(leaks []Leak, dest string) error {
+
+	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmpReport.Name())
+
+	err = writeReportJSON(leaks, tmpReport.Name())
+	if err != nil {
+		return err
+	}
+	// discovery bucket and path
+	r := regexp.MustCompile(`s3://(*)/(*)$`)
+	match := r.FindStringSubmatch(opts.Report)
+	if match == nil {
+		return errors.New("No valid match for s3 Report. Eg s3://bucket/object/path")
+	}
+	if len(match) <= 1 {
+		return errors.New(
+			fmt.Sprintf("Object not found. Match found: \n", match),
+		)
+	}
+	awsBucket := match[0]
+	awsObject := fmt.Sprintf("%s/%s", match[1], opts.RepoPath)
+
+	// read tmpReport and save to S3 path (reportDest)
+	s, err := session.NewSession(&aws.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Open the file for use
+	file, err := os.Open(tmpReport.Name())
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Get file size and read the file content into a buffer
+	fileInfo, _ := file.Stat()
+	var size int64 = fileInfo.Size()
+	buffer := make([]byte, size)
+	file.Read(buffer)
+
+	// Config settings: this is where you choose the bucket, filename, content-type etc.
+	// of the file you're uploading.
+	_, err = s3.New(s).PutObject(&s3.PutObjectInput{
+		Bucket:             aws.String(awsBucket),
+		Key:                aws.String(awsObject),
+		ACL:                aws.String("private"),
+		Body:               bytes.NewReader(buffer),
+		ContentLength:      aws.Int64(size),
+		ContentType:        aws.String(http.DetectContentType(buffer)),
+		ContentDisposition: aws.String("attachment"),
+	})
+	return err
+}
 
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
@@ -19,52 +138,15 @@ func writeReport(leaks []Leak) error {
 	if len(leaks) == 0 {
 		return nil
 	}
+	dest := opts.Report
+	log.Infof("writing report to %s", dest)
 
-	log.Infof("writing report to %s", opts.Report)
 	if strings.HasSuffix(opts.Report, ".csv") {
-		f, err := os.Create(opts.Report)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		w := csv.NewWriter(f)
-		w.Write([]string{"repo", "line", "commit", "offender", "rule", "info", "tags", "severity", "commitMsg", "author", "email", "file", "date"})
-		for _, leak := range leaks {
-			w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Info, leak.Tags, leak.Severity, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
-		}
-		w.Flush()
+		return writeReportCSV(leaks, dest)
+	} else if strings.HasSuffix(opts.Report, "s3://") {
+		return writeReportS3(leaks, dest)
 	} else {
-		f, err := os.Create(opts.Report)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		encoder := json.NewEncoder(f)
-		encoder.SetIndent("", "\t")
-		if _, err := f.WriteString("[\n"); err != nil {
-			return err
-		}
-		for i := 0; i < len(leaks); i++ {
-			if err := encoder.Encode(leaks[i]); err != nil {
-				return err
-			}
-			// for all but the last leak, seek back and overwrite the newline appended by Encode() with comma & newline
-			if i+1 < len(leaks) {
-				if _, err := f.Seek(-1, 1); err != nil {
-					return err
-				}
-				if _, err := f.WriteString(",\n"); err != nil {
-					return err
-				}
-			}
-		}
-		if _, err := f.WriteString("]"); err != nil {
-			return err
-		}
-		if err := f.Sync(); err != nil {
-			log.Error(err)
-			return err
-		}
+		return writeReportJSON(leaks, dest)
 	}
 	return nil
 }
