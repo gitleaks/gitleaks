@@ -13,11 +13,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
-
-	graylog "github.com/Devatoria/go-graylog"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -135,61 +132,6 @@ func writeReportS3(leaks []Leak, dest string) error {
 	return err
 }
 
-//writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
-func writeReportTCP2(leaks []Leak, dest string) error {
-
-	r := regexp.MustCompile(`gelf://(.*:.*)$`)
-	match := r.FindStringSubmatch(opts.Report)
-	if match == nil {
-		return errors.New("No valid match for TCP Report. Eg gelf://IP_DNS_TARGET:PORT")
-	}
-	if len(match) <= 1 {
-		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
-	}
-	destIpPort := match[1]
-
-	host := strings.Split(destIpPort, ":")[0]
-	port, err := strconv.Atoi(strings.Split(destIpPort, ":")[1])
-	if err != nil {
-		return err
-	}
-
-	g, err := graylog.NewGraylog(graylog.Endpoint{
-		Transport: graylog.TCP,
-		Address:   host,
-		Port:      uint(port),
-	})
-	if err != nil {
-		return err
-	}
-	defer g.Close()
-
-	for _, leak := range leaks {
-		leakStr, err := json.Marshal(leak)
-		if err != nil {
-			log.Errorf("Error parsing leak to send to gelf")
-			continue
-		}
-
-		err = g.Send(graylog.Message{
-			Version:      "1.1",
-			Host:         destIpPort,
-			ShortMessage: "Sample test",
-			FullMessage:  string(leakStr),
-			Timestamp:    time.Now().Unix(),
-			Level:        1,
-			Extra: map[string]string{
-				"event": leak.Message,
-			},
-		})
-		if err != nil {
-			log.Errorf("Error sending to gelf server: ", err)
-		}
-	}
-
-	return nil
-}
-
 //writeReportSyslog writes a report to a syslog server JSON format, one message by report.
 func writeReportSyslog(leaks []Leak, dest string) error {
 
@@ -238,8 +180,6 @@ func writeReport(leaks []Leak) error {
 		return writeReportCSV(leaks, dest)
 	} else if strings.HasPrefix(opts.Report, "s3://") {
 		return writeReportS3(leaks, dest)
-	} else if strings.HasPrefix(opts.Report, "gelf://") {
-		return writeReportTCP2(leaks, dest)
 	} else if strings.HasPrefix(opts.Report, "syslog://") {
 		return writeReportSyslog(leaks, dest)
 	} else {

@@ -129,12 +129,10 @@ func (opts *Options) guard() error {
 		if !strings.HasSuffix(opts.Report, ".json") &&
 			!strings.HasSuffix(opts.Report, ".csv") &&
 			!strings.HasPrefix(opts.Report, "s3://") &&
-			!strings.HasPrefix(opts.Report, "gelf://") &&
 			!strings.HasPrefix(opts.Report, "syslog://") {
-			return fmt.Errorf("Report should be a .json, .csv, s3://, gelf:// or syslog://")
+			return fmt.Errorf("Report should be a .json, .csv, s3://, or syslog://")
 		}
 		if !strings.HasPrefix(opts.Report, "s3://") &&
-			!strings.HasPrefix(opts.Report, "gelf://") &&
 			!strings.HasPrefix(opts.Report, "syslog://") {
 			dirPath := filepath.Dir(opts.Report)
 			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
