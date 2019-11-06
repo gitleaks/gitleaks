@@ -32,6 +32,11 @@ regex = '''-----BEGIN RSA PRIVATE KEY-----'''
 tags = ["key", "RSA"]
 
 [[rules]]
+description = "DSA"
+regex = '''-----BEGIN DSA PRIVATE KEY-----'''
+tags = ["key", "DSA"]
+
+[[rules]]
 description = "SSH"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
 tags = ["key", "SSH"]
