@@ -190,21 +190,9 @@ func writeReportTCP2(leaks []Leak, dest string) error {
 	return nil
 }
 
-//writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
+//writeReportSyslog writes a report to a syslog server JSON format, one message by report.
 func writeReportSyslog(leaks []Leak, dest string) error {
 
-	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpReport.Name())
-
-	err = writeReportJSON(leaks, tmpReport.Name())
-	if err != nil {
-		return err
-	}
-
-	// discovery bucket and path
 	r := regexp.MustCompile(`syslog://(.*):(.*:.*)/(.*)$`)
 	match := r.FindStringSubmatch(opts.Report)
 	if match == nil {
@@ -214,40 +202,25 @@ func writeReportSyslog(leaks []Leak, dest string) error {
 		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
 	}
 	destSyslogProto := strings.ToLower(match[1])
-	destSyslogIpPort := match[2]
+	destSyslogIPPort := match[2]
 	destSyslogTag := match[3]
 
-	sysLog, err := syslog.Dial(destSyslogProto, destSyslogIpPort,
+	sysLog, err := syslog.Dial(destSyslogProto, destSyslogIPPort,
 		syslog.LOG_INFO|syslog.LOG_DAEMON, destSyslogTag)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// defer syslog.Close()
 
-	file, err := os.Open(tmpReport.Name())
-	if err != nil {
-		//   fmt.Println(err)
-		return err
+	for _, leak := range leaks {
+		leakStr, err := json.Marshal(leak)
+		if err != nil {
+			log.Errorf("Error parsing leak to send to gelf")
+			continue
+		}
+		fmt.Println(string(leakStr))
+		fmt.Fprintf(sysLog, string(leakStr))
 	}
-	defer file.Close()
-
-	fileinfo, err := file.Stat()
-	if err != nil {
-		return err
-	}
-
-	filesize := fileinfo.Size()
-	buffer := make([]byte, filesize)
-
-	bytesread, err := file.Read(buffer)
-	if err != nil {
-		return err
-	}
-
-	//Trim too?
-	str := strings.ReplaceAll(string(buffer), "\n", "")
-	fmt.Println("bytes read: ", bytesread)
-	fmt.Fprintf(sysLog, str)
 
 	return nil
 }
