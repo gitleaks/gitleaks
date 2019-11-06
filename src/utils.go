@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log/syslog"
 	"net"
 	"net/http"
 	"os"
@@ -210,6 +211,70 @@ func fillString(retunString string, toLength int) string {
 	return retunString
 }
 
+//writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
+func writeReportSyslog(leaks []Leak, dest string) error {
+
+	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmpReport.Name())
+
+	err = writeReportJSON(leaks, tmpReport.Name())
+	if err != nil {
+		return err
+	}
+
+	// discovery bucket and path
+	r := regexp.MustCompile(`syslog://(.*):(.*:.*)/(.*)$`)
+	match := r.FindStringSubmatch(opts.Report)
+	if match == nil {
+		return errors.New("No valid match for TCP Report. Eg syslog://TCP:SERVER:PORT/tag")
+	}
+	if len(match) <= 1 {
+		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
+	}
+	destSyslogProto := strings.ToLower(match[1])
+	destSyslogIpPort := match[2]
+	destSyslogTag := match[3]
+
+	sysLog, err := syslog.Dial(destSyslogProto, destSyslogIpPort,
+		syslog.LOG_INFO|syslog.LOG_DAEMON, destSyslogTag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// defer syslog.Close()
+
+	file, err := os.Open(tmpReport.Name())
+	if err != nil {
+		//   fmt.Println(err)
+		return err
+	}
+	defer file.Close()
+
+	fileinfo, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	filesize := fileinfo.Size()
+	buffer := make([]byte, filesize)
+
+	bytesread, err := file.Read(buffer)
+	if err != nil {
+		return err
+	}
+
+	//Trim too?
+	str := strings.ReplaceAll(string(buffer), "\n", "")
+	fmt.Println("bytes read: ", bytesread)
+	// fmt.Printf("bytestream to string: %v", string(buffer))
+	// fmt.Printf("bytestream to string: %v", str)
+	fmt.Fprintf(sysLog, str)
+
+	return nil
+}
+
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
 func writeReport(leaks []Leak) error {
@@ -225,6 +290,8 @@ func writeReport(leaks []Leak) error {
 		return writeReportS3(leaks, dest)
 	} else if strings.HasPrefix(opts.Report, "tcp://") {
 		return writeReportTCP(leaks, dest)
+	} else if strings.HasPrefix(opts.Report, "syslog://") {
+		return writeReportSyslog(leaks, dest)
 	} else {
 		return writeReportJSON(leaks, dest)
 	}

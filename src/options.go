@@ -129,11 +129,13 @@ func (opts *Options) guard() error {
 		if !strings.HasSuffix(opts.Report, ".json") &&
 			!strings.HasSuffix(opts.Report, ".csv") &&
 			!strings.HasPrefix(opts.Report, "s3://") &&
-			!strings.HasPrefix(opts.Report, "tcp://") {
+			!strings.HasPrefix(opts.Report, "tcp://") &&
+			!strings.HasPrefix(opts.Report, "syslog://") {
 			return fmt.Errorf("Report should be a .json or .csv file")
 		}
 		if !strings.HasPrefix(opts.Report, "s3://") &&
-			!strings.HasPrefix(opts.Report, "tcp://") {
+			!strings.HasPrefix(opts.Report, "tcp://") &&
+			!strings.HasPrefix(opts.Report, "syslog://") {
 			dirPath := filepath.Dir(opts.Report)
 			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 				return fmt.Errorf("%s does not exist", dirPath)
