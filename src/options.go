@@ -48,7 +48,7 @@ type Options struct {
 	// Output options
 	Log          string `short:"l" long:"log" description:"log level"`
 	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report       string `long:"report" description:"path to write report file. Needs to be csv or json"`
+	Report       string `long:"report" description:"path to write report file. Needs to be csv, json, s3://bucket/obj or tcp://target:port"`
 	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
 	Version      bool   `long:"version" description:"version number"`
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
@@ -126,12 +126,18 @@ func (opts *Options) guard() error {
 	}
 
 	if opts.Report != "" {
-		if !strings.HasSuffix(opts.Report, ".json") && !strings.HasSuffix(opts.Report, ".csv") {
+		if !strings.HasSuffix(opts.Report, ".json") &&
+			!strings.HasSuffix(opts.Report, ".csv") &&
+			!strings.HasPrefix(opts.Report, "s3://") &&
+			!strings.HasPrefix(opts.Report, "tcp://") {
 			return fmt.Errorf("Report should be a .json or .csv file")
 		}
-		dirPath := filepath.Dir(opts.Report)
-		if _, err := os.Stat(dirPath); os.IsNotExist(err) {
-			return fmt.Errorf("%s does not exist", dirPath)
+		if !strings.HasPrefix(opts.Report, "s3://") &&
+			!strings.HasPrefix(opts.Report, "tcp://") {
+			dirPath := filepath.Dir(opts.Report)
+			if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+				return fmt.Errorf("%s does not exist", dirPath)
+			}
 		}
 	}
 

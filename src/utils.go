@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -85,19 +86,18 @@ func writeReportS3(leaks []Leak, dest string) error {
 	if err != nil {
 		return err
 	}
+
 	// discovery bucket and path
-	r := regexp.MustCompile(`s3://(*)/(*)$`)
+	r := regexp.MustCompile(`s3://(.*)/(.*)`)
 	match := r.FindStringSubmatch(opts.Report)
 	if match == nil {
 		return errors.New("No valid match for s3 Report. Eg s3://bucket/object/path")
 	}
-	if len(match) <= 1 {
-		return errors.New(
-			fmt.Sprintf("Object not found. Match found: \n", match),
-		)
+	if len(match) <= 2 {
+		return fmt.Errorf("Object not found. Match found: %v", match)
 	}
-	awsBucket := match[0]
-	awsObject := fmt.Sprintf("%s/%s", match[1], opts.RepoPath)
+	awsBucket := match[1]
+	awsObject := fmt.Sprintf("%s/%s.json", match[2], filepath.Base(opts.Repo))
 
 	// read tmpReport and save to S3 path (reportDest)
 	s, err := session.NewSession(&aws.Config{})
@@ -120,6 +120,7 @@ func writeReportS3(leaks []Leak, dest string) error {
 
 	// Config settings: this is where you choose the bucket, filename, content-type etc.
 	// of the file you're uploading.
+	log.Printf("Sending report to object s3://%s/%s\n", awsBucket, awsObject)
 	_, err = s3.New(s).PutObject(&s3.PutObjectInput{
 		Bucket:             aws.String(awsBucket),
 		Key:                aws.String(awsObject),
@@ -132,6 +133,33 @@ func writeReportS3(leaks []Leak, dest string) error {
 	return err
 }
 
+//writeReportS3 writes a report to a file in AWS S3 object storage in JSON format
+func writeReportTCP(leaks []Leak, dest string) error {
+
+	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmpReport.Name())
+
+	err = writeReportJSON(leaks, tmpReport.Name())
+	if err != nil {
+		return err
+	}
+
+	// discovery bucket and path
+	r := regexp.MustCompile(`tcp://(*):(*)$`)
+	match := r.FindStringSubmatch(opts.Report)
+	if match == nil {
+		return errors.New("No valid match for TCP Report. Eg tcp://IP_DNS_TARGET:PORT")
+	}
+	if len(match) <= 1 {
+		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
+	}
+	//send over TCP block
+	return nil
+}
+
 // writeReport writes a report to a file specified in the --report= option.
 // Default format for report is JSON. You can use the --csv option to write the report as a csv
 func writeReport(leaks []Leak) error {
@@ -139,12 +167,14 @@ func writeReport(leaks []Leak) error {
 		return nil
 	}
 	dest := opts.Report
-	log.Infof("writing report to %s", dest)
+	log.Infof("writing report to base path %s", dest)
 
 	if strings.HasSuffix(opts.Report, ".csv") {
 		return writeReportCSV(leaks, dest)
-	} else if strings.HasSuffix(opts.Report, "s3://") {
+	} else if strings.HasPrefix(opts.Report, "s3://") {
 		return writeReportS3(leaks, dest)
+	} else if strings.HasPrefix(opts.Report, "tcp://") {
+		return writeReportTCP(leaks, dest)
 	} else {
 		return writeReportJSON(leaks, dest)
 	}
