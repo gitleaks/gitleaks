@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -133,7 +136,9 @@ func writeReportS3(leaks []Leak, dest string) error {
 	return err
 }
 
-//writeReportS3 writes a report to a file in AWS S3 object storage in JSON format
+const BUFFERSIZE = 1024
+
+//writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
 func writeReportTCP(leaks []Leak, dest string) error {
 
 	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
@@ -148,7 +153,7 @@ func writeReportTCP(leaks []Leak, dest string) error {
 	}
 
 	// discovery bucket and path
-	r := regexp.MustCompile(`tcp://(*):(*)$`)
+	r := regexp.MustCompile(`tcp://(.*:.*)$`)
 	match := r.FindStringSubmatch(opts.Report)
 	if match == nil {
 		return errors.New("No valid match for TCP Report. Eg tcp://IP_DNS_TARGET:PORT")
@@ -156,8 +161,53 @@ func writeReportTCP(leaks []Leak, dest string) error {
 	if len(match) <= 1 {
 		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
 	}
+	destIpPort := match[1]
+
 	//send over TCP block
+	connection, err := net.Dial("tcp", destIpPort)
+	if err != nil {
+		return err
+	}
+	defer connection.Close()
+	fmt.Println("A client has connected!")
+	file, err := os.Open(tmpReport.Name())
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	fileInfo, err := file.Stat()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	fileSize := fillString(strconv.FormatInt(fileInfo.Size(), 10), 10)
+	fileName := fillString(fileInfo.Name(), 64)
+	fmt.Println("Sending filename and filesize!")
+	connection.Write([]byte(fileSize))
+	connection.Write([]byte(fileName))
+	sendBuffer := make([]byte, BUFFERSIZE)
+	fmt.Println("Start sending file!")
+	for {
+		_, err = file.Read(sendBuffer)
+		if err == io.EOF {
+			break
+		}
+		connection.Write(sendBuffer)
+	}
+	fmt.Println("File has been sent, closing connection!")
 	return nil
+}
+
+func fillString(retunString string, toLength int) string {
+	for {
+		lengtString := len(retunString)
+		if lengtString < toLength {
+			retunString = retunString + ":"
+			continue
+		}
+		break
+	}
+	return retunString
 }
 
 // writeReport writes a report to a file specified in the --report= option.
