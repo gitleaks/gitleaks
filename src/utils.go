@@ -6,10 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log/syslog"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -18,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	graylog "github.com/Devatoria/go-graylog"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -122,8 +122,6 @@ func writeReportS3(leaks []Leak, dest string) error {
 	buffer := make([]byte, size)
 	file.Read(buffer)
 
-	// Config settings: this is where you choose the bucket, filename, content-type etc.
-	// of the file you're uploading.
 	log.Printf("Sending report to object s3://%s/%s\n", awsBucket, awsObject)
 	_, err = s3.New(s).PutObject(&s3.PutObjectInput{
 		Bucket:             aws.String(awsBucket),
@@ -137,78 +135,59 @@ func writeReportS3(leaks []Leak, dest string) error {
 	return err
 }
 
-const BUFFERSIZE = 1024
-
 //writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
-func writeReportTCP(leaks []Leak, dest string) error {
+func writeReportTCP2(leaks []Leak, dest string) error {
 
-	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpReport.Name())
-
-	err = writeReportJSON(leaks, tmpReport.Name())
-	if err != nil {
-		return err
-	}
-
-	// discovery bucket and path
-	r := regexp.MustCompile(`tcp://(.*:.*)$`)
+	r := regexp.MustCompile(`gelf://(.*:.*)$`)
 	match := r.FindStringSubmatch(opts.Report)
 	if match == nil {
-		return errors.New("No valid match for TCP Report. Eg tcp://IP_DNS_TARGET:PORT")
+		return errors.New("No valid match for TCP Report. Eg gelf://IP_DNS_TARGET:PORT")
 	}
 	if len(match) <= 1 {
 		return fmt.Errorf("IP/DNS and port not found. Match found: %v", match)
 	}
 	destIpPort := match[1]
 
-	//send over TCP block
-	connection, err := net.Dial("tcp", destIpPort)
+	host := strings.Split(destIpPort, ":")[0]
+	port, err := strconv.Atoi(strings.Split(destIpPort, ":")[1])
 	if err != nil {
 		return err
 	}
-	defer connection.Close()
-	fmt.Println("A client has connected!")
-	file, err := os.Open(tmpReport.Name())
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	fileInfo, err := file.Stat()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	fileSize := fillString(strconv.FormatInt(fileInfo.Size(), 10), 10)
-	fileName := fillString(fileInfo.Name(), 64)
-	fmt.Println("Sending filename and filesize!")
-	connection.Write([]byte(fileSize))
-	connection.Write([]byte(fileName))
-	sendBuffer := make([]byte, BUFFERSIZE)
-	fmt.Println("Start sending file!")
-	for {
-		_, err = file.Read(sendBuffer)
-		if err == io.EOF {
-			break
-		}
-		connection.Write(sendBuffer)
-	}
-	fmt.Println("File has been sent, closing connection!")
-	return nil
-}
 
-func fillString(retunString string, toLength int) string {
-	for {
-		lengtString := len(retunString)
-		if lengtString < toLength {
-			retunString = retunString + ":"
+	g, err := graylog.NewGraylog(graylog.Endpoint{
+		Transport: graylog.TCP,
+		Address:   host,
+		Port:      uint(port),
+	})
+	if err != nil {
+		return err
+	}
+	defer g.Close()
+
+	for _, leak := range leaks {
+		leakStr, err := json.Marshal(leak)
+		if err != nil {
+			log.Errorf("Error parsing leak to send to gelf")
 			continue
 		}
-		break
+
+		err = g.Send(graylog.Message{
+			Version:      "1.1",
+			Host:         destIpPort,
+			ShortMessage: "Sample test",
+			FullMessage:  string(leakStr),
+			Timestamp:    time.Now().Unix(),
+			Level:        1,
+			Extra: map[string]string{
+				"event": leak.Message,
+			},
+		})
+		if err != nil {
+			log.Errorf("Error sending to gelf server: ", err)
+		}
 	}
-	return retunString
+
+	return nil
 }
 
 //writeReportTCP writes a report to a file in AWS S3 object storage in JSON format
@@ -268,8 +247,6 @@ func writeReportSyslog(leaks []Leak, dest string) error {
 	//Trim too?
 	str := strings.ReplaceAll(string(buffer), "\n", "")
 	fmt.Println("bytes read: ", bytesread)
-	// fmt.Printf("bytestream to string: %v", string(buffer))
-	// fmt.Printf("bytestream to string: %v", str)
 	fmt.Fprintf(sysLog, str)
 
 	return nil
@@ -288,8 +265,8 @@ func writeReport(leaks []Leak) error {
 		return writeReportCSV(leaks, dest)
 	} else if strings.HasPrefix(opts.Report, "s3://") {
 		return writeReportS3(leaks, dest)
-	} else if strings.HasPrefix(opts.Report, "tcp://") {
-		return writeReportTCP(leaks, dest)
+	} else if strings.HasPrefix(opts.Report, "gelf://") {
+		return writeReportTCP2(leaks, dest)
 	} else if strings.HasPrefix(opts.Report, "syslog://") {
 		return writeReportSyslog(leaks, dest)
 	} else {
