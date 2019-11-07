@@ -158,6 +158,54 @@ By default repos cloned to memory. Using `--disk` for clone to disk or you can q
 
 For speed up analyze operation using `--threads` parameter, which set to `ALL - 1` treads at your instance CPU.
 
+### Options examples
+
+Run gitleaks and save report to **CSV file** `/tmp/zricethezav-gitleaks.csv`:
+
+```bash
+docker run --rm --name=gitleaks zricethezav/gitleaks \
+  -v -r https://github.com/zricethezav/gitleaks.git \
+  --report /tmp/zricethezav-gitleaks.csv
+```
+
+Run gitleaks and save report to **JSON file** `/tmp/zricethezav-gitleaks.json`:
+
+```bash
+docker run --rm --name=gitleaks zricethezav/gitleaks \
+  -v -r https://github.com/zricethezav/gitleaks.git \
+  --report /tmp/zricethezav-gitleaks.json
+```
+
+Run gitleaks and save report on **AWS S3 Bucket/Object** `s3://myLeaksRepo/zricethezav/gitleaks.json`:
+
+```bash
+docker run --rm --name=gitleaks zricethezav/gitleaks \
+  -v -r https://github.com/zricethezav/gitleaks.git \
+  --report s3://myLeaksRepo/zricethezav/gitleaks.json
+```
+
+Run gitleaks and send report to **Remote TCP Syslog Server** `syslog://tcp:10.10.10.10:10514/gitleaks-docker`:
+
+Syntax: `syslog://PROTO:IP_DNS:PORT/TAG`
+
+* `PROTO`: Protocol. TCP or UDP
+* `IP_DNS`: IP or DNS address for syslog server
+* `PORT`: TCP or UDP port for syslog server
+* `TAG`: Tag (aka `programname`) to label the message on the server
+
+```bash
+docker run --rm --name=gitleaks zricethezav/gitleaks \
+  -v -r https://github.com/zricethezav/gitleaks.git \
+  --report syslog://tcp:10.10.10.10:10514/gitleaks-docker
+```
+
+Run gitleaks, and **save to JSON** file **AND** send report to **Remote TCP Syslog Server** `syslog://tcp:10.10.10.10:10514/gitleaks-docker`:
+
+```bash
+docker run --rm --name=gitleaks zricethezav/gitleaks \
+  -v -r https://github.com/zricethezav/gitleaks.git \
+  --report /tmp/zricethezav-gitleaks.json,syslog://tcp:10.10.10.10:10514/gitleaks-docker
+```
 
 ## Exit Codes
 
