@@ -90,7 +90,7 @@ func writeReportS3(leaks []Leak, dest string) error {
 
 	// discovery bucket and path
 	r := regexp.MustCompile(`s3://(.*)/(.*)`)
-	match := r.FindStringSubmatch(opts.Report)
+	match := r.FindStringSubmatch(dest)
 	if match == nil {
 		return errors.New("No valid match for s3 Report. Eg s3://bucket/object/path")
 	}
@@ -136,7 +136,7 @@ func writeReportS3(leaks []Leak, dest string) error {
 func writeReportSyslog(leaks []Leak, dest string) error {
 
 	r := regexp.MustCompile(`syslog://(.*):(.*:.*)/(.*)$`)
-	match := r.FindStringSubmatch(opts.Report)
+	match := r.FindStringSubmatch(dest)
 	if match == nil {
 		return errors.New("No valid match for TCP Report. Eg syslog://TCP:SERVER:PORT/tag")
 	}
@@ -173,19 +173,34 @@ func writeReport(leaks []Leak) error {
 	if len(leaks) == 0 {
 		return nil
 	}
-	dest := opts.Report
-	log.Infof("writing report to base path %s", dest)
+	var err error = nil
+	reports := strings.Split(opts.Report, ",")
+	for _, dest := range reports {
+		log.Infof("writing report to base path %s", dest)
 
-	if strings.HasSuffix(opts.Report, ".csv") {
-		return writeReportCSV(leaks, dest)
-	} else if strings.HasPrefix(opts.Report, "s3://") {
-		return writeReportS3(leaks, dest)
-	} else if strings.HasPrefix(opts.Report, "syslog://") {
-		return writeReportSyslog(leaks, dest)
-	} else {
-		return writeReportJSON(leaks, dest)
+		if strings.HasSuffix(dest, ".csv") {
+			err = writeReportCSV(leaks, dest)
+			if err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(dest, "s3://") {
+			err = writeReportS3(leaks, dest)
+			if err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(dest, "syslog://") {
+			err = writeReportSyslog(leaks, dest)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = writeReportJSON(leaks, dest)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	return nil
+	return err
 }
 
 // check rule will inspect a single line and return a leak if it encounters one
