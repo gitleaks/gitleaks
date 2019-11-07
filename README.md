@@ -10,6 +10,7 @@ Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted
 * Github and Gitlab support including support for bulk organization and repository owner (user) repository scans, as well as pull request scanning for use in common CI workflows.
 * Support for private repository scans, and repositories that require key based authentication
 * Output in CSV and JSON formats for consumption in other reporting tools and frameworks
+* Output JSON can be saved both in AWS S3 block storage or in remote syslog server
 * Externalised configuration for environment specific customisation including regex rules
 * Customizable repository name, file type, commit ID, branch name and regex whitelisting to reduce false positives
 * High performance through the use of src-d's [go-git](https://github.com/src-d/go-git) framework
@@ -81,7 +82,7 @@ Application Options:
       --branch=         Branch to audit
   -l, --log=            log level
   -v, --verbose         Show verbose output from gitleaks audit
-      --report=         path to write report file
+      --report=         path to write report file. Needs to be csv, json, s3://bucket/obj or syslog://tcp:target:port/tag
       --redact          redact secrets from log messages and report
       --version         version number
       --sample-config   prints a sample config file

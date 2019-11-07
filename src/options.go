@@ -48,7 +48,7 @@ type Options struct {
 	// Output options
 	Log          string `short:"l" long:"log" description:"log level"`
 	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from gitleaks audit"`
-	Report       string `long:"report" description:"path to write report file. Needs to be csv, json, s3://bucket/obj or tcp://target:port"`
+	Report       string `long:"report" description:"path to write report file. Needs to be csv, json, s3://bucket/obj or syslog://tcp:target:port/tag"`
 	Redact       bool   `long:"redact" description:"redact secrets from log messages and report"`
 	Version      bool   `long:"version" description:"version number"`
 	SampleConfig bool   `long:"sample-config" description:"prints a sample config file"`
