@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -77,28 +76,22 @@ func writeReportJSON(leaks []Leak, dest string) error {
 //writeReportS3 writes a report to a file in AWS S3 object storage in JSON format
 func writeReportS3(leaks []Leak, dest string) error {
 
-	tmpReport, err := ioutil.TempFile("/tmp", ".gitleak-")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpReport.Name())
-
-	err = writeReportJSON(leaks, tmpReport.Name())
-	if err != nil {
-		return err
-	}
-
-	// discovery bucket and path
-	r := regexp.MustCompile(`s3://(.*)/(.*)`)
+	// discovery bucket and path: s3:/bucket/path/to/object.json
+	r := regexp.MustCompile(`s3:\/\/([a-zA-Z\-0-9]+)\/(.*)`)
 	match := r.FindStringSubmatch(dest)
 	if match == nil {
-		return errors.New("No valid match for s3 Report. Eg s3://bucket/object/path")
+		return errors.New("No valid match for s3 Report. Eg s3://bucket/object/path.json")
 	}
 	if len(match) <= 2 {
 		return fmt.Errorf("Object not found. Match found: %v", match)
 	}
 	awsBucket := match[1]
-	awsObject := fmt.Sprintf("%s/%s.json", match[2], filepath.Base(opts.Repo))
+	var awsObject string
+	if strings.HasPrefix(match[2], "/") {
+		awsObject = match[2][1:]
+	} else {
+		awsObject = match[2]
+	}
 
 	// read tmpReport and save to S3 path (reportDest)
 	s, err := session.NewSession(&aws.Config{})
@@ -106,26 +99,23 @@ func writeReportS3(leaks []Leak, dest string) error {
 		log.Fatal(err)
 	}
 
-	// Open the file for use
-	file, err := os.Open(tmpReport.Name())
-	if err != nil {
-		return err
+	var buffer []byte
+	for _, leak := range leaks {
+		leakBuf, err := json.Marshal(leak)
+		buffer = append(buffer, leakBuf...)
+		if err != nil {
+			log.Errorf("Error parsing leak to send to gelf")
+			continue
+		}
 	}
-	defer file.Close()
 
-	// Get file size and read the file content into a buffer
-	fileInfo, _ := file.Stat()
-	var size int64 = fileInfo.Size()
-	buffer := make([]byte, size)
-	file.Read(buffer)
-
-	log.Printf("Sending report to object s3://%s/%s\n", awsBucket, awsObject)
+	log.Printf("Sending report to bucket=%s and object=%s\n", awsBucket, awsObject)
 	_, err = s3.New(s).PutObject(&s3.PutObjectInput{
 		Bucket:             aws.String(awsBucket),
 		Key:                aws.String(awsObject),
 		ACL:                aws.String("private"),
 		Body:               bytes.NewReader(buffer),
-		ContentLength:      aws.Int64(size),
+		ContentLength:      aws.Int64(int64(len(buffer))),
 		ContentType:        aws.String(http.DetectContentType(buffer)),
 		ContentDisposition: aws.String("attachment"),
 	})
