@@ -3,9 +3,9 @@ package audit
 import (
 	"fmt"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/zricethezav/gitleaks-ng/config"
-	"github.com/zricethezav/gitleaks-ng/manager"
-	"github.com/zricethezav/gitleaks-ng/options"
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/manager"
+	"github.com/zricethezav/gitleaks/options"
 	"io/ioutil"
 	"os"
 	"runtime"
