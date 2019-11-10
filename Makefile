@@ -1,16 +1,28 @@
-.PHONY: test build-all deploy
+.PHONY: test test-cover build release-builds
+
+VERSION := `git fetch --tags && git tag | sort -V | tail -1`
+PKG=github.com/zricethezav/gitleaks-ng
+LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks-ng/version.Version=$(VERSION)"
+COVER=--cover --coverprofile=cover.out
+
+test-cover:
+	go test ./... --race $(COVER) $(PKG) -v
+	go tool cover -html=cover.out
 
 test:
 	go get golang.org/x/lint/golint
 	go fmt
 	golint
-	go test --race --cover github.com/zricethezav/gitleaks/src -v
-deploy:
-	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	docker build -f Dockerfile -t $(REPO):$(TAG) .
-	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
-	docker push $(REPO)
-build-all:
+	go test ./... --race $(PKG) -v
+
+test-integration:
+	go test github.com/zricethezav/gitleaks-ng/hosts -v -integration
+
+build:
+	go mod tidy
+	go build $(LDFLAGS)
+
+release-builds:
 	rm -rf build
 	mkdir build
 	env GOOS="windows" GOARCH="amd64" go build -o "build/gitleaks-windows-amd64.exe"
@@ -20,3 +32,5 @@ build-all:
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64"
+
+

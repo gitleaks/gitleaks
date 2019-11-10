@@ -1,0 +1,246 @@
+package manager
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/hako/durafmt"
+	"github.com/mattn/go-colorable"
+	log "github.com/sirupsen/logrus"
+	"github.com/zricethezav/gitleaks-ng/config"
+	"github.com/zricethezav/gitleaks-ng/options"
+	"gopkg.in/src-d/go-git.v4"
+	"os"
+	"os/signal"
+	"runtime"
+	"sync"
+	"text/tabwriter"
+	"time"
+)
+
+// Manager is a struct containing options and configs as well CloneOptions and CloneDir.
+// This struct is passed into each NewRepo so we are not passing around the manager in func params.
+type Manager struct {
+	Opts   options.Options
+	Config config.Config
+
+	CloneOptions *git.CloneOptions
+	CloneDir     string
+
+	leaks    []Leak
+	leakChan chan Leak
+	leakWG   *sync.WaitGroup
+
+	stopChan chan os.Signal
+	metadata Metadata
+}
+
+type Leak struct {
+	Line     string    `json:"line"`
+	Offender string    `json:"offender"`
+	Commit   string    `json:"commit"`
+	Repo     string    `json:"repo"`
+	Rule     string    `json:"rule"`
+	Message  string    `json:"commitMessage"`
+	Author   string    `json:"author"`
+	Email    string    `json:"email"`
+	File     string    `json:"file"`
+	Date     time.Time `json:"date"`
+	Tags     string    `json:"tags"`
+	Severity string    `json:"severity"`
+}
+
+type AuditTime int64
+type PatchTime int64
+type CloneTime int64
+type RegexTime struct {
+	Time  int64
+	Regex string
+}
+
+type Metadata struct {
+	mux  sync.Mutex
+	data map[string]interface{}
+
+	timings chan interface{}
+
+	RegexTime map[string]int64
+	Commits   int
+	AuditTime int64
+	patchTime int64
+	cloneTime int64
+}
+
+func init() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: true,
+	})
+	// Fix colors on Windows
+	if runtime.GOOS == "windows" {
+		log.SetOutput(colorable.NewColorableStdout())
+	}
+}
+
+// GetLeaks returns all available leaks
+func (manager *Manager) GetLeaks() []Leak {
+	// need to wait for any straggling leaks
+	manager.leakWG.Wait()
+	return manager.leaks
+}
+
+// SendLeaks accepts a leak and is used by the audit pkg. This is the public function
+// that allows other packages to send leaks to the manager.
+func (manager *Manager) SendLeaks(l Leak) {
+	manager.leakWG.Add(1)
+	manager.leakChan <- l
+}
+
+// receiveLeaks listens to leakChan for incoming leaks. If any are received, they are appended to the
+// manager's leaks for future reporting. If the -v/--verbose option is set the leaks will marshaled into
+// json and printed out.
+func (manager *Manager) receiveLeaks() {
+	for leak := range manager.leakChan {
+		manager.leaks = append(manager.leaks, leak)
+		if manager.Opts.Verbose {
+			b, _ := json.Marshal(leak)
+			fmt.Println(string(b))
+		}
+		manager.leakWG.Done()
+	}
+}
+
+func (manager *Manager) GetMetadata() Metadata {
+	return manager.metadata
+}
+
+// receiveMetadata is where the messages sent to the metadata channel get consumed. You can view metadata
+// by running gitleaks with the --debug option set. This is extremely useful when trying to optimize regular
+// expressions as that what gitleaks spends most of its cycles on.
+func (manager *Manager) receiveMetadata() {
+	for t := range manager.metadata.timings {
+		switch ti := t.(type) {
+		case CloneTime:
+			manager.metadata.cloneTime += int64(ti)
+		case AuditTime:
+			manager.metadata.AuditTime += int64(ti)
+		case PatchTime:
+			manager.metadata.patchTime += int64(ti)
+		case RegexTime:
+			manager.metadata.RegexTime[ti.Regex] = manager.metadata.RegexTime[ti.Regex] + ti.Time
+		}
+	}
+}
+
+func (manager *Manager) IncrementCommits(i int) {
+	manager.metadata.mux.Lock()
+	manager.metadata.Commits += i
+	manager.metadata.mux.Unlock()
+}
+
+// RecordTime accepts an interface and sends it to the manager's time channel
+func (manager *Manager) RecordTime(t interface{}) {
+	manager.metadata.timings <- t
+}
+
+// NewManager accepts options and returns a manager struct. The manager is a container for gitleaks configurations,
+// options and channel receivers.
+func NewManager(opts options.Options, cfg config.Config) (*Manager, error) {
+	cloneOpts, err := opts.CloneOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	m := &Manager{
+		Opts:         opts,
+		Config:       cfg,
+		CloneOptions: cloneOpts,
+
+		stopChan: make(chan os.Signal, 1),
+		leakChan: make(chan Leak),
+		leakWG:   &sync.WaitGroup{},
+		metadata: Metadata{
+			RegexTime: make(map[string]int64),
+			timings:   make(chan interface{}),
+			data:      make(map[string]interface{}),
+		},
+	}
+
+	signal.Notify(m.stopChan, os.Interrupt)
+
+	// start receiving leaks and metadata
+	go m.receiveLeaks()
+	go m.receiveMetadata()
+	go m.receiveInterrupt()
+
+	return m, nil
+}
+
+// DebugOutput logs metadata and other messages that occurred during a gitleaks audit
+func (manager *Manager) DebugOutput() {
+	log.Debugf("-------------------------\n")
+	log.Debugf("| Times and Commit Counts|\n")
+	log.Debugf("-------------------------\n")
+	fmt.Println("totalAuditTime: ", durafmt.Parse(time.Duration(manager.metadata.AuditTime)*time.Nanosecond))
+	fmt.Println("totalPatchTime: ", durafmt.Parse(time.Duration(manager.metadata.patchTime)*time.Nanosecond))
+	fmt.Println("totalCloneTime: ", durafmt.Parse(time.Duration(manager.metadata.cloneTime)*time.Nanosecond))
+	fmt.Println("totalCommits: ", manager.metadata.Commits)
+
+	const padding = 6
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, '.', 0)
+
+	log.Debugf("--------------------------\n")
+	log.Debugf("| Individual Regex Times |\n")
+	log.Debugf("--------------------------\n")
+	for k, v := range manager.metadata.RegexTime {
+		fmt.Fprintf(w, "%s\t%s\n", k, durafmt.Parse(time.Duration(v)*time.Nanosecond))
+	}
+	w.Flush()
+
+}
+
+// Report saves gitleaks leaks to a json specified by --report={report.json}
+func (manager *Manager) Report() error {
+	close(manager.leakChan)
+	close(manager.metadata.timings)
+
+	if log.IsLevelEnabled(log.DebugLevel) {
+		manager.DebugOutput()
+	}
+
+	if manager.Opts.Report != "" {
+		if len(manager.GetLeaks()) == 0 {
+			log.Infof("no leaks found, skipping writing report")
+			return nil
+		}
+		file, err := os.Create(manager.Opts.Report)
+		if err != nil {
+			return err
+		}
+
+		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", " ")
+		err = encoder.Encode(manager.leaks)
+		if err != nil {
+			return err
+		}
+		err = file.Close()
+		if err != nil {
+			return err
+		}
+		log.Infof("report written to %s", manager.Opts.Report)
+	}
+	return nil
+}
+
+func (manager *Manager) receiveInterrupt() {
+	<-manager.stopChan
+	if manager.Opts.Report != "" {
+		err := manager.Report()
+		if err != nil {
+			log.Error(err)
+		}
+	}
+	log.Info("gitleaks received interrupt, stopping audit")
+	os.Exit(options.ErrorEncountered)
+}

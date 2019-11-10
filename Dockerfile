@@ -1,12 +1,12 @@
-FROM golang:1.11.6 AS build
-WORKDIR /go/src/github.com/zricethezav/gitleaks
+FROM golang:1.13.0 AS build
+WORKDIR /go/src/github.com/zricethezav/gitleaks-ng
 COPY . .
-RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks *.go
+RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks-ng *.go
 
 FROM alpine:3.7
 RUN apk add --no-cache bash git openssh
-COPY --from=build /go/src/github.com/zricethezav/gitleaks/bin/* /usr/bin/
-ENTRYPOINT ["gitleaks"]
+COPY --from=build /go/src/github.com/zricethezav/gitleaks-ng/bin/* /usr/bin/
+ENTRYPOINT ["gitleaks-ng"]
 
 # How to use me :
 
