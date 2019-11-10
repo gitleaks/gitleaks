@@ -33,4 +33,8 @@ release-builds:
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
 	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64"
 
-
+deploy:
+	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+	docker build -f Dockerfile -t $(REPO):$(TAG) .
+	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
+	docker push $(REPO)
