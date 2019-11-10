@@ -1,4 +1,4 @@
-module github.com/zricethezav/gitleaks-ng
+module github.com/zricethezav/gitleaks
 
 go 1.12
 
@@ -11,7 +11,6 @@ require (
 	github.com/sergi/go-diff v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/xanzy/go-gitlab v0.21.0
-	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1

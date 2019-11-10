@@ -5,9 +5,9 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
-	"github.com/zricethezav/gitleaks-ng/audit"
-	"github.com/zricethezav/gitleaks-ng/manager"
-	"github.com/zricethezav/gitleaks-ng/options"
+	"github.com/zricethezav/gitleaks/audit"
+	"github.com/zricethezav/gitleaks/manager"
+	"github.com/zricethezav/gitleaks/options"
 	"sync"
 )
 

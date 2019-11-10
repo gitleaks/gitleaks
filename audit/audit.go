@@ -2,7 +2,7 @@ package audit
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks-ng/manager"
+	"github.com/zricethezav/gitleaks/manager"
 	"io/ioutil"
 	"path"
 )

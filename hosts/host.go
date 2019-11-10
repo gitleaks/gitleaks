@@ -1,7 +1,7 @@
 package hosts
 
 import (
-	"github.com/zricethezav/gitleaks-ng/manager"
+	"github.com/zricethezav/gitleaks/manager"
 	"strings"
 )
 

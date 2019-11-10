@@ -3,8 +3,8 @@ package audit
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks-ng/config"
-	"github.com/zricethezav/gitleaks-ng/manager"
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/manager"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	fdiff "gopkg.in/src-d/go-git.v4/plumbing/format/diff"

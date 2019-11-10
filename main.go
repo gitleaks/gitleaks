@@ -3,18 +3,18 @@ package main
 import (
 	"github.com/hako/durafmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks-ng/audit"
-	"github.com/zricethezav/gitleaks-ng/config"
-	"github.com/zricethezav/gitleaks-ng/hosts"
-	"github.com/zricethezav/gitleaks-ng/manager"
-	"github.com/zricethezav/gitleaks-ng/options"
+	"github.com/zricethezav/gitleaks/audit"
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/hosts"
+	"github.com/zricethezav/gitleaks/manager"
+	"github.com/zricethezav/gitleaks/options"
 	"io/ioutil"
 	"os"
 	"time"
 )
 
 // TODO documentation for
-// 1. ./gitleaks-ng --repo=https://github.com/gitleakstest/gronit -v | jq -R 'fromjson?'
+// 1. ./gitleaks --repo=https://github.com/gitleakstest/gronit -v | jq -R 'fromjson?'
 // 2. Dockerfile
 // 3. need to add tests for --repo-config
 // 4. look over comments and code

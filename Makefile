@@ -1,8 +1,8 @@
 .PHONY: test test-cover build release-builds
 
 VERSION := `git fetch --tags && git tag | sort -V | tail -1`
-PKG=github.com/zricethezav/gitleaks-ng
-LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks-ng/version.Version=$(VERSION)"
+PKG=github.com/zricethezav/gitleaks
+LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/version.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:
@@ -16,7 +16,7 @@ test:
 	go test ./... --race $(PKG) -v
 
 test-integration:
-	go test github.com/zricethezav/gitleaks-ng/hosts -v -integration
+	go test github.com/zricethezav/gitleaks/hosts -v -integration
 
 build:
 	go mod tidy

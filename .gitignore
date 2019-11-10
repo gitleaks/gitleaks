@@ -6,7 +6,7 @@
 *.dylib
 *.DS_STORE
 *.idea
-*gitleaks-ng
+gitleaks
 
 # Test binary
 *.out

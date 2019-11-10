@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/zricethezav/gitleaks-ng/config"
-	"github.com/zricethezav/gitleaks-ng/options"
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/options"
 	"testing"
 )
 
