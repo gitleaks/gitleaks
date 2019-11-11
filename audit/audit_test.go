@@ -137,6 +137,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_entropy.json",
 		},
+		{
+			description: "test local repo four entropy alternative config",
+			opts: options.Options{
+				RepoPath: "../test_data/test_repos/test_repo_4",
+				Report:   "../test_data/test_local_repo_four_alt_config_entropy.json.got",
+				RepoConfig: true,
+
+			},
+			wantPath: "../test_data/test_local_repo_four_alt_config_entropy.json.got",
+		},
 	}
 
 	for _, test := range tests {
