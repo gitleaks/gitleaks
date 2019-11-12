@@ -18,9 +18,9 @@ import (
 // This block defines the exit codes. Success
 const (
 	// No leaks or early exit due to invalid options
-	Success int = iota + 1
-	LeaksPresent
-	ErrorEncountered
+	Success          = 0
+	LeaksPresent     = 1
+	ErrorEncountered = 2
 )
 
 // Options stores values of command line options
@@ -45,6 +45,7 @@ type Options struct {
 	Redact      bool   `long:"redact" description:"redact secrets from log messages and leaks"`
 	Debug       bool   `long:"debug" description:"log debug messages"`
 	RepoConfig  bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	PrettyPrint bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`

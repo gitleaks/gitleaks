@@ -114,7 +114,12 @@ func (manager *Manager) receiveLeaks() {
 	for leak := range manager.leakChan {
 		manager.leaks = append(manager.leaks, leak)
 		if manager.Opts.Verbose {
-			b, _ := json.Marshal(leak)
+			var b []byte
+			if manager.Opts.PrettyPrint {
+				b, _ = json.MarshalIndent(leak, "", "	")
+			} else {
+				b, _ = json.Marshal(leak)
+			}
 			fmt.Println(string(b))
 		}
 		manager.leakWG.Done()
