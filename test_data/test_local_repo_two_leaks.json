@@ -10,8 +10,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:12:32-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  },
  {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
@@ -24,8 +23,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:12:08-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
@@ -38,8 +36,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:07:41-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
@@ -52,8 +49,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:01:27-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  },
  {
   "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
@@ -66,8 +62,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:01:27-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  },
  {
   "line": "\nHere's an AWS secret: AKIALALEMEL33243OLIAE",
@@ -80,7 +75,6 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T12:58:39-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  }
 ]

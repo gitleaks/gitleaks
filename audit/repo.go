@@ -17,6 +17,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 	"io"
 	"os"
+	"path"
 	"sync"
 	"time"
 )
@@ -76,9 +77,9 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 	return nil
 }
 
-// AuditLocal will do a `git diff` and scan changed files that are being tracked. This is useful functionality
+// AuditUncommitted will do a `git diff` and scan changed files that are being tracked. This is useful functionality
 // for a pre-commit hook so you can make sure your code does not have any leaks before committing.
-func (repo *Repo) AuditLocal() error {
+func (repo *Repo) AuditUncommitted() error {
 	auditTimeStart := time.Now()
 
 	r, err := repo.Head()
@@ -277,6 +278,7 @@ func (repo *Repo) Open() error {
 			return err
 		}
 		repo.Repository = repository
+		repo.Name = path.Base(dir)
 	}
 	return nil
 }

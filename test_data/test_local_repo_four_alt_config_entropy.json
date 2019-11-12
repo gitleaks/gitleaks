@@ -10,8 +10,7 @@
   "email": "zricer@protonmail.com",
   "file": "secret.pem",
   "date": "2019-10-25T13:08:39-04:00",
-  "tags": "entropy",
-  "severity": ""
+  "tags": "entropy"
  },
  {
   "line": "    Just moments after the Cessna's inquiry, a Twin Beech piped up on frequency, in a rather superior tone, asking for his ground speed. \"I have you at one hundred and twenty-five knots of ground spe",
@@ -24,7 +23,6 @@
   "email": "zricer@protonmail.com",
   "file": "secret.pem",
   "date": "2019-10-25T13:07:41-04:00",
-  "tags": "entropy",
-  "severity": ""
+  "tags": "entropy"
  }
 ]

@@ -151,7 +151,7 @@ func TestAudit(t *testing.T) {
 				Report:     "../test_data/test_local_repo_four_alt_config_entropy.json.got",
 				RepoConfig: true,
 			},
-			wantPath: "../test_data/test_local_repo_four_alt_config_entropy.json.got",
+			wantPath: "../test_data/test_local_repo_four_alt_config_entropy.json",
 		},
 	}
 

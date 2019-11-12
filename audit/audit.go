@@ -20,7 +20,6 @@ func Run(m *manager.Manager) error {
 			}
 			m.Opts.RepoPath = fmt.Sprintf("%s/%s", m.Opts.OwnerPath, f.Name())
 			if err := runHelper(NewRepo(m)); err != nil {
-				// TODO or send to errchan?
 				return err
 			}
 		}
@@ -31,7 +30,6 @@ func Run(m *manager.Manager) error {
 }
 
 func runHelper(r *Repo) error {
-	// Check if gitleaks will perform a local audit.
 	if r.Manager.Opts.OpenLocal() {
 		r.Name = path.Base(r.Manager.Opts.RepoPath)
 		if err := r.Open(); err != nil {
@@ -41,7 +39,7 @@ func runHelper(r *Repo) error {
 		// Check if we are checking uncommitted files. This is the default behavior
 		// for a "$gitleaks" command with no options set
 		if r.Manager.Opts.CheckUncommitted() {
-			if err := r.AuditLocal(); err != nil {
+			if err := r.AuditUncommitted(); err != nil {
 				return err
 			}
 			return nil

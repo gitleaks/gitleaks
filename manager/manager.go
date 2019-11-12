@@ -48,7 +48,6 @@ type Leak struct {
 	File     string    `json:"file"`
 	Date     time.Time `json:"date"`
 	Tags     string    `json:"tags"`
-	Severity string    `json:"severity"`
 }
 
 // AuditTime is a type used to determine total audit time

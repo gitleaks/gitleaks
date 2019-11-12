@@ -19,6 +19,8 @@ test-integration:
 	go test github.com/zricethezav/gitleaks/hosts -v -integration
 
 build:
+	go fmt ./...
+	golint ./...
 	go mod tidy
 	go build $(LDFLAGS)
 

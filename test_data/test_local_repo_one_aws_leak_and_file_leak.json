@@ -10,8 +10,7 @@
   "email": "zricer@protonmail.com",
   "file": "server.test.py",
   "date": "2019-10-24T10:03:38-04:00",
-  "tags": "",
-  "severity": ""
+  "tags": ""
  },
  {
   "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
@@ -24,7 +23,6 @@
   "email": "zricer@protonmail.com",
   "file": "server.test.py",
   "date": "2019-10-24T09:29:27-04:00",
-  "tags": "key, AWS",
-  "severity": ""
+  "tags": "key, AWS"
  }
 ]

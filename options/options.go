@@ -63,8 +63,10 @@ func ParseOptions() (Options, error) {
 	_, err := parser.Parse()
 
 	if err != nil {
-		parser.WriteHelp(os.Stdout)
-		os.Exit(Success)
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
+			parser.WriteHelp(os.Stdout)
+		}
+		os.Exit(0)
 	}
 
 	if opts.Version {
@@ -83,9 +85,30 @@ func ParseOptions() (Options, error) {
 // If invalid sets of options are present, a descriptive error will return
 // else nil is returned
 func (opts Options) Guard() error {
-	// 1. only one target option set at a time:
-	// repo, owner-path, repo-path
+	if !oneOrNoneSet(opts.Repo, opts.OwnerPath, opts.RepoPath, opts.Host) {
+		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
+	}
+	if !oneOrNoneSet(opts.Organization, opts.User, opts.PullRequest) {
+		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
+	}
+	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
+		log.Warn("both access-token and password are set. Only password will be attempted")
+	}
+
 	return nil
+}
+
+func oneOrNoneSet(optStr ...string) bool {
+	c := 0
+	for _, s := range optStr {
+		if s != "" {
+			c++
+		}
+	}
+	if c <= 1 {
+		return true
+	}
+	return false
 }
 
 // CloneOptions returns a git.cloneOptions pointer. The authentication method

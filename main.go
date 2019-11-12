@@ -16,9 +16,7 @@ import (
 // TODO documentation for
 // 1. ./gitleaks --repo=https://github.com/gitleakstest/gronit -v | jq -R 'fromjson?'
 // 2. Dockerfile
-// 3. need to add tests for --repo-config
-// 4. look over comments and code
-// 5. prepare release
+// 3. prepare release
 
 func main() {
 	opts, err := options.ParseOptions()
@@ -55,15 +53,22 @@ func main() {
 	metadata := m.GetMetadata()
 
 	if len(m.GetLeaks()) != 0 {
-		log.Warnf("%d leaks detected. %d commits audited in %s", len(leaks),
-			metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+		if m.Opts.CheckUncommitted() {
+			log.Warnf("%d leaks detected in staged changes", len(leaks))
+		} else {
+			log.Warnf("%d leaks detected. %d commits audited in %s", len(leaks),
+				metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+		}
 		os.Exit(options.LeaksPresent)
 	} else {
-		log.Infof("No leaks detected. %d commits audited in %s",
-			metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+		if m.Opts.CheckUncommitted() {
+			log.Infof("No leaks detected in staged changes")
+		} else {
+			log.Infof("No leaks detected. %d commits audited in %s",
+				metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+		}
+		os.Exit(options.Success)
 	}
-
-	os.Exit(options.Success)
 }
 
 // Run begins the program and contains some basic logic on how to continue with the audit. If any external git host
@@ -71,7 +76,6 @@ func main() {
 // then Audit() and Report() will be called. Otherwise, gitleaks will create a new repo and an audit will proceed.
 // If no options or the uncommitted option is set then a pre-commit audit will
 // take place -- this is similar to running `git diff` on all the tracked files.
-// TODO handle errors from errChan
 func Run(m *manager.Manager) error {
 	if m.Opts.Disk {
 		dir, err := ioutil.TempDir("", "gitleaks")
