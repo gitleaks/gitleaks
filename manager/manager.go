@@ -34,6 +34,8 @@ type Manager struct {
 	metadata Metadata
 }
 
+// Leak is a struct that contains information about some line of code that contains
+// sensitive information as determined by the rules set in a gitleaks config
 type Leak struct {
 	Line     string    `json:"line"`
 	Offender string    `json:"offender"`
@@ -49,14 +51,24 @@ type Leak struct {
 	Severity string    `json:"severity"`
 }
 
+// AuditTime is a type used to determine total audit time
 type AuditTime int64
+
+// PatchTime is a type used to determine total patch time during an audit
 type PatchTime int64
+
+// CloneTime is a type used to determine total clone time
 type CloneTime int64
+
+// RegexTime is a type used to determine the time each rules' regex takes. This is especially useful
+// if you notice that gitleaks is taking a long time. You can use --debug to see the output of the regexTime
+// so you can determine which regex is not performing well.
 type RegexTime struct {
 	Time  int64
 	Regex string
 }
 
+// Metadata is a struct used to communicate metadata about an audit like timings and total commit counts.
 type Metadata struct {
 	mux  sync.Mutex
 	data map[string]interface{}
@@ -110,6 +122,7 @@ func (manager *Manager) receiveLeaks() {
 	}
 }
 
+// GetMetadata returns the metadata. TODO this may not need to be private
 func (manager *Manager) GetMetadata() Metadata {
 	return manager.metadata
 }
@@ -132,6 +145,7 @@ func (manager *Manager) receiveMetadata() {
 	}
 }
 
+// IncrementCommits increments total commits during an audit by i.
 func (manager *Manager) IncrementCommits(i int) {
 	manager.metadata.mux.Lock()
 	manager.metadata.Commits += i

@@ -14,12 +14,16 @@ import (
 	"strings"
 )
 
+// No leaks or early exit due to invalid options
+// This block defines the exit codes. Success
 const (
+	// No leaks or early exit due to invalid options
 	Success int = iota + 1
 	LeaksPresent
 	ErrorEncountered
 )
 
+// Options stores values of command line options
 type Options struct {
 	Verbose     bool   `short:"v" long:"verbose" description:"Show verbose output from audit"`
 	Repo        string `short:"r" long:"repo" description:"Target repository"`
@@ -40,7 +44,7 @@ type Options struct {
 	Report      string `long:"report" description:"path to write json leaks file"`
 	Redact      bool   `long:"redact" description:"redact secrets from log messages and leaks"`
 	Debug       bool   `long:"debug" description:"log debug messages"`
-	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	RepoConfig  bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
@@ -84,7 +88,7 @@ func (opts Options) Guard() error {
 	return nil
 }
 
-// cloneOptions returns a git.cloneOptions pointer. The authentication method
+// CloneOptions returns a git.cloneOptions pointer. The authentication method
 // is determined by what is passed in via command-Line options. If No
 // Username/PW or AccessToken is available and the repo target is not using the
 // git protocol then the repo must be a available via no auth.
@@ -96,7 +100,7 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 
 	if strings.HasPrefix(opts.Repo, "git") {
 		// using git protocol so needs ssh auth
-		auth, err := sshAuth(opts)
+		auth, err := SSHAuth(opts)
 		if err != nil {
 			return nil, err
 		}
@@ -145,11 +149,11 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 	}, nil
 }
 
-// sshAuth tried to generate ssh public keys based on what was passed via cli. If no
+// SSHAuth tried to generate ssh public keys based on what was passed via cli. If no
 // path was passed via cli then this will attempt to retrieve keys from the default
 // location for ssh keys, $HOME/.ssh/id_rsa. This function is only called if the
 // repo url using the git:// protocol.
-func sshAuth(opts Options) (*ssh.PublicKeys, error) {
+func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
 	if opts.SSH != "" {
 		return ssh.NewPublicKeysFromFile("git", opts.SSH, "")
 	}
@@ -161,7 +165,7 @@ func sshAuth(opts Options) (*ssh.PublicKeys, error) {
 	return ssh.NewPublicKeysFromFile("git", defaultPath, "")
 }
 
-// openLocal checks what options are set, if no remote targets are set
+// OpenLocal checks what options are set, if no remote targets are set
 // then return true
 func (opts Options) OpenLocal() bool {
 	if opts.Uncommited || opts.RepoPath != "" || opts.Repo == "" {

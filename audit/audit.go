@@ -7,6 +7,7 @@ import (
 	"path"
 )
 
+// Run accepts a manager and begins an audit based on the options/configs set in the manager.
 func Run(m *manager.Manager) error {
 	if m.Opts.OwnerPath != "" {
 		files, err := ioutil.ReadDir(m.Opts.OwnerPath)
@@ -17,7 +18,7 @@ func Run(m *manager.Manager) error {
 			if !f.IsDir() {
 				continue
 			}
-			m.Opts.RepoPath = fmt.Sprintf("%s/%s",m.Opts.OwnerPath, f.Name())
+			m.Opts.RepoPath = fmt.Sprintf("%s/%s", m.Opts.OwnerPath, f.Name())
 			if err := runHelper(NewRepo(m)); err != nil {
 				// TODO or send to errchan?
 				return err
@@ -46,10 +47,9 @@ func runHelper(r *Repo) error {
 			return nil
 		}
 	} else {
-		if err := r.Clone(); err != nil {
+		if err := r.Clone(nil); err != nil {
 			return err
 		}
 	}
 	return r.Audit()
 }
-

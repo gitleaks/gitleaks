@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 // TODO
 // add more substantial tests... but since literally every pkg uses manager
 // these tests are kind of redundant
@@ -73,17 +72,17 @@ func TestSendReceiveMeta(t *testing.T) {
 			})
 		}
 		md := m.GetMetadata()
-		if md.cloneTime != test.cloneTime * int64(test.iterations) {
+		if md.cloneTime != test.cloneTime*int64(test.iterations) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",
-				md.cloneTime, test.cloneTime * int64(test.iterations))
+				md.cloneTime, test.cloneTime*int64(test.iterations))
 		}
-		if md.AuditTime != test.auditTime * int64(test.iterations) {
+		if md.AuditTime != test.auditTime*int64(test.iterations) {
 			t.Errorf("audit time mismatch, got %d, wanted %d",
-				md.AuditTime, test.auditTime * int64(test.iterations))
+				md.AuditTime, test.auditTime*int64(test.iterations))
 		}
-		if md.patchTime != test.patchTime * int64(test.iterations) {
+		if md.patchTime != test.patchTime*int64(test.iterations) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",
-				md.patchTime, test.patchTime * int64(test.iterations))
+				md.patchTime, test.patchTime*int64(test.iterations))
 		}
 	}
 }

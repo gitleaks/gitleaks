@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/audit"
@@ -17,24 +16,15 @@ import (
 	"sync"
 )
 
-type GithubError struct {
-	Err    string
-	Repo   string
-	Commit string
-}
-
-func (githubError *GithubError) Error() string {
-	return fmt.Sprintf("repo: %s, err: %s",
-		githubError.Repo, githubError.Err)
-}
-
+// Github wraps a github client and manager. This struct implements what the Host interface defines.
 type Github struct {
 	client  *github.Client
-	errChan chan GithubError
 	manager manager.Manager
 	wg      sync.WaitGroup
 }
 
+// NewGithubClient accepts a manager struct and returns a Github host pointer which will be used to
+// perform a github audit on an organization, user, or PR.
 func NewGithubClient(m manager.Manager) *Github {
 	ctx := context.Background()
 	token := oauth2.StaticTokenSource(
@@ -44,7 +34,6 @@ func NewGithubClient(m manager.Manager) *Github {
 	return &Github{
 		manager: m,
 		client:  github.NewClient(oauth2.NewClient(ctx, token)),
-		errChan: make(chan GithubError),
 	}
 }
 
@@ -53,6 +42,7 @@ func (g *Github) Audit() {
 	ctx := context.Background()
 	listOptions := github.ListOptions{
 		PerPage: 100,
+		Page:    1,
 	}
 
 	var githubRepos []*github.Repository
@@ -70,12 +60,18 @@ func (g *Github) Audit() {
 			_githubRepos, resp, err = g.client.Repositories.ListByOrg(ctx, g.manager.Opts.Organization,
 				&github.RepositoryListByOrgOptions{ListOptions: listOptions})
 		}
-
 		githubRepos = append(githubRepos, _githubRepos...)
 
 		if resp == nil {
 			break
 		}
+
+		if resp.LastPage != 0 {
+			log.Infof("gathering github repos... progress: page %d of %d", listOptions.Page, resp.LastPage)
+		} else {
+			log.Infof("gathering github repos... progress: page %d of %d", listOptions.Page, listOptions.Page)
+		}
+
 		listOptions.Page = resp.NextPage
 		if err != nil || listOptions.Page == 0 {
 			break
@@ -87,11 +83,20 @@ func (g *Github) Audit() {
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
 		})
-		r.Name = *repo.Name
 		if err != nil {
-			log.Warn(err)
+			log.Warn("unable to clone via https and access token, attempting with ssh now")
+			auth, err := options.SSHAuth(g.manager.Opts)
+			if err != nil {
+				log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
+			}
+			err = r.Clone(&git.CloneOptions{
+				URL:  *repo.SSHURL,
+				Auth: auth,
+			})
+			if err != nil {
+				log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
+			}
 		}
-
 		if err = r.Audit(); err != nil {
 			log.Warn(err)
 		}

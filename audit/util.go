@@ -99,6 +99,16 @@ func trippedEntropy(line string, rule config.Rule) bool {
 	return false
 }
 
+func ruleContainRegex(rule config.Rule) bool {
+	if rule.Regex == nil {
+		return false
+	}
+	if rule.Regex.String() == "" {
+		return false
+	}
+	return true
+}
+
 // InspectString accepts a string, commit object, repo, and filename. This function iterates over
 // all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
 // Next, if the rule contains a regular expression then that will be checked.
@@ -106,11 +116,11 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 	for _, rule := range repo.config.Rules {
 		// check entropy
 		if len(rule.Entropy) != 0 {
-			// TODO
 			// an optimization would be to switch the regex from FindAllIndex to FindString
 			// since we are iterating on the lines if entropy rules exist...
 			for _, line := range strings.Split(content, "\n") {
-				if trippedEntropy(line, rule) {
+				entropyTripped := trippedEntropy(line, rule)
+				if entropyTripped && !ruleContainRegex(rule) {
 					_line := line
 					if len(_line) > maxLineLen {
 						_line = line[0 : maxLineLen-1]
@@ -128,8 +138,32 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 						Tags:     strings.Join(rule.Tags, ", "),
 						File:     filename,
 					})
+				} else if entropyTripped {
+					// entropy has been tripped which means if there is a regex specified in the same
+					// rule, we need to inspect the line for a regex match. In otherwords, the current rule has
+					// both entropy and regex set which work in combination. This helps narrow down false positives
+					// on searches for generic passwords in code.
+					match := rule.Regex.FindString(line)
+					if match != "" {
+						// both the regex and entropy in this rule have been tripped which means this line
+						// contains a leak
+						repo.Manager.SendLeaks(manager.Leak{
+							Line:     line,
+							Offender: match,
+							Commit:   c.Hash.String(),
+							Message:  c.Message,
+							Repo:     repo.Name,
+							Rule:     rule.Description,
+							Author:   c.Author.Name,
+							Email:    c.Author.Email,
+							Date:     c.Author.When,
+							Tags:     strings.Join(rule.Tags, ", "),
+							File:     filename,
+						})
+					}
 				}
 			}
+			return
 		}
 		if rule.Regex.String() == "" {
 			continue

@@ -11,8 +11,8 @@ test-cover:
 
 test:
 	go get golang.org/x/lint/golint
-	go fmt
-	golint
+	go fmt ./...
+	golint ./...
 	go test ./... --race $(PKG) -v
 
 test-integration:

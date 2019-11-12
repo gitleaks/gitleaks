@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// WhiteList is struct containing items that if encountered will whitelist
+// Whitelist is struct containing items that if encountered will whitelist
 // a commit/line of code that would be considered a leak.
 type Whitelist struct {
 	Description string
@@ -118,9 +118,6 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
 			fileRe, err := regexp.Compile(wl.File)
-			if err != nil {
-				return cfg, fmt.Errorf("problem loading config: %v", err)
-			}
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}

@@ -27,13 +27,12 @@ import (
 type Repo struct {
 	*git.Repository
 
-	// AlternativeConfig is used when the --repo-config option is set.
+	// config is used when the --repo-config option is set.
 	// This allows users to load up configs specific to their repos.
 	// Imagine the scenario where you are doing an audit of a large organization
 	// and you want certain repos to look for specific rules. If those specific repos
 	// have a gitleaks.toml or .gitleaks.toml config then those configs will be used specifically
 	// for those repo audits.
-	AlternativeConfig config.Config
 	config config.Config
 
 	Name    string
@@ -44,21 +43,18 @@ type Repo struct {
 func NewRepo(m *manager.Manager) *Repo {
 	return &Repo{
 		Manager: m,
-		config: m.Config,
+		config:  m.Config,
 	}
 }
 
 // Clone will clone a repo and return a Repo struct which contains a go-git repo. The clone method
 // is determined by the clone options set in Manager.metadata.cloneOptions
-func (repo *Repo) Clone(cloneOptions ...*git.CloneOptions) error {
+func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 	var (
-		repository  *git.Repository
-		err         error
-		cloneOption *git.CloneOptions
+		repository *git.Repository
+		err        error
 	)
-	if len(cloneOptions) != 0 {
-		cloneOption = cloneOptions[0]
-	} else {
+	if cloneOption == nil {
 		cloneOption = repo.Manager.CloneOptions
 	}
 
@@ -228,7 +224,6 @@ func (repo *Repo) Audit() error {
 			return nil
 		}
 
-		// TODO check whitelist Commit
 		if isCommitWhiteListed(c.Hash.String(), repo.config.Whitelist.Commits) {
 			return nil
 		}
@@ -304,4 +299,3 @@ func (repo *Repo) loadRepoConfig() (config.Config, error) {
 	_, err = toml.DecodeReader(f, &tomlLoader)
 	return tomlLoader.Parse()
 }
-

@@ -1,5 +1,8 @@
 package config
 
+// DefaultConfig is the default gitleaks configuration. If --config={path-to-config} is set than the config located
+// at {path-to-config} will be used. Alternatively, if --repo-config is set then gitleaks will attempt to
+// use the config set in a gitleaks.toml or .gitleaks.toml file in the repo that is run with --repo-config set.
 const DefaultConfig = `
 title = "gitleaks config"
 
@@ -133,4 +136,3 @@ title = "gitleaks config"
 	description = "image whitelists"
 	file = '''(.*?)(jpg|gif|doc|pdf|bin)$'''
 `
-

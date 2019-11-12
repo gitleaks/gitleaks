@@ -18,7 +18,7 @@ func TestParse(t *testing.T) {
 	}{
 		{
 			description: "default config",
-			opts: options.Options{},
+			opts:        options.Options{},
 		},
 		{
 			description: "test successful load",

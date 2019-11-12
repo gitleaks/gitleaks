@@ -10,11 +10,14 @@ const (
 	_gitlab
 )
 
+// Host is an interface used for defining external git hosting providers like github and gitlab.
+// TODO add bitbucket
 type Host interface {
 	Audit()
 	AuditPR()
 }
 
+// Run kicks off a host audit. This function accepts a manager and determines what host it should audit
 func Run(m *manager.Manager) error {
 	var host Host
 	switch getHost(m.Opts.Host) {

@@ -31,15 +31,15 @@ func TestGithub(t *testing.T) {
 	}{
 		{
 			opts: options.Options{
-				Host: "github",
-				User: "gitleakstest",
+				Host:        "github",
+				User:        "gitleakstest",
 				AccessToken: os.Getenv("GITHUB_TOKEN"),
 			},
 			desiredLeaks: 2,
 		},
 		{
 			opts: options.Options{
-				Host: "github",
+				Host:        "github",
 				PullRequest: "https://github.com/gitleakstest/gronit/pull/1",
 				AccessToken: os.Getenv("GITHUB_TOKEN"),
 			},
@@ -85,8 +85,8 @@ func TestGitlab(t *testing.T) {
 	}{
 		{
 			opts: options.Options{
-				Host: "gitlab",
-				User: "gitleakstest",
+				Host:        "gitlab",
+				User:        "gitleakstest",
 				AccessToken: os.Getenv("GITLAB_TOKEN"),
 			},
 			desiredLeaks: 2,

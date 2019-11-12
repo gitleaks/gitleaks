@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"context"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	"github.com/zricethezav/gitleaks/audit"
@@ -11,31 +10,21 @@ import (
 	"sync"
 )
 
-type GitlabError struct {
-	Err    string
-	Repo   string
-	Commit string
-}
-
-func (gitlabError *GitlabError) Error() string {
-	return fmt.Sprintf("repo: %s, err: %s",
-		gitlabError.Repo, gitlabError.Err)
-}
-
+// Gitlab wraps a gitlab client and manager. This struct implements what the Host interface defines.
 type Gitlab struct {
 	client  *gitlab.Client
-	errChan chan GitlabError
 	manager manager.Manager
 	ctx     context.Context
 	wg      sync.WaitGroup
 }
 
+// NewGitlabClient accepts a manager struct and returns a Gitlab host pointer which will be used to
+// perform a gitlab audit on an group or user.
 func NewGitlabClient(m manager.Manager) *Gitlab {
 	return &Gitlab{
 		manager: m,
 		ctx:     context.Background(),
 		client:  gitlab.NewClient(nil, options.GetAccessToken(m.Opts)),
-		errChan: make(chan GitlabError),
 	}
 }
 
@@ -87,6 +76,7 @@ func (g *Gitlab) Audit() {
 		cloneOpts := g.manager.CloneOptions
 		cloneOpts.URL = p.HTTPURLToRepo
 		err := r.Clone(cloneOpts)
+		// TODO handle clone retry with ssh like github host
 		r.Name = p.Name
 
 		if err = r.Audit(); err != nil {
@@ -95,7 +85,7 @@ func (g *Gitlab) Audit() {
 	}
 }
 
-// Audit(MR)PR TODO
+// AuditPR TODO not implemented
 func (g *Gitlab) AuditPR() {
 	log.Error("AuditPR is not implemented in Gitlab host yet...")
 }

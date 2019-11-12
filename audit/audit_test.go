@@ -31,7 +31,6 @@ func TestAudit(t *testing.T) {
 			opts: options.Options{
 				RepoPath: "../test_data/test_repos/test_repo_1",
 				Report:   "../test_data/test_local_repo_one_aws_leak.json.got",
-
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
 		},
@@ -123,8 +122,7 @@ func TestAudit(t *testing.T) {
 			description: "test owner path",
 			opts: options.Options{
 				OwnerPath: "../test_data/test_repos/",
-				Report:   "../test_data/test_local_owner_aws_leak.json.got",
-
+				Report:    "../test_data/test_local_owner_aws_leak.json.got",
 			},
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
@@ -138,12 +136,20 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_entropy.json",
 		},
 		{
+			description: "test entropy and regex",
+			opts: options.Options{
+				RepoPath: "../test_data/test_repos/test_repo_1",
+				Report:   "../test_data/test_regex_entropy.json.got",
+				Config:   "../test_data/test_configs/regex_entropy.toml",
+			},
+			wantPath: "../test_data/test_regex_entropy.json",
+		},
+		{
 			description: "test local repo four entropy alternative config",
 			opts: options.Options{
-				RepoPath: "../test_data/test_repos/test_repo_4",
-				Report:   "../test_data/test_local_repo_four_alt_config_entropy.json.got",
+				RepoPath:   "../test_data/test_repos/test_repo_4",
+				Report:     "../test_data/test_local_repo_four_alt_config_entropy.json.got",
 				RepoConfig: true,
-
 			},
 			wantPath: "../test_data/test_local_repo_four_alt_config_entropy.json.got",
 		},
@@ -277,7 +283,6 @@ func TestAuditUncommited(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func fileCheck(wantPath, gotPath string) error {
@@ -294,11 +299,10 @@ func fileCheck(wantPath, gotPath string) error {
 	if strings.Trim(string(want), "\n") != strings.Trim(string(got), "\n") {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(want), string(got), false)
-		return fmt.Errorf("does not equal: %s\n", dmp.DiffPrettyText(diffs))
-	} else {
-		if err := os.Remove(gotPath); err != nil {
-			return err
-		}
+		return fmt.Errorf("does not equal: %s", dmp.DiffPrettyText(diffs))
+	}
+	if err := os.Remove(gotPath); err != nil {
+		return err
 	}
 	return nil
 }
@@ -320,4 +324,3 @@ func moveDotGit(from, to string) error {
 	}
 	return nil
 }
-
