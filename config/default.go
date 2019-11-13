@@ -7,6 +7,11 @@ const DefaultConfig = `
 title = "gitleaks config"
 
 [[rules]]
+	description = "AWS Manager ID"
+	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+	tags = ["key", "AWS"]
+
+[[rules]]
 	description = "AWS Secret Key"
 	regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
 	tags = ["key", "AWS"]
@@ -62,14 +67,10 @@ title = "gitleaks config"
 	tags = ["key", "EC"]
 
 [[rules]]
-	description = "Generic API key"
-	regex = '''(?i)(api_key|apikey)(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
+	description = "Generic Credential"
+	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
 	tags = ["key", "API", "generic"]
 
-[[rules]]
-	description = "Generic Secret"
-	regex = '''(?i)secret(.{0,20})?['|"][0-9a-zA-Z]{32,45}['|"]'''
-	tags = ["key", "Secret", "generic"]
 
 [[rules]]
 	description = "Google API key"
@@ -126,11 +127,6 @@ title = "gitleaks config"
 	description = "Twilio API key"
 	regex = '''(?i)twilio(.{0,20})?['\"][0-9a-f]{32}['\"]'''
 	tags = ["key", "twilio"]
-
-[[rules]]
-	description = "AWS Manager ID"
-	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
-	tags = ["key", "AWS"]
 
 [whitelist]
 	description = "image whitelists"

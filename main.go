@@ -13,11 +13,6 @@ import (
 	"time"
 )
 
-// TODO documentation for
-// 1. ./gitleaks --repo=https://github.com/gitleakstest/gronit -v | jq -R 'fromjson?'
-// 2. Dockerfile
-// 3. prepare release
-
 func main() {
 	opts, err := options.ParseOptions()
 	if err != nil {

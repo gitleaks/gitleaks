@@ -45,16 +45,20 @@ go get -u github.com/zricethezav/gitleaks
 gitleaks has a wide range of configuration options that can be adjusted at runtime or via a configuration file based on your specific requirements.
 
 ```
+Usage:
+  gitleaks [OPTIONS]
+
 Application Options:
   -v, --verbose       Show verbose output from audit
   -r, --repo=         Target repository
       --config=       config path
       --disk          Clones repo(s) to disk
+      --version       version number
       --timeout=      Timeout (s)
       --username=     Username for git repo
       --password=     Password for git repo
       --access-token= Access token for git repo
-      --Commit=       sha of Commit to audit
+      --commit=       sha of commit to audit
       --threads=      Maximum number of threads gitleaks spawns
       --ssh-key=      path to ssh key used for auth
       --uncommitted   run gitleaks on uncommitted code
@@ -63,8 +67,9 @@ Application Options:
       --branch=       Branch to audit
       --report=       path to write json leaks file
       --redact        redact secrets from log messages and leaks
-      --version       version number
       --debug         log debug messages
+      --repo-config   Load config from target repo. Config file must be ".gitleaks.toml" or "gitleaks.toml"
+      --pretty        Pretty print json if leaks are present
       --host=         git hosting service like gitlab or github. Supported hosts include: Github, Gitlab
       --org=          organization to audit
       --user=         user to audit
@@ -72,7 +77,6 @@ Application Options:
 
 Help Options:
   -h, --help          Show this help message
-
 ```
 
 ### Docker usage examples
