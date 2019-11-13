@@ -87,6 +87,7 @@ func shannonEntropy(data string) (entropy float64) {
 	return entropy
 }
 
+// aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
 // trippedEntropy checks if a given line falls in between entropy ranges supplied
 // by a custom gitleaks configuration. Gitleaks do not check entropy by default.
 func trippedEntropy(line string, rule config.Rule) bool {
@@ -144,6 +145,20 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 					// both entropy and regex set which work in combination. This helps narrow down false positives
 					// on searches for generic passwords in code.
 					match := rule.Regex.FindString(line)
+
+					// check if any rules are whitelisting this leak
+					if len(rule.Whitelist) != 0 {
+						for _, wl := range rule.Whitelist {
+							if fileMatched(filename, wl.File) {
+								// if matched, go to next rule
+								goto NEXTLINE
+							}
+							if wl.Regex.FindString(line) != "" {
+								goto NEXTLINE
+							}
+						}
+					}
+
 					if match != "" {
 						// both the regex and entropy in this rule have been tripped which means this line
 						// contains a leak
@@ -162,6 +177,7 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 						})
 					}
 				}
+			NEXTLINE:
 			}
 			return
 		}
@@ -197,6 +213,14 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 
 				offender := content[loc[0]:loc[1]]
 				line := content[start:end]
+
+				if len(rule.Whitelist) != 0 {
+					for _, wl := range rule.Whitelist {
+						if wl.Regex.FindString(line) != "" {
+							goto NEXT
+						}
+					}
+				}
 				if repo.Manager.Opts.Redact {
 					line = strings.ReplaceAll(line, offender, "REDACTED")
 					offender = "REDACTED"

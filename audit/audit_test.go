@@ -153,6 +153,15 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_four_alt_config_entropy.json",
 		},
+		{
+			description: "test local repo four entropy alternative config",
+			opts: options.Options{
+				RepoPath: "../test_data/test_repos/test_repo_1",
+				Report:   "../test_data/test_regex_whitelist.json.got",
+				Config:   "../test_data/test_configs/aws_key_aws_whitelisted.toml",
+			},
+			wantEmpty: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -178,7 +187,6 @@ func TestAudit(t *testing.T) {
 			}
 			continue
 		}
-		// time.Sleep(time.Millisecond * 50)
 
 		err = m.Report()
 
