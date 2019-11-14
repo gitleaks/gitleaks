@@ -2,8 +2,10 @@ package audit
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/manager"
 	"io/ioutil"
+
 	"path"
 )
 
@@ -20,7 +22,7 @@ func Run(m *manager.Manager) error {
 			}
 			m.Opts.RepoPath = fmt.Sprintf("%s/%s", m.Opts.OwnerPath, f.Name())
 			if err := runHelper(NewRepo(m)); err != nil {
-				return err
+				log.Warnf("%s is not a git repo, skipping", f.Name())
 			}
 		}
 		return nil

@@ -80,6 +80,7 @@ func (g *Github) Audit() {
 
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(&g.manager)
+		r.Name = *repo.Name
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
 		})
