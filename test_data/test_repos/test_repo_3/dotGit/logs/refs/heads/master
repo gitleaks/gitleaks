@@ -1,0 +1,10 @@
+0000000000000000000000000000000000000000 85699e429f33e75541530998a5b5d457a12e6285 zach rice <zricer@protonmail.com> 1572022632 -0400	commit (initial): init
+85699e429f33e75541530998a5b5d457a12e6285 b10b3e2cb320a8c211fda94c4567299d37de7776 zach rice <zricer@protonmail.com> 1572022719 -0400	commit: adding aws key
+b10b3e2cb320a8c211fda94c4567299d37de7776 51f6dcf6b89b93f4075ba92c400b075631a6cc93 zach rice <zricer@protonmail.com> 1572022773 -0400	commit: no secrets
+51f6dcf6b89b93f4075ba92c400b075631a6cc93 17471a5fda722a9e423f1a0d3f0d267ea009d41c zach rice <zricer@protonmail.com> 1572022887 -0400	commit: wait this is actually adding an aws secret
+17471a5fda722a9e423f1a0d3f0d267ea009d41c 996865bb912f3bc45898a370a13aadb315014b55 zach rice <zricer@protonmail.com> 1572023261 -0400	commit: committing pem
+996865bb912f3bc45898a370a13aadb315014b55 d8ac0b73aeeb45843319cdc5ce506516eb49bf7a zach rice <zricer@protonmail.com> 1572023319 -0400	commit: removing secret.pem
+d8ac0b73aeeb45843319cdc5ce506516eb49bf7a b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba zach rice <zricer@protonmail.com> 1572023528 -0400	commit: adding another one
+b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba f61cd8587b7ac1d75a89a0c9af870a2f24c60263 zach rice <zricer@protonmail.com> 1572023552 -0400	commit: rm secrets again
+f61cd8587b7ac1d75a89a0c9af870a2f24c60263 84ac4e80d4dbf2c968b64e9d4005f5079795bb81 zach rice <zricer@protonmail.com> 1572026048 -0400	commit: more secrets
+84ac4e80d4dbf2c968b64e9d4005f5079795bb81 cd5eb8bef855f73c46b97b4c088badffdc40ebe9 zach rice <zricer@protonmail.com> 1572026066 -0400	commit: rm secrets

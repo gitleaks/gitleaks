@@ -1,4 +1,4 @@
-FROM golang:1.11.6 AS build
+FROM golang:1.13.0 AS build
 WORKDIR /go/src/github.com/zricethezav/gitleaks
 COPY . .
 RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks *.go
@@ -14,3 +14,4 @@ ENTRYPOINT ["gitleaks"]
 # docker run --rm --name=gitleaks gitleaks --repo=https://github.com/zricethezav/gitleaks
 
 # This will check for secrets in https://github.com/zricethezav/gitleaks
+
