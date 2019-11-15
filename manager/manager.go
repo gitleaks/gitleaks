@@ -32,6 +32,7 @@ type Manager struct {
 
 	stopChan chan os.Signal
 	metadata Metadata
+	metaWG   *sync.WaitGroup
 }
 
 // Leak is a struct that contains information about some line of code that contains
@@ -128,6 +129,7 @@ func (manager *Manager) receiveLeaks() {
 
 // GetMetadata returns the metadata. TODO this may not need to be private
 func (manager *Manager) GetMetadata() Metadata {
+	manager.metaWG.Wait()
 	return manager.metadata
 }
 
@@ -146,6 +148,7 @@ func (manager *Manager) receiveMetadata() {
 		case RegexTime:
 			manager.metadata.RegexTime[ti.Regex] = manager.metadata.RegexTime[ti.Regex] + ti.Time
 		}
+		manager.metaWG.Done()
 	}
 }
 
@@ -158,6 +161,7 @@ func (manager *Manager) IncrementCommits(i int) {
 
 // RecordTime accepts an interface and sends it to the manager's time channel
 func (manager *Manager) RecordTime(t interface{}) {
+	manager.metaWG.Add(1)
 	manager.metadata.timings <- t
 }
 
@@ -177,6 +181,7 @@ func NewManager(opts options.Options, cfg config.Config) (*Manager, error) {
 		stopChan: make(chan os.Signal, 1),
 		leakChan: make(chan Leak),
 		leakWG:   &sync.WaitGroup{},
+		metaWG:   &sync.WaitGroup{},
 		metadata: Metadata{
 			RegexTime: make(map[string]int64),
 			timings:   make(chan interface{}),
