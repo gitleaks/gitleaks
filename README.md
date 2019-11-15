@@ -14,9 +14,15 @@ Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted
 * Externalised configuration for environment specific customisation including regex rules
 * High performance through the use of src-d's [go-git](https://github.com/src-d/go-git) framework
 
-<p align="left">
-    <img src="https://cdn.rawgit.com/zricethezav/5bf8259b7fea0170becffc06b8588edb/raw/f762769fe20ef3669bff34612b1bede6457631e6/termtosvg_je8bp82s.svg">
-</p>
+
+
+|  `repo scan` |
+|---|
+| <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/repo-scan.gif"></p>  | <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/repo-scan.gif"></p> |
+
+| `pre commit scan` |
+|---|
+|  <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/pre-commit-1.gif"></p> |
 
 ## Getting Started
 
