@@ -71,7 +71,6 @@ title = "gitleaks config"
 	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
 	tags = ["key", "API", "generic"]
 
-
 [[rules]]
 	description = "Google API key"
 	regex = '''AIza[0-9A-Za-z\\-_]{35}'''
