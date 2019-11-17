@@ -1,15 +1,14 @@
-package config
-
-// DefaultConfig is the default gitleaks configuration. If --config={path-to-config} is set than the config located
-// at {path-to-config} will be used. Alternatively, if --repo-config is set then gitleaks will attempt to
-// use the config set in a gitleaks.toml or .gitleaks.toml file in the repo that is run with --repo-config set.
-const DefaultConfig = `
 title = "gitleaks config"
 
 [[rules]]
 	description = "AWS Manager ID"
 	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 	tags = ["key", "AWS"]
+
+[[rules]]
+	description = "AWS cred file info"
+	regex = '''(?i)(aws_access_key_id|aws_secret_access_key)(.{0,20})?=.[0-9a-zA-Z\/+]{20,40}'''
+	tags = ["AWS"]
 
 [[rules]]
 	description = "AWS Secret Key"
@@ -66,10 +65,6 @@ title = "gitleaks config"
 	regex = '''-----BEGIN EC PRIVATE KEY-----'''
 	tags = ["key", "EC"]
 
-[[rules]]
-	description = "Generic Credential"
-	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
-	tags = ["key", "API", "generic"]
 
 [[rules]]
 	description = "Google API key"
@@ -127,7 +122,48 @@ title = "gitleaks config"
 	regex = '''(?i)twilio(.{0,20})?['\"][0-9a-f]{32}['\"]'''
 	tags = ["key", "twilio"]
 
+[[rules]]
+	description = "Env Var"
+	regex = '''(?i)(api_key|apikey|secret|key|api|password|pw|host)=[0-9a-zA-Z-_{}]{4,120}'''
+
+[[rules]]
+	description = "Port"
+	regex = '''(?i)port(.{0,4})?[0-9]{1,10}'''
+
+[[rules]]
+	description = "Email"
+	regex = '''[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}'''
+	tags = ["email"]
+
+[[rules]]
+	description = "Generic Credential"
+	regex = '''(?i)(dbpasswd|dbuser|dbname|dbhost|api_key|apikey|secret|key|api|password|user|guid|hostname|pw|auth)(.{0,20})?['|"][0-9a-zA-Z-_!{}/=]{4,120}['|"]'''
+	tags = ["key", "API", "generic"]
+
+[[rules]]
+	description = "WP-Config"
+	regex='''define(.{0,20})?(DB_CHARSET|NONCE_SALT|LOGGED_IN_SALT|AUTH_SALT|NONCE_KEY|DB_HOST|DB_PASSWORD|AUTH_KEY|SECURE_AUTH_KEY|LOGGED_IN_KEY|DB_NAME|DB_USER)(.{0,20})?['|"].{10,120}['|"]'''
+	tags = ["key", "API", "generic"]
+
+
+[[rules]]
+	description = "Pure Entropy"
+	regex = '''['|"][0-9a-zA-Z-._{}$\/=]{40,120}['|"]'''
+	entropies = [
+        "5.0-5.6"
+	]
+
+[[rules]]
+	description = "Entropy plus Generic Credential"
+	regex = '''(?i)(api_key|apikey|secret|key|api|password|pw)'''
+	entropies = [
+        "5.2-5.5"
+	]
+
+[Global]
+    file = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
+
 [whitelist]
 	description = "image whitelists"
 	file = '''(.*?)(jpg|gif|doc|pdf|bin)$'''
-`
+

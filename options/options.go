@@ -25,27 +25,28 @@ const (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose     bool   `short:"v" long:"verbose" description:"Show verbose output from audit"`
-	Repo        string `short:"r" long:"repo" description:"Target repository"`
-	Config      string `long:"config" description:"config path"`
-	Disk        bool   `long:"disk" description:"Clones repo(s) to disk"`
-	Version     bool   `long:"version" description:"version number"`
-	Timeout     int    `long:"timeout" description:"Timeout (s)"`
-	Username    string `long:"username" description:"Username for git repo"`
-	Password    string `long:"password" description:"Password for git repo"`
-	AccessToken string `long:"access-token" description:"Access token for git repo"`
-	Commit      string `long:"commit" description:"sha of commit to audit"`
-	Threads     int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH         string `long:"ssh-key" description:"path to ssh key used for auth"`
-	Uncommited  bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
-	RepoPath    string `long:"repo-path" description:"Path to repo"`
-	OwnerPath   string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-	Branch      string `long:"branch" description:"Branch to audit"`
-	Report      string `long:"report" description:"path to write json leaks file"`
-	Redact      bool   `long:"redact" description:"redact secrets from log messages and leaks"`
-	Debug       bool   `long:"debug" description:"log debug messages"`
-	RepoConfig  bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
-	PrettyPrint bool   `long:"pretty" description:"Pretty print json if leaks are present"`
+	Verbose      bool   `short:"v" long:"verbose" description:"Show verbose output from audit"`
+	Repo         string `short:"r" long:"repo" description:"Target repository"`
+	Config       string `long:"config" description:"config path"`
+	Disk         bool   `long:"disk" description:"Clones repo(s) to disk"`
+	Version      bool   `long:"version" description:"version number"`
+	Timeout      int    `long:"timeout" description:"Timeout (s)"`
+	Username     string `long:"username" description:"Username for git repo"`
+	Password     string `long:"password" description:"Password for git repo"`
+	AccessToken  string `long:"access-token" description:"Access token for git repo"`
+	Commit       string `long:"commit" description:"sha of commit to audit"`
+	Threads      int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH          string `long:"ssh-key" description:"path to ssh key used for auth"`
+	Uncommited   bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
+	RepoPath     string `long:"repo-path" description:"Path to repo"`
+	OwnerPath    string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
+	Branch       string `long:"branch" description:"Branch to audit"`
+	Report       string `long:"report" description:"path to write json leaks file"`
+	ReportFormat string `long:"report-format" default:"json" description:"json or csv"`
+	Redact       bool   `long:"redact" description:"redact secrets from log messages and leaks"`
+	Debug        bool   `long:"debug" description:"log debug messages"`
+	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	PrettyPrint  bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
