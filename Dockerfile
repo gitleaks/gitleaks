@@ -3,7 +3,7 @@ WORKDIR /go/src/github.com/zricethezav/gitleaks
 COPY . .
 RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks *.go
 
-FROM alpine:3.7
+FROM alpine:3.10
 RUN apk add --no-cache bash git openssh
 COPY --from=build /go/src/github.com/zricethezav/gitleaks/bin/* /usr/bin/
 ENTRYPOINT ["gitleaks"]
