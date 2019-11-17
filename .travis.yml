@@ -1,8 +1,7 @@
-sudo: required
 language: go
 go:
-- 1.13
+- 1.13.x
 services:
 - docker
 script:
-- env GO111MODULE=on make test
+- make test
