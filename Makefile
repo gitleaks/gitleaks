@@ -27,13 +27,13 @@ build:
 release-builds:
 	rm -rf build
 	mkdir build
-	env GOOS="windows" GOARCH="amd64" go build -o "build/gitleaks-windows-amd64.exe"
-	env GOOS="windows" GOARCH="386" go build -o "build/gitleaks-windows-386.exe"
-	env GOOS="linux" GOARCH="amd64" go build -o "build/gitleaks-linux-amd64"
-	env GOOS="linux" GOARCH="arm" go build -o "build/gitleaks-linux-arm"
-	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
-	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips"
-	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64"
+	env GOOS="windows" GOARCH="amd64" go build -o "build/gitleaks-windows-amd64.exe" $(LDFLAGS)
+	env GOOS="windows" GOARCH="386" go build -o "build/gitleaks-windows-386.exe" $(LDFLAGS)
+	env GOOS="linux" GOARCH="amd64" go build -o "build/gitleaks-linux-amd64" $(LDFLAGS)
+	env GOOS="linux" GOARCH="arm" go build -o "build/gitleaks-linux-arm" $(LDFLAGS)
+	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips" $(LDFLAGS)
+	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips" $(LDFLAGS)
+	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64" $(LDFLAGS)
 
 deploy:
 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin

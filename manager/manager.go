@@ -1,6 +1,9 @@
 package manager
 
 import (
+	"crypto/sha1"
+	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/hako/durafmt"
@@ -26,9 +29,10 @@ type Manager struct {
 	CloneOptions *git.CloneOptions
 	CloneDir     string
 
-	leaks    []Leak
-	leakChan chan Leak
-	leakWG   *sync.WaitGroup
+	leaks     []Leak
+	leakChan  chan Leak
+	leakWG    *sync.WaitGroup
+	leakCache map[string]bool
 
 	stopChan chan os.Signal
 	metadata Metadata
@@ -38,17 +42,18 @@ type Manager struct {
 // Leak is a struct that contains information about some line of code that contains
 // sensitive information as determined by the rules set in a gitleaks config
 type Leak struct {
-	Line     string    `json:"line"`
-	Offender string    `json:"offender"`
-	Commit   string    `json:"commit"`
-	Repo     string    `json:"repo"`
-	Rule     string    `json:"rule"`
-	Message  string    `json:"commitMessage"`
-	Author   string    `json:"author"`
-	Email    string    `json:"email"`
-	File     string    `json:"file"`
-	Date     time.Time `json:"date"`
-	Tags     string    `json:"tags"`
+	Line       string    `json:"line"`
+	Offender   string    `json:"offender"`
+	Commit     string    `json:"commit"`
+	Repo       string    `json:"repo"`
+	Rule       string    `json:"rule"`
+	Message    string    `json:"commitMessage"`
+	Author     string    `json:"author"`
+	Email      string    `json:"email"`
+	File       string    `json:"file"`
+	Date       time.Time `json:"date"`
+	Tags       string    `json:"tags"`
+	lookupHash string
 }
 
 // AuditTime is a type used to determine total audit time
@@ -104,8 +109,19 @@ func (manager *Manager) GetLeaks() []Leak {
 // SendLeaks accepts a leak and is used by the audit pkg. This is the public function
 // that allows other packages to send leaks to the manager.
 func (manager *Manager) SendLeaks(l Leak) {
+	h := sha1.New()
+	h.Write([]byte(l.Commit + l.Offender + l.File))
+	l.lookupHash = hex.EncodeToString(h.Sum(nil))
 	manager.leakWG.Add(1)
 	manager.leakChan <- l
+}
+
+func (manager *Manager) alreadySeen(leak Leak) bool {
+	if _, ok := manager.leakCache[leak.lookupHash]; ok {
+		return true
+	}
+	manager.leakCache[leak.lookupHash] = true
+	return false
 }
 
 // receiveLeaks listens to leakChan for incoming leaks. If any are received, they are appended to the
@@ -113,6 +129,10 @@ func (manager *Manager) SendLeaks(l Leak) {
 // json and printed out.
 func (manager *Manager) receiveLeaks() {
 	for leak := range manager.leakChan {
+		if manager.alreadySeen(leak) {
+			manager.leakWG.Done()
+			continue
+		}
 		manager.leaks = append(manager.leaks, leak)
 		if manager.Opts.Verbose {
 			var b []byte
@@ -178,10 +198,11 @@ func NewManager(opts options.Options, cfg config.Config) (*Manager, error) {
 		Config:       cfg,
 		CloneOptions: cloneOpts,
 
-		stopChan: make(chan os.Signal, 1),
-		leakChan: make(chan Leak),
-		leakWG:   &sync.WaitGroup{},
-		metaWG:   &sync.WaitGroup{},
+		stopChan:  make(chan os.Signal, 1),
+		leakChan:  make(chan Leak),
+		leakWG:    &sync.WaitGroup{},
+		leakCache: make(map[string]bool),
+		metaWG:    &sync.WaitGroup{},
 		metadata: Metadata{
 			RegexTime: make(map[string]int64),
 			timings:   make(chan interface{}),
@@ -241,16 +262,23 @@ func (manager *Manager) Report() error {
 			return err
 		}
 
-		encoder := json.NewEncoder(file)
-		encoder.SetIndent("", " ")
-		err = encoder.Encode(manager.leaks)
-		if err != nil {
-			return err
+		if manager.Opts.ReportFormat == "json" {
+			encoder := json.NewEncoder(file)
+			encoder.SetIndent("", " ")
+			err = encoder.Encode(manager.leaks)
+			if err != nil {
+				return err
+			}
+		} else {
+			w := csv.NewWriter(file)
+			w.Write([]string{"repo", "line", "commit", "offender", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			for _, leak := range manager.GetLeaks() {
+				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+			}
+			w.Flush()
 		}
-		err = file.Close()
-		if err != nil {
-			return err
-		}
+		file.Close()
+
 		log.Infof("report written to %s", manager.Opts.Report)
 	}
 	return nil

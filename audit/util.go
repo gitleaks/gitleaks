@@ -270,6 +270,20 @@ func inspectCommit(c *object.Commit, repo *Repo) error {
 			log.Debugf("whitelisted file found, skipping audit of file: %s", f.Name)
 			return nil
 		}
+
+		if fileMatched(f.Name, repo.config.FileRegex) {
+			repo.Manager.SendLeaks(manager.Leak{
+				Line:     "N/A",
+				Offender: f.Name,
+				Commit:   c.Hash.String(),
+				Repo:     repo.Name,
+				Rule:     "file regex matched" + repo.config.FileRegex.String(),
+				Author:   c.Author.Name,
+				Email:    c.Author.Email,
+				Date:     c.Author.When,
+				File:     f.Name,
+			})
+		}
 		content, err := f.Contents()
 		if err != nil {
 			return err
