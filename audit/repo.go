@@ -4,23 +4,25 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/sergi/go-diff/diffmatchpatch"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/manager"
-	"gopkg.in/src-d/go-billy.v4"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/plumbing/storer"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/manager"
+
+	"github.com/BurntSushi/toml"
+	"github.com/sergi/go-diff/diffmatchpatch"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/storer"
+	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 // Repo wraps a *git.Repository object in addition to a manager object and the name of the repo.
@@ -209,7 +211,6 @@ func (repo *Repo) Audit() error {
 		return err
 	}
 
-	//checker := make(map[string]bool)
 	cc := 0
 	semaphore := make(chan bool, howManyThreads(repo.Manager.Opts.Threads))
 	wg := sync.WaitGroup{}
@@ -233,6 +234,14 @@ func (repo *Repo) Audit() error {
 
 		cc++
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
+			defer func() {
+				if err := recover(); err != nil {
+					// sometimes the patch generation will fail due to a known bug in
+					// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+					// Once a fix has been merged I will remove this recover.
+					return
+				}
+			}()
 			start := time.Now()
 			patch, err := c.Patch(parent)
 			if err != nil {

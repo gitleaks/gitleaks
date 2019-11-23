@@ -2,11 +2,12 @@ package audit
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/manager"
 	"io/ioutil"
-
 	"path"
+
+	"github.com/zricethezav/gitleaks/manager"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Run accepts a manager and begins an audit based on the options/configs set in the manager.

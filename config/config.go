@@ -2,11 +2,13 @@ package config
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/zricethezav/gitleaks/options"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/options"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Whitelist is struct containing items that if encountered will whitelist

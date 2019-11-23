@@ -2,16 +2,18 @@ package options
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/version"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/version"
+
+	"github.com/jessevdk/go-flags"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // No leaks or early exit due to invalid options
@@ -72,7 +74,11 @@ func ParseOptions() (Options, error) {
 	}
 
 	if opts.Version {
-		fmt.Printf("%s\n", version.Version)
+		if version.Version == "" {
+			fmt.Println("Gitleaks uses LDFLAGS to pull most recent version. Build with 'make build' for version")
+		} else {
+			fmt.Printf("%s\n", version.Version)
+		}
 		os.Exit(Success)
 	}
 

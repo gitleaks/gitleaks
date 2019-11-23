@@ -6,18 +6,20 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/hako/durafmt"
-	"github.com/mattn/go-colorable"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/options"
-	"gopkg.in/src-d/go-git.v4"
 	"os"
 	"os/signal"
 	"runtime"
 	"sync"
 	"text/tabwriter"
 	"time"
+
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/options"
+
+	"github.com/hako/durafmt"
+	"github.com/mattn/go-colorable"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 // Manager is a struct containing options and configs as well CloneOptions and CloneDir.
