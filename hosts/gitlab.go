@@ -2,12 +2,14 @@ package hosts
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	"sync"
+
 	"github.com/zricethezav/gitleaks/audit"
 	"github.com/zricethezav/gitleaks/manager"
 	"github.com/zricethezav/gitleaks/options"
-	"sync"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/xanzy/go-gitlab"
 )
 
 // Gitlab wraps a gitlab client and manager. This struct implements what the Host interface defines.

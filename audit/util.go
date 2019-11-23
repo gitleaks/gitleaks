@@ -2,19 +2,20 @@ package audit
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/manager"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	fdiff "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"math"
-	"path"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/zricethezav/gitleaks/config"
+	"github.com/zricethezav/gitleaks/manager"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	fdiff "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 const maxLineLen = 200
@@ -59,9 +60,9 @@ func getFileName(f fdiff.FilePatch) string {
 	fn := "???"
 	from, to := f.Files()
 	if from != nil {
-		return path.Base(from.Path())
+		return from.Path()
 	} else if to != nil {
-		return path.Base(to.Path())
+		return to.Path()
 	}
 
 	return fn

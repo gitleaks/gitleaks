@@ -1,16 +1,18 @@
 package main
 
 import (
-	"github.com/hako/durafmt"
-	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"time"
+
 	"github.com/zricethezav/gitleaks/audit"
 	"github.com/zricethezav/gitleaks/config"
 	"github.com/zricethezav/gitleaks/hosts"
 	"github.com/zricethezav/gitleaks/manager"
 	"github.com/zricethezav/gitleaks/options"
-	"io/ioutil"
-	"os"
-	"time"
+
+	"github.com/hako/durafmt"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

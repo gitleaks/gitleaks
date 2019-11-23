@@ -2,18 +2,20 @@ package hosts
 
 import (
 	"context"
-	"github.com/google/go-github/github"
-	log "github.com/sirupsen/logrus"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/zricethezav/gitleaks/audit"
 	"github.com/zricethezav/gitleaks/manager"
 	"github.com/zricethezav/gitleaks/options"
+
+	"github.com/google/go-github/github"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 // Github wraps a github client and manager. This struct implements what the Host interface defines.
