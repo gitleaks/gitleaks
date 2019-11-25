@@ -11,10 +11,18 @@ title = "gitleaks config"
 	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 	tags = ["key", "AWS"]
 
+	[[rules.whitelist]]
+		regex = '''AKIAIO5FODNN7EXAMPLE'''
+		description = "ignore example aws key"
+
 [[rules]]
 	description = "AWS Secret Key"
 	regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
 	tags = ["key", "AWS"]
+
+	[[rules.whitelist]]
+		regex = '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'''
+		description = "ignore example aws key"
 
 [[rules]]
 	description = "AWS MWS key"
