@@ -14,7 +14,7 @@
  },
  {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "AWSSECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
@@ -40,7 +40,7 @@
  },
  {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "AWSSECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
