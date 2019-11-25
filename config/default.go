@@ -68,7 +68,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Generic Credential"
-	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
+	regex = '''(?i)['"]?[\w-_]*(apikey|api_key|secret|token)[\w-_]*['"]?\s*[=:]\s*('(?:[^'\\]|\\.){6,100}'|"(?:[^"\\]|\\.){6,100}")'''
 	tags = ["key", "API", "generic"]
 
 [[rules]]
