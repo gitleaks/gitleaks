@@ -62,9 +62,9 @@ title = "gitleaks config"
 	tags = ["key", "Slack"]
 
 [[rules]]
-	description = "EC"
-	regex = '''-----BEGIN EC PRIVATE KEY-----'''
-	tags = ["key", "EC"]
+	description = "Asymmetric Private Key"
+	regex = '''-----BEGIN (EC|PGP|DSA|RSA|OPENSSH) PRIVATE KEY( BLOCK)?-----'''
+	tags = ["key", "AsymmetricPrivateKey"]
 
 [[rules]]
 	description = "Generic Credential"
