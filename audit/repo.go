@@ -104,6 +104,11 @@ func (repo *Repo) AuditUncommitted() error {
 	if err != nil {
 		return err
 	}
+	c.Hash = plumbing.Hash{}
+	c.Message = "STAGED CHANGES"
+	c.Author.Name = ""
+	c.Author.Email = ""
+	c.Author.When = time.Now()
 
 	prevTree, err := c.Tree()
 	if err != nil {
@@ -164,6 +169,7 @@ func (repo *Repo) AuditUncommitted() error {
 					Commit:   c.Hash.String(),
 					Repo:     repo.Name,
 					Rule:     "file regex matched" + repo.config.FileRegex.String(),
+					Message:  c.Message,
 					Author:   c.Author.Name,
 					Email:    c.Author.Email,
 					Date:     c.Author.When,
