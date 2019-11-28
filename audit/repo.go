@@ -84,6 +84,15 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 // AuditUncommitted will do a `git diff` and scan changed files that are being tracked. This is useful functionality
 // for a pre-commit hook so you can make sure your code does not have any leaks before committing.
 func (repo *Repo) AuditUncommitted() error {
+	// load up alternative config if possible, if not use manager's config
+	if repo.Manager.Opts.RepoConfig {
+		cfg, err := repo.loadRepoConfig()
+		if err != nil {
+			return err
+		}
+		repo.config = cfg
+	}
+
 	auditTimeStart := time.Now()
 
 	r, err := repo.Head()
