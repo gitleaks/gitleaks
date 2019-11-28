@@ -146,18 +146,22 @@ func (repo *Repo) AuditUncommitted() error {
 				}
 			}
 
-			dmp := diffmatchpatch.New()
-			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
-			var diffContents string
-			for _, d := range diffs {
-				switch d.Type {
-				case diffmatchpatch.DiffInsert:
-					diffContents += fmt.Sprintf("%s\n", d.Text)
-				case diffmatchpatch.DiffDelete:
-					diffContents += fmt.Sprintf("%s\n", d.Text)
+			if fileMatched(filename, repo.config.Whitelist.File) {
+				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
+			} else {
+				dmp := diffmatchpatch.New()
+				diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
+				var diffContents string
+				for _, d := range diffs {
+					switch d.Type {
+					case diffmatchpatch.DiffInsert:
+						diffContents += fmt.Sprintf("%s\n", d.Text)
+					case diffmatchpatch.DiffDelete:
+						diffContents += fmt.Sprintf("%s\n", d.Text)
+					}
 				}
+				InspectString(diffContents, c, repo, filename)
 			}
-			InspectString(diffContents, c, repo, filename)
 		}
 	}
 
