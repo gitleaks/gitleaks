@@ -5,7 +5,7 @@
   "commit": "0000000000000000000000000000000000000000",
   "repo": "test_repo_1",
   "rule": "AWS Manager ID",
-  "commitMessage": "STAGED CHANGES",
+  "commitMessage": "***STAGED CHANGES***",
   "author": "",
   "email": "",
   "file": "server.test.py",
