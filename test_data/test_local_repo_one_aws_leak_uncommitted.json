@@ -2,14 +2,14 @@
  {
   "line": " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'",
   "offender": "AKIAIO5FODNN7DXAMPLE",
-  "commit": "d274003914c707212cbe84e3e466a00013ccb639",
+  "commit": "0000000000000000000000000000000000000000",
   "repo": "test_repo_1",
   "rule": "AWS Manager ID",
-  "commitMessage": "comment\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
+  "commitMessage": "STAGED CHANGES",
+  "author": "",
+  "email": "",
   "file": "server.test.py",
-  "date": "2019-10-24T10:03:38-04:00",
+  "date": "1970-01-01T00:00:00Z",
   "tags": "key, AWS"
  }
 ]
