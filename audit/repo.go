@@ -104,11 +104,12 @@ func (repo *Repo) AuditUncommitted() error {
 	if err != nil {
 		return err
 	}
+	// Staged change so the commit details do not yet exist. Insert empty defaults.
 	c.Hash = plumbing.Hash{}
-	c.Message = "STAGED CHANGES"
+	c.Message = "***STAGED CHANGES***"
 	c.Author.Name = ""
 	c.Author.Email = ""
-	c.Author.When = time.Now()
+	c.Author.When = time.Unix(0, 0).UTC()
 
 	prevTree, err := c.Tree()
 	if err != nil {
