@@ -128,6 +128,6 @@ title = "gitleaks config"
 	tags = ["key", "twilio"]
 
 [whitelist]
-	description = "image whitelists"
-	file = '''(.*?)(jpg|gif|doc|pdf|bin)$'''
+	description = "Whitelisted files"
+	file = '''(^\.?gitleaks.toml$|(.*?)(jpg|gif|doc|pdf|bin)$)'''
 `
