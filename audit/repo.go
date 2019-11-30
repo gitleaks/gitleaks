@@ -84,6 +84,15 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 // AuditUncommitted will do a `git diff` and scan changed files that are being tracked. This is useful functionality
 // for a pre-commit hook so you can make sure your code does not have any leaks before committing.
 func (repo *Repo) AuditUncommitted() error {
+	// load up alternative config if possible, if not use manager's config
+	if repo.Manager.Opts.RepoConfig {
+		cfg, err := repo.loadRepoConfig()
+		if err != nil {
+			return err
+		}
+		repo.config = cfg
+	}
+
 	auditTimeStart := time.Now()
 
 	r, err := repo.Head()
@@ -95,6 +104,12 @@ func (repo *Repo) AuditUncommitted() error {
 	if err != nil {
 		return err
 	}
+	// Staged change so the commit details do not yet exist. Insert empty defaults.
+	c.Hash = plumbing.Hash{}
+	c.Message = "***STAGED CHANGES***"
+	c.Author.Name = ""
+	c.Author.Email = ""
+	c.Author.When = time.Unix(0, 0).UTC()
 
 	prevTree, err := c.Tree()
 	if err != nil {
@@ -146,18 +161,35 @@ func (repo *Repo) AuditUncommitted() error {
 				}
 			}
 
-			dmp := diffmatchpatch.New()
-			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
-			var diffContents string
-			for _, d := range diffs {
-				switch d.Type {
-				case diffmatchpatch.DiffInsert:
-					diffContents += fmt.Sprintf("%s\n", d.Text)
-				case diffmatchpatch.DiffDelete:
-					diffContents += fmt.Sprintf("%s\n", d.Text)
+			if fileMatched(filename, repo.config.Whitelist.File) {
+				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
+			} else if fileMatched(filename, repo.config.FileRegex) {
+				repo.Manager.SendLeaks(manager.Leak{
+					Line:     "N/A",
+					Offender: filename,
+					Commit:   c.Hash.String(),
+					Repo:     repo.Name,
+					Rule:     "file regex matched" + repo.config.FileRegex.String(),
+					Message:  c.Message,
+					Author:   c.Author.Name,
+					Email:    c.Author.Email,
+					Date:     c.Author.When,
+					File:     filename,
+				})
+			} else {
+				dmp := diffmatchpatch.New()
+				diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
+				var diffContents string
+				for _, d := range diffs {
+					switch d.Type {
+					case diffmatchpatch.DiffInsert:
+						diffContents += fmt.Sprintf("%s\n", d.Text)
+					case diffmatchpatch.DiffDelete:
+						diffContents += fmt.Sprintf("%s\n", d.Text)
+					}
 				}
+				InspectString(diffContents, c, repo, filename)
 			}
-			InspectString(diffContents, c, repo, filename)
 		}
 	}
 
