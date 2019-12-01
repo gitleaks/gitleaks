@@ -33,9 +33,22 @@ func NewGithubClient(m manager.Manager) *Github {
 		&oauth2.Token{AccessToken: options.GetAccessToken(m.Opts)},
 	)
 
+	var githubClient *github.Client
+	httpClient := oauth2.NewClient(ctx, token)
+
+	if m.Opts.BaseURL == "" {
+		githubClient = github.NewClient(httpClient)
+	} else {
+		var err error
+		githubClient, err = github.NewEnterpriseClient(m.Opts.BaseURL, m.Opts.BaseURL, httpClient)
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
 	return &Github{
 		manager: m,
-		client:  github.NewClient(oauth2.NewClient(ctx, token)),
+		client:  githubClient,
 	}
 }
 

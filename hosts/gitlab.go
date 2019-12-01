@@ -23,11 +23,20 @@ type Gitlab struct {
 // NewGitlabClient accepts a manager struct and returns a Gitlab host pointer which will be used to
 // perform a gitlab audit on an group or user.
 func NewGitlabClient(m manager.Manager) *Gitlab {
-	return &Gitlab{
+	gitlabClient := &Gitlab{
 		manager: m,
 		ctx:     context.Background(),
 		client:  gitlab.NewClient(nil, options.GetAccessToken(m.Opts)),
 	}
+
+	if m.Opts.BaseURL != "" {
+		err := gitlabClient.client.SetBaseURL(m.Opts.BaseURL)
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
+	return gitlabClient
 }
 
 // Audit will audit a github user or organization's repos.
