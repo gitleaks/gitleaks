@@ -123,12 +123,8 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 			for _, line := range strings.Split(content, "\n") {
 				entropyTripped := trippedEntropy(line, rule)
 				if entropyTripped && !ruleContainRegex(rule) {
-					_line := line
-					if len(_line) > maxLineLen {
-						_line = line[0 : maxLineLen-1]
-					}
 					repo.Manager.SendLeaks(manager.Leak{
-						Line:     _line,
+						Line:     line,
 						Offender: fmt.Sprintf("Entropy range %+v", rule.Entropy),
 						Commit:   c.Hash.String(),
 						Repo:     repo.Name,
@@ -226,7 +222,6 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 					line = strings.ReplaceAll(line, offender, "REDACTED")
 					offender = "REDACTED"
 				}
-
 				repo.Manager.SendLeaks(manager.Leak{
 					Line:     line,
 					Offender: offender,
