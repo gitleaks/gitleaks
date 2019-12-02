@@ -1,6 +1,6 @@
 [
  {
-  "line": "    Just moments after the Cessna's inquiry, a Twin Beech piped up on frequency, in a rather superior tone, asking for his ground speed. \"I have you at one hundred and twenty-five knots of ground spe",
+  "line": "    Just moments after the Cessna's inquiry, a Twin Beech piped up on frequency, in a rather superior tone, asking for his ground speed. \"I have you at one hundred and twenty-five knots of ground spe...",
   "offender": "Entropy range [{P1:4.5 P2:4.7}]",
   "commit": "d8ac0b73aeeb45843319cdc5ce506516eb49bf7a",
   "repo": "test_repo_4",
@@ -13,7 +13,7 @@
   "tags": "entropy"
  },
  {
-  "line": "    Just moments after the Cessna's inquiry, a Twin Beech piped up on frequency, in a rather superior tone, asking for his ground speed. \"I have you at one hundred and twenty-five knots of ground spe",
+  "line": "    Just moments after the Cessna's inquiry, a Twin Beech piped up on frequency, in a rather superior tone, asking for his ground speed. \"I have you at one hundred and twenty-five knots of ground spe...",
   "offender": "Entropy range [{P1:4.5 P2:4.7}]",
   "commit": "996865bb912f3bc45898a370a13aadb315014b55",
   "repo": "test_repo_4",
