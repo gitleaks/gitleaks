@@ -63,7 +63,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Asymmetric Private Key"
-	regex = '''-----BEGIN (EC|PGP|DSA|RSA|OPENSSH) PRIVATE KEY( BLOCK)?-----'''
+	regex = '''-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----'''
 	tags = ["key", "AsymmetricPrivateKey"]
 
 [[rules]]
