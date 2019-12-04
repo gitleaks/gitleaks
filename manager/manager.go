@@ -22,6 +22,8 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
+const maxLineLen = 200
+
 // Manager is a struct containing options and configs as well CloneOptions and CloneDir.
 // This struct is passed into each NewRepo so we are not passing around the manager in func params.
 type Manager struct {
@@ -111,6 +113,12 @@ func (manager *Manager) GetLeaks() []Leak {
 // SendLeaks accepts a leak and is used by the audit pkg. This is the public function
 // that allows other packages to send leaks to the manager.
 func (manager *Manager) SendLeaks(l Leak) {
+	if len(l.Line) > maxLineLen {
+		l.Line = l.Line[0:maxLineLen-1] + "..."
+	}
+	if len(l.Offender) > maxLineLen {
+		l.Offender = l.Offender[0:maxLineLen-1] + "..."
+	}
 	h := sha1.New()
 	h.Write([]byte(l.Commit + l.Offender + l.File))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
