@@ -41,9 +41,6 @@ func NewGithubClient(m manager.Manager) (*Github, error) {
 		githubClient = github.NewClient(httpClient)
 	} else {
 		githubClient, err = github.NewEnterpriseClient(m.Opts.BaseURL, m.Opts.BaseURL, httpClient)
-		if err != nil {
-			log.Error(err)
-		}
 	}
 
 	return &Github{

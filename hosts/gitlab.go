@@ -32,10 +32,7 @@ func NewGitlabClient(m manager.Manager) (*Gitlab, error) {
 	}
 
 	if m.Opts.BaseURL != "" {
-		err := gitlabClient.client.SetBaseURL(m.Opts.BaseURL)
-		if err != nil {
-			log.Error(err)
-		}
+		err = gitlabClient.client.SetBaseURL(m.Opts.BaseURL)
 	}
 
 	return gitlabClient, err
