@@ -20,11 +20,12 @@ type Host interface {
 // Run kicks off a host audit. This function accepts a manager and determines what host it should audit
 func Run(m *manager.Manager) error {
 	var host Host
+	var err error
 	switch getHost(m.Opts.Host) {
 	case _github:
-		host = NewGithubClient(*m)
+		host, err = NewGithubClient(*m)
 	case _gitlab:
-		host = NewGitlabClient(*m)
+		host, err = NewGitlabClient(*m)
 	default:
 		return nil
 	}
@@ -34,7 +35,7 @@ func Run(m *manager.Manager) error {
 	} else {
 		host.Audit()
 	}
-	return nil
+	return err
 }
 
 func getHost(host string) int {
