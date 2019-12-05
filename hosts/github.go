@@ -27,16 +27,26 @@ type Github struct {
 
 // NewGithubClient accepts a manager struct and returns a Github host pointer which will be used to
 // perform a github audit on an organization, user, or PR.
-func NewGithubClient(m manager.Manager) *Github {
+func NewGithubClient(m manager.Manager) (*Github, error) {
+	var err error
 	ctx := context.Background()
 	token := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: options.GetAccessToken(m.Opts)},
 	)
 
+	var githubClient *github.Client
+	httpClient := oauth2.NewClient(ctx, token)
+
+	if m.Opts.BaseURL == "" {
+		githubClient = github.NewClient(httpClient)
+	} else {
+		githubClient, err = github.NewEnterpriseClient(m.Opts.BaseURL, m.Opts.BaseURL, httpClient)
+	}
+
 	return &Github{
 		manager: m,
-		client:  github.NewClient(oauth2.NewClient(ctx, token)),
-	}
+		client:  githubClient,
+	}, err
 }
 
 // Audit will audit a github user or organization's repos.
