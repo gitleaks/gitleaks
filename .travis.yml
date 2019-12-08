@@ -5,3 +5,4 @@ services:
 - docker
 script:
 - make test
+- make security-scan
