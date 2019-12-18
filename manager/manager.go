@@ -79,7 +79,7 @@ type RegexTime struct {
 
 // Metadata is a struct used to communicate metadata about an audit like timings and total commit counts.
 type Metadata struct {
-	mux  sync.Mutex
+	mux  *sync.Mutex
 	data map[string]interface{}
 
 	timings chan interface{}
@@ -101,6 +101,42 @@ func init() {
 	if runtime.GOOS == "windows" {
 		log.SetOutput(colorable.NewColorableStdout())
 	}
+}
+
+// NewManager accepts options and returns a manager struct. The manager is a container for gitleaks configurations,
+// options and channel receivers.
+func NewManager(opts options.Options, cfg config.Config) (*Manager, error) {
+	cloneOpts, err := opts.CloneOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	m := &Manager{
+		Opts:         opts,
+		Config:       cfg,
+		CloneOptions: cloneOpts,
+
+		stopChan:  make(chan os.Signal, 1),
+		leakChan:  make(chan Leak),
+		leakWG:    &sync.WaitGroup{},
+		leakCache: make(map[string]bool),
+		metaWG:    &sync.WaitGroup{},
+		metadata: Metadata{
+			RegexTime: make(map[string]int64),
+			timings:   make(chan interface{}),
+			data:      make(map[string]interface{}),
+			mux:       new(sync.Mutex),
+		},
+	}
+
+	signal.Notify(m.stopChan, os.Interrupt)
+
+	// start receiving leaks and metadata
+	go m.receiveLeaks()
+	go m.receiveMetadata()
+	go m.receiveInterrupt()
+
+	return m, nil
 }
 
 // GetLeaks returns all available leaks
@@ -193,41 +229,6 @@ func (manager *Manager) IncrementCommits(i int) {
 func (manager *Manager) RecordTime(t interface{}) {
 	manager.metaWG.Add(1)
 	manager.metadata.timings <- t
-}
-
-// NewManager accepts options and returns a manager struct. The manager is a container for gitleaks configurations,
-// options and channel receivers.
-func NewManager(opts options.Options, cfg config.Config) (*Manager, error) {
-	cloneOpts, err := opts.CloneOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	m := &Manager{
-		Opts:         opts,
-		Config:       cfg,
-		CloneOptions: cloneOpts,
-
-		stopChan:  make(chan os.Signal, 1),
-		leakChan:  make(chan Leak),
-		leakWG:    &sync.WaitGroup{},
-		leakCache: make(map[string]bool),
-		metaWG:    &sync.WaitGroup{},
-		metadata: Metadata{
-			RegexTime: make(map[string]int64),
-			timings:   make(chan interface{}),
-			data:      make(map[string]interface{}),
-		},
-	}
-
-	signal.Notify(m.stopChan, os.Interrupt)
-
-	// start receiving leaks and metadata
-	go m.receiveLeaks()
-	go m.receiveMetadata()
-	go m.receiveInterrupt()
-
-	return m, nil
 }
 
 // DebugOutput logs metadata and other messages that occurred during a gitleaks audit

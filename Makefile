@@ -3,6 +3,7 @@
 VERSION := `git fetch --tags && git tag | sort -V | tail -1`
 PKG=github.com/zricethezav/gitleaks
 LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/version.Version=$(VERSION)"
+_LDFLAGS="github.com/zricethezav/gitleaks/version.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:
@@ -12,6 +13,7 @@ test-cover:
 test:
 	go get golang.org/x/lint/golint
 	go fmt ./...
+	go vet ./...
 	golint ./...
 	go test ./... --race $(PKG) -v
 
@@ -21,6 +23,7 @@ test-integration:
 build:
 	go fmt ./...
 	golint ./...
+	go vet ./...
 	go mod tidy
 	go build $(LDFLAGS)
 
@@ -37,6 +40,6 @@ release-builds:
 
 deploy:
 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	docker build -f Dockerfile -t $(REPO):$(TAG) .
-	echo "Pushing $(REPO):$(COMMIT) $(REPO):$(TAG)"
-	docker push $(REPO)
+	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
+	echo "Pushing zricethezav/gitleaks:$(VERSION) and zricethezav/gitleaks:latest"
+	docker push zricethezav/gitleaks
