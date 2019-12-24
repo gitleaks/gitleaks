@@ -2,7 +2,7 @@ Gitleaks
 --------
 
 <p align="left">
-      <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
+      <a href="https://travis-ci.com/zricethezav/gitleaks"><img alt="Travis" src="https://travis-ci.com/zricethezav/gitleaks.svg?branch=master"></a>
 </p>
 
 Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git repositories. As part of its core functionality, it provides:
@@ -119,5 +119,5 @@ Gitleaks provides consistent exist codes to assist in automation workflows such 
 
 ### Give Thanks
 
-If using gitleaks has made you job easier consider donating to one of [Sam](https://www.flickr.com/photos/146541520@N08/albums/72157710121716312)'s favorite places, the Japan House on the University of Illinois at Urbana-Champaign's campus: https://japanhouse.illinois.edu/make-a-gift
+If using gitleaks has made you job easier consider [sponsoring me](https://github.com/sponsors/zricethezav) through github's sponsorship program or donating to one of [Sam](https://www.flickr.com/photos/146541520@N08/albums/72157710121716312)'s favorite places, the Japan House on the University of Illinois at Urbana-Champaign's campus: https://japanhouse.illinois.edu/make-a-gift
 
