@@ -1,7 +1,8 @@
 FROM golang:1.13.4 AS build
 WORKDIR /go/src/github.com/zricethezav/gitleaks
+ARG ldflags
 COPY . .
-RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks *.go
+RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks -ldflags "-X="${ldflags} *.go 
 
 FROM alpine:3.10
 RUN apk add --no-cache bash git openssh
