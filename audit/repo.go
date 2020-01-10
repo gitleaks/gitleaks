@@ -74,8 +74,10 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 	if err != nil {
 		return err
 	}
-	repo.Name = filepath.Base(repo.Manager.Opts.Repo)
-	repo.Repository = repository
+    if repo.Manager.Opts.Organization == "" {
+	    repo.Name = filepath.Base(repo.Manager.Opts.Repo)
+    }
+    repo.Repository = repository
 	repo.Manager.RecordTime(manager.CloneTime(howLong(start)))
 
 	return nil
