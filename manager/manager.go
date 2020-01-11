@@ -248,9 +248,9 @@ func (manager *Manager) DebugOutput() {
 	log.Debugf("| Individual Regex Times |\n")
 	log.Debugf("--------------------------\n")
 	for k, v := range manager.metadata.RegexTime {
-		fmt.Fprintf(w, "%s\t%s\n", k, durafmt.Parse(time.Duration(v)*time.Nanosecond))
+		_, _ = fmt.Fprintf(w, "%s\t%s\n", k, durafmt.Parse(time.Duration(v)*time.Nanosecond))
 	}
-	w.Flush()
+	_ = w.Flush()
 
 }
 
@@ -282,13 +282,13 @@ func (manager *Manager) Report() error {
 			}
 		} else {
 			w := csv.NewWriter(file)
-			w.Write([]string{"repo", "line", "commit", "offender", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			_ = w.Write([]string{"repo", "line", "commit", "offender", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
 			for _, leak := range manager.GetLeaks() {
 				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 			}
 			w.Flush()
 		}
-		file.Close()
+		_ = file.Close()
 
 		log.Infof("report written to %s", manager.Opts.Report)
 	}

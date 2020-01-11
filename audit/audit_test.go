@@ -1,16 +1,20 @@
 package audit
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/sergi/go-diff/diffmatchpatch"
+	"io/ioutil"
+	"os"
+	"reflect"
+	"runtime"
+	"sort"
+	"testing"
+
 	"github.com/zricethezav/gitleaks/config"
 	"github.com/zricethezav/gitleaks/manager"
 	"github.com/zricethezav/gitleaks/options"
-	"io/ioutil"
-	"os"
-	"runtime"
-	"strings"
-	"testing"
+
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const testRepoBase = "../test_data/test_repos/"
@@ -70,6 +74,37 @@ func TestAudit(t *testing.T) {
 				ReportFormat: "json",
 			},
 			wantPath: "../test_data/test_local_repo_two_leaks.json",
+		},
+		{
+			description: "test local repo two leaks from commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_commit_from.json.got",
+				ReportFormat: "json",
+				CommitFrom:   "996865bb912f3bc45898a370a13aadb315014b55",
+			},
+			wantPath: "../test_data/test_local_repo_two_leaks_commit_from.json",
+		},
+		{
+			description: "test local repo two leaks to commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_commit_to.json.got",
+				ReportFormat: "json",
+				CommitTo:     "996865bb912f3bc45898a370a13aadb315014b55",
+			},
+			wantPath: "../test_data/test_local_repo_two_leaks_commit_to.json",
+		},
+		{
+			description: "test local repo two leaks range commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_commit_range.json.got",
+				ReportFormat: "json",
+				CommitFrom:   "d8ac0b73aeeb45843319cdc5ce506516eb49bf7a",
+				CommitTo:     "51f6dcf6b89b93f4075ba92c400b075631a6cc93",
+			},
+			wantPath: "../test_data/test_local_repo_two_leaks_commit_range.json",
 		},
 		{
 			description: "test local repo two leaks globally whitelisted",
@@ -312,6 +347,10 @@ func TestAuditUncommited(t *testing.T) {
 }
 
 func fileCheck(wantPath, gotPath string) error {
+	var (
+		gotLeaks  []manager.Leak
+		wantLeaks []manager.Leak
+	)
 	want, err := ioutil.ReadFile(wantPath)
 	if err != nil {
 		return err
@@ -322,7 +361,20 @@ func fileCheck(wantPath, gotPath string) error {
 		return err
 	}
 
-	if strings.Trim(string(want), "\n") != strings.Trim(string(got), "\n") {
+	err = json.Unmarshal(got, &gotLeaks)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(want, &wantLeaks)
+	if err != nil {
+		return nil
+	}
+
+	sort.Slice(gotLeaks, func(i, j int) bool { return (gotLeaks)[i].Commit < (gotLeaks)[j].Commit })
+	sort.Slice(wantLeaks, func(i, j int) bool { return (wantLeaks)[i].Commit < (wantLeaks)[j].Commit })
+
+	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(want), string(got), false)
 		return fmt.Errorf("does not equal: %s", dmp.DiffPrettyText(diffs))

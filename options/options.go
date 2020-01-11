@@ -49,6 +49,8 @@ type Options struct {
 	Debug        bool   `long:"debug" description:"log debug messages"`
 	RepoConfig   bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
 	PrettyPrint  bool   `long:"pretty" description:"Pretty print json if leaks are present"`
+	CommitFrom   string `long:"commit-from" description:"Commit to start audit from"`
+	CommitTo     string `long:"commit-to" description:"Commit to stop audit"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`

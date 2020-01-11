@@ -40,7 +40,7 @@ func runHelper(r *Repo) error {
 		}
 
 		// Check if we are checking uncommitted files. This is the default behavior
-		// for a "$gitleaks" command with no options set
+		// for a "$ gitleaks" command with no options set
 		if r.Manager.Opts.CheckUncommitted() {
 			if err := r.AuditUncommitted(); err != nil {
 				return err
