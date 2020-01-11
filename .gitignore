@@ -4,10 +4,9 @@
 *.dll
 *.so
 *.dylib
+*.DS_STORE
+*.idea
+gitleaks
 
 # Test binary
-*.test
 *.out
-
-examples
-src/gitleaksConfig
