@@ -339,8 +339,11 @@ func fileMatched(f interface{}, re *regexp.Regexp) bool {
 // It is similar to `git log {branch}`. Default behavior is to log ALL branches so
 // gitleaks gets the full git history.
 func getLogOptions(repo *Repo) (*git.LogOptions, error) {
+	var logOpts git.LogOptions
+	if repo.Manager.Opts.CommitFrom != "" {
+		logOpts.From = plumbing.NewHash(repo.Manager.Opts.CommitFrom)
+	}
 	if repo.Manager.Opts.Branch != "" {
-		var logOpts git.LogOptions
 		refs, err := repo.Storer.IterReferences()
 		if err != nil {
 			return nil, err
@@ -366,6 +369,9 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		if logOpts.From.IsZero() {
 			return nil, fmt.Errorf("could not find branch %s", repo.Manager.Opts.Branch)
 		}
+		return &logOpts, nil
+	}
+	if !logOpts.From.IsZero() {
 		return &logOpts, nil
 	}
 	return &git.LogOptions{All: true}, nil
