@@ -18,12 +18,10 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-const maxLineLen = 200
-
 // Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
 // binary, then gitleaks will skip auditing that file OR if a file is matched on
 // whitelisted files set in the configuration. If a global rule for files is defined and a filename
-// matches said global rule, then a laek is sent to the manager.
+// matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
 func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 	for _, f := range patch.FilePatches() {
