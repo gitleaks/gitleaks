@@ -32,7 +32,6 @@ type Options struct {
 	Config       string `long:"config" description:"config path"`
 	Disk         bool   `long:"disk" description:"Clones repo(s) to disk"`
 	Version      bool   `long:"version" description:"version number"`
-	Timeout      int    `long:"timeout" description:"Timeout (s)"`
 	Username     string `long:"username" description:"Username for git repo"`
 	Password     string `long:"password" description:"Password for git repo"`
 	AccessToken  string `long:"access-token" description:"Access token for git repo"`
@@ -51,6 +50,7 @@ type Options struct {
 	PrettyPrint  bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 	CommitFrom   string `long:"commit-from" description:"Commit to start audit from"`
 	CommitTo     string `long:"commit-to" description:"Commit to stop audit"`
+	Timeout      string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
