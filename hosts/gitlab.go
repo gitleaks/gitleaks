@@ -57,19 +57,26 @@ func (g *Gitlab) Audit() {
 			glOpts := &gitlab.ListProjectsOptions{
 				ListOptions: listOpts,
 			}
-			projects, resp, err = g.client.Projects.ListUserProjects(g.manager.Opts.User, glOpts)
+			_projects, resp, err = g.client.Projects.ListUserProjects(g.manager.Opts.User, glOpts)
 
 		} else if g.manager.Opts.Organization != "" {
 			glOpts := &gitlab.ListGroupProjectsOptions{
 				ListOptions: listOpts,
 			}
-			projects, resp, err = g.client.Groups.ListGroupProjects(g.manager.Opts.Organization, glOpts)
+			_projects, resp, err = g.client.Groups.ListGroupProjects(g.manager.Opts.Organization, glOpts)
 		}
 		if err != nil {
 			log.Error(err)
 		}
 
-		projects = append(projects, _projects...)
+		for _, p := range _projects {
+			if g.manager.Opts.ExcludeForks && p.ForkedFromProject != nil {
+				log.Debugf("excluding forked repo: %s", p.Name)
+				continue
+			}
+			projects = append(projects, p)
+		}
+
 		if resp == nil {
 			break
 		}

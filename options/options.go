@@ -56,8 +56,9 @@ type Options struct {
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
 	BaseURL      string `long:"baseurl" description:"Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server."`
 	Organization string `long:"org" description:"organization to audit"`
-	User         string `long:"user" description:"user to audit"` //work
+	User         string `long:"user" description:"user to audit"`
 	PullRequest  string `long:"pr" description:"pull/merge request url"`
+	ExcludeForks bool   `long:"exclude-forks" description:"audit excludes forks"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct
