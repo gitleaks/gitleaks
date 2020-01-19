@@ -40,7 +40,9 @@ type Repo struct {
 	// for those repo audits.
 	config config.Config
 
-	ctx context.Context
+	// ctx is used to signal timeouts to running goroutines
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	Name    string
 	Manager *manager.Manager
@@ -51,6 +53,7 @@ func NewRepo(m *manager.Manager) *Repo {
 	return &Repo{
 		Manager: m,
 		config:  m.Config,
+		ctx:     context.Background(),
 	}
 }
 
@@ -94,6 +97,10 @@ func (repo *Repo) AuditUncommitted() error {
 			return err
 		}
 		repo.config = cfg
+	}
+
+	if err := repo.setupTimeout(); err != nil {
+		return err
 	}
 
 	auditTimeStart := time.Now()
@@ -200,37 +207,6 @@ func (repo *Repo) AuditUncommitted() error {
 		return err
 	}
 	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
-	return nil
-}
-
-// timeoutReached returns true if the timeout deadline has been met. This function should be used
-// at the top of loops and before potentially long running goroutines (like checking inefficient regexes)
-func (repo *Repo) timeoutReached() bool {
-	if repo.ctx.Err() == context.DeadlineExceeded {
-		return true
-	}
-	return false
-}
-
-// setupTimeout parses the --timeout option and assigns a context with timeout to the manager
-// which will exit early if the timeout has been met.
-func (repo *Repo) setupTimeout() error {
-	if repo.Manager.Opts.Timeout == "" {
-		return nil
-	}
-	timeout, err := time.ParseDuration(repo.Manager.Opts.Timeout)
-	if err != nil {
-		return err
-	}
-
-	repo.ctx, _ = context.WithTimeout(context.Background(), timeout)
-
-	go func() {
-		select {
-		case <-repo.ctx.Done():
-			log.Warnf("Timeout deadline exceeded: %s", timeout.String())
-		}
-	}()
 	return nil
 }
 
@@ -384,4 +360,35 @@ func (repo *Repo) loadRepoConfig() (config.Config, error) {
 	var tomlLoader config.TomlLoader
 	_, err = toml.DecodeReader(f, &tomlLoader)
 	return tomlLoader.Parse()
+}
+
+// timeoutReached returns true if the timeout deadline has been met. This function should be used
+// at the top of loops and before potentially long running goroutines (like checking inefficient regexes)
+func (repo *Repo) timeoutReached() bool {
+	if repo.ctx.Err() == context.DeadlineExceeded {
+		return true
+	}
+	return false
+}
+
+// setupTimeout parses the --timeout option and assigns a context with timeout to the manager
+// which will exit early if the timeout has been met.
+func (repo *Repo) setupTimeout() error {
+	if repo.Manager.Opts.Timeout == "" {
+		return nil
+	}
+	timeout, err := time.ParseDuration(repo.Manager.Opts.Timeout)
+	if err != nil {
+		return err
+	}
+
+	repo.ctx, repo.cancel = context.WithTimeout(context.Background(), timeout)
+
+	go func() {
+		select {
+		case <-repo.ctx.Done():
+			log.Warnf("Timeout deadline exceeded: %s", timeout.String())
+		}
+	}()
+	return nil
 }
