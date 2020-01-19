@@ -23,9 +23,9 @@ func Run(m *manager.Manager) error {
 	var err error
 	switch getHost(m.Opts.Host) {
 	case _github:
-		host, err = NewGithubClient(*m)
+		host, err = NewGithubClient(m)
 	case _gitlab:
-		host, err = NewGitlabClient(*m)
+		host, err = NewGitlabClient(m)
 	default:
 		return nil
 	}

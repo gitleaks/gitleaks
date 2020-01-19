@@ -15,14 +15,14 @@ import (
 // Gitlab wraps a gitlab client and manager. This struct implements what the Host interface defines.
 type Gitlab struct {
 	client  *gitlab.Client
-	manager manager.Manager
+	manager *manager.Manager
 	ctx     context.Context
 	wg      sync.WaitGroup
 }
 
 // NewGitlabClient accepts a manager struct and returns a Gitlab host pointer which will be used to
 // perform a gitlab audit on an group or user.
-func NewGitlabClient(m manager.Manager) (*Gitlab, error) {
+func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	var err error
 
 	gitlabClient := &Gitlab{
@@ -82,7 +82,7 @@ func (g *Gitlab) Audit() {
 
 	// iterate of gitlab projects
 	for _, p := range projects {
-		r := audit.NewRepo(&g.manager)
+		r := audit.NewRepo(g.manager)
 		cloneOpts := g.manager.CloneOptions
 		cloneOpts.URL = p.HTTPURLToRepo
 		err := r.Clone(cloneOpts)
