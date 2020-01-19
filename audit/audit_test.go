@@ -233,6 +233,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
 		},
+		{
+			description: "test owner path depth=2",
+			opts: options.Options{
+				OwnerPath:    "../test_data/test_repos/",
+				Report:       "../test_data/test_local_owner_aws_leak_depth_2.json.got",
+				ReportFormat: "json",
+				Depth:        2,
+			},
+			wantPath: "../test_data/test_local_owner_aws_leak_depth_2.json",
+		},
 	}
 
 	for _, test := range tests {

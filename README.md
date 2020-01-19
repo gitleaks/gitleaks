@@ -60,7 +60,6 @@ Application Options:
       --config=        config path
       --disk           Clones repo(s) to disk
       --version        version number
-      --timeout=       Timeout (s)
       --username=      Username for git repo
       --password=      Password for git repo
       --access-token=  Access token for git repo
@@ -79,6 +78,9 @@ Application Options:
       --pretty         Pretty print json if leaks are present
       --commit-from=   Commit to start audit from
       --commit-to=     Commit to stop audit
+      --timeout=       Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s
+      --depth=         Number of commits to audit
+
       --host=          git hosting service like gitlab or github. Supported hosts include: Github, Gitlab
       --baseurl=       Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server.
       --org=           organization to audit

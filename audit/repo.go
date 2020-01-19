@@ -261,7 +261,8 @@ func (repo *Repo) Audit() error {
 	semaphore := make(chan bool, howManyThreads(repo.Manager.Opts.Threads))
 	wg := sync.WaitGroup{}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || c.Hash.String() == repo.Manager.Opts.CommitTo || repo.timeoutReached() {
+		if c == nil || c.Hash.String() == repo.Manager.Opts.CommitTo ||
+			repo.timeoutReached() || repo.depthReached(cc) {
 			return storer.ErrStop
 		}
 
@@ -391,4 +392,12 @@ func (repo *Repo) setupTimeout() error {
 		}
 	}()
 	return nil
+}
+
+func (repo *Repo) depthReached(i int) bool {
+	if repo.Manager.Opts.Depth != 0 && repo.Manager.Opts.Depth == i {
+		log.Warnf("Exceeded depth limit (%d)", i)
+		return true
+	}
+	return false
 }
