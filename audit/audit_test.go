@@ -213,6 +213,26 @@ func TestAudit(t *testing.T) {
 			},
 			wantEmpty: true,
 		},
+		{
+			description: "test local repo one aws leak timeout",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
+				ReportFormat: "json",
+				Timeout:      "10ns",
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test local repo one aws leak long timeout",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
+				ReportFormat: "json",
+				Timeout:      "2m",
+			},
+			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
+		},
 	}
 
 	for _, test := range tests {

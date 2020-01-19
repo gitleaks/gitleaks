@@ -25,6 +25,9 @@ import (
 // After that, file chunks are created which are then inspected by InspectString()
 func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 	for _, f := range patch.FilePatches() {
+		if repo.timeoutReached() {
+			return
+		}
 		if f.IsBinary() {
 			continue
 		}
@@ -119,6 +122,9 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 			// an optimization would be to switch the regex from FindAllIndex to FindString
 			// since we are iterating on the lines if entropy rules exist...
 			for _, line := range strings.Split(content, "\n") {
+				if repo.timeoutReached() {
+					return
+				}
 				entropyTripped := trippedEntropy(line, rule)
 				if entropyTripped && !ruleContainRegex(rule) {
 					repo.Manager.SendLeaks(manager.Leak{
@@ -135,6 +141,9 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 						File:     filename,
 					})
 				} else if entropyTripped {
+					if repo.timeoutReached() {
+						return
+					}
 					// entropy has been tripped which means if there is a regex specified in the same
 					// rule, we need to inspect the line for a regex match. In otherwords, the current rule has
 					// both entropy and regex set which work in combination. This helps narrow down false positives
@@ -178,6 +187,9 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 		}
 		if rule.Regex.String() == "" {
 			continue
+		}
+		if repo.timeoutReached() {
+			return
 		}
 		start := time.Now()
 		locs := rule.Regex.FindAllIndex([]byte(content), -1)
@@ -255,7 +267,7 @@ func inspectCommit(c *object.Commit, repo *Repo) error {
 
 	err = fIter.ForEach(func(f *object.File) error {
 		bin, err := f.IsBinary()
-		if bin {
+		if bin || repo.timeoutReached() {
 			return nil
 		} else if err != nil {
 			return err
