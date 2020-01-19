@@ -21,13 +21,13 @@ import (
 // Github wraps a github client and manager. This struct implements what the Host interface defines.
 type Github struct {
 	client  *github.Client
-	manager manager.Manager
+	manager *manager.Manager
 	wg      sync.WaitGroup
 }
 
 // NewGithubClient accepts a manager struct and returns a Github host pointer which will be used to
 // perform a github audit on an organization, user, or PR.
-func NewGithubClient(m manager.Manager) (*Github, error) {
+func NewGithubClient(m *manager.Manager) (*Github, error) {
 	var err error
 	ctx := context.Background()
 	token := oauth2.StaticTokenSource(
@@ -91,7 +91,7 @@ func (g *Github) Audit() {
 	}
 
 	for _, repo := range githubRepos {
-		r := audit.NewRepo(&g.manager)
+		r := audit.NewRepo(g.manager)
 		r.Name = *repo.Name
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
@@ -123,7 +123,7 @@ func (g *Github) AuditPR() {
 	owner := splits[len(splits)-4]
 	repoName := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
-	repo := audit.NewRepo(&g.manager)
+	repo := audit.NewRepo(g.manager)
 	repo.Name = repoName
 	log.Infof("auditing pr %s\n", g.manager.Opts.PullRequest)
 
