@@ -86,6 +86,7 @@ Application Options:
       --org=           organization to audit
       --user=          user to audit
       --pr=            pull/merge request url
+      --exclude-forks  audit excludes forks
 
 Help Options:
   -h, --help           Show this help message

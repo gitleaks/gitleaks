@@ -72,7 +72,15 @@ func (g *Github) Audit() {
 			_githubRepos, resp, err = g.client.Repositories.ListByOrg(ctx, g.manager.Opts.Organization,
 				&github.RepositoryListByOrgOptions{ListOptions: listOptions})
 		}
-		githubRepos = append(githubRepos, _githubRepos...)
+
+		for _, r := range _githubRepos {
+			if g.manager.Opts.ExcludeForks && r.GetFork() {
+				log.Debugf("excluding forked repo: %s", *r.Name)
+				continue
+			}
+			githubRepos = append(githubRepos, r)
+		}
+
 
 		if resp == nil {
 			break
