@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/manager"
+	"github.com/zricethezav/gitleaks/v3/config"
+	"github.com/zricethezav/gitleaks/v3/manager"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"

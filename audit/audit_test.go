@@ -10,9 +10,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/manager"
-	"github.com/zricethezav/gitleaks/options"
+	"github.com/zricethezav/gitleaks/v3/config"
+	"github.com/zricethezav/gitleaks/v3/manager"
+	"github.com/zricethezav/gitleaks/v3/options"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )

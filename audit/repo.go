@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zricethezav/gitleaks/config"
-	"github.com/zricethezav/gitleaks/manager"
+	"github.com/zricethezav/gitleaks/v3/config"
+	"github.com/zricethezav/gitleaks/v3/manager"
 
 	"github.com/BurntSushi/toml"
 	"github.com/sergi/go-diff/diffmatchpatch"

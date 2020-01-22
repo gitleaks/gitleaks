@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/audit"
-	"github.com/zricethezav/gitleaks/manager"
-	"github.com/zricethezav/gitleaks/options"
+	"github.com/zricethezav/gitleaks/v3/audit"
+	"github.com/zricethezav/gitleaks/v3/manager"
+	"github.com/zricethezav/gitleaks/v3/options"
 
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
