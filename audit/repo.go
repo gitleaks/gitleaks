@@ -217,6 +217,9 @@ func (repo *Repo) Audit() error {
 	if err := repo.setupTimeout(); err != nil {
 		return err
 	}
+	if repo.cancel != nil {
+		defer repo.cancel()
+	}
 
 	if repo.Repository == nil {
 		return fmt.Errorf("%s repo is empty", repo.Name)
@@ -388,7 +391,7 @@ func (repo *Repo) setupTimeout() error {
 	go func() {
 		select {
 		case <-repo.ctx.Done():
-			log.Warnf("Timeout deadline exceeded: %s", timeout.String())
+			log.Warnf("Timeout deadline (%s) exceeded for %s", timeout.String(), repo.Name)
 		}
 	}()
 	return nil
