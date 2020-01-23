@@ -41,9 +41,9 @@ docker pull zricethezav/gitleaks
 ```
 
 #### Go
-
+Ensure `GO111MODULE=on` is set as an env var
 ```bash
-go get -u github.com/zricethezav/gitleaks
+go get github.com/zricethezav/gitleaks/v3@latest
 ```
 
 ## Usage
