@@ -391,7 +391,9 @@ func (repo *Repo) setupTimeout() error {
 	go func() {
 		select {
 		case <-repo.ctx.Done():
-			log.Warnf("Timeout deadline (%s) exceeded for %s", timeout.String(), repo.Name)
+			if repo.timeoutReached() {
+				log.Warnf("Timeout deadline (%s) exceeded for %s", timeout.String(), repo.Name)
+			}
 		}
 	}()
 	return nil
