@@ -145,12 +145,13 @@ func TestAudit(t *testing.T) {
 			wantEmpty: true,
 		},
 		{
+					// TODO UPDATE TESTS
 			description: "test local repo one aws leak single commit",
 			opts: options.Options{
-				RepoPath:     "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_local_repo_one_aws_leak_commit.json.got",
-				Commit:       "6557c92612d3b35979bd426d429255b3bf9fab74",
-				ReportFormat: "json",
+				RepoPath:      "../test_data/test_repos/test_repo_1",
+				Report:        "../test_data/test_local_repo_one_aws_leak_commit.json.got",
+				FilesAtCommit: "6557c92612d3b35979bd426d429255b3bf9fab74",
+				ReportFormat:  "json",
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak_commit.json",
 		},

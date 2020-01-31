@@ -236,19 +236,12 @@ func (repo *Repo) Audit() error {
 
 	auditTimeStart := time.Now()
 
-	// audit single Commit
+	// audit commit patches OR all files at commit. See https://github.com/zricethezav/gitleaks/issues/326
+	// TODO having --commit= and --files-at-commit= set should probably be guarded against
 	if repo.Manager.Opts.Commit != "" {
-		h := plumbing.NewHash(repo.Manager.Opts.Commit)
-		c, err := repo.CommitObject(h)
-		if err != nil {
-			return err
-		}
-
-		err = inspectCommit(c, repo)
-		if err != nil {
-			return err
-		}
-		return nil
+		return inspectCommit(repo.Manager.Opts.Commit, repo, inspectCommitPatches)
+	} else if repo.Manager.Opts.FilesAtCommit != "" {
+		return inspectCommit(repo.Manager.Opts.FilesAtCommit, repo, inspectFilesAtCommit)
 	}
 
 	logOpts, err := getLogOptions(repo)
@@ -271,7 +264,7 @@ func (repo *Repo) Audit() error {
 
 		if len(c.ParentHashes) == 0 {
 			cc++
-			err = inspectCommit(c, repo)
+			err = inspectFilesAtCommit(c, repo)
 			if err != nil {
 				return err
 			}
