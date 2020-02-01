@@ -145,13 +145,12 @@ func TestAudit(t *testing.T) {
 			wantEmpty: true,
 		},
 		{
-					// TODO UPDATE TESTS
 			description: "test local repo one aws leak single commit",
 			opts: options.Options{
-				RepoPath:      "../test_data/test_repos/test_repo_1",
-				Report:        "../test_data/test_local_repo_one_aws_leak_commit.json.got",
-				FilesAtCommit: "6557c92612d3b35979bd426d429255b3bf9fab74",
-				ReportFormat:  "json",
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak_commit.json.got",
+				Commit:       "6557c92612d3b35979bd426d429255b3bf9fab74",
+				ReportFormat: "json",
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak_commit.json",
 		},
@@ -243,6 +242,26 @@ func TestAudit(t *testing.T) {
 				Depth:        2,
 			},
 			wantPath: "../test_data/test_local_owner_aws_leak_depth_2.json",
+		},
+		{
+			description: "test local repo five files at commit",
+			opts: options.Options{
+				RepoPath:      "../test_data/test_repos/test_repo_5",
+				Report:        "../test_data/test_local_repo_five_files_at_commit.json.got",
+				FilesAtCommit: "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
+				ReportFormat:  "json",
+			},
+			wantPath: "../test_data/test_local_repo_five_files_at_commit.json",
+		},
+		{
+			description: "test local repo five at commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_5",
+				Report:       "../test_data/test_local_repo_five_commit.json.got",
+				Commit:       "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_five_commit.json",
 		},
 	}
 
