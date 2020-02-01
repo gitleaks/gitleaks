@@ -55,42 +55,42 @@ Usage:
   gitleaks [OPTIONS]
 
 Application Options:
-  -v, --verbose        Show verbose output from audit
-  -r, --repo=          Target repository
-      --config=        config path
-      --disk           Clones repo(s) to disk
-      --version        version number
-      --username=      Username for git repo
-      --password=      Password for git repo
-      --access-token=  Access token for git repo
-      --commit=        sha of commit to audit
-      --threads=       Maximum number of threads gitleaks spawns
-      --ssh-key=       path to ssh key used for auth
-      --uncommitted    run gitleaks on uncommitted code
-      --repo-path=     Path to repo
-      --owner-path=    Path to owner directory (repos discovered)
-      --branch=        Branch to audit
-      --report=        path to write json leaks file
-      --report-format= json or csv (default: json)
-      --redact         redact secrets from log messages and leaks
-      --debug          log debug messages
-      --repo-config    Load config from target repo. Config file must be ".gitleaks.toml" or "gitleaks.toml"
-      --pretty         Pretty print json if leaks are present
-      --commit-from=   Commit to start audit from
-      --commit-to=     Commit to stop audit
-      --timeout=       Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s
-      --depth=         Number of commits to audit
+  -v, --verbose          Show verbose output from audit
+  -r, --repo=            Target repository
+      --config=          config path
+      --disk             Clones repo(s) to disk
+      --version          version number
+      --username=        Username for git repo
+      --password=        Password for git repo
+      --access-token=    Access token for git repo
+      --commit=          sha of commit to audit
+      --files-at-commit= sha of commit to audit all files at commit
+      --threads=         Maximum number of threads gitleaks spawns
+      --ssh-key=         path to ssh key used for auth
+      --uncommitted      run gitleaks on uncommitted code
+      --repo-path=       Path to repo
+      --owner-path=      Path to owner directory (repos discovered)
+      --branch=          Branch to audit
+      --report=          path to write json leaks file
+      --report-format=   json or csv (default: json)
+      --redact           redact secrets from log messages and leaks
+      --debug            log debug messages
+      --repo-config      Load config from target repo. Config file must be ".gitleaks.toml" or "gitleaks.toml"
+      --pretty           Pretty print json if leaks are present
+      --commit-from=     Commit to start audit from
+      --commit-to=       Commit to stop audit
+      --timeout=         Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s
+      --depth=           Number of commits to audit
 
-      --host=          git hosting service like gitlab or github. Supported hosts include: Github, Gitlab
-      --baseurl=       Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server.
-      --org=           organization to audit
-      --user=          user to audit
-      --pr=            pull/merge request url
-      --exclude-forks  audit excludes forks
+      --host=            git hosting service like gitlab or github. Supported hosts include: Github, Gitlab
+      --baseurl=         Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server.
+      --org=             organization to audit
+      --user=            user to audit
+      --pr=              pull/merge request url
+      --exclude-forks    audit excludes forks
 
 Help Options:
-  -h, --help           Show this help message
-
+  -h, --help             Show this help message
 ```
 
 ### Docker usage examples

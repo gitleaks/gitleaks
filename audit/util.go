@@ -257,6 +257,9 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 
 type commitInspector func(c *object.Commit, repo *Repo) error
 
+// inspectCommit accepts a commit hash, repo, and commit inspecting function. A new commit
+// object will be created from the hash which will be passed into either inspectCommitPatches
+// or inspectFilesAtCommit depending on the options set.
 func inspectCommit(hash string, repo *Repo, f commitInspector) error {
 	h := plumbing.NewHash(hash)
 	c, err := repo.CommitObject(h)
@@ -301,8 +304,8 @@ func inspectCommitPatches(c *object.Commit, repo *Repo) error {
 	})
 }
 
-// inspectFilesAtCommit accepts a commit object and a repo. This function is only called when the --commit=
-// option has been set. That option tells gitleaks to look only at a single commit and check the contents
+// inspectFilesAtCommit accepts a commit object and a repo. This function is only called when the --files-at-commit=
+// option has been set. That option tells gitleaks to look only at ALL the files at a commit and check the contents
 // of said commit. Similar to inspectPatch(), if the files contained in the commit are a binaries or if they are
 // whitelisted then those files will be skipped.
 func inspectFilesAtCommit(c *object.Commit, repo *Repo) error {
