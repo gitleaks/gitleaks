@@ -255,11 +255,57 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 	}
 }
 
-// inspectCommit accepts a commit object and a repo. This function is only called when the --commit=
+type commitInspector func(c *object.Commit, repo *Repo) error
+
+func inspectCommit(hash string, repo *Repo, f commitInspector) error {
+	h := plumbing.NewHash(hash)
+	c, err := repo.CommitObject(h)
+	if err != nil {
+		return err
+	}
+	return f(c, repo)
+}
+
+// inspectCommitPatches accepts a commit object and a repo. This function is only called when the --commit=
 // option has been set. That option tells gitleaks to look only at a single commit and check the contents
 // of said commit. Similar to inspectPatch(), if the files contained in the commit are a binaries or if they are
 // whitelisted then those files will be skipped.
-func inspectCommit(c *object.Commit, repo *Repo) error {
+func inspectCommitPatches(c *object.Commit, repo *Repo) error {
+	if len(c.ParentHashes) == 0 {
+		err := inspectFilesAtCommit(c, repo)
+		if err != nil {
+			return err
+		}
+	}
+
+	return c.Parents().ForEach(func(parent *object.Commit) error {
+		defer func() {
+			if err := recover(); err != nil {
+				// sometimes the patch generation will fail due to a known bug in
+				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+				// Once a fix has been merged I will remove this recover.
+				return
+			}
+		}()
+		if repo.timeoutReached() {
+			return nil
+		}
+		start := time.Now()
+		patch, err := c.Patch(parent)
+		if err != nil {
+			return fmt.Errorf("could not generate patch")
+		}
+		repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
+		inspectPatch(patch, c, repo)
+		return nil
+	})
+}
+
+// inspectFilesAtCommit accepts a commit object and a repo. This function is only called when the --commit=
+// option has been set. That option tells gitleaks to look only at a single commit and check the contents
+// of said commit. Similar to inspectPatch(), if the files contained in the commit are a binaries or if they are
+// whitelisted then those files will be skipped.
+func inspectFilesAtCommit(c *object.Commit, repo *Repo) error {
 	fIter, err := c.Files()
 	if err != nil {
 		return err
