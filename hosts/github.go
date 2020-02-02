@@ -81,7 +81,6 @@ func (g *Github) Audit() {
 			githubRepos = append(githubRepos, r)
 		}
 
-
 		if resp == nil {
 			break
 		}
