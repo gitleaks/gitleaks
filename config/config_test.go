@@ -78,26 +78,47 @@ func TestParse(t *testing.T) {
 			opts: options.Options{
 				Config: "../test_data/test_configs/bad_entropy_1.toml",
 			},
-			wantErr: fmt.Errorf("entropy range must be ascending"),
+			wantErr: fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value"),
 		},
 		{
-			description: "test entropy value p2",
+			description: "test entropy value max",
 			opts: options.Options{
 				Config: "../test_data/test_configs/bad_entropy_2.toml",
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
-			description: "test entropy value p1",
+			description: "test entropy value min",
 			opts: options.Options{
 				Config: "../test_data/test_configs/bad_entropy_3.toml",
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
-			description: "test entropy value p1",
+			description: "test entropy value group",
 			opts: options.Options{
 				Config: "../test_data/test_configs/bad_entropy_4.toml",
+			},
+			wantErr: fmt.Errorf("strconv.ParseInt: parsing \"x\": invalid syntax"),
+		},
+		{
+			description: "test entropy value group",
+			opts: options.Options{
+				Config: "../test_data/test_configs/bad_entropy_5.toml",
+			},
+			wantErr: fmt.Errorf("problem loading config: group cannot be lower than 0"),
+		},
+		{
+			description: "test entropy value group",
+			opts: options.Options{
+				Config: "../test_data/test_configs/bad_entropy_6.toml",
+			},
+			wantErr: fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp"),
+		},
+		{
+			description: "test entropy range limits",
+			opts: options.Options{
+				Config: "../test_data/test_configs/bad_entropy_7.toml",
 			},
 			wantErr: fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0"),
 		},

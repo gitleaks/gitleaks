@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/zricethezav/gitleaks/v3/options"
 
@@ -22,12 +23,6 @@ type Entropy struct {
 	Min		float64
 	Max		float64
 	Group	int
-}
-
-type TomlEntropy struct {
-	Min		string
-	Max		string
-	Group	string
 }
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
@@ -141,27 +136,32 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		var entropies []Entropy
-		for _, e := range tomlEntropies {
+		for _, e := range rule.Entropies {
 			min, err := strconv.ParseFloat(e.Min, 64)
 			if err != nil {
-				return nil, err
+				return cfg, err
 			}
 			max, err := strconv.ParseFloat(e.Min, 64)
 			if err != nil {
-				return nil, err
+				return cfg, err
+			}
+			if(e.Group == "") {
+				e.Group = "0"
 			}
 			group, err := strconv.ParseInt(e.Group, 10, 64)
 			if err != nil {
-				return nil, err
-			} else if group >= len(myExp.SubexpNames()) {
-				return nil, fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp")
+				return cfg, err
+			} else if int(group) >= len(re.SubexpNames()) {
+				return cfg, fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp")
+			} else if group < 0 {
+				return cfg, fmt.Errorf("problem loading config: group cannot be lower than 0")
 			} else if min > 8.0 || min < 0.0 || max > 8.0 || max < 0.0 {
-				return nil, fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0")
+				return cfg, fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0")
 			} else if min > max {
-				return nil, fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value")
+				return cfg, fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value")
 			}
 
-			entropies = append(entropies, Entropy{Min: min, Max: max, Group: group})
+			entropies = append(entropies, Entropy{Min: min, Max: max, Group: int(group)})
 		}
 
 		cfg.Rules = append(cfg.Rules, Rule{
@@ -169,7 +169,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			Regex:       re,
 			Tags:        rule.Tags,
 			Whitelist:   whitelists,
-			Entropies:     rule.Entropies,
+			Entropies:   entropies,
 		})
 	}
 
@@ -201,36 +201,4 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	cfg.Whitelist.Description = tomlLoader.Whitelist.Description
 
 	return cfg, nil
-}
-
-// getEntropy
-func getEntropies(tomlEntropies []TomlEntropy) ([]entropy, error) {
-	var entropies []Entropy
-
-	for _, entropy := range tomlEntropies {
-		min, err := strconv.ParseFloat(entropy.Min, 64)
-		if err != nil {
-			return nil, err
-		}
-		max, err := strconv.ParseFloat(entropy.Min, 64)
-		if err != nil {
-			return nil, err
-		}
-		group, err := strconv.ParseInt(entropy.Group, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		if group >= len(myExp.SubexpNames()) {
-			return nil, fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp")
-		}
-		if min > 8.0 || min < 0.0 || max > 8.0 || max < 0.0 {
-			return nil, fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0")
-		}
-		if min > max {
-			return nil, fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value")
-		}
-
-		entropies = append(entropies, Entropy{Min: min, Max: max, Group: group})
-	}
-	return entropies, nil
 }

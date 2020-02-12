@@ -3,7 +3,7 @@
 	regex = '''['|"]([0-9a-zA-Z-._{}$\/\+=]{20,120})['|"]'''
 		[[rules.Entropies]]
 			Min = "1.0"
-			Max = "8"
-			Group = "x"
+			Max = "8.5"
+			Group = "0"
 	tags = ["entropy"]
 
