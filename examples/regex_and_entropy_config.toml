@@ -8,8 +8,10 @@
 [[rules]]
 	description = "entropy and regex"
 	regex = '''(?i)key(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
-    entropies = [
-        "4.5-4.7",
-        "5.5-6.3",
-    ]
 	tags = ["entropy"]
+		[[rules.Entropies]]
+			Min = "4.5"
+			Max = "5.7"
+		[[rules.Entropies]]
+			Min = "5.5"
+			Max = "6.3"

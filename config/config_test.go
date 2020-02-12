@@ -120,7 +120,7 @@ func TestParse(t *testing.T) {
 			opts: options.Options{
 				Config: "../test_data/test_configs/bad_entropy_7.toml",
 			},
-			wantErr: fmt.Errorf("invalid entropy ranges, must be within 0.0-8.0"),
+			wantErr: fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0"),
 		},
 	}
 

@@ -149,16 +149,16 @@ title = "gitleaks config"
 [[rules]]
 	description = "Pure Entropy"
 	regex = '''['|"][0-9a-zA-Z-._{}$\/=]{40,120}['|"]'''
-	entropies = [
-        "5.0-5.6"
-	]
+		[[rules.Entropies]]
+			Min = "5.0"
+			Max = "5.6"
 
 [[rules]]
 	description = "Entropy plus Generic Credential"
 	regex = '''(?i)(api_key|apikey|secret|key|api|password|pw)'''
-	entropies = [
-        "5.2-5.5"
-	]
+		[[rules.Entropies]]
+			Min = "5.2"
+			Max = "5.5"
 
 [Global]
     file = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
