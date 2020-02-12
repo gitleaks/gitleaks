@@ -90,15 +90,20 @@ func shannonEntropy(data string) (entropy float64) {
 }
 
 // aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
-// trippedEntropy checks if a given line falls in between entropy ranges supplied
-// by a custom gitleaks configuration. Gitleaks do not check entropy by default.
-func trippedEntropy(line string, rule config.Rule) bool {
-	for _, e := range rule.Entropy {
-		entropy := shannonEntropy(line)
-		if entropy > e.P1 && entropy < e.P2 {
-			return true
+// trippedEntropy checks if a given groups or offender falls in between entropy ranges
+// supplied by a custom gitleaks configuration. Gitleaks do not check entropy by default.
+func trippedEntropy(groups []string, rule config.Rule) bool {
+	for _, e := range rule.Entropies {
+		if len(groups) > e.Group {
+			entropy := shannonEntropy(groups[e.Group])
+			log.Debugf("Calculating entropy for: %s", groups[e.Group])
+			log.Debugf("Calculating entropy for: %f", entropy)
+			if entropy > e.Min && entropy < e.Max {
+				return true
+			}
 		}
 	}
+
 	return false
 }
 
@@ -117,77 +122,10 @@ func ruleContainRegex(rule config.Rule) bool {
 // Next, if the rule contains a regular expression then that will be checked.
 func InspectString(content string, c *object.Commit, repo *Repo, filename string) {
 	for _, rule := range repo.config.Rules {
-		// check entropy
-		if len(rule.Entropy) != 0 {
-			// an optimization would be to switch the regex from FindAllIndex to FindString
-			// since we are iterating on the lines if entropy rules exist...
-			for _, line := range strings.Split(content, "\n") {
-				if repo.timeoutReached() {
-					return
-				}
-				entropyTripped := trippedEntropy(line, rule)
-				if entropyTripped && !ruleContainRegex(rule) {
-					repo.Manager.SendLeaks(manager.Leak{
-						Line:     line,
-						Offender: fmt.Sprintf("Entropy range %+v", rule.Entropy),
-						Commit:   c.Hash.String(),
-						Repo:     repo.Name,
-						Message:  c.Message,
-						Rule:     rule.Description,
-						Author:   c.Author.Name,
-						Email:    c.Author.Email,
-						Date:     c.Author.When,
-						Tags:     strings.Join(rule.Tags, ", "),
-						File:     filename,
-					})
-				} else if entropyTripped {
-					if repo.timeoutReached() {
-						return
-					}
-					// entropy has been tripped which means if there is a regex specified in the same
-					// rule, we need to inspect the line for a regex match. In otherwords, the current rule has
-					// both entropy and regex set which work in combination. This helps narrow down false positives
-					// on searches for generic passwords in code.
-					match := rule.Regex.FindString(line)
-
-					// check if any rules are whitelisting this leak
-					if len(rule.Whitelist) != 0 {
-						for _, wl := range rule.Whitelist {
-							if fileMatched(filename, wl.File) {
-								// if matched, go to next rule
-								goto NEXTLINE
-							}
-							if wl.Regex.FindString(line) != "" {
-								goto NEXTLINE
-							}
-						}
-					}
-
-					if match != "" {
-						// both the regex and entropy in this rule have been tripped which means this line
-						// contains a leak
-						repo.Manager.SendLeaks(manager.Leak{
-							Line:     line,
-							Offender: match,
-							Commit:   c.Hash.String(),
-							Message:  c.Message,
-							Repo:     repo.Name,
-							Rule:     rule.Description,
-							Author:   c.Author.Name,
-							Email:    c.Author.Email,
-							Date:     c.Author.When,
-							Tags:     strings.Join(rule.Tags, ", "),
-							File:     filename,
-						})
-					}
-				}
-			NEXTLINE:
-			}
-			return
-		}
 		if rule.Regex.String() == "" {
 			continue
 		}
+
 		if repo.timeoutReached() {
 			return
 		}
@@ -218,33 +156,53 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 					end = end + 1
 				}
 
-				offender := content[loc[0]:loc[1]]
 				line := content[start:end]
+				offender := content[loc[0]:loc[1]]
+				groups := rule.Regex.FindStringSubmatch(offender)
 
 				if len(rule.Whitelist) != 0 {
 					for _, wl := range rule.Whitelist {
-						if wl.Regex.FindString(line) != "" {
+						if wl.Regex.FindString(offender) != "" {
 							goto NEXT
 						}
 					}
 				}
-				if repo.Manager.Opts.Redact {
-					line = strings.ReplaceAll(line, offender, "REDACTED")
-					offender = "REDACTED"
+
+				if len(rule.Entropies) != 0 {
+					if trippedEntropy(groups, rule) {
+						repo.Manager.SendLeaks(manager.Leak{
+							Line:     line,
+							Offender: offender,
+							Commit:   c.Hash.String(),
+							Repo:     repo.Name,
+							Message:  c.Message,
+							Rule:     rule.Description,
+							Author:   c.Author.Name,
+							Email:    c.Author.Email,
+							Date:     c.Author.When,
+							Tags:     strings.Join(rule.Tags, ", "),
+							File:     filename,
+						})
+					}
+				} else {
+					if repo.Manager.Opts.Redact {
+						line = strings.ReplaceAll(line, offender, "REDACTED")
+						offender = "REDACTED"
+					}
+					repo.Manager.SendLeaks(manager.Leak{
+						Line:     line,
+						Offender: offender,
+						Commit:   c.Hash.String(),
+						Message:  c.Message,
+						Repo:     repo.Name,
+						Rule:     rule.Description,
+						Author:   c.Author.Name,
+						Email:    c.Author.Email,
+						Date:     c.Author.When,
+						Tags:     strings.Join(rule.Tags, ", "),
+						File:     filename,
+					})
 				}
-				repo.Manager.SendLeaks(manager.Leak{
-					Line:     line,
-					Offender: offender,
-					Commit:   c.Hash.String(),
-					Message:  c.Message,
-					Repo:     repo.Name,
-					Rule:     rule.Description,
-					Author:   c.Author.Name,
-					Email:    c.Author.Email,
-					Date:     c.Author.When,
-					Tags:     strings.Join(rule.Tags, ", "),
-					File:     filename,
-				})
 			}
 		}
 		repo.Manager.RecordTime(manager.RegexTime{
