@@ -96,14 +96,11 @@ func trippedEntropy(groups []string, rule config.Rule) bool {
 	for _, e := range rule.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
-			log.Debugf("Calculating entropy for: %s", groups[e.Group])
-			log.Debugf("Calculating entropy for: %f", entropy)
-			if entropy > e.Min && entropy < e.Max {
+			if entropy >= e.Min && entropy <= e.Max {
 				return true
 			}
 		}
 	}
-
 	return false
 }
 
@@ -170,6 +167,10 @@ func InspectString(content string, c *object.Commit, repo *Repo, filename string
 
 				if len(rule.Entropies) != 0 {
 					if trippedEntropy(groups, rule) {
+						if repo.Manager.Opts.Redact {
+							line = strings.ReplaceAll(line, offender, "REDACTED")
+							offender = "REDACTED"
+						}
 						repo.Manager.SendLeaks(manager.Leak{
 							Line:     line,
 							Offender: offender,

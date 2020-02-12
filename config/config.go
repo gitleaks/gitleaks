@@ -141,7 +141,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			if err != nil {
 				return cfg, err
 			}
-			max, err := strconv.ParseFloat(e.Min, 64)
+			max, err := strconv.ParseFloat(e.Max, 64)
 			if err != nil {
 				return cfg, err
 			}
