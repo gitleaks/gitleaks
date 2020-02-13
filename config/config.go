@@ -113,7 +113,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		fileRe, err := regexp.Compile(rule.RegexFile)
+		fileRe, err := regexp.Compile(rule.FileRegex)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}

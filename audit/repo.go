@@ -171,35 +171,18 @@ func (repo *Repo) AuditUncommitted() error {
 				}
 			}
 
-			if fileMatched(filename, repo.config.Whitelist.File) {
-				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
-			} else if fileMatched(filename, repo.config.FileRegex) {
-				repo.Manager.SendLeaks(manager.Leak{
-					Line:     "N/A",
-					Offender: filename,
-					Commit:   c.Hash.String(),
-					Repo:     repo.Name,
-					Rule:     "file regex matched" + repo.config.FileRegex.String(),
-					Message:  c.Message,
-					Author:   c.Author.Name,
-					Email:    c.Author.Email,
-					Date:     c.Author.When,
-					File:     filename,
-				})
-			} else {
-				dmp := diffmatchpatch.New()
-				diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
-				var diffContents string
-				for _, d := range diffs {
-					switch d.Type {
-					case diffmatchpatch.DiffInsert:
-						diffContents += fmt.Sprintf("%s\n", d.Text)
-					case diffmatchpatch.DiffDelete:
-						diffContents += fmt.Sprintf("%s\n", d.Text)
-					}
+			diffs := diffmatchpatch.New().DiffMain(prevFileContents, currFileContents, false)
+			var diffContents string
+			for _, d := range diffs {
+				switch d.Type {
+				case diffmatchpatch.DiffInsert:
+					diffContents += fmt.Sprintf("%s\n", d.Text)
+				case diffmatchpatch.DiffDelete:
+					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
-				InspectString(diffContents, c, repo, filename)
 			}
+
+			InspectFile(diffContents, filename, c, repo)
 		}
 	}
 

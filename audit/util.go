@@ -31,26 +31,9 @@ func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 		if f.IsBinary() {
 			continue
 		}
-		if fileMatched(getFileName(f), repo.config.Whitelist.File) {
-			log.Debugf("whitelisted file found, skipping audit of file: %s", getFileName(f))
-			continue
-		}
-		if fileMatched(getFileName(f), repo.config.FileRegex) {
-			repo.Manager.SendLeaks(manager.Leak{
-				Line:     "N/A",
-				Offender: getFileName(f),
-				Commit:   c.Hash.String(),
-				Repo:     repo.Name,
-				Rule:     "file regex matched" + repo.config.FileRegex.String(),
-				Author:   c.Author.Name,
-				Email:    c.Author.Email,
-				Date:     c.Author.When,
-				File:     getFileName(f),
-			})
-		}
 		for _, chunk := range f.Chunks() {
 			if chunk.Type() == fdiff.Delete || chunk.Type() == fdiff.Add {
-				InspectString(chunk.Content(), c, repo, getFileName(f))
+				InspectFile(chunk.Content(), getFileName(f), c, repo)
 			}
 		}
 	}
@@ -67,6 +50,21 @@ func getFileName(f fdiff.FilePatch) string {
 	}
 
 	return fn
+}
+
+// aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
+// trippedEntropy checks if a given groups or offender falls in between entropy ranges
+// supplied by a custom gitleaks configuration. Gitleaks do not check entropy by default.
+func trippedEntropy(groups []string, rule config.Rule) bool {
+	for _, e := range rule.Entropies {
+		if len(groups) > e.Group {
+			entropy := shannonEntropy(groups[e.Group])
+			if entropy >= e.Min && entropy <= e.Max {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
@@ -89,21 +87,7 @@ func shannonEntropy(data string) (entropy float64) {
 	return entropy
 }
 
-// aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
-// trippedEntropy checks if a given groups or offender falls in between entropy ranges
-// supplied by a custom gitleaks configuration. Gitleaks do not check entropy by default.
-func trippedEntropy(groups []string, rule config.Rule) bool {
-	for _, e := range rule.Entropies {
-		if len(groups) > e.Group {
-			entropy := shannonEntropy(groups[e.Group])
-			if entropy >= e.Min && entropy <= e.Max {
-				return true
-			}
-		}
-	}
-	return false
-}
-
+// Checks if the given rule has a regex
 func ruleContainRegex(rule config.Rule) bool {
 	if rule.Regex == nil {
 		return false
@@ -114,6 +98,7 @@ func ruleContainRegex(rule config.Rule) bool {
 	return true
 }
 
+// Checks if the given rule has a file regex
 func ruleContainFileRegex(rule config.Rule) bool {
 	if rule.FileRegex == nil {
 		return false
@@ -150,40 +135,29 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 // whitelisted files set in the configuration. If a global rule for files is defined and a filename
 // matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
-func inspectFile(content string, filename string, c *object.Commit, repo *Repo) {
-	if repo.timeoutReached() {
-		return
-	}
-	if f.IsBinary() {
-		return
-	}
-
+func InspectFile(content string, filename string, c *object.Commit, repo *Repo) {
 	// We want to check if there is a global
 	// whitelist for this file
 	if len(repo.config.Whitelist.Files) != 0 {
 		for _, reFile := range repo.config.Whitelist.Files {
 			if fileMatched(filename, reFile) {
-				log.Debugf("whitelisted file found, skipping audit of file: %s", getFileName(f))
+				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
 				return
 			}
 		}
 	}
 
 	for _, rule := range repo.config.Rules {
+		start := time.Now()
 
 		// For each rule we want to check filename whitelists
-		if len(rule.Whitelist) != 0 {
-			for _, wl := range rule.Whitelist {
-				if fileMatched(filename, wl.File) {
-					// if matched, go to next rule
-					goto NEXT
-				}
-			}
+		if isFileWhiteListed(filename, rule.Whitelist){
+			continue
 		}
 
 		// If it has fileRegex and it doesnt match we continue to next rule
 		if ruleContainFileRegex(rule) && !fileMatched(filename, rule.FileRegex) {
-			return
+			continue
 		}
 
 		// If it doesnt contain a regex then it is a filename regex match
@@ -191,15 +165,21 @@ func inspectFile(content string, filename string, c *object.Commit, repo *Repo) 
 			sendLeak(filename, "N/A", filename, rule, c, repo)
 		} else {
 			//otherwise we check if it matches content regex
-			inspectFileContents(content, c, repo, filename)
+			inspectFileContents(content, filename, rule, c, repo)
 		}
+
+		//	TODO should return filenameRegex if only file rule
+		repo.Manager.RecordTime(manager.RegexTime{
+			Time:  time.Now().Sub(start).Nanoseconds(),
+			Regex: rule.Regex.String(),
+		})
 	}
 }
 
 // InspectString accepts a string, commit object, repo, and filename. This function iterates over
 // all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
 // Next, if the rule contains a regular expression then that will be checked.
-func InspectFileContents(content string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
+func inspectFileContents(content string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
 	locs := rule.Regex.FindAllIndex([]byte(content), -1)
 	if len(locs) != 0 {
 		for _, loc := range locs {
@@ -221,12 +201,8 @@ func InspectFileContents(content string, filename string, rule config.Rule, c *o
 			offender := content[loc[0]:loc[1]]
 			groups := rule.Regex.FindStringSubmatch(offender)
 
-			if len(rule.Whitelist) != 0 {
-				for _, wl := range rule.Whitelist {
-					if wl.Regex.FindString(offender) != "" {
-						goto NEXT
-					}
-				}
+			if isOffenderWhiteListed(offender, rule.Whitelist) {
+				continue
 			}
 
 			if len(rule.Entropies) != 0 && !trippedEntropy(groups, rule) {
@@ -234,108 +210,7 @@ func InspectFileContents(content string, filename string, rule config.Rule, c *o
 			}
 
 			sendLeak(offender, line, filename, rule, c, repo)
-			NEXT:
 		}
-	}
-}
-
-// InspectString accepts a string, commit object, repo, and filename. This function iterates over
-// all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
-// Next, if the rule contains a regular expression then that will be checked.
-func InspectString(content string, c *object.Commit, repo *Repo, filename string) {
-	for _, rule := range repo.config.Rules {
-		if rule.Regex.String() == "" {
-			continue
-		}
-
-		if repo.timeoutReached() {
-			return
-		}
-		start := time.Now()
-		locs := rule.Regex.FindAllIndex([]byte(content), -1)
-		if len(locs) != 0 {
-			// check if any rules are whitelisting this leak
-			if len(rule.Whitelist) != 0 {
-				for _, wl := range rule.Whitelist {
-					if fileMatched(filename, wl.File) {
-						// if matched, go to next rule
-						goto NEXT
-					}
-				}
-			}
-			for _, loc := range locs {
-				start := loc[0]
-				end := loc[1]
-				for start != 0 && content[start] != '\n' {
-					start = start - 1
-				}
-				if start != 0 {
-					// skip newline
-					start = start + 1
-				}
-
-				for end < len(content)-1 && content[end] != '\n' {
-					end = end + 1
-				}
-
-				line := content[start:end]
-				offender := content[loc[0]:loc[1]]
-				groups := rule.Regex.FindStringSubmatch(offender)
-
-				if len(rule.Whitelist) != 0 {
-					for _, wl := range rule.Whitelist {
-						if wl.Regex.FindString(offender) != "" {
-							goto NEXT
-						}
-					}
-				}
-
-				if len(rule.Entropies) != 0 {
-					if trippedEntropy(groups, rule) {
-						if repo.Manager.Opts.Redact {
-							line = strings.ReplaceAll(line, offender, "REDACTED")
-							offender = "REDACTED"
-						}
-						repo.Manager.SendLeaks(manager.Leak{
-							Line:     line,
-							Offender: offender,
-							Commit:   c.Hash.String(),
-							Repo:     repo.Name,
-							Message:  c.Message,
-							Rule:     rule.Description,
-							Author:   c.Author.Name,
-							Email:    c.Author.Email,
-							Date:     c.Author.When,
-							Tags:     strings.Join(rule.Tags, ", "),
-							File:     filename,
-						})
-					}
-				} else {
-					if repo.Manager.Opts.Redact {
-						line = strings.ReplaceAll(line, offender, "REDACTED")
-						offender = "REDACTED"
-					}
-					repo.Manager.SendLeaks(manager.Leak{
-						Line:     line,
-						Offender: offender,
-						Commit:   c.Hash.String(),
-						Message:  c.Message,
-						Repo:     repo.Name,
-						Rule:     rule.Description,
-						Author:   c.Author.Name,
-						Email:    c.Author.Email,
-						Date:     c.Author.When,
-						Tags:     strings.Join(rule.Tags, ", "),
-						File:     filename,
-					})
-				}
-			}
-		}
-		repo.Manager.RecordTime(manager.RegexTime{
-			Time:  time.Now().Sub(start).Nanoseconds(),
-			Regex: rule.Regex.String(),
-		})
-	NEXT:
 	}
 }
 
@@ -405,30 +280,13 @@ func inspectFilesAtCommit(c *object.Commit, repo *Repo) error {
 		} else if err != nil {
 			return err
 		}
-		if fileMatched(f, repo.config.Whitelist.File) {
-			log.Debugf("whitelisted file found, skipping audit of file: %s", f.Name)
-			return nil
-		}
 
-		if fileMatched(f.Name, repo.config.FileRegex) {
-			repo.Manager.SendLeaks(manager.Leak{
-				Line:     "N/A",
-				Offender: f.Name,
-				Commit:   c.Hash.String(),
-				Repo:     repo.Name,
-				Rule:     "file regex matched" + repo.config.FileRegex.String(),
-				Author:   c.Author.Name,
-				Email:    c.Author.Email,
-				Date:     c.Author.When,
-				File:     f.Name,
-			})
-		}
 		content, err := f.Contents()
 		if err != nil {
 			return err
 		}
 
-		InspectString(content, c, repo, f.Name)
+		InspectFile(content, f.Name, c, repo)
 
 		return nil
 	})
@@ -452,6 +310,28 @@ func isCommitWhiteListed(commitHash string, whitelistedCommits []string) bool {
 	for _, hash := range whitelistedCommits {
 		if commitHash == hash {
 			return true
+		}
+	}
+	return false
+}
+
+func isOffenderWhiteListed(offender string, whitelist []config.Whitelist) bool {
+	if len(whitelist) != 0 {
+		for _, wl := range whitelist {
+			if wl.Regex.FindString(offender) != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isFileWhiteListed(filename string, whitelist []config.Whitelist) bool {
+	if len(whitelist) != 0 {
+		for _, wl := range whitelist {
+			if fileMatched(filename, wl.File) {
+				return true
+			}
 		}
 	}
 	return false
