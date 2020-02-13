@@ -114,6 +114,131 @@ func ruleContainRegex(rule config.Rule) bool {
 	return true
 }
 
+func ruleContainFileRegex(rule config.Rule) bool {
+	if rule.FileRegex == nil {
+		return false
+	}
+	if rule.FileRegex.String() == "" {
+		return false
+	}
+	return true
+}
+
+func sendLeak(offender string, line string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
+	if repo.Manager.Opts.Redact {
+		line = strings.ReplaceAll(line, offender, "REDACTED")
+		offender = "REDACTED"
+	}
+
+	repo.Manager.SendLeaks(manager.Leak{
+		Line:     line,
+		Offender: offender,
+		Commit:   c.Hash.String(),
+		Repo:     repo.Name,
+		Message:  c.Message,
+		Rule:     rule.Description,
+		Author:   c.Author.Name,
+		Email:    c.Author.Email,
+		Date:     c.Author.When,
+		Tags:     strings.Join(rule.Tags, ", "),
+		File:     filename,
+	})
+}
+
+// Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
+// binary, then gitleaks will skip auditing that file OR if a file is matched on
+// whitelisted files set in the configuration. If a global rule for files is defined and a filename
+// matches said global rule, then a leak is sent to the manager.
+// After that, file chunks are created which are then inspected by InspectString()
+func inspectFile(content string, filename string, c *object.Commit, repo *Repo) {
+	if repo.timeoutReached() {
+		return
+	}
+	if f.IsBinary() {
+		return
+	}
+
+	// We want to check if there is a global
+	// whitelist for this file
+	if len(repo.config.Whitelist.Files) != 0 {
+		for _, reFile := range repo.config.Whitelist.Files {
+			if fileMatched(filename, reFile) {
+				log.Debugf("whitelisted file found, skipping audit of file: %s", getFileName(f))
+				return
+			}
+		}
+	}
+
+	for _, rule := range repo.config.Rules {
+
+		// For each rule we want to check filename whitelists
+		if len(rule.Whitelist) != 0 {
+			for _, wl := range rule.Whitelist {
+				if fileMatched(filename, wl.File) {
+					// if matched, go to next rule
+					goto NEXT
+				}
+			}
+		}
+
+		// If it has fileRegex and it doesnt match we continue to next rule
+		if ruleContainFileRegex(rule) && !fileMatched(filename, rule.FileRegex) {
+			return
+		}
+
+		// If it doesnt contain a regex then it is a filename regex match
+		if !ruleContainRegex(rule) {
+			sendLeak(filename, "N/A", filename, rule, c, repo)
+		} else {
+			//otherwise we check if it matches content regex
+			inspectFileContents(content, c, repo, filename)
+		}
+	}
+}
+
+// InspectString accepts a string, commit object, repo, and filename. This function iterates over
+// all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
+// Next, if the rule contains a regular expression then that will be checked.
+func InspectFileContents(content string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
+	locs := rule.Regex.FindAllIndex([]byte(content), -1)
+	if len(locs) != 0 {
+		for _, loc := range locs {
+			start := loc[0]
+			end := loc[1]
+			for start != 0 && content[start] != '\n' {
+				start = start - 1
+			}
+			if start != 0 {
+				// skip newline
+				start = start + 1
+			}
+
+			for end < len(content)-1 && content[end] != '\n' {
+				end = end + 1
+			}
+
+			line := content[start:end]
+			offender := content[loc[0]:loc[1]]
+			groups := rule.Regex.FindStringSubmatch(offender)
+
+			if len(rule.Whitelist) != 0 {
+				for _, wl := range rule.Whitelist {
+					if wl.Regex.FindString(offender) != "" {
+						goto NEXT
+					}
+				}
+			}
+
+			if len(rule.Entropies) != 0 && !trippedEntropy(groups, rule) {
+				continue
+			}
+
+			sendLeak(offender, line, filename, rule, c, repo)
+			NEXT:
+		}
+	}
+}
+
 // InspectString accepts a string, commit object, repo, and filename. This function iterates over
 // all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
 // Next, if the rule contains a regular expression then that will be checked.

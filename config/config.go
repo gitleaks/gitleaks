@@ -33,6 +33,7 @@ type Entropy struct {
 type Rule struct {
 	Description string
 	Regex       *regexp.Regexp
+	FileRegex   *regexp.Regexp
 	Tags        []string
 	Whitelist   []Whitelist
 	Entropies   []Entropy
@@ -42,12 +43,11 @@ type Rule struct {
 // Each Rule contains a description, regular expression, tags, and whitelists if available
 type Config struct {
 	FileRegex *regexp.Regexp
-	Message   *regexp.Regexp
 	Rules     []Rule
 	Whitelist struct {
 		Description string
 		Commits     []string
-		File        *regexp.Regexp
+		Files       []*regexp.Regexp
 	}
 }
 
@@ -55,18 +55,15 @@ type Config struct {
 // see the config in config/defaults.go for an example. TomlLoader is used
 // to generate Config values (compiling regexes, etc).
 type TomlLoader struct {
-	Global struct {
-		File    string
-		Message string
-	}
 	Whitelist struct {
 		Description string
 		Commits     []string
-		File        string
+		Files       []string
 	}
 	Rules []struct {
 		Description string
 		Regex       string
+		FileRegex   string
 		Tags        []string
 		Entropies   []struct {
 			Min		string
@@ -113,6 +110,10 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
 		re, err := regexp.Compile(rule.Regex)
+		if err != nil {
+			return cfg, fmt.Errorf("problem loading config: %v", err)
+		}
+		fileRe, err := regexp.Compile(rule.RegexFile)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
@@ -167,35 +168,20 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		cfg.Rules = append(cfg.Rules, Rule{
 			Description: rule.Description,
 			Regex:       re,
+			FileRegex:	 fileRe,
 			Tags:        rule.Tags,
 			Whitelist:   whitelists,
 			Entropies:   entropies,
 		})
 	}
 
-	// global leaks
-	if tomlLoader.Global.File != "" {
-		re, err := regexp.Compile(tomlLoader.Global.File)
+	// global file whitelists
+	for _, wlFile := range tomlLoader.Whitelist.Files {
+		re, err := regexp.Compile(wlFile)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		cfg.FileRegex = re
-	}
-	if tomlLoader.Global.Message != "" {
-		re, err := regexp.Compile(tomlLoader.Global.Message)
-		if err != nil {
-			return cfg, fmt.Errorf("problem loading config: %v", err)
-		}
-		cfg.Message = re
-	}
-
-	// global whitelists
-	if tomlLoader.Whitelist.File != "" {
-		re, err := regexp.Compile(tomlLoader.Whitelist.File)
-		if err != nil {
-			return cfg, fmt.Errorf("problem loading config: %v", err)
-		}
-		cfg.Whitelist.File = re
+		cfg.Whitelist.Files = append(cfg.Whitelist.Files, re)
 	}
 	cfg.Whitelist.Commits = tomlLoader.Whitelist.Commits
 	cfg.Whitelist.Description = tomlLoader.Whitelist.Description
