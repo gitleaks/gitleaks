@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"path/filepath"
 
 	"github.com/zricethezav/gitleaks/v3/config"
 	"github.com/zricethezav/gitleaks/v3/manager"
@@ -33,14 +34,14 @@ func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 		}
 		for _, chunk := range f.Chunks() {
 			if chunk.Type() == fdiff.Delete || chunk.Type() == fdiff.Add {
-				InspectFile(chunk.Content(), getFileName(f), c, repo)
+				InspectFile(chunk.Content(), getFileFullPath(f), c, repo)
 			}
 		}
 	}
 }
 
 // getFileName accepts a file patch and returns the filename
-func getFileName(f fdiff.FilePatch) string {
+func getFileFullPath(f fdiff.FilePatch) string {
 	fn := "???"
 	from, to := f.Files()
 	if from != nil {
@@ -52,8 +53,19 @@ func getFileName(f fdiff.FilePatch) string {
 	return fn
 }
 
+// getFileName accepts a string with full path and returns only path
+func getFilePath(fullpath string) string {
+	return filepath.Dir(fullpath)
+}
+
+// getFileName accepts a string with full path and returns only filename
+func getFileName(fullpath string) string {
+	return filepath.Base(fullpath)
+}
+
+
 // aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
-// trippedEntropy checks if a given groups or offender falls in between entropy ranges
+// trippedEntropy checks if a given capture group or offender falls in between entropy ranges
 // supplied by a custom gitleaks configuration. Gitleaks do not check entropy by default.
 func trippedEntropy(groups []string, rule config.Rule) bool {
 	for _, e := range rule.Entropies {
@@ -98,12 +110,23 @@ func ruleContainRegex(rule config.Rule) bool {
 	return true
 }
 
-// Checks if the given rule has a file regex
-func ruleContainFileRegex(rule config.Rule) bool {
-	if rule.FileRegex == nil {
+// Checks if the given rule has a file name regex
+func ruleContainFileNameRegex(rule config.Rule) bool {
+	if rule.FileNameRegex == nil {
 		return false
 	}
-	if rule.FileRegex.String() == "" {
+	if rule.FileNameRegex.String() == "" {
+		return false
+	}
+	return true
+}
+
+// Checks if the given rule has a file path regex
+func ruleContainFilePathRegex(rule config.Rule) bool {
+	if rule.FilePathRegex == nil {
+		return false
+	}
+	if rule.FilePathRegex.String() == "" {
 		return false
 	}
 	return true
@@ -135,13 +158,26 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 // whitelisted files set in the configuration. If a global rule for files is defined and a filename
 // matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
-func InspectFile(content string, filename string, c *object.Commit, repo *Repo) {
-	// We want to check if there is a global
-	// whitelist for this file
+func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) {
+	
+	filename := getFileName(fullpath)
+	path := getFilePath(fullpath)
+
+	// We want to check if there is a whitelist for this file
 	if len(repo.config.Whitelist.Files) != 0 {
-		for _, reFile := range repo.config.Whitelist.Files {
-			if fileMatched(filename, reFile) {
+		for _, reFileName := range repo.config.Whitelist.Files {
+			if fileMatched(filename, reFileName) {
 				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
+				return
+			}
+		}
+	}
+
+	// We want to check if there is a whitelist for this path
+	if len(repo.config.Whitelist.Paths) != 0 {
+		for _, reFilePath := range repo.config.Whitelist.Files {
+			if fileMatched(path, reFilePath) {
+				log.Debugf("file in whitelisted path found, skipping audit of file: %s", filename)
 				return
 			}
 		}
@@ -151,21 +187,26 @@ func InspectFile(content string, filename string, c *object.Commit, repo *Repo) 
 		start := time.Now()
 
 		// For each rule we want to check filename whitelists
-		if isFileWhiteListed(filename, rule.Whitelist){
+		if isFileNameWhiteListed(filename, rule.Whitelist) || isFilePathWhiteListed(path, rule.Whitelist) {
 			continue
 		}
 
-		// If it has fileRegex and it doesnt match we continue to next rule
-		if ruleContainFileRegex(rule) && !fileMatched(filename, rule.FileRegex) {
+		// If it has fileNameRegex and it doesnt match we continue to next rule
+		if ruleContainFileNameRegex(rule) && !fileMatched(filename, rule.FileNameRegex) {
+			continue
+		} 
+
+		// If it has filePathRegex and it doesnt match we continue to next rule
+		if ruleContainFilePathRegex(rule) && !fileMatched(path, rule.FilePathRegex) {
 			continue
 		}
 
-		// If it doesnt contain a regex then it is a filename regex match
+		// If it doesnt contain a content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			sendLeak(filename, "N/A", filename, rule, c, repo)
+			sendLeak(filename, "N/A", fullpath, rule, c, repo)
 		} else {
 			//otherwise we check if it matches content regex
-			inspectFileContents(content, filename, rule, c, repo)
+			inspectFileContents(content, fullpath, rule, c, repo)
 		}
 
 		//	TODO should return filenameRegex if only file rule
@@ -179,7 +220,7 @@ func InspectFile(content string, filename string, c *object.Commit, repo *Repo) 
 // InspectString accepts a string, commit object, repo, and filename. This function iterates over
 // all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
 // Next, if the rule contains a regular expression then that will be checked.
-func inspectFileContents(content string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
+func inspectFileContents(content string, path string, rule config.Rule, c *object.Commit, repo *Repo) {
 	locs := rule.Regex.FindAllIndex([]byte(content), -1)
 	if len(locs) != 0 {
 		for _, loc := range locs {
@@ -209,7 +250,7 @@ func inspectFileContents(content string, filename string, rule config.Rule, c *o
 				continue
 			}
 
-			sendLeak(offender, line, filename, rule, c, repo)
+			sendLeak(offender, line, path, rule, c, repo)
 		}
 	}
 }
@@ -326,10 +367,21 @@ func isOffenderWhiteListed(offender string, whitelist []config.Whitelist) bool {
 	return false
 }
 
-func isFileWhiteListed(filename string, whitelist []config.Whitelist) bool {
+func isFileNameWhiteListed(filename string, whitelist []config.Whitelist) bool {
 	if len(whitelist) != 0 {
 		for _, wl := range whitelist {
 			if fileMatched(filename, wl.File) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func isFilePathWhiteListed(filepath string, whitelist []config.Whitelist) bool {
+	if len(whitelist) != 0 {
+		for _, wl := range whitelist {
+			if fileMatched(filepath, wl.Path) {
 				return true
 			}
 		}
