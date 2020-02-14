@@ -160,7 +160,8 @@ title = "gitleaks config"
 			Min = "5.2"
 			Max = "5.5"
 
-[Global]
+[[rules]]
+	description = "Files with keys and credentials"
     file = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
 
 [whitelist]
