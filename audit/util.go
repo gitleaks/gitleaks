@@ -153,11 +153,10 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 	})
 }
 
-// Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
-// binary, then gitleaks will skip auditing that file OR if a file is matched on
-// whitelisted files set in the configuration. If a global rule for files is defined and a filename
-// matches said global rule, then a leak is sent to the manager.
-// After that, file chunks are created which are then inspected by InspectString()
+// InspectFile accepts a file content, fullpath of file, commit and repo. If the file is
+// binary OR if a file is matched on whitelisted files set in the configuration, then gitleaks 
+// will skip auditing that file. It will check first if rules apply to this file comparing filename
+// and path to their respective rule regexes and inspect file content with inspectFileContents after.
 func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) {
 	
 	filename := getFileName(fullpath)
@@ -211,7 +210,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 
 		//	TODO should return filenameRegex if only file rule
 		repo.Manager.RecordTime(manager.RegexTime{
-			Time:  time.Now().Sub(start).Nanoseconds(),
+			Time:  howLong(start),
 			Regex: rule.Regex.String(),
 		})
 	}

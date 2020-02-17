@@ -19,7 +19,7 @@ type Whitelist struct {
 	Path        *regexp.Regexp
 }
 
-// entropy represents an entropy range
+// Entropy represents an entropy range
 type Entropy struct {
 	Min		float64
 	Max		float64
