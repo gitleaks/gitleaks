@@ -130,23 +130,23 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		// rule specific whitelists
 		var whitelists []Whitelist
 		for _, wl := range rule.Whitelist {
-			re, err := regexp.Compile(wl.Regex)
+			wlRe, err := regexp.Compile(wl.Regex)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			fileNameRe, err := regexp.Compile(wl.File)
+			wlFileNameRe, err := regexp.Compile(wl.File)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			filePathRe, err := regexp.Compile(wl.Path)
+			wlFilePathRe, err := regexp.Compile(wl.Path)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
 			whitelists = append(whitelists, Whitelist{
 				Description: wl.Description,
-				File:        fileNameRe,
-				Path:        filePathRe,
-				Regex:       re,
+				File:        wlFileNameRe,
+				Path:        wlFilePathRe,
+				Regex:       wlRe,
 			})
 		}
 
