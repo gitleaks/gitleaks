@@ -271,5 +271,18 @@
   "file": "secrets.py",
   "date": "2020-02-01T10:07:34-05:00",
   "tags": "key, AWS"
+ },
+ {
+  "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "95cf0237f8cdfc0686a29df08260d8635f46c9b0",
+  "repo": "test_repo_6",
+  "rule": "AWS Manager ID",
+  "commitMessage": "AWS Key in properties\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-19T04:04:15-05:00",
+  "tags": "key, AWS"
  }
 ]

@@ -1,7 +1,6 @@
 [
  {
   "line": "api_token: exampleSecretPassword",
-  "lineNumber": 3,
   "offender": "token: exampleSecretPassword",
   "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
   "repo": "test_repo_6",
@@ -15,7 +14,6 @@
  },
  {
   "line": "db_password_token: exampleSecretPassword",
-  "lineNumber": 3,
   "offender": "password_token: exampleSecretPassword",
   "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
   "repo": "test_repo_6",
@@ -28,8 +26,33 @@
   "tags": "key, Yml, Yaml"
  },
  {
+  "line": "apiToken=d41d8cd98f00b204e9800998ecf8427e",
+  "offender": "Token=d41d8cd98f00b204e9800998ecf8427e",
+  "commit": "95cf0237f8cdfc0686a29df08260d8635f46c9b0",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "AWS Key in properties\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-19T04:04:15-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "apiToken=d41d8cd98f00b204e9800998ecf8427e",
+  "offender": "Token=d41d8cd98f00b204e9800998ecf8427e",
+  "commit": "e8ee793eac345cd56b0f0a946f6f9b586bdb1373",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "Properties secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-19T03:55:22-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
   "line": "password: verySecretPassword",
-  "lineNumber": 2,
   "offender": "password: verySecretPassword",
   "commit": "a076b5881b503236c56c7573ef72bfa5338a0057",
   "repo": "test_repo_6",
@@ -43,7 +66,6 @@
  },
  {
   "line": "api_token: exampleSecretPassword",
-  "lineNumber": 2,
   "offender": "token: exampleSecretPassword",
   "commit": "a076b5881b503236c56c7573ef72bfa5338a0057",
   "repo": "test_repo_6",

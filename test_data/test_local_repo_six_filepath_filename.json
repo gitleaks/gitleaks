@@ -1,7 +1,6 @@
 [
  {
   "line": "api_token: exampleSecretPassword",
-  "lineNumber": 3,
   "offender": "token: exampleSecretPassword",
   "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
   "repo": "test_repo_6",
@@ -15,7 +14,6 @@
  },
  {
   "line": "db_password_token: exampleSecretPassword",
-  "lineNumber": 3,
   "offender": "password_token: exampleSecretPassword",
   "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
   "repo": "test_repo_6",
