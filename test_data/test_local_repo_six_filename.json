@@ -1,0 +1,58 @@
+[
+ {
+  "line": "api_token: exampleSecretPassword",
+  "lineNumber": 3,
+  "offender": "token: exampleSecretPassword",
+  "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "More secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/config.yaml",
+  "date": "2020-02-19T04:08:26-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "db_password_token: exampleSecretPassword",
+  "lineNumber": 3,
+  "offender": "password_token: exampleSecretPassword",
+  "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "More secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/config.yaml",
+  "date": "2020-02-19T04:08:26-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "password: verySecretPassword",
+  "lineNumber": 2,
+  "offender": "password: verySecretPassword",
+  "commit": "a076b5881b503236c56c7573ef72bfa5338a0057",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "Yaml secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "secrets.yaml",
+  "date": "2020-02-19T03:54:18-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "api_token: exampleSecretPassword",
+  "lineNumber": 2,
+  "offender": "token: exampleSecretPassword",
+  "commit": "a076b5881b503236c56c7573ef72bfa5338a0057",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "Yaml secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "secrets.yaml",
+  "date": "2020-02-19T03:54:18-05:00",
+  "tags": "key, Yml, Yaml"
+ }
+]
