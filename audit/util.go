@@ -202,7 +202,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 
 		// If it doesnt contain a content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			sendLeak(filename, "N/A", fullpath, rule, c, repo)
+			sendLeak("Filename/path offender: " + filename, "N/A", fullpath, rule, c, repo)
 		} else {
 			//otherwise we check if it matches content regex
 			inspectFileContents(content, fullpath, rule, c, repo)

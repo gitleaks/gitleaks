@@ -1,7 +1,7 @@
 [
  {
   "line": "N/A",
-  "offender": "server.test.py",
+  "offender": "Filename/path offender: server.test.py",
   "commit": "d274003914c707212cbe84e3e466a00013ccb639",
   "repo": "test_repo_1",
   "rule": "Python files",
@@ -27,7 +27,7 @@
  },
  {
   "line": "N/A",
-  "offender": "server.test.py",
+  "offender": "Filename/path offender: server.test.py",
   "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
   "repo": "test_repo_1",
   "rule": "Python files",
