@@ -173,7 +173,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 
 	// We want to check if there is a whitelist for this path
 	if len(repo.config.Whitelist.Paths) != 0 {
-		for _, reFilePath := range repo.config.Whitelist.Files {
+		for _, reFilePath := range repo.config.Whitelist.Paths {
 			if fileMatched(path, reFilePath) {
 				log.Debugf("file in whitelisted path found, skipping audit of file: %s", filename)
 				return
