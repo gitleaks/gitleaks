@@ -174,16 +174,6 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
 		{
-			description: "test entropy",
-			opts: options.Options{
-				RepoPath:     "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_entropy.json.got",
-				Config:       "../test_data/test_configs/entropy.toml",
-				ReportFormat: "json",
-			},
-			wantPath: "../test_data/test_entropy.json",
-		},
-		{
 			description: "test entropy and regex",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
@@ -427,7 +417,7 @@ func fileCheck(wantPath, gotPath string) error {
 	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(want), string(got), false)
-		return fmt.Errorf("does not equal: %s", dmp.DiffPrettyText(diffs))
+		return fmt.Errorf("%s does not equal %s: %s", wantPath, gotPath, dmp.DiffPrettyText(diffs))
 	}
 	if err := os.Remove(gotPath); err != nil {
 		return err

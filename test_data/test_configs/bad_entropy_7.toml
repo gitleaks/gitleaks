@@ -4,6 +4,6 @@
 	tags = ["entropy"]
 		[[rules.Entropies]]
 			Min = "1.0"
-			Max = "8"
-			Group = "x"
+			Max = "8.5"
+			Group = "0"
 
