@@ -21,9 +21,9 @@ type Whitelist struct {
 
 // Entropy represents an entropy range
 type Entropy struct {
-	Min		float64
-	Max		float64
-	Group	int
+	Min   float64
+	Max   float64
+	Group int
 }
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
@@ -32,13 +32,13 @@ type Entropy struct {
 // that match is not whitelisted (globally or locally), then a leak will be appended
 // to the final audit report.
 type Rule struct {
-	Description     string
-	Regex           *regexp.Regexp
-	FileNameRegex   *regexp.Regexp
-	FilePathRegex   *regexp.Regexp
-	Tags            []string
-	Whitelist       []Whitelist
-	Entropies       []Entropy
+	Description   string
+	Regex         *regexp.Regexp
+	FileNameRegex *regexp.Regexp
+	FilePathRegex *regexp.Regexp
+	Tags          []string
+	Whitelist     []Whitelist
+	Entropies     []Entropy
 }
 
 // Config is a composite struct of Rules and Whitelists
@@ -64,21 +64,21 @@ type TomlLoader struct {
 		Paths       []string
 	}
 	Rules []struct {
-		Description     string
-		Regex           string
-		FileNameRegex   string
-		FilePathRegex   string
-		Tags            []string
-		Entropies       []struct {
-			Min		        string
-			Max		        string
-			Group	        string
+		Description   string
+		Regex         string
+		FileNameRegex string
+		FilePathRegex string
+		Tags          []string
+		Entropies     []struct {
+			Min   string
+			Max   string
+			Group string
 		}
-		Whitelist       []struct {
-			Description     string
-			Regex           string
-			File            string
-			Path            string
+		Whitelist []struct {
+			Description string
+			Regex       string
+			File        string
+			Path        string
 		}
 	}
 }
@@ -160,7 +160,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			if err != nil {
 				return cfg, err
 			}
-			if(e.Group == "") {
+			if e.Group == "" {
 				e.Group = "0"
 			}
 			group, err := strconv.ParseInt(e.Group, 10, 64)
@@ -180,13 +180,13 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		cfg.Rules = append(cfg.Rules, Rule{
-			Description:     rule.Description,
-			Regex:           re,
-			FileNameRegex:   fileNameRe,
-			FilePathRegex:   filePathRe,
-			Tags:            rule.Tags,
-			Whitelist:       whitelists,
-			Entropies:       entropies,
+			Description:   rule.Description,
+			Regex:         re,
+			FileNameRegex: fileNameRe,
+			FilePathRegex: filePathRe,
+			Tags:          rule.Tags,
+			Whitelist:     whitelists,
+			Entropies:     entropies,
 		})
 	}
 

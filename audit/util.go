@@ -3,11 +3,11 @@ package audit
 import (
 	"fmt"
 	"math"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
-	"path/filepath"
 
 	"github.com/zricethezav/gitleaks/v3/config"
 	"github.com/zricethezav/gitleaks/v3/manager"
@@ -62,7 +62,6 @@ func getFilePath(fullpath string) string {
 func getFileName(fullpath string) string {
 	return filepath.Base(fullpath)
 }
-
 
 // aws_access_key_id='AKIAIO5FODNN7EXAMPLE',
 // trippedEntropy checks if a given capture group or offender falls in between entropy ranges
@@ -154,11 +153,11 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 }
 
 // InspectFile accepts a file content, fullpath of file, commit and repo. If the file is
-// binary OR if a file is matched on whitelisted files set in the configuration, then gitleaks 
+// binary OR if a file is matched on whitelisted files set in the configuration, then gitleaks
 // will skip auditing that file. It will check first if rules apply to this file comparing filename
 // and path to their respective rule regexes and inspect file content with inspectFileContents after.
 func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) {
-	
+
 	filename := getFileName(fullpath)
 	path := getFilePath(fullpath)
 
@@ -193,7 +192,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 		// If it has fileNameRegex and it doesnt match we continue to next rule
 		if ruleContainFileNameRegex(rule) && !fileMatched(filename, rule.FileNameRegex) {
 			continue
-		} 
+		}
 
 		// If it has filePathRegex and it doesnt match we continue to next rule
 		if ruleContainFilePathRegex(rule) && !fileMatched(path, rule.FilePathRegex) {
@@ -202,7 +201,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 
 		// If it doesnt contain a content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			sendLeak("Filename/path offender: " + filename, "N/A", fullpath, rule, c, repo)
+			sendLeak("Filename/path offender: "+filename, "N/A", fullpath, rule, c, repo)
 		} else {
 			//otherwise we check if it matches content regex
 			inspectFileContents(content, fullpath, rule, c, repo)
