@@ -20,9 +20,9 @@ type Whitelist struct {
 
 // entropy represents an entropy range
 type Entropy struct {
-	Min		float64
-	Max		float64
-	Group	int
+	Min   float64
+	Max   float64
+	Group int
 }
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
@@ -69,11 +69,11 @@ type TomlLoader struct {
 		Regex       string
 		Tags        []string
 		Entropies   []struct {
-			Min		string
-			Max		string
-			Group	string
+			Min   string
+			Max   string
+			Group string
 		}
-		Whitelist   []struct {
+		Whitelist []struct {
 			Description string
 			Regex       string
 			File        string
@@ -145,7 +145,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			if err != nil {
 				return cfg, err
 			}
-			if(e.Group == "") {
+			if e.Group == "" {
 				e.Group = "0"
 			}
 			group, err := strconv.ParseInt(e.Group, 10, 64)
