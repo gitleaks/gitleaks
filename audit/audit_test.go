@@ -283,6 +283,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_six_filepath_filename.json",
 		},
+		{
+			description: "test local repo six path globally whitelisted",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_path_globally_whitelisted.json.got",
+				Config:       "../test_data/test_configs/aws_key_global_whitelist_path.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
+		},
 	}
 
 	for _, test := range tests {
