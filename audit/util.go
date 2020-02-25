@@ -220,6 +220,7 @@ type commitInspector func(c *object.Commit, repo *Repo) error
 // object will be created from the hash which will be passed into either inspectCommitPatches
 // or inspectFilesAtCommit depending on the options set.
 func inspectCommit(hash string, repo *Repo, f commitInspector) error {
+	repo.Manager.IncrementCommits(1)
 	h := plumbing.NewHash(hash)
 	c, err := repo.CommitObject(h)
 	if err != nil {
