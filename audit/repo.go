@@ -257,8 +257,7 @@ func (repo *Repo) Audit() error {
 	semaphore := make(chan bool, howManyThreads(repo.Manager.Opts.Threads))
 	wg := sync.WaitGroup{}
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || c.Hash.String() == repo.Manager.Opts.CommitTo ||
-			repo.timeoutReached() || repo.depthReached(cc) {
+		if c == nil || repo.timeoutReached() || repo.depthReached(cc) {
 			return storer.ErrStop
 		}
 
@@ -306,6 +305,9 @@ func (repo *Repo) Audit() error {
 
 			return nil
 		})
+		if c.Hash.String() == repo.Manager.Opts.CommitTo {
+			return storer.ErrStop
+		}
 		return nil
 	})
 
