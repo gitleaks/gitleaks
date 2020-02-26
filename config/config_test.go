@@ -55,13 +55,6 @@ func TestParse(t *testing.T) {
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
 		{
-			description: "test bad global message regex",
-			opts: options.Options{
-				Config: "../test_data/test_configs/bad_aws_key_message_regex.toml",
-			},
-			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
-		},
-		{
 			description: "test successful load big ol thing",
 			opts: options.Options{
 				Config: "../test_data/test_configs/large.toml",

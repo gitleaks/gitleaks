@@ -1,0 +1,3 @@
+appName: "Gitleaks-Testing-App"
+api_token: exampleSecretPassword
+db_password: verySecretProductionPassword

@@ -1,0 +1,6 @@
+
+[[rules]]
+	description = "Generic password"
+	regex = '''(?i)(password|token).{0,20}?\s*[:|=]\s*?(?-i)([0-9a-zA-Z\/+]{4,40})'''
+	fileNameRegex = '''.*\.ya?ml'''
+	tags = ["key", "Yml", "Yaml"]

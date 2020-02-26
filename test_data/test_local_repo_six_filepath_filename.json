@@ -1,0 +1,15 @@
+[
+ {
+  "line": "apiToken=d41d8cd98f00b204e9800998ecf8427e",
+  "offender": "Token=d41d8cd98f00b204e9800998ecf8427e",
+  "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "Adding some secrets in config folder\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-24T14:13:15-05:00",
+  "tags": "key, Yml, Yaml"
+ }
+]

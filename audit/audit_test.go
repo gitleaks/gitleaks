@@ -253,6 +253,46 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_five_commit.json",
 		},
+		{
+			description: "test local repo six filename",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filename.json.got",
+				Config:       "../test_data/test_configs/regex_filename.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filename.json",
+		},
+		{
+			description: "test local repo six filepath",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filepath.json.got",
+				Config:       "../test_data/test_configs/regex_filepath.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filepath.json",
+		},
+		{
+			description: "test local repo six filename and filepath",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filepath_filename.json.got",
+				Config:       "../test_data/test_configs/regex_filepath_filename.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filepath_filename.json",
+		},
+		{
+			description: "test local repo six path globally whitelisted",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_path_globally_whitelisted.json.got",
+				Config:       "../test_data/test_configs/aws_key_global_whitelist_path.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
+		},
 	}
 
 	for _, test := range tests {
