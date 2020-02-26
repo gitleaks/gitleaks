@@ -98,6 +98,7 @@ func shannonEntropy(data string) (entropy float64) {
 	return entropy
 }
 
+
 // Checks if the given rule has a regex
 func ruleContainRegex(rule config.Rule) bool {
 	if rule.Regex == nil {
@@ -188,7 +189,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 		if isFileNameWhiteListed(filename, rule.Whitelist) || isFilePathWhiteListed(path, rule.Whitelist) {
 			continue
 		}
-
+    
 		// If it has fileNameRegex and it doesnt match we continue to next rule
 		if ruleContainFileNameRegex(rule) && !fileMatched(filename, rule.FileNameRegex) {
 			continue
