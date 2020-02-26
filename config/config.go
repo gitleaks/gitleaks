@@ -199,7 +199,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		cfg.Whitelist.Files = append(cfg.Whitelist.Files, re)
 	}
 
-	// global file whitelists
+	// global file path whitelists
 	for _, wlFilePath := range tomlLoader.Whitelist.Paths {
 		re, err := regexp.Compile(wlFilePath)
 		if err != nil {
