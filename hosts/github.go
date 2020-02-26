@@ -99,10 +99,10 @@ func (g *Github) Audit() {
 
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(g.manager)
-		r.Name = *repo.Name
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
 		})
+		r.Name = *repo.Name
 		if err != nil {
 			log.Warn("unable to clone via https and access token, attempting with ssh now")
 			auth, err := options.SSHAuth(g.manager.Opts)
