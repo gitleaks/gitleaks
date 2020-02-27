@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v3/audit"
-	"github.com/zricethezav/gitleaks/v3/manager"
-	"github.com/zricethezav/gitleaks/v3/options"
+	"github.com/zricethezav/gitleaks/v4/audit"
+	"github.com/zricethezav/gitleaks/v4/manager"
+	"github.com/zricethezav/gitleaks/v4/options"
 
 	"github.com/google/go-github/github"
 	log "github.com/sirupsen/logrus"
@@ -81,7 +81,6 @@ func (g *Github) Audit() {
 			githubRepos = append(githubRepos, r)
 		}
 
-
 		if resp == nil {
 			break
 		}
@@ -100,10 +99,10 @@ func (g *Github) Audit() {
 
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(g.manager)
-		r.Name = *repo.Name
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
 		})
+		r.Name = *repo.Name
 		if err != nil {
 			log.Warn("unable to clone via https and access token, attempting with ssh now")
 			auth, err := options.SSHAuth(g.manager.Opts)
@@ -162,7 +161,7 @@ func (g *Github) AuditPR() {
 				if f.Patch == nil {
 					continue
 				}
-				audit.InspectString(*f.Patch, &commitObj, repo, *f.Filename)
+				audit.InspectFile(*f.Patch, *f.Filename, &commitObj, repo)
 			}
 		}
 		page = resp.NextPage

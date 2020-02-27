@@ -1,8 +1,8 @@
-Gitleaks
---------
-
-<p align="left">
-      <a href="https://travis-ci.com/zricethezav/gitleaks"><img alt="Travis" src="https://travis-ci.com/zricethezav/gitleaks.svg?branch=master"></a>
+<p align="center">
+  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleakslogo.png" height="70" />
+  <p align="center">
+      <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
+  </p>
 </p>
 
 Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git repositories. As part of its core functionality, it provides:
@@ -43,7 +43,7 @@ docker pull zricethezav/gitleaks
 #### Go
 Ensure `GO111MODULE=on` is set as an env var
 ```bash
-go get github.com/zricethezav/gitleaks/v3@latest
+go get github.com/zricethezav/gitleaks/v4@latest
 ```
 
 ## Usage
@@ -128,4 +128,8 @@ Gitleaks provides consistent exist codes to assist in automation workflows such 
 ### Give Thanks
 
 If using gitleaks has made your job easier consider [sponsoring me](https://github.com/sponsors/zricethezav) through github's sponsorship program or donating to one of [Sam](https://www.flickr.com/photos/146541520@N08/albums/72157710121716312)'s favorite places, the Japan House on the University of Illinois at Urbana-Champaign's campus: https://japanhouse.illinois.edu/make-a-gift
+
+----
+#### Logo Attribution
+The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
 

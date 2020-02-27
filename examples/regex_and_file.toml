@@ -6,5 +6,7 @@
     regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
 
-[Global]
+[[rules]]
+    description = "PEM Files"
     file = '''(.*)?pem$'''
+    tags = ["key", "PEM"]

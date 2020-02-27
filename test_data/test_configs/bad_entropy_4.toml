@@ -1,7 +1,9 @@
 [[rules]]
 	description = "entropy"
-    entropies = [
-        "1-8.9",
-    ]
+	regex = '''['|"]([0-9a-zA-Z-._{}$\/\+=]{20,120})['|"]'''
 	tags = ["entropy"]
+		[[rules.Entropies]]
+			Min = "1.0"
+			Max = "8"
+			Group = "x"
 

@@ -13,8 +13,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v3/config"
-	"github.com/zricethezav/gitleaks/v3/options"
+	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v4/options"
 
 	"github.com/hako/durafmt"
 	"github.com/mattn/go-colorable"
@@ -156,7 +156,7 @@ func (manager *Manager) SendLeaks(l Leak) {
 		l.Offender = l.Offender[0:maxLineLen-1] + "..."
 	}
 	h := sha1.New()
-	h.Write([]byte(l.Commit + l.Offender + l.File))
+	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
 	manager.leakWG.Add(1)
 	manager.leakChan <- l

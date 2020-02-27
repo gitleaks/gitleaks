@@ -10,9 +10,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v3/config"
-	"github.com/zricethezav/gitleaks/v3/manager"
-	"github.com/zricethezav/gitleaks/v3/options"
+	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v4/manager"
+	"github.com/zricethezav/gitleaks/v4/options"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
@@ -174,16 +174,6 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
 		{
-			description: "test entropy",
-			opts: options.Options{
-				RepoPath:     "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_entropy.json.got",
-				Config:       "../test_data/test_configs/entropy.toml",
-				ReportFormat: "json",
-			},
-			wantPath: "../test_data/test_entropy.json",
-		},
-		{
 			description: "test entropy and regex",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
@@ -262,6 +252,46 @@ func TestAudit(t *testing.T) {
 				ReportFormat: "json",
 			},
 			wantPath: "../test_data/test_local_repo_five_commit.json",
+		},
+		{
+			description: "test local repo six filename",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filename.json.got",
+				Config:       "../test_data/test_configs/regex_filename.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filename.json",
+		},
+		{
+			description: "test local repo six filepath",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filepath.json.got",
+				Config:       "../test_data/test_configs/regex_filepath.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filepath.json",
+		},
+		{
+			description: "test local repo six filename and filepath",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_filepath_filename.json.got",
+				Config:       "../test_data/test_configs/regex_filepath_filename.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_filepath_filename.json",
+		},
+		{
+			description: "test local repo six path globally whitelisted",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_path_globally_whitelisted.json.got",
+				Config:       "../test_data/test_configs/aws_key_global_whitelist_path.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
 		},
 	}
 
@@ -427,7 +457,7 @@ func fileCheck(wantPath, gotPath string) error {
 	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(want), string(got), false)
-		return fmt.Errorf("does not equal: %s", dmp.DiffPrettyText(diffs))
+		return fmt.Errorf("%s does not equal %s: %s", wantPath, gotPath, dmp.DiffPrettyText(diffs))
 	}
 	if err := os.Remove(gotPath); err != nil {
 		return err

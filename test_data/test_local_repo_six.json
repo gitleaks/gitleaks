@@ -1,0 +1,44 @@
+[
+ {
+  "line": "api_token: exampleSecretPassword",
+  "lineNumber": 3,
+  "offender": "token: exampleSecretPassword",
+  "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "More secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/config.yaml",
+  "date": "2020-02-19T04:08:26-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "db_password_token: exampleSecretPassword",
+  "lineNumber": 3,
+  "offender": "password_token: exampleSecretPassword",
+  "commit": "e7bf376f855ae9bc6e3bb27b5f9d65c57eba799d",
+  "repo": "test_repo_6",
+  "rule": "Generic password",
+  "commitMessage": "More secrets\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/config.yaml",
+  "date": "2020-02-19T04:08:26-05:00",
+  "tags": "key, Yml, Yaml"
+ },
+ {
+  "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
+  "lineNumber": 1,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "95cf0237f8cdfc0686a29df08260d8635f46c9b0",
+  "repo": "test_repo_6",
+  "rule": "AWS Manager ID",
+  "commitMessage": "AWS Key in properties\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-19T04:04:15-05:00",
+  "tags": "key, AWS"
+ }
+]
