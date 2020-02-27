@@ -3,9 +3,9 @@ package hosts
 import (
 	"flag"
 	"fmt"
-	"github.com/zricethezav/gitleaks/v3/config"
-	"github.com/zricethezav/gitleaks/v3/manager"
-	"github.com/zricethezav/gitleaks/v3/options"
+	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v4/manager"
+	"github.com/zricethezav/gitleaks/v4/options"
 	"os"
 	"testing"
 )

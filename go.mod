@@ -1,4 +1,4 @@
-module github.com/zricethezav/gitleaks/v3
+module github.com/zricethezav/gitleaks/v4
 
 go 1.13
 

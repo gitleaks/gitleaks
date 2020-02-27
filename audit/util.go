@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v3/config"
-	"github.com/zricethezav/gitleaks/v3/manager"
+	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v4/manager"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"

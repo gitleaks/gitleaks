@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/zricethezav/gitleaks/v3/version"
+	"github.com/zricethezav/gitleaks/v4/version"
 
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
