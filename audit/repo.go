@@ -182,7 +182,7 @@ func (repo *Repo) AuditUncommitted() error {
 				}
 			}
 
-			InspectFile(diffContents, filename, c, repo)
+			InspectFile(diffContents, filename, c, repo, "N/A")
 		}
 	}
 

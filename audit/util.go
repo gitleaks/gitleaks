@@ -33,8 +33,8 @@ func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 			continue
 		}
 		for _, chunk := range f.Chunks() {
-			if chunk.Type() == fdiff.Delete || chunk.Type() == fdiff.Add {
-				InspectFile(chunk.Content(), getFileFullPath(f), c, repo)
+			if (!repo.Manager.Opts.AddsOnly && chunk.Type() == fdiff.Add) || chunk.Type() == fdiff.Delete {
+				InspectFile(chunk.Content(), getFileFullPath(f), c, repo, getDiffTypeName(chunk.Type()))
 			}
 		}
 	}
@@ -131,7 +131,7 @@ func ruleContainFilePathRegex(rule config.Rule) bool {
 	return true
 }
 
-func sendLeak(offender string, line string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
+func sendLeak(offender string, line string, filename string, rule config.Rule, c *object.Commit, repo *Repo, diffType string) {
 	if repo.Manager.Opts.Redact {
 		line = strings.ReplaceAll(line, offender, "REDACTED")
 		offender = "REDACTED"
@@ -139,6 +139,7 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 
 	repo.Manager.SendLeaks(manager.Leak{
 		Line:     line,
+		DiffType: diffType,
 		Offender: offender,
 		Commit:   c.Hash.String(),
 		Repo:     repo.Name,
@@ -156,7 +157,7 @@ func sendLeak(offender string, line string, filename string, rule config.Rule, c
 // binary OR if a file is matched on whitelisted files set in the configuration, then gitleaks
 // will skip auditing that file. It will check first if rules apply to this file comparing filename
 // and path to their respective rule regexes and inspect file content with inspectFileContents after.
-func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) {
+func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo, diffType string) {
 
 	filename := getFileName(fullpath)
 	path := getFilePath(fullpath)
@@ -201,10 +202,10 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 
 		// If it doesnt contain a content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			sendLeak("Filename/path offender: "+filename, "N/A", fullpath, rule, c, repo)
+			sendLeak("Filename/path offender: "+filename, "N/A", fullpath, rule, c, repo, diffType)
 		} else {
 			//otherwise we check if it matches content regex
-			inspectFileContents(content, fullpath, rule, c, repo)
+			inspectFileContents(content, fullpath, rule, c, repo, diffType)
 		}
 
 		//	TODO should return filenameRegex if only file rule
@@ -218,7 +219,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 // InspectString accepts a string, commit object, repo, and filename. This function iterates over
 // all the rules set by the gitleaks config. If the rule contains entropy checks then entropy will be checked first.
 // Next, if the rule contains a regular expression then that will be checked.
-func inspectFileContents(content string, path string, rule config.Rule, c *object.Commit, repo *Repo) {
+func inspectFileContents(content string, path string, rule config.Rule, c *object.Commit, repo *Repo, diffType string) {
 	locs := rule.Regex.FindAllIndex([]byte(content), -1)
 	if len(locs) != 0 {
 		for _, loc := range locs {
@@ -248,7 +249,7 @@ func inspectFileContents(content string, path string, rule config.Rule, c *objec
 				continue
 			}
 
-			sendLeak(offender, line, path, rule, c, repo)
+			sendLeak(offender, line, path, rule, c, repo, diffType)
 		}
 	}
 }
@@ -326,7 +327,16 @@ func inspectFilesAtCommit(c *object.Commit, repo *Repo) error {
 			return err
 		}
 
-		InspectFile(content, f.Name, c, repo)
+		// Inspecting a whole commit can be additions or/and deletions
+		// Except if it has no parent, then it must be additions
+		var diffType string
+		if len(c.ParentHashes) == 0 {
+			diffType = "Addition"
+		} else {
+			diffType = "N/A"
+		}
+
+		InspectFile(content, f.Name, c, repo, diffType)
 
 		return nil
 	})
@@ -455,4 +465,16 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 // converted to nanoseconds which is returned
 func howLong(t time.Time) int64 {
 	return time.Now().Sub(t).Nanoseconds()
+}
+
+// getDiffTypeName returns the diff type name from the user point of view
+func getDiffTypeName(operation fdiff.Operation) string {
+	switch operation {
+	case fdiff.Add:
+		return "Deletion"
+	case fdiff.Delete:
+		return "Addition"
+	default:
+		return "N/A"
+	}
 }

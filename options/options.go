@@ -53,6 +53,7 @@ type Options struct {
 	CommitTo      string `long:"commit-to" description:"Commit to stop audit"`
 	Timeout       string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth         int    `long:"depth" description:"Number of commits to audit"`
+	AddsOnly      bool   `long:"adds-only" description:"Only audit additions in commits"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`

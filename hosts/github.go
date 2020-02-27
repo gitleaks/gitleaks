@@ -161,7 +161,7 @@ func (g *Github) AuditPR() {
 				if f.Patch == nil {
 					continue
 				}
-				audit.InspectFile(*f.Patch, *f.Filename, &commitObj, repo)
+				audit.InspectFile(*f.Patch, *f.Filename, &commitObj, repo, "N/A")
 			}
 		}
 		page = resp.NextPage
