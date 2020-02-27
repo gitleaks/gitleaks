@@ -1,6 +1,7 @@
 [
  {
   "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "diffType": "Addition",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
   "repo": "test_repo_1",
@@ -14,6 +15,7 @@
  },
  {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
+  "diffType": "Deletion",
   "offender": "AKIALALEMEL33243OLIB",
   "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
   "repo": "test_repo_2",
@@ -27,6 +29,7 @@
  },
  {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
+  "diffType": "Deletion",
   "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
   "repo": "test_repo_2",
@@ -40,6 +43,7 @@
  },
  {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
+  "diffType": "Addition",
   "offender": "AKIALALEMEL33243OLIB",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_2",
@@ -53,6 +57,7 @@
  },
  {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
+  "diffType": "Addition",
   "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_2",
@@ -66,6 +71,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Deletion",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "996865bb912f3bc45898a370a13aadb315014b55",
   "repo": "test_repo_2",
@@ -79,6 +85,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Deletion",
   "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
   "commit": "996865bb912f3bc45898a370a13aadb315014b55",
   "repo": "test_repo_2",
@@ -92,6 +99,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Addition",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
@@ -105,6 +113,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Addition",
   "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
@@ -118,6 +127,7 @@
  },
  {
   "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
+  "diffType": "Deletion",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
@@ -131,6 +141,7 @@
  },
  {
   "line": "\nHere's an AWS secret: AKIALALEMEL33243OLIAE",
+  "diffType": "Addition",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "b10b3e2cb320a8c211fda94c4567299d37de7776",
   "repo": "test_repo_2",
@@ -144,6 +155,7 @@
  },
  {
   "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Deletion",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
   "repo": "test_repo_3",
@@ -157,6 +169,7 @@
  },
  {
   "line": "const AWSSECRET = \"99432bfewaf823ec3294e231\"",
+  "diffType": "Deletion",
   "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
   "repo": "test_repo_3",
@@ -170,6 +183,7 @@
  },
  {
   "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Addition",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "84ac4e80d4dbf2c968b64e9d4005f5079795bb81",
   "repo": "test_repo_3",
@@ -183,6 +197,7 @@
  },
  {
   "line": "const AWSSECRET = \"99432bfewaf823ec3294e231\"",
+  "diffType": "Addition",
   "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
   "commit": "84ac4e80d4dbf2c968b64e9d4005f5079795bb81",
   "repo": "test_repo_3",
@@ -196,6 +211,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Deletion",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "64cfcee9aad1c84581631636bfc54f2050718d1a",
   "repo": "test_repo_3",
@@ -209,6 +225,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Deletion",
   "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
   "commit": "64cfcee9aad1c84581631636bfc54f2050718d1a",
   "repo": "test_repo_3",
@@ -222,6 +239,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Addition",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "deea550dd6c7acaf0e59432600593533984a2125",
   "repo": "test_repo_3",
@@ -235,6 +253,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "diffType": "Addition",
   "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
   "commit": "deea550dd6c7acaf0e59432600593533984a2125",
   "repo": "test_repo_3",
@@ -248,6 +267,7 @@
  },
  {
   "line": "\nmore_secrets = '99432bfewaf823ec3294e231'",
+  "diffType": "Addition",
   "offender": "secrets = '99432bfewaf823ec3294e231'",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
@@ -261,6 +281,7 @@
  },
  {
   "line": "\naws_access_key_id='AKIAIO5FODNN7EXAMPL2'",
+  "diffType": "Addition",
   "offender": "AKIAIO5FODNN7EXAMPL2",
   "commit": "ca71fcdeda15f25f0cc661d90e8785c255925c27",
   "repo": "test_repo_5",
@@ -274,6 +295,7 @@
  },
  {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE'",
+  "diffType": "Addition",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "1f2a4abc47dabf991e6af6f9770867ce0ac1f360",
   "repo": "test_repo_5",
@@ -287,6 +309,7 @@
  },
  {
   "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
+  "diffType": "Addition",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
   "repo": "test_repo_6",

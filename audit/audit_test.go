@@ -293,6 +293,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
 		},
+		{
+			description: "test local repo additions only",
+			opts: options.Options{
+				AddsOnly:     true,
+				RepoPath:     "../test_data/test_repos/test_repo_4",
+				Report:       "../test_data/test_additions_only.json.got",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_additions_only.json",
+		},
 	}
 
 	for _, test := range tests {

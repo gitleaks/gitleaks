@@ -1,6 +1,7 @@
 [
  {
   "line": "N/A",
+  "diffType": "Addition",
   "offender": "Filename/path offender: server.test.py",
   "commit": "d274003914c707212cbe84e3e466a00013ccb639",
   "repo": "test_repo_1",
@@ -14,6 +15,7 @@
  },
  {
   "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "diffType": "Addition",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
   "repo": "test_repo_1",
@@ -27,6 +29,7 @@
  },
  {
   "line": "N/A",
+  "diffType": "Addition",
   "offender": "Filename/path offender: server.test.py",
   "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
   "repo": "test_repo_1",

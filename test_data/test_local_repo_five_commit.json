@@ -1,6 +1,7 @@
 [
  {
   "line": "\nmore_secrets = '99432bfewaf823ec3294e231'",
+  "diffType": "Addition",
   "offender": "secrets = '99432bfewaf823ec3294e231'",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",

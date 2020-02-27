@@ -1,6 +1,7 @@
 [
  {
   "line": "api_token: exampleSecretPassword",
+  "diffType": "Addition",
   "offender": "token: exampleSecretPassword",
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
   "repo": "test_repo_6",
@@ -14,6 +15,7 @@
  },
  {
   "line": "db_password: verySecretProductionPassword",
+  "diffType": "Addition",
   "offender": "password: verySecretProductionPassword",
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
   "repo": "test_repo_6",

@@ -1,6 +1,7 @@
 [
  {
   "line": " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'",
+  "diffType": "N/A",
   "offender": "AKIAIO5FODNN7DXAMPLE",
   "commit": "0000000000000000000000000000000000000000",
   "repo": "test_repo_1",
