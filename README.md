@@ -5,6 +5,9 @@
   </p>
 </p>
 
+### [Gitleaks Action](https://github.com/marketplace/actions/gitleaks) now available for your workflows!
+
+
 Audit git repos for secrets. Gitleaks provides a way for you to find unencrypted secrets and other unwanted data types in git repositories. As part of its core functionality, it provides:
 
 * Audits for uncommitted changes
