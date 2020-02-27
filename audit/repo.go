@@ -224,6 +224,15 @@ func (repo *Repo) Audit() error {
 	if repo.Manager.Opts.Commit != "" {
 		return inspectCommit(repo.Manager.Opts.Commit, repo, inspectCommitPatches)
 	} else if repo.Manager.Opts.FilesAtCommit != "" {
+		if repo.Manager.Opts.FilesAtCommit == "latest" {
+			// Getting the latest commit on the current branch
+			// ... retrieving the branch being pointed by HEAD
+			ref, err := repo.Repository.Head()
+			if err != nil {
+				return err
+			}
+			return inspectCommit(ref.Hash().String(), repo, inspectFilesAtCommit)
+		}
 		return inspectCommit(repo.Manager.Opts.FilesAtCommit, repo, inspectFilesAtCommit)
 	}
 
