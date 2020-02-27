@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v3/options"
+	"github.com/zricethezav/gitleaks/v4/options"
 	"regexp"
 	"testing"
 )

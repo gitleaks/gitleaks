@@ -43,7 +43,7 @@ docker pull zricethezav/gitleaks
 #### Go
 Ensure `GO111MODULE=on` is set as an env var
 ```bash
-go get github.com/zricethezav/gitleaks/v3@latest
+go get github.com/zricethezav/gitleaks/v4@latest
 ```
 
 ## Usage

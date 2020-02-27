@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"path"
 
-	"github.com/zricethezav/gitleaks/v3/manager"
+	"github.com/zricethezav/gitleaks/v4/manager"
 
 	log "github.com/sirupsen/logrus"
 )
