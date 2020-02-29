@@ -11,7 +11,7 @@ import (
 	"github.com/zricethezav/gitleaks/v4/manager"
 	"github.com/zricethezav/gitleaks/v4/options"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v29/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
@@ -75,6 +75,9 @@ func (g *Github) Audit() {
 		} else if g.manager.Opts.Organization != "" {
 			_githubRepos, resp, err = g.client.Repositories.ListByOrg(ctx, g.manager.Opts.Organization,
 				&github.RepositoryListByOrgOptions{ListOptions: listOptions})
+		} else {
+			_githubRepos, resp, err = g.client.Repositories.List(ctx, "",
+				&github.RepositoryListOptions{ListOptions: listOptions})
 		}
 
 		for _, r := range _githubRepos {
