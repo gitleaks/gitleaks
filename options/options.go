@@ -23,6 +23,7 @@ const (
 	Success          = 0
 	LeaksPresent     = 1
 	ErrorEncountered = 2
+	donateMessage    = "👋 maintaining gitleaks takes a lot of work so consider sponsoring me or donating a little something\n❤️ https://github.com/sponsors/zricethezav\n💸 https://www.paypal.me/zricethezav\n₿  btc:3GndEzRZa6rJ8ZpkLureUcc5TDHMYfpDxn"
 )
 
 // Options stores values of command line options
@@ -76,6 +77,7 @@ func ParseOptions() (Options, error) {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stdout)
 		}
+		fmt.Println(donateMessage)
 		os.Exit(0)
 	}
 

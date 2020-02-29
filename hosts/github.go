@@ -10,12 +10,13 @@ import (
 	"github.com/zricethezav/gitleaks/v4/manager"
 	"github.com/zricethezav/gitleaks/v4/options"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v29/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 )
 
 // Github wraps a github client and manager. This struct implements what the Host interface defines.
@@ -57,7 +58,10 @@ func (g *Github) Audit() {
 		Page:    1,
 	}
 
-	var githubRepos []*github.Repository
+	var (
+		githubRepos []*github.Repository
+		auth        transport.AuthMethod
+	)
 
 	for {
 		var (
@@ -71,6 +75,9 @@ func (g *Github) Audit() {
 		} else if g.manager.Opts.Organization != "" {
 			_githubRepos, resp, err = g.client.Repositories.ListByOrg(ctx, g.manager.Opts.Organization,
 				&github.RepositoryListByOrgOptions{ListOptions: listOptions})
+		} else {
+			_githubRepos, resp, err = g.client.Repositories.List(ctx, "",
+				&github.RepositoryListOptions{ListOptions: listOptions})
 		}
 
 		for _, r := range _githubRepos {
@@ -99,8 +106,13 @@ func (g *Github) Audit() {
 
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(g.manager)
+
+		if g.manager.CloneOptions != nil {
+			auth = g.manager.CloneOptions.Auth
+		}
 		err := r.Clone(&git.CloneOptions{
-			URL: *repo.CloneURL,
+			URL:  *repo.CloneURL,
+			Auth: auth,
 		})
 		r.Name = *repo.Name
 		if err != nil {
