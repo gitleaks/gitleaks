@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"context"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"strconv"
 	"strings"
 	"sync"
@@ -17,6 +16,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 )
 
 // Github wraps a github client and manager. This struct implements what the Host interface defines.
@@ -60,7 +60,7 @@ func (g *Github) Audit() {
 
 	var (
 		githubRepos []*github.Repository
-		auth transport.AuthMethod
+		auth        transport.AuthMethod
 	)
 
 	for {
@@ -111,7 +111,7 @@ func (g *Github) Audit() {
 			auth = g.manager.CloneOptions.Auth
 		}
 		err := r.Clone(&git.CloneOptions{
-			URL: *repo.CloneURL,
+			URL:  *repo.CloneURL,
 			Auth: auth,
 		})
 		r.Name = *repo.Name
