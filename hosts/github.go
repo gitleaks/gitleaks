@@ -2,6 +2,7 @@ package hosts
 
 import (
 	"context"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"strconv"
 	"strings"
 	"sync"
@@ -57,7 +58,10 @@ func (g *Github) Audit() {
 		Page:    1,
 	}
 
-	var githubRepos []*github.Repository
+	var (
+		githubRepos []*github.Repository
+		auth transport.AuthMethod
+	)
 
 	for {
 		var (
@@ -99,8 +103,13 @@ func (g *Github) Audit() {
 
 	for _, repo := range githubRepos {
 		r := audit.NewRepo(g.manager)
+
+		if g.manager.CloneOptions != nil {
+			auth = g.manager.CloneOptions.Auth
+		}
 		err := r.Clone(&git.CloneOptions{
 			URL: *repo.CloneURL,
+			Auth: auth,
 		})
 		r.Name = *repo.Name
 		if err != nil {
