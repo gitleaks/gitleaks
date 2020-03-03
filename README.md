@@ -67,7 +67,7 @@ Application Options:
       --password=        Password for git repo
       --access-token=    Access token for git repo
       --commit=          sha of commit to audit
-      --files-at-commit= sha of commit to audit all files at commit
+      --files-at-commit= sha of commit to audit all files at commit or "latest" to scan the last commit of the repository
       --threads=         Maximum number of threads gitleaks spawns
       --ssh-key=         path to ssh key used for auth
       --uncommitted      run gitleaks on uncommitted code
