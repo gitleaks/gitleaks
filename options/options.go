@@ -36,7 +36,7 @@ type Options struct {
 	Username      string `long:"username" description:"Username for git repo"`
 	Password      string `long:"password" description:"Password for git repo"`
 	AccessToken   string `long:"access-token" description:"Access token for git repo"`
-	Commit        string `long:"commit" description:"sha of commit to audit"`
+	Commit        string `long:"commit" description:"sha of commit to audit or \"latest\" to scan the last commit of the repository"`
 	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to audit all files at commit"`
 	Threads       int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
 	SSH           string `long:"ssh-key" description:"path to ssh key used for auth"`
