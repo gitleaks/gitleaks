@@ -127,10 +127,15 @@ Gitleaks provides consistent exist codes to assist in automation workflows such 
 1: leaks present
 2: error encountered
 ```
+----
+## Give Thanks
+👋 If using gitleaks has made your job easier consider sponsoring me through github's sponsorship program or donating a little something
 
-### Give Thanks
+❤️ [sponsor](https://github.com/sponsors/zricethezav)
 
-If using gitleaks has made your job easier consider [sponsoring me](https://github.com/sponsors/zricethezav) through github's sponsorship program or donating to one of [Sam](https://www.flickr.com/photos/146541520@N08/albums/72157710121716312)'s favorite places, the Japan House on the University of Illinois at Urbana-Champaign's campus: https://japanhouse.illinois.edu/make-a-gift
+💵 [paypal](https://www.paypal.me/zricethezav)
+
+₿  btc:3GndEzRZa6rJ8ZpkLureUcc5TDHMYfpDxn
 
 ### Sponsors
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
@@ -142,4 +147,6 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 ----
 #### Logo Attribution
 The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
+
+
 
