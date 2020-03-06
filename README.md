@@ -135,7 +135,7 @@ Gitleaks provides consistent exist codes to assist in automation workflows such 
 
 💵 [paypal](https://www.paypal.me/zricethezav)
 
-₿  btc:3GndEzRZa6rJ8ZpkLureUcc5TDHMYfpDxn
+₿itcoin:3GndEzRZa6rJ8ZpkLureUcc5TDHMYfpDxn
 
 ### Sponsors
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
