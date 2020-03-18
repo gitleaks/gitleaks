@@ -13,7 +13,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "AWS Secret Key"
-	regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
+	regex = '''(?i)aws(.{0,20})?(?-i)[0-9a-zA-Z\/+]{40}''
 	tags = ["key", "AWS"]
 
 [[rules]]
@@ -23,37 +23,37 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Facebook Secret Key"
-	regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
+	regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)[0-9a-f]{32}''
 	tags = ["key", "Facebook"]
 
 [[rules]]
 	description = "Facebook Client ID"
-	regex = '''(?i)(facebook|fb)(.{0,20})?['\"][0-9]{13,17}['\"]'''
+	regex = '''(?i)(facebook|fb)(.{0,20})?[0-9]{13,17}''
 	tags = ["key", "Facebook"]
 
 [[rules]]
 	description = "Twitter Secret Key"
-	regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{35,44}['\"]'''
+	regex = '''(?i)twitter(.{0,20})?[0-9a-z]{35,44}''
 	tags = ["key", "Twitter"]
 
 [[rules]]
 	description = "Twitter Client ID"
-	regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{18,25}['\"]'''
+	regex = '''(?i)twitter(.{0,20})?[0-9a-z]{18,25}''
 	tags = ["client", "Twitter"]
 
 [[rules]]
 	description = "Github"
-	regex = '''(?i)github(.{0,20})?(?-i)['\"][0-9a-zA-Z]{35,40}['\"]'''
+	regex = '''(?i)github(.{0,20})?(?-i)[0-9a-zA-Z]{35,40}''
 	tags = ["key", "Github"]
 
 [[rules]]
 	description = "LinkedIn Client ID"
-	regex = '''(?i)linkedin(.{0,20})?(?-i)['\"][0-9a-z]{12}['\"]'''
+	regex = '''(?i)linkedin(.{0,20})?(?-i)[0-9a-z]{12}''
 	tags = ["client", "LinkedIn"]
 
 [[rules]]
 	description = "LinkedIn Secret Key"
-	regex = '''(?i)linkedin(.{0,20})?['\"][0-9a-z]{16}['\"]'''
+	regex = '''(?i)linkedin(.{0,20})?[0-9a-z]{16}''
 	tags = ["secret", "LinkedIn"]
 
 [[rules]]
@@ -68,7 +68,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Generic Credential"
-	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?['|"][0-9a-zA-Z]{16,45}['|"]'''
+	regex = '''(?i)(api_key|apikey|secret)(.{0,20})?[0-9a-zA-Z]{16,45}''
 	tags = ["key", "API", "generic"]
 
 [[rules]]
@@ -76,20 +76,24 @@ title = "gitleaks config"
 	regex = '''AIza[0-9A-Za-z\\-_]{35}'''
 	tags = ["key", "Google"]
 
+[[rules]]
+	description = "Google (GCP) Service Account"
+	regex = '''"type": "service_account"'''
+	tags = ["key", "Google"]
 
 [[rules]]
 	description = "Heroku API key"
-	regex = '''(?i)heroku(.{0,20})?['"][0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}['"]'''
+	regex = '''(?i)heroku(.{0,20})?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''
 	tags = ["key", "Heroku"]
 
 [[rules]]
 	description = "MailChimp API key"
-	regex = '''(?i)(mailchimp|mc)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]'''
+	regex = '''(?i)(mailchimp|mc)(.{0,20})?[0-9a-f]{32}-us[0-9]{1,2}''
 	tags = ["key", "Mailchimp"]
 
 [[rules]]
 	description = "Mailgun API key"
-	regex = '''(?i)(mailgun|mg)(.{0,20})?['"][0-9a-z]{32}['"]'''
+	regex = '''((?i)(mailgun|mg)(.{0,20})?)?key-[0-9a-z]{32}''
 	tags = ["key", "Mailgun"]
 
 [[rules]]
@@ -114,7 +118,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Stripe API key"
-	regex = '''(?i)stripe(.{0,20})?['\"][sk|rk]_live_[0-9a-zA-Z]{24}'''
+	regex = '''(?i)stripe(.{0,20})?[sr]k_live_[0-9a-zA-Z]{24}'''
 	tags = ["key", "Stripe"]
 
 [[rules]]
@@ -129,7 +133,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Twilio API key"
-	regex = '''(?i)twilio(.{0,20})?['\"][0-9a-f]{32}['\"]'''
+	regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}''
 	tags = ["key", "twilio"]
 
 [whitelist]
