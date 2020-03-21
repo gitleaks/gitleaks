@@ -120,6 +120,7 @@ func (g *Github) Audit() {
 			auth, err := options.SSHAuth(g.manager.Opts)
 			if err != nil {
 				log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
+				continue
 			}
 			err = r.Clone(&git.CloneOptions{
 				URL:  *repo.SSHURL,
@@ -127,6 +128,7 @@ func (g *Github) Audit() {
 			})
 			if err != nil {
 				log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
+				continue
 			}
 		}
 		if err = r.Audit(); err != nil {
