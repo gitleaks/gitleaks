@@ -13,6 +13,32 @@
   "tags": "key, AWS"
  },
  {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "offender": "key_id='AKIAIO5FODNN7EXAMPLE",
+  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
+  "repo": "test_repo_1",
+  "rule": "Generic Credential",
+  "commitMessage": "commit 1 with secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "server.test.py",
+  "date": "2019-10-24T09:29:27-04:00",
+  "tags": "key, API, generic"
+ },
+ {
+  "line": "    aws_secret_access_key='ABCDEF+c2L7yXeGvUyrPgYsDnWRRC1AYEXAMPLE'",
+  "offender": "secret_access_key='ABCDEF+c2L7yXeGvUyrPgYsDnWRRC1AYEXAMPLE",
+  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
+  "repo": "test_repo_1",
+  "rule": "Generic Credential",
+  "commitMessage": "commit 1 with secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "server.test.py",
+  "date": "2019-10-24T09:29:27-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
   "offender": "AKIALALEMEL33243OLIB",
   "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
@@ -26,8 +52,21 @@
   "tags": "key, AWS"
  },
  {
+  "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
+  "offender": "KEY = \"AKIALALEMEL33243OLIBE",
+  "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
+  "repo": "test_repo_2",
+  "rule": "Generic Credential",
+  "commitMessage": "rm secrets again\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:12:32-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "SECRET = \"99432bfewaf823ec3294e231",
   "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
@@ -52,8 +91,21 @@
   "tags": "key, AWS"
  },
  {
+  "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
+  "offender": "KEY = \"AKIALALEMEL33243OLIBE",
+  "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
+  "repo": "test_repo_2",
+  "rule": "Generic Credential",
+  "commitMessage": "adding another one\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:12:08-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "    const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "SECRET = \"99432bfewaf823ec3294e231",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
@@ -79,7 +131,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
+  "offender": "secret: \"AKIALALEMEL33243OLIAE",
   "commit": "996865bb912f3bc45898a370a13aadb315014b55",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
@@ -105,7 +157,7 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
+  "offender": "secret: \"AKIALALEMEL33243OLIAE",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
   "rule": "Generic Credential",
@@ -130,6 +182,19 @@
   "tags": "key, AWS"
  },
  {
+  "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
+  "offender": "secret: AKIALALEMEL33243OLIAE",
+  "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+  "repo": "test_repo_2",
+  "rule": "Generic Credential",
+  "commitMessage": "wait this is actually adding an aws secret\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:01:27-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "\nHere's an AWS secret: AKIALALEMEL33243OLIAE",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "b10b3e2cb320a8c211fda94c4567299d37de7776",
@@ -143,6 +208,19 @@
   "tags": "key, AWS"
  },
  {
+  "line": "\nHere's an AWS secret: AKIALALEMEL33243OLIAE",
+  "offender": "secret: AKIALALEMEL33243OLIAE",
+  "commit": "b10b3e2cb320a8c211fda94c4567299d37de7776",
+  "repo": "test_repo_2",
+  "rule": "Generic Credential",
+  "commitMessage": "adding aws key\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T12:58:39-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
@@ -156,8 +234,21 @@
   "tags": "key, AWS"
  },
  {
+  "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
+  "offender": "KEY = \"AKIALALEMEL33243OLIAE",
+  "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
+  "repo": "test_repo_3",
+  "rule": "Generic Credential",
+  "commitMessage": "rm secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:54:26-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "SECRET = \"99432bfewaf823ec3294e231",
   "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
   "repo": "test_repo_3",
   "rule": "Generic Credential",
@@ -182,8 +273,21 @@
   "tags": "key, AWS"
  },
  {
+  "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
+  "offender": "KEY = \"AKIALALEMEL33243OLIAE",
+  "commit": "84ac4e80d4dbf2c968b64e9d4005f5079795bb81",
+  "repo": "test_repo_3",
+  "rule": "Generic Credential",
+  "commitMessage": "more secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:54:08-04:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "const AWSSECRET = \"99432bfewaf823ec3294e231\"",
-  "offender": "SECRET = \"99432bfewaf823ec3294e231\"",
+  "offender": "SECRET = \"99432bfewaf823ec3294e231",
   "commit": "84ac4e80d4dbf2c968b64e9d4005f5079795bb81",
   "repo": "test_repo_3",
   "rule": "Generic Credential",
@@ -209,7 +313,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
+  "offender": "secret: \"AKIALALEMEL33243OLIAE",
   "commit": "64cfcee9aad1c84581631636bfc54f2050718d1a",
   "repo": "test_repo_3",
   "rule": "Generic Credential",
@@ -235,7 +339,7 @@
  },
  {
   "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "secret: \"AKIALALEMEL33243OLIAE\"",
+  "offender": "secret: \"AKIALALEMEL33243OLIAE",
   "commit": "deea550dd6c7acaf0e59432600593533984a2125",
   "repo": "test_repo_3",
   "rule": "Generic Credential",
@@ -248,7 +352,7 @@
  },
  {
   "line": "\nmore_secrets = '99432bfewaf823ec3294e231'",
-  "offender": "secrets = '99432bfewaf823ec3294e231'",
+  "offender": "secrets = '99432bfewaf823ec3294e231",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
   "rule": "Generic Credential",
@@ -273,6 +377,19 @@
   "tags": "key, AWS"
  },
  {
+  "line": "\naws_access_key_id='AKIAIO5FODNN7EXAMPL2'",
+  "offender": "key_id='AKIAIO5FODNN7EXAMPL2",
+  "commit": "ca71fcdeda15f25f0cc661d90e8785c255925c27",
+  "repo": "test_repo_5",
+  "rule": "Generic Credential",
+  "commitMessage": "introduce more secrets\n",
+  "author": "Zach Rice",
+  "email": "zrice@gitlab.com",
+  "file": "secrets.py",
+  "date": "2020-02-01T10:08:04-05:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE'",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "1f2a4abc47dabf991e6af6f9770867ce0ac1f360",
@@ -286,6 +403,32 @@
   "tags": "key, AWS"
  },
  {
+  "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE'",
+  "offender": "key_id='AKIAIO5FODNN7EXAMPLE",
+  "commit": "1f2a4abc47dabf991e6af6f9770867ce0ac1f360",
+  "repo": "test_repo_5",
+  "rule": "Generic Credential",
+  "commitMessage": "introduce secrets\n",
+  "author": "Zach Rice",
+  "email": "zrice@gitlab.com",
+  "file": "secrets.py",
+  "date": "2020-02-01T10:07:34-05:00",
+  "tags": "key, API, generic"
+ },
+ {
+  "line": "db_password: verySecretProductionPassword",
+  "offender": "password: verySecretProductionPassword",
+  "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
+  "repo": "test_repo_6",
+  "rule": "Generic Credential",
+  "commitMessage": "Adding some secrets in config folder\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "application.yaml",
+  "date": "2020-02-24T14:13:15-05:00",
+  "tags": "key, API, generic"
+ },
+ {
   "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
@@ -297,5 +440,18 @@
   "file": "config/application.properties",
   "date": "2020-02-24T14:13:15-05:00",
   "tags": "key, AWS"
+ },
+ {
+  "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
+  "offender": "key_id=AKIAIO5FODNN7EXAMPLE",
+  "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
+  "repo": "test_repo_6",
+  "rule": "Generic Credential",
+  "commitMessage": "Adding some secrets in config folder\n\n",
+  "author": "Noel Algora",
+  "email": "noealgigu@gmail.com",
+  "file": "config/application.properties",
+  "date": "2020-02-24T14:13:15-05:00",
+  "tags": "key, API, generic"
  }
 ]
