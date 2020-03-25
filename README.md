@@ -140,9 +140,9 @@ Gitleaks provides consistent exist codes to assist in automation workflows such 
 ### Sponsors
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
-[![Adam Shannon](https://github.com/adamdecaf.png?size=100)](https://github.com/adamdecaf) | 
----|
-[Adam Shannon](https://ashannon.us/) |
+[![Adam Shannon](https://github.com/adamdecaf.png?size=75)](https://github.com/adamdecaf) | [![Granville Schmidt](https://github.com/gramidt.png?size=75)](https://github.com/gramidt) | 
+---|---|
+[Adam Shannon](https://ashannon.us/) | [Granville Schmidt](https://cloudcompliance.ninja) 
 
 ----
 #### Logo Attribution
