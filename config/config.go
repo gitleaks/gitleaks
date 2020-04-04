@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path"
 	"regexp"
 	"strconv"
 
@@ -94,6 +95,8 @@ func NewConfig(options options.Options) (Config, error) {
 	var err error
 	if options.Config != "" {
 		_, err = toml.DecodeFile(options.Config, &tomlLoader)
+		// append a whitelist rule for whitelisting the config
+		tomlLoader.Whitelist.Files = append(tomlLoader.Whitelist.Files, path.Base(options.Config))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}
