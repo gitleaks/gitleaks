@@ -264,6 +264,16 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_five_commit.json",
 		},
 		{
+			description: "test local repo five at latest commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_5",
+				Report:       "../test_data/test_local_repo_five_at_latest_commit.json.got",
+				Commit:       "latest",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_five_at_latest_commit.json",
+		},
+		{
 			description: "test local repo six filename",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_6",

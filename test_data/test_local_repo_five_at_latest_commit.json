@@ -1,0 +1,15 @@
+[
+ {
+  "line": "\nmore_secrets = '99432bfewaf823ec3294e231'",
+  "offender": "secrets = '99432bfewaf823ec3294e231",
+  "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
+  "repo": "test_repo_5",
+  "rule": "Generic Credential",
+  "commitMessage": "even more secrets\n",
+  "author": "Zach Rice",
+  "email": "zrice@gitlab.com",
+  "file": "secrets.py",
+  "date": "2020-02-01T10:30:22-05:00",
+  "tags": "key, API, generic"
+ }
+]
