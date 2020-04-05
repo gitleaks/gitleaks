@@ -383,22 +383,39 @@ func TestAuditUncommited(t *testing.T) {
 			fileToChange: "server.test.py",
 			addition:     "nothing bad",
 		},
+		{
+			description: "test audit repo with no commits",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_7",
+				Report:       "../test_data/test_local_repo_seven_aws_leak_uncommitted.json.got",
+				Uncommited:   true,
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_seven_aws_leak_uncommitted.json",
+		},
 	}
 	for _, test := range tests {
+		var (
+			old []byte
+			err error
+		)
 		fmt.Println(test.description)
-		old, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange))
-		if err != nil {
-			t.Error(err)
-		}
-		altered, err := os.OpenFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange),
-			os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			t.Error(err)
-		}
+		if test.fileToChange != "" {
+			old, err = ioutil.ReadFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange))
+			if err != nil {
+				t.Error(err)
+			}
+			altered, err := os.OpenFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange),
+				os.O_WRONLY|os.O_APPEND, 0644)
+			if err != nil {
+				t.Error(err)
+			}
 
-		_, err = altered.WriteString(test.addition)
-		if err != nil {
-			t.Error(err)
+			_, err = altered.WriteString(test.addition)
+			if err != nil {
+				t.Error(err)
+			}
+
 		}
 
 		cfg, err := config.NewConfig(test.opts)
@@ -418,9 +435,11 @@ func TestAuditUncommited(t *testing.T) {
 			t.Error(err)
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange), old, 0)
-		if err != nil {
-			t.Error(err)
+		if test.fileToChange != "" {
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange), old, 0)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 
 		if test.wantEmpty {

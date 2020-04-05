@@ -87,6 +87,42 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 	return nil
 }
 
+func emptyCommit() *object.Commit {
+	return &object.Commit{
+		Hash:    plumbing.Hash{},
+		Message: "***STAGED CHANGES***",
+		Author: object.Signature{
+			Name:  "",
+			Email: "",
+			When:  time.Unix(0, 0).UTC(),
+		},
+	}
+}
+
+// auditEmpty audits an empty repo without any commits. See https://github.com/zricethezav/gitleaks/issues/352
+func (repo *Repo) auditEmpty() error {
+	auditTimeStart := time.Now()
+	wt, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	status, err := wt.Status()
+	for fn := range status {
+		workTreeBuf := bytes.NewBuffer(nil)
+		workTreeFile, err := wt.Filesystem.Open(fn)
+		if err != nil {
+			continue
+		}
+		if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
+			return err
+		}
+		InspectFile(workTreeBuf.String(), workTreeFile.Name(), emptyCommit(), repo)
+	}
+	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
+	return nil
+}
+
 // AuditUncommitted will do a `git diff` and scan changed files that are being tracked. This is useful functionality
 // for a pre-commit hook so you can make sure your code does not have any leaks before committing.
 func (repo *Repo) AuditUncommitted() error {
@@ -103,12 +139,15 @@ func (repo *Repo) AuditUncommitted() error {
 		return err
 	}
 
-	auditTimeStart := time.Now()
-
 	r, err := repo.Head()
-	if err != nil {
+	if err == plumbing.ErrReferenceNotFound {
+		// possibly an empty repo, or maybe its not, either way lets scan all the files in the directory
+		return repo.auditEmpty()
+	} else if err != nil {
 		return err
 	}
+
+	auditTimeStart := time.Now()
 
 	c, err := repo.CommitObject(r.Hash())
 	if err != nil {
