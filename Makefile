@@ -43,3 +43,6 @@ deploy:
 	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
 	echo "Pushing zricethezav/gitleaks:$(VERSION) and zricethezav/gitleaks:latest"
 	docker push zricethezav/gitleaks
+
+dockerbuild: 
+	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
