@@ -1,0 +1,15 @@
+[
+ {
+  "line": "AKIAIO5FODNN7EXAMPLE",
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "0000000000000000000000000000000000000000",
+  "repo": "test_repo_7",
+  "rule": "AWS Manager ID",
+  "commitMessage": "***STAGED CHANGES***",
+  "author": "",
+  "email": "",
+  "file": "file",
+  "date": "1970-01-01T00:00:00Z",
+  "tags": "key, AWS"
+ }
+]
