@@ -259,19 +259,10 @@ func (repo *Repo) Audit() error {
 	auditTimeStart := time.Now()
 
 	// audit commit patches OR all files at commit. See https://github.com/zricethezav/gitleaks/issues/326
-	// TODO having --commit= and --files-at-commit= set should probably be guarded against
+	// TODO having --commit= and --fites-at-commit= set should probably be guarded against
 	if repo.Manager.Opts.Commit != "" {
 		return inspectCommit(repo.Manager.Opts.Commit, repo, inspectCommitPatches)
 	} else if repo.Manager.Opts.FilesAtCommit != "" {
-		if repo.Manager.Opts.FilesAtCommit == "latest" {
-			// Getting the latest commit on the current branch
-			// ... retrieving the branch being pointed by HEAD
-			ref, err := repo.Repository.Head()
-			if err != nil {
-				return err
-			}
-			return inspectCommit(ref.Hash().String(), repo, inspectFilesAtCommit)
-		}
 		return inspectCommit(repo.Manager.Opts.FilesAtCommit, repo, inspectFilesAtCommit)
 	}
 
