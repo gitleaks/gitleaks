@@ -135,8 +135,16 @@ title = "gitleaks config"
 	description = "Twilio API key"
 	regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}'''
 	tags = ["key", "twilio"]
+	
+[[rules]]
+	description = "JWT Token"
+	regex = '''^(e(y|w)[a-zA-Z0-9_=]{12,})\\.([a-zA-Z0-9_=]{30,})\\.([a-zA-Z0-9_\\-\\+\/=]){30,}'''
+	tags = ["token", "jwt"]
+
 
 [whitelist]
 	description = "Whitelisted files"
 	file = '''(^\.?gitleaks.toml$|(.*?)(jpg|gif|doc|pdf|bin)$)'''
+	
+
 `
