@@ -8,38 +8,28 @@
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. 
 
 
-
-
-|  `repo scan` |
-|---|
-| <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/repo-scan.gif"></p>  | <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/repo-scan.gif"></p> |
-
-| `pre commit scan` |
-|---|
-|  <p align="left"><img src="https://raw.githubusercontent.com/zricethezav/gifs/master/pre-commit-1.gif"></p> |
-
-## Getting Started
+### Getting Started
 
 Written in Go, gitleaks is available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks/releases). Alternatively, executed via Docker or it can be installed using Go directly, as per the below;
 
-#### MacOS
+##### MacOS
 
 ```
 brew install gitleaks
 ```
 
-#### Docker
+##### Docker
 
 ```bash
 docker pull zricethezav/gitleaks
 ```
 
-#### Go
+##### Go
 ```bash
 go get github.com/zricethezav/gitleaks/v4
 ```
 
-## Usage
+### Usage
 
 Gitleaks has a wide range of configuration options that can be adjusted at runtime or via a configuration file based on your specific requirements.
 
@@ -56,32 +46,12 @@ Application Options:
 Help Options:
   -h, --help             Show this help message
 ```
-## Configuration 
+### Configuration 
 Gitleaks provides the abilitiy to define your own rules for scanning secrets. Combine the power of regex, entropy, and regex group targeting for a finely tuned scan. Below is an example rule combining all three for an effective generic secret rule. Please view the documentation page for additional examples.
 
 
-### Docker usage examples
 
-Run gitleaks against:
-
-###### Public repository
-
-```bash
-docker run --rm --name=gitleaks zricethezav/gitleaks -v -r https://github.com/zricethezav/gitleaks.git
-```
-
-###### Local repository already cloned into /tmp/
-
-```bash
-docker run --rm --name=gitleaks -v /tmp/:/code/ zricethezav/gitleaks -v --repo-path=/code/gitleaks
-```
-
-By default repos cloned to memory. Using `--disk` for clone to disk or you can quickly out of memory.
-
-For speed up analyze operation using `--threads` parameter, which set to `ALL - 1` threads at your instance CPU.
-
-
-## Exit Codes
+#### Exit Codes
 
 Gitleaks provides consistent exist codes to assist in automation workflows such as CICD platforms and bulk scanning.
 
