@@ -6,6 +6,15 @@
 </p>
 
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. 
+Gitleaks offers:
+- Scans for commited secrets
+- Scans for uncommitted secrets as part of shifting security left
+- Available Github Action
+- Gitlab and Github API support which allows scans of whole organizations, users, and pull/merge requests
+- Custom rules
+- High performance using go-git
+- JSON and CSV reporting
+- Private repo scans using key or password based authentication
 
 
 ### Getting Started
