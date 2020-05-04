@@ -138,5 +138,5 @@ title = "gitleaks config"
 
 [whitelist]
 	description = "Whitelisted files"
-	file = '''(^\.?gitleaks.toml$|(.*?)(jpg|gif|doc|pdf|bin)$)'''
+	files = [ '''(^\.?gitleaks.toml$|(.*?)(jpg|gif|doc|pdf|bin)$)''' ]
 `
