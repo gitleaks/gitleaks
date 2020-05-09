@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"io"
 	"os"
 	"path"
@@ -16,14 +17,13 @@ import (
 	"github.com/zricethezav/gitleaks/v4/manager"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-billy.v4"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/plumbing/storer"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 // Repo wraps a *git.Repository object in addition to a manager object and the name of the repo.
@@ -259,7 +259,6 @@ func (repo *Repo) Audit() error {
 	auditTimeStart := time.Now()
 
 	// audit commit patches OR all files at commit. See https://github.com/zricethezav/gitleaks/issues/326
-	// TODO having --commit= and --fites-at-commit= set should probably be guarded against
 	if repo.Manager.Opts.Commit != "" {
 		return inspectCommit(repo.Manager.Opts.Commit, repo, inspectCommitPatches)
 	} else if repo.Manager.Opts.FilesAtCommit != "" {

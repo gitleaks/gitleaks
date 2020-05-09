@@ -11,9 +11,9 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
 // No leaks or early exit due to invalid options
@@ -109,6 +109,9 @@ func (opts Options) Guard() error {
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
 		log.Warn("both access-token and password are set. Only password will be attempted")
+	}
+	if !oneOrNoneSet(opts.FilesAtCommit, opts.Commit, opts.CommitTo, opts.CommitFrom) {
+		return fmt.Errorf("invalid commit options set")
 	}
 
 	return nil

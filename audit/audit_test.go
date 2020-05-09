@@ -174,6 +174,16 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
 		{
+			description: "test owner path whitelist repo",
+			opts: options.Options{
+				OwnerPath:    "../test_data/test_repos/",
+				Report:       "../test_data/test_local_owner_aws_leak_whitelist_repo.json.got",
+				ReportFormat: "json",
+				Config:       "../test_data/test_configs/aws_key_local_owner_whitelist_repo.toml",
+			},
+			wantPath: "../test_data/test_local_owner_aws_leak_whitelist_repo.json",
+		},
+		{
 			description: "test entropy and regex",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",

@@ -33,6 +33,15 @@ func Run(m *manager.Manager) error {
 }
 
 func runHelper(r *Repo) error {
+	// Ignore whitelisted repos
+	for _, wlRepo := range r.Manager.Config.Whitelist.Repos {
+		if RegexMatched(r.Manager.Opts.RepoPath, wlRepo) {
+			return nil
+		}
+		if RegexMatched(r.Manager.Opts.Repo, wlRepo) {
+			return nil
+		}
+	}
 	if r.Manager.Opts.OpenLocal() {
 		r.Name = path.Base(r.Manager.Opts.RepoPath)
 		if err := r.Open(); err != nil {
