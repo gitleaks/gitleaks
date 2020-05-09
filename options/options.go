@@ -9,11 +9,11 @@ import (
 
 	"github.com/zricethezav/gitleaks/v4/version"
 
-	"github.com/jessevdk/go-flags"
-	log "github.com/sirupsen/logrus"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/jessevdk/go-flags"
+	log "github.com/sirupsen/logrus"
 )
 
 // No leaks or early exit due to invalid options
