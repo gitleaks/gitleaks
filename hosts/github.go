@@ -10,13 +10,13 @@ import (
 	"github.com/zricethezav/gitleaks/v4/manager"
 	"github.com/zricethezav/gitleaks/v4/options"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/google/go-github/v31/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 )
 
 // Github wraps a github client and manager. This struct implements what the Host interface defines.
