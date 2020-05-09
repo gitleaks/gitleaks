@@ -132,11 +132,6 @@ func ruleContainFilePathRegex(rule config.Rule) bool {
 }
 
 func sendLeak(offender string, line string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
-	if repo.Manager.Opts.Redact {
-		line = strings.ReplaceAll(line, offender, "REDACTED")
-		offender = "REDACTED"
-	}
-
 	repo.Manager.SendLeaks(manager.Leak{
 		Line:     line,
 		Offender: offender,
