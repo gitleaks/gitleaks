@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"sync"
 	"text/tabwriter"
 	"time"
@@ -19,7 +20,7 @@ import (
 	"github.com/hako/durafmt"
 	"github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
+	"github.com/go-git/go-git/v5"
 )
 
 const maxLineLen = 200
@@ -158,6 +159,10 @@ func (manager *Manager) SendLeaks(l Leak) {
 	h := sha1.New()
 	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
+	if manager.Opts.Redact {
+		l.Line = strings.ReplaceAll(l.Line, l.Offender, "REDACTED")
+		l.Offender = "REDACTED"
+	}
 	manager.leakWG.Add(1)
 	manager.leakChan <- l
 }

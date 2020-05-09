@@ -13,10 +13,10 @@ import (
 	"github.com/zricethezav/gitleaks/v4/manager"
 
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	fdiff "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 // Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
@@ -132,11 +132,6 @@ func ruleContainFilePathRegex(rule config.Rule) bool {
 }
 
 func sendLeak(offender string, line string, filename string, rule config.Rule, c *object.Commit, repo *Repo) {
-	if repo.Manager.Opts.Redact {
-		line = strings.ReplaceAll(line, offender, "REDACTED")
-		offender = "REDACTED"
-	}
-
 	repo.Manager.SendLeaks(manager.Leak{
 		Line:     line,
 		Offender: offender,
@@ -164,7 +159,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 	// We want to check if there is a whitelist for this file
 	if len(repo.config.Whitelist.Files) != 0 {
 		for _, reFileName := range repo.config.Whitelist.Files {
-			if fileMatched(filename, reFileName) {
+			if RegexMatched(filename, reFileName) {
 				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
 				return
 			}
@@ -174,7 +169,7 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 	// We want to check if there is a whitelist for this path
 	if len(repo.config.Whitelist.Paths) != 0 {
 		for _, reFilePath := range repo.config.Whitelist.Paths {
-			if fileMatched(path, reFilePath) {
+			if RegexMatched(path, reFilePath) {
 				log.Debugf("file in whitelisted path found, skipping audit of file: %s", filename)
 				return
 			}
@@ -190,12 +185,12 @@ func InspectFile(content string, fullpath string, c *object.Commit, repo *Repo) 
 		}
 
 		// If it has fileNameRegex and it doesnt match we continue to next rule
-		if ruleContainFileNameRegex(rule) && !fileMatched(filename, rule.FileNameRegex) {
+		if ruleContainFileNameRegex(rule) && !RegexMatched(filename, rule.FileNameRegex) {
 			continue
 		}
 
 		// If it has filePathRegex and it doesnt match we continue to next rule
-		if ruleContainFilePathRegex(rule) && !fileMatched(path, rule.FilePathRegex) {
+		if ruleContainFilePathRegex(rule) && !RegexMatched(path, rule.FilePathRegex) {
 			continue
 		}
 
@@ -376,7 +371,7 @@ func isOffenderWhiteListed(offender string, whitelist []config.Whitelist) bool {
 func isFileNameWhiteListed(filename string, whitelist []config.Whitelist) bool {
 	if len(whitelist) != 0 {
 		for _, wl := range whitelist {
-			if fileMatched(filename, wl.File) {
+			if RegexMatched(filename, wl.File) {
 				return true
 			}
 		}
@@ -387,7 +382,7 @@ func isFileNameWhiteListed(filename string, whitelist []config.Whitelist) bool {
 func isFilePathWhiteListed(filepath string, whitelist []config.Whitelist) bool {
 	if len(whitelist) != 0 {
 		for _, wl := range whitelist {
-			if fileMatched(filepath, wl.Path) {
+			if RegexMatched(filepath, wl.Path) {
 				return true
 			}
 		}
@@ -395,7 +390,9 @@ func isFilePathWhiteListed(filepath string, whitelist []config.Whitelist) bool {
 	return false
 }
 
-func fileMatched(f interface{}, re *regexp.Regexp) bool {
+// RegexMatched matched an interface to a regular expression. The interface f can 
+// be a string type or go-git *object.File type.
+func RegexMatched(f interface{}, re *regexp.Regexp) bool {
 	if re == nil {
 		return false
 	}

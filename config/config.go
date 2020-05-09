@@ -51,6 +51,7 @@ type Config struct {
 		Commits     []string
 		Files       []*regexp.Regexp
 		Paths       []*regexp.Regexp
+		Repos       []*regexp.Regexp
 	}
 }
 
@@ -63,6 +64,7 @@ type TomlLoader struct {
 		Commits     []string
 		Files       []string
 		Paths       []string
+		Repos       []string
 	}
 	Rules []struct {
 		Description   string
@@ -210,6 +212,16 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 		cfg.Whitelist.Paths = append(cfg.Whitelist.Paths, re)
 	}
+
+	// global repo whitelists
+	for _, wlRepo := range tomlLoader.Whitelist.Repos {
+		re, err := regexp.Compile(wlRepo)
+		if err != nil {
+			return cfg, fmt.Errorf("problem loading config: %v", err)
+		}
+		cfg.Whitelist.Repos = append(cfg.Whitelist.Repos, re)
+	}
+
 	cfg.Whitelist.Commits = tomlLoader.Whitelist.Commits
 	cfg.Whitelist.Description = tomlLoader.Whitelist.Description
 
