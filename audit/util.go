@@ -12,11 +12,11 @@ import (
 	"github.com/zricethezav/gitleaks/v4/config"
 	"github.com/zricethezav/gitleaks/v4/manager"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	log "github.com/sirupsen/logrus"
 )
 
 // Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
@@ -390,7 +390,7 @@ func isFilePathWhiteListed(filepath string, whitelist []config.Whitelist) bool {
 	return false
 }
 
-// RegexMatched matched an interface to a regular expression. The interface f can 
+// RegexMatched matched an interface to a regular expression. The interface f can
 // be a string type or go-git *object.File type.
 func RegexMatched(f interface{}, re *regexp.Regexp) bool {
 	if re == nil {
