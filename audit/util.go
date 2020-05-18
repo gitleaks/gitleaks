@@ -12,11 +12,11 @@ import (
 	"github.com/zricethezav/gitleaks/v4/config"
 	"github.com/zricethezav/gitleaks/v4/manager"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	fdiff "gopkg.in/src-d/go-git.v4/plumbing/format/diff"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 // Inspect patch accepts a patch, commit, and repo. If the patches contains files that are
@@ -421,8 +421,25 @@ func fileMatched(f interface{}, re *regexp.Regexp) bool {
 // gitleaks gets the full git history.
 func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 	var logOpts git.LogOptions
+	const timeformat string = "2006-01-02"
 	if repo.Manager.Opts.CommitFrom != "" {
 		logOpts.From = plumbing.NewHash(repo.Manager.Opts.CommitFrom)
+	}
+	if repo.Manager.Opts.CommitSince != "" {
+		t, err := time.Parse(timeformat, repo.Manager.Opts.CommitSince)
+		logOpts.Since = &t
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	if repo.Manager.Opts.CommitUntil != "" {
+		t, err := time.Parse(timeformat, repo.Manager.Opts.CommitUntil)
+		logOpts.Until = &t
+
+		if err != nil {
+			return nil, err
+		}
 	}
 	if repo.Manager.Opts.Branch != "" {
 		refs, err := repo.Storer.IterReferences()
@@ -452,7 +469,7 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		}
 		return &logOpts, nil
 	}
-	if !logOpts.From.IsZero() {
+	if !logOpts.From.IsZero() || !logOpts.Since.IsZero() || !logOpts.Until.IsZero() {
 		return &logOpts, nil
 	}
 	return &git.LogOptions{All: true}, nil

@@ -9,11 +9,11 @@ import (
 
 	"github.com/zricethezav/gitleaks/v4/version"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // No leaks or early exit due to invalid options
@@ -52,6 +52,8 @@ type Options struct {
 	PrettyPrint   bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 	CommitFrom    string `long:"commit-from" description:"Commit to start audit from"`
 	CommitTo      string `long:"commit-to" description:"Commit to stop audit"`
+	CommitSince   string `long:"commit-since" description:"Audit commits more recent than a specific date"`
+	CommitUntil   string `long:"commit-until" description:"Audit commits older than a specific date."`
 	Timeout       string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth         int    `long:"depth" description:"Number of commits to audit"`
 

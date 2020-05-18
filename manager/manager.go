@@ -16,10 +16,10 @@ import (
 	"github.com/zricethezav/gitleaks/v4/config"
 	"github.com/zricethezav/gitleaks/v4/options"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/hako/durafmt"
 	"github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 const maxLineLen = 200
