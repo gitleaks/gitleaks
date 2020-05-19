@@ -14,7 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v31/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
