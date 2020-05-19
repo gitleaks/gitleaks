@@ -469,7 +469,7 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		}
 		return &logOpts, nil
 	}
-	if !logOpts.From.IsZero() || !logOpts.Since.IsZero() || !logOpts.Until.IsZero() {
+	if !logOpts.From.IsZero() || logOpts.Since != nil || logOpts.Until != nil {
 		return &logOpts, nil
 	}
 	return &git.LogOptions{All: true}, nil
