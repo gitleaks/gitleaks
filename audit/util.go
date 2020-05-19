@@ -421,23 +421,26 @@ func fileMatched(f interface{}, re *regexp.Regexp) bool {
 // gitleaks gets the full git history.
 func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 	var logOpts git.LogOptions
-	const timeformat string = "2006-01-02"
+	const dateformat string = "2006-01-02"
+	const timeformat string = "2006-01-02T15:04:05-0700"
 	if repo.Manager.Opts.CommitFrom != "" {
 		logOpts.From = plumbing.NewHash(repo.Manager.Opts.CommitFrom)
 	}
 	if repo.Manager.Opts.CommitSince != "" {
-		t, err := time.Parse(timeformat, repo.Manager.Opts.CommitSince)
-		logOpts.Since = &t
-
-		if err != nil {
+		if t, err := time.Parse(timeformat, repo.Manager.Opts.CommitSince); err == nil {
+			logOpts.Since = &t
+		} else if t, err := time.Parse(dateformat, repo.Manager.Opts.CommitSince); err == nil {
+			logOpts.Since = &t
+		} else {
 			return nil, err
 		}
 	}
 	if repo.Manager.Opts.CommitUntil != "" {
-		t, err := time.Parse(timeformat, repo.Manager.Opts.CommitUntil)
-		logOpts.Until = &t
-
-		if err != nil {
+		if t, err := time.Parse(timeformat, repo.Manager.Opts.CommitUntil); err == nil {
+			logOpts.Until = &t
+		} else if t, err := time.Parse(dateformat, repo.Manager.Opts.CommitUntil); err == nil {
+			logOpts.Until = &t
+		} else {
 			return nil, err
 		}
 	}

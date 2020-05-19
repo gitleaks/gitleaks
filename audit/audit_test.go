@@ -313,6 +313,37 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
 		},
+		{
+			description: "test local repo six leaks since date",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_leaks_since_date.json.got",
+				ReportFormat: "json",
+				CommitSince:  "2019-10-25",
+			},
+			wantPath: "../test_data/test_local_repo_six_leaks_since_date.json",
+		},
+		{
+			description: "test local repo two leaks until date",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_6",
+				Report:       "../test_data/test_local_repo_six_leaks_until_date.json.got",
+				ReportFormat: "json",
+				CommitUntil:  "2019-10-25",
+			},
+			wantPath: "../test_data/test_local_repo_six_leaks_until_date.json",
+		},
+		{
+			description: "test local repo four leaks timerange commit",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_4",
+				Report:       "../test_data/test_local_repo_four_leaks_commit_timerange.json.got",
+				ReportFormat: "json",
+				CommitSince:  "2019-10-25T13:01:27-0400",
+				CommitUntil:  "2019-10-25T13:12:32-0400",
+			},
+			wantPath: "../test_data/test_local_repo_four_leaks_commit_timerange.json",
+		},
 	}
 
 	for _, test := range tests {
