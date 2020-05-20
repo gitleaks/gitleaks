@@ -23,6 +23,12 @@ This project is documented [here](https://github.com/zricethezav/gitleaks/wiki)
 
 
 ###  Sponsors ❤️
+#### Corporate Sponsors
+[![gammanet](https://gammanet.com/assets/images/new-design/gamma-logo.png)](https://gammanet.com/?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
+
+Gamma proactively detects and remediates data leaks across cloud apps. Scan your public repos for secret leaks with [Gamma](https://gammanet.com/github-demo?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
+
+#### Individual Sponsors 
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
 [![Adam Shannon](https://github.com/adamdecaf.png?size=50)](https://github.com/adamdecaf) | [![Granville Schmidt](https://github.com/gramidt.png?size=50)](https://github.com/gramidt) | 
