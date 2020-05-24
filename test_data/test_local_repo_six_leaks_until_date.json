@@ -1,0 +1,15 @@
+[
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
+  "repo": "test_repo_6",
+  "rule": "AWS Manager ID",
+  "commitMessage": "commit 1 with secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "server.test.py",
+  "date": "2019-10-24T09:29:27-04:00",
+  "tags": "key, AWS"
+ }
+]

@@ -418,8 +418,28 @@ func RegexMatched(f interface{}, re *regexp.Regexp) bool {
 // gitleaks gets the full git history.
 func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 	var logOpts git.LogOptions
+	const dateformat string = "2006-01-02"
+	const timeformat string = "2006-01-02T15:04:05-0700"
 	if repo.Manager.Opts.CommitFrom != "" {
 		logOpts.From = plumbing.NewHash(repo.Manager.Opts.CommitFrom)
+	}
+	if repo.Manager.Opts.CommitSince != "" {
+		if t, err := time.Parse(timeformat, repo.Manager.Opts.CommitSince); err == nil {
+			logOpts.Since = &t
+		} else if t, err := time.Parse(dateformat, repo.Manager.Opts.CommitSince); err == nil {
+			logOpts.Since = &t
+		} else {
+			return nil, err
+		}
+	}
+	if repo.Manager.Opts.CommitUntil != "" {
+		if t, err := time.Parse(timeformat, repo.Manager.Opts.CommitUntil); err == nil {
+			logOpts.Until = &t
+		} else if t, err := time.Parse(dateformat, repo.Manager.Opts.CommitUntil); err == nil {
+			logOpts.Until = &t
+		} else {
+			return nil, err
+		}
 	}
 	if repo.Manager.Opts.Branch != "" {
 		refs, err := repo.Storer.IterReferences()
@@ -449,7 +469,7 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		}
 		return &logOpts, nil
 	}
-	if !logOpts.From.IsZero() {
+	if !logOpts.From.IsZero() || logOpts.Since != nil || logOpts.Until != nil {
 		return &logOpts, nil
 	}
 	return &git.LogOptions{All: true}, nil
