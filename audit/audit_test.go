@@ -356,6 +356,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_four_leaks_commit_timerange.json",
 		},
+		{
+			description: "test local repo two whitelist commit config",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_whitelist_commits.json.got",
+				Config:       "../test_data/test_configs/whitelist_commit.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_two_whitelist_commits.json",
+		},
 	}
 
 	for _, test := range tests {

@@ -282,6 +282,12 @@ func (repo *Repo) Audit() error {
 			return storer.ErrStop
 		}
 
+		// Check if commit is whitelisted
+		if isCommitWhiteListed(c.Hash.String(), repo.config.Whitelist.Commits) {
+			return nil
+		}
+
+		// Check if at root
 		if len(c.ParentHashes) == 0 {
 			cc++
 			err = inspectFilesAtCommit(c, repo)
@@ -291,11 +297,9 @@ func (repo *Repo) Audit() error {
 			return nil
 		}
 
-		if isCommitWhiteListed(c.Hash.String(), repo.config.Whitelist.Commits) {
-			return nil
-		}
-
+		// increase commit counter
 		cc++
+
 		err = c.Parents().ForEach(func(parent *object.Commit) error {
 			defer func() {
 				if err := recover(); err != nil {
