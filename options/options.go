@@ -112,9 +112,6 @@ func (opts Options) Guard() error {
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
 		log.Warn("both access-token and password are set. Only password will be attempted")
 	}
-	if !oneOrNoneSet(opts.FilesAtCommit, opts.Commit, opts.CommitTo, opts.CommitFrom) {
-		return fmt.Errorf("invalid commit options set")
-	}
 
 	return nil
 }
