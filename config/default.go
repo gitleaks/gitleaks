@@ -133,9 +133,7 @@ title = "gitleaks config"
 
 [whitelist]
 	description = "Whitelisted files"
-	files = [
-				'''^\.?gitleaks.toml$''',
-				'''(.*?)(jpg|gif|doc|pdf|bin)$''',
-				'''(go.mod|go.sum)$'''
-			]
+	files = ['''^\.?gitleaks.toml$''',
+	'''(.*?)(jpg|gif|doc|pdf|bin)$''',
+	'''(go.mod|go.sum)$''']
 `
