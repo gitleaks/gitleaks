@@ -163,6 +163,12 @@ func (manager *Manager) SendLeaks(l Leak) {
 		l.Line = strings.ReplaceAll(l.Line, l.Offender, "REDACTED")
 		l.Offender = "REDACTED"
 	}
+	if manager.Opts.RedactPersonalInfo {
+		l.Line = strings.ReplaceAll(l.Line, l.Author, "REDACTED")
+		l.Line = strings.ReplaceAll(l.Line, l.Email, "REDACTED")
+		l.Author = "REDACTED"
+		l.Email = "REDACTED"
+	}
 	manager.leakWG.Add(1)
 	manager.leakChan <- l
 }

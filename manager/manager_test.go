@@ -43,6 +43,25 @@ func TestSendReceiveLeaks(t *testing.T) {
 	}
 }
 
+func TestRedactPI(t *testing.T) {
+	opts := options.Options{RedactPersonalInfo: true}
+	cfg, _ := config.NewConfig(opts)
+	m, _ := NewManager(opts, cfg)
+
+	m.SendLeaks(Leak{Offender: newUUID(), Author: "John Doe", Email: "john.doe@..."})
+	m.SendLeaks(Leak{Offender: newUUID(), Author: "Jane Doe", Email: "jane.doe@..."})
+
+	leaks := m.GetLeaks()
+	for _, leak := range leaks {
+		if leak.Author != "REDACTED" {
+			t.Errorf("got author '%s', wanted 'REDACTED'", leak.Author)
+		}
+		if leak.Email != "REDACTED" {
+			t.Errorf("got email '%s', wanted 'REDACTED'", leak.Email)
+		}
+	}
+}
+
 func TestSendReceiveMeta(t *testing.T) {
 	tests := []struct {
 		auditTime  int64
