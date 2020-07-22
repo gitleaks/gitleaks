@@ -33,7 +33,7 @@ func inspectPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 			continue
 		}
 		for _, chunk := range f.Chunks() {
-			if chunk.Type() == fdiff.Delete || chunk.Type() == fdiff.Add {
+			if chunk.Type() == fdiff.Add || (repo.Manager.Opts.Deletion && chunk.Type() == fdiff.Delete){
 				InspectFile(chunk.Content(), getFileFullPath(f), c, repo)
 			}
 		}
@@ -294,8 +294,11 @@ func inspectCommitPatches(c *object.Commit, repo *Repo) error {
 		if repo.timeoutReached() {
 			return nil
 		}
+		if parent == nil {
+			return nil
+		}
 		start := time.Now()
-		patch, err := c.Patch(parent)
+		patch, err := parent.Patch(c)
 		if err != nil {
 			return fmt.Errorf("could not generate patch")
 		}

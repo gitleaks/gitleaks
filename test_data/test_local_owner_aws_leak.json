@@ -15,19 +15,6 @@
  {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
   "offender": "AKIALALEMEL33243OLIB",
-  "commit": "f61cd8587b7ac1d75a89a0c9af870a2f24c60263",
-  "repo": "test_repo_2",
-  "rule": "AWS Manager ID",
-  "commitMessage": "rm secrets again\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T13:12:32-04:00",
-  "tags": "key, AWS"
- },
- {
-  "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
-  "offender": "AKIALALEMEL33243OLIB",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_2",
   "rule": "AWS Manager ID",
@@ -40,32 +27,6 @@
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "AKIALALEMEL33243OLIA",
-  "commit": "996865bb912f3bc45898a370a13aadb315014b55",
-  "repo": "test_repo_2",
-  "rule": "AWS Manager ID",
-  "commitMessage": "committing pem\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T13:07:41-04:00",
-  "tags": "key, AWS"
- },
- {
-  "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "AKIALALEMEL33243OLIA",
-  "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
-  "repo": "test_repo_2",
-  "rule": "AWS Manager ID",
-  "commitMessage": "wait this is actually adding an aws secret\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T13:01:27-04:00",
-  "tags": "key, AWS"
- },
- {
-  "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
@@ -93,19 +54,6 @@
  {
   "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
   "offender": "AKIALALEMEL33243OLIA",
-  "commit": "cd5eb8bef855f73c46b97b4c088badffdc40ebe9",
-  "repo": "test_repo_3",
-  "rule": "AWS Manager ID",
-  "commitMessage": "rm secrets\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T13:54:26-04:00",
-  "tags": "key, AWS"
- },
- {
-  "line": "const AWSKEY = \"AKIALALEMEL33243OLIAE\"",
-  "offender": "AKIALALEMEL33243OLIA",
   "commit": "84ac4e80d4dbf2c968b64e9d4005f5079795bb81",
   "repo": "test_repo_3",
   "rule": "AWS Manager ID",
@@ -114,19 +62,6 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:54:08-04:00",
-  "tags": "key, AWS"
- },
- {
-  "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
-  "offender": "AKIALALEMEL33243OLIA",
-  "commit": "64cfcee9aad1c84581631636bfc54f2050718d1a",
-  "repo": "test_repo_3",
-  "rule": "AWS Manager ID",
-  "commitMessage": "rm secrets\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T13:36:22-04:00",
   "tags": "key, AWS"
  },
  {

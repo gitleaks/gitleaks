@@ -213,10 +213,7 @@ func (repo *Repo) AuditUncommitted() error {
 			diffs := diffmatchpatch.New().DiffMain(prevFileContents, currFileContents, false)
 			var diffContents string
 			for _, d := range diffs {
-				switch d.Type {
-				case diffmatchpatch.DiffInsert:
-					diffContents += fmt.Sprintf("%s\n", d.Text)
-				case diffmatchpatch.DiffDelete:
+				if d.Type == diffmatchpatch.DiffInsert {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
@@ -312,8 +309,13 @@ func (repo *Repo) Audit() error {
 			if repo.timeoutReached() {
 				return nil
 			}
+			if parent == nil {
+				// shouldn't reach this point but just in case
+				return nil
+			}
+
 			start := time.Now()
-			patch, err := c.Patch(parent)
+			patch, err := parent.Patch(c)
 			if err != nil {
 				return fmt.Errorf("could not generate patch")
 			}
