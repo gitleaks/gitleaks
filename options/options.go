@@ -56,6 +56,7 @@ type Options struct {
 	CommitUntil   string `long:"commit-until" description:"Audit commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	Timeout       string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth         int    `long:"depth" description:"Number of commits to audit"`
+	Deletion      bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
