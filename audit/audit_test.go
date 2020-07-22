@@ -366,6 +366,16 @@ func TestAudit(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_two_whitelist_commits.json",
 		},
+		{
+			description: "test local repo two deletion",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_deletion.json.got",
+				ReportFormat: "json",
+				Deletion:     true,
+			},
+			wantPath: "../test_data/test_local_repo_two_leaks_deletion.json",
+		},
 	}
 
 	for _, test := range tests {
