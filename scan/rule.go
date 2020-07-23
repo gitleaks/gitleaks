@@ -231,7 +231,7 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 
 func extractLineHelper(r io.Reader, frame *Frame, leak *manager.Leak) int {
 	scanner := bufio.NewScanner(r)
-	lineNumber := 0
+	lineNumber := 1
 	for scanner.Scan() {
 		if leak.Line == scanner.Text() {
 			if _, ok := frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, frame.FilePath)]; !ok {

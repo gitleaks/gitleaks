@@ -280,7 +280,7 @@ func (repo *Repo) scanUncommitted() error {
 			}
 			repo.CheckRules(Frame{
 				Content:  diffContents,
-				FileName: filename,
+				FilePath: filename,
 				Commit:   c,
 				scanType: uncommittedScan,
 			})

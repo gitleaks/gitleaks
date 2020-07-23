@@ -1,7 +1,7 @@
 [
  {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE'",
-  "lineNumber": 0,
+  "lineNumber": 1,
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
@@ -16,7 +16,7 @@
  },
  {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPL2'",
-  "lineNumber": 3,
+  "lineNumber": 4,
   "offender": "AKIAIO5FODNN7EXAMPL2",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
