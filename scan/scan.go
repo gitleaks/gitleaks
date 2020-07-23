@@ -21,7 +21,7 @@ import (
 // Frame contains information w/r/t auditing... name subject to change
 type Frame struct {
 	Commit *object.Commit
-	Patch  *object.Patch
+	Patch  string
 	reader io.Reader
 
 	lineLookup map[string]bool
@@ -300,6 +300,11 @@ func (repo *Repo) scanUncommitted() error {
 // matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
 func scanPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
+	frame := Frame{
+		Commit:   c,
+		Patch:    patch.String(),
+		scanType: patchScan,
+	}
 	for _, f := range patch.FilePatches() {
 		if repo.timeoutReached() {
 			return
@@ -309,13 +314,8 @@ func scanPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 		}
 		for _, chunk := range f.Chunks() {
 			if chunk.Type() == fdiff.Add || (repo.Manager.Opts.Deletion && chunk.Type() == fdiff.Delete) {
-				frame := Frame{
-					Commit:    c,
-					Patch:     patch,
-					Content:   chunk.Content(),
-					Operation: chunk.Type(),
-					scanType:  patchScan,
-				}
+				frame.Content = chunk.Content()
+				frame.Operation = chunk.Type()
 
 				// get filepath
 				from, to := f.Files()
@@ -416,10 +416,11 @@ func scanFilesAtCommit(c *object.Commit, repo *Repo) error {
 		}
 
 		repo.CheckRules(Frame{
-			Content:  content,
-			FilePath: f.Name,
-			Commit:   c,
-			scanType: commitScan,
+			Content:   content,
+			FilePath:  f.Name,
+			Commit:    c,
+			scanType:  commitScan,
+			Operation: fdiff.Add,
 		})
 		return nil
 	})

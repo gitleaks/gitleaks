@@ -67,7 +67,6 @@ func (repo *Repo) CheckRules(frame Frame) {
 
 		// If it doesnt contain a Content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			// sendLeak("Filename/path offender: "+filename, "N/A", fullpath, rule, c, repo)
 			repo.Manager.SendLeaks(manager.Leak{
 				Line:     "N/A",
 				Offender: "Filename/path offender: " + filename,
@@ -80,6 +79,7 @@ func (repo *Repo) CheckRules(frame Frame) {
 				Date:     frame.Commit.Author.When,
 				Tags:     strings.Join(rule.Tags, ", "),
 				File:     filename,
+				Operation: diffOpToString(frame.Operation),
 			})
 		} else {
 			//otherwise we check if it matches Content regex
@@ -127,7 +127,10 @@ func (repo *Repo) CheckRules(frame Frame) {
 						File:       frame.FilePath,
 						Operation:  diffOpToString(frame.Operation),
 					}
-					extractAndInjectLineNumber(&leak, &frame, repo)
+
+					if frame.Operation != fdiff.Delete{
+						extractAndInjectLineNumber(&leak, &frame, repo)
+					}
 
 					repo.Manager.SendLeaks(leak)
 				}
@@ -143,10 +146,14 @@ func (repo *Repo) CheckRules(frame Frame) {
 }
 
 func diffOpToString(operation fdiff.Operation) string {
-	if operation == fdiff.Add {
+	switch operation {
+	case fdiff.Add:
 		return "addition"
+	case fdiff.Equal:
+		return "Equal"
+	default:
+		return "deletion"
 	}
-	return "deletion"
 }
 
 // extractAndInjectLine is a reverse patch search.
@@ -155,12 +162,10 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 
 	switch frame.scanType {
 	case patchScan:
-		if frame.Patch == nil {
+		if frame.Patch == "" {
 			return
 		}
-		patch := frame.Patch.String()
-
-		scanner := bufio.NewScanner(strings.NewReader(patch))
+		scanner := bufio.NewScanner(strings.NewReader(frame.Patch))
 		currFile := ""
 		currLine := 0
 		currStartDiffLine := 0
@@ -170,7 +175,7 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 			if strings.HasPrefix(txt, "+++ b") {
 				currStartDiffLine = 1
 				currLine = 0
-				currFile = filepath.Base(strings.Split(txt, "+++ b")[1])
+				currFile = strings.Split(txt, "+++ b/")[1]
 
 				// next line contains diff line information so lets scan it here
 				scanner.Scan()
@@ -195,7 +200,6 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 			currLine++
 		}
 	case commitScan:
-		// load up file from commit object
 		if frame.Commit == nil {
 			return
 		}

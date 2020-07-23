@@ -19,7 +19,7 @@ import (
 
 const testRepoBase = "../test_data/test_repos/"
 
-func TestAudit(t *testing.T) {
+func TestScan(t *testing.T) {
 	moveDotGit("dotGit", ".git")
 	defer moveDotGit(".git", "dotGit")
 	tests := []struct {
@@ -420,7 +420,7 @@ func TestAudit(t *testing.T) {
 	}
 }
 
-func TestAuditUncommited(t *testing.T) {
+func TestScanUncommited(t *testing.T) {
 	moveDotGit("dotGit", ".git")
 	defer moveDotGit(".git", "dotGit")
 	tests := []struct {

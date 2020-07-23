@@ -1,6 +1,7 @@
 [
  {
   "line": "    const AWSKEY = \"AKIALALEMEL33243OLIBE\"",
+  "lineNumber": 5,
   "offender": "AKIALALEMEL33243OLIB",
   "commit": "b2eb34a61c988afd9b4aaa9dd58c8dd7d5f14dba",
   "repo": "test_repo_4",
@@ -10,10 +11,12 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:12:08-04:00",
-  "tags": "key, AWS"
+  "tags": "key, AWS",
+  "operation": "addition"
  },
  {
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "lineNumber": 5,
   "offender": "AKIALALEMEL33243OLIA",
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_4",
@@ -23,6 +26,7 @@
   "email": "zricer@protonmail.com",
   "file": "secrets.md",
   "date": "2019-10-25T13:01:27-04:00",
-  "tags": "key, AWS"
+  "tags": "key, AWS",
+  "operation": "addition"
  }
 ]
