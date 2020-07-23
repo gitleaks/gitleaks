@@ -24,9 +24,11 @@ type Frame struct {
 	Patch  *object.Patch
 	reader io.Reader
 
-	Content  string
-	FilePath string
-	FileName string
+	lineLookup map[string]bool
+	Content    string
+	FilePath   string
+	FileName   string
+	Operation  fdiff.Operation
 }
 
 type commitScanner func(c *object.Commit, repo *Repo) error
@@ -300,9 +302,10 @@ func scanPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 		for _, chunk := range f.Chunks() {
 			if chunk.Type() == fdiff.Add || (repo.Manager.Opts.Deletion && chunk.Type() == fdiff.Delete) {
 				frame := Frame{
-					Commit:  c,
-					Patch:   patch,
-					Content: chunk.Content(),
+					Commit:    c,
+					Patch:     patch,
+					Content:   chunk.Content(),
+					Operation: chunk.Type(),
 				}
 
 				// get filepath

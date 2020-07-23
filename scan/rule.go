@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	log "github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/v4/config"
@@ -8,6 +10,7 @@ import (
 	"math"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -19,6 +22,8 @@ import (
 func (repo *Repo) CheckRules(frame Frame) {
 	filename := filepath.Base(frame.FilePath)
 	path := filepath.Dir(frame.FilePath)
+
+	frame.lineLookup = make(map[string]bool)
 
 	// We want to check if there is a whitelist for this file
 	if len(repo.config.Whitelist.Files) != 0 {
@@ -63,7 +68,7 @@ func (repo *Repo) CheckRules(frame Frame) {
 			// sendLeak("Filename/path offender: "+filename, "N/A", fullpath, rule, c, repo)
 			repo.Manager.SendLeaks(manager.Leak{
 				Line:     "N/A",
-				Offender: "Filename/path offender: "+filename,
+				Offender: "Filename/path offender: " + filename,
 				Commit:   frame.Commit.Hash.String(),
 				Repo:     repo.Name,
 				Message:  frame.Commit.Message,
@@ -84,9 +89,9 @@ func (repo *Repo) CheckRules(frame Frame) {
 					for start != 0 && frame.Content[start] != '\n' {
 						start = start - 1
 					}
-					if start != 0 {
-						// skip newline
-						start = start + 1
+
+					if frame.Content[start] == '\n' {
+						start += 1
 					}
 
 					for end < len(frame.Content)-1 && frame.Content[end] != '\n' {
@@ -105,7 +110,7 @@ func (repo *Repo) CheckRules(frame Frame) {
 						continue
 					}
 
-					repo.Manager.SendLeaks(manager.Leak{
+					leak := manager.Leak{
 						Line:     line,
 						Offender: offender,
 						Commit:   frame.Commit.Hash.String(),
@@ -117,7 +122,10 @@ func (repo *Repo) CheckRules(frame Frame) {
 						Date:     frame.Commit.Author.When,
 						Tags:     strings.Join(rule.Tags, ", "),
 						File:     frame.FilePath,
-					})
+					}
+					extractAndInjectLine(&leak, &frame)
+
+					repo.Manager.SendLeaks(leak)
 				}
 			}
 		}
@@ -127,6 +135,48 @@ func (repo *Repo) CheckRules(frame Frame) {
 			Time:  howLong(start),
 			Regex: rule.Regex.String(),
 		})
+	}
+}
+
+func extractAndInjectLine(leak *manager.Leak, frame *Frame) {
+	var err error
+	if frame.Patch != nil {
+		patch := frame.Patch.String()
+
+		scanner := bufio.NewScanner(strings.NewReader(patch))
+		currFile := ""
+		currLine := 0
+		currStartDiffLine := 0
+
+		for scanner.Scan() {
+			txt := scanner.Text()
+			if strings.HasPrefix(txt, "+++ b") {
+				currStartDiffLine = 1
+				currLine = 0
+				currFile = filepath.Base(strings.Split(txt, "+++ b")[1])
+
+				// next line contains diff line information so lets scan it here
+				scanner.Scan()
+
+				txt := scanner.Text()
+				i := strings.Index(txt, "+")
+				pairs := strings.Split(strings.Split(txt[i+1:], " @@")[0], ",")
+				currStartDiffLine, err = strconv.Atoi(pairs[0])
+				if err != nil {
+					log.Debug(err)
+					return
+				}
+				continue
+			} else if strings.HasPrefix(txt, "+") && strings.Contains(txt, leak.Line) && leak.File == currFile {
+				potentialLine := currLine + currStartDiffLine
+				if _, ok := frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)]; !ok {
+					frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)] = true
+					leak.LineNumber = potentialLine
+					return
+				}
+			}
+			currLine++
+		}
 	}
 }
 

@@ -48,6 +48,7 @@ type Manager struct {
 // sensitive information as determined by the rules set in a gitleaks config
 type Leak struct {
 	Line       string    `json:"line"`
+	LineNumber int       `json:"lineNumber"`
 	Offender   string    `json:"offender"`
 	Commit     string    `json:"commit"`
 	Repo       string    `json:"repo"`
@@ -157,7 +158,7 @@ func (manager *Manager) SendLeaks(l Leak) {
 		l.Offender = l.Offender[0:maxLineLen-1] + "..."
 	}
 	h := sha1.New()
-	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line))
+	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line + string(l.LineNumber)))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
 	if manager.Opts.Redact {
 		l.Line = strings.ReplaceAll(l.Line, l.Offender, "REDACTED")
