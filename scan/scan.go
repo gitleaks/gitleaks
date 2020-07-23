@@ -29,9 +29,16 @@ type Frame struct {
 	FilePath   string
 	FileName   string
 	Operation  fdiff.Operation
+	scanType   int
 }
 
 type commitScanner func(c *object.Commit, repo *Repo) error
+
+const (
+	patchScan int = iota + 1
+	uncommittedScan
+	commitScan
+)
 
 // Scan is responsible for scanning the entire history (default behavior) of a
 // git repo. Options that can change the behavior of this function include: --Commit, --depth, --branch.
@@ -170,8 +177,8 @@ func (repo *Repo) scanEmpty() error {
 			Content:  workTreeBuf.String(),
 			FilePath: workTreeFile.Name(),
 			Commit:   emptyCommit(),
+			scanType: uncommittedScan,
 		})
-		// InspectFile(workTreeBuf.String(), workTreeFile.Name(), emptyCommit(), repo)
 	}
 	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
 	return nil
@@ -275,6 +282,7 @@ func (repo *Repo) scanUncommitted() error {
 				Content:  diffContents,
 				FileName: filename,
 				Commit:   c,
+				scanType: uncommittedScan,
 			})
 		}
 	}
@@ -306,6 +314,7 @@ func scanPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
 					Patch:     patch,
 					Content:   chunk.Content(),
 					Operation: chunk.Type(),
+					scanType:  patchScan,
 				}
 
 				// get filepath
@@ -410,6 +419,7 @@ func scanFilesAtCommit(c *object.Commit, repo *Repo) error {
 			Content:  content,
 			FilePath: f.Name,
 			Commit:   c,
+			scanType: commitScan,
 		})
 		return nil
 	})

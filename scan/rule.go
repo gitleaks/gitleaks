@@ -3,10 +3,12 @@ package scan
 import (
 	"bufio"
 	"fmt"
+	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	log "github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/v4/config"
 	"github.com/zricethezav/gitleaks/v4/manager"
+	"io"
 	"math"
 	"path/filepath"
 	"regexp"
@@ -111,19 +113,21 @@ func (repo *Repo) CheckRules(frame Frame) {
 					}
 
 					leak := manager.Leak{
-						Line:     line,
-						Offender: offender,
-						Commit:   frame.Commit.Hash.String(),
-						Repo:     repo.Name,
-						Message:  frame.Commit.Message,
-						Rule:     rule.Description,
-						Author:   frame.Commit.Author.Name,
-						Email:    frame.Commit.Author.Email,
-						Date:     frame.Commit.Author.When,
-						Tags:     strings.Join(rule.Tags, ", "),
-						File:     frame.FilePath,
+						LineNumber: -1,
+						Line:       line,
+						Offender:   offender,
+						Commit:     frame.Commit.Hash.String(),
+						Repo:       repo.Name,
+						Message:    frame.Commit.Message,
+						Rule:       rule.Description,
+						Author:     frame.Commit.Author.Name,
+						Email:      frame.Commit.Author.Email,
+						Date:       frame.Commit.Author.When,
+						Tags:       strings.Join(rule.Tags, ", "),
+						File:       frame.FilePath,
+						Operation:  diffOpToString(frame.Operation),
 					}
-					extractAndInjectLine(&leak, &frame)
+					extractAndInjectLineNumber(&leak, &frame, repo)
 
 					repo.Manager.SendLeaks(leak)
 				}
@@ -138,9 +142,22 @@ func (repo *Repo) CheckRules(frame Frame) {
 	}
 }
 
-func extractAndInjectLine(leak *manager.Leak, frame *Frame) {
+func diffOpToString(operation fdiff.Operation) string {
+	if operation == fdiff.Add {
+		return "addition"
+	}
+	return "deletion"
+}
+
+// extractAndInjectLine is a reverse patch search.
+func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 	var err error
-	if frame.Patch != nil {
+
+	switch frame.scanType {
+	case patchScan:
+		if frame.Patch == nil {
+			return
+		}
 		patch := frame.Patch.String()
 
 		scanner := bufio.NewScanner(strings.NewReader(patch))
@@ -177,7 +194,50 @@ func extractAndInjectLine(leak *manager.Leak, frame *Frame) {
 			}
 			currLine++
 		}
+	case commitScan:
+		// load up file from commit object
+		if frame.Commit == nil {
+			return
+		}
+		f, err := frame.Commit.File(frame.FilePath)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		r, err := f.Reader()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		leak.LineNumber = extractLineHelper(r, frame, leak)
+	case uncommittedScan:
+		wt, err := repo.Worktree()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		f, err := wt.Filesystem.Open(leak.File)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		leak.LineNumber = extractLineHelper(f, frame, leak)
 	}
+}
+
+func extractLineHelper(r io.Reader, frame *Frame, leak *manager.Leak) int {
+	scanner := bufio.NewScanner(r)
+	lineNumber := 0
+	for scanner.Scan() {
+		if leak.Line == scanner.Text() {
+			if _, ok := frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, frame.FilePath)]; !ok {
+				frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, frame.FilePath)] = true
+				return lineNumber
+			}
+		}
+		lineNumber++
+	}
+	return -1
 }
 
 // trippedEntropy checks if a given capture group or offender falls in between entropy ranges
