@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v4/audit"
+	"github.com/zricethezav/gitleaks/v4/scan"
 	"github.com/zricethezav/gitleaks/v4/manager"
 	"github.com/zricethezav/gitleaks/v4/options"
 
@@ -38,7 +38,7 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	return gitlabClient, err
 }
 
-// Audit will audit a github user or organization's repos.
+// Scan will audit a github user or organization's repos.
 func (g *Gitlab) Audit() {
 	var (
 		projects []*gitlab.Project
@@ -89,14 +89,14 @@ func (g *Gitlab) Audit() {
 
 	// iterate of gitlab projects
 	for _, p := range projects {
-		r := audit.NewRepo(g.manager)
+		r := scan.NewRepo(g.manager)
 		cloneOpts := g.manager.CloneOptions
 		cloneOpts.URL = p.HTTPURLToRepo
 		err := r.Clone(cloneOpts)
 		// TODO handle clone retry with ssh like github host
 		r.Name = p.Name
 
-		if err = r.Audit(); err != nil {
+		if err = r.Scan(); err != nil {
 			log.Error(err)
 		}
 	}

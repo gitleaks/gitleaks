@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v4/audit"
+	"github.com/zricethezav/gitleaks/v4/scan"
 	"github.com/zricethezav/gitleaks/v4/manager"
 	"github.com/zricethezav/gitleaks/v4/options"
 
@@ -50,7 +50,7 @@ func NewGithubClient(m *manager.Manager) (*Github, error) {
 	}, err
 }
 
-// Audit will audit a github user or organization's repos.
+// Scan will audit a github user or organization's repos.
 func (g *Github) Audit() {
 	ctx := context.Background()
 	listOptions := github.ListOptions{
@@ -105,7 +105,7 @@ func (g *Github) Audit() {
 	}
 
 	for _, repo := range githubRepos {
-		r := audit.NewRepo(g.manager)
+		r := scan.NewRepo(g.manager)
 
 		if g.manager.CloneOptions != nil {
 			auth = g.manager.CloneOptions.Auth
@@ -131,7 +131,7 @@ func (g *Github) Audit() {
 				continue
 			}
 		}
-		if err = r.Audit(); err != nil {
+		if err = r.Scan(); err != nil {
 			log.Warn(err)
 		}
 	}
@@ -144,7 +144,7 @@ func (g *Github) AuditPR() {
 	owner := splits[len(splits)-4]
 	repoName := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
-	repo := audit.NewRepo(g.manager)
+	repo := scan.NewRepo(g.manager)
 	repo.Name = repoName
 	log.Infof("auditing pr %s\n", g.manager.Opts.PullRequest)
 
@@ -175,7 +175,11 @@ func (g *Github) AuditPR() {
 				if f.Patch == nil {
 					continue
 				}
-				audit.InspectFile(*f.Patch, *f.Filename, &commitObj, repo)
+				repo.CheckRules(scan.Frame{
+					Content: *f.Patch,
+					FilePath: *f.Filename,
+					Commit: &commitObj,
+				})
 			}
 		}
 		page = resp.NextPage

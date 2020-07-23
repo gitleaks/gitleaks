@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v4/audit"
+	"github.com/zricethezav/gitleaks/v4/scan"
 	"github.com/zricethezav/gitleaks/v4/config"
 	"github.com/zricethezav/gitleaks/v4/hosts"
 	"github.com/zricethezav/gitleaks/v4/manager"
@@ -70,7 +70,7 @@ func main() {
 
 // Run begins the program and contains some basic logic on how to continue with the audit. If any external git host
 // options are set (like auditing a gitlab or github user) then a specific host client will be created and
-// then Audit() and Report() will be called. Otherwise, gitleaks will create a new repo and an audit will proceed.
+// then Scan() and Report() will be called. Otherwise, gitleaks will create a new repo and an audit will proceed.
 // If no options or the uncommitted option is set then a pre-commit audit will
 // take place -- this is similar to running `git diff` on all the tracked files.
 func Run(m *manager.Manager) error {
@@ -87,7 +87,7 @@ func Run(m *manager.Manager) error {
 	if m.Opts.Host != "" {
 		err = hosts.Run(m)
 	} else {
-		err = audit.Run(m)
+		err = scan.Run(m)
 	}
 	if err != nil {
 		return err

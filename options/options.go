@@ -52,8 +52,8 @@ type Options struct {
 	PrettyPrint   bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 	CommitFrom    string `long:"commit-from" description:"Commit to start audit from"`
 	CommitTo      string `long:"commit-to" description:"Commit to stop audit"`
-	CommitSince   string `long:"commit-since" description:"Audit commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	CommitUntil   string `long:"commit-until" description:"Audit commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitSince   string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitUntil   string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	Timeout       string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth         int    `long:"depth" description:"Number of commits to audit"`
 	Deletion      bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`

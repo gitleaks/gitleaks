@@ -1,4 +1,4 @@
-package audit
+package scan
 
 import (
 	"encoding/json"
@@ -76,7 +76,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_two_leaks.json",
 		},
 		{
-			description: "test local repo two leaks from commit",
+			description: "test local repo two leaks from Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
 				Report:       "../test_data/test_local_repo_two_leaks_commit_from.json.got",
@@ -86,7 +86,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_two_leaks_commit_from.json",
 		},
 		{
-			description: "test local repo two leaks to commit",
+			description: "test local repo two leaks to Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
 				Report:       "../test_data/test_local_repo_two_leaks_commit_to.json.got",
@@ -96,7 +96,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_two_leaks_commit_to.json",
 		},
 		{
-			description: "test local repo two leaks range commit",
+			description: "test local repo two leaks range Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
 				Report:       "../test_data/test_local_repo_two_leaks_commit_range.json.got",
@@ -145,7 +145,7 @@ func TestAudit(t *testing.T) {
 			wantEmpty: true,
 		},
 		{
-			description: "test local repo one aws leak single commit",
+			description: "test local repo one aws leak single Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
 				Report:       "../test_data/test_local_repo_one_aws_leak_commit.json.got",
@@ -244,7 +244,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_owner_aws_leak_depth_2.json",
 		},
 		{
-			description: "test local repo five files at commit",
+			description: "test local repo five files at Commit",
 			opts: options.Options{
 				RepoPath:      "../test_data/test_repos/test_repo_5",
 				Report:        "../test_data/test_local_repo_five_files_at_commit.json.got",
@@ -254,7 +254,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_five_files_at_commit.json",
 		},
 		{
-			description: "test local repo five files at latest commit",
+			description: "test local repo five files at latest Commit",
 			opts: options.Options{
 				RepoPath:      "../test_data/test_repos/test_repo_5",
 				Report:        "../test_data/test_local_repo_five_files_at_latest_commit.json.got",
@@ -264,7 +264,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_five_files_at_commit.json",
 		},
 		{
-			description: "test local repo five at commit",
+			description: "test local repo five at Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_5",
 				Report:       "../test_data/test_local_repo_five_commit.json.got",
@@ -275,7 +275,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_five_commit.json",
 		},
 		{
-			description: "test local repo five at latest commit",
+			description: "test local repo five at latest Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_5",
 				Report:       "../test_data/test_local_repo_five_at_latest_commit.json.got",
@@ -346,7 +346,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_six_leaks_until_date.json",
 		},
 		{
-			description: "test local repo four leaks timerange commit",
+			description: "test local repo four leaks timerange Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_4",
 				Report:       "../test_data/test_local_repo_four_leaks_commit_timerange.json.got",
@@ -357,7 +357,7 @@ func TestAudit(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_four_leaks_commit_timerange.json",
 		},
 		{
-			description: "test local repo two whitelist commit config",
+			description: "test local repo two whitelist Commit config",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
 				Report:       "../test_data/test_local_repo_two_whitelist_commits.json.got",
