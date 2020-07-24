@@ -190,7 +190,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			entropies = append(entropies, Entropy{Min: min, Max: max, Group: int(group)})
 		}
 
-		r := Rule{
+		cfg.Rules = append(cfg.Rules, Rule{
 			Description:   rule.Description,
 			Regex:         re,
 			FileNameRegex: fileNameRe,
@@ -198,9 +198,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			Tags:          rule.Tags,
 			Allowlist:     allowlists,
 			Entropies:     entropies,
-		}
-
-		cfg.Rules = append(cfg.Rules, r)
+		})
 	}
 
 	// global file name allowlists
