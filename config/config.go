@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"path"
 	"regexp"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"github.com/zricethezav/gitleaks/v5/options"
 
 	"github.com/BurntSushi/toml"
+	log "github.com/sirupsen/logrus"
 )
 
 // Allowlist is struct containing items that if encountered will allowlist
