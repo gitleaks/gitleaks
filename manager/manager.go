@@ -89,7 +89,7 @@ type Metadata struct {
 
 	RegexTime map[string]int64
 	Commits   int
-	ScanTime int64
+	ScanTime  int64
 	patchTime int64
 	cloneTime int64
 }

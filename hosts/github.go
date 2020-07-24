@@ -176,9 +176,9 @@ func (g *Github) ScanPR() {
 					continue
 				}
 				repo.CheckRules(&scan.Bundle{
-					Content: *f.Patch,
+					Content:  *f.Patch,
 					FilePath: *f.Filename,
-					Commit: &commitObj,
+					Commit:   &commitObj,
 				})
 			}
 		}

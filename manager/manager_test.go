@@ -45,14 +45,14 @@ func TestSendReceiveLeaks(t *testing.T) {
 
 func TestSendReceiveMeta(t *testing.T) {
 	tests := []struct {
-		scanTime  int64
+		scanTime   int64
 		patchTime  int64
 		cloneTime  int64
 		regexTime  int64
 		iterations int
 	}{
 		{
-			scanTime:  1000,
+			scanTime:   1000,
 			patchTime:  1000,
 			cloneTime:  1000,
 			regexTime:  1000,

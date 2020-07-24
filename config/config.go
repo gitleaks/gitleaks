@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"path"
 	"regexp"
 	"strconv"
@@ -119,6 +120,11 @@ func NewConfig(options options.Options) (Config, error) {
 func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
+		// check and make sure the rule is valid
+		if rule.Regex == "" && rule.FilePathRegex == "" && rule.FileNameRegex == "" && len(rule.Entropies) == 0 {
+			log.Warnf("Rule %s does not define any actionable data", rule.Description)
+			continue
+		}
 		re, err := regexp.Compile(rule.Regex)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
@@ -184,7 +190,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			entropies = append(entropies, Entropy{Min: min, Max: max, Group: int(group)})
 		}
 
-		cfg.Rules = append(cfg.Rules, Rule{
+		r := Rule{
 			Description:   rule.Description,
 			Regex:         re,
 			FileNameRegex: fileNameRe,
@@ -192,7 +198,9 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			Tags:          rule.Tags,
 			Allowlist:     allowlists,
 			Entropies:     entropies,
-		})
+		}
+
+		cfg.Rules = append(cfg.Rules, r)
 	}
 
 	// global file name allowlists
