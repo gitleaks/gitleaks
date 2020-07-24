@@ -8,6 +8,7 @@
     regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
 
+## this is an example of a rule that won't work
 [[rules]]
 	description = "Python files"
-	fileRegex = '''(.*)?py$'''
+	fileRegex = "(?i)*.py"

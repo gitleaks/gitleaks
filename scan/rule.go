@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	diffAddPrefix = "+"
-	diffAddFilePrefix = "+++ b"
+	diffAddPrefix          = "+"
+	diffAddFilePrefix      = "+++ b"
 	diffAddFilePrefixSlash = "+++ b/"
-	diffLineSignature = " @@"
-	defaultLineNumber = -1
+	diffLineSignature      = " @@"
+	defaultLineNumber      = -1
 )
 
 // CheckRules accepts bundle and checks each rule defined in the config against the bundle's content.
@@ -76,18 +76,18 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 		if !ruleContainRegex(rule) {
 			repo.Manager.SendLeaks(manager.Leak{
 				LineNumber: defaultLineNumber,
-				Line:      "N/A",
-				Offender:  "Filename/path offender: " + filename,
-				Commit:    bundle.Commit.Hash.String(),
-				Repo:      repo.Name,
-				Message:   bundle.Commit.Message,
-				Rule:      rule.Description,
-				Author:    bundle.Commit.Author.Name,
-				Email:     bundle.Commit.Author.Email,
-				Date:      bundle.Commit.Author.When,
-				Tags:      strings.Join(rule.Tags, ", "),
-				File:      filename,
-				Operation: diffOpToString(bundle.Operation),
+				Line:       "N/A",
+				Offender:   "Filename/path offender: " + filename,
+				Commit:     bundle.Commit.Hash.String(),
+				Repo:       repo.Name,
+				Message:    bundle.Commit.Message,
+				Rule:       rule.Description,
+				Author:     bundle.Commit.Author.Name,
+				Email:      bundle.Commit.Author.Email,
+				Date:       bundle.Commit.Author.When,
+				Tags:       strings.Join(rule.Tags, ", "),
+				File:       filename,
+				Operation:  diffOpToString(bundle.Operation),
 			})
 		} else {
 			//otherwise we check if it matches Content regex
@@ -393,4 +393,3 @@ func isFilePathWhiteListed(filepath string, allowlist []config.Allowlist) bool {
 	}
 	return false
 }
-

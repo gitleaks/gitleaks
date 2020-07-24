@@ -9,6 +9,7 @@ import (
 	"github.com/zricethezav/gitleaks/v5/options"
 
 	"github.com/BurntSushi/toml"
+	log "github.com/sirupsen/logrus"
 )
 
 // Allowlist is struct containing items that if encountered will allowlist
@@ -119,6 +120,11 @@ func NewConfig(options options.Options) (Config, error) {
 func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
+		// check and make sure the rule is valid
+		if rule.Regex == "" && rule.FilePathRegex == "" && rule.FileNameRegex == "" && len(rule.Entropies) == 0 {
+			log.Warnf("Rule %s does not define any actionable data", rule.Description)
+			continue
+		}
 		re, err := regexp.Compile(rule.Regex)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
