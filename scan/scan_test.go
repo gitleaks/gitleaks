@@ -434,7 +434,7 @@ func TestScanUncommited(t *testing.T) {
 		addition     string
 	}{
 		{
-			description: "test audit local one leak",
+			description: "test scan local one leak",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
 				Report:       "../test_data/test_local_repo_one_aws_leak_uncommitted.json.got",
@@ -446,7 +446,7 @@ func TestScanUncommited(t *testing.T) {
 			addition:     " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
 		},
 		{
-			description: "test audit local no leak",
+			description: "test scan local no leak",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
 				Uncommited:   true,
@@ -457,7 +457,7 @@ func TestScanUncommited(t *testing.T) {
 			addition:     "nothing bad",
 		},
 		{
-			description: "test audit repo with no commits",
+			description: "test scan repo with no commits",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_7",
 				Report:       "../test_data/test_local_repo_seven_aws_leak_uncommitted.json.got",

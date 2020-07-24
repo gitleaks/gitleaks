@@ -63,10 +63,10 @@ type Leak struct {
 	lookupHash string
 }
 
-// AuditTime is a type used to determine total audit time
+// AuditTime is a type used to determine total scan time
 type AuditTime int64
 
-// PatchTime is a type used to determine total patch time during an audit
+// PatchTime is a type used to determine total patch time during an scan
 type PatchTime int64
 
 // CloneTime is a type used to determine total clone time
@@ -80,7 +80,7 @@ type RegexTime struct {
 	Regex string
 }
 
-// Metadata is a struct used to communicate metadata about an audit like timings and total commit counts.
+// Metadata is a struct used to communicate metadata about an scan like timings and total commit counts.
 type Metadata struct {
 	mux  *sync.Mutex
 	data map[string]interface{}
@@ -149,7 +149,7 @@ func (manager *Manager) GetLeaks() []Leak {
 	return manager.leaks
 }
 
-// SendLeaks accepts a leak and is used by the audit pkg. This is the public function
+// SendLeaks accepts a leak and is used by the scan pkg. This is the public function
 // that allows other packages to send leaks to the manager.
 func (manager *Manager) SendLeaks(l Leak) {
 	if len(l.Line) > maxLineLen {
@@ -225,7 +225,7 @@ func (manager *Manager) receiveMetadata() {
 	}
 }
 
-// IncrementCommits increments total commits during an audit by i.
+// IncrementCommits increments total commits during an scan by i.
 func (manager *Manager) IncrementCommits(i int) {
 	manager.metadata.mux.Lock()
 	manager.metadata.Commits += i
@@ -238,7 +238,7 @@ func (manager *Manager) RecordTime(t interface{}) {
 	manager.metadata.timings <- t
 }
 
-// DebugOutput logs metadata and other messages that occurred during a gitleaks audit
+// DebugOutput logs metadata and other messages that occurred during a gitleaks scan
 func (manager *Manager) DebugOutput() {
 	log.Debugf("-------------------------\n")
 	log.Debugf("| Times and Commit Counts|\n")
@@ -310,6 +310,6 @@ func (manager *Manager) receiveInterrupt() {
 			log.Error(err)
 		}
 	}
-	log.Info("gitleaks received interrupt, stopping audit")
+	log.Info("gitleaks received interrupt, stopping scan")
 	os.Exit(options.ErrorEncountered)
 }

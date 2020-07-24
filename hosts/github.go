@@ -27,7 +27,7 @@ type Github struct {
 }
 
 // NewGithubClient accepts a manager struct and returns a Github host pointer which will be used to
-// perform a github audit on an organization, user, or PR.
+// perform a github scan on an organization, user, or PR.
 func NewGithubClient(m *manager.Manager) (*Github, error) {
 	var err error
 	ctx := context.Background()
@@ -50,7 +50,7 @@ func NewGithubClient(m *manager.Manager) (*Github, error) {
 	}, err
 }
 
-// Scan will audit a github user or organization's repos.
+// Scan will scan a github user or organization's repos.
 func (g *Github) Scan() {
 	ctx := context.Background()
 	listOptions := github.ListOptions{
@@ -119,7 +119,7 @@ func (g *Github) Scan() {
 			log.Warn("unable to clone via https and access token, attempting with ssh now")
 			auth, err := options.SSHAuth(g.manager.Opts)
 			if err != nil {
-				log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
+				log.Warnf("unable to get ssh auth, skipping clone and scan for repo %s: %+v\n", *repo.CloneURL, err)
 				continue
 			}
 			err = r.Clone(&git.CloneOptions{
@@ -127,7 +127,7 @@ func (g *Github) Scan() {
 				Auth: auth,
 			})
 			if err != nil {
-				log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
+				log.Warnf("err cloning %s, skipping clone and scan: %+v\n", *repo.SSHURL, err)
 				continue
 			}
 		}
@@ -146,7 +146,7 @@ func (g *Github) ScanPR() {
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
 	repo := scan.NewRepo(g.manager)
 	repo.Name = repoName
-	log.Infof("auditing pr %s\n", g.manager.Opts.PullRequest)
+	log.Infof("scanning pr %s\n", g.manager.Opts.PullRequest)
 
 	if err != nil {
 		return

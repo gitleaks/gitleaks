@@ -4,12 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/zricethezav/gitleaks/v5/config"
 	"io/ioutil"
 	"os"
 	"path"
@@ -17,8 +11,14 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v5/config"
 	"github.com/zricethezav/gitleaks/v5/manager"
 
+	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/storage/memory"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,10 +30,10 @@ type Repo struct {
 
 	// config is used when the --repo-config option is set.
 	// This allows users to load up configs specific to their repos.
-	// Imagine the scenario where you are doing an audit of a large organization
+	// Imagine the scenario where you are doing an scan of a large organization
 	// and you want certain repos to look for specific rules. If those specific repos
 	// have a gitleaks.toml or .gitleaks.toml config then those configs will be used specifically
-	// for those repo audits.
+	// for those repo scans.
 	config config.Config
 
 	// ctx is used to signal timeouts to running goroutines
@@ -53,7 +53,7 @@ func NewRepo(m *manager.Manager) *Repo {
 	}
 }
 
-// Run accepts a manager and begins an audit based on the options/configs set in the manager.
+// Run accepts a manager and begins an scan based on the options/configs set in the manager.
 func Run(m *manager.Manager) error {
 	if m.Opts.OwnerPath != "" {
 		files, err := ioutil.ReadDir(m.Opts.OwnerPath)

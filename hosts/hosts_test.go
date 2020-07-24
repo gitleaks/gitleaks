@@ -3,11 +3,12 @@ package hosts
 import (
 	"flag"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/zricethezav/gitleaks/v5/config"
 	"github.com/zricethezav/gitleaks/v5/manager"
 	"github.com/zricethezav/gitleaks/v5/options"
-	"os"
-	"testing"
 )
 
 var (

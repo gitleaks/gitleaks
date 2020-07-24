@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v5/options"
 	"regexp"
 	"testing"
+
+	"github.com/zricethezav/gitleaks/v5/options"
 )
 
 func TestParse(t *testing.T) {

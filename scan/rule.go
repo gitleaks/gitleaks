@@ -38,7 +38,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 	if len(repo.config.Whitelist.Files) != 0 {
 		for _, reFileName := range repo.config.Whitelist.Files {
 			if RegexMatched(filename, reFileName) {
-				log.Debugf("whitelisted file found, skipping audit of file: %s", filename)
+				log.Debugf("whitelisted file found, skipping scan of file: %s", filename)
 				return
 			}
 		}
@@ -48,7 +48,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 	if len(repo.config.Whitelist.Paths) != 0 {
 		for _, reFilePath := range repo.config.Whitelist.Paths {
 			if RegexMatched(path, reFilePath) {
-				log.Debugf("file in whitelisted path found, skipping audit of file: %s", filename)
+				log.Debugf("file in whitelisted path found, skipping scan of file: %s", filename)
 				return
 			}
 		}

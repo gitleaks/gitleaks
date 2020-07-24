@@ -1,8 +1,9 @@
 package hosts
 
 import (
-	"github.com/zricethezav/gitleaks/v5/manager"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v5/manager"
 )
 
 const (
@@ -17,7 +18,7 @@ type Host interface {
 	ScanPR()
 }
 
-// Run kicks off a host audit. This function accepts a manager and determines what host it should audit
+// Run kicks off a host scan. This function accepts a manager and determines what host it should scan
 func Run(m *manager.Manager) error {
 	var host Host
 	var err error

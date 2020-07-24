@@ -21,7 +21,7 @@ type Gitlab struct {
 }
 
 // NewGitlabClient accepts a manager struct and returns a Gitlab host pointer which will be used to
-// perform a gitlab audit on an group or user.
+// perform a gitlab scan on an group or user.
 func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	var err error
 
@@ -38,7 +38,7 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	return gitlabClient, err
 }
 
-// Scan will audit a github user or organization's repos.
+// Scan will scan a github user or organization's repos.
 func (g *Gitlab) Scan() {
 	var (
 		projects []*gitlab.Project

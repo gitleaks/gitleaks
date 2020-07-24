@@ -3,18 +3,18 @@ package scan
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
-	"github.com/sergi/go-diff/diffmatchpatch"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/zricethezav/gitleaks/v5/manager"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,9 +69,9 @@ func (repo *Repo) Scan() error {
 		repo.config = cfg
 	}
 
-	auditTimeStart := time.Now()
+	scanTimeStart := time.Now()
 
-	// audit Commit patches OR all files at Commit. See https://github.com/zricethezav/gitleaks/issues/326
+	// scan Commit patches OR all files at Commit. See https://github.com/zricethezav/gitleaks/issues/326
 	if repo.Manager.Opts.Commit != "" {
 		return scanCommit(repo.Manager.Opts.Commit, repo, scanCommitPatches)
 	} else if repo.Manager.Opts.FilesAtCommit != "" {
@@ -155,14 +155,14 @@ func (repo *Repo) Scan() error {
 	})
 
 	wg.Wait()
-	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
+	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
 	repo.Manager.IncrementCommits(cc)
 	return nil
 }
 
-// scanEmpty audits an empty repo without any commits. See https://github.com/zricethezav/gitleaks/issues/352
+// scanEmpty scans an empty repo without any commits. See https://github.com/zricethezav/gitleaks/issues/352
 func (repo *Repo) scanEmpty() error {
-	auditTimeStart := time.Now()
+	scanTimeStart := time.Now()
 	wt, err := repo.Worktree()
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func (repo *Repo) scanEmpty() error {
 			scanType: uncommittedScan,
 		})
 	}
-	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
+	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
 	return nil
 }
 
@@ -213,7 +213,7 @@ func (repo *Repo) scanUncommitted() error {
 		return err
 	}
 
-	auditTimeStart := time.Now()
+	scanTimeStart := time.Now()
 
 	c, err := repo.CommitObject(r.Hash())
 	if err != nil {
@@ -295,12 +295,12 @@ func (repo *Repo) scanUncommitted() error {
 	if err != nil {
 		return err
 	}
-	repo.Manager.RecordTime(manager.AuditTime(howLong(auditTimeStart)))
+	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
 	return nil
 }
 
 // scan accepts a Patch, Commit, and repo. If the patches contains files that are
-// binary, then gitleaks will skip auditing that file OR if a file is matched on
+// binary, then gitleaks will skip scanning that file OR if a file is matched on
 // whitelisted files set in the configuration. If a global rule for files is defined and a filename
 // matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
