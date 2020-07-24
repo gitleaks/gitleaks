@@ -3,8 +3,8 @@ package manager
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/zricethezav/gitleaks/v4/config"
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v5/config"
+	"github.com/zricethezav/gitleaks/v5/options"
 	"io"
 	"testing"
 )
@@ -45,14 +45,14 @@ func TestSendReceiveLeaks(t *testing.T) {
 
 func TestSendReceiveMeta(t *testing.T) {
 	tests := []struct {
-		auditTime  int64
+		scanTime  int64
 		patchTime  int64
 		cloneTime  int64
 		regexTime  int64
 		iterations int
 	}{
 		{
-			auditTime:  1000,
+			scanTime:  1000,
 			patchTime:  1000,
 			cloneTime:  1000,
 			regexTime:  1000,
@@ -65,7 +65,7 @@ func TestSendReceiveMeta(t *testing.T) {
 		m, _ := NewManager(opts, cfg)
 
 		for i := 0; i < test.iterations; i++ {
-			m.RecordTime(AuditTime(test.auditTime))
+			m.RecordTime(AuditTime(test.scanTime))
 			m.RecordTime(PatchTime(test.patchTime))
 			m.RecordTime(CloneTime(test.cloneTime))
 			m.RecordTime(RegexTime{
@@ -82,9 +82,9 @@ func TestSendReceiveMeta(t *testing.T) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",
 				md.cloneTime, test.cloneTime*int64(test.iterations))
 		}
-		if md.AuditTime != test.auditTime*int64(test.iterations) {
-			t.Errorf("audit time mismatch, got %d, wanted %d",
-				md.AuditTime, test.auditTime*int64(test.iterations))
+		if md.AuditTime != test.scanTime*int64(test.iterations) {
+			t.Errorf("scan time mismatch, got %d, wanted %d",
+				md.AuditTime, test.scanTime*int64(test.iterations))
 		}
 		if md.patchTime != test.patchTime*int64(test.iterations) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",

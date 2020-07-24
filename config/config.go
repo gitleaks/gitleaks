@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v5/options"
 
 	"github.com/BurntSushi/toml"
 )
@@ -29,9 +29,9 @@ type Entropy struct {
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
 // This struct is used in the Config struct as an array of Rules and is iterated
-// over during an audit. Each rule will be checked. If a regex match is found AND
+// over during an scan. Each rule will be checked. If a regex match is found AND
 // that match is not whitelisted (globally or locally), then a leak will be appended
-// to the final audit report.
+// to the final scan report.
 type Rule struct {
 	Description   string
 	Regex         *regexp.Regexp
@@ -87,7 +87,7 @@ type TomlLoader struct {
 }
 
 // NewConfig will create a new config struct which contains
-// rules on how gitleaks will proceed with its audit.
+// rules on how gitleaks will proceed with its scan.
 // If no options are passed via cli then NewConfig will return
 // a default config which can be seen in config.go
 func NewConfig(options options.Options) (Config, error) {
@@ -115,7 +115,7 @@ func NewConfig(options options.Options) (Config, error) {
 }
 
 // Parse will parse the values set in a TomlLoader and use those values
-// to create compiled regular expressions and rules used in audits
+// to create compiled regular expressions and rules used in scans
 func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {

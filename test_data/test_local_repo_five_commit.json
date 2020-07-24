@@ -1,6 +1,7 @@
 [
  {
-  "line": "\nmore_secrets = '99432bfewaf823ec3294e231'",
+  "line": "more_secrets = '99432bfewaf823ec3294e231'",
+  "lineNumber": 7,
   "offender": "secrets = '99432bfewaf823ec3294e231",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
@@ -10,6 +11,7 @@
   "email": "zrice@gitlab.com",
   "file": "secrets.py",
   "date": "2020-02-01T10:30:22-05:00",
-  "tags": "key, API, generic"
+  "tags": "key, API, generic",
+  "operation": "addition"
  }
 ]

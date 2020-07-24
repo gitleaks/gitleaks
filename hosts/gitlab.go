@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v4/audit"
-	"github.com/zricethezav/gitleaks/v4/manager"
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v5/scan"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -21,7 +21,7 @@ type Gitlab struct {
 }
 
 // NewGitlabClient accepts a manager struct and returns a Gitlab host pointer which will be used to
-// perform a gitlab audit on an group or user.
+// perform a gitlab scan on an group or user.
 func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	var err error
 
@@ -38,8 +38,8 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	return gitlabClient, err
 }
 
-// Audit will audit a github user or organization's repos.
-func (g *Gitlab) Audit() {
+// Scan will scan a github user or organization's repos.
+func (g *Gitlab) Scan() {
 	var (
 		projects []*gitlab.Project
 		resp     *gitlab.Response
@@ -89,20 +89,20 @@ func (g *Gitlab) Audit() {
 
 	// iterate of gitlab projects
 	for _, p := range projects {
-		r := audit.NewRepo(g.manager)
+		r := scan.NewRepo(g.manager)
 		cloneOpts := g.manager.CloneOptions
 		cloneOpts.URL = p.HTTPURLToRepo
 		err := r.Clone(cloneOpts)
 		// TODO handle clone retry with ssh like github host
 		r.Name = p.Name
 
-		if err = r.Audit(); err != nil {
+		if err = r.Scan(); err != nil {
 			log.Error(err)
 		}
 	}
 }
 
-// AuditPR TODO not implemented
-func (g *Gitlab) AuditPR() {
+// ScanPR TODO not implemented
+func (g *Gitlab) ScanPR() {
 	log.Error("AuditPR is not implemented in Gitlab host yet...")
 }
