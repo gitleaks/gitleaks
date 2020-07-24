@@ -39,7 +39,7 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 }
 
 // Scan will audit a github user or organization's repos.
-func (g *Gitlab) Audit() {
+func (g *Gitlab) Scan() {
 	var (
 		projects []*gitlab.Project
 		resp     *gitlab.Response
@@ -102,7 +102,7 @@ func (g *Gitlab) Audit() {
 	}
 }
 
-// AuditPR TODO not implemented
-func (g *Gitlab) AuditPR() {
+// ScanPR TODO not implemented
+func (g *Gitlab) ScanPR() {
 	log.Error("AuditPR is not implemented in Gitlab host yet...")
 }

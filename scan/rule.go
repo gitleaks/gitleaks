@@ -97,15 +97,15 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 					start := loc[0]
 					end := loc[1]
 					for start != 0 && bundle.Content[start] != '\n' {
-						start = start - 1
+						start--
 					}
 
 					if bundle.Content[start] == '\n' {
-						start += 1
+						start++
 					}
 
 					for end < len(bundle.Content)-1 && bundle.Content[end] != '\n' {
-						end = end + 1
+						end++
 					}
 
 					line := bundle.Content[start:end]

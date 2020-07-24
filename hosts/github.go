@@ -51,7 +51,7 @@ func NewGithubClient(m *manager.Manager) (*Github, error) {
 }
 
 // Scan will audit a github user or organization's repos.
-func (g *Github) Audit() {
+func (g *Github) Scan() {
 	ctx := context.Background()
 	listOptions := github.ListOptions{
 		PerPage: 100,
@@ -137,8 +137,8 @@ func (g *Github) Audit() {
 	}
 }
 
-// AuditPR audits a single github PR
-func (g *Github) AuditPR() {
+// ScanPR scan a single github PR
+func (g *Github) ScanPR() {
 	ctx := context.Background()
 	splits := strings.Split(g.manager.Opts.PullRequest, "/")
 	owner := splits[len(splits)-4]

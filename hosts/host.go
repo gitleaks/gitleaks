@@ -13,8 +13,8 @@ const (
 // Host is an interface used for defining external git hosting providers like github and gitlab.
 // TODO add bitbucket
 type Host interface {
-	Audit()
-	AuditPR()
+	Scan()
+	ScanPR()
 }
 
 // Run kicks off a host audit. This function accepts a manager and determines what host it should audit
@@ -30,10 +30,14 @@ func Run(m *manager.Manager) error {
 		return nil
 	}
 
+	if err != nil {
+		return err
+	}
+
 	if m.Opts.PullRequest != "" {
-		host.AuditPR()
+		host.ScanPR()
 	} else {
-		host.Audit()
+		host.Scan()
 	}
 	return err
 }
