@@ -3,11 +3,6 @@ package scan
 import (
 	"bufio"
 	"fmt"
-	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/v4/config"
-	"github.com/zricethezav/gitleaks/v4/manager"
 	"io"
 	"math"
 	"path/filepath"
@@ -15,17 +10,29 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v4/manager"
+
+	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	log "github.com/sirupsen/logrus"
 )
 
-// CheckRules accepts a file Content, fullpath of file, Commit and repo. If the file is
-// binary OR if a file is matched on whitelisted files set in the configuration, then gitleaks
-// will skip auditing that file. It will check first if rules apply to this file comparing filename
-// and path to their respective rule regexes and inspect file Content with inspectFileContents after.
-func (repo *Repo) CheckRules(frame Frame) {
-	filename := filepath.Base(frame.FilePath)
-	path := filepath.Dir(frame.FilePath)
+const (
+	diffAddPrefix = "+"
+	diffAddFilePrefix = "+++ b"
+	diffAddFilePrefixSlash = "+++ b/"
+	diffLineSignature = " @@"
+	defaultLineNumber = -1
+)
 
-	frame.lineLookup = make(map[string]bool)
+// CheckRules accepts bundle and checks each rule defined in the config against the bundle's content.
+func (repo *Repo) CheckRules(bundle *Bundle) {
+	filename := filepath.Base(bundle.FilePath)
+	path := filepath.Dir(bundle.FilePath)
+
+	bundle.lineLookup = make(map[string]bool)
 
 	// We want to check if there is a whitelist for this file
 	if len(repo.config.Whitelist.Files) != 0 {
@@ -68,40 +75,41 @@ func (repo *Repo) CheckRules(frame Frame) {
 		// If it doesnt contain a Content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
 			repo.Manager.SendLeaks(manager.Leak{
-				Line:     "N/A",
-				Offender: "Filename/path offender: " + filename,
-				Commit:   frame.Commit.Hash.String(),
-				Repo:     repo.Name,
-				Message:  frame.Commit.Message,
-				Rule:     rule.Description,
-				Author:   frame.Commit.Author.Name,
-				Email:    frame.Commit.Author.Email,
-				Date:     frame.Commit.Author.When,
-				Tags:     strings.Join(rule.Tags, ", "),
-				File:     filename,
-				Operation: diffOpToString(frame.Operation),
+				LineNumber: defaultLineNumber,
+				Line:      "N/A",
+				Offender:  "Filename/path offender: " + filename,
+				Commit:    bundle.Commit.Hash.String(),
+				Repo:      repo.Name,
+				Message:   bundle.Commit.Message,
+				Rule:      rule.Description,
+				Author:    bundle.Commit.Author.Name,
+				Email:     bundle.Commit.Author.Email,
+				Date:      bundle.Commit.Author.When,
+				Tags:      strings.Join(rule.Tags, ", "),
+				File:      filename,
+				Operation: diffOpToString(bundle.Operation),
 			})
 		} else {
 			//otherwise we check if it matches Content regex
-			locs := rule.Regex.FindAllIndex([]byte(frame.Content), -1)
+			locs := rule.Regex.FindAllIndex([]byte(bundle.Content), -1)
 			if len(locs) != 0 {
 				for _, loc := range locs {
 					start := loc[0]
 					end := loc[1]
-					for start != 0 && frame.Content[start] != '\n' {
+					for start != 0 && bundle.Content[start] != '\n' {
 						start = start - 1
 					}
 
-					if frame.Content[start] == '\n' {
+					if bundle.Content[start] == '\n' {
 						start += 1
 					}
 
-					for end < len(frame.Content)-1 && frame.Content[end] != '\n' {
+					for end < len(bundle.Content)-1 && bundle.Content[end] != '\n' {
 						end = end + 1
 					}
 
-					line := frame.Content[start:end]
-					offender := frame.Content[loc[0]:loc[1]]
+					line := bundle.Content[start:end]
+					offender := bundle.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
 					if isOffenderWhiteListed(offender, rule.Whitelist) {
@@ -113,23 +121,24 @@ func (repo *Repo) CheckRules(frame Frame) {
 					}
 
 					leak := manager.Leak{
-						LineNumber: -1,
+						LineNumber: defaultLineNumber,
 						Line:       line,
 						Offender:   offender,
-						Commit:     frame.Commit.Hash.String(),
+						Commit:     bundle.Commit.Hash.String(),
 						Repo:       repo.Name,
-						Message:    frame.Commit.Message,
+						Message:    bundle.Commit.Message,
 						Rule:       rule.Description,
-						Author:     frame.Commit.Author.Name,
-						Email:      frame.Commit.Author.Email,
-						Date:       frame.Commit.Author.When,
+						Author:     bundle.Commit.Author.Name,
+						Email:      bundle.Commit.Author.Email,
+						Date:       bundle.Commit.Author.When,
 						Tags:       strings.Join(rule.Tags, ", "),
-						File:       frame.FilePath,
-						Operation:  diffOpToString(frame.Operation),
+						File:       bundle.FilePath,
+						Operation:  diffOpToString(bundle.Operation),
 					}
 
-					if frame.Operation != fdiff.Delete{
-						extractAndInjectLineNumber(&leak, &frame, repo)
+					// only search for line numbers on non-deletions
+					if bundle.Operation != fdiff.Delete {
+						extractAndInjectLineNumber(&leak, bundle, repo)
 					}
 
 					repo.Manager.SendLeaks(leak)
@@ -145,54 +154,80 @@ func (repo *Repo) CheckRules(frame Frame) {
 	}
 }
 
+// RegexMatched matched an interface to a regular expression. The interface f can
+// be a string type or go-git *object.File type.
+func RegexMatched(f interface{}, re *regexp.Regexp) bool {
+	if re == nil {
+		return false
+	}
+	switch f.(type) {
+	case nil:
+		return false
+	case string:
+		if re.FindString(f.(string)) != "" {
+			return true
+		}
+		return false
+	case *object.File:
+		if re.FindString(f.(*object.File).Name) != "" {
+			return true
+		}
+		return false
+	}
+	return false
+}
+
+// diffOpToString converts a fdiff.Operation to a string
 func diffOpToString(operation fdiff.Operation) string {
 	switch operation {
 	case fdiff.Add:
 		return "addition"
 	case fdiff.Equal:
-		return "Equal"
+		return "equal"
 	default:
 		return "deletion"
 	}
 }
 
-// extractAndInjectLine is a reverse patch search.
-func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
+// extractAndInjectLine accepts a leak, bundle, and repo which it uses to do a reverse search in order to extract
+// the line number of a historic or present leak. The function is only called when the git operation is an addition
+// or none, it does not get called when the git operation is deletion.
+func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) {
 	var err error
 
-	switch frame.scanType {
+	switch bundle.scanType {
 	case patchScan:
-		if frame.Patch == "" {
+		if bundle.Patch == "" {
 			return
 		}
-		scanner := bufio.NewScanner(strings.NewReader(frame.Patch))
+		scanner := bufio.NewScanner(strings.NewReader(bundle.Patch))
 		currFile := ""
 		currLine := 0
 		currStartDiffLine := 0
 
 		for scanner.Scan() {
 			txt := scanner.Text()
-			if strings.HasPrefix(txt, "+++ b") {
+			if strings.HasPrefix(txt, diffAddFilePrefix) {
 				currStartDiffLine = 1
 				currLine = 0
-				currFile = strings.Split(txt, "+++ b/")[1]
+				currFile = strings.Split(txt, diffAddFilePrefixSlash)[1]
 
 				// next line contains diff line information so lets scan it here
 				scanner.Scan()
 
 				txt := scanner.Text()
-				i := strings.Index(txt, "+")
-				pairs := strings.Split(strings.Split(txt[i+1:], " @@")[0], ",")
+				i := strings.Index(txt, diffAddPrefix)
+				pairs := strings.Split(strings.Split(txt[i+1:], diffLineSignature)[0], ",")
 				currStartDiffLine, err = strconv.Atoi(pairs[0])
 				if err != nil {
 					log.Debug(err)
 					return
 				}
 				continue
-			} else if strings.HasPrefix(txt, "+") && strings.Contains(txt, leak.Line) && leak.File == currFile {
+			} else if strings.HasPrefix(txt, diffAddPrefix) && strings.Contains(txt, leak.Line) && leak.File == currFile {
 				potentialLine := currLine + currStartDiffLine
-				if _, ok := frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)]; !ok {
-					frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)] = true
+				if _, ok := bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)]; !ok {
+					bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)] = true
 					leak.LineNumber = potentialLine
 					return
 				}
@@ -200,10 +235,10 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 			currLine++
 		}
 	case commitScan:
-		if frame.Commit == nil {
+		if bundle.Commit == nil {
 			return
 		}
-		f, err := frame.Commit.File(frame.FilePath)
+		f, err := bundle.Commit.File(bundle.FilePath)
 		if err != nil {
 			log.Error(err)
 			return
@@ -213,7 +248,7 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 			log.Error(err)
 			return
 		}
-		leak.LineNumber = extractLineHelper(r, frame, leak)
+		leak.LineNumber = extractLineHelper(r, bundle, leak)
 	case uncommittedScan:
 		wt, err := repo.Worktree()
 		if err != nil {
@@ -225,17 +260,19 @@ func extractAndInjectLineNumber(leak *manager.Leak, frame *Frame, repo *Repo) {
 			log.Error(err)
 			return
 		}
-		leak.LineNumber = extractLineHelper(f, frame, leak)
+		leak.LineNumber = extractLineHelper(f, bundle, leak)
 	}
 }
 
-func extractLineHelper(r io.Reader, frame *Frame, leak *manager.Leak) int {
+// extractLineHelper consolidates code for checking the leak line against the contents of a reader to find the
+// line number of the leak.
+func extractLineHelper(r io.Reader, bundle *Bundle, leak *manager.Leak) int {
 	scanner := bufio.NewScanner(r)
 	lineNumber := 1
 	for scanner.Scan() {
 		if leak.Line == scanner.Text() {
-			if _, ok := frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, frame.FilePath)]; !ok {
-				frame.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, frame.FilePath)] = true
+			if _, ok := bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, bundle.FilePath)]; !ok {
+				bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, bundle.FilePath)] = true
 				return lineNumber
 			}
 		}
@@ -258,7 +295,11 @@ func trippedEntropy(groups []string, rule config.Rule) bool {
 	return false
 }
 
-// getShannonEntropy https://en.wiktionary.org/wiki/Shannon_entropy
+// shannonEntropy calculates the entropy of data using the formula defined here:
+// https://en.wiktionary.org/wiki/Shannon_entropy
+// Another way to think about what this is doing is calculating the number of bits
+// needed to on average encode the data. So, the higher the entropy, the more random the data, the
+// more bits needed to encode that data.
 func shannonEntropy(data string) (entropy float64) {
 	if data == "" {
 		return 0
@@ -353,25 +394,3 @@ func isFilePathWhiteListed(filepath string, whitelist []config.Whitelist) bool {
 	return false
 }
 
-// RegexMatched matched an interface to a regular expression. The interface f can
-// be a string type or go-git *object.File type.
-func RegexMatched(f interface{}, re *regexp.Regexp) bool {
-	if re == nil {
-		return false
-	}
-	switch f.(type) {
-	case nil:
-		return false
-	case string:
-		if re.FindString(f.(string)) != "" {
-			return true
-		}
-		return false
-	case *object.File:
-		if re.FindString(f.(*object.File).Name) != "" {
-			return true
-		}
-		return false
-	}
-	return false
-}

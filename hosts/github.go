@@ -175,7 +175,7 @@ func (g *Github) AuditPR() {
 				if f.Patch == nil {
 					continue
 				}
-				repo.CheckRules(scan.Frame{
+				repo.CheckRules(&scan.Bundle{
 					Content: *f.Patch,
 					FilePath: *f.Filename,
 					Commit: &commitObj,
