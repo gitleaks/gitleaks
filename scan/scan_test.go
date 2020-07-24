@@ -58,11 +58,11 @@ func TestScan(t *testing.T) {
 			emptyRepo: true,
 		},
 		{
-			description: "test local repo one aws leak whitelisted",
+			description: "test local repo one aws leak allowlisted",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
 				ReportFormat: "json",
-				Config:       "../test_data/test_configs/aws_key_whitelist_python_files.toml",
+				Config:       "../test_data/test_configs/aws_key_allowlist_python_files.toml",
 			},
 			wantEmpty: true,
 		},
@@ -107,19 +107,19 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_two_leaks_commit_range.json",
 		},
 		{
-			description: "test local repo two leaks globally whitelisted",
+			description: "test local repo two leaks globally allowlisted",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
-				Config:       "../test_data/test_configs/aws_key_global_whitelist_file.toml",
+				Config:       "../test_data/test_configs/aws_key_global_allowlist_file.toml",
 				ReportFormat: "json",
 			},
 			wantEmpty: true,
 		},
 		{
-			description: "test local repo two leaks whitelisted",
+			description: "test local repo two leaks allowlisted",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
-				Config:       "../test_data/test_configs/aws_key_whitelist_files.toml",
+				Config:       "../test_data/test_configs/aws_key_allowlist_files.toml",
 				ReportFormat: "json",
 			},
 			wantEmpty: true,
@@ -174,14 +174,14 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
 		{
-			description: "test owner path whitelist repo",
+			description: "test owner path allowlist repo",
 			opts: options.Options{
 				OwnerPath:    "../test_data/test_repos/",
-				Report:       "../test_data/test_local_owner_aws_leak_whitelist_repo.json.got",
+				Report:       "../test_data/test_local_owner_aws_leak_allowlist_repo.json.got",
 				ReportFormat: "json",
-				Config:       "../test_data/test_configs/aws_key_local_owner_whitelist_repo.toml",
+				Config:       "../test_data/test_configs/aws_key_local_owner_allowlist_repo.toml",
 			},
-			wantPath: "../test_data/test_local_owner_aws_leak_whitelist_repo.json",
+			wantPath: "../test_data/test_local_owner_aws_leak_allowlist_repo.json",
 		},
 		{
 			description: "test entropy and regex",
@@ -207,8 +207,8 @@ func TestScan(t *testing.T) {
 			description: "test local repo four entropy alternative config",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_regex_whitelist.json.got",
-				Config:       "../test_data/test_configs/aws_key_aws_whitelisted.toml",
+				Report:       "../test_data/test_regex_allowlist.json.got",
+				Config:       "../test_data/test_configs/aws_key_aws_allowlisted.toml",
 				ReportFormat: "json",
 			},
 			wantEmpty: true,
@@ -316,14 +316,14 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_six_filepath_filename.json",
 		},
 		{
-			description: "test local repo six path globally whitelisted",
+			description: "test local repo six path globally allowlisted",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_6",
-				Report:       "../test_data/test_local_repo_six_path_globally_whitelisted.json.got",
-				Config:       "../test_data/test_configs/aws_key_global_whitelist_path.toml",
+				Report:       "../test_data/test_local_repo_six_path_globally_allowlisted.json.got",
+				Config:       "../test_data/test_configs/aws_key_global_allowlist_path.toml",
 				ReportFormat: "json",
 			},
-			wantPath: "../test_data/test_local_repo_six_path_globally_whitelisted.json",
+			wantPath: "../test_data/test_local_repo_six_path_globally_allowlisted.json",
 		},
 		{
 			description: "test local repo six leaks since date",
@@ -357,14 +357,14 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_four_leaks_commit_timerange.json",
 		},
 		{
-			description: "test local repo two whitelist Commit config",
+			description: "test local repo two allowlist Commit config",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
-				Report:       "../test_data/test_local_repo_two_whitelist_commits.json.got",
-				Config:       "../test_data/test_configs/whitelist_commit.toml",
+				Report:       "../test_data/test_local_repo_two_allowlist_commits.json.got",
+				Config:       "../test_data/test_configs/allowlist_commit.toml",
 				ReportFormat: "json",
 			},
-			wantPath: "../test_data/test_local_repo_two_whitelist_commits.json",
+			wantPath: "../test_data/test_local_repo_two_allowlist_commits.json",
 		},
 		{
 			description: "test local repo two deletion",

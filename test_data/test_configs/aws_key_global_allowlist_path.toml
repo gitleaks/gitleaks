@@ -3,8 +3,8 @@
     regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
 
-[whitelist]
-    description = "ignore md files"
-    files = [
-        '''(.*)?md$'''
+[allowlist]
+    description = "ignore config folders"
+    paths = [
+        '''config(uration)?'''
     ]

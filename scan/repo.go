@@ -76,8 +76,8 @@ func Run(m *manager.Manager) error {
 }
 
 func runHelper(r *Repo) error {
-	// Ignore whitelisted repos
-	for _, wlRepo := range r.Manager.Config.Whitelist.Repos {
+	// Ignore allowlisted repos
+	for _, wlRepo := range r.Manager.Config.Allowlist.Repos {
 		if RegexMatched(r.Manager.Opts.RepoPath, wlRepo) {
 			return nil
 		}
