@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/zricethezav/gitleaks/v4/config"
+	"github.com/zricethezav/gitleaks/v5/config"
 	"io/ioutil"
 	"os"
 	"path"
@@ -17,7 +17,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v4/manager"
+	"github.com/zricethezav/gitleaks/v5/manager"
 
 	log "github.com/sirupsen/logrus"
 )

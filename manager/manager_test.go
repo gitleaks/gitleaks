@@ -3,8 +3,8 @@ package manager
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/zricethezav/gitleaks/v4/config"
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v5/config"
+	"github.com/zricethezav/gitleaks/v5/options"
 	"io"
 	"testing"
 )

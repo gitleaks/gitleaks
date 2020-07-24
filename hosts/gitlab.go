@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v4/scan"
-	"github.com/zricethezav/gitleaks/v4/manager"
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v5/scan"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
