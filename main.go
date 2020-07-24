@@ -54,7 +54,7 @@ func main() {
 			log.Warnf("%d leaks detected in staged changes", len(leaks))
 		} else {
 			log.Warnf("%d leaks detected. %d commits scanned in %s", len(leaks),
-				metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+				metadata.Commits, durafmt.Parse(time.Duration(metadata.ScanTime)*time.Nanosecond))
 		}
 		os.Exit(options.LeaksPresent)
 	} else {
@@ -62,7 +62,7 @@ func main() {
 			log.Infof("No leaks detected in staged changes")
 		} else {
 			log.Infof("No leaks detected. %d commits scanned in %s",
-				metadata.Commits, durafmt.Parse(time.Duration(metadata.AuditTime)*time.Nanosecond))
+				metadata.Commits, durafmt.Parse(time.Duration(metadata.ScanTime)*time.Nanosecond))
 		}
 		os.Exit(options.Success)
 	}

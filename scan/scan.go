@@ -155,7 +155,7 @@ func (repo *Repo) Scan() error {
 	})
 
 	wg.Wait()
-	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
+	repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	repo.Manager.IncrementCommits(cc)
 	return nil
 }
@@ -185,7 +185,7 @@ func (repo *Repo) scanEmpty() error {
 			scanType: uncommittedScan,
 		})
 	}
-	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
+	repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	return nil
 }
 
@@ -295,7 +295,7 @@ func (repo *Repo) scanUncommitted() error {
 	if err != nil {
 		return err
 	}
-	repo.Manager.RecordTime(manager.AuditTime(howLong(scanTimeStart)))
+	repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	return nil
 }
 
