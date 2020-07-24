@@ -65,7 +65,7 @@ func TestSendReceiveMeta(t *testing.T) {
 		m, _ := NewManager(opts, cfg)
 
 		for i := 0; i < test.iterations; i++ {
-			m.RecordTime(AuditTime(test.scanTime))
+			m.RecordTime(ScanTime(test.scanTime))
 			m.RecordTime(PatchTime(test.patchTime))
 			m.RecordTime(CloneTime(test.cloneTime))
 			m.RecordTime(RegexTime{
@@ -82,9 +82,9 @@ func TestSendReceiveMeta(t *testing.T) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",
 				md.cloneTime, test.cloneTime*int64(test.iterations))
 		}
-		if md.AuditTime != test.scanTime*int64(test.iterations) {
+		if md.ScanTime != test.scanTime*int64(test.iterations) {
 			t.Errorf("scan time mismatch, got %d, wanted %d",
-				md.AuditTime, test.scanTime*int64(test.iterations))
+				md.ScanTime, test.scanTime*int64(test.iterations))
 		}
 		if md.patchTime != test.patchTime*int64(test.iterations) {
 			t.Errorf("clone time mismatch, got %d, wanted %d",

@@ -63,8 +63,8 @@ type Leak struct {
 	lookupHash string
 }
 
-// AuditTime is a type used to determine total scan time
-type AuditTime int64
+// ScanTime is a type used to determine total scan time
+type ScanTime int64
 
 // PatchTime is a type used to determine total patch time during an scan
 type PatchTime int64
@@ -89,7 +89,7 @@ type Metadata struct {
 
 	RegexTime map[string]int64
 	Commits   int
-	AuditTime int64
+	ScanTime int64
 	patchTime int64
 	cloneTime int64
 }
@@ -214,8 +214,8 @@ func (manager *Manager) receiveMetadata() {
 		switch ti := t.(type) {
 		case CloneTime:
 			manager.metadata.cloneTime += int64(ti)
-		case AuditTime:
-			manager.metadata.AuditTime += int64(ti)
+		case ScanTime:
+			manager.metadata.ScanTime += int64(ti)
 		case PatchTime:
 			manager.metadata.patchTime += int64(ti)
 		case RegexTime:
@@ -243,7 +243,7 @@ func (manager *Manager) DebugOutput() {
 	log.Debugf("-------------------------\n")
 	log.Debugf("| Times and Commit Counts|\n")
 	log.Debugf("-------------------------\n")
-	fmt.Println("totalAuditTime: ", durafmt.Parse(time.Duration(manager.metadata.AuditTime)*time.Nanosecond))
+	fmt.Println("totalScanTime: ", durafmt.Parse(time.Duration(manager.metadata.ScanTime)*time.Nanosecond))
 	fmt.Println("totalPatchTime: ", durafmt.Parse(time.Duration(manager.metadata.patchTime)*time.Nanosecond))
 	fmt.Println("totalCloneTime: ", durafmt.Parse(time.Duration(manager.metadata.cloneTime)*time.Nanosecond))
 	fmt.Println("totalCommits: ", manager.metadata.Commits)

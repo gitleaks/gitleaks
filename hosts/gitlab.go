@@ -104,5 +104,5 @@ func (g *Gitlab) Scan() {
 
 // ScanPR TODO not implemented
 func (g *Gitlab) ScanPR() {
-	log.Error("AuditPR is not implemented in Gitlab host yet...")
+	log.Error("ScanPR is not implemented in Gitlab host yet...")
 }
