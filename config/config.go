@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"path"
 	"regexp"
 	"strconv"
