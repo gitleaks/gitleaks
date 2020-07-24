@@ -129,7 +129,7 @@ title = "gitleaks config"
 [[rules]]
 	description = "Port"
 	regex = '''(?i)port(.{0,4})?[0-9]{1,10}'''
-	[[rules.whitelist]]
+	[[rules.allowlist]]
 		regex = '''(?i)port '''
 		description = "ignore export "
 
@@ -139,7 +139,7 @@ title = "gitleaks config"
 	description = "Email"
 	regex = '''[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}'''
 	tags = ["email"]
-	[[rules.whitelist]]
+	[[rules.allowlist]]
 		file = '''(?i)bashrc'''
 		description = "ignore bashrc emails"
 
@@ -149,13 +149,13 @@ title = "gitleaks config"
 	regex = '''(?i)(dbpasswd|dbuser|dbname|dbhost|api_key|apikey|secret|key|api|password|user|guid|hostname|pw|auth)(.{0,20})?['|"]([0-9a-zA-Z-_\/+!{}/=]{4,120})['|"]'''
 	tags = ["key", "API", "generic"]
 	# ignore leaks with specific identifiers like slack and aws
-	[[rules.whitelist]]
+	[[rules.allowlist]]
 		regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
 		description = "ignore slack"
-	[[rules.whitelist]]
+	[[rules.allowlist]]
 		description = "MailChimp API key"
 		regex = '''(?i)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]'''
-	[[rules.whitelist]]
+	[[rules.allowlist]]
 		description = "AWS Manager ID"
 		regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 
@@ -172,7 +172,7 @@ title = "gitleaks config"
         [[rules.Entropies]]
             Min = "4.3"
             Max = "7.0"
-        [[rules.whitelist]]
+        [[rules.allowlist]]
             description = "ignore ssh key and pems"
             file = '''(pem|ppk|env)$'''
             path = '''(.*)?ssh'''
@@ -197,7 +197,7 @@ title = "gitleaks config"
 	description = "Files with keys and credentials"
     fileNameRegex = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
 
-[whitelist]
-	description = "image whitelists"
+[allowlist]
+	description = "image allowlists"
 	files = ['''(.*?)(jpg|gif|doc|pdf|bin)$''']
 

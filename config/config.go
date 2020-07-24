@@ -11,9 +11,9 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Whitelist is struct containing items that if encountered will whitelist
+// Allowlist is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
-type Whitelist struct {
+type Allowlist struct {
 	Description string
 	Regex       *regexp.Regexp
 	File        *regexp.Regexp
@@ -30,7 +30,7 @@ type Entropy struct {
 // Rule is a struct that contains information that is loaded from a gitleaks config.
 // This struct is used in the Config struct as an array of Rules and is iterated
 // over during an scan. Each rule will be checked. If a regex match is found AND
-// that match is not whitelisted (globally or locally), then a leak will be appended
+// that match is not allowlisted (globally or locally), then a leak will be appended
 // to the final scan report.
 type Rule struct {
 	Description   string
@@ -38,15 +38,15 @@ type Rule struct {
 	FileNameRegex *regexp.Regexp
 	FilePathRegex *regexp.Regexp
 	Tags          []string
-	Whitelist     []Whitelist
+	Allowlist     []Allowlist
 	Entropies     []Entropy
 }
 
-// Config is a composite struct of Rules and Whitelists
-// Each Rule contains a description, regular expression, tags, and whitelists if available
+// Config is a composite struct of Rules and Allowlists
+// Each Rule contains a description, regular expression, tags, and allowlists if available
 type Config struct {
 	Rules     []Rule
-	Whitelist struct {
+	Allowlist struct {
 		Description string
 		Commits     []string
 		Files       []*regexp.Regexp
@@ -59,7 +59,7 @@ type Config struct {
 // see the config in config/defaults.go for an example. TomlLoader is used
 // to generate Config values (compiling regexes, etc).
 type TomlLoader struct {
-	Whitelist struct {
+	Allowlist struct {
 		Description string
 		Commits     []string
 		Files       []string
@@ -77,7 +77,7 @@ type TomlLoader struct {
 			Max   string
 			Group string
 		}
-		Whitelist []struct {
+		Allowlist []struct {
 			Description string
 			Regex       string
 			File        string
@@ -97,8 +97,8 @@ func NewConfig(options options.Options) (Config, error) {
 	var err error
 	if options.Config != "" {
 		_, err = toml.DecodeFile(options.Config, &tomlLoader)
-		// append a whitelist rule for whitelisting the config
-		tomlLoader.Whitelist.Files = append(tomlLoader.Whitelist.Files, path.Base(options.Config))
+		// append a allowlist rule for allowlisting the config
+		tomlLoader.Allowlist.Files = append(tomlLoader.Allowlist.Files, path.Base(options.Config))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}
@@ -132,9 +132,9 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
 
-		// rule specific whitelists
-		var whitelists []Whitelist
-		for _, wl := range rule.Whitelist {
+		// rule specific allowlists
+		var allowlists []Allowlist
+		for _, wl := range rule.Allowlist {
 			wlRe, err := regexp.Compile(wl.Regex)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
@@ -147,7 +147,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			whitelists = append(whitelists, Whitelist{
+			allowlists = append(allowlists, Allowlist{
 				Description: wl.Description,
 				File:        wlFileNameRe,
 				Path:        wlFilePathRe,
@@ -190,40 +190,40 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			FileNameRegex: fileNameRe,
 			FilePathRegex: filePathRe,
 			Tags:          rule.Tags,
-			Whitelist:     whitelists,
+			Allowlist:     allowlists,
 			Entropies:     entropies,
 		})
 	}
 
-	// global file name whitelists
-	for _, wlFileName := range tomlLoader.Whitelist.Files {
+	// global file name allowlists
+	for _, wlFileName := range tomlLoader.Allowlist.Files {
 		re, err := regexp.Compile(wlFileName)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		cfg.Whitelist.Files = append(cfg.Whitelist.Files, re)
+		cfg.Allowlist.Files = append(cfg.Allowlist.Files, re)
 	}
 
-	// global file path whitelists
-	for _, wlFilePath := range tomlLoader.Whitelist.Paths {
+	// global file path allowlists
+	for _, wlFilePath := range tomlLoader.Allowlist.Paths {
 		re, err := regexp.Compile(wlFilePath)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		cfg.Whitelist.Paths = append(cfg.Whitelist.Paths, re)
+		cfg.Allowlist.Paths = append(cfg.Allowlist.Paths, re)
 	}
 
-	// global repo whitelists
-	for _, wlRepo := range tomlLoader.Whitelist.Repos {
+	// global repo allowlists
+	for _, wlRepo := range tomlLoader.Allowlist.Repos {
 		re, err := regexp.Compile(wlRepo)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		cfg.Whitelist.Repos = append(cfg.Whitelist.Repos, re)
+		cfg.Allowlist.Repos = append(cfg.Allowlist.Repos, re)
 	}
 
-	cfg.Whitelist.Commits = tomlLoader.Whitelist.Commits
-	cfg.Whitelist.Description = tomlLoader.Whitelist.Description
+	cfg.Allowlist.Commits = tomlLoader.Allowlist.Commits
+	cfg.Allowlist.Description = tomlLoader.Allowlist.Description
 
 	return cfg, nil
 }

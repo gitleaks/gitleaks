@@ -131,8 +131,8 @@ title = "gitleaks config"
 	regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}'''
 	tags = ["key", "twilio"]
 
-[whitelist]
-	description = "Whitelisted files"
+[allowlist]
+	description = "Allowlisted files"
 	files = ['''^\.?gitleaks.toml$''',
 	'''(.*?)(jpg|gif|doc|pdf|bin)$''',
 	'''(go.mod|go.sum)$''']

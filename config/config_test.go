@@ -15,7 +15,7 @@ func TestParse(t *testing.T) {
 		wantErr       error
 		wantFileRegex *regexp.Regexp
 		wantMessages  *regexp.Regexp
-		wantWhitelist Whitelist
+		wantAllowlist Allowlist
 	}{
 		{
 			description: "default config",
@@ -42,9 +42,9 @@ func TestParse(t *testing.T) {
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: invalid nested repetition operator: `???`"),
 		},
 		{
-			description: "test bad global whitelist file regex",
+			description: "test bad global allowlist file regex",
 			opts: options.Options{
-				Config: "../test_data/test_configs/bad_aws_key_global_whitelist_file.toml",
+				Config: "../test_data/test_configs/bad_aws_key_global_allowlist_file.toml",
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},

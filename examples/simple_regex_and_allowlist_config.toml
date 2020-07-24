@@ -1,0 +1,13 @@
+# This config contains a single rule that checks for AWS keys. However, it also contains a allowlist table
+# where you can define one or more allowlists. What this means is that if you have an example AWS key as part of your
+# code (in a test for example), then you can allowlist that specific key so gitleaks will not label it as a leak.
+# If this line was present in a git history: `aws_access_key_id='AKIAIO5FODNN7EXAMPLE``, gitleaks would match this line
+# with the rule below, but since we have a allowlist against that specific key, it would be ignored.
+
+[[rules]]
+    description = "AWS Manager ID"
+    regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+    tags = ["key", "AWS"]
+        [[rules.allowlist]]
+            regex = '''AKIAIO5FODNN7EXAMPLE.*'''
+            description = "ignore example aws key"

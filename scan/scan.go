@@ -95,8 +95,8 @@ func (repo *Repo) Scan() error {
 			return storer.ErrStop
 		}
 
-		// Check if Commit is whitelisted
-		if isCommitWhiteListed(c.Hash.String(), repo.config.Whitelist.Commits) {
+		// Check if Commit is allowlisted
+		if isCommitWhiteListed(c.Hash.String(), repo.config.Allowlist.Commits) {
 			return nil
 		}
 
@@ -301,7 +301,7 @@ func (repo *Repo) scanUncommitted() error {
 
 // scan accepts a Patch, Commit, and repo. If the patches contains files that are
 // binary, then gitleaks will skip scanning that file OR if a file is matched on
-// whitelisted files set in the configuration. If a global rule for files is defined and a filename
+// allowlisted files set in the configuration. If a global rule for files is defined and a filename
 // matches said global rule, then a leak is sent to the manager.
 // After that, file chunks are created which are then inspected by InspectString()
 func scanPatch(patch *object.Patch, c *object.Commit, repo *Repo) {
@@ -360,7 +360,7 @@ func scanCommit(commit string, repo *Repo, f commitScanner) error {
 // scanCommitPatches accepts a Commit object and a repo. This function is only called when the --Commit=
 // option has been set. That option tells gitleaks to look only at a single Commit and check the contents
 // of said Commit. Similar to scan(), if the files contained in the Commit are a binaries or if they are
-// whitelisted then those files will be skipped.
+// allowlisted then those files will be skipped.
 func scanCommitPatches(c *object.Commit, repo *Repo) error {
 	if len(c.ParentHashes) == 0 {
 		err := scanFilesAtCommit(c, repo)
@@ -400,7 +400,7 @@ func scanCommitPatches(c *object.Commit, repo *Repo) error {
 // scanFilesAtCommit accepts a Commit object and a repo. This function is only called when the --files-at-Commit=
 // option has been set. That option tells gitleaks to look only at ALL the files at a Commit and check the contents
 // of said Commit. Similar to scan(), if the files contained in the Commit are a binaries or if they are
-// whitelisted then those files will be skipped.
+// allowlisted then those files will be skipped.
 func scanFilesAtCommit(c *object.Commit, repo *Repo) error {
 	fIter, err := c.Files()
 	if err != nil {

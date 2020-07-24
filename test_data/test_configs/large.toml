@@ -125,13 +125,13 @@ title = "gitleaks config"
 	description = "AWS Manager ID"
 	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 	tags = ["key", "AWS"]
-		[[rules.whitelist]]
+		[[rules.allowlist]]
 			description = "ignore common jenkins functions"
-			regex = '''whitelistme'''
+			regex = '''allowlistme'''
 			file = '''(.*)?Jenkinsfile$'''
-		[[rules.whitelist]]
+		[[rules.allowlist]]
 			description = "ignore common jenkins functions2"
-			regex = '''whitelistme'''
+			regex = '''allowlistme'''
 			file = '''(.*)?Jenkinsfile$'''
 
 # Global rules. This instructs gitleaks to ignore all .pem files or if a message with
@@ -139,8 +139,8 @@ title = "gitleaks config"
 	description = "Files with keys and credentials"
     fileRegex = '''(.*?)(pem)'''
 
-[whitelist]
-	description = "File whitelists"
+[allowlist]
+	description = "File allowlists"
 	files = [
 		'''(.*?)(jpg|gif)$''',
 		'''(.*?)(doc|pdf|bin)$'''

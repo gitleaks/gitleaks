@@ -2,6 +2,6 @@
     description = "AWS Manager ID"
     regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
-        [[rules.whitelist]]
+        [[rules.allowlist]]
             description = "ignore python files"
             file = '''(.*)?py$'''
