@@ -376,6 +376,15 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_two_leaks_deletion.json",
 		},
+		{
+			description: "test local repo eight (merges)",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_8",
+				Report:       "../test_data/test_local_repo_eight.json.got",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_eight.json",
+		},
 	}
 
 	for _, test := range tests {

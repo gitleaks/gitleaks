@@ -113,41 +113,46 @@ func (repo *Repo) Scan() error {
 		// increase Commit counter
 		cc++
 
-		err = c.Parents().ForEach(func(parent *object.Commit) error {
-			defer func() {
-				if err := recover(); err != nil {
-					// sometimes the Patch generation will fail due to a known bug in
-					// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-					// Once a fix has been merged I will remove this recover.
-					return
-				}
-			}()
-			if repo.timeoutReached() {
-				return nil
-			}
-			if parent == nil {
-				// shouldn't reach this point but just in case
-				return nil
-			}
+		// inspect first parent only as all other parents will be eventually reached
+		// (they exist as the tip of other branches, etc)
+		// See https://github.com/zricethezav/gitleaks/issues/413 for details
+		parent, err := c.Parent(0)
+		if err != nil {
+			return err
+		}
 
-			start := time.Now()
-			patch, err := parent.Patch(c)
-			if err != nil {
-				return fmt.Errorf("could not generate Patch")
+		defer func() {
+			if err := recover(); err != nil {
+				// sometimes the Patch generation will fail due to a known bug in
+				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+				// Once a fix has been merged I will remove this recover.
+				return
 			}
-			repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
-			wg.Add(1)
-			semaphore <- true
-			go func(c *object.Commit, patch *object.Patch) {
-				defer func() {
-					<-semaphore
-					wg.Done()
-				}()
-				scanPatch(patch, c, repo)
-			}(c, patch)
-
+		}()
+		if repo.timeoutReached() {
 			return nil
-		})
+		}
+		if parent == nil {
+			// shouldn't reach this point but just in case
+			return nil
+		}
+
+		start := time.Now()
+		patch, err := parent.Patch(c)
+		if err != nil {
+			return fmt.Errorf("could not generate Patch")
+		}
+		repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
+		wg.Add(1)
+		semaphore <- true
+		go func(c *object.Commit, patch *object.Patch) {
+			defer func() {
+				<-semaphore
+				wg.Done()
+			}()
+			scanPatch(patch, c, repo)
+		}(c, patch)
+
 		if c.Hash.String() == repo.Manager.Opts.CommitTo {
 			return storer.ErrStop
 		}

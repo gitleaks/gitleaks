@@ -73,5 +73,20 @@
   "date": "2020-02-24T14:13:15-05:00",
   "tags": "key, AWS",
   "operation": "addition"
+ },
+ {
+  "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 6,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "748f11eaf2c38c3cf0ac6a22e44208777e79fa6f",
+  "repo": "test_repo_8",
+  "rule": "AWS Manager ID",
+  "commitMessage": "Merge pull request #1 from zricethezav/additional-secret-branch\n\nUpdate dummy.txt",
+  "author": "Zachary Rice",
+  "email": "zricer@protonmail.com",
+  "file": "dummy.txt",
+  "date": "2020-07-25T14:44:48-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
  }
 ]
