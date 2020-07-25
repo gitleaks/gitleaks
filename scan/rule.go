@@ -200,7 +200,15 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 		if bundle.Patch == "" {
 			return
 		}
+
+		// This is needed as some patches generate strings that are larger than
+		// scanners max size (MaxScanTokenSize = 64 * 1024)
+		// https://github.com/zricethezav/gitleaks/issues/413
+		buf := make([]byte, len(bundle.Patch))
 		scanner := bufio.NewScanner(strings.NewReader(bundle.Patch))
+		scanner.Buffer(buf, len(bundle.Patch))
+		scanner.Split(bufio.ScanLines)
+
 		currFile := ""
 		currLine := 0
 		currStartDiffLine := 0
