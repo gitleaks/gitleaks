@@ -1,0 +1,47 @@
+[
+ {
+  "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 6,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "748f11eaf2c38c3cf0ac6a22e44208777e79fa6f",
+  "repo": "test_repo_8",
+  "rule": "AWS Manager ID",
+  "commitMessage": "Merge pull request #1 from zricethezav/additional-secret-branch\n\nUpdate dummy.txt",
+  "author": "Zachary Rice",
+  "email": "zricer@protonmail.com",
+  "file": "dummy.txt",
+  "date": "2020-07-25T14:44:48-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
+ },
+ {
+  "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 2,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "ce7e8177bbf8a172c06b6a1e370a374d5c19f660",
+  "repo": "test_repo_8",
+  "rule": "AWS Manager ID",
+  "commitMessage": "dummy.txt w/ text",
+  "author": "Zachary Rice",
+  "email": "zricer@protonmail.com",
+  "file": "dummy.txt",
+  "date": "2020-07-25T14:39:11-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
+ },
+ {
+  "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 6,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "9267bc86ec1497471cbc6f3308f3527f7ef34b9d",
+  "repo": "test_repo_8",
+  "rule": "AWS Manager ID",
+  "commitMessage": "Update dummy.txt",
+  "author": "Zachary Rice",
+  "email": "zricer@protonmail.com",
+  "file": "dummy.txt",
+  "date": "2020-07-25T14:41:11-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
+ }
+]
