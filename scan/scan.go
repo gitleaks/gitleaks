@@ -281,7 +281,8 @@ func (repo *Repo) scanUncommitted() error {
 				}
 			}
 
-			diffs := diffmatchpatch.New().DiffMain(prevFileContents, currFileContents, false)
+			dmp := diffmatchpatch.New()
+			diffs := dmp.DiffCleanupSemantic(dmp.DiffMain(prevFileContents, currFileContents, false))
 			var diffContents string
 			for _, d := range diffs {
 				if d.Type == diffmatchpatch.DiffInsert {
