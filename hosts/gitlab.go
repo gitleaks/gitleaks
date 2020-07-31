@@ -93,6 +93,10 @@ func (g *Gitlab) Scan() {
 		cloneOpts := g.manager.CloneOptions
 		cloneOpts.URL = p.HTTPURLToRepo
 		err := r.Clone(cloneOpts)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
 		// TODO handle clone retry with ssh like github host
 		r.Name = p.Name
 
