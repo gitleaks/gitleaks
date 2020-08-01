@@ -2,11 +2,16 @@ package hosts
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/zricethezav/gitleaks/v5/manager"
 	"github.com/zricethezav/gitleaks/v5/options"
 	"github.com/zricethezav/gitleaks/v5/scan"
+
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -38,7 +43,7 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	return gitlabClient, err
 }
 
-// Scan will scan a github user or organization's repos.
+// Scan will scan a gitlab user or organization's repos.
 func (g *Gitlab) Scan() {
 	var (
 		projects []*gitlab.Project
@@ -108,5 +113,64 @@ func (g *Gitlab) Scan() {
 
 // ScanPR TODO not implemented
 func (g *Gitlab) ScanPR() {
-	log.Error("ScanPR is not implemented in Gitlab host yet...")
+
+	splits := strings.Split(g.manager.Opts.PullRequest, "/")
+	repoName := splits[len(splits)-5] + "/" + splits[len(splits)-4]
+	mrNum, _ := strconv.Atoi(splits[len(splits)-1])
+	repo := scan.NewRepo(g.manager)
+	repo.Name = repoName
+	log.Infof("scanning mr %s\n", g.manager.Opts.PullRequest)
+
+	// Loop through all commits in the MR
+	page := 1
+	for {
+		commits, resp, err := g.client.MergeRequests.GetMergeRequestCommits(repoName, mrNum, &gitlab.GetMergeRequestCommitsOptions{
+			PerPage: 100, Page: page})
+		if err != nil {
+			log.Fatalf("Failed to retrieve MR %v", err)
+		}
+
+		// Loop through each commit in the MR
+		for _, c := range commits {
+			commitObj := object.Commit{
+				Hash: plumbing.NewHash(c.ID),
+				Author: object.Signature{
+					Name:  c.AuthorName,
+					Email: c.AuthorEmail,
+					When:  *c.AuthoredDate,
+				},
+			}
+
+			// Loop through all diffs in the commit
+			diff_page := 1
+			for {
+				diffs, diff_resp, diff_err := g.client.Commits.GetCommitDiff(repoName, c.ID, &gitlab.GetCommitDiffOptions{
+					PerPage: 100, Page: diff_page})
+				if diff_err != nil {
+					log.Errorf("Failed to retrieve commit %v", diff_err)
+					continue
+				}
+
+				// Loop through each diff
+				for _, d := range diffs {
+					repo.CheckRules(&scan.Bundle{
+						Content:  d.Diff,
+						FilePath: d.NewPath,
+						Commit:   &commitObj,
+					})
+				}
+
+				if diff_resp.CurrentPage >= diff_resp.TotalPages {
+					break
+				}
+				diff_page = diff_resp.NextPage
+			}
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+		page = resp.NextPage
+	}
+
 }
