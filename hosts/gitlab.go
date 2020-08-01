@@ -142,12 +142,12 @@ func (g *Gitlab) ScanPR() {
 			}
 
 			// Loop through all diffs in the commit
-			diff_page := 1
+			diffPage := 1
 			for {
-				diffs, diff_resp, diff_err := g.client.Commits.GetCommitDiff(repoName, c.ID, &gitlab.GetCommitDiffOptions{
-					PerPage: 100, Page: diff_page})
-				if diff_err != nil {
-					log.Errorf("Failed to retrieve commit %v", diff_err)
+				diffs, diffResp, diffErr := g.client.Commits.GetCommitDiff(repoName, c.ID, &gitlab.GetCommitDiffOptions{
+					PerPage: 100, Page: diffPage})
+				if diffErr != nil {
+					log.Errorf("Failed to retrieve commit %v", diffErr)
 					continue
 				}
 
@@ -160,10 +160,10 @@ func (g *Gitlab) ScanPR() {
 					})
 				}
 
-				if diff_resp.CurrentPage >= diff_resp.TotalPages {
+				if diffResp.CurrentPage >= diffResp.TotalPages {
 					break
 				}
-				diff_page = diff_resp.NextPage
+				diffPage = diffResp.NextPage
 			}
 		}
 
