@@ -2,7 +2,6 @@ package manager
 
 import (
 	"crypto/sha1"
-	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -261,46 +260,6 @@ func (manager *Manager) DebugOutput() {
 
 }
 
-// Report saves gitleaks leaks to a json specified by --report={report.json}
-func (manager *Manager) Report() error {
-	close(manager.leakChan)
-	close(manager.metadata.timings)
-
-	if log.IsLevelEnabled(log.DebugLevel) {
-		manager.DebugOutput()
-	}
-
-	if manager.Opts.Report != "" {
-		if len(manager.GetLeaks()) == 0 {
-			log.Infof("no leaks found, skipping writing report")
-			return nil
-		}
-		file, err := os.Create(manager.Opts.Report)
-		if err != nil {
-			return err
-		}
-
-		if manager.Opts.ReportFormat == "json" {
-			encoder := json.NewEncoder(file)
-			encoder.SetIndent("", " ")
-			err = encoder.Encode(manager.leaks)
-			if err != nil {
-				return err
-			}
-		} else {
-			w := csv.NewWriter(file)
-			_ = w.Write([]string{"repo", "line", "commit", "offender", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
-			for _, leak := range manager.GetLeaks() {
-				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
-			}
-			w.Flush()
-		}
-		_ = file.Close()
-
-		log.Infof("report written to %s", manager.Opts.Report)
-	}
-	return nil
-}
 
 func (manager *Manager) receiveInterrupt() {
 	<-manager.stopChan

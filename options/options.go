@@ -45,7 +45,7 @@ type Options struct {
 	OwnerPath     string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
 	Branch        string `long:"branch" description:"Branch to scan"`
 	Report        string `long:"report" description:"path to write json leaks file"`
-	ReportFormat  string `long:"report-format" default:"json" description:"json or csv"`
+	ReportFormat  string `long:"report-format" default:"json" description:"json, csv, sarif"`
 	Redact        bool   `long:"redact" description:"redact secrets from log messages and leaks"`
 	Debug         bool   `long:"debug" description:"log debug messages"`
 	RepoConfig    bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
