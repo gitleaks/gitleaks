@@ -115,14 +115,11 @@ func (manager *Manager) Report() error {
 								Rules: manager.configToRules(),
 							},
 						},
-						Results: nil,
+						Results: manager.leaksToResults(),
 					},
 				},
 			}
 
-			//for _, leak := range manager.leaks {
-			//
-			//}
 			encoder := json.NewEncoder(file)
 			encoder.SetIndent("", " ")
 			err = encoder.Encode(s)
@@ -183,3 +180,20 @@ func (m *Manager) configToRules() []Rules {
 	}
 	return rules
 }
+
+func (m *Manager) leaksToResults() []Results {
+	var results []Results
+	for _, leak := range m.leaks {
+		results = append(results, Results{
+			Message:             Message{
+				Text: ,
+			},
+			Locations:           nil,
+			PartialFingerprints: PartialFingerprints{},
+		})
+		
+	}
+	
+	return results
+}
+
