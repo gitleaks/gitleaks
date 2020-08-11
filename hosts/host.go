@@ -16,6 +16,7 @@ const (
 type Host interface {
 	Scan()
 	ScanPR()
+	ScanCommitURL()
 }
 
 // Run kicks off a host scan. This function accepts a manager and determines what host it should scan
@@ -37,6 +38,8 @@ func Run(m *manager.Manager) error {
 
 	if m.Opts.PullRequest != "" {
 		host.ScanPR()
+	} else if m.Opts.CommitURL != "" {
+		host.ScanCommitURL()
 	} else {
 		host.Scan()
 	}

@@ -188,3 +188,8 @@ func (g *Github) ScanPR() {
 		}
 	}
 }
+
+// ScanCommitURL scan a single github commit link url
+func (g *Github) ScanCommitURL() {
+	log.Error("ScanCommitURL is not implemented in GitHub host yet...")
+}

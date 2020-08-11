@@ -2,11 +2,15 @@ package hosts
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/zricethezav/gitleaks/v5/manager"
 	"github.com/zricethezav/gitleaks/v5/options"
 	"github.com/zricethezav/gitleaks/v5/scan"
+
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -109,4 +113,58 @@ func (g *Gitlab) Scan() {
 // ScanPR TODO not implemented
 func (g *Gitlab) ScanPR() {
 	log.Error("ScanPR is not implemented in Gitlab host yet...")
+}
+
+// ScanCommitURL scan a single gitlab commit link url
+func (g *Gitlab) ScanCommitURL() {
+
+	url := strings.Replace(g.manager.Opts.CommitURL, "/-/", "/", 1)
+	splitPath := strings.SplitN(url, "/", 4)
+	splits := strings.Split(splitPath[3], "/commit/")
+
+	repoName := splits[0]
+	commitSha := splits[1]
+	repo := scan.NewRepo(g.manager)
+	repo.Name = repoName
+	log.Infof("scanning commit link %s\n", g.manager.Opts.CommitURL)
+
+	commit, _, err := g.client.Commits.GetCommit(repoName, commitSha)
+	if err != nil {
+		log.Fatalf("Failed to retrieve commit %v", err)
+	}
+
+	commitObj := object.Commit{
+		Hash: plumbing.NewHash(commit.ID),
+		Author: object.Signature{
+			Name:  commit.AuthorName,
+			Email: commit.AuthorEmail,
+			When:  *commit.AuthoredDate,
+		},
+	}
+
+	// Loop through all diffs in the commit
+	diffPage := 1
+	for {
+		diffs, diffResp, diffErr := g.client.Commits.GetCommitDiff(repoName, commitSha, &gitlab.GetCommitDiffOptions{
+			PerPage: 100, Page: diffPage})
+		if diffErr != nil {
+			log.Errorf("Failed to retrieve commit %v", diffErr)
+			continue
+		}
+
+		// Loop through each diff
+		for _, d := range diffs {
+			repo.CheckRules(&scan.Bundle{
+				Content:  d.Diff,
+				FilePath: d.NewPath,
+				Commit:   &commitObj,
+			})
+		}
+
+		if diffResp.CurrentPage >= diffResp.TotalPages {
+			break
+		}
+		diffPage = diffResp.NextPage
+	}
+
 }

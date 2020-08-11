@@ -64,6 +64,7 @@ type Options struct {
 	Organization string `long:"org" description:"organization to scan"`
 	User         string `long:"user" description:"user to scan"`
 	PullRequest  string `long:"pr" description:"pull/merge request url"`
+	CommitURL    string `long:"commit-url" description:"commit url"`
 	ExcludeForks bool   `long:"exclude-forks" description:"scan excludes forks"`
 }
 
