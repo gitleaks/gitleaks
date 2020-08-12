@@ -134,11 +134,11 @@ title = "gitleaks config"
 			    '''(.*)?Jenkinsfile$'''
 			]
 
-# Global rules. This instructs gitleaks to ignore all .pem files or if a message with
 [[rules]]
 	description = "Files with keys and credentials"
-    fileNameRegex = '''(.*?)(pem)'''
+    file = '''(.*?)(pem)'''
 
+# Global allowlist
 [allowlist]
 	description = "global allowlists"
 	files = [

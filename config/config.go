@@ -36,13 +36,13 @@ type Entropy struct {
 // that match is not allowlisted (globally or locally), then a leak will be appended
 // to the final scan report.
 type Rule struct {
-	Description   string
-	Regex         *regexp.Regexp
-	FileNameRegex *regexp.Regexp
-	FilePathRegex *regexp.Regexp
-	Tags          []string
-	Allowlist     Allowlist
-	Entropies     []Entropy
+	Description string
+	Regex       *regexp.Regexp
+	FileRegex   *regexp.Regexp
+	PathRegex   *regexp.Regexp
+	Tags        []string
+	Allowlist   Allowlist
+	Entropies   []Entropy
 }
 
 // Config is a composite struct of Rules and Allowlists
@@ -69,12 +69,12 @@ type TomlAllowList struct {
 type TomlLoader struct {
 	Allowlist TomlAllowList
 	Rules     []struct {
-		Description   string
-		Regex         string
-		FileNameRegex string
-		FilePathRegex string
-		Tags          []string
-		Entropies     []struct {
+		Description string
+		Regex       string
+		File        string
+		Path        string
+		Tags        []string
+		Entropies   []struct {
 			Min   string
 			Max   string
 			Group string
@@ -117,7 +117,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
 		// check and make sure the rule is valid
-		if rule.Regex == "" && rule.FilePathRegex == "" && rule.FileNameRegex == "" && len(rule.Entropies) == 0 {
+		if rule.Regex == "" && rule.Path == "" && rule.File == "" && len(rule.Entropies) == 0 {
 			log.Warnf("Rule %s does not define any actionable data", rule.Description)
 			continue
 		}
@@ -125,11 +125,11 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		fileNameRe, err := regexp.Compile(rule.FileNameRegex)
+		fileNameRe, err := regexp.Compile(rule.File)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		filePathRe, err := regexp.Compile(rule.FilePathRegex)
+		filePathRe, err := regexp.Compile(rule.Path)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
@@ -164,7 +164,6 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
 
-
 		var entropies []Entropy
 		for _, e := range rule.Entropies {
 			min, err := strconv.ParseFloat(e.Min, 64)
@@ -195,13 +194,13 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		r := Rule{
-			Description:   rule.Description,
-			Regex:         re,
-			FileNameRegex: fileNameRe,
-			FilePathRegex: filePathRe,
-			Tags:          rule.Tags,
-			Allowlist:     allowList,
-			Entropies:     entropies,
+			Description: rule.Description,
+			Regex:       re,
+			FileRegex:   fileNameRe,
+			PathRegex:   filePathRe,
+			Tags:        rule.Tags,
+			Allowlist:   allowList,
+			Entropies:   entropies,
 		}
 
 		cfg.Rules = append(cfg.Rules, r)

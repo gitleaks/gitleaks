@@ -137,7 +137,7 @@ title = "gitleaks config"
 # Global rules. This instructs gitleaks to ignore all .pem files or if a message with
 [[rules]]
 	description = "Files with keys and credentials"
-    fileNameRegex = '''(.*?)(pem)'''
+    file = '''(.*?)(pem)'''
 
 [allowlist]
 	description = "File allowlists"
