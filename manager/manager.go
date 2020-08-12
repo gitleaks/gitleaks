@@ -14,8 +14,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/hako/durafmt"
@@ -252,7 +252,7 @@ func (manager *Manager) DebugOutput() {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, '.', 0)
 
 	log.Debugf("--------------------------\n")
-	log.Debugf("| Individual Regex Times |\n")
+	log.Debugf("| Individual Regexes Times |\n")
 	log.Debugf("--------------------------\n")
 	for k, v := range manager.metadata.RegexTime {
 		_, _ = fmt.Fprintf(w, "%s\t%s\n", k, durafmt.Parse(time.Duration(v)*time.Nanosecond))

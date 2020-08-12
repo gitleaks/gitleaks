@@ -11,8 +11,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/manager"
 
 	"github.com/BurntSushi/toml"
 	"github.com/go-git/go-billy/v5"
@@ -77,11 +77,11 @@ func Run(m *manager.Manager) error {
 
 func runHelper(r *Repo) error {
 	// Ignore allowlisted repos
-	for _, wlRepo := range r.Manager.Config.Allowlist.Repos {
-		if RegexMatched(r.Manager.Opts.RepoPath, wlRepo) {
+	for _, allowListedRepo := range r.Manager.Config.Allowlist.Repos {
+		if RegexMatched(r.Manager.Opts.RepoPath, allowListedRepo) {
 			return nil
 		}
-		if RegexMatched(r.Manager.Opts.Repo, wlRepo) {
+		if RegexMatched(r.Manager.Opts.Repo, allowListedRepo) {
 			return nil
 		}
 	}

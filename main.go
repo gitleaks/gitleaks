@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/hosts"
-	"github.com/zricethezav/gitleaks/v5/manager"
-	"github.com/zricethezav/gitleaks/v5/options"
-	"github.com/zricethezav/gitleaks/v5/scan"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/hosts"
+	"github.com/zricethezav/gitleaks/v6/manager"
+	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v6/scan"
 
 	"github.com/hako/durafmt"
 	log "github.com/sirupsen/logrus"

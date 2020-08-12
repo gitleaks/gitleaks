@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v5/manager"
-	"github.com/zricethezav/gitleaks/v5/options"
-	"github.com/zricethezav/gitleaks/v5/scan"
+	"github.com/zricethezav/gitleaks/v6/manager"
+	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v6/scan"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/zricethezav/gitleaks/v5/version"
+	"github.com/zricethezav/gitleaks/v6/version"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"

@@ -10,9 +10,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/manager"
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/manager"
+	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
@@ -384,6 +384,16 @@ func TestScan(t *testing.T) {
 				ReportFormat: "json",
 			},
 			wantPath: "../test_data/test_local_repo_eight.json",
+		},
+		{
+			description: "test local repo nine",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_9",
+				Report:       "../test_data/test_local_repo_nine_aws_leak.json.got",
+				Config:       "../test_data/test_configs/large_with_global_allowlist_regex.toml",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_nine_aws_leak.json",
 		},
 	}
 

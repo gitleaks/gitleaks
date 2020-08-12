@@ -3,7 +3,7 @@ package hosts
 import (
 	"strings"
 
-	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v6/manager"
 )
 
 const (
