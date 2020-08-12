@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/manager"
 
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"

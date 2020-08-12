@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/sirupsen/logrus"

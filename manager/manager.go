@@ -14,8 +14,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/hako/durafmt"

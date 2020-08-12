@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/options"
 )
 
 func TestParse(t *testing.T) {
