@@ -63,12 +63,12 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 		}
 
 		// If it has fileNameRegex and it doesnt match we continue to next rule
-		if ruleContainFileRegex(rule) && !RegexMatched(filename, rule.FileRegex) {
+		if ruleContainFileRegex(rule) && !RegexMatched(filename, rule.File) {
 			continue
 		}
 
 		// If it has filePathRegex and it doesnt match we continue to next rule
-		if ruleContainPathRegex(rule) && !RegexMatched(path, rule.PathRegex) {
+		if ruleContainPathRegex(rule) && !RegexMatched(path, rule.Path) {
 			continue
 		}
 
@@ -154,7 +154,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 }
 
 // RegexMatched matched an interface to a regular expression. The interface f can
-// be a string type or go-git *object.FileRegex type.
+// be a string type or go-git *object.File type.
 func RegexMatched(f interface{}, re *regexp.Regexp) bool {
 	if re == nil {
 		return false
@@ -339,10 +339,10 @@ func ruleContainRegex(rule config.Rule) bool {
 
 // Checks if the given rule has a file name regex
 func ruleContainFileRegex(rule config.Rule) bool {
-	if rule.FileRegex == nil {
+	if rule.File == nil {
 		return false
 	}
-	if rule.FileRegex.String() == "" {
+	if rule.File.String() == "" {
 		return false
 	}
 	return true
@@ -350,10 +350,10 @@ func ruleContainFileRegex(rule config.Rule) bool {
 
 // Checks if the given rule has a file path regex
 func ruleContainPathRegex(rule config.Rule) bool {
-	if rule.PathRegex == nil {
+	if rule.Path == nil {
 		return false
 	}
-	if rule.PathRegex.String() == "" {
+	if rule.Path.String() == "" {
 		return false
 	}
 	return true
