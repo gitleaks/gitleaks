@@ -137,21 +137,21 @@ func (repo *Repo) Scan() error {
 			return nil
 		}
 
-		start := time.Now()
-		patch, err := parent.Patch(c)
-		if err != nil {
-			return fmt.Errorf("could not generate Patch")
-		}
-		repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
 		wg.Add(1)
 		semaphore <- true
-		go func(c *object.Commit, patch *object.Patch) {
+		go func(c *object.Commit) {
 			defer func() {
 				<-semaphore
 				wg.Done()
 			}()
+			start := time.Now()
+			patch, err := parent.Patch(c)
+			if err != nil {
+				log.Errorf("could not generate Patch")
+			}
+			repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
 			scanPatch(patch, c, repo)
-		}(c, patch)
+		}(c)
 
 		if c.Hash.String() == repo.Manager.Opts.CommitTo {
 			return storer.ErrStop

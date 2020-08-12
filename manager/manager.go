@@ -252,7 +252,7 @@ func (manager *Manager) DebugOutput() {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, '.', 0)
 
 	log.Debugf("--------------------------\n")
-	log.Debugf("| Individual Regex Times |\n")
+	log.Debugf("| Individual Regexes Times |\n")
 	log.Debugf("--------------------------\n")
 	for k, v := range manager.metadata.RegexTime {
 		_, _ = fmt.Fprintf(w, "%s\t%s\n", k, durafmt.Parse(time.Duration(v)*time.Nanosecond))

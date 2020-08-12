@@ -58,7 +58,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 		start := time.Now()
 
 		// For each rule we want to check filename allowlists
-		if isFileNameWhiteListed(filename, rule.Allowlist) || isFilePathWhiteListed(path, rule.Allowlist) {
+		if isAllowListed(filename, rule.Allowlist.Files) || isAllowListed(path, rule.Allowlist.Paths) {
 			continue
 		}
 
@@ -112,7 +112,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 					offender := bundle.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
-					if isOffenderWhiteListed(offender, rule.Allowlist) {
+					if isAllowListed(offender, append(rule.Allowlist.Regex, repo.config.Allowlist.Regex...)) {
 						continue
 					}
 
@@ -369,35 +369,14 @@ func isCommitWhiteListed(commitHash string, allowlistedCommits []string) bool {
 	return false
 }
 
-func isOffenderWhiteListed(offender string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if wl.Regex.FindString(offender) != "" {
+func isAllowListed(target string, allowList []*regexp.Regexp) bool {
+	if len(allowList) != 0 {
+		for _, re := range allowList {
+			if re.FindString(target) != "" {
 				return true
 			}
 		}
 	}
 	return false
-}
 
-func isFileNameWhiteListed(filename string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if RegexMatched(filename, wl.File) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func isFilePathWhiteListed(filepath string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if RegexMatched(filepath, wl.Path) {
-				return true
-			}
-		}
-	}
-	return false
 }
