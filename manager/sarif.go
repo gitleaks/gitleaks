@@ -5,80 +5,81 @@ import (
 	"time"
 )
 
-//Sarif is
+//Sarif ...
 type Sarif struct {
 	Schema  string `json:"$schema"`
 	Version string `json:"version"`
 	Runs    []Runs `json:"runs"`
 }
 
-//ShortDescription
+//ShortDescription ...
 type ShortDescription struct {
 	Text string `json:"text"`
 }
 
-//FullDescription
+//FullDescription ...
 type FullDescription struct {
 	Text string `json:"text"`
 }
 
-//Rules
+//Rules ...
 type Rules struct {
 	ID         string          `json:"id"`
 	Name       string          `json:"name"`
-	Properties RulesProperties `json:"properties"`
 }
 
-//Driver
+//Driver ...
 type Driver struct {
 	Name            string  `json:"name"`
 	SemanticVersion string  `json:"semanticVersion"`
 	Rules           []Rules `json:"rules"`
 }
 
-//Tool
+//Tool ...
 type Tool struct {
 	Driver Driver `json:"driver"`
 }
 
-//Message
+//Message ...
 type Message struct {
 	Text string `json:"text"`
 }
 
-//ArtifactLocation
+//ArtifactLocation ...
 type ArtifactLocation struct {
 	URI string `json:"uri"`
 }
 
-//Region
+//Region ...
 type Region struct {
 	StartLine int     `json:"startLine"`
 	Snippet   Snippet `json:"snippet"`
 }
 
+//Snippet ...
 type Snippet struct {
 	Text string `json:"text"`
 }
 
-//PhysicalLocation
+//PhysicalLocation ...
 type PhysicalLocation struct {
 	ArtifactLocation ArtifactLocation `json:"artifactLocation"`
 	Region           Region           `json:"region"`
 }
 
-//Locations
+//Locations ...
 type Locations struct {
 	PhysicalLocation PhysicalLocation `json:"physicalLocation"`
 }
 
-//Results
+//Results ...
 type Results struct {
 	Message    Message          `json:"message"`
 	Properties ResultProperties `json:"properties"`
 	Locations  []Locations      `json:"locations"`
 }
 
+//ResultProperties ...
 type ResultProperties struct {
 	Commit        string    `json:"commit"`
 	Offender      string    `json:"offender"`
@@ -90,16 +91,7 @@ type ResultProperties struct {
 	Repo          string    `json:"repo"`
 }
 
-type RulesProperties struct {
-	Regex         string `json:"regex"`
-	Entropy       string `json:"entropy"`
-	FilenameRegex string `json:"fileNameRegex"`
-	FilPathRegex  string `json:"filePathRegex"`
-	AllowList     string `json:"allowList"`
-}
-
-
-//Runs
+//Runs ...
 type Runs struct {
 	Tool    Tool      `json:"tool"`
 	Results []Results `json:"results"`
@@ -108,23 +100,9 @@ type Runs struct {
 func (manager *Manager) configToRules() []Rules {
 	var rules []Rules
 	for _, rule := range manager.Config.Rules {
-		allowList, entropy := "", ""
-		if len(rule.Entropies) != 0 {
-			entropy = fmt.Sprintf("%v", rule.Entropies)
-		}
-		if len(rule.Allowlist) != 0 {
-			allowList = fmt.Sprintf("%v", rule.Allowlist)
-		}
 		rules = append(rules, Rules{
 			ID:   rule.Description,
 			Name: rule.Description,
-			Properties: RulesProperties{
-				Regex:         rule.Regex.String(),
-				Entropy:       entropy,
-				FilenameRegex: rule.FileNameRegex.String(),
-				FilPathRegex:  rule.FilePathRegex.String(),
-				AllowList:     allowList,
-			},
 		})
 	}
 	return rules
@@ -172,3 +150,4 @@ func leakToLocation(leak Leak) []Locations {
 		},
 	}
 }
+

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/version"
+	"github.com/zricethezav/gitleaks/v6/version"
 
 	log "github.com/sirupsen/logrus"
 )
