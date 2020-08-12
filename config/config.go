@@ -52,6 +52,8 @@ type Config struct {
 	Allowlist Allowlist
 }
 
+// TomlAllowList is a struct used in the TomlLoader that loads in allowlists from
+// specific rules or globally at the top level config
 type TomlAllowList struct {
 	Description string
 	Regexes     []string
@@ -137,29 +139,29 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 
 		// rule specific regexes
 		for _, re := range rule.Allowlist.Regexes {
-			wlRe, err := regexp.Compile(re)
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			allowList.Regexes = append(allowList.Regexes, wlRe)
+			allowList.Regexes = append(allowList.Regexes, allowListedRegex)
 		}
 
 		// rule specific filenames
 		for _, re := range rule.Allowlist.Files {
-			wlRe, err := regexp.Compile(re)
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			allowList.Files = append(allowList.Files, wlRe)
+			allowList.Files = append(allowList.Files, allowListedRegex)
 		}
 
 		// rule specific paths
 		for _, re := range rule.Allowlist.Paths {
-			wlRe, err := regexp.Compile(re)
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			allowList.Paths = append(allowList.Paths, wlRe)
+			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
 
 

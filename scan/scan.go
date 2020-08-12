@@ -96,7 +96,7 @@ func (repo *Repo) Scan() error {
 		}
 
 		// Check if Commit is allowlisted
-		if isCommitWhiteListed(c.Hash.String(), repo.config.Allowlist.Commits) {
+		if isCommitAllowListed(c.Hash.String(), repo.config.Allowlist.Commits) {
 			return nil
 		}
 

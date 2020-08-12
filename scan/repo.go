@@ -77,11 +77,11 @@ func Run(m *manager.Manager) error {
 
 func runHelper(r *Repo) error {
 	// Ignore allowlisted repos
-	for _, wlRepo := range r.Manager.Config.Allowlist.Repos {
-		if RegexMatched(r.Manager.Opts.RepoPath, wlRepo) {
+	for _, allowListedRepo := range r.Manager.Config.Allowlist.Repos {
+		if RegexMatched(r.Manager.Opts.RepoPath, allowListedRepo) {
 			return nil
 		}
-		if RegexMatched(r.Manager.Opts.Repo, wlRepo) {
+		if RegexMatched(r.Manager.Opts.Repo, allowListedRepo) {
 			return nil
 		}
 	}

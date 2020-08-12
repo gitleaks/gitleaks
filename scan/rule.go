@@ -360,7 +360,7 @@ func ruleContainFilePathRegex(rule config.Rule) bool {
 	return true
 }
 
-func isCommitWhiteListed(commitHash string, allowlistedCommits []string) bool {
+func isCommitAllowListed(commitHash string, allowlistedCommits []string) bool {
 	for _, hash := range allowlistedCommits {
 		if commitHash == hash {
 			return true
