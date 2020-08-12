@@ -15,7 +15,7 @@ func TestParse(t *testing.T) {
 		wantErr       error
 		wantFileRegex *regexp.Regexp
 		wantMessages  *regexp.Regexp
-		wantAllowlist Allowlist
+		wantAllowlist AllowList
 	}{
 		{
 			description: "default config",

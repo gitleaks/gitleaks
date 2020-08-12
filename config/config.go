@@ -14,7 +14,7 @@ import (
 
 // AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
-type Allowlist struct {
+type AllowList struct {
 	Description string
 	Regexes     []*regexp.Regexp
 	Commits     []string
@@ -41,7 +41,7 @@ type Rule struct {
 	File        *regexp.Regexp
 	Path        *regexp.Regexp
 	Tags        []string
-	Allowlist   Allowlist
+	AllowList   AllowList
 	Entropies   []Entropy
 }
 
@@ -49,7 +49,7 @@ type Rule struct {
 // Each Rule contains a description, regular expression, tags, and allowlists if available
 type Config struct {
 	Rules     []Rule
-	Allowlist Allowlist
+	Allowlist AllowList
 }
 
 // TomlAllowList is a struct used in the TomlLoader that loads in allowlists from
@@ -135,7 +135,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		// rule specific allowlists
-		var allowList Allowlist
+		var allowList AllowList
 
 		// rule specific regexes
 		for _, re := range rule.AllowList.Regexes {
@@ -199,7 +199,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			File:        fileNameRe,
 			Path:        filePathRe,
 			Tags:        rule.Tags,
-			Allowlist:   allowList,
+			AllowList:   allowList,
 			Entropies:   entropies,
 		}
 

@@ -58,7 +58,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 		start := time.Now()
 
 		// For each rule we want to check filename allowlists
-		if isAllowListed(filename, rule.Allowlist.Files) || isAllowListed(path, rule.Allowlist.Paths) {
+		if isAllowListed(filename, rule.AllowList.Files) || isAllowListed(path, rule.AllowList.Paths) {
 			continue
 		}
 
@@ -112,7 +112,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 					offender := bundle.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
-					if isAllowListed(line, append(rule.Allowlist.Regexes, repo.config.Allowlist.Regexes...)) {
+					if isAllowListed(line, append(rule.AllowList.Regexes, repo.config.Allowlist.Regexes...)) {
 						continue
 					}
 
