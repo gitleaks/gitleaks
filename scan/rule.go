@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/config"
-	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/manager"
 
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -58,17 +58,17 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 		start := time.Now()
 
 		// For each rule we want to check filename allowlists
-		if isFileNameWhiteListed(filename, rule.Allowlist) || isFilePathWhiteListed(path, rule.Allowlist) {
+		if isAllowListed(filename, rule.Allowlist.Files) || isAllowListed(path, rule.Allowlist.Paths) {
 			continue
 		}
 
 		// If it has fileNameRegex and it doesnt match we continue to next rule
-		if ruleContainFileNameRegex(rule) && !RegexMatched(filename, rule.FileNameRegex) {
+		if ruleContainFileRegex(rule) && !RegexMatched(filename, rule.File) {
 			continue
 		}
 
 		// If it has filePathRegex and it doesnt match we continue to next rule
-		if ruleContainFilePathRegex(rule) && !RegexMatched(path, rule.FilePathRegex) {
+		if ruleContainPathRegex(rule) && !RegexMatched(path, rule.Path) {
 			continue
 		}
 
@@ -112,7 +112,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 					offender := bundle.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
-					if isOffenderWhiteListed(offender, rule.Allowlist) {
+					if isAllowListed(line, append(rule.Allowlist.Regexes, repo.config.Allowlist.Regexes...)) {
 						continue
 					}
 
@@ -146,7 +146,6 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 			}
 		}
 
-		//	TODO should return filenameRegex if only file rule
 		repo.Manager.RecordTime(manager.RegexTime{
 			Time:  howLong(start),
 			Regex: rule.Regex.String(),
@@ -339,28 +338,28 @@ func ruleContainRegex(rule config.Rule) bool {
 }
 
 // Checks if the given rule has a file name regex
-func ruleContainFileNameRegex(rule config.Rule) bool {
-	if rule.FileNameRegex == nil {
+func ruleContainFileRegex(rule config.Rule) bool {
+	if rule.File == nil {
 		return false
 	}
-	if rule.FileNameRegex.String() == "" {
+	if rule.File.String() == "" {
 		return false
 	}
 	return true
 }
 
 // Checks if the given rule has a file path regex
-func ruleContainFilePathRegex(rule config.Rule) bool {
-	if rule.FilePathRegex == nil {
+func ruleContainPathRegex(rule config.Rule) bool {
+	if rule.Path == nil {
 		return false
 	}
-	if rule.FilePathRegex.String() == "" {
+	if rule.Path.String() == "" {
 		return false
 	}
 	return true
 }
 
-func isCommitWhiteListed(commitHash string, allowlistedCommits []string) bool {
+func isCommitAllowListed(commitHash string, allowlistedCommits []string) bool {
 	for _, hash := range allowlistedCommits {
 		if commitHash == hash {
 			return true
@@ -369,35 +368,14 @@ func isCommitWhiteListed(commitHash string, allowlistedCommits []string) bool {
 	return false
 }
 
-func isOffenderWhiteListed(offender string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if wl.Regex.FindString(offender) != "" {
+func isAllowListed(target string, allowList []*regexp.Regexp) bool {
+	if len(allowList) != 0 {
+		for _, re := range allowList {
+			if re.FindString(target) != "" {
 				return true
 			}
 		}
 	}
 	return false
-}
 
-func isFileNameWhiteListed(filename string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if RegexMatched(filename, wl.File) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func isFilePathWhiteListed(filepath string, allowlist []config.Allowlist) bool {
-	if len(allowlist) != 0 {
-		for _, wl := range allowlist {
-			if RegexMatched(filepath, wl.Path) {
-				return true
-			}
-		}
-	}
-	return false
 }

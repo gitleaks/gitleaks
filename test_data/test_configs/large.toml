@@ -125,19 +125,19 @@ title = "gitleaks config"
 	description = "AWS Manager ID"
 	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 	tags = ["key", "AWS"]
-		[[rules.allowlist]]
+		[rules.allowlist]
 			description = "ignore common jenkins functions"
-			regex = '''allowlistme'''
-			file = '''(.*)?Jenkinsfile$'''
-		[[rules.allowlist]]
-			description = "ignore common jenkins functions2"
-			regex = '''allowlistme'''
-			file = '''(.*)?Jenkinsfile$'''
+			regexes = [
+			    '''allowlistme'''
+			]
+			files = [
+			    '''(.*)?Jenkinsfile$'''
+			]
 
 # Global rules. This instructs gitleaks to ignore all .pem files or if a message with
 [[rules]]
 	description = "Files with keys and credentials"
-    fileRegex = '''(.*?)(pem)'''
+    file = '''(.*?)(pem)'''
 
 [allowlist]
 	description = "File allowlists"

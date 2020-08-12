@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v5/manager"
+	"github.com/zricethezav/gitleaks/v6/manager"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -96,7 +96,7 @@ func (repo *Repo) Scan() error {
 		}
 
 		// Check if Commit is allowlisted
-		if isCommitWhiteListed(c.Hash.String(), repo.config.Allowlist.Commits) {
+		if isCommitAllowListed(c.Hash.String(), repo.config.Allowlist.Commits) {
 			return nil
 		}
 
@@ -140,9 +140,10 @@ func (repo *Repo) Scan() error {
 		start := time.Now()
 		patch, err := parent.Patch(c)
 		if err != nil {
-			return fmt.Errorf("could not generate Patch")
+			log.Errorf("could not generate Patch")
 		}
 		repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
+
 		wg.Add(1)
 		semaphore <- true
 		go func(c *object.Commit, patch *object.Patch) {

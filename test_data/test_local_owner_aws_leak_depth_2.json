@@ -88,5 +88,20 @@
   "date": "2020-07-25T14:44:48-04:00",
   "tags": "key, AWS",
   "operation": "addition"
+ },
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE', #gitleaks:allow",
+  "lineNumber": 6,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "8d1fb60d2d80f0590f191ed5ace1e45ef780909a",
+  "repo": "test_repo_9",
+  "rule": "AWS Manager ID",
+  "commitMessage": "gitleaks allow secret\n",
+  "author": "Zach Rice",
+  "email": "zrice@gitlab.com",
+  "file": "server.test.py",
+  "date": "2020-08-12T13:36:20-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
  }
 ]

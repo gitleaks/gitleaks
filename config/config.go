@@ -6,19 +6,21 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v5/options"
+	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/sirupsen/logrus"
 )
 
-// Allowlist is struct containing items that if encountered will allowlist
+// AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
 type Allowlist struct {
 	Description string
-	Regex       *regexp.Regexp
-	File        *regexp.Regexp
-	Path        *regexp.Regexp
+	Regexes     []*regexp.Regexp
+	Commits     []string
+	Files       []*regexp.Regexp
+	Paths       []*regexp.Regexp
+	Repos       []*regexp.Regexp
 }
 
 // Entropy represents an entropy range
@@ -34,56 +36,50 @@ type Entropy struct {
 // that match is not allowlisted (globally or locally), then a leak will be appended
 // to the final scan report.
 type Rule struct {
-	Description   string
-	Regex         *regexp.Regexp
-	FileNameRegex *regexp.Regexp
-	FilePathRegex *regexp.Regexp
-	Tags          []string
-	Allowlist     []Allowlist
-	Entropies     []Entropy
+	Description string
+	Regex       *regexp.Regexp
+	File        *regexp.Regexp
+	Path        *regexp.Regexp
+	Tags        []string
+	Allowlist   Allowlist
+	Entropies   []Entropy
 }
 
 // Config is a composite struct of Rules and Allowlists
 // Each Rule contains a description, regular expression, tags, and allowlists if available
 type Config struct {
 	Rules     []Rule
-	Allowlist struct {
-		Description string
-		Commits     []string
-		Files       []*regexp.Regexp
-		Paths       []*regexp.Regexp
-		Repos       []*regexp.Regexp
-	}
+	Allowlist Allowlist
+}
+
+// TomlAllowList is a struct used in the TomlLoader that loads in allowlists from
+// specific rules or globally at the top level config
+type TomlAllowList struct {
+	Description string
+	Regexes     []string
+	Commits     []string
+	Files       []string
+	Paths       []string
+	Repos       []string
 }
 
 // TomlLoader gets loaded with the values from a gitleaks toml config
 // see the config in config/defaults.go for an example. TomlLoader is used
 // to generate Config values (compiling regexes, etc).
 type TomlLoader struct {
-	Allowlist struct {
+	AllowList TomlAllowList
+	Rules     []struct {
 		Description string
-		Commits     []string
-		Files       []string
-		Paths       []string
-		Repos       []string
-	}
-	Rules []struct {
-		Description   string
-		Regex         string
-		FileNameRegex string
-		FilePathRegex string
-		Tags          []string
-		Entropies     []struct {
+		Regex       string
+		File        string
+		Path        string
+		Tags        []string
+		Entropies   []struct {
 			Min   string
 			Max   string
 			Group string
 		}
-		Allowlist []struct {
-			Description string
-			Regex       string
-			File        string
-			Path        string
-		}
+		AllowList TomlAllowList
 	}
 }
 
@@ -99,7 +95,7 @@ func NewConfig(options options.Options) (Config, error) {
 	if options.Config != "" {
 		_, err = toml.DecodeFile(options.Config, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
-		tomlLoader.Allowlist.Files = append(tomlLoader.Allowlist.Files, path.Base(options.Config))
+		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}
@@ -121,7 +117,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
 		// check and make sure the rule is valid
-		if rule.Regex == "" && rule.FilePathRegex == "" && rule.FileNameRegex == "" && len(rule.Entropies) == 0 {
+		if rule.Regex == "" && rule.Path == "" && rule.File == "" && len(rule.Entropies) == 0 {
 			log.Warnf("Rule %s does not define any actionable data", rule.Description)
 			continue
 		}
@@ -129,36 +125,43 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		fileNameRe, err := regexp.Compile(rule.FileNameRegex)
+		fileNameRe, err := regexp.Compile(rule.File)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		filePathRe, err := regexp.Compile(rule.FilePathRegex)
+		filePathRe, err := regexp.Compile(rule.Path)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
 
 		// rule specific allowlists
-		var allowlists []Allowlist
-		for _, wl := range rule.Allowlist {
-			wlRe, err := regexp.Compile(wl.Regex)
+		var allowList Allowlist
+
+		// rule specific regexes
+		for _, re := range rule.AllowList.Regexes {
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			wlFileNameRe, err := regexp.Compile(wl.File)
+			allowList.Regexes = append(allowList.Regexes, allowListedRegex)
+		}
+
+		// rule specific filenames
+		for _, re := range rule.AllowList.Files {
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			wlFilePathRe, err := regexp.Compile(wl.Path)
+			allowList.Files = append(allowList.Files, allowListedRegex)
+		}
+
+		// rule specific paths
+		for _, re := range rule.AllowList.Paths {
+			allowListedRegex, err := regexp.Compile(re)
 			if err != nil {
 				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-			allowlists = append(allowlists, Allowlist{
-				Description: wl.Description,
-				File:        wlFileNameRe,
-				Path:        wlFilePathRe,
-				Regex:       wlRe,
-			})
+			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
 
 		var entropies []Entropy
@@ -191,47 +194,56 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		r := Rule{
-			Description:   rule.Description,
-			Regex:         re,
-			FileNameRegex: fileNameRe,
-			FilePathRegex: filePathRe,
-			Tags:          rule.Tags,
-			Allowlist:     allowlists,
-			Entropies:     entropies,
+			Description: rule.Description,
+			Regex:       re,
+			File:        fileNameRe,
+			Path:        filePathRe,
+			Tags:        rule.Tags,
+			Allowlist:   allowList,
+			Entropies:   entropies,
 		}
 
 		cfg.Rules = append(cfg.Rules, r)
 	}
 
-	// global file name allowlists
-	for _, wlFileName := range tomlLoader.Allowlist.Files {
-		re, err := regexp.Compile(wlFileName)
+	// global regex allowLists
+	for _, allowListRegex := range tomlLoader.AllowList.Regexes {
+		re, err := regexp.Compile(allowListRegex)
+		if err != nil {
+			return cfg, fmt.Errorf("problem loading config: %v", err)
+		}
+		cfg.Allowlist.Regexes = append(cfg.Allowlist.Regexes, re)
+	}
+
+	// global file name allowLists
+	for _, allowListFileName := range tomlLoader.AllowList.Files {
+		re, err := regexp.Compile(allowListFileName)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
 		cfg.Allowlist.Files = append(cfg.Allowlist.Files, re)
 	}
 
-	// global file path allowlists
-	for _, wlFilePath := range tomlLoader.Allowlist.Paths {
-		re, err := regexp.Compile(wlFilePath)
+	// global file path allowLists
+	for _, allowListFilePath := range tomlLoader.AllowList.Paths {
+		re, err := regexp.Compile(allowListFilePath)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
 		cfg.Allowlist.Paths = append(cfg.Allowlist.Paths, re)
 	}
 
-	// global repo allowlists
-	for _, wlRepo := range tomlLoader.Allowlist.Repos {
-		re, err := regexp.Compile(wlRepo)
+	// global repo allowLists
+	for _, allowListRepo := range tomlLoader.AllowList.Repos {
+		re, err := regexp.Compile(allowListRepo)
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
 		cfg.Allowlist.Repos = append(cfg.Allowlist.Repos, re)
 	}
 
-	cfg.Allowlist.Commits = tomlLoader.Allowlist.Commits
-	cfg.Allowlist.Description = tomlLoader.Allowlist.Description
+	cfg.Allowlist.Commits = tomlLoader.AllowList.Commits
+	cfg.Allowlist.Description = tomlLoader.AllowList.Description
 
 	return cfg, nil
 }
