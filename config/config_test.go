@@ -122,7 +122,7 @@ func TestParse(t *testing.T) {
 		_, err := NewConfig(test.opts)
 		if err != nil {
 			if test.wantErr == nil {
-				t.Error(err)
+				t.Error(test.description, err)
 			} else if test.wantErr.Error() != err.Error() {
 				t.Errorf("expected err: %s, got %s", test.wantErr, err)
 			}

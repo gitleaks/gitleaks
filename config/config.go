@@ -16,7 +16,7 @@ import (
 // a commit/line of code that would be considered a leak.
 type Allowlist struct {
 	Description string
-	Regex       []*regexp.Regexp
+	Regexes     []*regexp.Regexp
 	Commits     []string
 	Files       []*regexp.Regexp
 	Paths       []*regexp.Regexp
@@ -77,7 +77,7 @@ type TomlLoader struct {
 			Max   string
 			Group string
 		}
-		Allowlist []TomlAllowList
+		Allowlist TomlAllowList
 	}
 }
 
@@ -133,54 +133,35 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		}
 
 		// rule specific allowlists
-		var allowlist Allowlist
-		for _, wl := range rule.Allowlist {
-			var allowList Allowlist
+		var allowList Allowlist
 
-			// rule specific regexes
-			if len(wl.Regexes) != 0 {
-				for _, regex := range wl.Regexes {
-					wlRe, err := regexp.Compile(regex)
-					if err != nil {
-						return cfg, fmt.Errorf("problem loading config: %v", err)
-					}
-					allowList.Regex = append(allowList.Regex, wlRe)
-				}
+		// rule specific regexes
+		for _, re := range rule.Allowlist.Regexes {
+			wlRe, err := regexp.Compile(re)
+			if err != nil {
+				return cfg, fmt.Errorf("problem loading config: %v", err)
 			}
-
-			// rule specific filenames
-			if len(wl.Regexes) != 0 {
-				for _, regex := range wl.Regexes {
-					wlRe, err := regexp.Compile(regex)
-					if err != nil {
-						return cfg, fmt.Errorf("problem loading config: %v", err)
-					}
-					allowList.Regex = append(allowList.Regex, wlRe)
-				}
-			}
-
-			// rule specifc filepaths
-			if len(wl.Paths) != 0 {
-				for _, p := range wl.Paths {
-					wlRe, err := regexp.Compile(p)
-					if err != nil {
-						return cfg, fmt.Errorf("problem loading config: %v", err)
-					}
-					allowList.Paths = append(allowList.Paths, wlRe)
-				}
-			}
-
-			// rule specifc filenames
-			if len(wl.Files) != 0 {
-				for _, f := range wl.Files {
-					wlRe, err := regexp.Compile(f)
-					if err != nil {
-						return cfg, fmt.Errorf("problem loading config: %v", err)
-					}
-					allowList.Files = append(allowList.Files, wlRe)
-				}
-			}
+			allowList.Regexes = append(allowList.Regexes, wlRe)
 		}
+
+		// rule specific filenames
+		for _, re := range rule.Allowlist.Files {
+			wlRe, err := regexp.Compile(re)
+			if err != nil {
+				return cfg, fmt.Errorf("problem loading config: %v", err)
+			}
+			allowList.Files = append(allowList.Files, wlRe)
+		}
+
+		// rule specific paths
+		for _, re := range rule.Allowlist.Paths {
+			wlRe, err := regexp.Compile(re)
+			if err != nil {
+				return cfg, fmt.Errorf("problem loading config: %v", err)
+			}
+			allowList.Paths = append(allowList.Paths, wlRe)
+		}
+
 
 		var entropies []Entropy
 		for _, e := range rule.Entropies {
@@ -217,7 +198,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			FileNameRegex: fileNameRe,
 			FilePathRegex: filePathRe,
 			Tags:          rule.Tags,
-			Allowlist:     allowlist,
+			Allowlist:     allowList,
 			Entropies:     entropies,
 		}
 
@@ -230,7 +211,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		if err != nil {
 			return cfg, fmt.Errorf("problem loading config: %v", err)
 		}
-		cfg.Allowlist.Regex = append(cfg.Allowlist.Regex, re)
+		cfg.Allowlist.Regexes = append(cfg.Allowlist.Regexes, re)
 	}
 
 	// global file name allowLists

@@ -112,7 +112,7 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 					offender := bundle.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
-					if isAllowListed(offender, append(rule.Allowlist.Regex, repo.config.Allowlist.Regex...)) {
+					if isAllowListed(offender, append(rule.Allowlist.Regexes, repo.config.Allowlist.Regexes...)) {
 						continue
 					}
 
