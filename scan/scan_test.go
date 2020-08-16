@@ -422,6 +422,9 @@ func TestScan(t *testing.T) {
 		}
 
 		err = m.Report()
+		if err != nil {
+			t.Error(err)
+		}
 
 		if test.wantEmpty {
 			if len(m.GetLeaks()) != 0 {

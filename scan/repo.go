@@ -201,6 +201,10 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 			}
 			return nil
 		})
+		if err != nil {
+			return nil, err
+		}
+
 		if logOpts.From.IsZero() {
 			return nil, fmt.Errorf("could not find branch %s", repo.Manager.Opts.Branch)
 		}
@@ -259,6 +263,10 @@ func (repo *Repo) loadRepoConfig() (config.Config, error) {
 	defer f.Close()
 	var tomlLoader config.TomlLoader
 	_, err = toml.DecodeReader(f, &tomlLoader)
+	if err != nil {
+		return config.Config{}, err
+	}
+
 	return tomlLoader.Parse()
 }
 
