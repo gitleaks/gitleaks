@@ -175,6 +175,9 @@ func (repo *Repo) scanEmpty() error {
 	}
 
 	status, err := wt.Status()
+	if err != nil {
+		return err
+	}
 	for fn := range status {
 		workTreeBuf := bytes.NewBuffer(nil)
 		workTreeFile, err := wt.Filesystem.Open(fn)
