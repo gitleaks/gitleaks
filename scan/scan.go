@@ -1,9 +1,12 @@
 package scan
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -71,11 +74,36 @@ func (repo *Repo) Scan() error {
 
 	scanTimeStart := time.Now()
 
-	// scan Commit patches OR all files at Commit. See https://github.com/zricethezav/gitleaks/issues/326
+	// See https://github.com/zricethezav/gitleaks/issues/326
+	// Scan commit patches, all files at a commit, or a range of commits
 	if repo.Manager.Opts.Commit != "" {
 		return scanCommit(repo.Manager.Opts.Commit, repo, scanCommitPatches)
 	} else if repo.Manager.Opts.FilesAtCommit != "" {
 		return scanCommit(repo.Manager.Opts.FilesAtCommit, repo, scanFilesAtCommit)
+	} else if repo.Manager.Opts.Commits != "" {
+		commits := strings.Split(repo.Manager.Opts.Commits, ",")
+		for _, c := range commits {
+			err := scanCommit(c, repo, scanCommitPatches)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	} else if repo.Manager.Opts.CommitsFile != "" {
+		file, err := os.Open(repo.Manager.Opts.CommitsFile)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			err := scanCommit(scanner.Text(), repo, scanCommitPatches)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	logOpts, err := getLogOptions(repo)

@@ -13,20 +13,5 @@
   "date": "2019-10-25T13:01:27-04:00",
   "tags": "key, AWS",
   "operation": "addition"
- },
- {
-  "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
-  "lineNumber": 3,
-  "offender": "AKIALALEMEL33243OLIA",
-  "commit": "b10b3e2cb320a8c211fda94c4567299d37de7776",
-  "repo": "test_repo_2",
-  "rule": "AWS Manager ID",
-  "commitMessage": "adding aws key\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "secrets.md",
-  "date": "2019-10-25T12:58:39-04:00",
-  "tags": "key, AWS",
-  "operation": "addition"
  }
 ]

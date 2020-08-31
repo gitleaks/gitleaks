@@ -96,15 +96,35 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_local_repo_two_leaks_commit_to.json",
 		},
 		{
-			description: "test local repo two leaks range Commit",
+			description: "test local repo two leaks to from Commit",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_2",
-				Report:       "../test_data/test_local_repo_two_leaks_commit_range.json.got",
+				Report:       "../test_data/test_local_repo_two_leaks_commit_to_from.json.got",
 				ReportFormat: "json",
 				CommitFrom:   "d8ac0b73aeeb45843319cdc5ce506516eb49bf7a",
 				CommitTo:     "51f6dcf6b89b93f4075ba92c400b075631a6cc93",
 			},
+			wantPath: "../test_data/test_local_repo_two_leaks_commit_to_from.json",
+		},
+		{
+			description: "test local repo two leaks list Commits",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_commit_range.json.got",
+				ReportFormat: "json",
+				Commits:      "d8ac0b73aeeb45843319cdc5ce506516eb49bf7a,996865bb912f3bc45898a370a13aadb315014b55,17471a5fda722a9e423f1a0d3f0d267ea009d41c,51f6dcf6b89b93f4075ba92c400b075631a6cc93,b10b3e2cb320a8c211fda94c4567299d37de7776",
+			},
 			wantPath: "../test_data/test_local_repo_two_leaks_commit_range.json",
+		},
+		{
+			description: "test local repo two leaks file list commits",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_2",
+				Report:       "../test_data/test_local_repo_two_leaks_file_commit_range.json.got",
+				ReportFormat: "json",
+				CommitsFile:  "../test_data/test_options/test_local_repo_commits.txt",
+			},
+			wantPath: "../test_data/test_local_repo_two_leaks_file_commit_range.json",
 		},
 		{
 			description: "test local repo two leaks globally allowlisted",
