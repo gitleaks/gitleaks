@@ -24,6 +24,7 @@ const (
 	diffAddFilePrefix      = "+++ b"
 	diffAddFilePrefixSlash = "+++ b/"
 	diffLineSignature      = " @@"
+	diffLineSignaturePrefix      = "@@ "
 	defaultLineNumber      = -1
 )
 
@@ -238,6 +239,16 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 					leak.LineNumber = potentialLine
 					return
 				}
+			} else if strings.HasPrefix(txt, diffLineSignaturePrefix) && currStartDiffLine != 0 {
+				// This logic is used for when there are multiple leaks of the same offender within the same patch
+				i := strings.Index(txt, diffAddPrefix)
+				pairs := strings.Split(strings.Split(txt[i+1:], diffLineSignature)[0], ",")
+				currStartDiffLine, err = strconv.Atoi(pairs[0])
+				if err != nil {
+					log.Debug(err)
+					return
+				}
+				currLine = 0
 			}
 			currLine++
 		}
