@@ -20,12 +20,12 @@ import (
 )
 
 const (
-	diffAddPrefix          = "+"
-	diffAddFilePrefix      = "+++ b"
-	diffAddFilePrefixSlash = "+++ b/"
-	diffLineSignature      = " @@"
-	diffLineSignaturePrefix      = "@@ "
-	defaultLineNumber      = -1
+	diffAddPrefix           = "+"
+	diffAddFilePrefix       = "+++ b"
+	diffAddFilePrefixSlash  = "+++ b/"
+	diffLineSignature       = " @@"
+	diffLineSignaturePrefix = "@@ "
+	defaultLineNumber       = -1
 )
 
 // CheckRules accepts bundle and checks each rule defined in the config against the bundle's content.
