@@ -13,7 +13,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "AWS Secret Key"
-	regex = '''(?i)aws(.{0,20})?(?-i)[0-9a-zA-Z\/+]{40}'''
+	regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
 	tags = ["key", "AWS"]
 
 [[rules]]
@@ -131,7 +131,9 @@ title = "gitleaks config"
 	regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}'''
 	tags = ["key", "twilio"]
 
-[whitelist]
-	description = "Whitelisted files"
-	files = [ '''(^\.?gitleaks.toml$|(.*?)(jpg|gif|doc|pdf|bin)$)''' ]
+[allowlist]
+	description = "Allowlisted files"
+	files = ['''^\.?gitleaks.toml$''',
+	'''(.*?)(jpg|gif|doc|pdf|bin)$''',
+	'''(go.mod|go.sum)$''']
 `

@@ -1,0 +1,17 @@
+[
+ {
+  "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "lineNumber": 5,
+  "offender": "AKIALALEMEL33243OLIA",
+  "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+  "repo": "test_repo_2",
+  "rule": "AWS Manager ID",
+  "commitMessage": "wait this is actually adding an aws secret\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:01:27-04:00",
+  "tags": "key, AWS",
+  "operation": "addition"
+ }
+]

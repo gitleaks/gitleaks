@@ -1,8 +1,9 @@
 package hosts
 
 import (
-	"github.com/zricethezav/gitleaks/v4/manager"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v6/manager"
 )
 
 const (
@@ -13,11 +14,11 @@ const (
 // Host is an interface used for defining external git hosting providers like github and gitlab.
 // TODO add bitbucket
 type Host interface {
-	Audit()
-	AuditPR()
+	Scan()
+	ScanPR()
 }
 
-// Run kicks off a host audit. This function accepts a manager and determines what host it should audit
+// Run kicks off a host scan. This function accepts a manager and determines what host it should scan
 func Run(m *manager.Manager) error {
 	var host Host
 	var err error
@@ -30,10 +31,14 @@ func Run(m *manager.Manager) error {
 		return nil
 	}
 
+	if err != nil {
+		return err
+	}
+
 	if m.Opts.PullRequest != "" {
-		host.AuditPR()
+		host.ScanPR()
 	} else {
-		host.Audit()
+		host.Scan()
 	}
 	return err
 }

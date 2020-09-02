@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v4/options"
 	"regexp"
 	"testing"
+
+	"github.com/zricethezav/gitleaks/v6/options"
 )
 
 func TestParse(t *testing.T) {
@@ -14,7 +15,7 @@ func TestParse(t *testing.T) {
 		wantErr       error
 		wantFileRegex *regexp.Regexp
 		wantMessages  *regexp.Regexp
-		wantWhitelist Whitelist
+		wantAllowlist AllowList
 	}{
 		{
 			description: "default config",
@@ -41,9 +42,9 @@ func TestParse(t *testing.T) {
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: invalid nested repetition operator: `???`"),
 		},
 		{
-			description: "test bad global whitelist file regex",
+			description: "test bad global allowlist file regex",
 			opts: options.Options{
-				Config: "../test_data/test_configs/bad_aws_key_global_whitelist_file.toml",
+				Config: "../test_data/test_configs/bad_aws_key_global_allowlist_file.toml",
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
@@ -121,7 +122,7 @@ func TestParse(t *testing.T) {
 		_, err := NewConfig(test.opts)
 		if err != nil {
 			if test.wantErr == nil {
-				t.Error(err)
+				t.Error(test.description, err)
 			} else if test.wantErr.Error() != err.Error() {
 				t.Errorf("expected err: %s, got %s", test.wantErr, err)
 			}

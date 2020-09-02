@@ -129,8 +129,8 @@ title = "gitleaks config"
 [[rules]]
 	description = "Port"
 	regex = '''(?i)port(.{0,4})?[0-9]{1,10}'''
-	[[rules.whitelist]]
-		regex = '''(?i)port '''
+	[rules.allowlist]
+		regexes = ['''(?i)port ''']
 		description = "ignore export "
 
 
@@ -139,8 +139,8 @@ title = "gitleaks config"
 	description = "Email"
 	regex = '''[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}'''
 	tags = ["email"]
-	[[rules.whitelist]]
-		file = '''(?i)bashrc'''
+	[rules.allowlist]
+		files = ['''(?i)bashrc''']
 		description = "ignore bashrc emails"
 
 
@@ -149,35 +149,26 @@ title = "gitleaks config"
 	regex = '''(?i)(dbpasswd|dbuser|dbname|dbhost|api_key|apikey|secret|key|api|password|user|guid|hostname|pw|auth)(.{0,20})?['|"]([0-9a-zA-Z-_\/+!{}/=]{4,120})['|"]'''
 	tags = ["key", "API", "generic"]
 	# ignore leaks with specific identifiers like slack and aws
-	[[rules.whitelist]]
-		regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
-		description = "ignore slack"
-	[[rules.whitelist]]
-		description = "MailChimp API key"
-		regex = '''(?i)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]'''
-	[[rules.whitelist]]
-		description = "AWS Manager ID"
-		regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
-
-#[[rules]]
-#	description = "s3config"
-#  	regex = '''(?i)(dbpasswd|dbuser|dbname|dbhost|api_key|apikey|key|api|password|user|guid|hostname|pw|auth)(.{0,3})?([0-9a-zA-Z-_\/+!{}=]{4,120})'''
-#	fileNameRegex = '''(?i)s3cfg$'''
+	[rules.allowlist]
+		description = "ignore slack, mailchimp, aws"
+		regexes = [
+		    '''xox[baprs]-([0-9a-zA-Z]{10,48})''',
+		    '''(?i)(.{0,20})?['"][0-9a-f]{32}-us[0-9]{1,2}['"]''',
+		    '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+		]
 
 [[rules]]
 	description = "High Entropy"
 	regex = '''[0-9a-zA-Z-_!{}/=]{4,120}'''
-  	fileNameRegex = '''(?i)(dump.sql|high-entropy-misc.txt)$'''
+  	file = '''(?i)(dump.sql|high-entropy-misc.txt)$'''
 	tags = ["entropy"]
-        [[rules.Entropies]]
-            Min = "4.3"
-            Max = "7.0"
-        [[rules.whitelist]]
-            description = "ignore ssh key and pems"
-            file = '''(pem|ppk|env)$'''
-            path = '''(.*)?ssh'''
-
-
+    [[rules.Entropies]]
+        Min = "4.3"
+        Max = "7.0"
+    [rules.allowlist]
+        description = "ignore ssh key and pems"
+        files = ['''(pem|ppk|env)$''']
+        paths = ['''(.*)?ssh''']
 
 [[rules]]
 	description = "Potential bash var"
@@ -195,9 +186,10 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Files with keys and credentials"
-    fileNameRegex = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
+    file = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
 
-[whitelist]
-	description = "image whitelists"
+# Global allowlist
+[allowlist]
+	description = "image allowlists"
 	files = ['''(.*?)(jpg|gif|doc|pdf|bin)$''']
 

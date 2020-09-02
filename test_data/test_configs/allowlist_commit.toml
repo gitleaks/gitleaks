@@ -1,0 +1,13 @@
+[[rules]]
+    description = "AWS Manager ID"
+    regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+    tags = ["key", "AWS"]
+
+
+[allowlist]
+  commits = [
+    "b10b3e2cb320a8c211fda94c4567299d37de7776",
+    "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+    "996865bb912f3bc45898a370a13aadb315014b55"
+  ]
+

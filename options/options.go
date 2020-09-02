@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/zricethezav/gitleaks/v4/version"
+	"github.com/zricethezav/gitleaks/v6/version"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -28,42 +28,48 @@ const (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose       bool   `short:"v" long:"verbose" description:"Show verbose output from audit"`
-	Repo          string `short:"r" long:"repo" description:"Target repository"`
-	Config        string `long:"config" description:"config path"`
-	Disk          bool   `long:"disk" description:"Clones repo(s) to disk"`
-	Version       bool   `long:"version" description:"version number"`
-	Username      string `long:"username" description:"Username for git repo"`
-	Password      string `long:"password" description:"Password for git repo"`
-	AccessToken   string `long:"access-token" description:"Access token for git repo"`
-	Commit        string `long:"commit" description:"sha of commit to audit or \"latest\" to scan the last commit of the repository"`
-	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to audit all files at commit"`
-	Threads       int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH           string `long:"ssh-key" description:"path to ssh key used for auth"`
-	Uncommited    bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
-	RepoPath      string `long:"repo-path" description:"Path to repo"`
-	OwnerPath     string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-	Branch        string `long:"branch" description:"Branch to audit"`
-	Report        string `long:"report" description:"path to write json leaks file"`
-	ReportFormat  string `long:"report-format" default:"json" description:"json or csv"`
-	Redact        bool   `long:"redact" description:"redact secrets from log messages and leaks"`
-	Debug         bool   `long:"debug" description:"log debug messages"`
-	RepoConfig    bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
-	PrettyPrint   bool   `long:"pretty" description:"Pretty print json if leaks are present"`
-	CommitFrom    string `long:"commit-from" description:"Commit to start audit from"`
-	CommitTo      string `long:"commit-to" description:"Commit to stop audit"`
-	CommitSince   string `long:"commit-since" description:"Audit commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	CommitUntil   string `long:"commit-until" description:"Audit commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	Timeout       string `long:"timeout" description:"Time allowed per audit. Ex: 10us, 30s, 1m, 1h10m1s"`
-	Depth         int    `long:"depth" description:"Number of commits to audit"`
+	Verbose         bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	Repo            string `short:"r" long:"repo" description:"Target repository"`
+	Config          string `long:"config" description:"config path"`
+	Disk            bool   `long:"disk" description:"Clones repo(s) to disk"`
+	Version         bool   `long:"version" description:"version number"`
+	Username        string `long:"username" description:"Username for git repo"`
+	Password        string `long:"password" description:"Password for git repo"`
+	AccessToken     string `long:"access-token" description:"Access token for git repo"`
+	FilesAtCommit   string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
+	Threads         int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH             string `long:"ssh-key" description:"path to ssh key used for auth"`
+	Uncommited      bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
+	RepoPath        string `long:"repo-path" description:"Path to repo"`
+	OwnerPath       string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
+	Branch          string `long:"branch" description:"Branch to scan"`
+	Report          string `long:"report" description:"path to write json leaks file"`
+	ReportFormat    string `long:"report-format" default:"json" description:"json, csv, sarif"`
+	Redact          bool   `long:"redact" description:"redact secrets from log messages and leaks"`
+	Debug           bool   `long:"debug" description:"log debug messages"`
+	RepoConfig      bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	PrettyPrint     bool   `long:"pretty" description:"Pretty print json if leaks are present"`
+
+	// Commit Options
+	Commit      string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
+	Commits     string `long:"commits" description:"comma separated list of a commits to scan"`
+	CommitsFile string `long:"commits-file" description:"file of new line separated list of a commits to scan"`
+	CommitFrom  string `long:"commit-from" description:"Commit to start scan from"`
+	CommitTo    string `long:"commit-to" description:"Commit to stop scan"`
+	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+
+	Timeout         string `long:"timeout" description:"Time allowed per scan. Ex: 10us, 30s, 1m, 1h10m1s"`
+	Depth           int    `long:"depth" description:"Number of commits to scan"`
+	Deletion        bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
 	BaseURL      string `long:"baseurl" description:"Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server."`
-	Organization string `long:"org" description:"organization to audit"`
-	User         string `long:"user" description:"user to audit"`
+	Organization string `long:"org" description:"organization to scan"`
+	User         string `long:"user" description:"user to scan"`
 	PullRequest  string `long:"pr" description:"pull/merge request url"`
-	ExcludeForks bool   `long:"exclude-forks" description:"audit excludes forks"`
+	ExcludeForks bool   `long:"exclude-forks" description:"scan excludes forks"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct
@@ -111,9 +117,6 @@ func (opts Options) Guard() error {
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
 		log.Warn("both access-token and password are set. Only password will be attempted")
-	}
-	if !oneOrNoneSet(opts.FilesAtCommit, opts.Commit, opts.CommitTo, opts.CommitFrom) {
-		return fmt.Errorf("invalid commit options set")
 	}
 
 	return nil
@@ -244,7 +247,7 @@ func (opts Options) CheckUncommitted() bool {
 }
 
 // GetAccessToken accepts options and returns a string which is the access token to a git host.
-// Setting this option or environment var is necessary if performing an audit with any of the git hosting providers
+// Setting this option or environment var is necessary if performing an scan with any of the git hosting providers
 // in the host pkg. The access token set by cli options takes precedence over env vars.
 func GetAccessToken(opts Options) string {
 	if opts.AccessToken != "" {

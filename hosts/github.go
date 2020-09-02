@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v4/audit"
-	"github.com/zricethezav/gitleaks/v4/manager"
-	"github.com/zricethezav/gitleaks/v4/options"
+	"github.com/zricethezav/gitleaks/v6/manager"
+	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v6/scan"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -27,7 +27,7 @@ type Github struct {
 }
 
 // NewGithubClient accepts a manager struct and returns a Github host pointer which will be used to
-// perform a github audit on an organization, user, or PR.
+// perform a github scan on an organization, user, or PR.
 func NewGithubClient(m *manager.Manager) (*Github, error) {
 	var err error
 	ctx := context.Background()
@@ -50,8 +50,8 @@ func NewGithubClient(m *manager.Manager) (*Github, error) {
 	}, err
 }
 
-// Audit will audit a github user or organization's repos.
-func (g *Github) Audit() {
+// Scan will scan a github user or organization's repos.
+func (g *Github) Scan() {
 	ctx := context.Background()
 	listOptions := github.ListOptions{
 		PerPage: 100,
@@ -105,7 +105,7 @@ func (g *Github) Audit() {
 	}
 
 	for _, repo := range githubRepos {
-		r := audit.NewRepo(g.manager)
+		r := scan.NewRepo(g.manager)
 
 		if g.manager.CloneOptions != nil {
 			auth = g.manager.CloneOptions.Auth
@@ -119,7 +119,7 @@ func (g *Github) Audit() {
 			log.Warn("unable to clone via https and access token, attempting with ssh now")
 			auth, err := options.SSHAuth(g.manager.Opts)
 			if err != nil {
-				log.Warnf("unable to get ssh auth, skipping clone and audit for repo %s: %+v\n", *repo.CloneURL, err)
+				log.Warnf("unable to get ssh auth, skipping clone and scan for repo %s: %+v\n", *repo.CloneURL, err)
 				continue
 			}
 			err = r.Clone(&git.CloneOptions{
@@ -127,26 +127,26 @@ func (g *Github) Audit() {
 				Auth: auth,
 			})
 			if err != nil {
-				log.Warnf("err cloning %s, skipping clone and audit: %+v\n", *repo.SSHURL, err)
+				log.Warnf("err cloning %s, skipping clone and scan: %+v\n", *repo.SSHURL, err)
 				continue
 			}
 		}
-		if err = r.Audit(); err != nil {
+		if err = r.Scan(); err != nil {
 			log.Warn(err)
 		}
 	}
 }
 
-// AuditPR audits a single github PR
-func (g *Github) AuditPR() {
+// ScanPR scan a single github PR
+func (g *Github) ScanPR() {
 	ctx := context.Background()
 	splits := strings.Split(g.manager.Opts.PullRequest, "/")
 	owner := splits[len(splits)-4]
 	repoName := splits[len(splits)-3]
 	prNum, err := strconv.Atoi(splits[len(splits)-1])
-	repo := audit.NewRepo(g.manager)
+	repo := scan.NewRepo(g.manager)
 	repo.Name = repoName
-	log.Infof("auditing pr %s\n", g.manager.Opts.PullRequest)
+	log.Infof("scanning pr %s\n", g.manager.Opts.PullRequest)
 
 	if err != nil {
 		return
@@ -175,7 +175,11 @@ func (g *Github) AuditPR() {
 				if f.Patch == nil {
 					continue
 				}
-				audit.InspectFile(*f.Patch, *f.Filename, &commitObj, repo)
+				repo.CheckRules(&scan.Bundle{
+					Content:  *f.Patch,
+					FilePath: *f.Filename,
+					Commit:   &commitObj,
+				})
 			}
 		}
 		page = resp.NextPage

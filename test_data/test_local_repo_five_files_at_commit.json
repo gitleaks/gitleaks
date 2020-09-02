@@ -1,6 +1,7 @@
 [
  {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPLE'",
+  "lineNumber": 1,
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
@@ -10,10 +11,12 @@
   "email": "zrice@gitlab.com",
   "file": "secrets.py",
   "date": "2020-02-01T10:30:22-05:00",
-  "tags": "key, AWS"
+  "tags": "key, AWS",
+  "operation": "addition"
  },
  {
   "line": "aws_access_key_id='AKIAIO5FODNN7EXAMPL2'",
+  "lineNumber": 4,
   "offender": "AKIAIO5FODNN7EXAMPL2",
   "commit": "a4c9fb737d5552fd96fce5cc7eedb23353ba9ed0",
   "repo": "test_repo_5",
@@ -23,6 +26,7 @@
   "email": "zrice@gitlab.com",
   "file": "secrets.py",
   "date": "2020-02-01T10:30:22-05:00",
-  "tags": "key, AWS"
+  "tags": "key, AWS",
+  "operation": "addition"
  }
 ]
