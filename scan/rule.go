@@ -249,6 +249,9 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 					return
 				}
 				currLine = 0
+				if !strings.HasSuffix(txt, diffLineSignature) {
+					currLine = -1
+				}
 			}
 			currLine++
 		}
