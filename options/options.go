@@ -14,6 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
+        homedir "github.com/mitchellh/go-homedir"
 )
 
 // No leaks or early exit due to invalid options
@@ -97,6 +98,16 @@ func ParseOptions() (Options, error) {
 		}
 		os.Exit(Success)
 	}
+
+	opts.RepoPath, err = homedir.Expand(opts.RepoPath)
+        if err != nil {
+                log.Error(err)
+        }
+
+	opts.OwnerPath, err = homedir.Expand(opts.OwnerPath)
+        if err != nil {
+                log.Error(err)
+        }
 
 	if opts.Debug {
 		log.SetLevel(log.DebugLevel)
