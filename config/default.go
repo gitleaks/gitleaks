@@ -70,6 +70,11 @@ title = "gitleaks config"
 	description = "Google API key"
 	regex = '''AIza[0-9A-Za-z\\-_]{35}'''
 	tags = ["key", "Google"]
+	
+[[rules]]
+	description = "FCM Server Key"
+	regex = '''AAAA[a-zA-Z0-9_-]{7}:[a-zA-Z0-9_-]{140}'''
+	tags = ["key", "FCM"]	
 
 [[rules]]
 	description = "Google (GCP) Service Account"
