@@ -23,12 +23,12 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Facebook Secret Key"
-	regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
+	regex = '''(?i)([^0-9a-z])(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
 	tags = ["key", "Facebook"]
 
 [[rules]]
 	description = "Facebook Client ID"
-	regex = '''(?i)(facebook|fb)(.{0,20})?['\"][0-9]{13,17}['\"]'''
+	regex = '''(?i)([^0-9a-z])(facebook|fb)(.{0,20})?['\"][0-9]{13,17}['\"]'''
 	tags = ["key", "Facebook"]
 
 [[rules]]
