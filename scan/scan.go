@@ -65,11 +65,14 @@ func (repo *Repo) Scan() error {
 
 	// load up alternative config if possible, if not use manager's config
 	if repo.Manager.Opts.RepoConfig {
-		cfg, err := repo.loadRepoConfig()
-		if err != nil {
+		cfg, err := repo.loadRepoConfig() // Returns blank config in error
+		if repo.Manager.Opts.MergeConfig && err == nil {
+			repo.config = repo.Manager.MergeConfig(cfg)
+		} else if err != nil {
 			return err
+		} else {
+			repo.config = cfg
 		}
-		repo.config = cfg
 	}
 
 	scanTimeStart := time.Now()

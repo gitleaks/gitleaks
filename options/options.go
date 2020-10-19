@@ -28,27 +28,28 @@ const (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose         bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
-	Repo            string `short:"r" long:"repo" description:"Target repository"`
-	Config          string `long:"config" description:"config path"`
-	Disk            bool   `long:"disk" description:"Clones repo(s) to disk"`
-	Version         bool   `long:"version" description:"version number"`
-	Username        string `long:"username" description:"Username for git repo"`
-	Password        string `long:"password" description:"Password for git repo"`
-	AccessToken     string `long:"access-token" description:"Access token for git repo"`
-	FilesAtCommit   string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
-	Threads         int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH             string `long:"ssh-key" description:"path to ssh key used for auth"`
-	Uncommited      bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
-	RepoPath        string `long:"repo-path" description:"Path to repo"`
-	OwnerPath       string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-	Branch          string `long:"branch" description:"Branch to scan"`
-	Report          string `long:"report" description:"path to write json leaks file"`
-	ReportFormat    string `long:"report-format" default:"json" description:"json, csv, sarif"`
-	Redact          bool   `long:"redact" description:"redact secrets from log messages and leaks"`
-	Debug           bool   `long:"debug" description:"log debug messages"`
-	RepoConfig      bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
-	PrettyPrint     bool   `long:"pretty" description:"Pretty print json if leaks are present"`
+	Verbose       bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	Repo          string `short:"r" long:"repo" description:"Target repository"`
+	Config        string `long:"config" description:"config path"`
+	Disk          bool   `long:"disk" description:"Clones repo(s) to disk"`
+	Version       bool   `long:"version" description:"version number"`
+	Username      string `long:"username" description:"Username for git repo"`
+	Password      string `long:"password" description:"Password for git repo"`
+	AccessToken   string `long:"access-token" description:"Access token for git repo"`
+	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
+	Threads       int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH           string `long:"ssh-key" description:"path to ssh key used for auth"`
+	Uncommited    bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
+	RepoPath      string `long:"repo-path" description:"Path to repo"`
+	OwnerPath     string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
+	Branch        string `long:"branch" description:"Branch to scan"`
+	Report        string `long:"report" description:"path to write json leaks file"`
+	ReportFormat  string `long:"report-format" default:"json" description:"json, csv, sarif"`
+	Redact        bool   `long:"redact" description:"redact secrets from log messages and leaks"`
+	Debug         bool   `long:"debug" description:"log debug messages"`
+	RepoConfig    bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	PrettyPrint   bool   `long:"pretty" description:"Pretty print json if leaks are present"`
+	MergeConfig   bool   `long:"merge-config" description:"Instead of overwriting the manager config, combine it with the repo config. RepoConfig option is requirered when using this command"`
 
 	// Commit Options
 	Commit      string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
@@ -59,9 +60,9 @@ type Options struct {
 	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 
-	Timeout         string `long:"timeout" description:"Time allowed per scan. Ex: 10us, 30s, 1m, 1h10m1s"`
-	Depth           int    `long:"depth" description:"Number of commits to scan"`
-	Deletion        bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
+	Timeout  string `long:"timeout" description:"Time allowed per scan. Ex: 10us, 30s, 1m, 1h10m1s"`
+	Depth    int    `long:"depth" description:"Number of commits to scan"`
+	Deletion bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
 
 	// Hosts
 	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
@@ -117,6 +118,10 @@ func (opts Options) Guard() error {
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
 		log.Warn("both access-token and password are set. Only password will be attempted")
+	}
+
+	if !isRepoConfigTrueWhenMergeConfigIsTrue(opts) {
+		return fmt.Errorf("when using Merge Config, you must also use the repo config")
 	}
 
 	return nil
@@ -254,4 +259,12 @@ func GetAccessToken(opts Options) string {
 		return opts.AccessToken
 	}
 	return os.Getenv("GITLEAKS_ACCESS_TOKEN")
+}
+
+// Ensure RepoConfig is enabled if MergeConfig is enabled
+func isRepoConfigTrueWhenMergeConfigIsTrue(opts Options) bool {
+	if opts.MergeConfig == true {
+		return opts.RepoConfig
+	}
+	return true
 }

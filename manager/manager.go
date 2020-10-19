@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -158,7 +159,7 @@ func (manager *Manager) SendLeaks(l Leak) {
 		l.Offender = l.Offender[0:maxLineLen-1] + "..."
 	}
 	h := sha1.New()
-	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line + string(l.LineNumber)))
+	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line + strconv.Itoa(l.LineNumber)))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
 	if manager.Opts.Redact {
 		l.Line = strings.ReplaceAll(l.Line, l.Offender, "REDACTED")
@@ -260,6 +261,24 @@ func (manager *Manager) DebugOutput() {
 
 }
 
+// MergeConfig returns a new config that is the result of mergeing the manager's config with the config passed into it.
+func (manager *Manager) MergeConfig(cfg config.Config) config.Config {
+	newAllowList := config.AllowList{
+		Description: "Merged Configuration",
+		Commits:     append(manager.Config.Allowlist.Commits, cfg.Allowlist.Commits...),
+		Files:       append(manager.Config.Allowlist.Files, cfg.Allowlist.Files...),
+		Paths:       append(manager.Config.Allowlist.Paths, cfg.Allowlist.Paths...),
+		Regexes:     append(manager.Config.Allowlist.Regexes, cfg.Allowlist.Regexes...),
+		Repos:       append(manager.Config.Allowlist.Repos, cfg.Allowlist.Repos...),
+	}
+
+	newcfg := config.Config{
+		Rules:     append(manager.Config.Rules, cfg.Rules...),
+		Allowlist: newAllowList,
+	}
+
+	return newcfg
+}
 
 func (manager *Manager) receiveInterrupt() {
 	<-manager.stopChan

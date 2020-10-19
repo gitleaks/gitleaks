@@ -15,7 +15,9 @@ import (
 	"github.com/zricethezav/gitleaks/v6/manager"
 
 	"github.com/BurntSushi/toml"
+
 	"github.com/go-git/go-billy/v5"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage/memory"
@@ -248,25 +250,68 @@ func (repo *Repo) Open() error {
 }
 
 func (repo *Repo) loadRepoConfig() (config.Config, error) {
-	wt, err := repo.Repository.Worktree()
+	gitConfig, err := repo.Repository.Config()
+
 	if err != nil {
-		return config.Config{}, err
-	}
-	var f billy.File
-	f, _ = wt.Filesystem.Open(".gitleaks.toml")
-	if f == nil {
-		f, err = wt.Filesystem.Open("gitleaks.toml")
-		if err != nil {
-			return config.Config{}, fmt.Errorf("problem loading repo config: %v", err)
-		}
-	}
-	defer f.Close()
-	var tomlLoader config.TomlLoader
-	_, err = toml.DecodeReader(f, &tomlLoader)
-	if err != nil {
+		log.Errorf("Unable to read gitleaks config. Error: %s", err)
 		return config.Config{}, err
 	}
 
+	var file billy.File
+
+	if gitConfig.Core.IsBare {
+		// path must be set for bare repos
+		path := repo.Manager.Opts.RepoPath
+		file, err = readConfigFileFromFileSystem(osfs.New(path))
+
+		if err != nil {
+			log.Errorf("Unable to read gitleaks config from file system. Using defaults. Error: %s", err)
+			return config.Config{}, err
+		}
+
+	} else {
+		wt, err := repo.Repository.Worktree()
+
+		if err != nil {
+			log.Error(err)
+			return config.Config{}, err
+		}
+
+		file, err = readConfigFileFromFileSystem(wt.Filesystem)
+
+		if err != nil {
+			log.Errorf("Unable to read gitleaks config. Using defaults. Error: %s", err)
+			return config.Config{}, err
+		}
+	}
+
+	defer file.Close()
+
+	return parseTomlFile(file)
+
+}
+
+// takes a Filesystem and reads a gitleaks config from it. If it cannot, it returns nil and the error
+func readConfigFileFromFileSystem(fs billy.Filesystem) (billy.File, error) {
+	file, err := fs.Open(".gitleaks.toml")
+	if file == nil {
+		file, err = fs.Open("gitleaks.toml")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return file, err
+}
+
+// takes a File, makes sure it is a valid config, and parses it
+func parseTomlFile(f billy.File) (config.Config, error) {
+	var tomlLoader config.TomlLoader
+	_, err := toml.DecodeReader(f, &tomlLoader)
+	if err != nil {
+		log.Errorf("Unable to parse gitleaks config. Using defaults. Error: %s", err)
+		return config.Config{}, err
+	}
 	return tomlLoader.Parse()
 }
 
