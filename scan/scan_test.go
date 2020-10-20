@@ -415,6 +415,50 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_nine_aws_leak.json",
 		},
+		{
+			description: "test ability to scan with merged configurations",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_10",
+				Config:       "../test_data/test_configs/aws_key_file_regex.toml",
+				ReportFormat: "json",
+				MergeConfig:  true,
+				RepoConfig:   true,
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test ability to scan with merged configurations when default is used",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_10",
+				ReportFormat: "json",
+				MergeConfig:  true,
+				RepoConfig:   true,
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test ability to scan with merged configurations when config file does not exist",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_9",
+				ReportFormat: "json",
+				Config:       "../test_data/test_configs/aws_key_file_regex.toml",
+				MergeConfig:  true,
+				RepoConfig:   true,
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test ability to scan with merged configurations from a bare repo",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_bare",
+				Report:       "../test_data/test_bare_repo.json",
+				ReportFormat: "json",
+				Config:       "../test_data/test_configs/aws_key_file_regex.toml",
+				RepoConfig:   true,
+				MergeConfig:  true,
+			},
+			wantPath: "../test_data/test_bare_repo.json",
+		},
 	}
 
 	for _, test := range tests {

@@ -1,0 +1,2 @@
+[allowlist]
+        files = [ '''not_server.test.py''']

@@ -11,8 +11,10 @@ require (
 	github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mattn/go-colorable v0.1.2
+	github.com/securego/gosec v2.2.0+incompatible // indirect
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/xanzy/go-gitlab v0.21.0
+	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )

@@ -309,7 +309,7 @@ func parseTomlFile(f billy.File) (config.Config, error) {
 	var tomlLoader config.TomlLoader
 	_, err := toml.DecodeReader(f, &tomlLoader)
 	if err != nil {
-		log.Errorf("Unable to parse gitleaks config. Using defaults. Error: %s", err)
+		log.Errorf("Unable to read gitleaks config. Using defaults. Error: %s", err)
 		return config.Config{}, err
 	}
 	return tomlLoader.Parse()
