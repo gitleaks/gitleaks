@@ -100,6 +100,10 @@ func (g *Gitlab) Scan() {
 		// TODO handle clone retry with ssh like github host
 		r.Name = p.Name
 
+		if r.IsAllowListed() {
+			log.Infof("repo %s is allowlisted. skipping scan.", r.Name)
+			continue
+		}
 		if err = r.Scan(); err != nil {
 			log.Error(err)
 		}

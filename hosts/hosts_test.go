@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/zricethezav/gitleaks/v6/config"
@@ -22,12 +23,15 @@ func TestGithub(t *testing.T) {
 		return
 	}
 	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Log("skipping github integration tests, need env var GITLAB_TOKEN")
+		t.Log("skipping github integration tests, need env var GITHUB_TOKEN")
 		return
 	}
 
+	re, _ := regexp.Compile("gronit")
+
 	tests := []struct {
 		opts         options.Options
+		allowedRepos []*regexp.Regexp
 		desiredLeaks int
 	}{
 		{
@@ -46,6 +50,15 @@ func TestGithub(t *testing.T) {
 			},
 			desiredLeaks: 4,
 		},
+		{
+			opts: options.Options{
+				Host:        "github",
+				User:        "gitleakstest",
+				AccessToken: os.Getenv("GITHUB_TOKEN"),
+			},
+			allowedRepos: []*regexp.Regexp{re},
+			desiredLeaks: 0,
+		},
 	}
 
 	for _, test := range tests {
@@ -53,6 +66,8 @@ func TestGithub(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
+
+		cfg.Allowlist.Repos = test.allowedRepos
 
 		m, err := manager.NewManager(test.opts, cfg)
 		if err != nil {

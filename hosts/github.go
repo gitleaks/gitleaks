@@ -131,6 +131,10 @@ func (g *Github) Scan() {
 				continue
 			}
 		}
+		if r.IsAllowListed() {
+			log.Infof("repo %s is allowlisted. skipping scan.", r.Name)
+			continue
+		}
 		if err = r.Scan(); err != nil {
 			log.Warn(err)
 		}

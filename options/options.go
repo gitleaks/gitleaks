@@ -110,10 +110,10 @@ func ParseOptions() (Options, error) {
 // else nil is returned
 func (opts Options) Guard() error {
 	if !oneOrNoneSet(opts.Repo, opts.OwnerPath, opts.RepoPath, opts.Host) {
-		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
+		return fmt.Errorf("only one target option can be set. target options: repo, owner-path, repo-path, host")
 	}
 	if !oneOrNoneSet(opts.Organization, opts.User, opts.PullRequest) {
-		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
+		return fmt.Errorf("only one target option can be set. target options: org, user, pr")
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
 		log.Warn("both access-token and password are set. Only password will be attempted")

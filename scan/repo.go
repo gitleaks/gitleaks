@@ -77,6 +77,9 @@ func Run(m *manager.Manager) error {
 
 func runHelper(r *Repo) error {
 	// Ignore allowlisted repos
+	if r.IsAllowListed() {
+		return nil
+	}
 	for _, allowListedRepo := range r.Manager.Config.Allowlist.Repos {
 		if RegexMatched(r.Manager.Opts.RepoPath, allowListedRepo) {
 			return nil
@@ -107,6 +110,20 @@ func runHelper(r *Repo) error {
 	return r.Scan()
 }
 
+// IsAllowListed returns true if the global allowlist matches a repository path or name. False otherwise.
+func (repo *Repo) IsAllowListed() bool {
+	// Ignore allowlisted repos
+	for _, allowListedRepo := range repo.Manager.Config.Allowlist.Repos {
+		if RegexMatched(repo.Manager.Opts.RepoPath, allowListedRepo) {
+			return true
+		}
+		if RegexMatched(repo.Manager.Opts.Repo, allowListedRepo) {
+			return true
+		}
+	}
+	return false
+}
+
 // Clone will clone a repo and return a Repo struct which contains a go-git repo. The clone method
 // is determined by the clone options set in Manager.metadata.cloneOptions
 func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
@@ -131,6 +148,7 @@ func (repo *Repo) Clone(cloneOption *git.CloneOptions) error {
 		return err
 	}
 	repo.Name = filepath.Base(repo.Manager.Opts.Repo)
+	repo.Manager.Opts.Repo = cloneOption.URL
 	repo.Repository = repository
 	repo.Manager.RecordTime(manager.CloneTime(howLong(start)))
 
