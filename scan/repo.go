@@ -80,14 +80,6 @@ func runHelper(r *Repo) error {
 	if r.IsAllowListed() {
 		return nil
 	}
-	for _, allowListedRepo := range r.Manager.Config.Allowlist.Repos {
-		if RegexMatched(r.Manager.Opts.RepoPath, allowListedRepo) {
-			return nil
-		}
-		if RegexMatched(r.Manager.Opts.Repo, allowListedRepo) {
-			return nil
-		}
-	}
 	if r.Manager.Opts.OpenLocal() {
 		r.Name = path.Base(r.Manager.Opts.RepoPath)
 		if err := r.Open(); err != nil {
