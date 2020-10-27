@@ -168,6 +168,7 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		} else {
 			return nil, err
 		}
+		logOpts.All = true
 	}
 	if repo.Manager.Opts.CommitUntil != "" {
 		if t, err := time.Parse(timeformat, repo.Manager.Opts.CommitUntil); err == nil {
@@ -177,6 +178,7 @@ func getLogOptions(repo *Repo) (*git.LogOptions, error) {
 		} else {
 			return nil, err
 		}
+		logOpts.All = true
 	}
 	if repo.Manager.Opts.Branch != "" {
 		refs, err := repo.Storer.IterReferences()
