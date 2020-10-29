@@ -145,6 +145,17 @@ func TestScan(t *testing.T) {
 			wantEmpty: true,
 		},
 		{
+			description: "test local repo three leaks dev branch with reportGroup set",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_3",
+				Report:       "../test_data/test_local_repo_three_leaks_with_report_groups.json.got",
+				Config:       "../test_data/test_configs/aws_key_with_report_groups.toml",
+				Branch:       "dev",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_three_leaks_with_report_groups.json",
+		},
+		{
 			description: "test local repo three leaks dev branch",
 			opts: options.Options{
 				RepoPath:     "../test_data/test_repos/test_repo_3",

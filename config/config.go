@@ -40,6 +40,7 @@ type Rule struct {
 	Regex       *regexp.Regexp
 	File        *regexp.Regexp
 	Path        *regexp.Regexp
+	ReportGroup int
 	Tags        []string
 	AllowList   AllowList
 	Entropies   []Entropy
@@ -73,6 +74,7 @@ type TomlLoader struct {
 		Regex       string
 		File        string
 		Path        string
+		ReportGroup int
 		Tags        []string
 		Entropies   []struct {
 			Min   string
@@ -198,6 +200,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			Regex:       re,
 			File:        fileNameRe,
 			Path:        filePathRe,
+			ReportGroup: rule.ReportGroup,
 			Tags:        rule.Tags,
 			AllowList:   allowList,
 			Entropies:   entropies,
