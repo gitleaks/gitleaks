@@ -1,0 +1,2 @@
+[allowlist]
+        files = [ '''server.test.py''']

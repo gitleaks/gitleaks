@@ -1,0 +1,4 @@
+[[rules]]
+	description = "AWS Secret Key"
+	regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
+	tags = ["key", "AWS"]
