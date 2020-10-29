@@ -252,11 +252,6 @@ func (repo *Repo) Open() error {
 func (repo *Repo) loadRepoConfig() (config.Config, error) {
 	gitConfig, err := repo.Repository.Config()
 
-	if err != nil {
-		log.Errorf("Unable to read gitleaks config. Error: %s", err)
-		return config.Config{}, err
-	}
-
 	var file billy.File
 
 	if gitConfig.Core.IsBare {
@@ -289,6 +284,17 @@ func (repo *Repo) loadRepoConfig() (config.Config, error) {
 
 	return parseTomlFile(file)
 
+}
+
+func (repo *Repo) loadAdditionalConfig() (config.Config, error) {
+	dir, fileName := filepath.Split(repo.Manager.Opts.AdditionalConfig)
+	file, err := osfs.New(dir).Open(fileName)
+
+	if err != nil {
+		return config.Config{}, err
+	}
+
+	return parseTomlFile(file)
 }
 
 // takes a Filesystem and reads a gitleaks config from it. If it cannot, it returns nil and the error

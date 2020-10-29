@@ -63,16 +63,27 @@ func (repo *Repo) Scan() error {
 		return fmt.Errorf("%s repo is empty", repo.Name)
 	}
 
-	// load up alternative config if possible, if not use manager's config
+	// load up repo config if possible, if not use manager's config
 	if repo.Manager.Opts.RepoConfig {
 		cfg, err := repo.loadRepoConfig() // Returns blank config in error
-		if repo.Manager.Opts.MergeConfig && err == nil {
+		if repo.Manager.Opts.MergeRepoConfig && err == nil {
 			repo.config = repo.Manager.MergeConfig(cfg)
 		} else if err != nil {
 			return err
 		} else {
 			repo.config = cfg
 		}
+	}
+
+	// load external configuration to merge with manager config
+	if repo.Manager.Opts.AdditionalConfig != "" {
+		cfg, err := repo.loadAdditionalConfig()
+
+		if err != nil {
+			return err
+		}
+
+		repo.config = repo.Manager.MergeConfig(cfg)
 	}
 
 	scanTimeStart := time.Now()
