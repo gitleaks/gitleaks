@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"testing"
 
@@ -128,4 +130,84 @@ func TestParse(t *testing.T) {
 			}
 		}
 	}
+}
+
+// TestParseFields will test that fields are properly parsed from a config. As fields are added, then please
+// add tests here.
+func TestParseFields(t *testing.T) {
+	tomlConfig := `
+[[rules]]
+	description = "Some Groups without a reportGroup"
+	regex = '(.)(.)'
+
+[[rules]]
+	description = "Some Groups"
+	regex = '(.)(.)'
+  reportGroup = 1
+`
+	configPath, err := writeTestConfig(tomlConfig)
+	defer os.Remove(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config, err := NewConfig(options.Options{Config: configPath})
+	if err != nil {
+		t.Fatalf("Couldn't parse config: %v", err)
+	}
+
+	expectedRuleFields := []struct {
+		Description string
+		ReportGroup int
+	}{
+		{
+			Description: "Some Groups without a reportGroup",
+			ReportGroup: 0,
+		},
+		{
+			Description: "Some Groups",
+			ReportGroup: 1,
+		},
+	}
+
+	if len(config.Rules) != len(expectedRuleFields) {
+		t.Fatalf("expected %v rules", len(expectedRuleFields))
+	}
+
+	for _, expected := range expectedRuleFields {
+		rule, err := findRuleByDescription(config.Rules, expected.Description)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rule.ReportGroup != expected.ReportGroup {
+			t.Errorf("expected the rule with description '%v' to have a ReportGroup of %v", expected.Description, expected.ReportGroup)
+		}
+	}
+}
+
+func findRuleByDescription(rules []Rule, description string) (*Rule, error) {
+	for _, rule := range rules {
+		if rule.Description == description {
+			return &rule, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Couldn't find rule with the description: %s", description)
+}
+
+func writeTestConfig(toml string) (string, error) {
+	tmpfile, err := ioutil.TempFile("", "testConfig")
+	if err != nil {
+		return "", fmt.Errorf("Couldn't create test config got: %w", err)
+	}
+
+	if _, err := tmpfile.Write([]byte(toml)); err != nil {
+		return "", fmt.Errorf("Couldn't create test config got: %w", err)
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return "", fmt.Errorf("Couldn't create test config got: %w", err)
+	}
+
+	return tmpfile.Name(), nil
 }

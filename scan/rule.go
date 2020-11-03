@@ -121,6 +121,11 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 						continue
 					}
 
+					// 0 is a match for the full regex pattern
+					if 0 < rule.ReportGroup && rule.ReportGroup < len(groups) {
+						offender = groups[rule.ReportGroup]
+					}
+
 					leak := manager.Leak{
 						LineNumber: defaultLineNumber,
 						Line:       line,
