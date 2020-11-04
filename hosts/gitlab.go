@@ -61,7 +61,8 @@ func (g *Gitlab) Scan() {
 
 		} else if g.manager.Opts.Organization != "" {
 			glOpts := &gitlab.ListGroupProjectsOptions{
-				ListOptions: listOpts,
+				ListOptions:      listOpts,
+				IncludeSubgroups: &g.manager.Opts.Recursive,
 			}
 			_projects, resp, err = g.client.Groups.ListGroupProjects(g.manager.Opts.Organization, glOpts)
 		}
