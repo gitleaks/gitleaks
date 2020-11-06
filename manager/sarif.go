@@ -24,8 +24,8 @@ type FullDescription struct {
 
 //Rules ...
 type Rules struct {
-	ID         string          `json:"id"`
-	Name       string          `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 //Driver ...
@@ -135,8 +135,7 @@ func (manager *Manager) leaksToResults() []Results {
 func leakToLocation(leak Leak) []Locations {
 	return []Locations{
 		{
-			PhysicalLocation:
-			PhysicalLocation{
+			PhysicalLocation: PhysicalLocation{
 				ArtifactLocation: ArtifactLocation{
 					URI: leak.File,
 				},
@@ -150,4 +149,3 @@ func leakToLocation(leak Leak) []Locations {
 		},
 	}
 }
-

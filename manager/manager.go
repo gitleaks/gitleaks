@@ -158,7 +158,7 @@ func (manager *Manager) SendLeaks(l Leak) {
 		l.Offender = l.Offender[0:maxLineLen-1] + "..."
 	}
 	h := sha1.New()
-	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line + string(l.LineNumber)))
+	h.Write([]byte(l.Commit + l.Offender + l.File + l.Line + fmt.Sprint(l.LineNumber)))
 	l.lookupHash = hex.EncodeToString(h.Sum(nil))
 	if manager.Opts.Redact {
 		l.Line = strings.ReplaceAll(l.Line, l.Offender, "REDACTED")
@@ -259,7 +259,6 @@ func (manager *Manager) DebugOutput() {
 	_ = w.Flush()
 
 }
-
 
 func (manager *Manager) receiveInterrupt() {
 	<-manager.stopChan

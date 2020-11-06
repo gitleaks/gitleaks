@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -272,7 +273,7 @@ func (repo *Repo) scanUncommitted() error {
 		return err
 	}
 
-	status, err := wt.Status()
+	status, err := gitStatus(wt)
 	for fn, state := range status {
 		var (
 			prevFileContents string
@@ -335,6 +336,39 @@ func (repo *Repo) scanUncommitted() error {
 	}
 	repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	return nil
+}
+
+// gitStatus returns the status modified files in the worktree. It will attempt to execute 'git status'
+// and will fall back to git.Worktree.Status() if that fails.
+func gitStatus(wt *git.Worktree) (git.Status, error) {
+	c := exec.Command("git", "status", "--porcelain", "-z")
+	c.Dir = wt.Filesystem.Root()
+	output, err := c.Output()
+	if err != nil {
+		stat, err := wt.Status()
+		return stat, err
+	}
+
+	lines := strings.Split(string(output), "\000")
+	stat := make(map[string]*git.FileStatus, len(lines))
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+
+		parts := strings.SplitN(strings.TrimLeft(line, " "), " ", 2)
+		if len(parts) == 2 {
+			stat[strings.Trim(parts[1], " ")] = &git.FileStatus{
+				Staging: git.StatusCode([]byte(parts[0])[0]),
+			}
+		} else {
+			// this shouldn't happen
+			stat[strings.Trim(parts[0], " ")] = &git.FileStatus{
+				Staging: git.Unmodified,
+			}
+		}
+	}
+	return stat, err
 }
 
 // scan accepts a Patch, Commit, and repo. If the patches contains files that are
