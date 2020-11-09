@@ -356,15 +356,13 @@ func gitStatus(wt *git.Worktree) (git.Status, error) {
 			continue
 		}
 
+		// For copy/rename the output looks like
+		//   R  destination\000source
+		// Which means we can split on space and ignore anything with only one result
 		parts := strings.SplitN(strings.TrimLeft(line, " "), " ", 2)
 		if len(parts) == 2 {
 			stat[strings.Trim(parts[1], " ")] = &git.FileStatus{
 				Staging: git.StatusCode([]byte(parts[0])[0]),
-			}
-		} else {
-			// this shouldn't happen
-			stat[strings.Trim(parts[0], " ")] = &git.FileStatus{
-				Staging: git.Unmodified,
 			}
 		}
 	}
