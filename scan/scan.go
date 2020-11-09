@@ -338,7 +338,7 @@ func (repo *Repo) scanUncommitted() error {
 	return nil
 }
 
-// gitStatus returns the status modified files in the worktree. It will attempt to execute 'git status'
+// gitStatus returns the status of modified files in the worktree. It will attempt to execute 'git status'
 // and will fall back to git.Worktree.Status() if that fails.
 func gitStatus(wt *git.Worktree) (git.Status, error) {
 	c := exec.Command("git", "status", "--porcelain", "-z")
