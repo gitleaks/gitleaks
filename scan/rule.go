@@ -239,8 +239,8 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 				continue
 			} else if strings.HasPrefix(txt, diffAddPrefix) && strings.Contains(txt, leak.Line) && leak.File == currFile {
 				potentialLine := currLine + currStartDiffLine
-				if _, ok := bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)]; !ok {
-					bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, potentialLine, currFile)] = true
+				if _, ok := bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)]; !ok {
+					bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)] = true
 					leak.LineNumber = potentialLine
 					return
 				}
@@ -297,8 +297,8 @@ func extractLineHelper(r io.Reader, bundle *Bundle, leak *manager.Leak) int {
 	lineNumber := 1
 	for scanner.Scan() {
 		if leak.Line == scanner.Text() {
-			if _, ok := bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, bundle.FilePath)]; !ok {
-				bundle.lineLookup[fmt.Sprintf("%s%d%s", leak.Line, lineNumber, bundle.FilePath)] = true
+			if _, ok := bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, bundle.FilePath)]; !ok {
+				bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, bundle.FilePath)] = true
 				return lineNumber
 			}
 		}
