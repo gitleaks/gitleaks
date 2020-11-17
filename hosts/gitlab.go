@@ -38,7 +38,7 @@ func NewGitlabClient(m *manager.Manager) (*Gitlab, error) {
 	return gitlabClient, err
 }
 
-// Scan will scan a github user or organization's repos.
+// Scan will scan a gitlab user or organization's repos.
 func (g *Gitlab) Scan() {
 	var (
 		projects []*gitlab.Project
