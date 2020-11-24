@@ -28,12 +28,12 @@ const (
 	defaultLineNumber       = -1
 )
 
-// CheckRules accepts bundle and checks each rule defined in the config against the bundle's content.
-func (repo *Repo) CheckRules(bundle *Bundle) {
-	filename := filepath.Base(bundle.FilePath)
-	path := filepath.Dir(bundle.FilePath)
+// CheckRules accepts source and checks each rule defined in the config against the source's content.
+func (repo *Repo) CheckRules(source *Source) {
+	filename := filepath.Base(source.FilePath)
+	path := filepath.Dir(source.FilePath)
 
-	bundle.lineLookup = make(map[string]bool)
+	source.lineLookup = make(map[string]bool)
 
 	// We want to check if there is a allowlist for this file
 	if len(repo.config.Allowlist.Files) != 0 {
@@ -79,38 +79,38 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 				LineNumber: defaultLineNumber,
 				Line:       "N/A",
 				Offender:   "Filename/path offender: " + filename,
-				Commit:     bundle.Commit.Hash.String(),
+				Commit:     source.Commit.Hash.String(),
 				Repo:       repo.Name,
-				Message:    bundle.Commit.Message,
+				Message:    source.Commit.Message,
 				Rule:       rule.Description,
-				Author:     bundle.Commit.Author.Name,
-				Email:      bundle.Commit.Author.Email,
-				Date:       bundle.Commit.Author.When,
+				Author:     source.Commit.Author.Name,
+				Email:      source.Commit.Author.Email,
+				Date:       source.Commit.Author.When,
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filename,
-				Operation:  diffOpToString(bundle.Operation),
+				Operation:  diffOpToString(source.Operation),
 			})
 		} else {
 			//otherwise we check if it matches Content regex
-			locs := rule.Regex.FindAllIndex([]byte(bundle.Content), -1)
+			locs := rule.Regex.FindAllIndex([]byte(source.Content), -1)
 			if len(locs) != 0 {
 				for _, loc := range locs {
 					start := loc[0]
 					end := loc[1]
-					for start != 0 && bundle.Content[start] != '\n' {
+					for start != 0 && source.Content[start] != '\n' {
 						start--
 					}
 
-					if bundle.Content[start] == '\n' {
+					if source.Content[start] == '\n' {
 						start++
 					}
 
-					for end < len(bundle.Content)-1 && bundle.Content[end] != '\n' {
+					for end < len(source.Content)-1 && source.Content[end] != '\n' {
 						end++
 					}
 
-					line := bundle.Content[start:end]
-					offender := bundle.Content[loc[0]:loc[1]]
+					line := source.Content[start:end]
+					offender := source.Content[loc[0]:loc[1]]
 					groups := rule.Regex.FindStringSubmatch(offender)
 
 					if isAllowListed(line, append(rule.AllowList.Regexes, repo.config.Allowlist.Regexes...)) {
@@ -130,21 +130,21 @@ func (repo *Repo) CheckRules(bundle *Bundle) {
 						LineNumber: defaultLineNumber,
 						Line:       line,
 						Offender:   offender,
-						Commit:     bundle.Commit.Hash.String(),
+						Commit:     source.Commit.Hash.String(),
 						Repo:       repo.Name,
-						Message:    bundle.Commit.Message,
+						Message:    source.Commit.Message,
 						Rule:       rule.Description,
-						Author:     bundle.Commit.Author.Name,
-						Email:      bundle.Commit.Author.Email,
-						Date:       bundle.Commit.Author.When,
+						Author:     source.Commit.Author.Name,
+						Email:      source.Commit.Author.Email,
+						Date:       source.Commit.Author.When,
 						Tags:       strings.Join(rule.Tags, ", "),
-						File:       bundle.FilePath,
-						Operation:  diffOpToString(bundle.Operation),
+						File:       source.FilePath,
+						Operation:  diffOpToString(source.Operation),
 					}
 
 					// only search for line numbers on non-deletions
-					if bundle.Operation != fdiff.Delete {
-						extractAndInjectLineNumber(&leak, bundle, repo)
+					if source.Operation != fdiff.Delete {
+						extractAndInjectLineNumber(&leak, source, repo)
 					}
 
 					repo.Manager.SendLeaks(leak)
@@ -194,24 +194,24 @@ func diffOpToString(operation fdiff.Operation) string {
 	}
 }
 
-// extractAndInjectLine accepts a leak, bundle, and repo which it uses to do a reverse search in order to extract
+// extractAndInjectLine accepts a leak, source, and repo which it uses to do a reverse search in order to extract
 // the line number of a historic or present leak. The function is only called when the git operation is an addition
 // or none, it does not get called when the git operation is deletion.
-func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) {
+func extractAndInjectLineNumber(leak *manager.Leak, source *Source, repo *Repo) {
 	var err error
 
-	switch bundle.scanType {
+	switch source.scanType {
 	case patchScan:
-		if bundle.Patch == "" {
+		if source.Patch == "" {
 			return
 		}
 
 		// This is needed as some patches generate strings that are larger than
 		// scanners max size (MaxScanTokenSize = 64 * 1024)
 		// https://github.com/zricethezav/gitleaks/issues/413
-		buf := make([]byte, len(bundle.Patch))
-		scanner := bufio.NewScanner(strings.NewReader(bundle.Patch))
-		scanner.Buffer(buf, len(bundle.Patch))
+		buf := make([]byte, len(source.Patch))
+		scanner := bufio.NewScanner(strings.NewReader(source.Patch))
+		scanner.Buffer(buf, len(source.Patch))
 		scanner.Split(bufio.ScanLines)
 
 		currFile := ""
@@ -239,8 +239,8 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 				continue
 			} else if strings.HasPrefix(txt, diffAddPrefix) && strings.Contains(txt, leak.Line) && leak.File == currFile {
 				potentialLine := currLine + currStartDiffLine
-				if _, ok := bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)]; !ok {
-					bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)] = true
+				if _, ok := source.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)]; !ok {
+					source.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, potentialLine, currFile)] = true
 					leak.LineNumber = potentialLine
 					return
 				}
@@ -261,10 +261,10 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 			currLine++
 		}
 	case commitScan:
-		if bundle.Commit == nil {
+		if source.Commit == nil {
 			return
 		}
-		f, err := bundle.Commit.File(bundle.FilePath)
+		f, err := source.Commit.File(source.FilePath)
 		if err != nil {
 			log.Error(err)
 			return
@@ -274,7 +274,7 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 			log.Error(err)
 			return
 		}
-		leak.LineNumber = extractLineHelper(r, bundle, leak)
+		leak.LineNumber = extractLineHelper(r, source, leak)
 	case uncommittedScan:
 		wt, err := repo.Worktree()
 		if err != nil {
@@ -286,19 +286,19 @@ func extractAndInjectLineNumber(leak *manager.Leak, bundle *Bundle, repo *Repo) 
 			log.Error(err)
 			return
 		}
-		leak.LineNumber = extractLineHelper(f, bundle, leak)
+		leak.LineNumber = extractLineHelper(f, source, leak)
 	}
 }
 
 // extractLineHelper consolidates code for checking the leak line against the contents of a reader to find the
 // line number of the leak.
-func extractLineHelper(r io.Reader, bundle *Bundle, leak *manager.Leak) int {
+func extractLineHelper(r io.Reader, source *Source, leak *manager.Leak) int {
 	scanner := bufio.NewScanner(r)
 	lineNumber := 1
 	for scanner.Scan() {
 		if leak.Line == scanner.Text() {
-			if _, ok := bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, bundle.FilePath)]; !ok {
-				bundle.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, bundle.FilePath)] = true
+			if _, ok := source.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, source.FilePath)]; !ok {
+				source.lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, source.FilePath)] = true
 				return lineNumber
 			}
 		}

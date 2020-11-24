@@ -175,7 +175,7 @@ func (g *Github) ScanPR() {
 				if f.Patch == nil {
 					continue
 				}
-				repo.CheckRules(&scan.Bundle{
+				repo.CheckRules(&scan.Source{
 					Content:  *f.Patch,
 					FilePath: *f.Filename,
 					Commit:   &commitObj,

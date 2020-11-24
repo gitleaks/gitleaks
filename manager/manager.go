@@ -24,6 +24,7 @@ import (
 
 const maxLineLen = 200
 
+
 // Manager is a struct containing options and configs as well CloneOptions and CloneDir.
 // This struct is passed into each NewRepo so we are not passing around the manager in func params.
 type Manager struct {

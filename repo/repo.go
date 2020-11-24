@@ -1,10 +1,9 @@
-package scan
+package repo
 
 import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -53,59 +52,6 @@ func NewRepo(m *manager.Manager) *Repo {
 	}
 }
 
-// Run accepts a manager and begins an scan based on the options/configs set in the manager.
-func Run(m *manager.Manager) error {
-	if m.Opts.OwnerPath != "" {
-		files, err := ioutil.ReadDir(m.Opts.OwnerPath)
-		if err != nil {
-			return err
-		}
-		for _, f := range files {
-			if !f.IsDir() {
-				continue
-			}
-			m.Opts.RepoPath = fmt.Sprintf("%s/%s", m.Opts.OwnerPath, f.Name())
-			if err := runHelper(NewRepo(m)); err != nil {
-				log.Warnf("%s is not a git repo, skipping", f.Name())
-			}
-		}
-		return nil
-	}
-
-	return runHelper(NewRepo(m))
-}
-
-func runHelper(r *Repo) error {
-	// Ignore allowlisted repos
-	for _, allowListedRepo := range r.Manager.Config.Allowlist.Repos {
-		if RegexMatched(r.Manager.Opts.RepoPath, allowListedRepo) {
-			return nil
-		}
-		if RegexMatched(r.Manager.Opts.Repo, allowListedRepo) {
-			return nil
-		}
-	}
-	if r.Manager.Opts.OpenLocal() {
-		r.Name = path.Base(r.Manager.Opts.RepoPath)
-		if err := r.Open(); err != nil {
-			return err
-		}
-
-		// Check if we are checking uncommitted files. This is the default behavior
-		// for a "$ gitleaks" command with no options set
-		if r.Manager.Opts.CheckUncommitted() {
-			if err := r.scanUncommitted(); err != nil {
-				return err
-			}
-			return nil
-		}
-	} else {
-		if err := r.Clone(nil); err != nil {
-			return err
-		}
-	}
-	return r.Scan()
-}
 
 // Clone will clone a repo and return a Repo struct which contains a go-git repo. The clone method
 // is determined by the clone options set in Manager.metadata.cloneOptions
@@ -279,9 +225,9 @@ func (repo *Repo) timeoutReached() bool {
 	return false
 }
 
-// setupTimeout parses the --timeout option and assigns a context with timeout to the manager
+// SetupTimeout parses the --timeout option and assigns a context with timeout to the manager
 // which will exit early if the timeout has been met.
-func (repo *Repo) setupTimeout() error {
+func (repo *Repo) SetupTimeout() error {
 	if repo.Manager.Opts.Timeout == "" {
 		return nil
 	}
