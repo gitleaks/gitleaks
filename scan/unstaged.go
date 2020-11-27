@@ -5,55 +5,54 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/zricethezav/gitleaks/v6/manager"
-	"github.com/zricethezav/gitleaks/v6/repo"
 	"io"
 	"time"
 )
 
 type UnstagedScanner struct {
-	repo      *repo.Repo
+	BaseScanner
+	repo *git.Repository
+
+	leaks []Leak
 }
 
-func NewUnstagedScanner(repo *repo.Repo) (*UnstagedScanner, error) {
+func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {
 	return &UnstagedScanner{
-		repo:   nil,
-	}, nil
+		BaseScanner: base,
+		repo: repo,
+	}
 }
 
-func (scanner *UnstagedScanner) Scan() error {
-	return nil
-}
-
-// scanUncommitted will do a `git diff` and scan changed files that are being tracked. This is useful functionality
-// for a pre-Commit hook so you can make sure your code does not have any leaks before committing.
-func (repo *Repo) scanUncommitted() error {
-	// load up alternative config if possible, if not use manager's config
-	if repo.Manager.Opts.RepoConfig {
-		cfg, err := repo.loadRepoConfig()
+func (us *UnstagedScanner) Scan() error {
+	r, err := us.repo.Head()
+	if err == plumbing.ErrReferenceNotFound {
+		wt, err := us.repo.Worktree()
 		if err != nil {
 			return err
 		}
-		repo.config = cfg
-	}
 
-	if err := repo.setupTimeout(); err != nil {
-		return err
-	}
-
-	r, err := repo.Head()
-	if err == plumbing.ErrReferenceNotFound {
-		// possibly an empty repo, or maybe its not, either way lets scan all the files in the directory
-		return repo.scanEmpty()
+		status, err := wt.Status()
+		if err != nil {
+			return err
+		}
+		for fn := range status {
+			workTreeBuf := bytes.NewBuffer(nil)
+			workTreeFile, err := wt.Filesystem.Open(fn)
+			if err != nil {
+				continue
+			}
+			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
+				return err
+			}
+			us.leaks = append(us.leaks, checkRules(us.cfg, "", workTreeFile.Name(), emptyCommit(), workTreeBuf.String())...)
+		}
+		return nil
 	} else if err != nil {
 		return err
 	}
 
-	scanTimeStart := time.Now()
-
-	c, err := repo.CommitObject(r.Hash())
+	c, err := us.repo.CommitObject(r.Hash())
 	if err != nil {
 		return err
 	}
@@ -68,7 +67,7 @@ func (repo *Repo) scanUncommitted() error {
 	if err != nil {
 		return err
 	}
-	wt, err := repo.Worktree()
+	wt, err := us.repo.Worktree()
 	if err != nil {
 		return err
 	}
@@ -122,18 +121,16 @@ func (repo *Repo) scanUncommitted() error {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
-			repo.CheckRules(&Source{
-				Content:  diffContents,
-				FilePath: filename,
-				Commit:   c,
-				scanType: uncommittedScan,
-			})
+			us.leaks = append(us.leaks, checkRules(us.cfg, "", filename, c, diffContents)...)
 		}
 	}
 
 	if err != nil {
 		return err
 	}
-	repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	return nil
+}
+
+func (us *UnstagedScanner) GetLeaks() []Leak {
+	return us.leaks
 }

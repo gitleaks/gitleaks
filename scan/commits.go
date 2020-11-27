@@ -1,22 +1,40 @@
 package scan
 
 import (
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/zricethezav/gitleaks/v6/repo"
+	"github.com/go-git/go-git/v5"
 )
 
 type CommitsScanner struct {
-	repo      *repo.Repo
-	commit *object.Commit
+	BaseScanner
+
+	repo    *git.Repository
+	commits []string
+	leaks   []Leak
 }
 
-func NewCommitsScanner(commits []string, repo *repo.Repo) (*CommitScanner, error) {
-	return &CommitScanner{
-		repo:   nil,
-		commit: nil,
-	}, nil
+func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string) *CommitsScanner {
+	return &CommitsScanner{
+		BaseScanner: base,
+		repo:        repo,
+		commits:     commits,
+	}
 }
 
-func (c *CommitsScanner) Scan() error {
+func (css *CommitsScanner) Scan() error {
+	for _, c := range css.commits {
+		c, err := obtainCommit(css.repo, c)
+		if err != nil {
+			return nil
+		}
+		cs := NewCommitScanner(css.BaseScanner, css.repo, c)
+		if err := cs.Scan(); err != nil {
+			return err
+		}
+		css.leaks = append(css.leaks, cs.GetLeaks()...)
+	}
 	return nil
+}
+
+func (css *CommitsScanner) GetLeaks() []Leak {
+	return css.leaks
 }
