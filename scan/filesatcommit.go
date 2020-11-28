@@ -39,8 +39,8 @@ func (fs *FilesAtCommitScanner) Scan() error {
 		}
 
 		fs.leaks = checkRules(fs.cfg, "", f.Name, fs.commit, content)
-		if fs.opts.Verbose {
-			logLeaks(fs.leaks)
+		for _, leak := range fs.leaks {
+			logLeak(leak)
 		}
 		return nil
 	})

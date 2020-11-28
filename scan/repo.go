@@ -1,11 +1,8 @@
 package scan
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 
 	"github.com/go-git/go-git/v5"
@@ -150,7 +147,9 @@ func (rs *RepoScanner) Scan() error {
 
 						for _, leak := range checkRules(rs.cfg, "", filepath, c, chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-							rs.sendLeak(leak)
+							logLeak(leak)
+							rs.leakWG.Add(1)
+							rs.leakChan <- leak
 						}
 					}
 				}
@@ -167,25 +166,9 @@ func (rs *RepoScanner) Scan() error {
 	return nil
 }
 
-func (rs *RepoScanner) sendLeak(leak Leak) {
-	if rs.opts.Redact {
-		leak.Line = strings.ReplaceAll(leak.Line, leak.Offender, "REDACTED")
-		leak.Offender = "REDACTED"
-	}
-	rs.leakWG.Add(1)
-	rs.leakChan <- leak
-}
-
 func (rs *RepoScanner) receiveLeaks() {
 	for leak := range rs.leakChan {
-		h := sha1.New()
-		h.Write([]byte(leak.Commit + leak.Offender + leak.File + leak.Line + string(leak.LineNumber)))
-		hash := hex.EncodeToString(h.Sum(nil))
-		if _, ok := rs.leakCache[hash]; !ok {
-			rs.leakCache[hash] = true
-			rs.leaks = append(rs.leaks, leak)
-		}
-
+		rs.leaks = append(rs.leaks, leak)
 		rs.leakWG.Done()
 	}
 }

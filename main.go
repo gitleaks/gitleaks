@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
+	"encoding/json"
 	"github.com/zricethezav/gitleaks/v6/config"
 	"github.com/zricethezav/gitleaks/v6/options"
 	"github.com/zricethezav/gitleaks/v6/scan"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -45,10 +44,24 @@ func main() {
 		os.Exit(options.ErrorEncountered)
 	}
 
-	report(scanner)
+	// report scan
+	if err := report(scanner, opts); err != nil {
+		log.Error(err)
+		os.Exit(options.ErrorEncountered)
+	}
 }
 
-func report(scanner scan.Scanner) {
+func report(scanner scan.Scanner, opts options.Options) error {
 	leaks := scanner.GetLeaks()
-	fmt.Println(len(leaks))
+	file, err := os.Create(opts.Report)
+	if err != nil {
+		return err
+	}
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", " ")
+	err = encoder.Encode(leaks)
+	if err != nil {
+		return err
+	}
+	return nil
 }
