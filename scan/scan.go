@@ -2,10 +2,8 @@ package scan
 
 import (
 	"context"
-	"github.com/zricethezav/gitleaks/v6/collector"
 	"github.com/zricethezav/gitleaks/v6/config"
 	"github.com/zricethezav/gitleaks/v6/options"
-	"sync"
 	"time"
 )
 
@@ -34,8 +32,8 @@ type Scanner interface {
 }
 
 type BaseScanner struct {
-	opts      options.Options
-	cfg       config.Config
+	opts options.Options
+	cfg  config.Config
 
 	// ctx is used to signal timeouts to running goroutines
 	ctx    context.Context
@@ -44,7 +42,7 @@ type BaseScanner struct {
 	leaks []Leak
 }
 
-func NewScanner(opts options.Options,  cfg config.Config) (Scanner, error) {
+func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
 		if regexMatched(opts.RepoPath, allowListedRepo) {
 			return nil, nil
@@ -55,12 +53,13 @@ func NewScanner(opts options.Options,  cfg config.Config) (Scanner, error) {
 	}
 
 	base := BaseScanner{
-		opts:      opts,
-		cfg:       cfg,
+		opts: opts,
+		cfg:  cfg,
+		ctx: context.Background(),
 	}
 
 	if opts.OwnerPath != "" {
-		return NewDirScanner(base)
+		return NewDirScanner(base), nil
 	}
 
 	// get repo
@@ -85,7 +84,11 @@ func NewScanner(opts options.Options,  cfg config.Config) (Scanner, error) {
 		return NewCommitScanner(base, repo, c), nil
 	}
 	if opts.Commits != "" || opts.CommitsFile != "" {
-		return NewCommitsScanner(base)
+		commits, err := optsToCommits(opts)
+		if err != nil {
+			return nil, err
+		}
+		return NewCommitsScanner(base, repo, commits), nil
 	}
 	if opts.FilesAtCommit != "" {
 		// TODO
@@ -100,4 +103,3 @@ func NewScanner(opts options.Options,  cfg config.Config) (Scanner, error) {
 	}
 	return NewRepoScanner(base, repo), nil
 }
-

@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/BurntSushi/toml"
@@ -9,6 +10,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/storage/memory"
 	log "github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/v6/config"
 	"github.com/zricethezav/gitleaks/v6/options"
@@ -49,35 +51,27 @@ func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error
 }
 
 func getRepo(opts options.Options) (*git.Repository, error) {
-	// TODO
-	return nil, nil
-}
-
-func openRepo(opts options.Options) (*git.Repository, error) {
-	if opts.RepoPath != "" {
+	if opts.OpenLocal() {
 		return git.PlainOpen(opts.RepoPath)
 	}
-	// open git repo from PWD
-	dir, err := os.Getwd()
+	if opts.CheckUncommitted() {
+		// open git repo from PWD
+		dir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		return git.PlainOpen(dir)
+	}
+	return cloneRepo(opts)
+}
+
+func cloneRepo(opts options.Options) (*git.Repository, error) {
+	cloneOpts, err := opts.CloneOptions()
 	if err != nil {
 		return nil, err
 	}
-	return git.PlainOpen(dir)
-}
-func cloneRepo(opts options.Options) (*git.Repository, error) {
-	return nil, nil
-	//log.Infof("cloning... %s", cloneOption.URL)
-	//start := time.Now()
-	//
-	//if repo.Manager.CloneDir != "" {
-	//	clonePath := fmt.Sprintf("%s/%x", repo.Manager.CloneDir, md5.Sum([]byte(time.Now().String())))
-	//	repository, err = git.PlainClone(clonePath, false, cloneOption)
-	//} else {
-	//	repository, err = git.Clone(memory.NewStorage(), nil, cloneOption)
-	//}
-	//if err != nil {
-	//	return err
-	//}
+	log.Infof("cloning... %s", cloneOpts.URL)
+	return git.Clone(memory.NewStorage(), nil, cloneOpts)
 }
 
 // depthReached checks if i meets the depth (--depth=) if set
@@ -157,7 +151,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 
 		// If it doesnt contain a Content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			leaks = append(leaks, Leak{
+			leak := Leak{
 				LineNumber: defaultLineNumber,
 				Line:       "N/A",
 				Offender:   "Filename/path offender: " + filename,
@@ -171,7 +165,9 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filename,
 				// Operation:  diffOpToString(bundle.Operation),
-			})
+			}
+			fmt.Println(leak)
+			leaks = append(leaks, leak)
 		}
 	}
 
@@ -192,7 +188,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 			currLine = 0
 		}
 		for _, rule := range cfg.Rules {
-			if _, ok := skipRuleLookup[rule.Description]; !ok {
+			if _, ok := skipRuleLookup[rule.Description]; ok {
 				continue
 			}
 
@@ -215,7 +211,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				offender = groups[rule.ReportGroup]
 			}
 
-			leaks = append(leaks, Leak{
+			leak := Leak{
 				LineNumber: currStartDiffLine + currLine,
 				Line:       line,
 				Offender:   offender,
@@ -228,7 +224,9 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				Date:       commit.Author.When,
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filePath,
-			})
+			}
+			fmt.Println(leak)
+			leaks = append(leaks, leak)
 		}
 		currLine++
 	}
@@ -466,4 +464,22 @@ func isAllowListed(target string, allowList []*regexp.Regexp) bool {
 	}
 	return false
 
+}
+
+func optsToCommits(opts options.Options) ([]string, error) {
+	if opts.Commits != "" {
+		return strings.Split(opts.Commits, ","), nil
+	}
+	file, err := os.Open(opts.CommitsFile)
+	if err != nil {
+		return []string{}, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var commits []string
+	for scanner.Scan() {
+		commits = append(commits, scanner.Text())
+	}
+	return commits, nil
 }

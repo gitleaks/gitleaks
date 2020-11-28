@@ -29,6 +29,10 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
 		repo:        repo,
+		stopChan:    make(chan os.Signal, 1),
+		leakChan:    make(chan Leak),
+		leakWG:      &sync.WaitGroup{},
+		leakCache:   make(map[string]bool),
 	}
 
 	// setup signal stuff
@@ -72,6 +76,7 @@ func (rs *RepoScanner) Scan() error {
 				return err
 			}
 			rs.leaks = append(rs.leaks, facScanner.GetLeaks()...)
+			return nil
 		}
 
 		// increase Commit counter
@@ -136,6 +141,7 @@ func (rs *RepoScanner) Scan() error {
 							filepath = "???"
 						}
 						for _, leak := range checkRules(rs.cfg, "", filepath, c, chunk.Content()) {
+							rs.leakWG.Add(1)
 							rs.leakChan <- leak
 						}
 					}
@@ -153,6 +159,7 @@ func (rs *RepoScanner) Scan() error {
 	// TODO Record Time
 	//repo.Manager.RecordTime(manager.ScanTime(howLong(scanTimeStart)))
 	//repo.Manager.IncrementCommits(cc)
+	fmt.Println("DONE")
 	return nil
 }
 
@@ -173,5 +180,7 @@ func (rs *RepoScanner) receiveLeaks() {
 }
 
 func (rs *RepoScanner) GetLeaks() []Leak {
+	fmt.Println("REPORTING")
+	rs.leakWG.Wait()
 	return rs.leaks
 }
