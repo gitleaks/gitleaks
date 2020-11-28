@@ -31,6 +31,9 @@ func (css *CommitsScanner) Scan() error {
 			return err
 		}
 		css.leaks = append(css.leaks, cs.GetLeaks()...)
+		if css.opts.Verbose {
+			logLeaks(css.leaks)
+		}
 	}
 	return nil
 }

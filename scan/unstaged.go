@@ -122,6 +122,9 @@ func (us *UnstagedScanner) Scan() error {
 				}
 			}
 			us.leaks = append(us.leaks, checkRules(us.cfg, "", filename, c, diffContents)...)
+			if us.opts.Verbose {
+				logLeaks(us.leaks)
+			}
 		}
 	}
 

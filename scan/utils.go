@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -174,7 +175,6 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 
 	lineNumber := 0
 
-	// more intensive
 	for _, line := range strings.Split(content, "\n") {
 		for _, rule := range cfg.Rules {
 			if _, ok := skipRuleLookup[rule.Description]; ok {
@@ -220,6 +220,14 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 		lineNumber++
 	}
 	return leaks
+}
+
+func logLeaks(leaks []Leak) {
+	for _, leak := range leaks {
+		var b []byte
+		b, _ = json.MarshalIndent(leak, "", "	")
+		fmt.Println(string(b))
+	}
 }
 
 func logLeak(leak Leak) {
@@ -477,4 +485,34 @@ func optsToCommits(opts options.Options) ([]string, error) {
 		commits = append(commits, scanner.Text())
 	}
 	return commits, nil
+}
+
+func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int {
+	i := strings.Index(patchContent, fmt.Sprintf("\n+++ b/%s", leak.File))
+	filePatchContent := patchContent[i+1:]
+	i = strings.Index(filePatchContent, "diff --git")
+	if i != -1 {
+		filePatchContent = filePatchContent[:i]
+	}
+	chunkStartLine := 0
+	currLine := 0
+	for _, patchLine := range strings.Split(filePatchContent, "\n") {
+		if strings.HasPrefix(patchLine, "@@") {
+			i := strings.Index(patchLine, diffAddPrefix)
+			pairs := strings.Split(strings.Split(patchLine[i+1:], diffLineSignature)[0], ",")
+			chunkStartLine, _ = strconv.Atoi(pairs[0])
+			currLine = -1
+		}
+		if strings.HasPrefix(patchLine, diffAddPrefix) && strings.Contains(patchLine, leak.Line) {
+			lineNumber := chunkStartLine + currLine
+			if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
+				lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
+				return lineNumber
+				//leak.LineNumber = lineNumber
+				//break
+			}
+		}
+		currLine++
+	}
+	return defaultLineNumber
 }

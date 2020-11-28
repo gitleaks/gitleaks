@@ -51,6 +51,8 @@ func (cs *CommitScanner) Scan() error {
 			return fmt.Errorf("could not generate Patch")
 		}
 
+		patchContent := patch.String()
+
 		for _, f := range patch.FilePatches() {
 			if timeoutReached(cs.ctx) {
 				return nil
@@ -69,7 +71,13 @@ func (cs *CommitScanner) Scan() error {
 					} else {
 						filepath = "???"
 					}
-					checkRules(cs.cfg, "", filepath, cs.commit, chunk.Content())
+					leaks := checkRules(cs.cfg, "", filepath, cs.commit, chunk.Content())
+
+					var lineLookup map[string]bool
+					for _, leak := range leaks {
+						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+					}
+					cs.leaks = leaks
 				}
 			}
 		}
