@@ -1,10 +1,11 @@
 package scan
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/go-git/go-git/v5"
@@ -129,6 +130,9 @@ func (rs *RepoScanner) Scan() error {
 				if f.IsBinary() {
 					continue
 				}
+
+				patchContent := patch.String()
+
 				for _, chunk := range f.Chunks() {
 					if chunk.Type() == fdiff.Add || (rs.opts.Deletion && chunk.Type() == fdiff.Delete) {
 						from, to := f.Files()
@@ -140,7 +144,51 @@ func (rs *RepoScanner) Scan() error {
 						} else {
 							filepath = "???"
 						}
+						//
+						//obj, err := object.GetBlob(rs.repo.Storer, from.Hash())
+						//if err != nil {
+						//	return
+						//}
+						//r, err := obj.Reader()
+						//if err != nil {
+						//	return
+						//}
+						//s := bufio.NewScanner(r)
+						//s.Split(bufio.ScanLines)
+						//for s.Scan() {
+						//	l := s.Text()
+						//	fmt.Println(l)
+						//}
+
+						lineLookup := make(map[string]bool)
+
 						for _, leak := range checkRules(rs.cfg, "", filepath, c, chunk.Content()) {
+							i := strings.Index(patchContent, fmt.Sprintf("\n+++ b/%s", leak.File))
+							filePatchContent := patchContent[i+1:]
+							i = strings.Index(filePatchContent, "diff --git")
+							if i != -1 {
+								filePatchContent = filePatchContent[:i]
+							}
+							chunkStartLine := 0
+							currLine := 0
+							for _, patchLine := range strings.Split(filePatchContent, "\n") {
+								if strings.HasPrefix(patchLine, "@@") {
+									i := strings.Index(patchLine, diffAddPrefix)
+									pairs := strings.Split(strings.Split(patchLine[i+1:], diffLineSignature)[0], ",")
+									chunkStartLine, _ = strconv.Atoi(pairs[0])
+									currLine = -1
+								}
+								if strings.HasPrefix(patchLine, diffAddPrefix) && strings.Contains(patchLine, leak.Line) {
+									lineNumber := chunkStartLine + currLine
+									if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, filepath)]; !ok {
+										lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, filepath)] = true
+										leak.LineNumber = lineNumber
+										break
+									}
+								}
+								currLine++
+							}
+
 							rs.leakWG.Add(1)
 							rs.leakChan <- leak
 						}
@@ -166,21 +214,11 @@ func (rs *RepoScanner) Scan() error {
 func (rs *RepoScanner) receiveLeaks() {
 	for leak := range rs.leakChan {
 		rs.leaks = append(rs.leaks, leak)
-		if rs.opts.Verbose {
-			var b []byte
-			if rs.opts.PrettyPrint {
-				b, _ = json.MarshalIndent(leak, "", "	")
-			} else {
-				b, _ = json.Marshal(leak)
-			}
-			fmt.Println(string(b))
-		}
 		rs.leakWG.Done()
 	}
 }
 
 func (rs *RepoScanner) GetLeaks() []Leak {
-	fmt.Println("REPORTING")
 	rs.leakWG.Wait()
 	return rs.leaks
 }

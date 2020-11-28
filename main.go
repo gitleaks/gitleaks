@@ -50,5 +50,5 @@ func main() {
 
 func report(scanner scan.Scanner) {
 	leaks := scanner.GetLeaks()
-	fmt.Print(leaks)
+	fmt.Println(len(leaks))
 }

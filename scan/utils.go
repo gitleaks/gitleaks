@@ -3,6 +3,7 @@ package scan
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/go-git/go-billy/v5"
@@ -19,17 +20,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
-
 
 const (
 	diffAddPrefix           = "+"
 	diffLineSignature       = " @@"
 	diffLineSignaturePrefix = "@@ "
 	defaultLineNumber       = -1
+	diffAddFilePrefix       = "+++ b"
+	diffAddFilePrefixSlash  = "+++ b/"
 )
 
 func timeoutReached(ctx context.Context) bool {
@@ -166,27 +167,15 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				File:       filename,
 				// Operation:  diffOpToString(bundle.Operation),
 			}
-			fmt.Println(leak)
+			// logLeak(leak)
 			leaks = append(leaks, leak)
 		}
 	}
 
-	currLine := 0
-	currStartDiffLine := 0
-	var err error
+	lineNumber := 0
 
 	// more intensive
 	for _, line := range strings.Split(content, "\n") {
-		if strings.HasPrefix(line, diffLineSignaturePrefix) {
-			i := strings.Index(line, diffAddPrefix)
-			pairs := strings.Split(strings.Split(line[i+1:], diffLineSignature)[0], ",")
-			currStartDiffLine, err = strconv.Atoi(pairs[0])
-			if err != nil {
-				log.Debug(err)
-				return leaks
-			}
-			currLine = 0
-		}
 		for _, rule := range cfg.Rules {
 			if _, ok := skipRuleLookup[rule.Description]; ok {
 				continue
@@ -212,7 +201,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 			}
 
 			leak := Leak{
-				LineNumber: currStartDiffLine + currLine,
+				LineNumber: lineNumber,
 				Line:       line,
 				Offender:   offender,
 				Commit:     commit.Hash.String(),
@@ -225,12 +214,18 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filePath,
 			}
-			fmt.Println(leak)
+			// logLeak(leak)
 			leaks = append(leaks, leak)
 		}
-		currLine++
+		lineNumber++
 	}
 	return leaks
+}
+
+func logLeak(leak Leak) {
+	var b []byte
+	b, _ = json.MarshalIndent(leak, "", "	")
+	fmt.Println(string(b))
 }
 
 // getLogOptions determines what log options are used when iterating through commits.
