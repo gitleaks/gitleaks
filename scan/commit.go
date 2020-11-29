@@ -11,14 +11,17 @@ type CommitScanner struct {
 	BaseScanner
 	repo   *git.Repository
 	commit *object.Commit
+	leaks  []Leak
 }
 
 func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
-	return &CommitScanner{
+	cs := &CommitScanner{
 		BaseScanner: base,
 		repo:        repo,
 		commit:      commit,
 	}
+	cs.scannerType = TypeCommitScanner
+	return cs
 }
 
 func (cs *CommitScanner) Scan() ([]Leak, error) {
@@ -68,7 +71,7 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 					} else {
 						filepath = "???"
 					}
-					leaks := checkRules(cs.cfg, "", filepath, cs.commit, chunk.Content())
+					leaks := checkRules(cs.BaseScanner, cs.commit, "", filepath, chunk.Content())
 
 					var lineLookup map[string]bool
 					for _, leak := range leaks {

@@ -11,9 +11,11 @@ type DirScanner struct {
 }
 
 func NewDirScanner(base BaseScanner) *DirScanner {
-	return &DirScanner{
+	ds := &DirScanner{
 		BaseScanner: base,
 	}
+	ds.scannerType = TypeDirScanner
+	return ds
 }
 
 func (ds *DirScanner) Scan() ([]Leak, error) {

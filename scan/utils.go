@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	diffAddPrefix           = "+"
-	diffLineSignature       = " @@"
-	defaultLineNumber       = -1
+	diffAddPrefix     = "+"
+	diffLineSignature = " @@"
+	defaultLineNumber = -1
 )
 
 func timeoutReached(ctx context.Context) bool {
@@ -131,18 +131,18 @@ func howManyThreads(threads int) int {
 	return threads
 }
 
-func checkRules(cfg config.Config, repoName string, filePath string, commit *object.Commit, content string) []Leak {
+func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, content string) []Leak {
 	filename := filepath.Base(filePath)
 	path := filepath.Dir(filePath)
 	var leaks []Leak
 
 	skipRuleLookup := make(map[string]bool)
 	// First do simple rule checks based on filename
-	if skipCheck(cfg, filename, path) {
+	if skipCheck(scanner.cfg, filename, path) {
 		return leaks
 	}
 
-	for _, rule := range cfg.Rules {
+	for _, rule := range scanner.cfg.Rules {
 		if skipRule(rule, filename, filePath) {
 			skipRuleLookup[rule.Description] = true
 			continue
@@ -165,7 +165,9 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				File:       filename,
 				// Operation:  diffOpToString(bundle.Operation),
 			}
-			// logLeak(leak)
+			if scanner.opts.Verbose && scanner.scannerType != TypeRepoScanner {
+				logLeak(leak)
+			}
 			leaks = append(leaks, leak)
 		}
 	}
@@ -173,7 +175,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 	lineNumber := 0
 
 	for _, line := range strings.Split(content, "\n") {
-		for _, rule := range cfg.Rules {
+		for _, rule := range scanner.cfg.Rules {
 			if _, ok := skipRuleLookup[rule.Description]; ok {
 				continue
 			}
@@ -185,7 +187,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 
 			// check entropy
 			groups := rule.Regex.FindStringSubmatch(offender)
-			if isAllowListed(line, append(rule.AllowList.Regexes, cfg.Allowlist.Regexes...)) {
+			if isAllowListed(line, append(rule.AllowList.Regexes, scanner.cfg.Allowlist.Regexes...)) {
 				continue
 			}
 			if len(rule.Entropies) != 0 && !trippedEntropy(groups, rule) {
@@ -211,7 +213,9 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filePath,
 			}
-			// logLeak(leak)
+			if scanner.opts.Verbose && scanner.scannerType != TypeRepoScanner {
+				logLeak(leak)
+			}
 			leaks = append(leaks, leak)
 		}
 		lineNumber++
@@ -219,15 +223,7 @@ func checkRules(cfg config.Config, repoName string, filePath string, commit *obj
 	return leaks
 }
 
-func logLeaks(leaks []Leak) {
-	for _, leak := range leaks {
-		var b []byte
-		b, _ = json.MarshalIndent(leak, "", "	")
-		fmt.Println(string(b))
-	}
-}
-
-func logLeak(leak Leak) {
+func logLeak(leak Leak){
 	var b []byte
 	b, _ = json.MarshalIndent(leak, "", "	")
 	fmt.Println(string(b))
@@ -510,4 +506,23 @@ func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int
 		currLine++
 	}
 	return defaultLineNumber
+}
+
+func scanType(opts options.Options) ScannerType {
+	if opts.OwnerPath != "" {
+		return TypeDirScanner
+	}
+	if opts.Commit != "" {
+		return TypeCommitScanner
+	}
+	if opts.Commits != "" || opts.CommitsFile != "" {
+		return TypeCommitsScanner
+	}
+	if opts.FilesAtCommit != "" {
+		return TypeFilesAtCommitScanner
+	}
+	if opts.CheckUncommitted() {
+		return TypeUnstagedScanner
+	}
+	return TypeRepoScanner
 }

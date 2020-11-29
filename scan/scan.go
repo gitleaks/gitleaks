@@ -11,7 +11,6 @@ import (
 
 type Scanner interface {
 	Scan() ([]Leak, error)
-	// GetLeaks() []Leak
 }
 
 type BaseScanner struct {
@@ -22,8 +21,19 @@ type BaseScanner struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	leaks []Leak
+	scannerType ScannerType
 }
+
+type ScannerType int
+
+const (
+	TypeRepoScanner ScannerType = iota +1
+	TypeDirScanner
+	TypeCommitScanner
+	TypeCommitsScanner
+	TypeUnstagedScanner
+	TypeFilesAtCommitScanner
+)
 
 // Leak is a struct that contains information about some line of code that contains
 // sensitive information as determined by the rules set in a gitleaks config
@@ -60,11 +70,14 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		ctx:  context.Background(),
 	}
 
-	if opts.OwnerPath != "" {
+	// We want to return a dir scanner immediately since if the scan type is a directory scan
+	// we don't want to clone/open a repo until inside DirScanner.Scan
+	st := scanType(opts)
+	if st == TypeDirScanner {
 		return NewDirScanner(base), nil
 	}
 
-	// get repo
+	// Clone or open a repo
 	repo, err := getRepo(base.opts)
 	if err != nil {
 		return nil, err
@@ -78,30 +91,28 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		}
 	}
 
-	if opts.Commit != "" {
+	switch st {
+	case TypeCommitScanner:
 		c, err := obtainCommit(repo, opts.Commit)
 		if err != nil {
 			return nil, err
 		}
 		return NewCommitScanner(base, repo, c), nil
-	}
-	if opts.Commits != "" || opts.CommitsFile != "" {
+	case TypeCommitsScanner:
 		commits, err := optsToCommits(opts)
 		if err != nil {
 			return nil, err
 		}
 		return NewCommitsScanner(base, repo, commits), nil
-	}
-	if opts.FilesAtCommit != "" {
-		// TODO
+	case TypeFilesAtCommitScanner:
 		c, err := obtainCommit(repo, opts.FilesAtCommit)
 		if err != nil {
 			return nil, err
 		}
 		return NewFilesAtCommitScanner(base, repo, c), nil
-	}
-	if opts.CheckUncommitted() {
+	case TypeUnstagedScanner:
 		return NewUnstagedScanner(base, repo), nil
+	default:
+		return NewRepoScanner(base, repo), nil
 	}
-	return NewRepoScanner(base, repo), nil
 }

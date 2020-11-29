@@ -19,6 +19,7 @@ type RepoScanner struct {
 	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
+	leaks []Leak
 }
 
 func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
@@ -30,6 +31,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
 	}
+	rs.scannerType = TypeRepoScanner
 
 	// setup signal stuff
 	signal.Notify(rs.stopChan, os.Interrupt)
@@ -144,9 +146,11 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 
 						lineLookup := make(map[string]bool)
 
-						for _, leak := range checkRules(rs.cfg, "", filepath, c, chunk.Content()) {
+						for _, leak := range checkRules(rs.BaseScanner, c, "", filepath, chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-							if rs.opts.Verbose{logLeak(leak)}
+							if rs.opts.Verbose {
+								logLeak(leak)
+							}
 							rs.leakWG.Add(1)
 							rs.leakChan <- leak
 						}
@@ -173,9 +177,3 @@ func (rs *RepoScanner) receiveLeaks() {
 		rs.leakWG.Done()
 	}
 }
-//
-//func (rs *RepoScanner) GetLeaks() []Leak {
-//	rs.leakWG.Wait()
-//	return rs.leaks
-//}
-//

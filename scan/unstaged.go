@@ -18,10 +18,12 @@ type UnstagedScanner struct {
 }
 
 func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {
-	return &UnstagedScanner{
+	us := &UnstagedScanner{
 		BaseScanner: base,
 		repo: repo,
 	}
+	us.scannerType = TypeUnstagedScanner
+	return us
 }
 
 func (us *UnstagedScanner) Scan() ([]Leak, error) {
@@ -45,7 +47,7 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return us.leaks, err
 			}
-			us.leaks = append(us.leaks, checkRules(us.cfg, "", workTreeFile.Name(), emptyCommit(), workTreeBuf.String())...)
+			us.leaks = append(us.leaks, checkRules(us.BaseScanner, emptyCommit(), "", workTreeFile.Name(), workTreeBuf.String())...)
 		}
 		return us.leaks, nil
 	} else if err != nil {
@@ -124,10 +126,7 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
-			us.leaks = append(us.leaks, checkRules(us.cfg, "", filename, c, diffContents)...)
-			if us.opts.Verbose {
-				logLeaks(us.leaks)
-			}
+			us.leaks = append(us.leaks, checkRules(us.BaseScanner, c, "", filename, diffContents)...)
 		}
 	}
 
