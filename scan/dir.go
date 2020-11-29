@@ -16,10 +16,10 @@ func NewDirScanner(base BaseScanner) *DirScanner {
 	}
 }
 
-func (ds *DirScanner) Scan() error {
+func (ds *DirScanner) Scan() ([]Leak, error) {
 	files, err := ioutil.ReadDir(ds.opts.OwnerPath)
 	if err != nil {
-		return err
+		return ds.leaks, err
 	}
 	for _, f := range files {
 		if !f.IsDir() {
@@ -28,17 +28,14 @@ func (ds *DirScanner) Scan() error {
 
 		repo, err := getRepo(ds.opts)
 		if err != nil {
-			return err
+			return ds.leaks, err
 		}
 		rs := NewRepoScanner(ds.BaseScanner, repo)
-		if err := rs.Scan(); err != nil {
-			return err
+		leaks, err:= rs.Scan()
+		if err != nil {
+			return ds.leaks, err
 		}
-		ds.leaks = append(ds.leaks, rs.GetLeaks()...)
+		ds.leaks = append(ds.leaks, leaks...)
 	}
-	return nil
-}
-
-func (ds *DirScanner) GetLeaks() []Leak {
-	return ds.leaks
+	return ds.leaks, nil
 }

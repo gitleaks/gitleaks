@@ -20,24 +20,21 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 	}
 }
 
-func (css *CommitsScanner) Scan() error {
+func (css *CommitsScanner) Scan() ([]Leak, error) {
 	for _, c := range css.commits {
 		c, err := obtainCommit(css.repo, c)
 		if err != nil {
-			return nil
+			return css.leaks, nil
 		}
 		cs := NewCommitScanner(css.BaseScanner, css.repo, c)
-		if err := cs.Scan(); err != nil {
-			return err
+		leaks, err := cs.Scan()
+		if err != nil {
+			return css.leaks, err
 		}
-		css.leaks = append(css.leaks, cs.GetLeaks()...)
+		css.leaks = append(css.leaks, leaks...)
 		if css.opts.Verbose {
 			logLeaks(css.leaks)
 		}
 	}
-	return nil
-}
-
-func (css *CommitsScanner) GetLeaks() []Leak {
-	return css.leaks
+	return css.leaks, nil
 }

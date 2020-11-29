@@ -2,10 +2,28 @@ package scan
 
 import (
 	"context"
+	"time"
+
 	"github.com/zricethezav/gitleaks/v6/config"
 	"github.com/zricethezav/gitleaks/v6/options"
-	"time"
 )
+
+
+type Scanner interface {
+	Scan() ([]Leak, error)
+	// GetLeaks() []Leak
+}
+
+type BaseScanner struct {
+	opts options.Options
+	cfg  config.Config
+
+	// ctx is used to signal timeouts to running goroutines
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	leaks []Leak
+}
 
 // Leak is a struct that contains information about some line of code that contains
 // sensitive information as determined by the rules set in a gitleaks config
@@ -26,22 +44,6 @@ type Leak struct {
 	lookupHash string
 }
 
-type Scanner interface {
-	Scan() error
-	GetLeaks() []Leak
-}
-
-type BaseScanner struct {
-	opts options.Options
-	cfg  config.Config
-
-	// ctx is used to signal timeouts to running goroutines
-	ctx    context.Context
-	cancel context.CancelFunc
-
-	leaks []Leak
-}
-
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
 		if regexMatched(opts.RepoPath, allowListedRepo) {
@@ -55,7 +57,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	base := BaseScanner{
 		opts: opts,
 		cfg:  cfg,
-		ctx: context.Background(),
+		ctx:  context.Background(),
 	}
 
 	if opts.OwnerPath != "" {

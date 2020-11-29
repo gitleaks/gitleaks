@@ -21,16 +21,13 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	}
 }
 
-func (cs *CommitScanner) Scan() error {
+func (cs *CommitScanner) Scan() ([]Leak, error) {
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
-		if err := facScanner.Scan(); err != nil {
-			return err
-		}
-		cs.leaks = append(cs.leaks, facScanner.GetLeaks()...)
+		return facScanner.Scan()
 	}
 
-	return cs.commit.Parents().ForEach(func(parent *object.Commit) error {
+	err := cs.commit.Parents().ForEach(func(parent *object.Commit) error {
 		defer func() {
 			if err := recover(); err != nil {
 				// sometimes the Patch generation will fail due to a known bug in
@@ -83,8 +80,5 @@ func (cs *CommitScanner) Scan() error {
 		}
 		return nil
 	})
-}
-
-func (cs *CommitScanner) GetLeaks() []Leak {
-	return cs.leaks
+	return cs.leaks, err
 }

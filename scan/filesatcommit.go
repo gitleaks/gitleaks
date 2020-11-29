@@ -19,10 +19,10 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 	}
 }
 
-func (fs *FilesAtCommitScanner) Scan() error {
+func (fs *FilesAtCommitScanner) Scan() ([]Leak, error) {
 	fIter, err := fs.commit.Files()
 	if err != nil {
-		return err
+		return fs.leaks, err
 	}
 
 	err = fIter.ForEach(func(f *object.File) error {
@@ -45,9 +45,5 @@ func (fs *FilesAtCommitScanner) Scan() error {
 		return nil
 	})
 
-	return nil
-}
-
-func (fs *FilesAtCommitScanner) GetLeaks() []Leak {
-	return fs.leaks
+	return fs.leaks, err
 }

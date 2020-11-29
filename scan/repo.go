@@ -1,15 +1,14 @@
 package scan
 
 import (
-	"os"
-	"os/signal"
-	"sync"
-
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
 	log "github.com/sirupsen/logrus"
+	"os"
+	"os/signal"
+	"sync"
 )
 
 type RepoScanner struct {
@@ -17,7 +16,6 @@ type RepoScanner struct {
 	repo *git.Repository
 
 	stopChan  chan os.Signal
-	leaks     []Leak
 	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
@@ -41,14 +39,14 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	return rs
 }
 
-func (rs *RepoScanner) Scan() error {
+func (rs *RepoScanner) Scan() ([]Leak, error) {
 	logOpts, err := logOptions(rs.repo, rs.opts)
 	if err != nil {
-		return err
+		return rs.leaks, err
 	}
 	cIter, err := rs.repo.Log(logOpts)
 	if err != nil {
-		return err
+		return rs.leaks, err
 	}
 
 	cc := 0
@@ -69,10 +67,11 @@ func (rs *RepoScanner) Scan() error {
 		if len(c.ParentHashes) == 0 {
 			cc++
 			facScanner := NewFilesAtCommitScanner(rs.BaseScanner, rs.repo, c)
-			if err := facScanner.Scan(); err != nil {
+			leaks, err := facScanner.Scan()
+			if err != nil {
 				return err
 			}
-			rs.leaks = append(rs.leaks, facScanner.GetLeaks()...)
+			rs.leaks = append(rs.leaks, leaks...)
 			return nil
 		}
 
@@ -147,7 +146,7 @@ func (rs *RepoScanner) Scan() error {
 
 						for _, leak := range checkRules(rs.cfg, "", filepath, c, chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-							logLeak(leak)
+							if rs.opts.Verbose{logLeak(leak)}
 							rs.leakWG.Add(1)
 							rs.leakChan <- leak
 						}
@@ -163,7 +162,9 @@ func (rs *RepoScanner) Scan() error {
 	})
 
 	wg.Wait()
-	return nil
+	rs.leakWG.Wait()
+	log.Info("commits scanned: ", cc)
+	return rs.leaks, nil
 }
 
 func (rs *RepoScanner) receiveLeaks() {
@@ -172,8 +173,9 @@ func (rs *RepoScanner) receiveLeaks() {
 		rs.leakWG.Done()
 	}
 }
-
-func (rs *RepoScanner) GetLeaks() []Leak {
-	rs.leakWG.Wait()
-	return rs.leaks
-}
+//
+//func (rs *RepoScanner) GetLeaks() []Leak {
+//	rs.leakWG.Wait()
+//	return rs.leaks
+//}
+//

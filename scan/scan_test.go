@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/zricethezav/gitleaks/v6/config"
-	"github.com/zricethezav/gitleaks/v6/manager"
 	"github.com/zricethezav/gitleaks/v6/options"
 
 	"github.com/sergi/go-diff/diffmatchpatch"

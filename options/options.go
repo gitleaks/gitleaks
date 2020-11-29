@@ -16,16 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// No leaks or early exit due to invalid options
-// This block defines the exit codes. Success
-const (
-	// No leaks or early exit due to invalid options
-	Success          = 0
-	LeaksPresent     = 1
-	ErrorEncountered = 2
-	donateMessage    = "👋 maintaining gitleaks takes a lot of work so consider sponsoring me or donating a little something\n❤️ https://github.com/sponsors/zricethezav\n💸 https://www.paypal.me/zricethezav\n₿  btc:3GndEzRZa6rJ8ZpkLureUcc5TDHMYfpDxn"
-)
-
 // Options stores values of command line options
 type Options struct {
 	Verbose         bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
@@ -48,13 +38,14 @@ type Options struct {
 	Redact          bool   `long:"redact" description:"redact secrets from log messages and leaks"`
 	Debug           bool   `long:"debug" description:"log debug messages"`
 	RepoConfig      bool   `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
-	PrettyPrint     bool   `long:"pretty" description:"Pretty print json if leaks are present"`
 
 	// Commit Options
 	Commit      string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
 	Commits     string `long:"commits" description:"comma separated list of a commits to scan"`
 	CommitsFile string `long:"commits-file" description:"file of new line separated list of a commits to scan"`
+	// TODO maybe remove
 	CommitFrom  string `long:"commit-from" description:"Commit to start scan from"`
+	// TODO maybe remove
 	CommitTo    string `long:"commit-to" description:"Commit to stop scan"`
 	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
@@ -62,14 +53,14 @@ type Options struct {
 	Timeout         string `long:"timeout" description:"Time allowed per scan. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth           int    `long:"depth" description:"Number of commits to scan"`
 	Deletion        bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
-
-	// Hosts
-	Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
-	BaseURL      string `long:"baseurl" description:"Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server."`
-	Organization string `long:"org" description:"organization to scan"`
-	User         string `long:"user" description:"user to scan"`
-	PullRequest  string `long:"pr" description:"pull/merge request url"`
-	ExcludeForks bool   `long:"exclude-forks" description:"scan excludes forks"`
+	//
+	//// Hosts
+	//Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
+	//BaseURL      string `long:"baseurl" description:"Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server."`
+	//Organization string `long:"org" description:"organization to scan"`
+	//User         string `long:"user" description:"user to scan"`
+	//PullRequest  string `long:"pr" description:"pull/merge request url"`
+	//ExcludeForks bool   `long:"exclude-forks" description:"scan excludes forks"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct
@@ -85,7 +76,6 @@ func ParseOptions() (Options, error) {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stdout)
 		}
-		fmt.Println(donateMessage)
 		os.Exit(0)
 	}
 
@@ -95,7 +85,7 @@ func ParseOptions() (Options, error) {
 		} else {
 			fmt.Printf("%s\n", version.Version)
 		}
-		os.Exit(Success)
+		os.Exit(0)
 	}
 
 	if opts.Debug {
@@ -109,10 +99,7 @@ func ParseOptions() (Options, error) {
 // If invalid sets of options are present, a descriptive error will return
 // else nil is returned
 func (opts Options) Guard() error {
-	if !oneOrNoneSet(opts.Repo, opts.OwnerPath, opts.RepoPath, opts.Host) {
-		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
-	}
-	if !oneOrNoneSet(opts.Organization, opts.User, opts.PullRequest) {
+	if !oneOrNoneSet(opts.Repo, opts.OwnerPath, opts.RepoPath) {
 		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
@@ -238,9 +225,6 @@ func (opts Options) CheckUncommitted() bool {
 		return false
 	}
 	if opts.OwnerPath != "" {
-		return false
-	}
-	if opts.Host != "" {
 		return false
 	}
 	return true

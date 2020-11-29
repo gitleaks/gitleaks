@@ -24,17 +24,17 @@ func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner
 	}
 }
 
-func (us *UnstagedScanner) Scan() error {
+func (us *UnstagedScanner) Scan() ([]Leak, error) {
 	r, err := us.repo.Head()
 	if err == plumbing.ErrReferenceNotFound {
 		wt, err := us.repo.Worktree()
 		if err != nil {
-			return err
+			return us.leaks, err
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			return err
+			return us.leaks, err
 		}
 		for fn := range status {
 			workTreeBuf := bytes.NewBuffer(nil)
@@ -43,18 +43,18 @@ func (us *UnstagedScanner) Scan() error {
 				continue
 			}
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-				return err
+				return us.leaks, err
 			}
 			us.leaks = append(us.leaks, checkRules(us.cfg, "", workTreeFile.Name(), emptyCommit(), workTreeBuf.String())...)
 		}
-		return nil
+		return us.leaks, nil
 	} else if err != nil {
-		return err
+		return us.leaks, err
 	}
 
 	c, err := us.repo.CommitObject(r.Hash())
 	if err != nil {
-		return err
+		return us.leaks, err
 	}
 	// Staged change so the Commit details do not yet exist. Insert empty defaults.
 	c.Hash = plumbing.Hash{}
@@ -65,14 +65,17 @@ func (us *UnstagedScanner) Scan() error {
 
 	prevTree, err := c.Tree()
 	if err != nil {
-		return err
+		return us.leaks, err
 	}
 	wt, err := us.repo.Worktree()
 	if err != nil {
-		return err
+		return us.leaks, err
 	}
 
 	status, err := wt.Status()
+	if err != nil {
+		return us.leaks, err
+	}
 	for fn, state := range status {
 		var (
 			prevFileContents string
@@ -92,7 +95,7 @@ func (us *UnstagedScanner) Scan() error {
 					continue
 				}
 				if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-					return err
+					return us.leaks, err
 				}
 				currFileContents = workTreeBuf.String()
 				filename = workTreeFile.Name()
@@ -106,7 +109,7 @@ func (us *UnstagedScanner) Scan() error {
 			} else {
 				prevFileContents, err = prevFile.Contents()
 				if err != nil {
-					return err
+					return us.leaks, err
 				}
 				if filename == "" {
 					filename = prevFile.Name
@@ -128,12 +131,5 @@ func (us *UnstagedScanner) Scan() error {
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (us *UnstagedScanner) GetLeaks() []Leak {
-	return us.leaks
+	return us.leaks, err
 }

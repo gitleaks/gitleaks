@@ -28,10 +28,7 @@ import (
 const (
 	diffAddPrefix           = "+"
 	diffLineSignature       = " @@"
-	diffLineSignaturePrefix = "@@ "
 	defaultLineNumber       = -1
-	diffAddFilePrefix       = "+++ b"
-	diffAddFilePrefixSlash  = "+++ b/"
 )
 
 func timeoutReached(ctx context.Context) bool {
