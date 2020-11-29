@@ -2,17 +2,25 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/hako/durafmt"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/zricethezav/gitleaks/v6/config"
 	"github.com/zricethezav/gitleaks/v6/options"
 	"github.com/zricethezav/gitleaks/v6/scan"
-	"os"
-	"time"
 
+	"github.com/hako/durafmt"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	// this block sets up a go routine to listen for an interrupt signal
+	// which will immediately exit gitleaks
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, os.Interrupt)
+	go listenForInterrupt(stopChan)
+
 	// setup options
 	opts, err := options.ParseOptions()
 	if err != nil {
@@ -76,4 +84,10 @@ func report(leaks []scan.Leak, opts options.Options) error {
 	}
 
 	return nil
+}
+
+func listenForInterrupt(stopScan chan os.Signal) {
+	<-stopScan
+	log.Warn("halting gitleaks scan")
+	os.Exit(1)
 }

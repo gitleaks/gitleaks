@@ -6,8 +6,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
 	"sync"
 )
 
@@ -15,7 +13,6 @@ type RepoScanner struct {
 	BaseScanner
 	repo *git.Repository
 
-	stopChan  chan os.Signal
 	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
@@ -26,15 +23,11 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
 		repo:        repo,
-		stopChan:    make(chan os.Signal, 1),
 		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
 	}
 	rs.scannerType = TypeRepoScanner
-
-	// setup signal stuff
-	signal.Notify(rs.stopChan, os.Interrupt)
 
 	go rs.receiveLeaks()
 

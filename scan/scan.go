@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/zricethezav/gitleaks/v6/config"
@@ -17,9 +18,9 @@ type BaseScanner struct {
 	opts options.Options
 	cfg  config.Config
 
-	// ctx is used to signal timeouts to running goroutines
 	ctx    context.Context
 	cancel context.CancelFunc
+	stopChan  chan os.Signal
 
 	scannerType ScannerType
 }
