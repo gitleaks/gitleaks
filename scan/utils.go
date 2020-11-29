@@ -172,7 +172,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 		}
 	}
 
-	lineNumber := 0
+	lineNumber := 1
 
 	for _, line := range strings.Split(content, "\n") {
 		for _, rule := range scanner.cfg.Rules {

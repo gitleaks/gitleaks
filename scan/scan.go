@@ -2,6 +2,8 @@ package scan
 
 import (
 	"context"
+	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
 
@@ -116,4 +118,26 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	default:
 		return NewRepoScanner(base, repo), nil
 	}
+}
+
+func Report(leaks []Leak, opts options.Options) error {
+	if len(leaks) != 0 {
+		log.Warn("leaks found: ", len(leaks))
+	} else {
+		log.Info("leaks found: ", len(leaks))
+	}
+	if opts.Report != "" {
+		file, err := os.Create(opts.Report)
+		if err != nil {
+			return err
+		}
+		encoder := json.NewEncoder(file)
+		encoder.SetIndent("", " ")
+		err = encoder.Encode(leaks)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

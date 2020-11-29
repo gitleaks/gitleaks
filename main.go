@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 	"os/signal"
 	"time"
@@ -58,32 +57,10 @@ func main() {
 	}
 
 	// report scan
-	if err := report(leaks, opts); err != nil {
+	if err := scan.Report(leaks, opts); err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-}
-
-func report(leaks []scan.Leak, opts options.Options) error {
-	if len(leaks) != 0 {
-		log.Warn("leaks found: ", len(leaks))
-	} else {
-		log.Info("leaks found: ", len(leaks))
-	}
-	if opts.Report != "" {
-		file, err := os.Create(opts.Report)
-		if err != nil {
-			return err
-		}
-		encoder := json.NewEncoder(file)
-		encoder.SetIndent("", " ")
-		err = encoder.Encode(leaks)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func listenForInterrupt(stopScan chan os.Signal) {
