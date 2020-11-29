@@ -9,7 +9,6 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
 	log "github.com/sirupsen/logrus"
@@ -49,7 +48,21 @@ func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error
 	return repo.CommitObject(plumbing.NewHash(commitSha))
 }
 
-func getRepo(opts options.Options) (*git.Repository, error) {
+func getRepoName(opts options.Options) string {
+	if opts.Repo != "" {
+		return filepath.Base(opts.Repo)
+	}
+	if opts.RepoPath != "" {
+		return filepath.Base(opts.RepoPath)
+	}
+	if opts.CheckUncommitted() {
+		dir, _ := os.Getwd()
+		return filepath.Base(dir)
+	}
+	return ""
+}
+
+func getRepo(opts options.Options) (*git.Repository,  error) {
 	if opts.OpenLocal() {
 		return git.PlainOpen(opts.RepoPath)
 	}
@@ -356,18 +369,6 @@ func regexMatched(f interface{}, re *regexp.Regexp) bool {
 		return false
 	}
 	return false
-}
-
-// diffOpToString converts a fdiff.Operation to a string
-func diffOpToString(operation fdiff.Operation) string {
-	switch operation {
-	case fdiff.Add:
-		return "addition"
-	case fdiff.Equal:
-		return "equal"
-	default:
-		return "deletion"
-	}
 }
 
 // trippedEntropy checks if a given capture group or offender falls in between entropy ranges

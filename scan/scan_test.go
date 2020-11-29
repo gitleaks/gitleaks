@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"runtime"
 	"sort"
 	"testing"
 
@@ -37,16 +38,16 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
 		},
-		//{
-		//	description: "test local repo one aws leak threaded",
-		//	opts: options.Options{
-		//		Threads:      runtime.GOMAXPROCS(0),
-		//		RepoPath:     "../test_data/test_repos/test_repo_1",
-		//		Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
-		//		ReportFormat: "json",
-		//	},
-		//	wantPath: "../test_data/test_local_repo_one_aws_leak.json",
-		//},
+		{
+			description: "test local repo one aws leak threaded",
+			opts: options.Options{
+				Threads:      runtime.GOMAXPROCS(0),
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
+		},
 		//{
 		//	description: "test non existent repo",
 		//	opts: options.Options{

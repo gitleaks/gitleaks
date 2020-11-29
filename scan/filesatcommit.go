@@ -7,8 +7,10 @@ import (
 
 type FilesAtCommitScanner struct {
 	BaseScanner
+
 	repo   *git.Repository
 	commit *object.Commit
+	repoName string
 	leaks []Leak
 }
 
@@ -17,6 +19,7 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 		BaseScanner: base,
 		repo:   repo,
 		commit: commit,
+		repoName: getRepoName(base.opts),
 	}
 	fs.scannerType = TypeFilesAtCommitScanner
 	return fs
@@ -41,7 +44,7 @@ func (fs *FilesAtCommitScanner) Scan() ([]Leak, error) {
 			return err
 		}
 
-		fs.leaks = append(fs.leaks, checkRules(fs.BaseScanner, fs.commit, "", f.Name, content)...)
+		fs.leaks = append(fs.leaks, checkRules(fs.BaseScanner, fs.commit, fs.repoName, f.Name, content)...)
 		return nil
 	})
 

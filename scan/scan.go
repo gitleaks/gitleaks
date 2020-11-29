@@ -53,8 +53,6 @@ type Leak struct {
 	File       string    `json:"file"`
 	Date       time.Time `json:"date"`
 	Tags       string    `json:"tags"`
-	Operation  string    `json:"operation"`
-	lookupHash string
 }
 
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {

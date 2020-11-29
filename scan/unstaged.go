@@ -13,6 +13,7 @@ import (
 type UnstagedScanner struct {
 	BaseScanner
 	repo *git.Repository
+	repoName string
 
 	leaks []Leak
 }
@@ -21,6 +22,7 @@ func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner
 	us := &UnstagedScanner{
 		BaseScanner: base,
 		repo: repo,
+		repoName: getRepoName(base.opts),
 	}
 	us.scannerType = TypeUnstagedScanner
 	return us

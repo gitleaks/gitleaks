@@ -12,6 +12,7 @@ import (
 type RepoScanner struct {
 	BaseScanner
 	repo *git.Repository
+	repoName string
 
 	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
@@ -26,6 +27,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
+		repoName: getRepoName(base.opts),
 	}
 	rs.scannerType = TypeRepoScanner
 
@@ -43,7 +45,6 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 	if err != nil {
 		return rs.leaks, err
 	}
-
 	cc := 0
 	semaphore := make(chan bool, howManyThreads(rs.opts.Threads))
 	wg := sync.WaitGroup{}
@@ -126,20 +127,10 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 				}
 
 				for _, chunk := range f.Chunks() {
-					if chunk.Type() == fdiff.Add || (rs.opts.Deletion && chunk.Type() == fdiff.Delete) {
-						from, to := f.Files()
-						var filepath string
-						if from != nil {
-							filepath = from.Path()
-						} else if to != nil {
-							filepath = to.Path()
-						} else {
-							filepath = "???"
-						}
-
+					if chunk.Type() == fdiff.Add {
+						_, to := f.Files()
 						lineLookup := make(map[string]bool)
-
-						for _, leak := range checkRules(rs.BaseScanner, c, "", filepath, chunk.Content()) {
+						for _, leak := range checkRules(rs.BaseScanner, c, rs.repoName, to.Path(), chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 							if rs.opts.Verbose {
 								logLeak(leak)

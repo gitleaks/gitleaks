@@ -9,9 +9,10 @@ import (
 
 type CommitScanner struct {
 	BaseScanner
-	repo   *git.Repository
-	commit *object.Commit
-	leaks  []Leak
+	repo     *git.Repository
+	repoName string
+	commit   *object.Commit
+	leaks    []Leak
 }
 
 func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
@@ -19,6 +20,7 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 		BaseScanner: base,
 		repo:        repo,
 		commit:      commit,
+		repoName:    getRepoName(base.opts),
 	}
 	cs.scannerType = TypeCommitScanner
 	return cs
@@ -61,7 +63,7 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 				continue
 			}
 			for _, chunk := range f.Chunks() {
-				if chunk.Type() == fdiff.Add || (cs.opts.Deletion && chunk.Type() == fdiff.Delete) {
+				if chunk.Type() == fdiff.Add {
 					from, to := f.Files()
 					var filepath string
 					if from != nil {
@@ -71,7 +73,7 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 					} else {
 						filepath = "???"
 					}
-					leaks := checkRules(cs.BaseScanner, cs.commit, "", filepath, chunk.Content())
+					leaks := checkRules(cs.BaseScanner, cs.commit, cs.repoName, filepath, chunk.Content())
 
 					var lineLookup map[string]bool
 					for _, leak := range leaks {

@@ -8,6 +8,7 @@ type CommitsScanner struct {
 	BaseScanner
 
 	repo    *git.Repository
+	repoName string
 	commits []string
 	leaks   []Leak
 }
@@ -17,6 +18,7 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 		BaseScanner: base,
 		repo:        repo,
 		commits:     commits,
+		repoName: getRepoName(base.opts),
 	}
 }
 
