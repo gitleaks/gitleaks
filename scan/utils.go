@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -100,22 +99,33 @@ func emptyCommit() *object.Commit {
 	}
 }
 
-func loadRepoConfig(repo *git.Repository) (config.Config, error) {
-	wt, err := repo.Worktree()
+func loadRepoConfig(repo *git.Repository, opts options.Options) (config.Config, error) {
+	ref, err := repo.Head()
 	if err != nil {
 		return config.Config{}, err
 	}
-	var f billy.File
-	f, _ = wt.Filesystem.Open(".gitleaks.toml")
-	if f == nil {
-		f, err = wt.Filesystem.Open("gitleaks.toml")
-		if err != nil {
-			return config.Config{}, fmt.Errorf("problem loading repo config: %v", err)
-		}
+
+	c, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return config.Config{}, err
 	}
-	defer f.Close()
+
+	configFileName := ".gitleaks.toml"
+	if opts.Config != "" {
+		configFileName = opts.Config
+	}
+
+	f, err := c.File(configFileName)
+	if err != nil {
+		return config.Config{}, err
+	}
+
 	var tomlLoader config.TomlLoader
-	_, err = toml.DecodeReader(f, &tomlLoader)
+	r, err := f.Reader()
+	if err != nil {
+		return config.Config{}, err
+	}
+	_, err = toml.DecodeReader(r, &tomlLoader)
 	if err != nil {
 		return config.Config{}, err
 	}

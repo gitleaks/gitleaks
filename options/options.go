@@ -3,6 +3,7 @@ package options
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -44,7 +45,7 @@ type Options struct {
 	Commit      string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
 	Commits     string `long:"commits" description:"comma separated list of a commits to scan"`
 	CommitsFile string `long:"commits-file" description:"file of new line separated list of a commits to scan"`
-	CommitFrom string `long:"commit-from" description:"Commit to start scan from"`
+	CommitFrom  string `long:"commit-from" description:"Commit to start scan from"`
 	CommitTo    string `long:"commit-to" description:"Commit to stop scan"`
 	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
@@ -124,70 +125,52 @@ func oneOrNoneSet(optStr ...string) bool {
 // Username/PW or AccessToken is available and the repo target is not using the
 // git protocol then the repo must be a available via no auth.
 func (opts Options) CloneOptions() (*git.CloneOptions, error) {
+	var err error
 	progress := ioutil.Discard
 	if opts.Verbose {
 		progress = os.Stdout
 	}
 
+	cloneOpts := &git.CloneOptions{
+		URL:      opts.Repo,
+		Progress: progress,
+	}
+	if opts.Depth != 0 {
+		cloneOpts.Depth = opts.Depth
+	}
+	if opts.Branch != "" {
+		cloneOpts.ReferenceName = plumbing.NewBranchReferenceName(opts.Branch)
+	}
+
+	var auth transport.AuthMethod
+
 	if strings.HasPrefix(opts.Repo, "git") {
 		// using git protocol so needs ssh auth
-		auth, err := SSHAuth(opts)
+		auth, err = SSHAuth(opts)
 		if err != nil {
 			return nil, err
 		}
-		return &git.CloneOptions{
-			URL:           opts.Repo,
-			Auth:          auth,
-			Progress:      progress,
-			ReferenceName: plumbing.NewBranchReferenceName(opts.Branch),
-			Depth:         opts.Depth,
-		}, nil
-	}
-	if opts.Password != "" && opts.Username != "" {
+	} else if opts.Password != "" && opts.Username != "" {
 		// auth using username and password
-		return &git.CloneOptions{
-			URL: opts.Repo,
-			Auth: &http.BasicAuth{
-				Username: opts.Username,
-				Password: opts.Password,
-			},
-			Progress:      progress,
-			ReferenceName: plumbing.NewBranchReferenceName(opts.Branch),
-			Depth:         opts.Depth,
-		}, nil
+		auth = &http.BasicAuth{
+			Username: opts.Username,
+			Password: opts.Password,
+		}
+	} else if opts.AccessToken != "" {
+		auth = &http.BasicAuth{
+			Username: "gitleaks_user",
+			Password: opts.AccessToken,
+		}
+	} else if os.Getenv("GITLEAKS_ACCESS_TOKEN") != "" {
+		auth = &http.BasicAuth{
+			Username: "gitleaks_user",
+			Password: os.Getenv("GITLEAKS_ACCESS_TOKEN"),
+		}
 	}
-	if opts.AccessToken != "" {
-		return &git.CloneOptions{
-			URL: opts.Repo,
-			Auth: &http.BasicAuth{
-				Username: "gitleaks_user",
-				Password: opts.AccessToken,
-			},
-			Progress:      progress,
-			ReferenceName: plumbing.NewBranchReferenceName(opts.Branch),
-			Depth:         opts.Depth,
-		}, nil
+	if auth != nil {
+		cloneOpts.Auth = auth
 	}
-	if os.Getenv("GITLEAKS_ACCESS_TOKEN") != "" {
-		return &git.CloneOptions{
-			URL: opts.Repo,
-			Auth: &http.BasicAuth{
-				Username: "gitleaks_user",
-				Password: os.Getenv("GITLEAKS_ACCESS_TOKEN"),
-			},
-			Progress:      progress,
-			ReferenceName: plumbing.NewBranchReferenceName(opts.Branch),
-			Depth:         opts.Depth,
-		}, nil
-	}
-
-	// No Auth, publicly available
-	return &git.CloneOptions{
-		URL:           opts.Repo,
-		Progress:      progress,
-		ReferenceName: plumbing.NewBranchReferenceName(opts.Branch),
-		Depth:         opts.Depth,
-	}, nil
+	return cloneOpts, nil
 }
 
 // SSHAuth tried to generate ssh public keys based on what was passed via cli. If no

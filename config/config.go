@@ -94,7 +94,7 @@ func NewConfig(options options.Options) (Config, error) {
 	tomlLoader := TomlLoader{}
 
 	var err error
-	if options.Config != "" {
+	if options.Config != "" && !options.RepoConfig {
 		_, err = toml.DecodeFile(options.Config, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
 		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
