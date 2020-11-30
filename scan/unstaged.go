@@ -3,19 +3,18 @@ package scan
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"io"
-	"time"
 )
 
 type UnstagedScanner struct {
 	BaseScanner
 	repo *git.Repository
 	repoName string
-
-	leaks []Leak
 }
 
 func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {

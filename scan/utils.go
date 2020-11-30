@@ -4,14 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
-	log "github.com/sirupsen/logrus"
-	"github.com/zricethezav/gitleaks/v6/config"
-	"github.com/zricethezav/gitleaks/v6/options"
 	"math"
 	"os"
 	"path/filepath"
@@ -20,6 +12,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/zricethezav/gitleaks/v6/config"
+	"github.com/zricethezav/gitleaks/v6/options"
+
+	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/storage/memory"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -53,7 +55,7 @@ func getRepoName(opts options.Options) string {
 	return ""
 }
 
-func getRepo(opts options.Options) (*git.Repository,  error) {
+func getRepo(opts options.Options) (*git.Repository, error) {
 	if opts.OpenLocal() {
 		return git.PlainOpen(opts.RepoPath)
 	}
@@ -72,6 +74,10 @@ func cloneRepo(opts options.Options) (*git.Repository, error) {
 	cloneOpts, err := opts.CloneOptions()
 	if err != nil {
 		return nil, err
+	}
+	if opts.ClonePath != "" {
+		log.Infof("cloning... %s to %s", cloneOpts.URL, opts.ClonePath)
+		return git.PlainClone(opts.ClonePath, false, cloneOpts)
 	}
 	log.Infof("cloning... %s", cloneOpts.URL)
 	return git.Clone(memory.NewStorage(), nil, cloneOpts)
@@ -99,7 +105,7 @@ func emptyCommit() *object.Commit {
 	}
 }
 
-func loadRepoConfig(repo *git.Repository, opts options.Options) (config.Config, error) {
+func loadRepoConfig(repo *git.Repository, repoConfig string) (config.Config, error) {
 	ref, err := repo.Head()
 	if err != nil {
 		return config.Config{}, err
@@ -110,12 +116,7 @@ func loadRepoConfig(repo *git.Repository, opts options.Options) (config.Config, 
 		return config.Config{}, err
 	}
 
-	configFileName := ".gitleaks.toml"
-	if opts.Config != "" {
-		configFileName = opts.Config
-	}
-
-	f, err := c.File(configFileName)
+	f, err := c.File(repoConfig)
 	if err != nil {
 		return config.Config{}, err
 	}
@@ -158,7 +159,11 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 	}
 
 	for _, rule := range scanner.cfg.Rules {
-		if skipRule(rule, filename, filePath) {
+		if isCommitAllowListed(commit.Hash.String(), rule.AllowList.Commits) {
+			continue
+		}
+
+		if skipRule(rule, filename, filePath, commit.Hash.String()) {
 			skipRuleLookup[rule.Description] = true
 			continue
 		}
@@ -238,7 +243,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 	return leaks
 }
 
-func logLeak(leak Leak){
+func logLeak(leak Leak) {
 	var b []byte
 	b, _ = json.MarshalIndent(leak, "", "	")
 	fmt.Println(string(b))
@@ -262,6 +267,7 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 		} else {
 			return nil, err
 		}
+		logOpts.All = true
 	}
 	if opts.CommitUntil != "" {
 		if t, err := time.Parse(timeformat, opts.CommitUntil); err == nil {
@@ -271,6 +277,7 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 		} else {
 			return nil, err
 		}
+		logOpts.All = true
 	}
 	if opts.Branch != "" {
 		ref, err := repo.Storer.Reference(plumbing.NewBranchReferenceName(opts.Branch))
@@ -315,7 +322,7 @@ func skipCheck(cfg config.Config, filename string, path string) bool {
 	return false
 }
 
-func skipRule(rule config.Rule, filename string, path string) bool {
+func skipRule(rule config.Rule, filename, path, commitSha string) bool {
 	// For each rule we want to check filename allowlists
 	if isAllowListed(filename, rule.AllowList.Files) || isAllowListed(path, rule.AllowList.Paths) {
 		return true
@@ -330,6 +337,7 @@ func skipRule(rule config.Rule, filename string, path string) bool {
 	if ruleContainPathRegex(rule) && !regexMatched(path, rule.Path) {
 		return true
 	}
+
 	return false
 }
 

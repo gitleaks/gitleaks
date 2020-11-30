@@ -94,7 +94,7 @@ func NewConfig(options options.Options) (Config, error) {
 	tomlLoader := TomlLoader{}
 
 	var err error
-	if options.Config != "" && !options.RepoConfig {
+	if options.Config != "" {
 		_, err = toml.DecodeFile(options.Config, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
 		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
@@ -116,6 +116,7 @@ func NewConfig(options options.Options) (Config, error) {
 // Parse will parse the values set in a TomlLoader and use those values
 // to create compiled regular expressions and rules used in scans
 func (tomlLoader TomlLoader) Parse() (Config, error) {
+	// TODO https://github.com/zricethezav/gitleaks/issues/398
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
 		// check and make sure the rule is valid

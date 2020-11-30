@@ -3,11 +3,13 @@ package config
 // DefaultConfig is the default gitleaks configuration. If --config={path-to-config} is set than the config located
 // at {path-to-config} will be used. Alternatively, if --repo-config is set then gitleaks will attempt to
 // use the config set in a gitleaks.toml or .gitleaks.toml file in the repo that is run with --repo-config set.
+
+// TODO add shopify and others
 const DefaultConfig = `
 title = "gitleaks config"
 
 [[rules]]
-	description = "AWS Manager ID"
+	description = "AWS Access Key"
 	regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 	tags = ["key", "AWS"]
 
@@ -130,6 +132,31 @@ title = "gitleaks config"
 	description = "Twilio API key"
 	regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}'''
 	tags = ["key", "twilio"]
+
+[[rules]]
+	description = "Dynatrace ttoken"
+	regex = '''dt0[a-zA-Z]{1}[0-9]{2}\.[A-Z0-9]{24}\.[A-Z0-9]{64}'''
+	tags = ["key", "Dynatrace"]
+
+[[rules]]
+	description = "Shopify shared secret"
+	regex = '''shpss_[a-fA-F0-9]{32}'''
+	tags = ["key", "Shopify"]
+
+[[rules]]
+	description = "Shopify access token"
+	regex = '''shpat_[a-fA-F0-9]{32}'''
+	tags = ["key", "Shopify"]
+
+[[rules]]
+	description = "Shopify custom app access token"
+	regex = '''shpca_[a-fA-F0-9]{32}'''
+	tags = ["key", "Shopify"]
+
+[[rules]]
+	description = "Shopify private app access token"
+	regex = '''shppa_[a-fA-F0-9]{32}'''
+	tags = ["key", "Shopify"]
 
 [allowlist]
 	description = "Allowlisted files"

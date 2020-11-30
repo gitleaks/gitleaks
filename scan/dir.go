@@ -9,8 +9,6 @@ import (
 
 type DirScanner struct {
 	BaseScanner
-
-	leaks []Leak
 }
 
 func NewDirScanner(base BaseScanner) *DirScanner {

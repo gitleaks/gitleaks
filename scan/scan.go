@@ -55,6 +55,7 @@ type Report struct {
 }
 
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
+	// TODO https://github.com/zricethezav/gitleaks/pull/274
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
 		if regexMatched(opts.RepoPath, allowListedRepo) {
 			return nil, nil
@@ -83,8 +84,8 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	}
 
 	// load up alternative config if possible, if not use manager's config
-	if opts.RepoConfig {
-		base.cfg, err = loadRepoConfig(repo, opts)
+	if opts.RepoConfig != "" {
+		base.cfg, err = loadRepoConfig(repo, opts.RepoConfig)
 		if err != nil {
 			return nil, err
 		}
