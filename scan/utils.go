@@ -106,6 +106,33 @@ func emptyCommit() *object.Commit {
 }
 
 func loadRepoConfig(repo *git.Repository, repoConfig string) (config.Config, error) {
+	gitRepoConfig, err := repo.Config()
+	if err != nil {
+		return config.Config{}, err
+	}
+	if !gitRepoConfig.Core.IsBare {
+		wt, err := repo.Worktree()
+		if err != nil {
+			return config.Config{}, err
+		}
+		_, err = wt.Filesystem.Stat(repoConfig)
+		if err != nil {
+			return config.Config{}, err
+		}
+		r, err := wt.Filesystem.Open(repoConfig)
+		if err != nil {
+			return config.Config{}, err
+		}
+		var tomlLoader config.TomlLoader
+		_, err = toml.DecodeReader(r, &tomlLoader)
+		if err != nil {
+			return config.Config{}, err
+		}
+
+		return tomlLoader.Parse()
+	}
+
+	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
 	ref, err := repo.Head()
 	if err != nil {
 		return config.Config{}, err
@@ -126,6 +153,8 @@ func loadRepoConfig(repo *git.Repository, repoConfig string) (config.Config, err
 	if err != nil {
 		return config.Config{}, err
 	}
+	st, err := f.Contents()
+	fmt.Println(st)
 	_, err = toml.DecodeReader(r, &tomlLoader)
 	if err != nil {
 		return config.Config{}, err
@@ -196,6 +225,9 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 
 	for _, line := range strings.Split(content, "\n") {
 		for _, rule := range scanner.cfg.Rules {
+			if isCommitAllowListed(commit.Hash.String(), rule.AllowList.Commits) {
+				break
+			}
 			if _, ok := skipRuleLookup[rule.Description]; ok {
 				continue
 			}
@@ -282,7 +314,7 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 	if opts.Branch != "" {
 		ref, err := repo.Storer.Reference(plumbing.NewBranchReferenceName(opts.Branch))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not find branch %s", opts.Branch)
 		}
 		logOpts = git.LogOptions{
 			From: ref.Hash(),

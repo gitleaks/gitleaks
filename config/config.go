@@ -140,6 +140,8 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		// rule specific allowlists
 		var allowList AllowList
 
+		allowList.Description = rule.AllowList.Description
+
 		// rule specific regexes
 		for _, re := range rule.AllowList.Regexes {
 			allowListedRegex, err := regexp.Compile(re)
@@ -166,6 +168,9 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			}
 			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
+
+		// rule specific commits
+		allowList.Commits = rule.AllowList.Commits
 
 		var entropies []Entropy
 		for _, e := range rule.Entropies {
