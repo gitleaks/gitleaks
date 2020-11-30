@@ -86,7 +86,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 
 	// load up alternative config if possible, if not use manager's config
 	if opts.RepoConfig {
-		cfg, err = loadRepoConfig(repo)
+		base.cfg, err = loadRepoConfig(repo)
 		if err != nil {
 			return nil, err
 		}

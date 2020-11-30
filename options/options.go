@@ -52,7 +52,6 @@ type Options struct {
 
 	Timeout         string `long:"timeout" description:"Time allowed per scan. Ex: 10us, 30s, 1m, 1h10m1s"`
 	Depth           int    `long:"depth" description:"Number of commits to scan"`
-	Deletion        bool   `long:"include-deletion" description:"Scan for patch deletions in addition to patch additions"`
 	//
 	//// Hosts
 	//Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`

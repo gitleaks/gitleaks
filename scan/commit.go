@@ -64,22 +64,14 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 			}
 			for _, chunk := range f.Chunks() {
 				if chunk.Type() == fdiff.Add {
-					from, to := f.Files()
-					var filepath string
-					if from != nil {
-						filepath = from.Path()
-					} else if to != nil {
-						filepath = to.Path()
-					} else {
-						filepath = "???"
-					}
-					leaks := checkRules(cs.BaseScanner, cs.commit, cs.repoName, filepath, chunk.Content())
+					_, to := f.Files()
+					leaks := checkRules(cs.BaseScanner, cs.commit, cs.repoName, to.Path(), chunk.Content())
 
-					var lineLookup map[string]bool
+					lineLookup := make(map[string]bool)
 					for _, leak := range leaks {
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+						cs.leaks = append(cs.leaks, leak)
 					}
-					cs.leaks = leaks
 				}
 			}
 		}

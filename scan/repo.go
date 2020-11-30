@@ -63,6 +63,7 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 		if len(c.ParentHashes) == 0 {
 			cc++
 			facScanner := NewFilesAtCommitScanner(rs.BaseScanner, rs.repo, c)
+			facScanner.repoName = rs.repoName
 			leaks, err := facScanner.Scan()
 			if err != nil {
 				return err
@@ -151,7 +152,9 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 
 	wg.Wait()
 	rs.leakWG.Wait()
-	log.Info("commits scanned: ", cc)
+	if rs.opts.OwnerPath == "" {
+		log.Info("commits scanned: ", cc)
+	}
 	return rs.leaks, nil
 }
 
