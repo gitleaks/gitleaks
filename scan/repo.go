@@ -1,23 +1,24 @@
 package scan
 
 import (
+	"sync"
+
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
 	log "github.com/sirupsen/logrus"
-	"sync"
 )
 
 type RepoScanner struct {
 	BaseScanner
-	repo *git.Repository
+	repo     *git.Repository
 	repoName string
 
 	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
-	leaks []Leak
+	leaks     []Leak
 }
 
 func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
@@ -27,7 +28,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
-		repoName: getRepoName(base.opts),
+		repoName:    getRepoName(base.opts),
 	}
 
 	rs.scannerType = TypeRepoScanner
@@ -69,7 +70,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 			if err != nil {
 				return err
 			}
-			rs.leaks = append(rs.leaks, facReport.Leaks...)
+			report.Leaks = append(report.Leaks, facReport.Leaks...)
 			return nil
 		}
 
@@ -144,7 +145,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 
 	wg.Wait()
 	rs.leakWG.Wait()
-	report.Leaks = rs.leaks
+	report.Leaks = append(report.Leaks, rs.leaks...)
 	return report, nil
 }
 
