@@ -29,15 +29,15 @@ func TestScan(t *testing.T) {
 		emptyRepo   bool
 		wantEmpty   bool
 	}{
-		//{
-		//	description: "test local repo one aws leak",
-		//	opts: options.Options{
-		//		RepoPath:     "../test_data/test_repos/test_repo_1",
-		//		Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
-		//		ReportFormat: "json",
-		//	},
-		//	wantPath: "../test_data/test_local_repo_one_aws_leak.json",
-		//},
+		{
+			description: "test local repo one aws leak",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
+		},
 		//{
 		//	description: "test local repo one aws leak threaded",
 		//	opts: options.Options{
@@ -244,26 +244,6 @@ func TestScan(t *testing.T) {
 		//	},
 		//	wantEmpty: true,
 		//},
-		{
-			description: "test local repo one aws leak timeout",
-			opts: options.Options{
-				RepoPath:     "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
-				ReportFormat: "json",
-				Timeout:      "10ns",
-			},
-			wantEmpty: true,
-		},
-		//{
-		//	description: "test local repo one aws leak long timeout",
-		//	opts: options.Options{
-		//		RepoPath:     "../test_data/test_repos/test_repo_1",
-		//		Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
-		//		ReportFormat: "json",
-		//		Timeout:      "2m",
-		//	},
-		//	wantPath: "../test_data/test_local_repo_one_aws_leak.json",
-		//},
 		//{
 		//	description: "test owner path depth=2",
 		//	opts: options.Options{
@@ -449,7 +429,7 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		leaks, err := scanner.Scan()
+		report, err := scanner.Scan()
 
 		if test.wantScanErr != nil {
 			if err == nil {
@@ -464,15 +444,15 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = Report(leaks, test.opts)
+		err = WriteReport(report, test.opts)
 		if err != nil {
 			t.Error(err)
 		}
 
 
 		if test.wantEmpty {
-			if len(leaks) != 0 {
-				t.Errorf("wanted no leaks but got some instead: %+v", leaks)
+			if len(report.Leaks) != 0 {
+				t.Errorf("wanted no leaks but got some instead: %+v", report.Leaks)
 			}
 			continue
 		}

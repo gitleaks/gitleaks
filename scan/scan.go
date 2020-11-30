@@ -1,7 +1,6 @@
 package scan
 
 import (
-	"context"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -11,26 +10,21 @@ import (
 	"github.com/zricethezav/gitleaks/v6/options"
 )
 
-
 type Scanner interface {
-	Scan() ([]Leak, error)
+	Scan() (Report, error)
 }
 
 type BaseScanner struct {
-	opts options.Options
-	cfg  config.Config
-
-	ctx    context.Context
-	cancel context.CancelFunc
-	stopChan  chan os.Signal
-
+	opts        options.Options
+	cfg         config.Config
+	stopChan    chan os.Signal
 	scannerType ScannerType
 }
 
 type ScannerType int
 
 const (
-	TypeRepoScanner ScannerType = iota +1
+	TypeRepoScanner ScannerType = iota + 1
 	TypeDirScanner
 	TypeCommitScanner
 	TypeCommitsScanner
@@ -55,6 +49,11 @@ type Leak struct {
 	Tags       string    `json:"tags"`
 }
 
+type Report struct {
+	Leaks    []Leak
+	Commits  int
+}
+
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
 		if regexMatched(opts.RepoPath, allowListedRepo) {
@@ -68,7 +67,6 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	base := BaseScanner{
 		opts: opts,
 		cfg:  cfg,
-		ctx:  context.Background(),
 	}
 
 	// We want to return a dir scanner immediately since if the scan type is a directory scan
@@ -118,11 +116,12 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	}
 }
 
-func Report(leaks []Leak, opts options.Options) error {
-	if len(leaks) != 0 {
-		log.Warn("leaks found: ", len(leaks))
+func WriteReport(report Report, opts options.Options) error {
+	log.Info("commits scanned: ", report.Commits)
+	if len(report.Leaks) != 0 {
+		log.Warn("leaks found: ", len(report.Leaks))
 	} else {
-		log.Info("leaks found: ", len(leaks))
+		log.Info("leaks found: ", len(report.Leaks))
 	}
 	if opts.Report != "" {
 		file, err := os.Create(opts.Report)
@@ -131,7 +130,7 @@ func Report(leaks []Leak, opts options.Options) error {
 		}
 		encoder := json.NewEncoder(file)
 		encoder.SetIndent("", " ")
-		err = encoder.Encode(leaks)
+		err = encoder.Encode(report.Leaks)
 		if err != nil {
 			return err
 		}

@@ -7,10 +7,9 @@ import (
 type CommitsScanner struct {
 	BaseScanner
 
-	repo    *git.Repository
+	repo     *git.Repository
 	repoName string
-	commits []string
-	leaks   []Leak
+	commits  []string
 }
 
 func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string) *CommitsScanner {
@@ -18,22 +17,24 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 		BaseScanner: base,
 		repo:        repo,
 		commits:     commits,
-		repoName: getRepoName(base.opts),
+		repoName:    getRepoName(base.opts),
 	}
 }
 
-func (css *CommitsScanner) Scan() ([]Leak, error) {
+func (css *CommitsScanner) Scan() (Report, error) {
+	var report Report
 	for _, c := range css.commits {
 		c, err := obtainCommit(css.repo, c)
 		if err != nil {
-			return css.leaks, nil
+			return report, nil
 		}
 		cs := NewCommitScanner(css.BaseScanner, css.repo, c)
-		leaks, err := cs.Scan()
+		commitReport, err := cs.Scan()
 		if err != nil {
-			return css.leaks, err
+			return report, err
 		}
-		css.leaks = append(css.leaks, leaks...)
+		report.Leaks = append(report.Leaks, commitReport.Leaks...)
+		report.Commits++
 	}
-	return css.leaks, nil
+	return report, nil
 }

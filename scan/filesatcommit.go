@@ -25,15 +25,16 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 	return fs
 }
 
-func (fs *FilesAtCommitScanner) Scan() ([]Leak, error) {
+func (fs *FilesAtCommitScanner) Scan() (Report, error) {
+	var report Report
 	fIter, err := fs.commit.Files()
 	if err != nil {
-		return fs.leaks, err
+		return report, err
 	}
 
 	err = fIter.ForEach(func(f *object.File) error {
 		bin, err := f.IsBinary()
-		if bin || timeoutReached(fs.ctx) {
+		if bin {
 			return nil
 		} else if err != nil {
 			return err
@@ -48,5 +49,7 @@ func (fs *FilesAtCommitScanner) Scan() ([]Leak, error) {
 		return nil
 	})
 
-	return fs.leaks, err
+	report.Leaks = fs.leaks
+	report.Commits = 1
+	return report, err
 }

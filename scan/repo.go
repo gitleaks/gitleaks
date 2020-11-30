@@ -29,6 +29,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 		leakCache:   make(map[string]bool),
 		repoName: getRepoName(base.opts),
 	}
+
 	rs.scannerType = TypeRepoScanner
 
 	go rs.receiveLeaks()
@@ -36,21 +37,21 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	return rs
 }
 
-func (rs *RepoScanner) Scan() ([]Leak, error) {
+func (rs *RepoScanner) Scan() (Report, error) {
+	var report Report
 	logOpts, err := logOptions(rs.repo, rs.opts)
 	if err != nil {
-		return rs.leaks, err
+		return report, err
 	}
 	cIter, err := rs.repo.Log(logOpts)
 	if err != nil {
-		return rs.leaks, err
+		return report, err
 	}
-	cc := 0
 	semaphore := make(chan bool, howManyThreads(rs.opts.Threads))
 	wg := sync.WaitGroup{}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || timeoutReached(rs.ctx) || depthReached(cc, rs.opts) {
+		if c == nil || depthReached(report.Commits, rs.opts) {
 			return storer.ErrStop
 		}
 
@@ -61,19 +62,18 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 
 		// Check if at root
 		if len(c.ParentHashes) == 0 {
-			cc++
+			report.Commits++
 			facScanner := NewFilesAtCommitScanner(rs.BaseScanner, rs.repo, c)
 			facScanner.repoName = rs.repoName
-			leaks, err := facScanner.Scan()
+			facReport, err := facScanner.Scan()
 			if err != nil {
 				return err
 			}
-			rs.leaks = append(rs.leaks, leaks...)
+			rs.leaks = append(rs.leaks, facReport.Leaks...)
 			return nil
 		}
 
-		// increase Commit counter
-		cc++
+		report.Commits++
 
 		// inspect first parent only as all other parents will be eventually reached
 		// (they exist as the tip of other branches, etc)
@@ -92,9 +92,6 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 			}
 		}()
 
-		if timeoutReached(rs.ctx) {
-			return nil
-		}
 		if parent == nil {
 			// shouldn't reach this point but just in case
 			return nil
@@ -105,8 +102,6 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 		if err != nil {
 			log.Errorf("could not generate Patch")
 		}
-		// TODO Record time
-		// repo.Manager.RecordTime(manager.PatchTime(howLong(start)))
 
 		wg.Add(1)
 		semaphore <- true
@@ -120,9 +115,6 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 			patchContent := patch.String()
 
 			for _, f := range patch.FilePatches() {
-				if timeoutReached(rs.ctx) {
-					return
-				}
 				if f.IsBinary() {
 					continue
 				}
@@ -152,10 +144,8 @@ func (rs *RepoScanner) Scan() ([]Leak, error) {
 
 	wg.Wait()
 	rs.leakWG.Wait()
-	if rs.opts.OwnerPath == "" {
-		log.Info("commits scanned: ", cc)
-	}
-	return rs.leaks, nil
+	report.Leaks = rs.leaks
+	return report, nil
 }
 
 func (rs *RepoScanner) receiveLeaks() {

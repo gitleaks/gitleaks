@@ -21,10 +21,11 @@ func NewDirScanner(base BaseScanner) *DirScanner {
 	return ds
 }
 
-func (ds *DirScanner) Scan() ([]Leak, error) {
+func (ds *DirScanner) Scan() (Report, error) {
+	var report Report
 	files, err := ioutil.ReadDir(ds.opts.OwnerPath)
 	if err != nil {
-		return ds.leaks, err
+		return report, err
 	}
 	for _, f := range files {
 		if !f.IsDir() {
@@ -37,7 +38,7 @@ func (ds *DirScanner) Scan() ([]Leak, error) {
 				log.Debugf("%s is not a git repository", f.Name())
 				continue
 			}
-			return ds.leaks, err
+			return report, err
 		}
 		skip := false
 		for _, allowListedRepo := range ds.cfg.Allowlist.Repos {
@@ -51,11 +52,12 @@ func (ds *DirScanner) Scan() ([]Leak, error) {
 
 		rs := NewRepoScanner(ds.BaseScanner, repo)
 		rs.repoName = f.Name()
-		leaks, err:= rs.Scan()
+		repoReport, err:= rs.Scan()
 		if err != nil {
-			return ds.leaks, err
+			return report, err
 		}
-		ds.leaks = append(ds.leaks, leaks...)
+		report.Leaks = append(report.Leaks, repoReport.Leaks...)
+		report.Commits += repoReport.Commits
 	}
-	return ds.leaks, nil
+	return report, nil
 }

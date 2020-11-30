@@ -28,17 +28,18 @@ func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner
 	return us
 }
 
-func (us *UnstagedScanner) Scan() ([]Leak, error) {
+func (us *UnstagedScanner) Scan() (Report, error) {
+	var report Report
 	r, err := us.repo.Head()
 	if err == plumbing.ErrReferenceNotFound {
 		wt, err := us.repo.Worktree()
 		if err != nil {
-			return us.leaks, err
+			return report, err
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			return us.leaks, err
+			return report, err
 		}
 		for fn := range status {
 			workTreeBuf := bytes.NewBuffer(nil)
@@ -47,19 +48,20 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 				continue
 			}
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-				return us.leaks, err
+				return report, err
 			}
-			us.leaks = append(us.leaks, checkRules(us.BaseScanner, emptyCommit(), "", workTreeFile.Name(), workTreeBuf.String())...)
+			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, emptyCommit(), "", workTreeFile.Name(), workTreeBuf.String())...)
 		}
-		return us.leaks, nil
+		return report, nil
 	} else if err != nil {
-		return us.leaks, err
+		return report, err
 	}
 
 	c, err := us.repo.CommitObject(r.Hash())
 	if err != nil {
-		return us.leaks, err
+		return report, err
 	}
+
 	// Staged change so the Commit details do not yet exist. Insert empty defaults.
 	c.Hash = plumbing.Hash{}
 	c.Message = "***STAGED CHANGES***"
@@ -69,16 +71,16 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 
 	prevTree, err := c.Tree()
 	if err != nil {
-		return us.leaks, err
+		return report, err
 	}
 	wt, err := us.repo.Worktree()
 	if err != nil {
-		return us.leaks, err
+		return report, err
 	}
 
 	status, err := wt.Status()
 	if err != nil {
-		return us.leaks, err
+		return report, err
 	}
 	for fn, state := range status {
 		var (
@@ -99,7 +101,7 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 					continue
 				}
 				if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-					return us.leaks, err
+					return report, err
 				}
 				currFileContents = workTreeBuf.String()
 				filename = workTreeFile.Name()
@@ -113,7 +115,7 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 			} else {
 				prevFileContents, err = prevFile.Contents()
 				if err != nil {
-					return us.leaks, err
+					return report, err
 				}
 				if filename == "" {
 					filename = prevFile.Name
@@ -128,9 +130,9 @@ func (us *UnstagedScanner) Scan() ([]Leak, error) {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
-			us.leaks = append(us.leaks, checkRules(us.BaseScanner, c, "", filename, diffContents)...)
+			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, c, "", filename, diffContents)...)
 		}
 	}
 
-	return us.leaks, err
+	return report, err
 }

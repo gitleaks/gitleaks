@@ -12,7 +12,6 @@ type CommitScanner struct {
 	repo     *git.Repository
 	repoName string
 	commit   *object.Commit
-	leaks    []Leak
 }
 
 func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
@@ -26,7 +25,8 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	return cs
 }
 
-func (cs *CommitScanner) Scan() ([]Leak, error) {
+func (cs *CommitScanner) Scan() (Report, error) {
+	var report Report
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
 		return facScanner.Scan()
@@ -41,9 +41,6 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 				return
 			}
 		}()
-		if timeoutReached(cs.ctx) {
-			return nil
-		}
 		if parent == nil {
 			return nil
 		}
@@ -56,9 +53,6 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 		patchContent := patch.String()
 
 		for _, f := range patch.FilePatches() {
-			if timeoutReached(cs.ctx) {
-				return nil
-			}
 			if f.IsBinary() {
 				continue
 			}
@@ -70,12 +64,13 @@ func (cs *CommitScanner) Scan() ([]Leak, error) {
 					lineLookup := make(map[string]bool)
 					for _, leak := range leaks {
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-						cs.leaks = append(cs.leaks, leak)
+						report.Leaks = append(report.Leaks, leak)
 					}
 				}
 			}
 		}
 		return nil
 	})
-	return cs.leaks, err
+	report.Commits = 1
+	return report, err
 }

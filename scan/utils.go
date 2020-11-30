@@ -2,7 +2,6 @@ package scan
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
@@ -29,13 +28,6 @@ const (
 	diffLineSignature = " @@"
 	defaultLineNumber = -1
 )
-
-func timeoutReached(ctx context.Context) bool {
-	if ctx.Err() == context.DeadlineExceeded {
-		return true
-	}
-	return false
-}
 
 func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error) {
 	if commitSha == "latest" {
@@ -271,30 +263,12 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 		}
 	}
 	if opts.Branch != "" {
-		refs, err := repo.Storer.IterReferences()
+		ref, err := repo.Storer.Reference(plumbing.NewBranchReferenceName(opts.Branch))
 		if err != nil {
 			return nil, err
 		}
-		err = refs.ForEach(func(ref *plumbing.Reference) error {
-			if ref.Name().IsTag() {
-				return nil
-			}
-			// check heads first
-			if ref.Name().String() == "refs/heads/"+opts.Branch {
-				logOpts = git.LogOptions{
-					From: ref.Hash(),
-				}
-				return nil
-			} else if ref.Name().String() == "refs/remotes/origin/"+opts.Branch {
-				logOpts = git.LogOptions{
-					From: ref.Hash(),
-				}
-				return nil
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
+		logOpts = git.LogOptions{
+			From: ref.Hash(),
 		}
 
 		if logOpts.From.IsZero() {
@@ -307,6 +281,7 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 	}
 	return &git.LogOptions{All: true}, nil
 }
+
 func skipCheck(cfg config.Config, filename string, path string) bool {
 	// We want to check if there is a allowlist for this file
 	if len(cfg.Allowlist.Files) != 0 {

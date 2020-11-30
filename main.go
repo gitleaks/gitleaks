@@ -49,7 +49,7 @@ func main() {
 
 	// run and time the scan
 	start := time.Now()
-	leaks, err := scanner.Scan()
+	report, err := scanner.Scan()
 	log.Info("scan time: ", durafmt.Parse(time.Now().Sub(start)))
 	if err != nil {
 		log.Error(err)
@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// report scan
-	if err := scan.Report(leaks, opts); err != nil {
+	if err := scan.WriteReport(report, opts); err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
