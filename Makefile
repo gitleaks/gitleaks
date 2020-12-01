@@ -17,9 +17,6 @@ test:
 	golint ./...
 	go test ./... --race $(PKG) -v
 
-test-integration:
-	go test github.com/zricethezav/gitleaks/hosts -v -integration
-
 build:
 	go fmt ./...
 	golint ./...
