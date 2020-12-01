@@ -14,22 +14,26 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
+// UnstagedScanner is an unstaged scanner. This is the scanner used when you don't provide program arguments
+// which will then scan your PWD. This scans unstaged changes in your repo.
 type UnstagedScanner struct {
 	BaseScanner
 	repo     *git.Repository
 	repoName string
 }
 
+// NewUnstagedScanner returns an unstaged scanner
 func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {
 	us := &UnstagedScanner{
 		BaseScanner: base,
 		repo:        repo,
 		repoName:    getRepoName(base.opts),
 	}
-	us.scannerType = TypeUnstagedScanner
+	us.scannerType = typeUnstagedScanner
 	return us
 }
 
+// Scan kicks off an unstaged scan. This will attempt to determine unstaged changes which are then scanned.
 func (us *UnstagedScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	r, err := us.repo.Head()

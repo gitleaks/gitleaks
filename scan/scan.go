@@ -10,10 +10,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Scanner abstracts unique scanner internals while exposing the Scan function which
+// returns a report.
 type Scanner interface {
 	Scan() (report.Report, error)
 }
 
+// BaseScanner is a container for common data each scanner needs.
 type BaseScanner struct {
 	opts        options.Options
 	cfg         config.Config
@@ -21,17 +24,20 @@ type BaseScanner struct {
 	scannerType ScannerType
 }
 
+// ScannerType is the scanner type which is determined based on program arguments
 type ScannerType int
 
 const (
-	TypeRepoScanner ScannerType = iota + 1
-	TypeDirScanner
-	TypeCommitScanner
-	TypeCommitsScanner
-	TypeUnstagedScanner
-	TypeFilesAtCommitScanner
+	typeRepoScanner ScannerType = iota + 1
+	typeDirScanner
+	typeCommitScanner
+	typeCommitsScanner
+	typeUnstagedScanner
+	typeFilesAtCommitScanner
 )
 
+// NewScanner accepts options and a config which will be used to determine and create a
+// new scanner which is then returned.
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	// TODO move this block to config parsing?
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
@@ -51,7 +57,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	// We want to return a dir scanner immediately since if the scan type is a directory scan
 	// we don't want to clone/open a repo until inside DirScanner.Scan
 	st := scanType(opts)
-	if st == TypeDirScanner {
+	if st == typeDirScanner {
 		return NewDirScanner(base), nil
 	}
 
@@ -72,25 +78,25 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	log.Debugf("starting scan on %s\n", getRepoName(opts))
 
 	switch st {
-	case TypeCommitScanner:
+	case typeCommitScanner:
 		c, err := obtainCommit(repo, opts.Commit)
 		if err != nil {
 			return nil, err
 		}
 		return NewCommitScanner(base, repo, c), nil
-	case TypeCommitsScanner:
+	case typeCommitsScanner:
 		commits, err := optsToCommits(opts)
 		if err != nil {
 			return nil, err
 		}
 		return NewCommitsScanner(base, repo, commits), nil
-	case TypeFilesAtCommitScanner:
+	case typeFilesAtCommitScanner:
 		c, err := obtainCommit(repo, opts.FilesAtCommit)
 		if err != nil {
 			return nil, err
 		}
 		return NewFilesAtCommitScanner(base, repo, c), nil
-	case TypeUnstagedScanner:
+	case typeUnstagedScanner:
 		return NewUnstagedScanner(base, repo), nil
 	default:
 		return NewRepoScanner(base, repo), nil
@@ -99,19 +105,19 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 
 func scanType(opts options.Options) ScannerType {
 	if opts.OwnerPath != "" {
-		return TypeDirScanner
+		return typeDirScanner
 	}
 	if opts.Commit != "" {
-		return TypeCommitScanner
+		return typeCommitScanner
 	}
 	if opts.Commits != "" || opts.CommitsFile != "" {
-		return TypeCommitsScanner
+		return typeCommitsScanner
 	}
 	if opts.FilesAtCommit != "" {
-		return TypeFilesAtCommitScanner
+		return typeFilesAtCommitScanner
 	}
 	if opts.CheckUncommitted() {
-		return TypeUnstagedScanner
+		return typeUnstagedScanner
 	}
-	return TypeRepoScanner
+	return typeRepoScanner
 }

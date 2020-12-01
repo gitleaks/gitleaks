@@ -5,6 +5,7 @@ import (
 	"github.com/zricethezav/gitleaks/v7/report"
 )
 
+// CommitsScanner is a commit scanner
 type CommitsScanner struct {
 	BaseScanner
 
@@ -13,6 +14,7 @@ type CommitsScanner struct {
 	commits  []string
 }
 
+// NewCommitsScanner creates and returns a commits scanner, notice the 's' in commits
 func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string) *CommitsScanner {
 	return &CommitsScanner{
 		BaseScanner: base,
@@ -22,6 +24,7 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 	}
 }
 
+// Scan kicks off a CommitsScanner Scan
 func (css *CommitsScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	for _, c := range css.commits {

@@ -10,6 +10,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
+// CommitScanner is a commit scanner
 type CommitScanner struct {
 	BaseScanner
 	repo     *git.Repository
@@ -17,6 +18,7 @@ type CommitScanner struct {
 	commit   *object.Commit
 }
 
+// NewCommitScanner creates and returns a commit scanner
 func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
 	cs := &CommitScanner{
 		BaseScanner: base,
@@ -24,10 +26,11 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 		commit:      commit,
 		repoName:    getRepoName(base.opts),
 	}
-	cs.scannerType = TypeCommitScanner
+	cs.scannerType = typeCommitScanner
 	return cs
 }
 
+// Scan kicks off a CommitScanner Scan
 func (cs *CommitScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	if len(cs.commit.ParentHashes) == 0 {

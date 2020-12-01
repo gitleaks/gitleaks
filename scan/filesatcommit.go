@@ -6,6 +6,10 @@ import (
 	"github.com/zricethezav/gitleaks/v7/report"
 )
 
+// FilesAtCommitScanner is a files at commit scanner. This differs from CommitScanner
+// as CommitScanner generates patches that are scanned. FilesAtCommitScanner instead looks at
+// files available at a commit's worktree and scans the entire content of said files.
+// Apologies for the awful struct name...
 type FilesAtCommitScanner struct {
 	BaseScanner
 
@@ -14,6 +18,7 @@ type FilesAtCommitScanner struct {
 	repoName string
 }
 
+// NewFilesAtCommitScanner creates and returns a files at commit scanner
 func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *FilesAtCommitScanner {
 	fs := &FilesAtCommitScanner{
 		BaseScanner: base,
@@ -21,10 +26,11 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 		commit:      commit,
 		repoName:    getRepoName(base.opts),
 	}
-	fs.scannerType = TypeFilesAtCommitScanner
+	fs.scannerType = typeFilesAtCommitScanner
 	return fs
 }
 
+// Scan kicks off a FilesAtCommitScanner Scan
 func (fs *FilesAtCommitScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	fIter, err := fs.commit.Files()

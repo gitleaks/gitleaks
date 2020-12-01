@@ -10,11 +10,13 @@ import (
 	"github.com/zricethezav/gitleaks/v7/options"
 )
 
+// Report is a container for leaks and number of commits scanned
 type Report struct {
 	Leaks   []Leak
 	Commits int
 }
 
+// WriteReport accepts a report and options and will write a report if --report has been set
 func WriteReport(report Report, opts options.Options) error {
 	log.Info("commits scanned: ", report.Commits)
 	if len(report.Leaks) != 0 {

@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// RepoScanner is a repo scanner
 type RepoScanner struct {
 	BaseScanner
 	repo     *git.Repository
@@ -23,6 +24,8 @@ type RepoScanner struct {
 	leaks     []report.Leak
 }
 
+// NewRepoScanner returns a new repo scanner (go figure). This function also
+// sets up the leak listener for multi-threaded awesomeness.
 func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
@@ -33,13 +36,14 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 		repoName:    getRepoName(base.opts),
 	}
 
-	rs.scannerType = TypeRepoScanner
+	rs.scannerType = typeRepoScanner
 
 	go rs.receiveLeaks()
 
 	return rs
 }
 
+// Scan kicks of a repo scan
 func (rs *RepoScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	logOpts, err := logOptions(rs.repo, rs.opts)

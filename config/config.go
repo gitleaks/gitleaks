@@ -259,6 +259,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	return cfg, nil
 }
 
+// LoadRepoConfig accepts a repo and config path related to the target repo's root.
 func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
 	gitRepoConfig, err := repo.Config()
 	if err != nil {

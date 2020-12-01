@@ -124,7 +124,7 @@ func howManyThreads(threads int) int {
 }
 
 func shouldLog(scanner BaseScanner) bool {
-	if scanner.opts.Verbose && scanner.scannerType != TypeRepoScanner && scanner.scannerType != TypeCommitScanner {
+	if scanner.opts.Verbose && scanner.scannerType != typeRepoScanner && scanner.scannerType != typeCommitScanner {
 		return true
 	}
 	return false

@@ -10,18 +10,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// DirScanner is a directory scanner
 type DirScanner struct {
 	BaseScanner
 }
 
+// NewDirScanner creates and returns a directory scanner
 func NewDirScanner(base BaseScanner) *DirScanner {
 	ds := &DirScanner{
 		BaseScanner: base,
 	}
-	ds.scannerType = TypeDirScanner
+	ds.scannerType = typeDirScanner
 	return ds
 }
 
+// Scan kicks off a DirScanner scan. This uses the directory from --owner-path to discovery repos
+// that have --owner-path as their parent.
 func (ds *DirScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
 	log.Debugf("scanning repos in %s\n", ds.opts.OwnerPath)

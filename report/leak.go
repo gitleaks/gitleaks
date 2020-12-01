@@ -22,6 +22,8 @@ type Leak struct {
 	Tags       string    `json:"tags"`
 }
 
+// RedactLeak will replace the offending string with "REDACTED" in both
+// the offender and line field of the leak which.
 func RedactLeak(leak Leak) Leak {
 	leak.Line = strings.Replace(leak.Line, leak.Offender, "REDACTED", -1)
 	leak.Offender = "REDACTED"
