@@ -1,7 +1,10 @@
 package report
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/zricethezav/gitleaks/v7/config"
 )
 
 //Sarif ...
@@ -86,7 +89,6 @@ type ResultProperties struct {
 	Author        string    `json:"author"`
 	Email         string    `json:"email"`
 	CommitMessage string    `json:"commitMessage"`
-	Operation     string    `json:"gitOperation"`
 	Repo          string    `json:"repo"`
 }
 
@@ -96,55 +98,54 @@ type Runs struct {
 	Results []Results `json:"results"`
 }
 
-//func configToRules() []Rules {
-//	var rules []Rules
-//	for _, rule := range manager.Config.Rules {
-//		rules = append(rules, Rules{
-//			ID:   rule.Description,
-//			Name: rule.Description,
-//		})
-//	}
-//	return rules
-//}
-//
-//func LeaksToResults(leak Leak) []Results {
-//	var results []Results
-//	for _, leak := range manager.leaks {
-//		results = append(results, Results{
-//			Message: Message{
-//				Text: fmt.Sprintf("%s secret detected", leak.Rule),
-//			},
-//			Properties: ResultProperties{
-//				Commit:        leak.Commit,
-//				Offender:      leak.Offender,
-//				Date:          leak.Date,
-//				Author:        leak.Author,
-//				Email:         leak.Email,
-//				CommitMessage: leak.Message,
-//				Operation:     leak.Operation,
-//				Repo:          leak.Repo,
-//			},
-//			Locations: leakToLocation(leak),
-//		})
-//	}
-//
-//	return results
-//}
-//
-//func leakToLocation(leak Leak) []Locations {
-//	return []Locations{
-//		{
-//			PhysicalLocation: PhysicalLocation{
-//				ArtifactLocation: ArtifactLocation{
-//					URI: leak.File,
-//				},
-//				Region: Region{
-//					StartLine: leak.LineNumber,
-//					Snippet: Snippet{
-//						Text: leak.Line,
-//					},
-//				},
-//			},
-//		},
-//	}
-//}
+func configToRules(cfg config.Config) []Rules {
+	var rules []Rules
+	for _, rule := range cfg.Rules {
+		rules = append(rules, Rules{
+			ID:   rule.Description,
+			Name: rule.Description,
+		})
+	}
+	return rules
+}
+
+func leaksToResults(leaks []Leak) []Results {
+	var results []Results
+	for _, leak := range leaks {
+		results = append(results, Results{
+			Message: Message{
+				Text: fmt.Sprintf("%s secret detected", leak.Rule),
+			},
+			Properties: ResultProperties{
+				Commit:        leak.Commit,
+				Offender:      leak.Offender,
+				Date:          leak.Date,
+				Author:        leak.Author,
+				Email:         leak.Email,
+				CommitMessage: leak.Message,
+				Repo:          leak.Repo,
+			},
+			Locations: leakToLocation(leak),
+		})
+	}
+
+	return results
+}
+
+func leakToLocation(leak Leak) []Locations {
+	return []Locations{
+		{
+			PhysicalLocation: PhysicalLocation{
+				ArtifactLocation: ArtifactLocation{
+					URI: leak.File,
+				},
+				Region: Region{
+					StartLine: leak.LineNumber,
+					Snippet: Snippet{
+						Text: leak.Line,
+					},
+				},
+			},
+		},
+	}
+}

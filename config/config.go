@@ -6,11 +6,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/go-git/go-git/v5"
-
 	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -6,8 +6,12 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/version"
+
 	"github.com/zricethezav/gitleaks/v7/options"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Report is a container for leaks and number of commits scanned
@@ -17,7 +21,7 @@ type Report struct {
 }
 
 // WriteReport accepts a report and options and will write a report if --report has been set
-func WriteReport(report Report, opts options.Options) error {
+func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	log.Info("commits scanned: ", report.Commits)
 	if len(report.Leaks) != 0 {
 		log.Warn("leaks found: ", len(report.Leaks))
@@ -61,9 +65,29 @@ func WriteReport(report Report, opts options.Options) error {
 			}
 			w.Flush()
 		case "sarif":
-
+			s := Sarif{
+				Schema:  "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+				Version: "2.1.0",
+				Runs: []Runs{
+					{
+						Tool: Tool{
+							Driver: Driver{
+								Name:            "Gitleaks",
+								SemanticVersion: version.Version,
+								Rules:           configToRules(cfg),
+							},
+						},
+						Results: leaksToResults(report.Leaks),
+					},
+				},
+			}
+			encoder := json.NewEncoder(file)
+			encoder.SetIndent("", " ")
+			err = encoder.Encode(s)
+			if err != nil {
+				return err
+			}
 		}
-
 	}
 
 	return nil

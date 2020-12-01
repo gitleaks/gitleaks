@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// report scan
-	if err := report.WriteReport(scannerReport, opts); err != nil {
+	if err := report.WriteReport(scannerReport, opts, cfg); err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}

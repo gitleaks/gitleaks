@@ -437,7 +437,7 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts)
+		err = report.WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}
@@ -564,7 +564,7 @@ func TestScanUncommited(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts)
+		err = report.WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}
