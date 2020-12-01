@@ -316,23 +316,12 @@ func skipRule(rule config.Rule, filename, path, commitSha string) bool {
 
 // regexMatched matched an interface to a regular expression. The interface f can
 // be a string type or go-git *object.File type.
-func regexMatched(f interface{}, re *regexp.Regexp) bool {
+func regexMatched(f string, re *regexp.Regexp) bool {
 	if re == nil {
 		return false
 	}
-	switch f.(type) {
-	case nil:
-		return false
-	case string:
-		if re.FindString(f.(string)) != "" {
-			return true
-		}
-		return false
-	case *object.File:
-		if re.FindString(f.(*object.File).Name) != "" {
-			return true
-		}
-		return false
+	if re.FindString(f) != "" {
+		return true
 	}
 	return false
 }

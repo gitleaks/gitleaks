@@ -221,13 +221,3 @@ func (opts Options) CheckUncommitted() bool {
 	}
 	return true
 }
-
-// GetAccessToken accepts options and returns a string which is the access token to a git host.
-// Setting this option or environment var is necessary if performing an scan with any of the git hosting providers
-// in the host pkg. The access token set by cli options takes precedence over env vars.
-func GetAccessToken(opts Options) string {
-	if opts.AccessToken != "" {
-		return opts.AccessToken
-	}
-	return os.Getenv("GITLEAKS_ACCESS_TOKEN")
-}

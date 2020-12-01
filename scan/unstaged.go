@@ -124,7 +124,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 			dmp := diffmatchpatch.New()
 			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
-			prettyDiff := DiffPrettyText(diffs)
+			prettyDiff := diffPrettyText(diffs)
 
 			var diffContents string
 			for _, d := range diffs {
@@ -155,7 +155,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 // DiffPrettyText converts a []Diff into a colored text report.
 // TODO open PR for this
-func DiffPrettyText(diffs []diffmatchpatch.Diff) string {
+func diffPrettyText(diffs []diffmatchpatch.Diff) string {
 	var buff bytes.Buffer
 	for _, diff := range diffs {
 		text := diff.Text
