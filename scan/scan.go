@@ -2,12 +2,13 @@ package scan
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v6/config"
-	"github.com/zricethezav/gitleaks/v6/options"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 )
 
 type Scanner interface {
@@ -50,8 +51,8 @@ type Leak struct {
 }
 
 type Report struct {
-	Leaks    []Leak
-	Commits  int
+	Leaks   []Leak
+	Commits int
 }
 
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
@@ -85,7 +86,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 
 	// load up alternative config if possible, if not use manager's config
 	if opts.RepoConfig != "" {
-		base.cfg, err = loadRepoConfig(repo, opts.RepoConfig)
+		base.cfg, err = config.LoadRepoConfig(repo, opts.RepoConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -138,4 +139,23 @@ func WriteReport(report Report, opts options.Options) error {
 	}
 
 	return nil
+}
+
+func scanType(opts options.Options) ScannerType {
+	if opts.OwnerPath != "" {
+		return TypeDirScanner
+	}
+	if opts.Commit != "" {
+		return TypeCommitScanner
+	}
+	if opts.Commits != "" || opts.CommitsFile != "" {
+		return TypeCommitsScanner
+	}
+	if opts.FilesAtCommit != "" {
+		return TypeFilesAtCommitScanner
+	}
+	if opts.CheckUncommitted() {
+		return TypeUnstagedScanner
+	}
+	return TypeRepoScanner
 }

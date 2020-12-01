@@ -2,14 +2,15 @@ package options
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/transport"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"strings"
 
-	"github.com/zricethezav/gitleaks/v6/version"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+
+	"github.com/zricethezav/gitleaks/v7/version"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"

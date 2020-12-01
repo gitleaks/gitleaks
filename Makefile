@@ -2,8 +2,8 @@
 
 VERSION := `git fetch --tags && git tag | sort -V | tail -1`
 PKG=github.com/zricethezav/gitleaks
-LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v6/version.Version=$(VERSION)"
-_LDFLAGS="github.com/zricethezav/gitleaks/v6/version.Version=$(VERSION)"
+LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v7/version.Version=$(VERSION)"
+_LDFLAGS="github.com/zricethezav/gitleaks/v7/version.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:

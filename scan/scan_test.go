@@ -10,8 +10,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v6/config"
-	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
@@ -409,10 +409,10 @@ func TestScan(t *testing.T) {
 		scanner, err := NewScanner(test.opts, cfg)
 		if test.wantErr != nil {
 			if err == nil {
-				t.Errorf("did not receive wantErr: %v", test.wantErr)
+				t.Fatalf("did not receive wantErr: %v", test.wantErr)
 			}
 			if err.Error() != test.wantErr.Error() {
-				t.Errorf("wantErr does not equal err received: %v", err.Error())
+				t.Fatalf("wantErr does not equal err received: %v", err.Error())
 			}
 			continue
 		}
@@ -424,10 +424,10 @@ func TestScan(t *testing.T) {
 
 		if test.wantScanErr != nil {
 			if err == nil {
-				t.Errorf("did not receive wantErr: %v", test.wantScanErr)
+				t.Fatalf("did not receive wantErr: %v", test.wantScanErr)
 			}
 			if err.Error() != test.wantScanErr.Error() {
-				t.Errorf("wantErr does not equal err received: %v", err.Error())
+				t.Fatalf("wantErr does not equal err received: %v", err.Error())
 			}
 			continue
 		}
@@ -457,113 +457,135 @@ func TestScan(t *testing.T) {
 }
 
 //
-//func TestScanUncommited(t *testing.T) {
-//	moveDotGit("dotGit", ".git")
-//	defer moveDotGit(".git", "dotGit")
-//	tests := []struct {
-//		description  string
-//		opts         options.Options
-//		wantPath     string
-//		wantErr      error
-//		emptyRepo    bool
-//		wantEmpty    bool
-//		fileToChange string
-//		addition     string
-//	}{
-//		{
-//			description: "test scan local one leak",
-//			opts: options.Options{
-//				RepoPath:     "../test_data/test_repos/test_repo_1",
-//				Report:       "../test_data/test_local_repo_one_aws_leak_uncommitted.json.got",
-//				Uncommited:   true,
-//				ReportFormat: "json",
-//			},
-//			wantPath:     "../test_data/test_local_repo_one_aws_leak_uncommitted.json",
-//			fileToChange: "server.test.py",
-//			addition:     " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
-//		},
-//		{
-//			description: "test scan local no leak",
-//			opts: options.Options{
-//				RepoPath:     "../test_data/test_repos/test_repo_1",
-//				Uncommited:   true,
-//				ReportFormat: "json",
-//			},
-//			wantEmpty:    true,
-//			fileToChange: "server.test.py",
-//			addition:     "nothing bad",
-//		},
-//		{
-//			description: "test scan repo with no commits",
-//			opts: options.Options{
-//				RepoPath:     "../test_data/test_repos/test_repo_7",
-//				Report:       "../test_data/test_local_repo_seven_aws_leak_uncommitted.json.got",
-//				Uncommited:   true,
-//				ReportFormat: "json",
-//			},
-//			wantPath: "../test_data/test_local_repo_seven_aws_leak_uncommitted.json",
-//		},
-//	}
-//	for _, test := range tests {
-//		var (
-//			old []byte
-//			err error
-//		)
-//		fmt.Println(test.description)
-//		if test.fileToChange != "" {
-//			old, err = ioutil.ReadFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange))
-//			if err != nil {
-//				t.Error(err)
-//			}
-//			altered, err := os.OpenFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange),
-//				os.O_WRONLY|os.O_APPEND, 0644)
-//			if err != nil {
-//				t.Error(err)
-//			}
-//
-//			_, err = altered.WriteString(test.addition)
-//			if err != nil {
-//				t.Error(err)
-//			}
-//
-//		}
-//
-//		cfg, err := config.NewConfig(test.opts)
-//		if err != nil {
-//			t.Error(err)
-//		}
-//		m, err := manager.NewManager(test.opts, cfg)
-//		if err != nil {
-//			t.Error(err)
-//		}
-//
-//		if err := Run(m); err != nil {
-//			t.Error(err)
-//		}
-//
-//		if err := m.Report(); err != nil {
-//			t.Error(err)
-//		}
-//
-//		if test.fileToChange != "" {
-//			err = ioutil.WriteFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange), old, 0)
-//			if err != nil {
-//				t.Error(err)
-//			}
-//		}
-//
-//		if test.wantEmpty {
-//			continue
-//		}
-//
-//		if test.wantPath != "" {
-//			err := fileCheck(test.wantPath, test.opts.Report)
-//			if err != nil {
-//				t.Error(err)
-//			}
-//		}
-//	}
-//}
+func TestScanUncommited(t *testing.T) {
+	moveDotGit("dotGit", ".git")
+	defer moveDotGit(".git", "dotGit")
+	tests := []struct {
+		description  string
+		opts         options.Options
+		wantPath     string
+		wantErr      error
+		wantScanErr  error
+		emptyRepo    bool
+		wantEmpty    bool
+		fileToChange string
+		addition     string
+	}{
+		{
+			description: "test scan local one leak",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak_uncommitted.json.got",
+				Uncommited:   true,
+				ReportFormat: "json",
+			},
+			wantPath:     "../test_data/test_local_repo_one_aws_leak_uncommitted.json",
+			fileToChange: "server.test.py",
+			addition:     " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
+		},
+		{
+			description: "test scan local no leak",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_1",
+				Uncommited:   true,
+				ReportFormat: "json",
+			},
+			wantEmpty:    true,
+			fileToChange: "server.test.py",
+			addition:     "nothing bad",
+		},
+		{
+			description: "test scan repo with no commits",
+			opts: options.Options{
+				RepoPath:     "../test_data/test_repos/test_repo_7",
+				Report:       "../test_data/test_local_repo_seven_aws_leak_uncommitted.json.got",
+				Uncommited:   true,
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_seven_aws_leak_uncommitted.json",
+		},
+	}
+	for _, test := range tests {
+		var (
+			old []byte
+			err error
+		)
+		fmt.Println(test.description)
+		if test.fileToChange != "" {
+			old, err = ioutil.ReadFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange))
+			if err != nil {
+				t.Error(err)
+			}
+			altered, err := os.OpenFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange),
+				os.O_WRONLY|os.O_APPEND, 0644)
+			if err != nil {
+				t.Error(err)
+			}
+
+			_, err = altered.WriteString(test.addition)
+			if err != nil {
+				t.Error(err)
+			}
+
+		}
+
+		cfg, err := config.NewConfig(test.opts)
+		if err != nil {
+			t.Error(err)
+		}
+		scanner, err := NewScanner(test.opts, cfg)
+		if test.wantErr != nil {
+			if err == nil {
+				t.Fatalf("did not receive wantErr: %v", test.wantErr)
+			}
+			if err.Error() != test.wantErr.Error() {
+				t.Fatalf("wantErr does not equal err received: %v", err.Error())
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		report, err := scanner.Scan()
+
+		if test.wantScanErr != nil {
+			if err == nil {
+				t.Fatalf("did not receive wantErr: %v", test.wantScanErr)
+			}
+			if err.Error() != test.wantScanErr.Error() {
+				t.Fatalf("wantErr does not equal err received: %v", err.Error())
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = WriteReport(report, test.opts)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if test.fileToChange != "" {
+			err = ioutil.WriteFile(fmt.Sprintf("%s/%s", test.opts.RepoPath, test.fileToChange), old, 0)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+
+		if test.wantEmpty {
+			continue
+		}
+
+		if test.wantPath != "" {
+			err := fileCheck(test.wantPath, test.opts.Report)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+	}
+}
 
 func fileCheck(wantPath, gotPath string) error {
 	var (

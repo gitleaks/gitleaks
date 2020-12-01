@@ -13,10 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v6/config"
-	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 
-	"github.com/BurntSushi/toml"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -103,64 +102,6 @@ func emptyCommit() *object.Commit {
 			When:  time.Unix(0, 0).UTC(),
 		},
 	}
-}
-
-func loadRepoConfig(repo *git.Repository, repoConfig string) (config.Config, error) {
-	gitRepoConfig, err := repo.Config()
-	if err != nil {
-		return config.Config{}, err
-	}
-	if !gitRepoConfig.Core.IsBare {
-		wt, err := repo.Worktree()
-		if err != nil {
-			return config.Config{}, err
-		}
-		_, err = wt.Filesystem.Stat(repoConfig)
-		if err != nil {
-			return config.Config{}, err
-		}
-		r, err := wt.Filesystem.Open(repoConfig)
-		if err != nil {
-			return config.Config{}, err
-		}
-		var tomlLoader config.TomlLoader
-		_, err = toml.DecodeReader(r, &tomlLoader)
-		if err != nil {
-			return config.Config{}, err
-		}
-
-		return tomlLoader.Parse()
-	}
-
-	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
-	ref, err := repo.Head()
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	c, err := repo.CommitObject(ref.Hash())
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	f, err := c.File(repoConfig)
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	var tomlLoader config.TomlLoader
-	r, err := f.Reader()
-	if err != nil {
-		return config.Config{}, err
-	}
-	st, err := f.Contents()
-	fmt.Println(st)
-	_, err = toml.DecodeReader(r, &tomlLoader)
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	return tomlLoader.Parse()
 }
 
 // howManyThreads will return a number 1-GOMAXPROCS which is the number
@@ -532,23 +473,4 @@ func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int
 		currLine++
 	}
 	return defaultLineNumber
-}
-
-func scanType(opts options.Options) ScannerType {
-	if opts.OwnerPath != "" {
-		return TypeDirScanner
-	}
-	if opts.Commit != "" {
-		return TypeCommitScanner
-	}
-	if opts.Commits != "" || opts.CommitsFile != "" {
-		return TypeCommitsScanner
-	}
-	if opts.FilesAtCommit != "" {
-		return TypeFilesAtCommitScanner
-	}
-	if opts.CheckUncommitted() {
-		return TypeUnstagedScanner
-	}
-	return TypeRepoScanner
 }

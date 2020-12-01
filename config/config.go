@@ -6,7 +6,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/go-git/go-git/v5"
+
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/sirupsen/logrus"
@@ -255,4 +257,60 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	cfg.Allowlist.Description = tomlLoader.AllowList.Description
 
 	return cfg, nil
+}
+
+func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
+	gitRepoConfig, err := repo.Config()
+	if err != nil {
+		return Config{}, err
+	}
+	if !gitRepoConfig.Core.IsBare {
+		wt, err := repo.Worktree()
+		if err != nil {
+			return Config{}, err
+		}
+		_, err = wt.Filesystem.Stat(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		r, err := wt.Filesystem.Open(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		var tomlLoader TomlLoader
+		_, err = toml.DecodeReader(r, &tomlLoader)
+		if err != nil {
+			return Config{}, err
+		}
+
+		return tomlLoader.Parse()
+	}
+
+	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
+	ref, err := repo.Head()
+	if err != nil {
+		return Config{}, err
+	}
+
+	c, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return Config{}, err
+	}
+
+	f, err := c.File(repoConfig)
+	if err != nil {
+		return Config{}, err
+	}
+
+	var tomlLoader TomlLoader
+	r, err := f.Reader()
+	if err != nil {
+		return Config{}, err
+	}
+	_, err = toml.DecodeReader(r, &tomlLoader)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return tomlLoader.Parse()
 }

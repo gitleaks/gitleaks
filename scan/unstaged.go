@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -13,15 +14,15 @@ import (
 
 type UnstagedScanner struct {
 	BaseScanner
-	repo *git.Repository
+	repo     *git.Repository
 	repoName string
 }
 
 func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {
 	us := &UnstagedScanner{
 		BaseScanner: base,
-		repo: repo,
-		repoName: getRepoName(base.opts),
+		repo:        repo,
+		repoName:    getRepoName(base.opts),
 	}
 	us.scannerType = TypeUnstagedScanner
 	return us
@@ -49,7 +50,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return report, err
 			}
-			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, emptyCommit(), "", workTreeFile.Name(), workTreeBuf.String())...)
+			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())...)
 		}
 		return report, nil
 	} else if err != nil {
@@ -122,16 +123,53 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			}
 
 			dmp := diffmatchpatch.New()
-			diffs := dmp.DiffCleanupSemantic(dmp.DiffMain(prevFileContents, currFileContents, false))
+			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
+			prettyDiff := DiffPrettyText(diffs)
+
 			var diffContents string
 			for _, d := range diffs {
 				if d.Type == diffmatchpatch.DiffInsert {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
-			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, c, "", filename, diffContents)...)
+			leaks := checkRules(us.BaseScanner, c, us.repoName, filename, diffContents)
+
+			lineLookup := make(map[string]bool)
+			for _, leak := range leaks {
+				for lineNumber, line := range strings.Split(prettyDiff, "\n") {
+					if strings.HasPrefix(line, diffAddPrefix) && strings.Contains(line, leak.Line) {
+						if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
+							lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
+							leak.LineNumber = lineNumber + 1
+							report.Leaks = append(report.Leaks, leak)
+							break
+						}
+					}
+				}
+			}
 		}
 	}
 
 	return report, err
+}
+
+// DiffPrettyText converts a []Diff into a colored text report.
+// TODO open PR for this
+func DiffPrettyText(diffs []diffmatchpatch.Diff) string {
+	var buff bytes.Buffer
+	for _, diff := range diffs {
+		text := diff.Text
+
+		switch diff.Type {
+		case diffmatchpatch.DiffInsert:
+			_, _ = buff.WriteString("+")
+			_, _ = buff.WriteString(text)
+		case diffmatchpatch.DiffDelete:
+			_, _ = buff.WriteString("-")
+			_, _ = buff.WriteString(text)
+		case diffmatchpatch.DiffEqual:
+			_, _ = buff.WriteString(text)
+		}
+	}
+	return buff.String()
 }
