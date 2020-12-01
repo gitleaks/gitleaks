@@ -1,10 +1,13 @@
 package scan
 
 import (
-	"github.com/go-git/go-git/v5"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/zricethezav/gitleaks/v7/report"
+
+	"github.com/go-git/go-git/v5"
+	log "github.com/sirupsen/logrus"
 )
 
 type DirScanner struct {
@@ -19,11 +22,13 @@ func NewDirScanner(base BaseScanner) *DirScanner {
 	return ds
 }
 
-func (ds *DirScanner) Scan() (Report, error) {
-	var report Report
+func (ds *DirScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
+	log.Debugf("scanning repos in %s\n", ds.opts.OwnerPath)
+
 	files, err := ioutil.ReadDir(ds.opts.OwnerPath)
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 	for _, f := range files {
 		if !f.IsDir() {
@@ -36,7 +41,7 @@ func (ds *DirScanner) Scan() (Report, error) {
 				log.Debugf("%s is not a git repository", f.Name())
 				continue
 			}
-			return report, err
+			return scannerReport, err
 		}
 		skip := false
 		for _, allowListedRepo := range ds.cfg.Allowlist.Repos {
@@ -50,12 +55,12 @@ func (ds *DirScanner) Scan() (Report, error) {
 
 		rs := NewRepoScanner(ds.BaseScanner, repo)
 		rs.repoName = f.Name()
-		repoReport, err:= rs.Scan()
+		repoReport, err := rs.Scan()
 		if err != nil {
-			return report, err
+			return scannerReport, err
 		}
-		report.Leaks = append(report.Leaks, repoReport.Leaks...)
-		report.Commits += repoReport.Commits
+		scannerReport.Leaks = append(scannerReport.Leaks, repoReport.Leaks...)
+		scannerReport.Commits += repoReport.Commits
 	}
-	return report, nil
+	return scannerReport, nil
 }

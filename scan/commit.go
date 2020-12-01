@@ -2,6 +2,9 @@ package scan
 
 import (
 	"fmt"
+
+	"github.com/zricethezav/gitleaks/v7/report"
+
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -25,8 +28,8 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	return cs
 }
 
-func (cs *CommitScanner) Scan() (Report, error) {
-	var report Report
+func (cs *CommitScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
 		return facScanner.Scan()
@@ -64,13 +67,16 @@ func (cs *CommitScanner) Scan() (Report, error) {
 					lineLookup := make(map[string]bool)
 					for _, leak := range leaks {
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-						report.Leaks = append(report.Leaks, leak)
+						scannerReport.Leaks = append(scannerReport.Leaks, leak)
+						if cs.opts.Verbose {
+							logLeak(leak, cs.opts.Redact)
+						}
 					}
 				}
 			}
 		}
 		return nil
 	})
-	report.Commits = 1
-	return report, err
+	scannerReport.Commits = 1
+	return scannerReport, err
 }

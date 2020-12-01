@@ -1,18 +1,17 @@
 package scan
 
 import (
-	"encoding/json"
 	"os"
-	"time"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
+	"github.com/zricethezav/gitleaks/v7/report"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Scanner interface {
-	Scan() (Report, error)
+	Scan() (report.Report, error)
 }
 
 type BaseScanner struct {
@@ -33,30 +32,8 @@ const (
 	TypeFilesAtCommitScanner
 )
 
-// Leak is a struct that contains information about some line of code that contains
-// sensitive information as determined by the rules set in a gitleaks config
-type Leak struct {
-	Line       string    `json:"line"`
-	LineNumber int       `json:"lineNumber"`
-	Offender   string    `json:"offender"`
-	Commit     string    `json:"commit"`
-	Repo       string    `json:"repo"`
-	Rule       string    `json:"rule"`
-	Message    string    `json:"commitMessage"`
-	Author     string    `json:"author"`
-	Email      string    `json:"email"`
-	File       string    `json:"file"`
-	Date       time.Time `json:"date"`
-	Tags       string    `json:"tags"`
-}
-
-type Report struct {
-	Leaks   []Leak
-	Commits int
-}
-
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
-	// TODO https://github.com/zricethezav/gitleaks/pull/274
+	// TODO move this block to config parsing?
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
 		if regexMatched(opts.RepoPath, allowListedRepo) {
 			return nil, nil
@@ -92,6 +69,8 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		}
 	}
 
+	log.Debugf("starting scan on %s\n", getRepoName(opts))
+
 	switch st {
 	case TypeCommitScanner:
 		c, err := obtainCommit(repo, opts.Commit)
@@ -116,29 +95,6 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	default:
 		return NewRepoScanner(base, repo), nil
 	}
-}
-
-func WriteReport(report Report, opts options.Options) error {
-	log.Info("commits scanned: ", report.Commits)
-	if len(report.Leaks) != 0 {
-		log.Warn("leaks found: ", len(report.Leaks))
-	} else {
-		log.Info("leaks found: ", len(report.Leaks))
-	}
-	if opts.Report != "" {
-		file, err := os.Create(opts.Report)
-		if err != nil {
-			return err
-		}
-		encoder := json.NewEncoder(file)
-		encoder.SetIndent("", " ")
-		err = encoder.Encode(report.Leaks)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func scanType(opts options.Options) ScannerType {

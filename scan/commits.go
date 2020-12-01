@@ -2,6 +2,7 @@ package scan
 
 import (
 	"github.com/go-git/go-git/v5"
+	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 type CommitsScanner struct {
@@ -21,20 +22,20 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 	}
 }
 
-func (css *CommitsScanner) Scan() (Report, error) {
-	var report Report
+func (css *CommitsScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
 	for _, c := range css.commits {
 		c, err := obtainCommit(css.repo, c)
 		if err != nil {
-			return report, nil
+			return scannerReport, nil
 		}
 		cs := NewCommitScanner(css.BaseScanner, css.repo, c)
 		commitReport, err := cs.Scan()
 		if err != nil {
-			return report, err
+			return scannerReport, err
 		}
-		report.Leaks = append(report.Leaks, commitReport.Leaks...)
-		report.Commits++
+		scannerReport.Leaks = append(scannerReport.Leaks, commitReport.Leaks...)
+		scannerReport.Commits++
 	}
-	return report, nil
+	return scannerReport, nil
 }

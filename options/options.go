@@ -22,9 +22,9 @@ import (
 // Options stores values of command line options
 type Options struct {
 	Verbose       bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
-	Repo          string `short:"r" long:"repo" description:"Target repository"`
-	Config        string `long:"config" description:"config path"`
-	RepoConfig    string `long:"repo-config" description:"Load config from target repo. Config file must be \".gitleaks.toml\" or \"gitleaks.toml\""`
+	Repo          string `short:"r" long:"repo" description:"Repository URL"`
+	Config        string `long:"config" description:"Path to config"`
+	RepoConfig    string `long:"repo-config" description:"Path to gitleaks config relative to repo root"`
 	ClonePath     string `long:"clone-path" description:"Path to clone repo to disk"`
 	Version       bool   `long:"version" description:"version number"`
 	Username      string `long:"username" description:"Username for git repo"`
@@ -36,10 +36,9 @@ type Options struct {
 	Uncommited    bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
 	RepoPath      string `long:"repo-path" description:"Path to repo"`
 	OwnerPath     string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-	Dir           string `long:"dir" description:"scan files within a directory"`
 	Branch        string `long:"branch" description:"Branch to scan"`
-	Report        string `long:"report" description:"path to write json leaks file"`
-	ReportFormat  string `long:"report-format" default:"json" description:"json, csv, sarif"`
+	Report        string `short:"o" long:"report" description:"report output path"`
+	ReportFormat  string `short:"f" long:"report-format" default:"json" description:"json, csv, sarif"`
 	Redact        bool   `long:"redact" description:"redact secrets from log messages and leaks"`
 	Debug         bool   `long:"debug" description:"log debug messages"`
 
@@ -51,16 +50,7 @@ type Options struct {
 	CommitTo    string `long:"commit-to" description:"Commit to stop scan"`
 	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-
-	Depth int `long:"depth" description:"Number of commits to scan"`
-
-	//// Hosts
-	//Host         string `long:"host" description:"git hosting service like gitlab or github. Supported hosts include: Github, Gitlab"`
-	//BaseURL      string `long:"baseurl" description:"Base URL for API requests. Defaults to the public GitLab or GitHub API, but can be set to a domain endpoint to use with a self hosted server."`
-	//Organization string `long:"org" description:"organization to scan"`
-	//User         string `long:"user" description:"user to scan"`
-	//PullRequest  string `long:"pr" description:"pull/merge request url"`
-	//ExcludeForks bool   `long:"exclude-forks" description:"scan excludes forks"`
+	Depth       int    `long:"depth" description:"Number of commits to scan"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct

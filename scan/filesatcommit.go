@@ -3,32 +3,33 @@ package scan
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 type FilesAtCommitScanner struct {
 	BaseScanner
 
-	repo   *git.Repository
-	commit *object.Commit
+	repo     *git.Repository
+	commit   *object.Commit
 	repoName string
 }
 
 func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *FilesAtCommitScanner {
 	fs := &FilesAtCommitScanner{
 		BaseScanner: base,
-		repo:   repo,
-		commit: commit,
-		repoName: getRepoName(base.opts),
+		repo:        repo,
+		commit:      commit,
+		repoName:    getRepoName(base.opts),
 	}
 	fs.scannerType = TypeFilesAtCommitScanner
 	return fs
 }
 
-func (fs *FilesAtCommitScanner) Scan() (Report, error) {
-	var report Report
+func (fs *FilesAtCommitScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
 	fIter, err := fs.commit.Files()
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 
 	err = fIter.ForEach(func(f *object.File) error {
@@ -44,10 +45,10 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 			return err
 		}
 
-		report.Leaks = append(report.Leaks, checkRules(fs.BaseScanner, fs.commit, fs.repoName, f.Name, content)...)
+		scannerReport.Leaks = append(scannerReport.Leaks, checkRules(fs.BaseScanner, fs.commit, fs.repoName, f.Name, content)...)
 		return nil
 	})
 
-	report.Commits = 1
-	return report, err
+	scannerReport.Commits = 1
+	return scannerReport, err
 }

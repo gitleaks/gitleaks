@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v7/report"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -28,18 +30,18 @@ func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner
 	return us
 }
 
-func (us *UnstagedScanner) Scan() (Report, error) {
-	var report Report
+func (us *UnstagedScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
 	r, err := us.repo.Head()
 	if err == plumbing.ErrReferenceNotFound {
 		wt, err := us.repo.Worktree()
 		if err != nil {
-			return report, err
+			return scannerReport, err
 		}
 
 		status, err := wt.Status()
 		if err != nil {
-			return report, err
+			return scannerReport, err
 		}
 		for fn := range status {
 			workTreeBuf := bytes.NewBuffer(nil)
@@ -48,18 +50,18 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				continue
 			}
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-				return report, err
+				return scannerReport, err
 			}
-			report.Leaks = append(report.Leaks, checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())...)
+			scannerReport.Leaks = append(scannerReport.Leaks, checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())...)
 		}
-		return report, nil
+		return scannerReport, nil
 	} else if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 
 	c, err := us.repo.CommitObject(r.Hash())
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 
 	// Staged change so the Commit details do not yet exist. Insert empty defaults.
@@ -71,16 +73,16 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 	prevTree, err := c.Tree()
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 	wt, err := us.repo.Worktree()
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 
 	status, err := wt.Status()
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 	for fn, state := range status {
 		var (
@@ -101,7 +103,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					continue
 				}
 				if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
-					return report, err
+					return scannerReport, err
 				}
 				currFileContents = workTreeBuf.String()
 				filename = workTreeFile.Name()
@@ -115,7 +117,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			} else {
 				prevFileContents, err = prevFile.Contents()
 				if err != nil {
-					return report, err
+					return scannerReport, err
 				}
 				if filename == "" {
 					filename = prevFile.Name
@@ -141,7 +143,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 						if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
 							lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
 							leak.LineNumber = lineNumber + 1
-							report.Leaks = append(report.Leaks, leak)
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
 							break
 						}
 					}
@@ -150,7 +152,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 		}
 	}
 
-	return report, err
+	return scannerReport, err
 }
 
 // DiffPrettyText converts a []Diff into a colored text report.

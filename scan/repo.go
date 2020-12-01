@@ -3,6 +3,8 @@ package scan
 import (
 	"sync"
 
+	"github.com/zricethezav/gitleaks/v7/report"
+
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -15,17 +17,17 @@ type RepoScanner struct {
 	repo     *git.Repository
 	repoName string
 
-	leakChan  chan Leak
+	leakChan  chan report.Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
-	leaks     []Leak
+	leaks     []report.Leak
 }
 
 func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
 		repo:        repo,
-		leakChan:    make(chan Leak),
+		leakChan:    make(chan report.Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
 		repoName:    getRepoName(base.opts),
@@ -38,21 +40,21 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	return rs
 }
 
-func (rs *RepoScanner) Scan() (Report, error) {
-	var report Report
+func (rs *RepoScanner) Scan() (report.Report, error) {
+	var scannerReport report.Report
 	logOpts, err := logOptions(rs.repo, rs.opts)
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 	cIter, err := rs.repo.Log(logOpts)
 	if err != nil {
-		return report, err
+		return scannerReport, err
 	}
 	semaphore := make(chan bool, howManyThreads(rs.opts.Threads))
 	wg := sync.WaitGroup{}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || depthReached(report.Commits, rs.opts) {
+		if c == nil || depthReached(scannerReport.Commits, rs.opts) {
 			return storer.ErrStop
 		}
 
@@ -63,18 +65,18 @@ func (rs *RepoScanner) Scan() (Report, error) {
 
 		// Check if at root
 		if len(c.ParentHashes) == 0 {
-			report.Commits++
+			scannerReport.Commits++
 			facScanner := NewFilesAtCommitScanner(rs.BaseScanner, rs.repo, c)
 			facScanner.repoName = rs.repoName
 			facReport, err := facScanner.Scan()
 			if err != nil {
 				return err
 			}
-			report.Leaks = append(report.Leaks, facReport.Leaks...)
+			scannerReport.Leaks = append(scannerReport.Leaks, facReport.Leaks...)
 			return nil
 		}
 
-		report.Commits++
+		scannerReport.Commits++
 
 		// inspect first parent only as all other parents will be eventually reached
 		// (they exist as the tip of other branches, etc)
@@ -127,7 +129,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 						for _, leak := range checkRules(rs.BaseScanner, c, rs.repoName, to.Path(), chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 							if rs.opts.Verbose {
-								logLeak(leak)
+								logLeak(leak, rs.opts.Redact)
 							}
 							rs.leakWG.Add(1)
 							rs.leakChan <- leak
@@ -145,8 +147,8 @@ func (rs *RepoScanner) Scan() (Report, error) {
 
 	wg.Wait()
 	rs.leakWG.Wait()
-	report.Leaks = append(report.Leaks, rs.leaks...)
-	return report, nil
+	scannerReport.Leaks = append(scannerReport.Leaks, rs.leaks...)
+	return scannerReport, nil
 }
 
 func (rs *RepoScanner) receiveLeaks() {

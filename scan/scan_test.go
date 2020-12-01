@@ -10,6 +10,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/zricethezav/gitleaks/v7/report"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 
@@ -420,7 +422,7 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		report, err := scanner.Scan()
+		scannerReport, err := scanner.Scan()
 
 		if test.wantScanErr != nil {
 			if err == nil {
@@ -435,14 +437,14 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = WriteReport(report, test.opts)
+		err = report.WriteReport(scannerReport, test.opts)
 		if err != nil {
 			t.Error(err)
 		}
 
 		if test.wantEmpty {
-			if len(report.Leaks) != 0 {
-				t.Errorf("wanted no leaks but got some instead: %+v", report.Leaks)
+			if len(scannerReport.Leaks) != 0 {
+				t.Errorf("wanted no leaks but got some instead: %+v", scannerReport.Leaks)
 			}
 			continue
 		}
@@ -547,7 +549,7 @@ func TestScanUncommited(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		report, err := scanner.Scan()
+		scannerReport, err := scanner.Scan()
 
 		if test.wantScanErr != nil {
 			if err == nil {
@@ -562,7 +564,7 @@ func TestScanUncommited(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = WriteReport(report, test.opts)
+		err = report.WriteReport(scannerReport, test.opts)
 		if err != nil {
 			t.Error(err)
 		}
@@ -589,8 +591,8 @@ func TestScanUncommited(t *testing.T) {
 
 func fileCheck(wantPath, gotPath string) error {
 	var (
-		gotLeaks  []Leak
-		wantLeaks []Leak
+		gotLeaks  []report.Leak
+		wantLeaks []report.Leak
 	)
 	want, err := ioutil.ReadFile(wantPath)
 	if err != nil {
