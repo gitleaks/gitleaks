@@ -22,7 +22,7 @@ type Report struct {
 
 // WriteReport accepts a report and options and will write a report if --report has been set
 func WriteReport(report Report, opts options.Options, cfg config.Config) error {
-	if !opts.NoGit {
+	if !(opts.NoGit || opts.CheckUncommitted()) {
 		log.Info("commits scanned: ", report.Commits)
 	}
 	if len(report.Leaks) != 0 {

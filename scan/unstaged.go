@@ -56,7 +56,13 @@ func (us *UnstagedScanner) Scan() (report.Report, error) {
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}
-			scannerReport.Leaks = append(scannerReport.Leaks, checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())...)
+			leaks := checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())
+			for _, leak := range leaks {
+				if us.opts.Verbose {
+					logLeak(leak, us.opts.Redact)
+				}
+				scannerReport.Leaks = append(scannerReport.Leaks, leak)
+			}
 		}
 		return scannerReport, nil
 	} else if err != nil {
@@ -147,6 +153,9 @@ func (us *UnstagedScanner) Scan() (report.Report, error) {
 						if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
 							lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
 							leak.LineNumber = lineNumber + 1
+							if us.opts.Verbose {
+								logLeak(leak, us.opts.Redact)
+							}
 							scannerReport.Leaks = append(scannerReport.Leaks, leak)
 							break
 						}

@@ -27,6 +27,7 @@ type Options struct {
 	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
 	RepoConfigPath string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
 	ClonePath      string `long:"clone-path" description:"Path to clone repo to disk"`
+	CleanUp        string `long:"clone-cleanup" description:"Deletes cloned repo after scan"`
 	Version        bool   `long:"version" description:"version number"`
 	Username       string `long:"username" description:"Username for git repo"`
 	Password       string `long:"password" description:"Password for git repo"`
@@ -41,7 +42,7 @@ type Options struct {
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"report output path"`
-	ReportFormat string `short:"f" long:"report-format" default:"json" description:"json, csv, sarif"`
+	ReportFormat string `short:"f" long:"format" default:"json" description:"json, csv, sarif"`
 
 	// Commit Options
 	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`

@@ -61,7 +61,11 @@ func getRepoName(opts options.Options) string {
 
 func getRepo(opts options.Options) (*git.Repository, error) {
 	if opts.OpenLocal() {
-		log.Infof("opening %s\n", opts.Path)
+		if opts.Path != "" {
+			log.Infof("opening %s\n", opts.Path)
+		} else {
+			log.Info("opening .")
+		}
 		return git.PlainOpen(opts.Path)
 	}
 	if opts.CheckUncommitted() {
@@ -127,6 +131,7 @@ func howManyThreads(threads int) int {
 func shouldLog(scanner BaseScanner) bool {
 	if scanner.opts.Verbose && scanner.scannerType != typeRepoScanner &&
 		scanner.scannerType != typeCommitScanner &&
+		scanner.scannerType != typeUnstagedScanner &&
 		scanner.scannerType != typeNoGitScanner {
 		return true
 	}

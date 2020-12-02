@@ -133,11 +133,15 @@ func leaksToResults(leaks []Leak) []Results {
 }
 
 func leakToLocation(leak Leak) []Locations {
+	uri := leak.File
+	if leak.LeakURL != "" {
+		uri = leak.LeakURL
+	}
 	return []Locations{
 		{
 			PhysicalLocation: PhysicalLocation{
 				ArtifactLocation: ArtifactLocation{
-					URI: leak.File,
+					URI: uri,
 				},
 				Region: Region{
 					StartLine: leak.LineNumber,
