@@ -67,7 +67,7 @@ type TomlAllowList struct {
 
 // TomlLoader gets loaded with the values from a gitleaks toml config
 // see the config in config/defaults.go for an example. TomlLoader is used
-// to generate ConfigPath values (compiling regexes, etc).
+// to generate Config values (compiling regexes, etc).
 type TomlLoader struct {
 	AllowList TomlAllowList
 	Rules     []struct {
@@ -117,7 +117,6 @@ func NewConfig(options options.Options) (Config, error) {
 // Parse will parse the values set in a TomlLoader and use those values
 // to create compiled regular expressions and rules used in scans
 func (tomlLoader TomlLoader) Parse() (Config, error) {
-	// TODO https://github.com/zricethezav/gitleaks/issues/398
 	var cfg Config
 	for _, rule := range tomlLoader.Rules {
 		// check and make sure the rule is valid

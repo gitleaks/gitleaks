@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/zricethezav/gitleaks/v7/config"
-	"github.com/zricethezav/gitleaks/v7/version"
-
 	"github.com/zricethezav/gitleaks/v7/options"
+	"github.com/zricethezav/gitleaks/v7/version"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -61,9 +60,9 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 			}
 		case "csv":
 			w := csv.NewWriter(file)
-			_ = w.Write([]string{"repo", "line", "commit", "offender", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			_ = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
 			for _, leak := range report.Leaks {
-				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 			}
 			w.Flush()
 		case "sarif":
