@@ -28,26 +28,26 @@ type Options struct {
 	RepoConfigPath string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
 	ClonePath      string `long:"clone-path" description:"Path to clone repo to disk"`
 	CleanUp        string `long:"clone-cleanup" description:"Deletes cloned repo after scan"`
-	Version        bool   `long:"version" description:"version number"`
+	Version        bool   `long:"version" description:"Version number"`
 	Username       string `long:"username" description:"Username for git repo"`
 	Password       string `long:"password" description:"Password for git repo"`
 	AccessToken    string `long:"access-token" description:"Access token for git repo"`
 	Threads        int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH            string `long:"ssh-key" description:"path to ssh key used for auth"`
-	Unstaged       bool   `long:"unstaged" description:"run gitleaks on unstaged code"`
+	SSH            string `long:"ssh-key" description:"Path to ssh key used for auth"`
+	Unstaged       bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
 	Branch         string `long:"branch" description:"Branch to scan"`
-	Redact         bool   `long:"redact" description:"redact secrets from log messages and leaks"`
-	Debug          bool   `long:"debug" description:"log debug messages"`
-	NoGit          bool   `long:"no-git" description:"treat git repos as plain directories and scan those files"`
+	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
+	Debug          bool   `long:"debug" description:"Log debug messages"`
+	NoGit          bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
 
 	// Report Options
-	Report       string `short:"o" long:"report" description:"report output path"`
-	ReportFormat string `short:"f" long:"format" default:"json" description:"json, csv, sarif"`
+	Report       string `short:"o" long:"report" description:"Report output path"`
+	ReportFormat string `short:"f" long:"format" default:"json" description:"JSON, CSV, SARIF"`
 
 	// Commit Options
-	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
-	Commit        string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
-	Commits       string `long:"commits" description:"comma separated list of a commits to scan"`
+	FilesAtCommit string `long:"files-at-commit" description:"Sha of commit to scan all files at commit"`
+	Commit        string `long:"commit" description:"Sha of commit to scan or \"latest\" to scan the last commit of the repository"`
+	Commits       string `long:"commits" description:"Comma separated list of a commits to scan"`
 	CommitsFile   string `long:"commits-file" description:"Path to file of line separated list of commits to scan"`
 	CommitFrom    string `long:"commit-from" description:"Commit to start scan from"`
 	CommitTo      string `long:"commit-to" description:"Commit to stop scan"`

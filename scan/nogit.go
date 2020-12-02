@@ -8,9 +8,11 @@ import (
 	"sync"
 
 	"github.com/zricethezav/gitleaks/v7/report"
+
 	"golang.org/x/sync/errgroup"
 )
 
+// NoGitScanner is a scanner that absolutely despises git
 type NoGitScanner struct {
 	BaseScanner
 	leakChan chan report.Leak

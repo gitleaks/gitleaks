@@ -80,8 +80,6 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 			return nil
 		}
 
-		scannerReport.Commits++
-
 		// inspect first parent only as all other parents will be eventually reached
 		// (they exist as the tip of other branches, etc)
 		// See https://github.com/zricethezav/gitleaks/issues/413 for details
@@ -110,6 +108,7 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 			log.Errorf("could not generate Patch")
 		}
 
+		scannerReport.Commits++
 		wg.Add(1)
 		semaphore <- true
 		go func(c *object.Commit, patch *object.Patch) {

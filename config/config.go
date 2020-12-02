@@ -32,7 +32,7 @@ type Entropy struct {
 }
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
-// This struct is used in the ConfigPath struct as an array of Rules and is iterated
+// This struct is used in the Config struct as an array of Rules and is iterated
 // over during an scan. Each rule will be checked. If a regex match is found AND
 // that match is not allowlisted (globally or locally), then a leak will be appended
 // to the final scan report.
@@ -47,7 +47,7 @@ type Rule struct {
 	Entropies   []Entropy
 }
 
-// ConfigPath is a composite struct of Rules and Allowlists
+// Config is a composite struct of Rules and Allowlists
 // Each Rule contains a description, regular expression, tags, and allowlists if available
 type Config struct {
 	Rules     []Rule
