@@ -5,7 +5,7 @@
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
   "repo": "test_repo_1",
-  "rule": "AWS Manager ID",
+  "rule": "AWS Access Key",
   "commitMessage": "commit 1 with secrets\n",
   "author": "zach rice",
   "email": "zricer@protonmail.com",

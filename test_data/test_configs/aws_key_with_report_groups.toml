@@ -4,7 +4,7 @@
 	tags = ["key", "AWS"]
 
 [[rules]]
-    description = "AWS Manager ID"
+    description = "AWS Access Key"
     regex = '''AWS secret: ("?)((A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16})("?)'''
     tags = ["key", "AWS"]
     reportGroup = 2

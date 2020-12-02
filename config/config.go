@@ -6,9 +6,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -94,10 +95,10 @@ func NewConfig(options options.Options) (Config, error) {
 	tomlLoader := TomlLoader{}
 
 	var err error
-	if options.Config != "" {
-		_, err = toml.DecodeFile(options.Config, &tomlLoader)
+	if options.ConfigPath != "" {
+		_, err = toml.DecodeFile(options.ConfigPath, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
-		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
+		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.ConfigPath))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}
@@ -139,6 +140,8 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		// rule specific allowlists
 		var allowList AllowList
 
+		allowList.Description = rule.AllowList.Description
+
 		// rule specific regexes
 		for _, re := range rule.AllowList.Regexes {
 			allowListedRegex, err := regexp.Compile(re)
@@ -165,6 +168,9 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			}
 			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
+
+		// rule specific commits
+		allowList.Commits = rule.AllowList.Commits
 
 		var entropies []Entropy
 		for _, e := range rule.Entropies {
@@ -249,4 +255,61 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	cfg.Allowlist.Description = tomlLoader.AllowList.Description
 
 	return cfg, nil
+}
+
+// LoadRepoConfig accepts a repo and config path related to the target repo's root.
+func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
+	gitRepoConfig, err := repo.Config()
+	if err != nil {
+		return Config{}, err
+	}
+	if !gitRepoConfig.Core.IsBare {
+		wt, err := repo.Worktree()
+		if err != nil {
+			return Config{}, err
+		}
+		_, err = wt.Filesystem.Stat(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		r, err := wt.Filesystem.Open(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		var tomlLoader TomlLoader
+		_, err = toml.DecodeReader(r, &tomlLoader)
+		if err != nil {
+			return Config{}, err
+		}
+
+		return tomlLoader.Parse()
+	}
+
+	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
+	ref, err := repo.Head()
+	if err != nil {
+		return Config{}, err
+	}
+
+	c, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return Config{}, err
+	}
+
+	f, err := c.File(repoConfig)
+	if err != nil {
+		return Config{}, err
+	}
+
+	var tomlLoader TomlLoader
+	r, err := f.Reader()
+	if err != nil {
+		return Config{}, err
+	}
+	_, err = toml.DecodeReader(r, &tomlLoader)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return tomlLoader.Parse()
 }
