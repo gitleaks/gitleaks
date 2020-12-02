@@ -10,27 +10,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DirScanner is a directory scanner
-type DirScanner struct {
+// ParentScanner is a parent directory scanner
+type ParentScanner struct {
 	BaseScanner
 }
 
-// NewDirScanner creates and returns a directory scanner
-func NewDirScanner(base BaseScanner) *DirScanner {
-	ds := &DirScanner{
+// NewParentScanner creates and returns a directory scanner
+func NewParentScanner(base BaseScanner) *ParentScanner {
+	ds := &ParentScanner{
 		BaseScanner: base,
 	}
 	ds.scannerType = typeDirScanner
 	return ds
 }
 
-// Scan kicks off a DirScanner scan. This uses the directory from --owner-path to discovery repos
-// that have --owner-path as their parent.
-func (ds *DirScanner) Scan() (report.Report, error) {
+// Scan kicks off a ParentScanner scan. This uses the directory from --path to discovery repos
+func (ds *ParentScanner) Scan() (report.Report, error) {
 	var scannerReport report.Report
-	log.Debugf("scanning repos in %s\n", ds.opts.OwnerPath)
+	log.Debugf("scanning repos in %s\n", ds.opts.Path)
 
-	files, err := ioutil.ReadDir(ds.opts.OwnerPath)
+	files, err := ioutil.ReadDir(ds.opts.Path)
 	if err != nil {
 		return scannerReport, err
 	}
@@ -39,7 +38,7 @@ func (ds *DirScanner) Scan() (report.Report, error) {
 			continue
 		}
 
-		repo, err := git.PlainOpen(filepath.Join(ds.opts.OwnerPath, f.Name()))
+		repo, err := git.PlainOpen(filepath.Join(ds.opts.Path, f.Name()))
 		if err != nil {
 			if err.Error() == "repository does not exist" {
 				log.Debugf("%s is not a git repository", f.Name())

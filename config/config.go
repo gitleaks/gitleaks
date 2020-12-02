@@ -32,7 +32,7 @@ type Entropy struct {
 }
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
-// This struct is used in the Config struct as an array of Rules and is iterated
+// This struct is used in the ConfigPath struct as an array of Rules and is iterated
 // over during an scan. Each rule will be checked. If a regex match is found AND
 // that match is not allowlisted (globally or locally), then a leak will be appended
 // to the final scan report.
@@ -47,7 +47,7 @@ type Rule struct {
 	Entropies   []Entropy
 }
 
-// Config is a composite struct of Rules and Allowlists
+// ConfigPath is a composite struct of Rules and Allowlists
 // Each Rule contains a description, regular expression, tags, and allowlists if available
 type Config struct {
 	Rules     []Rule
@@ -67,7 +67,7 @@ type TomlAllowList struct {
 
 // TomlLoader gets loaded with the values from a gitleaks toml config
 // see the config in config/defaults.go for an example. TomlLoader is used
-// to generate Config values (compiling regexes, etc).
+// to generate ConfigPath values (compiling regexes, etc).
 type TomlLoader struct {
 	AllowList TomlAllowList
 	Rules     []struct {
@@ -95,10 +95,10 @@ func NewConfig(options options.Options) (Config, error) {
 	tomlLoader := TomlLoader{}
 
 	var err error
-	if options.Config != "" {
-		_, err = toml.DecodeFile(options.Config, &tomlLoader)
+	if options.ConfigPath != "" {
+		_, err = toml.DecodeFile(options.ConfigPath, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
-		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
+		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.ConfigPath))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}

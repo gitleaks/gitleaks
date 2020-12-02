@@ -10,5 +10,6 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

@@ -1,0 +1,30 @@
+[
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 5,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "0000000000000000000000000000000000000000",
+  "repo": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "../test_data/test_repos/test_dir_1/server.test.py",
+  "date": "1970-01-01T00:00:00Z",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 5,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "0000000000000000000000000000000000000000",
+  "repo": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "../test_data/test_repos/test_dir_1/server.test2.py",
+  "date": "1970-01-01T00:00:00Z",
+  "tags": "key, AWS"
+ }
+]

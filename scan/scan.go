@@ -2,12 +2,13 @@ package scan
 
 import (
 	"os"
+	"path/filepath"
+
+	"github.com/go-git/go-git/v5"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/report"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Scanner abstracts unique scanner internals while exposing the Scan function which
@@ -34,48 +35,56 @@ const (
 	typeCommitsScanner
 	typeUnstagedScanner
 	typeFilesAtCommitScanner
+	typeNoGitScanner
+	typeEmpty
 )
 
 // NewScanner accepts options and a config which will be used to determine and create a
 // new scanner which is then returned.
 func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
+	var (
+		repo *git.Repository
+		err  error
+	)
 	// TODO move this block to config parsing?
 	for _, allowListedRepo := range cfg.Allowlist.Repos {
-		if regexMatched(opts.RepoPath, allowListedRepo) {
+		if regexMatched(opts.Path, allowListedRepo) {
 			return nil, nil
 		}
-		if regexMatched(opts.Repo, allowListedRepo) {
+		if regexMatched(opts.RepoURL, allowListedRepo) {
 			return nil, nil
 		}
 	}
-
 	base := BaseScanner{
 		opts: opts,
 		cfg:  cfg,
 	}
 
 	// We want to return a dir scanner immediately since if the scan type is a directory scan
-	// we don't want to clone/open a repo until inside DirScanner.Scan
-	st := scanType(opts)
-	if st == typeDirScanner {
-		return NewDirScanner(base), nil
-	}
-
-	// Clone or open a repo
-	repo, err := getRepo(base.opts)
+	// we don't want to clone/open a repo until inside ParentScanner.Scan
+	st, err := scanType(opts)
 	if err != nil {
 		return nil, err
 	}
+	if st == typeDirScanner {
+		return NewParentScanner(base), nil
+	}
 
-	// load up alternative config if possible, if not use manager's config
-	if opts.RepoConfig != "" {
-		base.cfg, err = config.LoadRepoConfig(repo, opts.RepoConfig)
+	// Clone or open a repo if we need it
+	if needsRepo(st) {
+		repo, err = getRepo(base.opts)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	log.Debugf("starting scan on %s\n", getRepoName(opts))
+	// load up alternative config if possible, if not use manager's config
+	if opts.RepoConfigPath != "" {
+		base.cfg, err = config.LoadRepoConfig(repo, opts.RepoConfigPath)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	switch st {
 	case typeCommitScanner:
@@ -98,26 +107,59 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		return NewFilesAtCommitScanner(base, repo, c), nil
 	case typeUnstagedScanner:
 		return NewUnstagedScanner(base, repo), nil
+	case typeDirScanner:
+		return NewParentScanner(base), nil
+	case typeNoGitScanner:
+		return NewNoGitScanner(base), nil
 	default:
 		return NewRepoScanner(base, repo), nil
 	}
 }
 
-func scanType(opts options.Options) ScannerType {
-	if opts.OwnerPath != "" {
-		return typeDirScanner
-	}
+func scanType(opts options.Options) (ScannerType, error) {
+	//if opts.OwnerPath != "" {
+	//	return typeDirScanner
+	//}
 	if opts.Commit != "" {
-		return typeCommitScanner
+		return typeCommitScanner, nil
 	}
 	if opts.Commits != "" || opts.CommitsFile != "" {
-		return typeCommitsScanner
+		return typeCommitsScanner, nil
 	}
 	if opts.FilesAtCommit != "" {
-		return typeFilesAtCommitScanner
+		return typeFilesAtCommitScanner, nil
+	}
+	if opts.Path != "" && !opts.NoGit {
+		_, err := os.Stat(filepath.Join(opts.Path))
+		if err != nil {
+			return typeEmpty, err
+		}
+		// check if path/.git exists, if it does, this is a repo scan
+		// if not this is a multi-repo scan
+		_, err = os.Stat(filepath.Join(opts.Path, ".git"))
+		if os.IsNotExist(err) {
+			return typeDirScanner, nil
+		}
+		return typeRepoScanner, nil
+	}
+	if opts.Path != "" && opts.NoGit {
+		_, err := os.Stat(filepath.Join(opts.Path))
+		if err != nil {
+			return typeEmpty, err
+		}
+		return typeNoGitScanner, nil
 	}
 	if opts.CheckUncommitted() {
-		return typeUnstagedScanner
+		return typeUnstagedScanner, nil
 	}
-	return typeRepoScanner
+
+	// default to the most commonly used scanner, RepoScanner
+	return typeRepoScanner, nil
+}
+
+func needsRepo(st ScannerType) bool {
+	if !(st == typeDirScanner || st == typeNoGitScanner) {
+		return true
+	}
+	return false
 }

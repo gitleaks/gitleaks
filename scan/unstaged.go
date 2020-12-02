@@ -70,7 +70,7 @@ func (us *UnstagedScanner) Scan() (report.Report, error) {
 
 	// Staged change so the Commit details do not yet exist. Insert empty defaults.
 	c.Hash = plumbing.Hash{}
-	c.Message = "***STAGED CHANGES***"
+	c.Message = ""
 	c.Author.Name = ""
 	c.Author.Email = ""
 	c.Author.When = time.Unix(0, 0).UTC()

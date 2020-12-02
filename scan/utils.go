@@ -45,11 +45,11 @@ func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error
 }
 
 func getRepoName(opts options.Options) string {
-	if opts.Repo != "" {
-		return filepath.Base(opts.Repo)
+	if opts.RepoURL != "" {
+		return filepath.Base(opts.RepoURL)
 	}
-	if opts.RepoPath != "" {
-		return filepath.Base(opts.RepoPath)
+	if opts.Path != "" {
+		return filepath.Base(opts.Path)
 	}
 	if opts.CheckUncommitted() {
 		dir, _ := os.Getwd()
@@ -60,8 +60,8 @@ func getRepoName(opts options.Options) string {
 
 func getRepo(opts options.Options) (*git.Repository, error) {
 	if opts.OpenLocal() {
-		log.Infof("opening %s\n", opts.RepoPath)
-		return git.PlainOpen(opts.RepoPath)
+		log.Infof("opening %s\n", opts.Path)
+		return git.PlainOpen(opts.Path)
 	}
 	if opts.CheckUncommitted() {
 		// open git repo from PWD
@@ -101,7 +101,7 @@ func depthReached(i int, opts options.Options) bool {
 func emptyCommit() *object.Commit {
 	return &object.Commit{
 		Hash:    plumbing.Hash{},
-		Message: "***STAGED CHANGES***",
+		Message: "",
 		Author: object.Signature{
 			Name:  "",
 			Email: "",
@@ -124,7 +124,9 @@ func howManyThreads(threads int) int {
 }
 
 func shouldLog(scanner BaseScanner) bool {
-	if scanner.opts.Verbose && scanner.scannerType != typeRepoScanner && scanner.scannerType != typeCommitScanner {
+	if scanner.opts.Verbose && scanner.scannerType != typeRepoScanner &&
+		scanner.scannerType != typeCommitScanner &&
+		scanner.scannerType != typeNoGitScanner {
 		return true
 	}
 	return false
@@ -155,7 +157,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 		if !ruleContainRegex(rule) {
 			leak := report.Leak{
 				LineNumber: defaultLineNumber,
-				Line:       "N/A",
+				Line:       "",
 				Offender:   limitLen("Filename/path offender: " + filename),
 				Commit:     commit.Hash.String(),
 				Repo:       repoName,

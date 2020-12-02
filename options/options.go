@@ -21,36 +21,38 @@ import (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose       bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
-	Repo          string `short:"r" long:"repo" description:"Repository URL"`
-	Config        string `long:"config" description:"Path to config"`
-	RepoConfig    string `long:"repo-config" description:"Path to gitleaks config relative to repo root"`
-	ClonePath     string `long:"clone-path" description:"Path to clone repo to disk"`
-	Version       bool   `long:"version" description:"version number"`
-	Username      string `long:"username" description:"Username for git repo"`
-	Password      string `long:"password" description:"Password for git repo"`
-	AccessToken   string `long:"access-token" description:"Access token for git repo"`
-	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
-	Threads       int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH           string `long:"ssh-key" description:"path to ssh key used for auth"`
-	Uncommited    bool   `long:"uncommitted" description:"run gitleaks on uncommitted code"`
-	RepoPath      string `long:"repo-path" description:"Path to repo"`
-	OwnerPath     string `long:"owner-path" description:"Path to owner directory (repos discovered)"`
-	Branch        string `long:"branch" description:"Branch to scan"`
-	Report        string `short:"o" long:"report" description:"report output path"`
-	ReportFormat  string `short:"f" long:"report-format" default:"json" description:"json, csv, sarif"`
-	Redact        bool   `long:"redact" description:"redact secrets from log messages and leaks"`
-	Debug         bool   `long:"debug" description:"log debug messages"`
+	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	RepoURL        string `short:"r" long:"repo-url" description:"Repository URL"`
+	Path           string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
+	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
+	RepoConfigPath string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
+	ClonePath      string `long:"clone-path" description:"Path to clone repo to disk"`
+	Version        bool   `long:"version" description:"version number"`
+	Username       string `long:"username" description:"Username for git repo"`
+	Password       string `long:"password" description:"Password for git repo"`
+	AccessToken    string `long:"access-token" description:"Access token for git repo"`
+	Threads        int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH            string `long:"ssh-key" description:"path to ssh key used for auth"`
+	Unstaged       bool   `long:"unstaged" description:"run gitleaks on unstaged code"`
+	Branch         string `long:"branch" description:"Branch to scan"`
+	Redact         bool   `long:"redact" description:"redact secrets from log messages and leaks"`
+	Debug          bool   `long:"debug" description:"log debug messages"`
+	NoGit          bool   `long:"no-git" description:"treat git repos as plain directories and scan those files"`
+
+	// Report Options
+	Report       string `short:"o" long:"report" description:"report output path"`
+	ReportFormat string `short:"f" long:"report-format" default:"json" description:"json, csv, sarif"`
 
 	// Commit Options
-	Commit      string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
-	Commits     string `long:"commits" description:"comma separated list of a commits to scan"`
-	CommitsFile string `long:"commits-file" description:"file of new line separated list of a commits to scan"`
-	CommitFrom  string `long:"commit-from" description:"Commit to start scan from"`
-	CommitTo    string `long:"commit-to" description:"Commit to stop scan"`
-	CommitSince string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	CommitUntil string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	Depth       int    `long:"depth" description:"Number of commits to scan"`
+	FilesAtCommit string `long:"files-at-commit" description:"sha of commit to scan all files at commit"`
+	Commit        string `long:"commit" description:"sha of commit to scan or \"latest\" to scan the last commit of the repository"`
+	Commits       string `long:"commits" description:"comma separated list of a commits to scan"`
+	CommitsFile   string `long:"commits-file" description:"Path to file of line separated list of commits to scan"`
+	CommitFrom    string `long:"commit-from" description:"Commit to start scan from"`
+	CommitTo      string `long:"commit-to" description:"Commit to stop scan"`
+	CommitSince   string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitUntil   string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	Depth         int    `long:"depth" description:"Number of commits to scan"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct
@@ -89,7 +91,7 @@ func ParseOptions() (Options, error) {
 // If invalid sets of options are present, a descriptive error will return
 // else nil is returned
 func (opts Options) Guard() error {
-	if !oneOrNoneSet(opts.Repo, opts.OwnerPath, opts.RepoPath) {
+	if !oneOrNoneSet(opts.RepoURL, opts.Path) {
 		return fmt.Errorf("only one target option must can be set. target options: repo, owner-path, repo-path, host")
 	}
 	if !oneOrNoneSet(opts.AccessToken, opts.Password) {
@@ -124,7 +126,7 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 	}
 
 	cloneOpts := &git.CloneOptions{
-		URL:      opts.Repo,
+		URL:      opts.RepoURL,
 		Progress: progress,
 	}
 	if opts.Depth != 0 {
@@ -136,7 +138,7 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 
 	var auth transport.AuthMethod
 
-	if strings.HasPrefix(opts.Repo, "git") {
+	if strings.HasPrefix(opts.RepoURL, "git") {
 		// using git protocol so needs ssh auth
 		auth, err = SSHAuth(opts)
 		if err != nil {
@@ -184,7 +186,7 @@ func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
 // OpenLocal checks what options are set, if no remote targets are set
 // then return true
 func (opts Options) OpenLocal() bool {
-	if opts.Uncommited || opts.RepoPath != "" || opts.Repo == "" {
+	if opts.Unstaged || opts.Path != "" || opts.RepoURL == "" {
 		return true
 	}
 	return false
@@ -194,19 +196,16 @@ func (opts Options) OpenLocal() bool {
 // or if gitleaks should check the entire git history
 func (opts Options) CheckUncommitted() bool {
 	// check to make sure no remote shit is set
-	if opts.Uncommited {
+	if opts.Unstaged {
 		return true
 	}
 	if opts == (Options{}) {
 		return true
 	}
-	if opts.Repo != "" {
+	if opts.RepoURL != "" {
 		return false
 	}
-	if opts.RepoPath != "" {
-		return false
-	}
-	if opts.OwnerPath != "" {
+	if opts.Path != "" {
 		return false
 	}
 	return true
