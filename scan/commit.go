@@ -70,6 +70,7 @@ func (cs *CommitScanner) Scan() (report.Report, error) {
 					lineLookup := make(map[string]bool)
 					for _, leak := range leaks {
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+						leak.LeakURL = leakURL(leak)
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 						if cs.opts.Verbose {
 							logLeak(leak, cs.opts.Redact)

@@ -130,6 +130,9 @@ func scanType(opts options.Options) (ScannerType, error) {
 		return typeFilesAtCommitScanner, nil
 	}
 	if opts.Path != "" && !opts.NoGit {
+		if opts.CheckUncommitted() {
+			return typeUnstagedScanner, nil
+		}
 		_, err := os.Stat(filepath.Join(opts.Path))
 		if err != nil {
 			return typeEmpty, err

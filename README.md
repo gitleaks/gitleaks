@@ -8,8 +8,9 @@
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks aims to be the **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code. 
  
 ### Features:
-- Scans for [commited](https://github.com/zricethezav/gitleaks/wiki/Scanning) secrets
-- Scans for [uncommitted](https://github.com/zricethezav/gitleaks/wiki/Scanning#uncommitted-changes-scan) secrets as part of shifting security left
+- Scan for [commited](https://github.com/zricethezav/gitleaks/wiki/Scanning) secrets
+- Scan for [uncommitted](https://github.com/zricethezav/gitleaks/wiki/Scanning#uncommitted-changes-scan) secrets as part of shifting security left
+- Scan for entire directories and files
 - Available [Github Action](https://github.com/marketplace/actions/gitleaks)
 - [Custom rules](https://github.com/zricethezav/gitleaks/wiki/Configuration) via toml configuration
 - High performance using [go-git](https://github.com/go-git/go-git)

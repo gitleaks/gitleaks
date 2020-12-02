@@ -132,6 +132,7 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 						lineLookup := make(map[string]bool)
 						for _, leak := range checkRules(rs.BaseScanner, c, rs.repoName, to.Path(), chunk.Content()) {
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+							leak.LeakURL = leakURL(leak)
 							if rs.opts.Verbose {
 								logLeak(leak, rs.opts.Redact)
 							}

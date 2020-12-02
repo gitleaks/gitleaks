@@ -13,6 +13,8 @@ type Leak struct {
 	Offender   string    `json:"offender"`
 	Commit     string    `json:"commit"`
 	Repo       string    `json:"repo"`
+	RepoURL    string    `json:"repoURL"`
+	LeakURL    string    `json:"leakURL"`
 	Rule       string    `json:"rule"`
 	Message    string    `json:"commitMessage"`
 	Author     string    `json:"author"`

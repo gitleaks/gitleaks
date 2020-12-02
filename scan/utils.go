@@ -27,8 +27,9 @@ import (
 
 const (
 	diffAddPrefix     = "+"
+	diffDelPrefix     = "-"
 	diffLineSignature = " @@"
-	defaultLineNumber = -1
+	defaultLineNumber = 1
 
 	maxLineLen = 200
 )
@@ -161,15 +162,17 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 				Offender:   limitLen("Filename/path offender: " + filename),
 				Commit:     commit.Hash.String(),
 				Repo:       repoName,
+				RepoURL:    scanner.opts.RepoURL,
 				Message:    limitLen(commit.Message),
 				Rule:       rule.Description,
 				Author:     commit.Author.Name,
 				Email:      commit.Author.Email,
 				Date:       commit.Author.When,
 				Tags:       strings.Join(rule.Tags, ", "),
-				File:       filename,
+				File:       filePath,
 				// Operation:  diffOpToString(bundle.Operation),
 			}
+			leak.LeakURL = leakURL(leak)
 			if shouldLog(scanner) {
 				logLeak(leak, scanner.opts.Redact)
 			}
@@ -213,6 +216,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 				Offender:   limitLen(offender),
 				Commit:     commit.Hash.String(),
 				Repo:       repoName,
+				RepoURL:    scanner.opts.RepoURL,
 				Message:    limitLen(commit.Message),
 				Rule:       rule.Description,
 				Author:     commit.Author.Name,
@@ -221,6 +225,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 				Tags:       strings.Join(rule.Tags, ", "),
 				File:       filePath,
 			}
+			leak.LeakURL = leakURL(leak)
 			if shouldLog(scanner) {
 				logLeak(leak, scanner.opts.Redact)
 			}
@@ -477,6 +482,9 @@ func extractLine(patchContent string, leak report.Leak, lineLookup map[string]bo
 			chunkStartLine, _ = strconv.Atoi(pairs[0])
 			currLine = -1
 		}
+		if strings.HasPrefix(patchLine, diffDelPrefix) {
+			currLine--
+		}
 		if strings.HasPrefix(patchLine, diffAddPrefix) && strings.Contains(patchLine, leak.Line) {
 			lineNumber := chunkStartLine + currLine
 			if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
@@ -487,4 +495,11 @@ func extractLine(patchContent string, leak report.Leak, lineLookup map[string]bo
 		currLine++
 	}
 	return defaultLineNumber
+}
+
+func leakURL(leak report.Leak) string {
+	if leak.RepoURL != "" {
+		return fmt.Sprintf("%s/blob/%s/%s#L%d", leak.RepoURL, leak.Commit, leak.File, leak.LineNumber)
+	}
+	return ""
 }
