@@ -35,10 +35,10 @@ docker pull zricethezav/gitleaks
 
 ##### Go
 ```bash
-GO111MODULE=on go get github.com/zricethezav/gitleaks/v6
+GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
 
-### Usage
+### Usage and Options
 ```
 Usage:
   gitleaks [OPTIONS]
