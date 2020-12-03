@@ -164,11 +164,11 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 			leak := report.Leak{
 				LineNumber: defaultLineNumber,
 				Line:       "",
-				Offender:   limitLen("Filename/path offender: " + filename),
+				Offender:   "Filename/path offender: " + filename,
 				Commit:     commit.Hash.String(),
 				Repo:       repoName,
 				RepoURL:    scanner.opts.RepoURL,
-				Message:    limitLen(commit.Message),
+				Message:    commit.Message,
 				Rule:       rule.Description,
 				Author:     commit.Author.Name,
 				Email:      commit.Author.Email,
@@ -217,12 +217,12 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 
 			leak := report.Leak{
 				LineNumber: lineNumber,
-				Line:       limitLen(line),
-				Offender:   limitLen(offender),
+				Line:       line,
+				Offender:   offender,
 				Commit:     commit.Hash.String(),
 				Repo:       repoName,
 				RepoURL:    scanner.opts.RepoURL,
-				Message:    limitLen(commit.Message),
+				Message:    commit.Message,
 				Rule:       rule.Description,
 				Author:     commit.Author.Name,
 				Email:      commit.Author.Email,
@@ -239,13 +239,6 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 		lineNumber++
 	}
 	return leaks
-}
-
-func limitLen(str string) string {
-	if len(str) > 200 {
-		return str[0:maxLineLen-1] + "..."
-	}
-	return str
 }
 
 func logLeak(leak report.Leak, redact bool) {
