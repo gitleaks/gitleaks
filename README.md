@@ -81,7 +81,7 @@ Help Options:
 ```
 
 
-### Scanning
+### [Scanning](https://www.youtube.com/watch?v=WUzpRL8mKCk)
 
 #### Basic repo-url scan:
 This scans the entire history of tests/secrets and logs leaks as they are encountered `-v`/`--verbose` being set.
