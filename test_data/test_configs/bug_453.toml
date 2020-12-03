@@ -1,0 +1,16 @@
+title = "gitleaks config"
+
+[[rules]]
+	description = "Asymmetric Private Key"
+	regex = '''-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----'''
+	tags = ["key", "AsymmetricPrivateKey"]
+
+[[rules]]
+	description = "Passwords"
+	regex = '''(?i)password=(?i)'''
+	tags = ["key", "Generic"]
+
+[[rules]]
+	description = "secret secret.com"
+	regex = '''(?i)secret\.com'''
+	tags = ["key", "custom"]

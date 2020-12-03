@@ -5,7 +5,7 @@
   "offender": "AKIAIO5FODNN7EXAMPLE",
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
   "repo": "test_repo_6",
-  "rule": "AWS Manager ID",
+  "rule": "AWS Access Key",
   "commitMessage": "Adding some secrets in config folder\n\n",
   "author": "Noel Algora",
   "email": "noealgigu@gmail.com",
