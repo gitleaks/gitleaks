@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	log.Info("Gitleaks - Seeeverything Edition\n")
 	opts, err := options.ParseOptions()
 	if err != nil {
 		log.Error(err)

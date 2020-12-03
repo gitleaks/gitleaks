@@ -75,4 +75,3 @@ func (manager *Manager) Report() error {
 	}
 	return nil
 }
-

@@ -260,7 +260,6 @@ func (manager *Manager) DebugOutput() {
 
 }
 
-
 func (manager *Manager) receiveInterrupt() {
 	<-manager.stopChan
 	if manager.Opts.Report != "" {

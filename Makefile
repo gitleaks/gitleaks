@@ -1,6 +1,6 @@
 .PHONY: test test-cover build release-builds
 
-VERSION := `git fetch --tags && git tag | sort -V | tail -1`
+VERSION := 6.2.1
 PKG=github.com/zricethezav/gitleaks
 LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v6/version.Version=$(VERSION)"
 _LDFLAGS="github.com/zricethezav/gitleaks/v6/version.Version=$(VERSION)"
@@ -42,11 +42,11 @@ release-builds:
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips" $(LDFLAGS)
 	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64" $(LDFLAGS)
 
-deploy:
-	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
-	echo "Pushing zricethezav/gitleaks:$(VERSION) and zricethezav/gitleaks:latest"
-	docker push zricethezav/gitleaks
+# deploy:
+# 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+# 	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
+# 	echo "Pushing zricethezav/gitleaks:$(VERSION) and zricethezav/gitleaks:latest"
+# 	docker push zricethezav/gitleaks
 
-dockerbuild: 
-	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
+# dockerbuild: 
+# 	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
