@@ -30,6 +30,10 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	return cs
 }
 
+func (cs *CommitScanner) OverrideRepoName(repoName string) {
+	cs.repoName = repoName
+}
+
 // Scan kicks off a CommitScanner Scan
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
@@ -38,92 +42,97 @@ func (cs *CommitScanner) Scan() (Report, error) {
 		return facScanner.Scan()
 	}
 
-	err := cs.commit.Parents().ForEach(func(parent *object.Commit) error {
-		defer func() {
-			if err := recover(); err != nil {
-				// sometimes the Patch generation will fail due to a known bug in
-				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-				// Once a fix has been merged I will remove this recover.
-				return
-			}
-		}()
-		if parent == nil {
-			return nil
+	parent, err := cs.commit.Parent(0)
+	if err != nil {
+		return scannerReport, err
+	}
+
+	if parent == nil {
+		return scannerReport, nil
+	}
+
+	patch, err := parent.Patch(cs.commit)
+	if err != nil {
+		return scannerReport, fmt.Errorf("could not generate Patch")
+	}
+
+	patchContent := patch.String()
+
+	for _, f := range patch.FilePatches() {
+		if f.IsBinary() {
+			continue
 		}
+		for _, chunk := range f.Chunks() {
+			if chunk.Type() == fdiff.Add {
+				_, to := f.Files()
+				if cs.cfg.Allowlist.FileAllowed(filepath.Base(to.Path())) ||
+					cs.cfg.Allowlist.PathAllowed(to.Path()) {
+					continue
+				}
 
-		patch, err := parent.Patch(cs.commit)
-		if err != nil {
-			return fmt.Errorf("could not generate Patch")
-		}
-
-		patchContent := patch.String()
-
-		for _, f := range patch.FilePatches() {
-			if f.IsBinary() {
-				continue
-			}
-			for _, chunk := range f.Chunks() {
-				if chunk.Type() == fdiff.Add {
-					_, to := f.Files()
-					if cs.cfg.Allowlist.FileAllowed(filepath.Base(to.Path())) ||
-						cs.cfg.Allowlist.PathAllowed(to.Path()) {
+				// Check individual file path ONLY rules
+				for _, rule := range cs.cfg.Rules {
+					if rule.CommitAllowListed(cs.commit.Hash.String()) {
 						continue
 					}
 
-					// Check individual file path ONLY rules
-					for _, rule := range cs.cfg.Rules {
-						if rule.CommitAllowListed(cs.commit.Hash.String()) {
-							continue
-						}
+					if rule.HasFileOrPathLeakOnly(to.Path()) {
+						leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(cs.commit)
+						leak.Repo = cs.repoName
+						leak.File = to.Path()
+						leak.RepoURL = cs.opts.RepoURL
+						leak.LeakURL = leakURL(leak)
+						leak.Rule = rule.Description
+						leak.Tags = strings.Join(rule.Tags, ", ")
 
-						if rule.HasFileOrPathLeakOnly(to.Path()) {
-							leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(cs.commit)
-							leak.Repo = cs.repoName
-							leak.File = to.Path()
-							leak.RepoURL = cs.opts.RepoURL
-							leak.LeakURL = leakURL(leak)
-							leak.Rule = rule.Description
-							leak.Tags = strings.Join(rule.Tags, ", ")
-
-							if cs.opts.Verbose {
-								leak.Log(cs.opts.Redact)
-							}
-							scannerReport.Leaks = append(scannerReport.Leaks, leak)
-							continue
+						if cs.opts.Verbose {
+							leak.Log(cs.opts.Redact)
 						}
+						scannerReport.Leaks = append(scannerReport.Leaks, leak)
+						continue
 					}
+				}
 
-					lineLookup := make(map[string]bool)
+				lineLookup := make(map[string]bool)
 
-					// Check the actual content
-					for _, line := range strings.Split(chunk.Content(), "\n") {
-						for _, rule := range cs.cfg.Rules {
-							offender := rule.Inspect(line)
-							if offender == "" || cs.cfg.Allowlist.RegexAllowed(offender) {
-								continue
-							}
-							leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
-							if leak.Allowed(cs.cfg.Allowlist) {
-								continue
-							}
-							leak.File = to.Path()
-							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-							leak.RepoURL = cs.opts.RepoURL
-							leak.Repo = cs.repoName
-							leak.LeakURL = leakURL(leak)
-							leak.Rule = rule.Description
-							leak.Tags = strings.Join(rule.Tags, ", ")
-							if cs.opts.Verbose {
-								leak.Log(cs.opts.Redact)
-							}
-							scannerReport.Leaks = append(scannerReport.Leaks, leak)
+				// Check the actual content
+				for _, line := range strings.Split(chunk.Content(), "\n") {
+					for _, rule := range cs.cfg.Rules {
+						offender := rule.Inspect(line)
+						if offender == "" {
+							continue
 						}
+						if cs.cfg.Allowlist.RegexAllowed(line) ||
+							rule.AllowList.FileAllowed(filepath.Base(to.Path())) ||
+							rule.AllowList.PathAllowed(to.Path()) ||
+							rule.AllowList.CommitAllowed(cs.commit.Hash.String()) {
+							continue
+						}
+
+						if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(to.Path())) {
+							continue
+						}
+						if rule.Path.String() != "" && !rule.HasFilePathLeak(to.Path()) {
+							continue
+						}
+
+						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
+						leak.File = to.Path()
+						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+						leak.RepoURL = cs.opts.RepoURL
+						leak.Repo = cs.repoName
+						leak.LeakURL = leakURL(leak)
+						leak.Rule = rule.Description
+						leak.Tags = strings.Join(rule.Tags, ", ")
+						if cs.opts.Verbose {
+							leak.Log(cs.opts.Redact)
+						}
+						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 					}
 				}
 			}
 		}
-		return nil
-	})
+	}
 	scannerReport.Commits = 1
 	return scannerReport, err
 }

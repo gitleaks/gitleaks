@@ -1,15 +1,13 @@
 package scan
 
 import (
-	"path/filepath"
-	"strings"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/go-git/go-git/v5"
-	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
-	log "github.com/sirupsen/logrus"
 )
 
 // RepoScanner is a repo scanner
@@ -58,6 +56,15 @@ func (rs *RepoScanner) Scan() (Report, error) {
 	wg := sync.WaitGroup{}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
+		defer func() {
+			if err := recover(); err != nil {
+				// sometimes the Patch generation will fail due to a known bug in
+				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+				// Once a fix has been merged I will remove this recover.
+				return
+			}
+		}()
+
 		if c == nil || depthReached(scannerReport.Commits, rs.opts) {
 			return storer.ErrStop
 		}
@@ -87,110 +94,31 @@ func (rs *RepoScanner) Scan() (Report, error) {
 			return err
 		}
 
-		defer func() {
-			if err := recover(); err != nil {
-				// sometimes the Patch generation will fail due to a known bug in
-				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-				// Once a fix has been merged I will remove this recover.
-				return
-			}
-		}()
-
 		if parent == nil {
 			// shouldn't reach this point but just in case
 			return nil
 		}
 
-		patch, err := parent.Patch(c)
-		if err != nil {
-			log.Errorf("could not generate Patch")
-		}
-
 		scannerReport.Commits++
 		wg.Add(1)
 		semaphore <- true
-		go func(c *object.Commit, patch *object.Patch) {
+		go func(c *object.Commit) {
 			defer func() {
 				<-semaphore
 				wg.Done()
 			}()
 
-			// patchContent is used for searching for leak line number
-			patchContent := patch.String()
-
-			for _, f := range patch.FilePatches() {
-				if f.IsBinary() {
-					continue
-				}
-
-				for _, chunk := range f.Chunks() {
-					if chunk.Type() == fdiff.Add {
-						_, to := f.Files()
-
-						// Check global allowlist
-						if rs.cfg.Allowlist.FileAllowed(filepath.Base(to.Path())) ||
-							rs.cfg.Allowlist.PathAllowed(to.Path()) {
-							continue
-						}
-
-						// Check individual file path ONLY rules
-						for _, rule := range rs.cfg.Rules {
-							if rule.CommitAllowListed(c.Hash.String()) {
-								continue
-							}
-
-							if rule.HasFileOrPathLeakOnly(to.Path()) {
-								leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(c)
-								leak.Repo = rs.repoName
-								leak.File = to.Path()
-								leak.RepoURL = rs.opts.RepoURL
-								leak.LeakURL = leakURL(leak)
-								leak.Rule = rule.Description
-								leak.Tags = strings.Join(rule.Tags, ", ")
-
-								if rs.opts.Verbose {
-									leak.Log(rs.opts.Redact)
-								}
-								// send to leak channel
-								rs.leakWG.Add(1)
-								rs.leakChan <- leak
-								continue
-							}
-						}
-
-						lineLookup := make(map[string]bool)
-
-						// Check the actual content
-						for _, line := range strings.Split(chunk.Content(), "\n") {
-							for _, rule := range rs.cfg.Rules {
-								offender := rule.Inspect(line)
-								if offender == "" || rs.cfg.Allowlist.RegexAllowed(offender) {
-									continue
-								}
-								leak := NewLeak(line, offender, defaultLineNumber).WithCommit(c)
-								if leak.Allowed(rs.cfg.Allowlist) {
-									continue
-								}
-								leak.File = to.Path()
-								leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-								leak.RepoURL = rs.opts.RepoURL
-								leak.Repo = rs.repoName
-								leak.LeakURL = leakURL(leak)
-								leak.Rule = rule.Description
-								leak.Tags = strings.Join(rule.Tags, ", ")
-								if rs.opts.Verbose {
-									leak.Log(rs.opts.Redact)
-								}
-
-								// send to leak channel
-								rs.leakWG.Add(1)
-								rs.leakChan <- leak
-							}
-						}
-					}
-				}
+			commitScanner := NewCommitScanner(rs.BaseScanner, rs.repo, c)
+			commitScanner.OverrideRepoName(rs.repoName)
+			report, err := commitScanner.Scan()
+			if err != nil {
+				log.Error(err)
 			}
-		}(c, patch)
+			for _, leak := range report.Leaks {
+				rs.leakWG.Add(1)
+				rs.leakChan <- leak
+			}
+		}(c)
 
 		if c.Hash.String() == rs.opts.CommitTo {
 			return storer.ErrStop

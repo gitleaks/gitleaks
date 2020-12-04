@@ -38,7 +38,7 @@ func (r *Rule) Inspect(line string) string {
 	}
 
 	// check if offender is allowed
-	if r.RegexAllowed(offender) {
+	if r.RegexAllowed(line) {
 		return ""
 	}
 
