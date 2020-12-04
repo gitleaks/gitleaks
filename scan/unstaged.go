@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -34,8 +32,8 @@ func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner
 }
 
 // Scan kicks off an unstaged scan. This will attempt to determine unstaged changes which are then scanned.
-func (us *UnstagedScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (us *UnstagedScanner) Scan() (Report, error) {
+	var scannerReport Report
 	r, err := us.repo.Head()
 	if err == plumbing.ErrReferenceNotFound {
 		wt, err := us.repo.Worktree()

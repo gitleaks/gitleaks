@@ -8,13 +8,12 @@ import (
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 // Scanner abstracts unique scanner internals while exposing the Scan function which
 // returns a report.
 type Scanner interface {
-	Scan() (report.Report, error)
+	Scan() (Report, error)
 }
 
 // BaseScanner is a container for common data each scanner needs.

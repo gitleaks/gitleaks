@@ -10,8 +10,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 
@@ -457,7 +455,7 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts, cfg)
+		err = WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}
@@ -584,7 +582,7 @@ func TestScanUncommited(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts, cfg)
+		err = WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}

@@ -1,8 +1,14 @@
 package scan
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/go-git/go-git/v5/plumbing/object"
+
+	"github.com/zricethezav/gitleaks/v7/config"
 )
 
 // Leak is a struct that contains information about some line of code that contains
@@ -30,4 +36,42 @@ func RedactLeak(leak Leak) Leak {
 	leak.Line = strings.Replace(leak.Line, leak.Offender, "REDACTED", -1)
 	leak.Offender = "REDACTED"
 	return leak
+}
+
+func NewLeak(line string, offender string, lineNumber int) Leak {
+	return Leak{
+		Line:       line,
+		Offender:   offender,
+		LineNumber: lineNumber,
+	}
+}
+
+func (leak Leak) WithCommit(commit *object.Commit) Leak {
+	leak.Commit = commit.Hash.String()
+	leak.Author = commit.Author.Name
+	leak.Email = commit.Author.Email
+	leak.Message = commit.Message
+	leak.Date = commit.Author.When
+	return leak
+}
+
+func (leak Leak) IsEmpty() bool {
+	if leak.Offender == "" {
+		return true
+	}
+	return false
+}
+
+func (leak Leak) Allowed(a config.AllowList) bool {
+	// TODO maybe check all the things again?
+	return a.RegexAllowed(leak.Offender)
+}
+
+func (leak Leak) Log(redact bool) {
+	if redact {
+		leak = RedactLeak(leak)
+	}
+	var b []byte
+	b, _ = json.MarshalIndent(leak, "", "	")
+	fmt.Println(string(b))
 }

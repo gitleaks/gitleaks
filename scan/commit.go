@@ -2,8 +2,8 @@ package scan
 
 import (
 	"fmt"
-
-	"github.com/zricethezav/gitleaks/v7/report"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
@@ -31,8 +31,8 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 }
 
 // Scan kicks off a CommitScanner Scan
-func (cs *CommitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (cs *CommitScanner) Scan() (Report, error) {
+	var scannerReport Report
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
 		return facScanner.Scan()
@@ -65,15 +65,58 @@ func (cs *CommitScanner) Scan() (report.Report, error) {
 			for _, chunk := range f.Chunks() {
 				if chunk.Type() == fdiff.Add {
 					_, to := f.Files()
-					leaks := checkRules(cs.BaseScanner, cs.commit, cs.repoName, to.Path(), chunk.Content())
+					if cs.cfg.Allowlist.FileAllowed(filepath.Base(to.Path())) ||
+						cs.cfg.Allowlist.PathAllowed(to.Path()) {
+						continue
+					}
+
+					// Check individual file path ONLY rules
+					for _, rule := range cs.cfg.Rules {
+						if rule.CommitAllowListed(cs.commit.Hash.String()) {
+							continue
+						}
+
+						if rule.HasFileOrPathLeakOnly(to.Path()) {
+							leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(cs.commit)
+							leak.Repo = cs.repoName
+							leak.File = to.Path()
+							leak.RepoURL = cs.opts.RepoURL
+							leak.LeakURL = leakURL(leak)
+							leak.Rule = rule.Description
+							leak.Tags = strings.Join(rule.Tags, ", ")
+
+							if cs.opts.Verbose {
+								leak.Log(cs.opts.Redact)
+							}
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
+							continue
+						}
+					}
 
 					lineLookup := make(map[string]bool)
-					for _, leak := range leaks {
-						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-						leak.LeakURL = leakURL(leak)
-						scannerReport.Leaks = append(scannerReport.Leaks, leak)
-						if cs.opts.Verbose {
-							logLeak(leak, cs.opts.Redact)
+
+					// Check the actual content
+					for _, line := range strings.Split(chunk.Content(), "\n") {
+						for _, rule := range cs.cfg.Rules {
+							offender := rule.Inspect(line)
+							if offender == "" || cs.cfg.Allowlist.RegexAllowed(offender) {
+								continue
+							}
+							leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
+							if leak.Allowed(cs.cfg.Allowlist) {
+								continue
+							}
+							leak.File = to.Path()
+							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+							leak.RepoURL = cs.opts.RepoURL
+							leak.Repo = cs.repoName
+							leak.LeakURL = leakURL(leak)
+							leak.Rule = rule.Description
+							leak.Tags = strings.Join(rule.Tags, ", ")
+							if cs.opts.Verbose {
+								leak.Log(cs.opts.Redact)
+							}
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
 						}
 					}
 				}

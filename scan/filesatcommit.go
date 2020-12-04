@@ -3,7 +3,6 @@ package scan
 import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 // FilesAtCommitScanner is a files at commit scanner. This differs from CommitScanner
@@ -31,8 +30,8 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 }
 
 // Scan kicks off a FilesAtCommitScanner Scan
-func (fs *FilesAtCommitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (fs *FilesAtCommitScanner) Scan() (Report, error) {
+	var scannerReport Report
 	fIter, err := fs.commit.Files()
 	if err != nil {
 		return scannerReport, err

@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"golang.org/x/sync/errgroup"
 )
 
@@ -36,8 +34,8 @@ func NewNoGitScanner(base BaseScanner) *NoGitScanner {
 }
 
 // Scan kicks off a NoGitScanner Scan
-func (ngs *NoGitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (ngs *NoGitScanner) Scan() (Report, error) {
+	var scannerReport Report
 
 	g, _ := errgroup.WithContext(context.Background())
 	paths := make(chan string)

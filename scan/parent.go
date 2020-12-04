@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,8 +23,8 @@ func NewParentScanner(base BaseScanner) *ParentScanner {
 }
 
 // Scan kicks off a ParentScanner scan. This uses the directory from --path to discovery repos
-func (ds *ParentScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (ds *ParentScanner) Scan() (Report, error) {
+	var scannerReport Report
 	log.Debugf("scanning repos in %s\n", ds.opts.Path)
 
 	files, err := ioutil.ReadDir(ds.opts.Path)
