@@ -15,16 +15,16 @@ import (
 // NoGitScanner is a scanner that absolutely despises git
 type NoGitScanner struct {
 	BaseScanner
-	leakChan chan report.Leak
+	leakChan chan Leak
 	leakWG   *sync.WaitGroup
-	leaks    []report.Leak
+	leaks    []Leak
 }
 
 // NewNoGitScanner creates and returns a nogit scanner. This is used for scanning files and directories
 func NewNoGitScanner(base BaseScanner) *NoGitScanner {
 	ngs := &NoGitScanner{
 		BaseScanner: base,
-		leakChan:    make(chan report.Leak),
+		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 	}
 

@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 
@@ -30,8 +28,6 @@ const (
 	diffDelPrefix     = "-"
 	diffLineSignature = " @@"
 	defaultLineNumber = 1
-
-	maxLineLen = 200
 )
 
 func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error) {
@@ -138,10 +134,10 @@ func shouldLog(scanner BaseScanner) bool {
 	return false
 }
 
-func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, content string) []report.Leak {
+func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, content string) []Leak {
 	filename := filepath.Base(filePath)
 	path := filepath.Dir(filePath)
-	var leaks []report.Leak
+	var leaks []Leak
 
 	skipRuleLookup := make(map[string]bool)
 	// First do simple rule checks based on filename
@@ -161,7 +157,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 
 		// If it doesnt contain a Content regex then it is a filename regex match
 		if !ruleContainRegex(rule) {
-			leak := report.Leak{
+			leak := Leak{
 				LineNumber: defaultLineNumber,
 				Line:       "",
 				Offender:   "Filename/path offender: " + filename,
@@ -215,7 +211,7 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 				offender = groups[rule.ReportGroup]
 			}
 
-			leak := report.Leak{
+			leak := Leak{
 				LineNumber: lineNumber,
 				Line:       line,
 				Offender:   offender,
@@ -241,9 +237,9 @@ func checkRules(scanner BaseScanner, commit *object.Commit, repoName, filePath, 
 	return leaks
 }
 
-func logLeak(leak report.Leak, redact bool) {
+func logLeak(leak Leak, redact bool) {
 	if redact {
-		leak = report.RedactLeak(leak)
+		leak = RedactLeak(leak)
 	}
 	var b []byte
 	b, _ = json.MarshalIndent(leak, "", "	")
@@ -464,7 +460,7 @@ func optsToCommits(opts options.Options) ([]string, error) {
 	return commits, nil
 }
 
-func extractLine(patchContent string, leak report.Leak, lineLookup map[string]bool) int {
+func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int {
 	i := strings.Index(patchContent, fmt.Sprintf("\n+++ b/%s", leak.File))
 	filePatchContent := patchContent[i+1:]
 	i = strings.Index(filePatchContent, "diff --git")
@@ -495,7 +491,7 @@ func extractLine(patchContent string, leak report.Leak, lineLookup map[string]bo
 	return defaultLineNumber
 }
 
-func leakURL(leak report.Leak) string {
+func leakURL(leak Leak) string {
 	if leak.RepoURL != "" {
 		return fmt.Sprintf("%s/blob/%s/%s#L%d", leak.RepoURL, leak.Commit, leak.File, leak.LineNumber)
 	}

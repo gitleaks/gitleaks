@@ -1,4 +1,4 @@
-package report
+package scan
 
 import (
 	"strings"

@@ -13,6 +13,34 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// RuleType is the scanner type which is determined based on program arguments
+type RuleType int
+
+const (
+	fileOnly RuleType = iota + 1
+	regexOnly
+	entropyOnly
+	regexAndEntropy
+	fileAndRegex
+)
+
+// Rule is a struct that contains information that is loaded from a gitleaks config.
+// This struct is used in the Config struct as an array of Rules and is iterated
+// over during an scan. Each rule will be checked. If a regex match is found AND
+// that match is not allowlisted (globally or locally), then a leak will be appended
+// to the final scan report.
+type Rule struct {
+	Description string
+	Regex       *regexp.Regexp
+	File        *regexp.Regexp
+	Path        *regexp.Regexp
+	ReportGroup int
+	Tags        []string
+	AllowList   AllowList
+	Entropies   []Entropy
+	ruleType    RuleType
+}
+
 // AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
 type AllowList struct {
@@ -29,22 +57,6 @@ type Entropy struct {
 	Min   float64
 	Max   float64
 	Group int
-}
-
-// Rule is a struct that contains information that is loaded from a gitleaks config.
-// This struct is used in the Config struct as an array of Rules and is iterated
-// over during an scan. Each rule will be checked. If a regex match is found AND
-// that match is not allowlisted (globally or locally), then a leak will be appended
-// to the final scan report.
-type Rule struct {
-	Description string
-	Regex       *regexp.Regexp
-	File        *regexp.Regexp
-	Path        *regexp.Regexp
-	ReportGroup int
-	Tags        []string
-	AllowList   AllowList
-	Entropies   []Entropy
 }
 
 // Config is a composite struct of Rules and Allowlists

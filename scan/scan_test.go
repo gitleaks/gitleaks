@@ -611,8 +611,8 @@ func TestScanUncommited(t *testing.T) {
 
 func fileCheck(wantPath, gotPath string) error {
 	var (
-		gotLeaks  []report.Leak
-		wantLeaks []report.Leak
+		gotLeaks  []Leak
+		wantLeaks []Leak
 	)
 	want, err := ioutil.ReadFile(wantPath)
 	if err != nil {

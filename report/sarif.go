@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v7/scan"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 )
 
@@ -109,7 +111,7 @@ func configToRules(cfg config.Config) []Rules {
 	return rules
 }
 
-func leaksToResults(leaks []Leak) []Results {
+func leaksToResults(leaks []scan.Leak) []Results {
 	var results []Results
 	for _, leak := range leaks {
 		results = append(results, Results{
@@ -132,7 +134,7 @@ func leaksToResults(leaks []Leak) []Results {
 	return results
 }
 
-func leakToLocation(leak Leak) []Locations {
+func leakToLocation(leak scan.Leak) []Locations {
 	uri := leak.File
 	if leak.LeakURL != "" {
 		uri = leak.LeakURL

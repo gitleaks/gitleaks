@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"path/filepath"
 	"sync"
 
 	"github.com/zricethezav/gitleaks/v7/report"
@@ -18,10 +19,10 @@ type RepoScanner struct {
 	repo     *git.Repository
 	repoName string
 
-	leakChan  chan report.Leak
+	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
-	leaks     []report.Leak
+	leaks     []Leak
 }
 
 // NewRepoScanner returns a new repo scanner (go figure). This function also
@@ -30,7 +31,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
 		repo:        repo,
-		leakChan:    make(chan report.Leak),
+		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
 		repoName:    getRepoName(base.opts),
@@ -62,8 +63,7 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 			return storer.ErrStop
 		}
 
-		// Check if Commit is allowlisted
-		if isCommitAllowListed(c.Hash.String(), rs.cfg.Allowlist.Commits) {
+		if CommitAllowed(rs.cfg.Allowlist, c.Hash.String()) {
 			return nil
 		}
 
@@ -125,16 +125,54 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 					continue
 				}
 
+				fileLookup := make(map[string]bool)
 				for _, chunk := range f.Chunks() {
 					if chunk.Type() == fdiff.Add {
 						_, to := f.Files()
+
+						// Check allowlist
+						if FileAllowed(rs.cfg.Allowlist, filepath.Base(to.Path())) ||
+							PathAllowed(rs.cfg.Allowlist, to.Path()) {
+							continue
+						}
+
+						// lineLookup is used for extracting the correct line number from a historic leak
 						lineLookup := make(map[string]bool)
-						for _, leak := range checkRules(rs.BaseScanner, c, rs.repoName, to.Path(), chunk.Content()) {
+
+						// Check individual rules
+						for _, rule := range rs.cfg.Rules {
+							if _, ok := fileLookup[to.Path()]; !ok {
+								continue
+							}
+							if CommitAllowListed(rule, c.Hash.String()) {
+								continue
+							}
+							if rule.HasFileLeak(filepath.Base(to.Path())) || rule.HasFilePathLeak(to.Path()) {
+								// TODO leak = addFileLeak
+								leak := Leak{
+									LineNumber: defaultLineNumber,
+									Line:       "",
+									Offender:   "Filename or path offender: " + to.Path(),
+								}
+								// send to leak channel
+								rs.leakWG.Add(1)
+								rs.leakChan <- leak
+								fileLookup[to.Path()] = true
+								continue
+							}
+
+							leak := rule.CheckLines(chunk.Content())
+							if rs.cfg.Allowlist.LeakAllowed(leak) {
+								continue
+							}
 							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 							leak.LeakURL = leakURL(leak)
+
 							if rs.opts.Verbose {
 								logLeak(leak, rs.opts.Redact)
 							}
+
+							// send to leak channel
 							rs.leakWG.Add(1)
 							rs.leakChan <- leak
 						}

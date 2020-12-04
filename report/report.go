@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v7/scan"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/version"
@@ -15,7 +17,7 @@ import (
 
 // Report is a container for leaks and number of commits scanned
 type Report struct {
-	Leaks   []Leak
+	Leaks   []scan.Leak
 	Commits int
 }
 
@@ -36,9 +38,9 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	}
 
 	if opts.Redact {
-		var redactedLeaks []Leak
+		var redactedLeaks []scan.Leak
 		for _, leak := range report.Leaks {
-			redactedLeaks = append(redactedLeaks, RedactLeak(leak))
+			redactedLeaks = append(redactedLeaks, scan.RedactLeak(leak))
 		}
 		report.Leaks = redactedLeaks
 	}
