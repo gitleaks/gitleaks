@@ -46,13 +46,7 @@ func (ds *ParentScanner) Scan() (Report, error) {
 			}
 			return scannerReport, err
 		}
-		skip := false
-		for _, allowListedRepo := range ds.cfg.Allowlist.Repos {
-			if regexMatched(f.Name(), allowListedRepo) {
-				skip = true
-			}
-		}
-		if skip {
+		if ds.cfg.Allowlist.RepoAllowed(f.Name()) {
 			continue
 		}
 

@@ -40,6 +40,11 @@ func (a *AllowList) RegexAllowed(content string) bool {
 	return anyRegexMatch(content, a.Regexes)
 }
 
+// RepoAllowed checks if a regex is allowlisted
+func (a *AllowList) RepoAllowed(repo string) bool {
+	return anyRegexMatch(repo, a.Repos)
+}
+
 // IgnoreDotGit appends a `.git$` rule to ignore all .git paths. This is used for --no-git scans
 func (a *AllowList) IgnoreDotGit() error {
 	re, err := regexp.Compile(".git$")

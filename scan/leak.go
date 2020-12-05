@@ -64,3 +64,11 @@ func (leak Leak) Log(redact bool) {
 	b, _ = json.MarshalIndent(leak, "", "	")
 	fmt.Println(string(b))
 }
+
+// URL generates a url to the leak if leak.RepoURL is set
+func (leak Leak) URL() string {
+	if leak.RepoURL != "" {
+		return fmt.Sprintf("%s/blob/%s/%s#L%d", leak.RepoURL, leak.Commit, leak.File, leak.LineNumber)
+	}
+	return ""
+}

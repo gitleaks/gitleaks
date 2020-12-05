@@ -286,14 +286,3 @@ func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
 
 	return tomlLoader.Parse()
 }
-
-//func (c Config) FileAndPathOnlyRules() []Rule {
-//	var rules []Rule
-//	for _, r := range c.Rules {
-//		if r.File != nil || r.Path != nil {
-//			rules = append(rules)
-//		}
-//
-//	}
-//
-//}

@@ -91,7 +91,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.Repo = cs.repoName
 						leak.File = to.Path()
 						leak.RepoURL = cs.opts.RepoURL
-						leak.LeakURL = leakURL(leak)
+						leak.LeakURL = leak.URL()
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
 
@@ -131,7 +131,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 						leak.RepoURL = cs.opts.RepoURL
 						leak.Repo = cs.repoName
-						leak.LeakURL = leakURL(leak)
+						leak.LeakURL = leak.URL()
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
 						if cs.opts.Verbose {

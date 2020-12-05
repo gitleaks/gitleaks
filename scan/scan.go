@@ -45,15 +45,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		repo *git.Repository
 		err  error
 	)
-	// TODO move this block to config parsing?
-	for _, allowListedRepo := range cfg.Allowlist.Repos {
-		if regexMatched(opts.Path, allowListedRepo) {
-			return nil, nil
-		}
-		if regexMatched(opts.RepoURL, allowListedRepo) {
-			return nil, nil
-		}
-	}
+
 	base := BaseScanner{
 		opts: opts,
 		cfg:  cfg,
