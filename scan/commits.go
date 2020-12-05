@@ -2,7 +2,6 @@ package scan
 
 import (
 	"github.com/go-git/go-git/v5"
-	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 // CommitsScanner is a commit scanner
@@ -25,8 +24,8 @@ func NewCommitsScanner(base BaseScanner, repo *git.Repository, commits []string)
 }
 
 // Scan kicks off a CommitsScanner Scan
-func (css *CommitsScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (css *CommitsScanner) Scan() (Report, error) {
+	var scannerReport Report
 	for _, c := range css.commits {
 		c, err := obtainCommit(css.repo, c)
 		if err != nil {

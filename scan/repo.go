@@ -1,15 +1,14 @@
 package scan
 
 import (
+	"fmt"
 	"sync"
 
-	"github.com/zricethezav/gitleaks/v7/report"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-git/go-git/v5"
-	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
-	log "github.com/sirupsen/logrus"
 )
 
 // RepoScanner is a repo scanner
@@ -18,10 +17,10 @@ type RepoScanner struct {
 	repo     *git.Repository
 	repoName string
 
-	leakChan  chan report.Leak
+	leakChan  chan Leak
 	leakWG    *sync.WaitGroup
 	leakCache map[string]bool
-	leaks     []report.Leak
+	leaks     []Leak
 }
 
 // NewRepoScanner returns a new repo scanner (go figure). This function also
@@ -30,7 +29,7 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
 		BaseScanner: base,
 		repo:        repo,
-		leakChan:    make(chan report.Leak),
+		leakChan:    make(chan Leak),
 		leakWG:      &sync.WaitGroup{},
 		leakCache:   make(map[string]bool),
 		repoName:    getRepoName(base.opts),
@@ -44,8 +43,8 @@ func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
 }
 
 // Scan kicks of a repo scan
-func (rs *RepoScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (rs *RepoScanner) Scan() (Report, error) {
+	var scannerReport Report
 	logOpts, err := logOptions(rs.repo, rs.opts)
 	if err != nil {
 		return scannerReport, err
@@ -62,8 +61,7 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 			return storer.ErrStop
 		}
 
-		// Check if Commit is allowlisted
-		if isCommitAllowListed(c.Hash.String(), rs.cfg.Allowlist.Commits) {
+		if rs.cfg.Allowlist.CommitAllowed(c.Hash.String()) {
 			return nil
 		}
 
@@ -84,28 +82,12 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 		// (they exist as the tip of other branches, etc)
 		// See https://github.com/zricethezav/gitleaks/issues/413 for details
 		parent, err := c.Parent(0)
-		if err != nil {
+		if err != nil || parent == nil {
 			return err
 		}
-
-		defer func() {
-			if err := recover(); err != nil {
-				// sometimes the Patch generation will fail due to a known bug in
-				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-				// Once a fix has been merged I will remove this recover.
-				return
-			}
-		}()
-
-		if parent == nil {
-			// shouldn't reach this point but just in case
-			return nil
-		}
-
-		// start := time.Now()
 		patch, err := parent.Patch(c)
 		if err != nil {
-			log.Errorf("could not generate Patch")
+			return fmt.Errorf("could not generate Patch")
 		}
 
 		scannerReport.Commits++
@@ -117,29 +99,16 @@ func (rs *RepoScanner) Scan() (report.Report, error) {
 				wg.Done()
 			}()
 
-			// patchContent is used for searching for leak line number
-			patchContent := patch.String()
-
-			for _, f := range patch.FilePatches() {
-				if f.IsBinary() {
-					continue
-				}
-
-				for _, chunk := range f.Chunks() {
-					if chunk.Type() == fdiff.Add {
-						_, to := f.Files()
-						lineLookup := make(map[string]bool)
-						for _, leak := range checkRules(rs.BaseScanner, c, rs.repoName, to.Path(), chunk.Content()) {
-							leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-							leak.LeakURL = leakURL(leak)
-							if rs.opts.Verbose {
-								logLeak(leak, rs.opts.Redact)
-							}
-							rs.leakWG.Add(1)
-							rs.leakChan <- leak
-						}
-					}
-				}
+			commitScanner := NewCommitScanner(rs.BaseScanner, rs.repo, c)
+			commitScanner.SetRepoName(rs.repoName)
+			commitScanner.SetPatch(patch)
+			report, err := commitScanner.Scan()
+			if err != nil {
+				log.Error(err)
+			}
+			for _, leak := range report.Leaks {
+				rs.leakWG.Add(1)
+				rs.leakChan <- leak
 			}
 		}(c, patch)
 

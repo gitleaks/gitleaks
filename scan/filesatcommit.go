@@ -1,9 +1,11 @@
 package scan
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 // FilesAtCommitScanner is a files at commit scanner. This differs from CommitScanner
@@ -31,8 +33,8 @@ func NewFilesAtCommitScanner(base BaseScanner, repo *git.Repository, commit *obj
 }
 
 // Scan kicks off a FilesAtCommitScanner Scan
-func (fs *FilesAtCommitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (fs *FilesAtCommitScanner) Scan() (Report, error) {
+	var scannerReport Report
 	fIter, err := fs.commit.Files()
 	if err != nil {
 		return scannerReport, err
@@ -51,7 +53,65 @@ func (fs *FilesAtCommitScanner) Scan() (report.Report, error) {
 			return err
 		}
 
-		scannerReport.Leaks = append(scannerReport.Leaks, checkRules(fs.BaseScanner, fs.commit, fs.repoName, f.Name, content)...)
+		// Check individual file path ONLY rules
+		for _, rule := range fs.cfg.Rules {
+			if rule.CommitAllowed(fs.commit.Hash.String()) {
+				continue
+			}
+
+			if rule.HasFileOrPathLeakOnly(f.Name) {
+				leak := NewLeak("", "Filename or path offender: "+f.Name, defaultLineNumber).WithCommit(fs.commit)
+				leak.Repo = fs.repoName
+				leak.File = f.Name
+				leak.RepoURL = fs.opts.RepoURL
+				leak.LeakURL = leak.URL()
+				leak.Rule = rule.Description
+				leak.Tags = strings.Join(rule.Tags, ", ")
+
+				if fs.opts.Verbose {
+					leak.Log(fs.opts.Redact)
+				}
+				scannerReport.Leaks = append(scannerReport.Leaks, leak)
+				continue
+			}
+		}
+
+		for i, line := range strings.Split(content, "\n") {
+			for _, rule := range fs.cfg.Rules {
+				offender := rule.Inspect(line)
+
+				if offender == "" {
+					continue
+				}
+				if fs.cfg.Allowlist.RegexAllowed(line) ||
+					rule.AllowList.FileAllowed(filepath.Base(f.Name)) ||
+					rule.AllowList.PathAllowed(f.Name) ||
+					rule.AllowList.CommitAllowed(fs.commit.Hash.String()) {
+					continue
+				}
+
+				if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(f.Name)) {
+					continue
+				}
+				if rule.Path.String() != "" && !rule.HasFilePathLeak(f.Name) {
+					continue
+				}
+
+				leak := NewLeak(line, offender, defaultLineNumber).WithCommit(fs.commit)
+				leak.File = f.Name
+				leak.LineNumber = i + 1
+				leak.RepoURL = fs.opts.RepoURL
+				leak.Repo = fs.repoName
+				leak.LeakURL = leak.URL()
+				leak.Rule = rule.Description
+				leak.Tags = strings.Join(rule.Tags, ", ")
+				if fs.opts.Verbose {
+					leak.Log(fs.opts.Redact)
+				}
+				scannerReport.Leaks = append(scannerReport.Leaks, leak)
+			}
+		}
+
 		return nil
 	})
 

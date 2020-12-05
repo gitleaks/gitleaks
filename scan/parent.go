@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/zricethezav/gitleaks/v7/report"
+	"github.com/zricethezav/gitleaks/v7/config"
 
 	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
@@ -25,8 +25,8 @@ func NewParentScanner(base BaseScanner) *ParentScanner {
 }
 
 // Scan kicks off a ParentScanner scan. This uses the directory from --path to discovery repos
-func (ds *ParentScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (ds *ParentScanner) Scan() (Report, error) {
+	var scannerReport Report
 	log.Debugf("scanning repos in %s\n", ds.opts.Path)
 
 	files, err := ioutil.ReadDir(ds.opts.Path)
@@ -46,14 +46,17 @@ func (ds *ParentScanner) Scan() (report.Report, error) {
 			}
 			return scannerReport, err
 		}
-		skip := false
-		for _, allowListedRepo := range ds.cfg.Allowlist.Repos {
-			if regexMatched(f.Name(), allowListedRepo) {
-				skip = true
-			}
-		}
-		if skip {
+		if ds.cfg.Allowlist.RepoAllowed(f.Name()) {
 			continue
+		}
+
+		if ds.opts.RepoConfigPath != "" {
+			cfg, err := config.LoadRepoConfig(repo, ds.opts.RepoConfigPath)
+			if err != nil {
+				log.Warn(err)
+			} else {
+				ds.BaseScanner.cfg = cfg
+			}
 		}
 
 		rs := NewRepoScanner(ds.BaseScanner, repo)

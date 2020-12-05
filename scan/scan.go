@@ -8,13 +8,12 @@ import (
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-	"github.com/zricethezav/gitleaks/v7/report"
 )
 
 // Scanner abstracts unique scanner internals while exposing the Scan function which
 // returns a report.
 type Scanner interface {
-	Scan() (report.Report, error)
+	Scan() (Report, error)
 }
 
 // BaseScanner is a container for common data each scanner needs.
@@ -46,15 +45,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		repo *git.Repository
 		err  error
 	)
-	// TODO move this block to config parsing?
-	for _, allowListedRepo := range cfg.Allowlist.Repos {
-		if regexMatched(opts.Path, allowListedRepo) {
-			return nil, nil
-		}
-		if regexMatched(opts.RepoURL, allowListedRepo) {
-			return nil, nil
-		}
-	}
+
 	base := BaseScanner{
 		opts: opts,
 		cfg:  cfg,
@@ -79,7 +70,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	}
 
 	// load up alternative config if possible, if not use manager's config
-	if opts.RepoConfigPath != "" {
+	if opts.RepoConfigPath != "" && !opts.NoGit {
 		base.cfg, err = config.LoadRepoConfig(repo, opts.RepoConfigPath)
 		if err != nil {
 			return nil, err

@@ -1,4 +1,4 @@
-package report
+package scan
 
 import (
 	"encoding/csv"
@@ -6,11 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/version"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Report is a container for leaks and number of commits scanned
@@ -22,12 +21,12 @@ type Report struct {
 // WriteReport accepts a report and options and will write a report if --report has been set
 func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	if !(opts.NoGit || opts.CheckUncommitted()) {
-		log.Info("commits scanned: ", report.Commits)
+		logrus.Info("commits scanned: ", report.Commits)
 	}
 	if len(report.Leaks) != 0 {
-		log.Warn("leaks found: ", len(report.Leaks))
+		logrus.Warn("leaks found: ", len(report.Leaks))
 	} else {
-		log.Info("No leaks found")
+		logrus.Info("No leaks found")
 		return nil
 	}
 

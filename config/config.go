@@ -13,15 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// AllowList is struct containing items that if encountered will allowlist
-// a commit/line of code that would be considered a leak.
-type AllowList struct {
-	Description string
-	Regexes     []*regexp.Regexp
-	Commits     []string
-	Files       []*regexp.Regexp
-	Paths       []*regexp.Regexp
-	Repos       []*regexp.Regexp
+// Config is a composite struct of Rules and Allowlists
+// Each Rule contains a description, regular expression, tags, and allowlists if available
+type Config struct {
+	Rules     []Rule
+	Allowlist AllowList
 }
 
 // Entropy represents an entropy range
@@ -29,29 +25,6 @@ type Entropy struct {
 	Min   float64
 	Max   float64
 	Group int
-}
-
-// Rule is a struct that contains information that is loaded from a gitleaks config.
-// This struct is used in the Config struct as an array of Rules and is iterated
-// over during an scan. Each rule will be checked. If a regex match is found AND
-// that match is not allowlisted (globally or locally), then a leak will be appended
-// to the final scan report.
-type Rule struct {
-	Description string
-	Regex       *regexp.Regexp
-	File        *regexp.Regexp
-	Path        *regexp.Regexp
-	ReportGroup int
-	Tags        []string
-	AllowList   AllowList
-	Entropies   []Entropy
-}
-
-// Config is a composite struct of Rules and Allowlists
-// Each Rule contains a description, regular expression, tags, and allowlists if available
-type Config struct {
-	Rules     []Rule
-	Allowlist AllowList
 }
 
 // TomlAllowList is a struct used in the TomlLoader that loads in allowlists from
