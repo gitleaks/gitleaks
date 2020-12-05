@@ -55,7 +55,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 
 		// Check individual file path ONLY rules
 		for _, rule := range fs.cfg.Rules {
-			if rule.CommitAllowListed(fs.commit.Hash.String()) {
+			if rule.CommitAllowed(fs.commit.Hash.String()) {
 				continue
 			}
 

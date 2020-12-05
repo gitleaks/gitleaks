@@ -1,4 +1,4 @@
 [[rules]]
 	description = "flag go"
-	file = '''(.*?)(go)$'''
+	file = '''(.*?)(md)$'''
 	tags = ["key", "extensions"]

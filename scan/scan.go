@@ -78,7 +78,7 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 	}
 
 	// load up alternative config if possible, if not use manager's config
-	if opts.RepoConfigPath != "" {
+	if opts.RepoConfigPath != "" && !opts.NoGit {
 		base.cfg, err = config.LoadRepoConfig(repo, opts.RepoConfigPath)
 		if err != nil {
 			return nil, err

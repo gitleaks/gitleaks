@@ -15,6 +15,7 @@ type AllowList struct {
 	Repos       []*regexp.Regexp
 }
 
+// CommitAllowed checks if a commit is allowlisted
 func (a *AllowList) CommitAllowed(commit string) bool {
 	for _, hash := range a.Commits {
 		if commit == hash {
@@ -24,20 +25,24 @@ func (a *AllowList) CommitAllowed(commit string) bool {
 	return false
 }
 
+// FileAllowed checks if a file is allowlisted
 func (a *AllowList) FileAllowed(fileName string) bool {
 	return anyRegexMatch(fileName, a.Files)
 }
 
+// PathAllowed checks if a path is allowlisted
 func (a *AllowList) PathAllowed(filePath string) bool {
 	return anyRegexMatch(filePath, a.Paths)
 }
 
+// RegexAllowed checks if a regex is allowlisted
 func (a *AllowList) RegexAllowed(content string) bool {
 	return anyRegexMatch(content, a.Regexes)
 }
 
+// IgnoreDotGit appends a `.git$` rule to ignore all .git paths. This is used for --no-git scans
 func (a *AllowList) IgnoreDotGit() error {
-	re, err := regexp.Compile(".git")
+	re, err := regexp.Compile(".git$")
 	if err != nil {
 		return err
 	}

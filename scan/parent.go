@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+
 	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
@@ -52,6 +54,15 @@ func (ds *ParentScanner) Scan() (Report, error) {
 		}
 		if skip {
 			continue
+		}
+
+		if ds.opts.RepoConfigPath != "" {
+			cfg, err := config.LoadRepoConfig(repo, ds.opts.RepoConfigPath)
+			if err != nil {
+				log.Warn(err)
+			} else {
+				ds.BaseScanner.cfg = cfg
+			}
 		}
 
 		rs := NewRepoScanner(ds.BaseScanner, repo)

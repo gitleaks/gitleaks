@@ -22,6 +22,7 @@ type Rule struct {
 	Entropies   []Entropy
 }
 
+// Inspect checks the content of a line for a leak
 func (r *Rule) Inspect(line string) string {
 	offender := r.Regex.FindString(line)
 	if offender == "" {
@@ -46,14 +47,17 @@ func (r *Rule) Inspect(line string) string {
 	return offender
 }
 
+// RegexAllowed checks if the content is allowlisted
 func (r *Rule) RegexAllowed(content string) bool {
 	return anyRegexMatch(content, r.AllowList.Regexes)
 }
 
-func (r *Rule) CommitAllowListed(commit string) bool {
+// CommitAllowed checks if a commit is allowlisted
+func (r *Rule) CommitAllowed(commit string) bool {
 	return r.AllowList.CommitAllowed(commit)
 }
 
+// ContainsEntropyLeak checks if there is an entropy leak
 func (r *Rule) ContainsEntropyLeak(groups []string) bool {
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
@@ -66,6 +70,8 @@ func (r *Rule) ContainsEntropyLeak(groups []string) bool {
 	return false
 }
 
+// HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if
+// there are any file/path leaks
 func (r *Rule) HasFileOrPathLeakOnly(filePath string) bool {
 	if r.Regex.String() != "" {
 		return false
@@ -76,10 +82,12 @@ func (r *Rule) HasFileOrPathLeakOnly(filePath string) bool {
 	return r.HasFileLeak(filepath.Base(filePath)) || r.HasFilePathLeak(filePath)
 }
 
+// HasFileLeak checks if there is a file leak
 func (r *Rule) HasFileLeak(fileName string) bool {
 	return regexMatched(fileName, r.File)
 }
 
+// HasFilePathLeak checks if there is a path leak
 func (r *Rule) HasFilePathLeak(filePath string) bool {
 	return regexMatched(filePath, r.Path)
 }

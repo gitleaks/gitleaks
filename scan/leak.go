@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/object"
-
-	"github.com/zricethezav/gitleaks/v7/config"
 )
 
 // Leak is a struct that contains information about some line of code that contains
@@ -38,6 +36,7 @@ func RedactLeak(leak Leak) Leak {
 	return leak
 }
 
+// NewLeak creates a new leak from common data all leaks must have, line, offender, linenumber
 func NewLeak(line string, offender string, lineNumber int) Leak {
 	return Leak{
 		Line:       line,
@@ -46,6 +45,7 @@ func NewLeak(line string, offender string, lineNumber int) Leak {
 	}
 }
 
+// WithCommit adds commit data to the leak
 func (leak Leak) WithCommit(commit *object.Commit) Leak {
 	leak.Commit = commit.Hash.String()
 	leak.Author = commit.Author.Name
@@ -55,18 +55,7 @@ func (leak Leak) WithCommit(commit *object.Commit) Leak {
 	return leak
 }
 
-func (leak Leak) IsEmpty() bool {
-	if leak.Offender == "" {
-		return true
-	}
-	return false
-}
-
-func (leak Leak) Allowed(a config.AllowList) bool {
-	// TODO maybe check all the things again?
-	return a.RegexAllowed(leak.Offender)
-}
-
+// Log logs a leak and redacts if necessary
 func (leak Leak) Log(redact bool) {
 	if redact {
 		leak = RedactLeak(leak)

@@ -82,7 +82,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 
 				// Check individual file path ONLY rules
 				for _, rule := range cs.cfg.Rules {
-					if rule.CommitAllowListed(cs.commit.Hash.String()) {
+					if rule.CommitAllowed(cs.commit.Hash.String()) {
 						continue
 					}
 

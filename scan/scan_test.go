@@ -417,6 +417,17 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_file1_aws_leak.json",
 		},
+		{
+			description: "test only md files no git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/",
+				Report:       "../test_data/test_only_files_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/onlyFiles.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_only_files_no_git.json",
+		},
 	}
 
 	for _, test := range tests {
@@ -632,8 +643,12 @@ func fileCheck(wantPath, gotPath string) error {
 		return err
 	}
 
-	sort.Slice(gotLeaks, func(i, j int) bool { return (gotLeaks)[i].Commit < (gotLeaks)[j].Commit })
-	sort.Slice(wantLeaks, func(i, j int) bool { return (wantLeaks)[i].Commit < (wantLeaks)[j].Commit })
+	sort.Slice(gotLeaks, func(i, j int) bool {
+		return (gotLeaks)[i].Offender+(gotLeaks)[i].File < (gotLeaks)[j].Offender+(gotLeaks)[j].File
+	})
+	sort.Slice(wantLeaks, func(i, j int) bool {
+		return (wantLeaks)[i].Offender+(wantLeaks)[i].File < (wantLeaks)[j].Offender+(wantLeaks)[j].File
+	})
 
 	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
 		dmp := diffmatchpatch.New()
