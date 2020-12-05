@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"fmt"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -56,15 +57,6 @@ func (rs *RepoScanner) Scan() (Report, error) {
 	wg := sync.WaitGroup{}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
-		defer func() {
-			if err := recover(); err != nil {
-				// sometimes the Patch generation will fail due to a known bug in
-				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-				// Once a fix has been merged I will remove this recover.
-				return
-			}
-		}()
-
 		if c == nil || depthReached(scannerReport.Commits, rs.opts) {
 			return storer.ErrStop
 		}
@@ -90,26 +82,26 @@ func (rs *RepoScanner) Scan() (Report, error) {
 		// (they exist as the tip of other branches, etc)
 		// See https://github.com/zricethezav/gitleaks/issues/413 for details
 		parent, err := c.Parent(0)
-		if err != nil {
+		if err != nil || parent == nil {
 			return err
 		}
-
-		if parent == nil {
-			// shouldn't reach this point but just in case
-			return nil
+		patch, err := parent.Patch(c)
+		if err != nil {
+			return fmt.Errorf("could not generate Patch")
 		}
 
 		scannerReport.Commits++
 		wg.Add(1)
 		semaphore <- true
-		go func(c *object.Commit) {
+		go func(c *object.Commit, patch *object.Patch) {
 			defer func() {
 				<-semaphore
 				wg.Done()
 			}()
 
 			commitScanner := NewCommitScanner(rs.BaseScanner, rs.repo, c)
-			commitScanner.OverrideRepoName(rs.repoName)
+			commitScanner.ProvideRepoName(rs.repoName)
+			commitScanner.ProvidePatch(patch)
 			report, err := commitScanner.Scan()
 			if err != nil {
 				log.Error(err)
@@ -118,7 +110,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 				rs.leakWG.Add(1)
 				rs.leakChan <- leak
 			}
-		}(c)
+		}(c, patch)
 
 		if c.Hash.String() == rs.opts.CommitTo {
 			return storer.ErrStop

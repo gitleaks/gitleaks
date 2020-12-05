@@ -16,6 +16,7 @@ type CommitScanner struct {
 	repo     *git.Repository
 	repoName string
 	commit   *object.Commit
+	patch    *object.Patch
 }
 
 // NewCommitScanner creates and returns a commit scanner
@@ -30,8 +31,12 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	return cs
 }
 
-func (cs *CommitScanner) OverrideRepoName(repoName string) {
+func (cs *CommitScanner) ProvideRepoName(repoName string) {
 	cs.repoName = repoName
+}
+
+func (cs *CommitScanner) ProvidePatch(patch *object.Patch) {
+	cs.patch = patch
 }
 
 // Scan kicks off a CommitScanner Scan
@@ -42,23 +47,25 @@ func (cs *CommitScanner) Scan() (Report, error) {
 		return facScanner.Scan()
 	}
 
-	parent, err := cs.commit.Parent(0)
-	if err != nil {
-		return scannerReport, err
+	if cs.patch == nil {
+		parent, err := cs.commit.Parent(0)
+		if err != nil {
+			return scannerReport, err
+		}
+
+		if parent == nil {
+			return scannerReport, nil
+		}
+
+		cs.patch, err = parent.Patch(cs.commit)
+		if err != nil {
+			return scannerReport, fmt.Errorf("could not generate Patch")
+		}
 	}
 
-	if parent == nil {
-		return scannerReport, nil
-	}
+	patchContent := cs.patch.String()
 
-	patch, err := parent.Patch(cs.commit)
-	if err != nil {
-		return scannerReport, fmt.Errorf("could not generate Patch")
-	}
-
-	patchContent := patch.String()
-
-	for _, f := range patch.FilePatches() {
+	for _, f := range cs.patch.FilePatches() {
 		if f.IsBinary() {
 			continue
 		}
@@ -134,5 +141,5 @@ func (cs *CommitScanner) Scan() (Report, error) {
 		}
 	}
 	scannerReport.Commits = 1
-	return scannerReport, err
+	return scannerReport, nil
 }

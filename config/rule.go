@@ -20,16 +20,7 @@ type Rule struct {
 	Tags        []string
 	AllowList   AllowList
 	Entropies   []Entropy
-	RuleType
 }
-
-// RuleType
-type RuleType int
-
-const (
-	TypeContent RuleType = iota + 1
-	TypeFile
-)
 
 func (r *Rule) Inspect(line string) string {
 	offender := r.Regex.FindString(line)

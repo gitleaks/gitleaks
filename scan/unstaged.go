@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -54,12 +55,36 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}
-			leaks := checkRules(us.BaseScanner, emptyCommit(), us.repoName, workTreeFile.Name(), workTreeBuf.String())
-			for _, leak := range leaks {
-				if us.opts.Verbose {
-					logLeak(leak, us.opts.Redact)
+			lineNumber := 0
+			for _, line := range strings.Split(workTreeBuf.String(), "\n") {
+				lineNumber++
+				for _, rule := range us.cfg.Rules {
+					offender := rule.Inspect(line)
+					if offender == "" {
+						continue
+					}
+					if us.cfg.Allowlist.RegexAllowed(line) ||
+						rule.AllowList.FileAllowed(filepath.Base(workTreeFile.Name())) ||
+						rule.AllowList.PathAllowed(workTreeFile.Name()) {
+						continue
+					}
+					if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(workTreeFile.Name())) {
+						continue
+					}
+					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(workTreeFile.Name())) {
+						continue
+					}
+					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak.File = workTreeFile.Name()
+					leak.LineNumber = lineNumber
+					leak.Repo = us.repoName
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+					if us.opts.Verbose {
+						leak.Log(us.opts.Redact)
+					}
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
-				scannerReport.Leaks = append(scannerReport.Leaks, leak)
 			}
 		}
 		return scannerReport, nil
@@ -142,22 +167,36 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					diffContents += fmt.Sprintf("%s\n", d.Text)
 				}
 			}
-			leaks := checkRules(us.BaseScanner, c, us.repoName, filename, diffContents)
 
 			lineLookup := make(map[string]bool)
-			for _, leak := range leaks {
-				for lineNumber, line := range strings.Split(prettyDiff, "\n") {
-					if strings.HasPrefix(line, diffAddPrefix) && strings.Contains(line, leak.Line) {
-						if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
-							lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
-							leak.LineNumber = lineNumber + 1
-							if us.opts.Verbose {
-								logLeak(leak, us.opts.Redact)
-							}
-							scannerReport.Leaks = append(scannerReport.Leaks, leak)
-							break
-						}
+
+			for _, line := range strings.Split(diffContents, "\n") {
+				for _, rule := range us.cfg.Rules {
+					offender := rule.Inspect(line)
+					if offender == "" {
+						continue
 					}
+					if us.cfg.Allowlist.RegexAllowed(line) ||
+						rule.AllowList.FileAllowed(filepath.Base(filename)) ||
+						rule.AllowList.PathAllowed(filename) {
+						continue
+					}
+					if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(filename)) {
+						continue
+					}
+					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(filename)) {
+						continue
+					}
+					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak.File = filename
+					leak.LineNumber = extractLine(prettyDiff, leak, lineLookup) + 1
+					leak.Repo = us.repoName
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+					if us.opts.Verbose {
+						leak.Log(us.opts.Redact)
+					}
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
 			}
 		}
@@ -181,6 +220,7 @@ func diffPrettyText(diffs []diffmatchpatch.Diff) string {
 			_, _ = buff.WriteString("-")
 			_, _ = buff.WriteString(text)
 		case diffmatchpatch.DiffEqual:
+			_, _ = buff.WriteString(" ")
 			_, _ = buff.WriteString(text)
 		}
 	}
