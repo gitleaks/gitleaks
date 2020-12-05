@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -113,7 +114,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 		return scannerReport, err
 	}
 
-	status, err := wt.Status()
+	status, err := gitStatus(wt)
 	if err != nil {
 		return scannerReport, err
 	}
@@ -225,4 +226,35 @@ func diffPrettyText(diffs []diffmatchpatch.Diff) string {
 		}
 	}
 	return buff.String()
+}
+
+// gitStatus returns the status of modified files in the worktree. It will attempt to execute 'git status'
+// and will fall back to git.Worktree.Status() if that fails.
+func gitStatus(wt *git.Worktree) (git.Status, error) {
+	c := exec.Command("git", "status", "--porcelain", "-z")
+	c.Dir = wt.Filesystem.Root()
+	output, err := c.Output()
+	if err != nil {
+		stat, err := wt.Status()
+		return stat, err
+	}
+
+	lines := strings.Split(string(output), "\000")
+	stat := make(map[string]*git.FileStatus, len(lines))
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+
+		// For copy/rename the output looks like
+		//   R  destination\000source
+		// Which means we can split on space and ignore anything with only one result
+		parts := strings.SplitN(strings.TrimLeft(line, " "), " ", 2)
+		if len(parts) == 2 {
+			stat[strings.Trim(parts[1], " ")] = &git.FileStatus{
+				Staging: git.StatusCode([]byte(parts[0])[0]),
+			}
+		}
+	}
+	return stat, err
 }
