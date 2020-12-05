@@ -5,7 +5,10 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -29,6 +32,15 @@ func NewNoGitScanner(base BaseScanner) *NoGitScanner {
 	go ngs.receiveLeaks()
 
 	ngs.scannerType = typeNoGitScanner
+
+	// no-git scans should ignore .git folders by default
+	// issue: https://github.com/zricethezav/gitleaks/issues/474
+	// ngs.cfg.Allowlist
+	err := ngs.cfg.Allowlist.IgnoreDotGit()
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
 
 	return ngs
 }
@@ -65,19 +77,61 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 				<-semaphore
 				wg.Done()
 			}()
+
+			if ngs.cfg.Allowlist.FileAllowed(filepath.Base(path)) ||
+				ngs.cfg.Allowlist.PathAllowed(path) {
+				return nil
+			}
+
+			for _, rule := range ngs.cfg.Rules {
+				if rule.HasFileOrPathLeakOnly(path) {
+					leak := NewLeak("", "Filename or path offender: "+path, defaultLineNumber)
+					leak.File = path
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+
+					if ngs.opts.Verbose {
+						leak.Log(ngs.opts.Redact)
+					}
+					ngs.leakWG.Add(1)
+					ngs.leakChan <- leak
+				}
+			}
+
 			f, err := os.Open(p)
 			if err != nil {
 				return err
 			}
 			scanner := bufio.NewScanner(f)
-			line := 0
+			lineNumber := 0
 			for scanner.Scan() {
-				line++
-				leaks := checkRules(ngs.BaseScanner, emptyCommit(), "", f.Name(), scanner.Text())
-				for _, leak := range leaks {
-					leak.LineNumber = line
+				lineNumber++
+				for _, rule := range ngs.cfg.Rules {
+					line := scanner.Text()
+					offender := rule.Inspect(line)
+					if offender == "" {
+						continue
+					}
+					if ngs.cfg.Allowlist.RegexAllowed(line) ||
+						rule.AllowList.FileAllowed(filepath.Base(path)) ||
+						rule.AllowList.PathAllowed(path) {
+						continue
+					}
+
+					if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(path)) {
+						continue
+					}
+					if rule.Path.String() != "" && !rule.HasFilePathLeak(path) {
+						continue
+					}
+
+					leak := NewLeak(line, offender, defaultLineNumber)
+					leak.File = path
+					leak.LineNumber = lineNumber
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
 					if ngs.opts.Verbose {
-						logLeak(leak, ngs.opts.Redact)
+						leak.Log(ngs.opts.Redact)
 					}
 					ngs.leakWG.Add(1)
 					ngs.leakChan <- leak
@@ -86,8 +140,15 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 			return f.Close()
 		})
 	}
+
 	wg.Wait()
 	ngs.leakWG.Wait()
+
+	//err := g.Wait()
+	//if err != nil {
+	//	return scannerReport, err
+	//}
+
 	scannerReport.Leaks = ngs.leaks
 
 	return scannerReport, nil

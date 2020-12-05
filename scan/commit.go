@@ -31,11 +31,14 @@ func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Com
 	return cs
 }
 
-func (cs *CommitScanner) ProvideRepoName(repoName string) {
+// SetRepoName sets the repo name of the scanner.
+func (cs *CommitScanner) SetRepoName(repoName string) {
 	cs.repoName = repoName
 }
 
-func (cs *CommitScanner) ProvidePatch(patch *object.Patch) {
+// SetPatch sets the patch to be inspected by the commit scanner. This is used to avoid
+// a race condition when running a threaded repo scan
+func (cs *CommitScanner) SetPatch(patch *object.Patch) {
 	cs.patch = patch
 }
 

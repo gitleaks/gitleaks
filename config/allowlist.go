@@ -1,6 +1,8 @@
 package config
 
-import "regexp"
+import (
+	"regexp"
+)
 
 // AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
@@ -32,4 +34,13 @@ func (a *AllowList) PathAllowed(filePath string) bool {
 
 func (a *AllowList) RegexAllowed(content string) bool {
 	return anyRegexMatch(content, a.Regexes)
+}
+
+func (a *AllowList) IgnoreDotGit() error {
+	re, err := regexp.Compile(".git")
+	if err != nil {
+		return err
+	}
+	a.Paths = append(a.Paths, re)
+	return nil
 }

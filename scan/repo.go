@@ -100,8 +100,8 @@ func (rs *RepoScanner) Scan() (Report, error) {
 			}()
 
 			commitScanner := NewCommitScanner(rs.BaseScanner, rs.repo, c)
-			commitScanner.ProvideRepoName(rs.repoName)
-			commitScanner.ProvidePatch(patch)
+			commitScanner.SetRepoName(rs.repoName)
+			commitScanner.SetPatch(patch)
 			report, err := commitScanner.Scan()
 			if err != nil {
 				log.Error(err)
