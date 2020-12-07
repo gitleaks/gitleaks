@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/go-git/go-git/v5"
@@ -13,7 +16,8 @@ import (
 
 // RepoScanner is a repo scanner
 type RepoScanner struct {
-	BaseScanner
+	opts     options.Options
+	cfg      config.Config
 	repo     *git.Repository
 	repoName string
 
@@ -25,17 +29,16 @@ type RepoScanner struct {
 
 // NewRepoScanner returns a new repo scanner (go figure). This function also
 // sets up the leak listener for multi-threaded awesomeness.
-func NewRepoScanner(base BaseScanner, repo *git.Repository) *RepoScanner {
+func NewRepoScanner(opts options.Options, cfg config.Config, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
-		BaseScanner: base,
-		repo:        repo,
-		leakChan:    make(chan Leak),
-		leakWG:      &sync.WaitGroup{},
-		leakCache:   make(map[string]bool),
-		repoName:    getRepoName(base.opts),
+		opts:      opts,
+		cfg:       cfg,
+		repo:      repo,
+		leakChan:  make(chan Leak),
+		leakWG:    &sync.WaitGroup{},
+		leakCache: make(map[string]bool),
+		repoName:  getRepoName(opts),
 	}
-
-	rs.scannerType = typeRepoScanner
 
 	go rs.receiveLeaks()
 
@@ -68,7 +71,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 		// Check if at root
 		if len(c.ParentHashes) == 0 {
 			scannerReport.Commits++
-			facScanner := NewFilesAtCommitScanner(rs.BaseScanner, rs.repo, c)
+			facScanner := NewFilesAtCommitScanner(rs.opts, rs.cfg, rs.repo, c)
 			facScanner.repoName = rs.repoName
 			facReport, err := facScanner.Scan()
 			if err != nil {
@@ -99,7 +102,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 				wg.Done()
 			}()
 
-			commitScanner := NewCommitScanner(rs.BaseScanner, rs.repo, c)
+			commitScanner := NewCommitScanner(rs.opts, rs.cfg, rs.repo, c)
 			commitScanner.SetRepoName(rs.repoName)
 			commitScanner.SetPatch(patch)
 			report, err := commitScanner.Scan()

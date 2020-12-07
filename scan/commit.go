@@ -5,6 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -12,7 +15,8 @@ import (
 
 // CommitScanner is a commit scanner
 type CommitScanner struct {
-	BaseScanner
+	cfg      config.Config
+	opts     options.Options
 	repo     *git.Repository
 	repoName string
 	commit   *object.Commit
@@ -20,14 +24,14 @@ type CommitScanner struct {
 }
 
 // NewCommitScanner creates and returns a commit scanner
-func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
+func NewCommitScanner(opts options.Options, cfg config.Config, repo *git.Repository, commit *object.Commit) *CommitScanner {
 	cs := &CommitScanner{
-		BaseScanner: base,
-		repo:        repo,
-		commit:      commit,
-		repoName:    getRepoName(base.opts),
+		cfg:      cfg,
+		opts:     opts,
+		repo:     repo,
+		commit:   commit,
+		repoName: getRepoName(opts),
 	}
-	cs.scannerType = typeCommitScanner
 	return cs
 }
 
@@ -46,7 +50,7 @@ func (cs *CommitScanner) SetPatch(patch *object.Patch) {
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
 	if len(cs.commit.ParentHashes) == 0 {
-		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
+		facScanner := NewFilesAtCommitScanner(cs.opts, cs.cfg, cs.repo, cs.commit)
 		return facScanner.Scan()
 	}
 

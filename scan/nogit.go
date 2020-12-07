@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/sync/errgroup"
@@ -14,16 +17,16 @@ import (
 
 // NoGitScanner is a scanner that absolutely despises git
 type NoGitScanner struct {
-	BaseScanner
+	opts options.Options
+	cfg  config.Config
 }
 
 // NewNoGitScanner creates and returns a nogit scanner. This is used for scanning files and directories
-func NewNoGitScanner(base BaseScanner) *NoGitScanner {
+func NewNoGitScanner(opts options.Options, cfg config.Config) *NoGitScanner {
 	ngs := &NoGitScanner{
-		BaseScanner: base,
+		opts: opts,
+		cfg:  cfg,
 	}
-
-	ngs.scannerType = typeNoGitScanner
 
 	// no-git scans should ignore .git folders by default
 	// issue: https://github.com/zricethezav/gitleaks/issues/474

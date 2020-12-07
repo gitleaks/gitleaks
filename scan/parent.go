@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 
 	"github.com/go-git/go-git/v5"
@@ -12,15 +14,16 @@ import (
 
 // ParentScanner is a parent directory scanner
 type ParentScanner struct {
-	BaseScanner
+	cfg  config.Config
+	opts options.Options
 }
 
 // NewParentScanner creates and returns a directory scanner
-func NewParentScanner(base BaseScanner) *ParentScanner {
+func NewParentScanner(opts options.Options, cfg config.Config) *ParentScanner {
 	ds := &ParentScanner{
-		BaseScanner: base,
+		opts: opts,
+		cfg:  cfg,
 	}
-	ds.scannerType = typeDirScanner
 	return ds
 }
 
@@ -55,11 +58,11 @@ func (ds *ParentScanner) Scan() (Report, error) {
 			if err != nil {
 				log.Warn(err)
 			} else {
-				ds.BaseScanner.cfg = cfg
+				ds.cfg = cfg
 			}
 		}
 
-		rs := NewRepoScanner(ds.BaseScanner, repo)
+		rs := NewRepoScanner(ds.opts, ds.cfg, repo)
 		rs.repoName = f.Name()
 		repoReport, err := rs.Scan()
 		if err != nil {
