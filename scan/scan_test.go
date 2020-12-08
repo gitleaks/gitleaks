@@ -5,15 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"runtime"
-	"sort"
 	"testing"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const testRepoBase = "../test_data/test_repos/"
@@ -202,6 +198,7 @@ func TestScan(t *testing.T) {
 				Path:         "../test_data/test_repos/",
 				Report:       "../test_data/test_local_owner_aws_leak.json.got",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
@@ -643,22 +640,66 @@ func fileCheck(wantPath, gotPath string) error {
 		return err
 	}
 
-	sort.Slice(gotLeaks, func(i, j int) bool {
-		return (gotLeaks)[i].Offender+(gotLeaks)[i].File < (gotLeaks)[j].Offender+(gotLeaks)[j].File
-	})
-	sort.Slice(wantLeaks, func(i, j int) bool {
-		return (wantLeaks)[i].Offender+(wantLeaks)[i].File < (wantLeaks)[j].Offender+(wantLeaks)[j].File
-	})
-
-	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
-		dmp := diffmatchpatch.New()
-		diffs := dmp.DiffMain(string(want), string(got), false)
-		return fmt.Errorf("%s does not equal %s: %s", wantPath, gotPath, dmp.DiffPrettyText(diffs))
+	if len(wantLeaks) != len(gotLeaks) {
+		return fmt.Errorf("got %d leaks, want %d leaks", len(gotLeaks), len(wantLeaks))
 	}
+
+	for _, wantLeak := range wantLeaks {
+		found := false
+		for _, gotLeak := range gotLeaks {
+			if same(gotLeak, wantLeak) {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find %+v in got leaks", wantLeak)
+		}
+	}
+
 	if err := os.Remove(gotPath); err != nil {
 		return err
 	}
 	return nil
+}
+
+func same(l1, l2 Leak) bool {
+	if l1.Commit != l2.Commit {
+		return false
+	}
+
+	if l1.Offender != l2.Offender {
+		return false
+	}
+
+	if l1.Line != l2.Line {
+		return false
+	}
+
+	if l1.Tags != l2.Tags {
+		return false
+	}
+
+	if l1.LineNumber != l2.LineNumber {
+		return false
+	}
+
+	if l1.Author != l2.Author {
+		return false
+	}
+
+	if l1.LeakURL != l2.LeakURL {
+		return false
+	}
+
+	if l1.RepoURL != l2.RepoURL {
+		return false
+	}
+
+	if l1.Repo != l2.Repo {
+		return false
+	}
+	return true
+
 }
 
 func moveDotGit(from, to string) error {

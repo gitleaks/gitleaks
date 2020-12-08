@@ -1,17 +1,17 @@
 package scan
 
 import (
-	"fmt"
-	"sync"
+	"context"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
+	log "github.com/sirupsen/logrus"
 )
 
 // RepoScanner is a repo scanner
@@ -19,35 +19,30 @@ type RepoScanner struct {
 	opts     options.Options
 	cfg      config.Config
 	repo     *git.Repository
+	throttle *Throttle
 	repoName string
-
-	leakChan  chan Leak
-	leakWG    *sync.WaitGroup
-	leakCache map[string]bool
-	leaks     []Leak
 }
 
 // NewRepoScanner returns a new repo scanner (go figure). This function also
 // sets up the leak listener for multi-threaded awesomeness.
 func NewRepoScanner(opts options.Options, cfg config.Config, repo *git.Repository) *RepoScanner {
 	rs := &RepoScanner{
-		opts:      opts,
-		cfg:       cfg,
-		repo:      repo,
-		leakChan:  make(chan Leak),
-		leakWG:    &sync.WaitGroup{},
-		leakCache: make(map[string]bool),
-		repoName:  getRepoName(opts),
+		opts:     opts,
+		cfg:      cfg,
+		repo:     repo,
+		throttle: NewThrottle(opts),
+		repoName: getRepoName(opts),
 	}
-
-	go rs.receiveLeaks()
 
 	return rs
 }
 
 // Scan kicks of a repo scan
 func (rs *RepoScanner) Scan() (Report, error) {
-	var scannerReport Report
+	var (
+		scannerReport Report
+		commits       chan *object.Commit
+	)
 	logOpts, err := logOptions(rs.repo, rs.opts)
 	if err != nil {
 		return scannerReport, err
@@ -56,80 +51,65 @@ func (rs *RepoScanner) Scan() (Report, error) {
 	if err != nil {
 		return scannerReport, err
 	}
-	semaphore := make(chan bool, howManyThreads(rs.opts.Threads))
-	wg := sync.WaitGroup{}
 
-	err = cIter.ForEach(func(c *object.Commit) error {
-		if c == nil || depthReached(scannerReport.Commits, rs.opts) {
-			return storer.ErrStop
-		}
+	g, _ := errgroup.WithContext(context.Background())
+	commits = make(chan *object.Commit)
+	leaks := make(chan Leak)
 
-		if rs.cfg.Allowlist.CommitAllowed(c.Hash.String()) {
-			return nil
-		}
-
-		// Check if at root
-		if len(c.ParentHashes) == 0 {
-			scannerReport.Commits++
-			facScanner := NewFilesAtCommitScanner(rs.opts, rs.cfg, rs.repo, c)
-			facScanner.repoName = rs.repoName
-			facReport, err := facScanner.Scan()
-			if err != nil {
-				return err
+	commitNum := 0
+	g.Go(func() error {
+		defer close(commits)
+		err = cIter.ForEach(func(c *object.Commit) error {
+			if c == nil || depthReached(commitNum, rs.opts) {
+				return storer.ErrStop
 			}
-			scannerReport.Leaks = append(scannerReport.Leaks, facReport.Leaks...)
-			return nil
-		}
 
-		// inspect first parent only as all other parents will be eventually reached
-		// (they exist as the tip of other branches, etc)
-		// See https://github.com/zricethezav/gitleaks/issues/413 for details
-		parent, err := c.Parent(0)
-		if err != nil || parent == nil {
+			if rs.cfg.Allowlist.CommitAllowed(c.Hash.String()) {
+				return nil
+			}
+			commitNum++
+			commits <- c
+			if c.Hash.String() == rs.opts.CommitTo {
+				return storer.ErrStop
+			}
+
 			return err
-		}
-		patch, err := parent.Patch(c)
-		if err != nil {
-			return fmt.Errorf("could not generate Patch")
-		}
+		})
+		cIter.Close()
+		return nil
+	})
 
-		scannerReport.Commits++
-		wg.Add(1)
-		semaphore <- true
-		go func(c *object.Commit, patch *object.Patch) {
-			defer func() {
-				<-semaphore
-				wg.Done()
-			}()
-
+	for commit := range commits {
+		c := commit
+		rs.throttle.Limit()
+		g.Go(func() error {
 			commitScanner := NewCommitScanner(rs.opts, rs.cfg, rs.repo, c)
 			commitScanner.SetRepoName(rs.repoName)
-			commitScanner.SetPatch(patch)
 			report, err := commitScanner.Scan()
+			rs.throttle.Release()
 			if err != nil {
 				log.Error(err)
 			}
 			for _, leak := range report.Leaks {
-				rs.leakWG.Add(1)
-				rs.leakChan <- leak
+				leaks <- leak
 			}
-		}(c, patch)
+			return nil
+		})
+	}
 
-		if c.Hash.String() == rs.opts.CommitTo {
-			return storer.ErrStop
-		}
-		return nil
-	})
+	go func() {
+		g.Wait()
+		close(leaks)
+	}()
 
-	wg.Wait()
-	rs.leakWG.Wait()
-	scannerReport.Leaks = append(scannerReport.Leaks, rs.leaks...)
-	return scannerReport, nil
+	for leak := range leaks {
+		scannerReport.Leaks = append(scannerReport.Leaks, leak)
+	}
+
+	scannerReport.Commits = commitNum
+	return scannerReport, g.Wait()
 }
 
-func (rs *RepoScanner) receiveLeaks() {
-	for leak := range rs.leakChan {
-		rs.leaks = append(rs.leaks, leak)
-		rs.leakWG.Done()
-	}
+func (rs *RepoScanner) SetRepoName(repoName string) {
+	rs.repoName = repoName
 }
