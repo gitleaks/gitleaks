@@ -240,22 +240,6 @@
   "tags": "key, AWS"
  },
  {
-  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
-  "lineNumber": 5,
-  "offender": "AKIAIO5FODNN7EXAMPLE",
-  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
-  "repo": "test_repo_6",
-  "repoURL": "",
-  "leakURL": "",
-  "rule": "AWS Access Key",
-  "commitMessage": "commit 1 with secrets\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "server.test.py",
-  "date": "2019-10-24T09:29:27-04:00",
-  "tags": "key, AWS"
- },
- {
   "line": "aws_access_key_id=AKIAIO5FODNN7EXAMPLE",
   "lineNumber": 3,
   "offender": "AKIAIO5FODNN7EXAMPLE",
@@ -269,6 +253,22 @@
   "email": "noealgigu@gmail.com",
   "file": "config/application.properties",
   "date": "2020-02-24T14:13:15-05:00",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 5,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
+  "repo": "test_repos",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "commit 1 with secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "server.test.py",
+  "date": "2019-10-24T09:29:27-04:00",
   "tags": "key, AWS"
  },
  {
@@ -320,22 +320,6 @@
   "tags": "key, AWS"
  },
  {
-  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
-  "lineNumber": 5,
-  "offender": "AKIAIO5FODNN7EXAMPLE",
-  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
-  "repo": "test_repo_9",
-  "repoURL": "",
-  "leakURL": "",
-  "rule": "AWS Access Key",
-  "commitMessage": "commit 1 with secrets\n",
-  "author": "zach rice",
-  "email": "zricer@protonmail.com",
-  "file": "server.test.py",
-  "date": "2019-10-24T09:29:27-04:00",
-  "tags": "key, AWS"
- },
- {
   "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE', #gitleaks:allow",
   "lineNumber": 5,
   "offender": "AKIAIO5FODNN7EXAMPLE",
@@ -349,6 +333,22 @@
   "email": "zrice@gitlab.com",
   "file": "server.test.py",
   "date": "2020-08-12T13:36:20-04:00",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
+  "lineNumber": 5,
+  "offender": "AKIAIO5FODNN7EXAMPLE",
+  "commit": "6557c92612d3b35979bd426d429255b3bf9fab74",
+  "repo": "test_repos",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "commit 1 with secrets\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "server.test.py",
+  "date": "2019-10-24T09:29:27-04:00",
   "tags": "key, AWS"
  }
 ]

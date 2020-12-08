@@ -20,7 +20,6 @@ type CommitScanner struct {
 	repo     *git.Repository
 	repoName string
 	commit   *object.Commit
-	patch    *object.Patch
 }
 
 // NewCommitScanner creates and returns a commit scanner
@@ -40,12 +39,6 @@ func (cs *CommitScanner) SetRepoName(repoName string) {
 	cs.repoName = repoName
 }
 
-// SetPatch sets the patch to be inspected by the commit scanner. This is used to avoid
-// a race condition when running a threaded repo scan
-func (cs *CommitScanner) SetPatch(patch *object.Patch) {
-	cs.patch = patch
-}
-
 // Scan kicks off a CommitScanner Scan
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
@@ -54,25 +47,23 @@ func (cs *CommitScanner) Scan() (Report, error) {
 		return facScanner.Scan()
 	}
 
-	if cs.patch == nil {
-		parent, err := cs.commit.Parent(0)
-		if err != nil {
-			return scannerReport, err
-		}
-
-		if parent == nil {
-			return scannerReport, nil
-		}
-
-		cs.patch, err = parent.Patch(cs.commit)
-		if err != nil {
-			return scannerReport, fmt.Errorf("could not generate Patch")
-		}
+	parent, err := cs.commit.Parent(0)
+	if err != nil {
+		return scannerReport, err
 	}
 
-	patchContent := cs.patch.String()
+	if parent == nil {
+		return scannerReport, nil
+	}
 
-	for _, f := range cs.patch.FilePatches() {
+	patch, err := parent.Patch(cs.commit)
+	if err != nil {
+		return scannerReport, fmt.Errorf("could not generate Patch")
+	}
+
+	patchContent := patch.String()
+
+	for _, f := range patch.FilePatches() {
 		if f.IsBinary() {
 			continue
 		}
