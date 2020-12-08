@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -17,19 +20,20 @@ import (
 // UnstagedScanner is an unstaged scanner. This is the scanner used when you don't provide program arguments
 // which will then scan your PWD. This scans unstaged changes in your repo.
 type UnstagedScanner struct {
-	BaseScanner
+	opts     options.Options
+	cfg      config.Config
 	repo     *git.Repository
 	repoName string
 }
 
 // NewUnstagedScanner returns an unstaged scanner
-func NewUnstagedScanner(base BaseScanner, repo *git.Repository) *UnstagedScanner {
+func NewUnstagedScanner(opts options.Options, cfg config.Config, repo *git.Repository) *UnstagedScanner {
 	us := &UnstagedScanner{
-		BaseScanner: base,
-		repo:        repo,
-		repoName:    getRepoName(base.opts),
+		opts:     opts,
+		cfg:      cfg,
+		repo:     repo,
+		repoName: getRepoName(opts),
 	}
-	us.scannerType = typeUnstagedScanner
 	return us
 }
 
