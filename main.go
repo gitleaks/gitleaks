@@ -61,6 +61,10 @@ func main() {
 		log.Error(err)
 		os.Exit(1)
 	}
+
+	if len(scannerReport.Leaks) != 0 {
+		os.Exit(opts.CodeOnLeak)
+	}
 }
 
 func listenForInterrupt(stopScan chan os.Signal) {

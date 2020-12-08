@@ -37,6 +37,7 @@ type Options struct {
 	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
 	Debug          bool   `long:"debug" description:"Log debug messages"`
 	NoGit          bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
+	CodeOnLeak     int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
