@@ -32,10 +32,12 @@ func NewThrottle(opts options.Options) *Throttle {
 
 }
 
+// Limit blocks new goroutines from spinning up if throttle is at capacity
 func (t *Throttle) Limit() {
 	t.throttle <- true
 }
 
+// Release releases the hold on the throttle, allowing more goroutines to be spun up
 func (t *Throttle) Release() {
 	<-t.throttle
 }

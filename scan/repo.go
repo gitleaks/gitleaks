@@ -110,6 +110,7 @@ func (rs *RepoScanner) Scan() (Report, error) {
 	return scannerReport, g.Wait()
 }
 
+// SetRepoName sets the repo name
 func (rs *RepoScanner) SetRepoName(repoName string) {
 	rs.repoName = repoName
 }
