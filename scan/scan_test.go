@@ -463,6 +463,30 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_allow_list_docx_no_git.json",
 		},
+		{
+			description: "test local repo two allowlist Commit config",
+			opts: options.Options{
+				Path:          "../test_data/test_repos/test_repo_2",
+				Report:        "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json.got",
+				ConfigPath:    "../test_data/test_configs/allowlist_commit.toml",
+				ReportFormat:  "json",
+				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+			},
+			wantPath:  "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json",
+			wantEmpty: true,
+		},
+		{
+			description: "test local repo two global allowlist commit config",
+			opts: options.Options{
+				Path:          "../test_data/test_repos/test_repo_2",
+				Report:        "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json.got",
+				ConfigPath:    "../test_data/test_configs/allowlist_global_files.toml",
+				ReportFormat:  "json",
+				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+			},
+			wantPath:  "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json",
+			wantEmpty: true,
+		},
 	}
 
 	for _, test := range tests {
