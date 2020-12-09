@@ -59,6 +59,7 @@ Application Options:
       --branch=           Branch to scan
       --redact            Redact secrets from log messages and leaks
       --debug             Log debug messages
+      --leaks-exit-code=  Exit code when leaks have been encountered (default: 1) 
       --no-git            Treat git repos as plain directories and scan those
                           files
   -o, --report=           Report output path
@@ -238,6 +239,12 @@ So you can use the following to effectively create the proper Perl regex:
 
 
 
+### Exit Codes
+You can always set the exit code when leaves are encountered with the `--leaks-exit-code` flag. Default exit codes below:
+```
+0 - no leaks present
+1 - leaks or error encountered
+```
 
 ###  Sponsors ❤️
 #### Corporate Sponsors
