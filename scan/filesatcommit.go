@@ -38,6 +38,11 @@ func NewFilesAtCommitScanner(opts options.Options, cfg config.Config, repo *git.
 // Scan kicks off a FilesAtCommitScanner Scan
 func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 	var scannerReport Report
+
+	if fs.cfg.Allowlist.CommitAllowed(fs.commit.Hash.String()) {
+		return scannerReport, nil
+	}
+
 	fIter, err := fs.commit.Files()
 	if err != nil {
 		return scannerReport, err
@@ -49,6 +54,11 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 			return nil
 		} else if err != nil {
 			return err
+		}
+
+		if fs.cfg.Allowlist.FileAllowed(filepath.Base(f.Name)) ||
+			fs.cfg.Allowlist.PathAllowed(f.Name) {
+			return nil
 		}
 
 		content, err := f.Contents()
