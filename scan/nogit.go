@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-
-	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -36,7 +36,6 @@ func NewNoGitScanner(opts options.Options, cfg config.Config) *NoGitScanner {
 		log.Error(err)
 		return nil
 	}
-
 	return ngs
 }
 
@@ -95,13 +94,17 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 				lineNumber++
 				for _, rule := range ngs.cfg.Rules {
 					line := scanner.Text()
+
+					if rule.AllowList.FileAllowed(filepath.Base(p)) ||
+						rule.AllowList.PathAllowed(p) {
+						continue
+					}
+
 					offender := rule.Inspect(line)
 					if offender == "" {
 						continue
 					}
-					if ngs.cfg.Allowlist.RegexAllowed(line) ||
-						rule.AllowList.FileAllowed(filepath.Base(p)) ||
-						rule.AllowList.PathAllowed(p) {
+					if ngs.cfg.Allowlist.RegexAllowed(line) {
 						continue
 					}
 

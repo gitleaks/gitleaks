@@ -79,6 +79,9 @@ func (r *Rule) HasFileOrPathLeakOnly(filePath string) bool {
 	if len(r.Entropies) != 0 {
 		return false
 	}
+	if r.AllowList.FileAllowed(filepath.Base(filePath)) || r.AllowList.PathAllowed(filePath) {
+		return false
+	}
 	return r.HasFileLeak(filepath.Base(filePath)) || r.HasFilePathLeak(filePath)
 }
 

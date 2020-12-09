@@ -47,7 +47,7 @@ func (a *AllowList) RepoAllowed(repo string) bool {
 
 // IgnoreDotGit appends a `.git$` rule to ignore all .git paths. This is used for --no-git scans
 func (a *AllowList) IgnoreDotGit() error {
-	re, err := regexp.Compile(".git$")
+	re, err := regexp.Compile(".git")
 	if err != nil {
 		return err
 	}

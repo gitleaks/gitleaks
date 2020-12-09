@@ -81,15 +81,19 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 
 		for i, line := range strings.Split(content, "\n") {
 			for _, rule := range fs.cfg.Rules {
+				if rule.AllowList.FileAllowed(filepath.Base(f.Name)) ||
+					rule.AllowList.PathAllowed(f.Name) ||
+					rule.AllowList.CommitAllowed(fs.commit.Hash.String()) {
+					continue
+				}
+
 				offender := rule.Inspect(line)
 
 				if offender == "" {
 					continue
 				}
-				if fs.cfg.Allowlist.RegexAllowed(line) ||
-					rule.AllowList.FileAllowed(filepath.Base(f.Name)) ||
-					rule.AllowList.PathAllowed(f.Name) ||
-					rule.AllowList.CommitAllowed(fs.commit.Hash.String()) {
+
+				if fs.cfg.Allowlist.RegexAllowed(line) {
 					continue
 				}
 

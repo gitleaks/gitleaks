@@ -103,14 +103,17 @@ func (cs *CommitScanner) Scan() (Report, error) {
 				// Check the actual content
 				for _, line := range strings.Split(chunk.Content(), "\n") {
 					for _, rule := range cs.cfg.Rules {
+						if rule.AllowList.FileAllowed(filepath.Base(to.Path())) ||
+							rule.AllowList.PathAllowed(to.Path()) ||
+							rule.AllowList.CommitAllowed(cs.commit.Hash.String()) {
+							continue
+						}
 						offender := rule.Inspect(line)
 						if offender == "" {
 							continue
 						}
-						if cs.cfg.Allowlist.RegexAllowed(line) ||
-							rule.AllowList.FileAllowed(filepath.Base(to.Path())) ||
-							rule.AllowList.PathAllowed(to.Path()) ||
-							rule.AllowList.CommitAllowed(cs.commit.Hash.String()) {
+
+						if cs.cfg.Allowlist.RegexAllowed(line) {
 							continue
 						}
 
