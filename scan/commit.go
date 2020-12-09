@@ -42,6 +42,11 @@ func (cs *CommitScanner) SetRepoName(repoName string) {
 // Scan kicks off a CommitScanner Scan
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
+
+	if cs.cfg.Allowlist.CommitAllowed(cs.commit.Hash.String()) {
+		return scannerReport, nil
+	}
+
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.opts, cs.cfg, cs.repo, cs.commit)
 		return facScanner.Scan()
