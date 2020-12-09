@@ -1,0 +1,11 @@
+[[rules]]
+	description = "Block dangerous filetypes"
+	file = '''(.*?)(pdf|doc|docx|zip|xls|tfplan|tfstate|tfvars|vault_pass|vagrant|pyc|key|cache)$'''
+	tags = ["key", "extensions"]
+	[rules.allowlist]
+		paths = ['''.zip''']
+		description = "ignore known locations and files"
+#
+#[allowlist]
+#	description = "Allowlisted files"
+#	paths = ['''.zip''']

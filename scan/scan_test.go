@@ -15,7 +15,10 @@ import (
 const testRepoBase = "../test_data/test_repos/"
 
 func TestScan(t *testing.T) {
-	moveDotGit("dotGit", ".git")
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer moveDotGit(".git", "dotGit")
 	tests := []struct {
 		description string
@@ -32,6 +35,7 @@ func TestScan(t *testing.T) {
 				Path:         "../test_data/test_repos/test_repo_1",
 				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
 		},
@@ -120,6 +124,7 @@ func TestScan(t *testing.T) {
 				Report:       "../test_data/test_local_repo_two_leaks_file_commit_range.json.got",
 				ReportFormat: "json",
 				CommitsFile:  "../test_data/test_options/test_local_repo_commits.txt",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_repo_two_leaks_file_commit_range.json",
 		},
@@ -219,6 +224,7 @@ func TestScan(t *testing.T) {
 				Report:       "../test_data/test_regex_entropy.json.got",
 				ConfigPath:   "../test_data/test_configs/regex_entropy.toml",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_regex_entropy.json",
 		},
@@ -424,6 +430,38 @@ func TestScan(t *testing.T) {
 				NoGit:        true,
 			},
 			wantPath: "../test_data/test_only_files_no_git.json",
+		},
+		{
+			description: "test allowlist files",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+			},
+			wantPath: "../test_data/test_allow_list_file.json",
+		},
+		{
+			description: "test allowlist files no-git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_allow_list_file_no_git.json",
+		},
+		{
+			description: "test allowlist docx no-git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_docx_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_docx.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_allow_list_docx_no_git.json",
 		},
 	}
 
@@ -708,6 +746,9 @@ func moveDotGit(from, to string) error {
 		return err
 	}
 	for _, dir := range repoDirs {
+		if to == ".git" {
+			os.RemoveAll(fmt.Sprintf("%s/%s/%s", testRepoBase, dir.Name(), ".git"))
+		}
 		if !dir.IsDir() {
 			continue
 		}
@@ -721,6 +762,7 @@ func moveDotGit(from, to string) error {
 		if err != nil {
 			return err
 		}
+		// fmt.Println("RENAMED")
 	}
 	return nil
 }
