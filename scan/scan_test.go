@@ -747,6 +747,11 @@ func moveDotGit(from, to string) error {
 	}
 	for _, dir := range repoDirs {
 		if to == ".git" {
+			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", testRepoBase, dir.Name(), "dotGit"))
+			if os.IsNotExist(err) {
+				// dont want to delete the only copy of .git accidentally
+				continue
+			}
 			os.RemoveAll(fmt.Sprintf("%s/%s/%s", testRepoBase, dir.Name(), ".git"))
 		}
 		if !dir.IsDir() {
