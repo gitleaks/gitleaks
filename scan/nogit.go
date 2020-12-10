@@ -84,7 +84,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 				}
 			}
 
-			f, err := os.Open(p)
+			f, err := os.Open(p) // #nosec
 			if err != nil {
 				return err
 			}
@@ -131,7 +131,10 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	}
 
 	go func() {
-		g.Wait()
+		err := g.Wait()
+		if err != nil {
+			log.Error(err)
+		}
 		close(leaks)
 	}()
 

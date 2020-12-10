@@ -98,7 +98,10 @@ func (rs *RepoScanner) Scan() (Report, error) {
 	}
 
 	go func() {
-		g.Wait()
+		err := g.Wait()
+		if err != nil {
+			log.Error(err)
+		}
 		close(leaks)
 	}()
 

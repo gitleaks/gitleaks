@@ -178,7 +178,7 @@ func optsToCommits(opts options.Options) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	defer file.Close()
+	defer rable(file.Close)
 
 	scanner := bufio.NewScanner(file)
 	var commits []string
@@ -217,4 +217,10 @@ func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int
 		currLine++
 	}
 	return defaultLineNumber
+}
+
+// rable is the second half of deferrable. Used to make .Close() functions deferrable
+func rable(f func() error) {
+	err := f()
+	log.Error(err)
 }
