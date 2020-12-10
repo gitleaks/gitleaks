@@ -442,6 +442,16 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_allow_list_file.json",
 		},
 		{
+			description: "test allowlist files",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+			},
+			wantPath: "../test_data/test_allow_list_file.json",
+		},
+		{
 			description: "test allowlist files no-git",
 			opts: options.Options{
 				Path:         "../test_data/test_repos/test_repo_10",
