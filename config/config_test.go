@@ -211,3 +211,73 @@ func writeTestConfig(toml string) (string, error) {
 
 	return tmpfile.Name(), nil
 }
+
+func TestMergingConfiguration(t *testing.T) {
+	testRegexA, _ := regexp.Compile("a")
+	testRegexB, _ := regexp.Compile("b")
+
+	allowListA := AllowList{
+		Description: "Test Description",
+		Commits:     []string{"a"},
+		Files:       []*regexp.Regexp{testRegexA},
+		Paths:       []*regexp.Regexp{testRegexA},
+		Regexes:     []*regexp.Regexp{testRegexA},
+		Repos:       []*regexp.Regexp{testRegexA},
+	}
+
+	allowListB := AllowList{
+		Description: "Test Description",
+		Commits:     []string{"b"},
+		Files:       []*regexp.Regexp{testRegexB},
+		Paths:       []*regexp.Regexp{testRegexB},
+		Regexes:     []*regexp.Regexp{testRegexB},
+		Repos:       []*regexp.Regexp{testRegexB},
+	}
+
+	ruleA := Rule{Description: "a"}
+	ruleB := Rule{Description: "b"}
+
+	rulesA := []Rule{ruleA}
+	rulesB := []Rule{ruleB}
+
+	cfgA := Config{
+		Rules:     rulesA,
+		Allowlist: allowListA,
+	}
+
+	cfgB := Config{
+		Rules:     rulesB,
+		Allowlist: allowListB,
+	}
+
+	cfgMerged := cfgA.MergeConfig(cfgB)
+
+	if !(len(cfgMerged.Rules) == 2) {
+		t.Errorf("Length of Merged Rules = %d; want 2", len(cfgMerged.Rules))
+	}
+
+	if !(len(cfgMerged.Allowlist.Commits) == 2) {
+		t.Errorf("Length of Merged Allowed Commits = %d; want 2", len(cfgMerged.Allowlist.Commits))
+	}
+
+	if !(len(cfgMerged.Allowlist.Files) == 2) {
+		t.Errorf("Length of Merged Allowed Files = %d; want 2", len(cfgMerged.Allowlist.Files))
+	}
+
+	if !(len(cfgMerged.Allowlist.Paths) == 2) {
+		t.Errorf("Length of Merged Allowed Paths = %d; want 2", len(cfgMerged.Allowlist.Paths))
+	}
+
+	if !(len(cfgMerged.Allowlist.Regexes) == 2) {
+		t.Errorf("Length of Merged Allowed Regexes = %d; want 2", len(cfgMerged.Allowlist.Regexes))
+	}
+
+	if !(len(cfgMerged.Allowlist.Repos) == 2) {
+		t.Errorf("Length of Merged Allowed Repos = %d; want 2", len(cfgMerged.Allowlist.Repos))
+	}
+
+	if cfgMerged.Allowlist.Description != "Merged Configuration" {
+		t.Errorf("Allow List Description is = \"%s\"; want \"Merged Configuration\"", cfgMerged.Allowlist.Description)
+	}
+
+}

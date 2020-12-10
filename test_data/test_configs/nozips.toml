@@ -1,0 +1,4 @@
+
+[[rules]]
+	description = "No Zips"
+	file = '''.*\.zip'''

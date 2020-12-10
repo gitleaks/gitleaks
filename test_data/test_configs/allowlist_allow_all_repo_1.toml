@@ -1,0 +1,3 @@
+[allowlist]
+	description = "Allowlisted files"
+	files = [ '''server.test.py''','''server.test2.py''']

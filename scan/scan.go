@@ -45,6 +45,13 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		return nil, err
 	}
 	if st == typeDirScanner {
+		if opts.AdditionalConfig != "" && err == nil {
+			additionalCfg, err := config.LoadAdditionalConfig(opts.AdditionalConfig)
+			if err != nil {
+				return nil, err
+			}
+			cfg = cfg.MergeConfig(additionalCfg)
+		}
 		return NewParentScanner(opts, cfg), nil
 	}
 
@@ -56,12 +63,25 @@ func NewScanner(opts options.Options, cfg config.Config) (Scanner, error) {
 		}
 	}
 
-	// load up alternative config if possible, if not use manager's config
+	// load up alternative config if possible, if not use default/specified config. Will merge if MergeRepoConfig is true
 	if opts.RepoConfigPath != "" && !opts.NoGit {
-		cfg, err = config.LoadRepoConfig(repo, opts.RepoConfigPath)
+		repoCfg, err := config.LoadRepoConfig(repo, opts.RepoConfigPath)
+		if opts.MergeRepoConfig && err == nil {
+			cfg = cfg.MergeConfig(repoCfg)
+		} else if err != nil {
+			return nil, err
+		} else {
+			cfg = repoCfg
+		}
+	}
+
+	// merge additional config with the rest of the config
+	if opts.AdditionalConfig != "" {
+		additionalCfg, err := config.LoadAdditionalConfig(opts.AdditionalConfig)
 		if err != nil {
 			return nil, err
 		}
+		cfg = cfg.MergeConfig(additionalCfg)
 	}
 
 	switch st {

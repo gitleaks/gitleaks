@@ -20,24 +20,26 @@ import (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
-	RepoURL        string `short:"r" long:"repo-url" description:"Repository URL"`
-	Path           string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
-	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
-	RepoConfigPath string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
-	ClonePath      string `long:"clone-path" description:"Path to clone repo to disk"`
-	Version        bool   `long:"version" description:"Version number"`
-	Username       string `long:"username" description:"Username for git repo"`
-	Password       string `long:"password" description:"Password for git repo"`
-	AccessToken    string `long:"access-token" description:"Access token for git repo"`
-	Threads        int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH            string `long:"ssh-key" description:"Path to ssh key used for auth"`
-	Unstaged       bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
-	Branch         string `long:"branch" description:"Branch to scan"`
-	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
-	Debug          bool   `long:"debug" description:"Log debug messages"`
-	NoGit          bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
-	CodeOnLeak     int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
+	Verbose          bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	RepoURL          string `short:"r" long:"repo-url" description:"Repository URL"`
+	Path             string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
+	ConfigPath       string `short:"c" long:"config-path" description:"Path to config"`
+	RepoConfigPath   string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
+	ClonePath        string `long:"clone-path" description:"Path to clone repo to disk"`
+	Version          bool   `long:"version" description:"Version number"`
+	Username         string `long:"username" description:"Username for git repo"`
+	Password         string `long:"password" description:"Password for git repo"`
+	AccessToken      string `long:"access-token" description:"Access token for git repo"`
+	Threads          int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH              string `long:"ssh-key" description:"Path to ssh key used for auth"`
+	Unstaged         bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
+	Branch           string `long:"branch" description:"Branch to scan"`
+	Redact           bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
+	Debug            bool   `long:"debug" description:"Log debug messages"`
+	NoGit            bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
+	CodeOnLeak       int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
+	MergeRepoConfig  bool   `long:"merge-repo-config" description:"merge provided config with the repo config."`
+	AdditionalConfig string `long:"additional-config" description:"path to an additional gitleaks config to merge with an existing config. Can be used with --merge-repo-config to merge up to three configurations"`
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
