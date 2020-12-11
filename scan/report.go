@@ -46,7 +46,7 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer rable(file.Close)
 
 	if opts.Report != "" {
 		switch opts.ReportFormat {
@@ -59,9 +59,15 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 			}
 		case "csv":
 			w := csv.NewWriter(file)
-			_ = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			err = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			if err != nil {
+				return err
+			}
 			for _, leak := range report.Leaks {
-				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				if err != nil {
+					return err
+				}
 			}
 			w.Flush()
 		case "sarif":
