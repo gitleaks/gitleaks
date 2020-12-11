@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zricethezav/gitleaks/v7/options"
+
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
@@ -56,13 +58,22 @@ func (leak Leak) WithCommit(commit *object.Commit) Leak {
 }
 
 // Log logs a leak and redacts if necessary
-func (leak Leak) Log(redact bool) {
-	if redact {
+func (leak Leak) Log(opts options.Options) {
+	if !opts.Quiet && !opts.Verbose {
+		return
+	}
+	if opts.Redact {
 		leak = RedactLeak(leak)
 	}
-	var b []byte
-	b, _ = json.MarshalIndent(leak, "", "	")
-	fmt.Println(string(b))
+	if opts.Quiet {
+		var b []byte
+		b, _ = json.Marshal(leak)
+		fmt.Println(string(b))
+	} else {
+		var b []byte
+		b, _ = json.MarshalIndent(leak, "", "	")
+		fmt.Println(string(b))
+	}
 }
 
 // URL generates a url to the leak if leak.RepoURL is set

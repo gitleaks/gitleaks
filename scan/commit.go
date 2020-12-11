@@ -95,9 +95,8 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
 
-						if cs.opts.Verbose {
-							leak.Log(cs.opts.Redact)
-						}
+						leak.Log(cs.opts)
+
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 						continue
 					}
@@ -137,9 +136,9 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.LeakURL = leak.URL()
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
-						if cs.opts.Verbose {
-							leak.Log(cs.opts.Redact)
-						}
+
+						leak.Log(cs.opts)
+
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 					}
 				}

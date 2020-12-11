@@ -77,14 +77,13 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
 
-					if ngs.opts.Verbose {
-						leak.Log(ngs.opts.Redact)
-					}
+					leak.Log(ngs.opts)
+
 					leaks <- leak
 				}
 			}
 
-			f, err := os.Open(p)
+			f, err := os.Open(p) // #nosec
 			if err != nil {
 				return err
 			}
@@ -120,9 +119,9 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					leak.LineNumber = lineNumber
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
-					if ngs.opts.Verbose {
-						leak.Log(ngs.opts.Redact)
-					}
+
+					leak.Log(ngs.opts)
+
 					leaks <- leak
 				}
 			}
@@ -131,7 +130,9 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	}
 
 	go func() {
-		g.Wait()
+		if err := g.Wait(); err != nil {
+			log.Error(err)
+		}
 		close(leaks)
 	}()
 
