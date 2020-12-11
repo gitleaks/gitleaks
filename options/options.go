@@ -21,6 +21,7 @@ import (
 // Options stores values of command line options
 type Options struct {
 	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	Quiet          bool   `short:"q" long:"quiet" description:"Sets log level to error and only output leaks, one json object per line"`
 	RepoURL        string `short:"r" long:"repo-url" description:"Repository URL"`
 	Path           string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
 	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
@@ -82,6 +83,9 @@ func ParseOptions() (Options, error) {
 
 	if opts.Debug {
 		log.SetLevel(log.DebugLevel)
+	}
+	if opts.Quiet {
+		log.SetLevel(log.ErrorLevel)
 	}
 
 	return opts, nil

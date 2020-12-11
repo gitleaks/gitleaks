@@ -86,7 +86,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
 					if us.opts.Verbose {
-						leak.Log(us.opts.Redact)
+						leak.Log(us.opts)
 					}
 					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
@@ -198,9 +198,9 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					leak.Repo = us.repoName
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
-					if us.opts.Verbose {
-						leak.Log(us.opts.Redact)
-					}
+
+					leak.Log(us.opts)
+
 					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
 			}

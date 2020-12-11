@@ -81,9 +81,8 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")
 
-				if fs.opts.Verbose {
-					leak.Log(fs.opts.Redact)
-				}
+				leak.Log(fs.opts)
+
 				scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				continue
 			}
@@ -122,9 +121,9 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.LeakURL = leak.URL()
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")
-				if fs.opts.Verbose {
-					leak.Log(fs.opts.Redact)
-				}
+
+				leak.Log(fs.opts)
+
 				scannerReport.Leaks = append(scannerReport.Leaks, leak)
 			}
 		}
