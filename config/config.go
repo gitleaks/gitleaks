@@ -290,19 +290,19 @@ func LoadAdditionalConfig(repoConfig string) (Config, error) {
 	return parseTomlFile(file)
 }
 
-// MergeConfig Merge Accepts a Config struct and will append those fields to this Config Struct's fields
-func (config *Config) MergeConfig(configToBeMerged Config) Config {
+// AppendConfig Accepts a Config struct and will append those fields to this Config Struct's fields
+func (config *Config) AppendConfig(configToBeAppended Config) Config {
 	newAllowList := AllowList{
-		Description: "Merged Configuration",
-		Commits:     append(config.Allowlist.Commits, configToBeMerged.Allowlist.Commits...),
-		Files:       append(config.Allowlist.Files, configToBeMerged.Allowlist.Files...),
-		Paths:       append(config.Allowlist.Paths, configToBeMerged.Allowlist.Paths...),
-		Regexes:     append(config.Allowlist.Regexes, configToBeMerged.Allowlist.Regexes...),
-		Repos:       append(config.Allowlist.Repos, configToBeMerged.Allowlist.Repos...),
+		Description: "Appended Configuration",
+		Commits:     append(config.Allowlist.Commits, configToBeAppended.Allowlist.Commits...),
+		Files:       append(config.Allowlist.Files, configToBeAppended.Allowlist.Files...),
+		Paths:       append(config.Allowlist.Paths, configToBeAppended.Allowlist.Paths...),
+		Regexes:     append(config.Allowlist.Regexes, configToBeAppended.Allowlist.Regexes...),
+		Repos:       append(config.Allowlist.Repos, configToBeAppended.Allowlist.Repos...),
 	}
 
 	return Config{
-		Rules:     append(config.Rules, configToBeMerged.Rules...),
+		Rules:     append(config.Rules, configToBeAppended.Rules...),
 		Allowlist: newAllowList,
 	}
 }

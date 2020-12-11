@@ -212,7 +212,7 @@ func writeTestConfig(toml string) (string, error) {
 	return tmpfile.Name(), nil
 }
 
-func TestMergingConfiguration(t *testing.T) {
+func TestAppendingConfiguration(t *testing.T) {
 	testRegexA, _ := regexp.Compile("a")
 	testRegexB, _ := regexp.Compile("b")
 
@@ -250,34 +250,34 @@ func TestMergingConfiguration(t *testing.T) {
 		Allowlist: allowListB,
 	}
 
-	cfgMerged := cfgA.MergeConfig(cfgB)
+	cfgAppended := cfgA.AppendConfig(cfgB)
 
-	if !(len(cfgMerged.Rules) == 2) {
-		t.Errorf("Length of Merged Rules = %d; want 2", len(cfgMerged.Rules))
+	if !(len(cfgAppended.Rules) == 2) {
+		t.Errorf("Length of Appended Rules = %d; want 2", len(cfgAppended.Rules))
 	}
 
-	if !(len(cfgMerged.Allowlist.Commits) == 2) {
-		t.Errorf("Length of Merged Allowed Commits = %d; want 2", len(cfgMerged.Allowlist.Commits))
+	if !(len(cfgAppended.Allowlist.Commits) == 2) {
+		t.Errorf("Length of Appended Allowed Commits = %d; want 2", len(cfgAppended.Allowlist.Commits))
 	}
 
-	if !(len(cfgMerged.Allowlist.Files) == 2) {
-		t.Errorf("Length of Merged Allowed Files = %d; want 2", len(cfgMerged.Allowlist.Files))
+	if !(len(cfgAppended.Allowlist.Files) == 2) {
+		t.Errorf("Length of Appended Allowed Files = %d; want 2", len(cfgAppended.Allowlist.Files))
 	}
 
-	if !(len(cfgMerged.Allowlist.Paths) == 2) {
-		t.Errorf("Length of Merged Allowed Paths = %d; want 2", len(cfgMerged.Allowlist.Paths))
+	if !(len(cfgAppended.Allowlist.Paths) == 2) {
+		t.Errorf("Length of Appended Allowed Paths = %d; want 2", len(cfgAppended.Allowlist.Paths))
 	}
 
-	if !(len(cfgMerged.Allowlist.Regexes) == 2) {
-		t.Errorf("Length of Merged Allowed Regexes = %d; want 2", len(cfgMerged.Allowlist.Regexes))
+	if !(len(cfgAppended.Allowlist.Regexes) == 2) {
+		t.Errorf("Length of Appended Allowed Regexes = %d; want 2", len(cfgAppended.Allowlist.Regexes))
 	}
 
-	if !(len(cfgMerged.Allowlist.Repos) == 2) {
-		t.Errorf("Length of Merged Allowed Repos = %d; want 2", len(cfgMerged.Allowlist.Repos))
+	if !(len(cfgAppended.Allowlist.Repos) == 2) {
+		t.Errorf("Length of Appended Allowed Repos = %d; want 2", len(cfgAppended.Allowlist.Repos))
 	}
 
-	if cfgMerged.Allowlist.Description != "Merged Configuration" {
-		t.Errorf("Allow List Description is = \"%s\"; want \"Merged Configuration\"", cfgMerged.Allowlist.Description)
+	if cfgAppended.Allowlist.Description != "Appended Configuration" {
+		t.Errorf("Allow List Description is = \"%s\"; want \"Appended Configuration\"", cfgAppended.Allowlist.Description)
 	}
 
 }

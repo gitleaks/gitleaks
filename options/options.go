@@ -39,8 +39,8 @@ type Options struct {
 	Debug            bool   `long:"debug" description:"Log debug messages"`
 	NoGit            bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
 	CodeOnLeak       int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
-	MergeRepoConfig  bool   `long:"merge-repo-config" description:"merge provided config with the repo config."`
-	AdditionalConfig string `long:"additional-config" description:"path to an additional gitleaks config to merge with an existing config. Can be used with --merge-repo-config to merge up to three configurations"`
+	AppendRepoConfig bool   `long:"append-repo-config" description:"append the provided or default config with the repo config."`
+	AdditionalConfig string `long:"additional-config" description:"path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations"`
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
