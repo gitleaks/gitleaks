@@ -19,7 +19,7 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 
 
 ### Installation
-Written in Go, gitleaks is available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks/releases). Alternatively, executed via Docker or it can be installed using Go directly.
+Gitleaks can be installed with Homebrew, Docker, and Go. Gitleaks is also available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks/releases).
 
 ##### MacOS
 
@@ -45,6 +45,7 @@ Usage:
 
 Application Options:
   -v, --verbose           Show verbose output from scan
+  -q, --quiet             Sets log level to error and only output leaks, one json object per line
   -r, --repo-url=         Repository URL
   -p, --path=             Path to directory (repo if contains .git) or file
   -c, --config-path=      Path to config
