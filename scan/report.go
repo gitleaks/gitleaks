@@ -1,4 +1,4 @@
-package report
+package scan
 
 import (
 	"encoding/csv"
@@ -6,11 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/version"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Report is a container for leaks and number of commits scanned
@@ -22,12 +21,12 @@ type Report struct {
 // WriteReport accepts a report and options and will write a report if --report has been set
 func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	if !(opts.NoGit || opts.CheckUncommitted()) {
-		log.Info("commits scanned: ", report.Commits)
+		logrus.Info("commits scanned: ", report.Commits)
 	}
 	if len(report.Leaks) != 0 {
-		log.Warn("leaks found: ", len(report.Leaks))
+		logrus.Warn("leaks found: ", len(report.Leaks))
 	} else {
-		log.Info("No leaks found")
+		logrus.Info("No leaks found")
 		return nil
 	}
 
@@ -47,7 +46,7 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer rable(file.Close)
 
 	if opts.Report != "" {
 		switch opts.ReportFormat {
@@ -60,9 +59,15 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 			}
 		case "csv":
 			w := csv.NewWriter(file)
-			_ = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			err = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			if err != nil {
+				return err
+			}
 			for _, leak := range report.Leaks {
-				w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				if err != nil {
+					return err
+				}
 			}
 			w.Flush()
 		case "sarif":

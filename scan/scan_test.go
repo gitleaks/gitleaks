@@ -5,23 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"runtime"
-	"sort"
 	"testing"
-
-	"github.com/zricethezav/gitleaks/v7/report"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const testRepoBase = "../test_data/test_repos/"
 
 func TestScan(t *testing.T) {
-	moveDotGit("dotGit", ".git")
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer moveDotGit(".git", "dotGit")
 	tests := []struct {
 		description string
@@ -38,6 +35,7 @@ func TestScan(t *testing.T) {
 				Path:         "../test_data/test_repos/test_repo_1",
 				Report:       "../test_data/test_local_repo_one_aws_leak.json.got",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_repo_one_aws_leak.json",
 		},
@@ -126,6 +124,7 @@ func TestScan(t *testing.T) {
 				Report:       "../test_data/test_local_repo_two_leaks_file_commit_range.json.got",
 				ReportFormat: "json",
 				CommitsFile:  "../test_data/test_options/test_local_repo_commits.txt",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_repo_two_leaks_file_commit_range.json",
 		},
@@ -204,6 +203,7 @@ func TestScan(t *testing.T) {
 				Path:         "../test_data/test_repos/",
 				Report:       "../test_data/test_local_owner_aws_leak.json.got",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_local_owner_aws_leak.json",
 		},
@@ -224,6 +224,7 @@ func TestScan(t *testing.T) {
 				Report:       "../test_data/test_regex_entropy.json.got",
 				ConfigPath:   "../test_data/test_configs/regex_entropy.toml",
 				ReportFormat: "json",
+				Threads:      runtime.GOMAXPROCS(0),
 			},
 			wantPath: "../test_data/test_regex_entropy.json",
 		},
@@ -419,6 +420,73 @@ func TestScan(t *testing.T) {
 			},
 			wantPath: "../test_data/test_file1_aws_leak.json",
 		},
+		{
+			description: "test only md files no git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/",
+				Report:       "../test_data/test_only_files_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/onlyFiles.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_only_files_no_git.json",
+		},
+		{
+			description: "test allowlist files",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+			},
+			wantPath: "../test_data/test_allow_list_file.json",
+		},
+		{
+			description: "test allowlist files no-git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_allow_list_file_no_git.json",
+		},
+		{
+			description: "test allowlist docx no-git",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_docx_no_git.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_docx.toml",
+				NoGit:        true,
+			},
+			wantPath: "../test_data/test_allow_list_docx_no_git.json",
+		},
+		{
+			description: "test local repo two allowlist Commit config",
+			opts: options.Options{
+				Path:          "../test_data/test_repos/test_repo_2",
+				Report:        "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json.got",
+				ConfigPath:    "../test_data/test_configs/allowlist_commit.toml",
+				ReportFormat:  "json",
+				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+			},
+			wantPath:  "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json",
+			wantEmpty: true,
+		},
+		{
+			description: "test local repo two global allowlist commit config",
+			opts: options.Options{
+				Path:          "../test_data/test_repos/test_repo_2",
+				Report:        "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json.got",
+				ConfigPath:    "../test_data/test_configs/allowlist_global_files.toml",
+				ReportFormat:  "json",
+				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+			},
+			wantPath:  "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json",
+			wantEmpty: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -457,7 +525,7 @@ func TestScan(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts, cfg)
+		err = WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}
@@ -584,7 +652,7 @@ func TestScanUncommited(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = report.WriteReport(scannerReport, test.opts, cfg)
+		err = WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(err)
 		}
@@ -611,8 +679,8 @@ func TestScanUncommited(t *testing.T) {
 
 func fileCheck(wantPath, gotPath string) error {
 	var (
-		gotLeaks  []report.Leak
-		wantLeaks []report.Leak
+		gotLeaks  []Leak
+		wantLeaks []Leak
 	)
 	want, err := ioutil.ReadFile(wantPath)
 	if err != nil {
@@ -634,18 +702,66 @@ func fileCheck(wantPath, gotPath string) error {
 		return err
 	}
 
-	sort.Slice(gotLeaks, func(i, j int) bool { return (gotLeaks)[i].Commit < (gotLeaks)[j].Commit })
-	sort.Slice(wantLeaks, func(i, j int) bool { return (wantLeaks)[i].Commit < (wantLeaks)[j].Commit })
-
-	if !reflect.DeepEqual(gotLeaks, wantLeaks) {
-		dmp := diffmatchpatch.New()
-		diffs := dmp.DiffMain(string(want), string(got), false)
-		return fmt.Errorf("%s does not equal %s: %s", wantPath, gotPath, dmp.DiffPrettyText(diffs))
+	if len(wantLeaks) != len(gotLeaks) {
+		return fmt.Errorf("got %d leaks, want %d leaks", len(gotLeaks), len(wantLeaks))
 	}
+
+	for _, wantLeak := range wantLeaks {
+		found := false
+		for _, gotLeak := range gotLeaks {
+			if same(gotLeak, wantLeak) {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find %+v in got leaks", wantLeak)
+		}
+	}
+
 	if err := os.Remove(gotPath); err != nil {
 		return err
 	}
 	return nil
+}
+
+func same(l1, l2 Leak) bool {
+	if l1.Commit != l2.Commit {
+		return false
+	}
+
+	if l1.Offender != l2.Offender {
+		return false
+	}
+
+	if l1.Line != l2.Line {
+		return false
+	}
+
+	if l1.Tags != l2.Tags {
+		return false
+	}
+
+	if l1.LineNumber != l2.LineNumber {
+		return false
+	}
+
+	if l1.Author != l2.Author {
+		return false
+	}
+
+	if l1.LeakURL != l2.LeakURL {
+		return false
+	}
+
+	if l1.RepoURL != l2.RepoURL {
+		return false
+	}
+
+	if l1.Repo != l2.Repo {
+		return false
+	}
+	return true
+
 }
 
 func moveDotGit(from, to string) error {
@@ -654,6 +770,14 @@ func moveDotGit(from, to string) error {
 		return err
 	}
 	for _, dir := range repoDirs {
+		if to == ".git" {
+			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", testRepoBase, dir.Name(), "dotGit"))
+			if os.IsNotExist(err) {
+				// dont want to delete the only copy of .git accidentally
+				continue
+			}
+			os.RemoveAll(fmt.Sprintf("%s/%s/%s", testRepoBase, dir.Name(), ".git"))
+		}
 		if !dir.IsDir() {
 			continue
 		}
@@ -667,6 +791,7 @@ func moveDotGit(from, to string) error {
 		if err != nil {
 			return err
 		}
+		// fmt.Println("RENAMED")
 	}
 	return nil
 }

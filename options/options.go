@@ -21,6 +21,7 @@ import (
 // Options stores values of command line options
 type Options struct {
 	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	Quiet          bool   `short:"q" long:"quiet" description:"Sets log level to error and only output leaks, one json object per line"`
 	RepoURL        string `short:"r" long:"repo-url" description:"Repository URL"`
 	Path           string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
 	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
@@ -37,6 +38,7 @@ type Options struct {
 	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
 	Debug          bool   `long:"debug" description:"Log debug messages"`
 	NoGit          bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
+	CodeOnLeak     int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
@@ -81,6 +83,9 @@ func ParseOptions() (Options, error) {
 
 	if opts.Debug {
 		log.SetLevel(log.DebugLevel)
+	}
+	if opts.Quiet {
+		log.SetLevel(log.ErrorLevel)
 	}
 
 	return opts, nil

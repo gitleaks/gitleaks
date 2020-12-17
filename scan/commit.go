@@ -2,8 +2,11 @@ package scan
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
-	"github.com/zricethezav/gitleaks/v7/report"
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/go-git/go-git/v5"
 	fdiff "github.com/go-git/go-git/v5/plumbing/format/diff"
@@ -12,75 +15,136 @@ import (
 
 // CommitScanner is a commit scanner
 type CommitScanner struct {
-	BaseScanner
+	cfg      config.Config
+	opts     options.Options
 	repo     *git.Repository
 	repoName string
 	commit   *object.Commit
 }
 
 // NewCommitScanner creates and returns a commit scanner
-func NewCommitScanner(base BaseScanner, repo *git.Repository, commit *object.Commit) *CommitScanner {
+func NewCommitScanner(opts options.Options, cfg config.Config, repo *git.Repository, commit *object.Commit) *CommitScanner {
 	cs := &CommitScanner{
-		BaseScanner: base,
-		repo:        repo,
-		commit:      commit,
-		repoName:    getRepoName(base.opts),
+		cfg:      cfg,
+		opts:     opts,
+		repo:     repo,
+		commit:   commit,
+		repoName: getRepoName(opts),
 	}
-	cs.scannerType = typeCommitScanner
 	return cs
 }
 
+// SetRepoName sets the repo name of the scanner.
+func (cs *CommitScanner) SetRepoName(repoName string) {
+	cs.repoName = repoName
+}
+
 // Scan kicks off a CommitScanner Scan
-func (cs *CommitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (cs *CommitScanner) Scan() (Report, error) {
+	var scannerReport Report
+
+	if cs.cfg.Allowlist.CommitAllowed(cs.commit.Hash.String()) {
+		return scannerReport, nil
+	}
+
 	if len(cs.commit.ParentHashes) == 0 {
-		facScanner := NewFilesAtCommitScanner(cs.BaseScanner, cs.repo, cs.commit)
+		facScanner := NewFilesAtCommitScanner(cs.opts, cs.cfg, cs.repo, cs.commit)
 		return facScanner.Scan()
 	}
 
-	err := cs.commit.Parents().ForEach(func(parent *object.Commit) error {
-		defer func() {
-			if err := recover(); err != nil {
-				// sometimes the Patch generation will fail due to a known bug in
-				// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
-				// Once a fix has been merged I will remove this recover.
-				return
-			}
-		}()
-		if parent == nil {
-			return nil
+	parent, err := cs.commit.Parent(0)
+	if err != nil {
+		return scannerReport, err
+	}
+
+	if parent == nil {
+		return scannerReport, nil
+	}
+
+	patch, err := parent.Patch(cs.commit)
+	if err != nil {
+		return scannerReport, fmt.Errorf("could not generate Patch")
+	}
+
+	patchContent := patch.String()
+
+	for _, f := range patch.FilePatches() {
+		if f.IsBinary() {
+			continue
 		}
+		for _, chunk := range f.Chunks() {
+			if chunk.Type() == fdiff.Add {
+				_, to := f.Files()
+				if cs.cfg.Allowlist.FileAllowed(filepath.Base(to.Path())) ||
+					cs.cfg.Allowlist.PathAllowed(to.Path()) {
+					continue
+				}
 
-		patch, err := parent.Patch(cs.commit)
-		if err != nil {
-			return fmt.Errorf("could not generate Patch")
-		}
+				// Check individual file path ONLY rules
+				for _, rule := range cs.cfg.Rules {
+					if rule.CommitAllowed(cs.commit.Hash.String()) {
+						continue
+					}
 
-		patchContent := patch.String()
+					if rule.HasFileOrPathLeakOnly(to.Path()) {
+						leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(cs.commit)
+						leak.Repo = cs.repoName
+						leak.File = to.Path()
+						leak.RepoURL = cs.opts.RepoURL
+						leak.LeakURL = leak.URL()
+						leak.Rule = rule.Description
+						leak.Tags = strings.Join(rule.Tags, ", ")
 
-		for _, f := range patch.FilePatches() {
-			if f.IsBinary() {
-				continue
-			}
-			for _, chunk := range f.Chunks() {
-				if chunk.Type() == fdiff.Add {
-					_, to := f.Files()
-					leaks := checkRules(cs.BaseScanner, cs.commit, cs.repoName, to.Path(), chunk.Content())
+						leak.Log(cs.opts)
 
-					lineLookup := make(map[string]bool)
-					for _, leak := range leaks {
-						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
-						leak.LeakURL = leakURL(leak)
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
-						if cs.opts.Verbose {
-							logLeak(leak, cs.opts.Redact)
+						continue
+					}
+				}
+
+				lineLookup := make(map[string]bool)
+
+				// Check the actual content
+				for _, line := range strings.Split(chunk.Content(), "\n") {
+					for _, rule := range cs.cfg.Rules {
+						if rule.AllowList.FileAllowed(filepath.Base(to.Path())) ||
+							rule.AllowList.PathAllowed(to.Path()) ||
+							rule.AllowList.CommitAllowed(cs.commit.Hash.String()) {
+							continue
 						}
+						offender := rule.Inspect(line)
+						if offender == "" {
+							continue
+						}
+
+						if cs.cfg.Allowlist.RegexAllowed(line) {
+							continue
+						}
+
+						if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(to.Path())) {
+							continue
+						}
+						if rule.Path.String() != "" && !rule.HasFilePathLeak(to.Path()) {
+							continue
+						}
+
+						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
+						leak.File = to.Path()
+						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+						leak.RepoURL = cs.opts.RepoURL
+						leak.Repo = cs.repoName
+						leak.LeakURL = leak.URL()
+						leak.Rule = rule.Description
+						leak.Tags = strings.Join(rule.Tags, ", ")
+
+						leak.Log(cs.opts)
+
+						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 					}
 				}
 			}
 		}
-		return nil
-	})
+	}
 	scannerReport.Commits = 1
-	return scannerReport, err
+	return scannerReport, nil
 }

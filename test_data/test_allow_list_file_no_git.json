@@ -1,0 +1,18 @@
+[
+ {
+  "line": "",
+  "lineNumber": 1,
+  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_10/tmp/bad.docx",
+  "commit": "",
+  "repo": "",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "Block dangerous filetypes",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "../test_data/test_repos/test_repo_10/tmp/bad.docx",
+  "date": "0001-01-01T00:00:00Z",
+  "tags": "key, extensions"
+ }
+]

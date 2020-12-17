@@ -5,44 +5,46 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"sync"
+	"strings"
 
-	"github.com/zricethezav/gitleaks/v7/report"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"golang.org/x/sync/errgroup"
 )
 
 // NoGitScanner is a scanner that absolutely despises git
 type NoGitScanner struct {
-	BaseScanner
-	leakChan chan report.Leak
-	leakWG   *sync.WaitGroup
-	leaks    []report.Leak
+	opts options.Options
+	cfg  config.Config
 }
 
 // NewNoGitScanner creates and returns a nogit scanner. This is used for scanning files and directories
-func NewNoGitScanner(base BaseScanner) *NoGitScanner {
+func NewNoGitScanner(opts options.Options, cfg config.Config) *NoGitScanner {
 	ngs := &NoGitScanner{
-		BaseScanner: base,
-		leakChan:    make(chan report.Leak),
-		leakWG:      &sync.WaitGroup{},
+		opts: opts,
+		cfg:  cfg,
 	}
 
-	go ngs.receiveLeaks()
-
-	ngs.scannerType = typeNoGitScanner
-
+	// no-git scans should ignore .git folders by default
+	// issue: https://github.com/zricethezav/gitleaks/issues/474
+	// ngs.cfg.Allowlist
+	err := ngs.cfg.Allowlist.IgnoreDotGit()
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
 	return ngs
 }
 
 // Scan kicks off a NoGitScanner Scan
-func (ngs *NoGitScanner) Scan() (report.Report, error) {
-	var scannerReport report.Report
+func (ngs *NoGitScanner) Scan() (Report, error) {
+	var scannerReport Report
 
 	g, _ := errgroup.WithContext(context.Background())
-	paths := make(chan string)
-	semaphore := make(chan bool, howManyThreads(ngs.opts.Threads))
-	wg := sync.WaitGroup{}
+	paths := make(chan string, 100)
 
 	g.Go(func() error {
 		defer close(paths)
@@ -58,46 +60,85 @@ func (ngs *NoGitScanner) Scan() (report.Report, error) {
 			})
 	})
 
+	leaks := make(chan Leak, 100)
+
 	for path := range paths {
 		p := path
-		wg.Add(1)
-		semaphore <- true
 		g.Go(func() error {
-			defer func() {
-				<-semaphore
-				wg.Done()
-			}()
-			f, err := os.Open(p)
+			if ngs.cfg.Allowlist.FileAllowed(filepath.Base(p)) ||
+				ngs.cfg.Allowlist.PathAllowed(p) {
+				return nil
+			}
+
+			for _, rule := range ngs.cfg.Rules {
+				if rule.HasFileOrPathLeakOnly(p) {
+					leak := NewLeak("", "Filename or path offender: "+p, defaultLineNumber)
+					leak.File = p
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+
+					leak.Log(ngs.opts)
+
+					leaks <- leak
+				}
+			}
+
+			f, err := os.Open(p) // #nosec
 			if err != nil {
 				return err
 			}
 			scanner := bufio.NewScanner(f)
-			line := 0
+			lineNumber := 0
 			for scanner.Scan() {
-				line++
-				leaks := checkRules(ngs.BaseScanner, emptyCommit(), "", f.Name(), scanner.Text())
-				for _, leak := range leaks {
-					leak.LineNumber = line
-					if ngs.opts.Verbose {
-						logLeak(leak, ngs.opts.Redact)
+				lineNumber++
+				for _, rule := range ngs.cfg.Rules {
+					line := scanner.Text()
+
+					if rule.AllowList.FileAllowed(filepath.Base(p)) ||
+						rule.AllowList.PathAllowed(p) {
+						continue
 					}
-					ngs.leakWG.Add(1)
-					ngs.leakChan <- leak
+
+					offender := rule.Inspect(line)
+					if offender == "" {
+						continue
+					}
+					if ngs.cfg.Allowlist.RegexAllowed(line) {
+						continue
+					}
+
+					if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(p)) {
+						continue
+					}
+					if rule.Path.String() != "" && !rule.HasFilePathLeak(p) {
+						continue
+					}
+
+					leak := NewLeak(line, offender, defaultLineNumber)
+					leak.File = p
+					leak.LineNumber = lineNumber
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+
+					leak.Log(ngs.opts)
+
+					leaks <- leak
 				}
 			}
 			return f.Close()
 		})
 	}
-	wg.Wait()
-	ngs.leakWG.Wait()
-	scannerReport.Leaks = ngs.leaks
 
-	return scannerReport, nil
-}
+	go func() {
+		if err := g.Wait(); err != nil {
+			log.Error(err)
+		}
+		close(leaks)
+	}()
 
-func (ngs *NoGitScanner) receiveLeaks() {
-	for leak := range ngs.leakChan {
-		ngs.leaks = append(ngs.leaks, leak)
-		ngs.leakWG.Done()
+	for leak := range leaks {
+		scannerReport.Leaks = append(scannerReport.Leaks, leak)
 	}
+
+	return scannerReport, g.Wait()
 }

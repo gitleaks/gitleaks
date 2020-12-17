@@ -5,8 +5,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v7/report"
-
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/scan"
@@ -59,9 +57,13 @@ func main() {
 	}
 
 	// report scan
-	if err := report.WriteReport(scannerReport, opts, cfg); err != nil {
+	if err := scan.WriteReport(scannerReport, opts, cfg); err != nil {
 		log.Error(err)
 		os.Exit(1)
+	}
+
+	if len(scannerReport.Leaks) != 0 {
+		os.Exit(opts.CodeOnLeak)
 	}
 }
 
