@@ -2,10 +2,12 @@ package options
 
 import (
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"strings"
+	"syscall"
 
 	"github.com/zricethezav/gitleaks/v7/version"
 
@@ -33,6 +35,8 @@ type Options struct {
 	AccessToken    string `long:"access-token" description:"Access token for git repo"`
 	Threads        int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
 	SSH            string `long:"ssh-key" description:"Path to ssh key used for auth"`
+	SshPhrase      bool   `long:"ssh-pass" description:"Ask for the passphrase used to decrypt the ssh key"`
+	SshAgent	   bool   `long:"ssh-agent" description:"Use the ssh agent for auth"`
 	Unstaged       bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
 	Branch         string `long:"branch" description:"Branch to scan"`
 	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
@@ -144,9 +148,18 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 
 	if strings.HasPrefix(opts.RepoURL, "git") {
 		// using git protocol so needs ssh auth
-		auth, err = SSHAuth(opts)
-		if err != nil {
-			return nil, err
+		// ssh agent is requested so open channel to users ssh agent
+		if opts.SshAgent == true {
+			auth, err = SSHAgentAuth(opts)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// ssh authentication with private key, accepts passphrase
+			auth, err = SSHAuth(opts)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else if opts.Password != "" && opts.Username != "" {
 		// auth using username and password
@@ -176,15 +189,37 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 // location for ssh keys, $HOME/.ssh/id_rsa. This function is only called if the
 // repo url using the git:// protocol.
 func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
-	if opts.SSH != "" {
-		return ssh.NewPublicKeysFromFile("git", opts.SSH, "")
+	// the default value for the ssh key passphrase is empty. This can be used with
+	// unencrypted ssh key
+	password := ""
+
+	// When the SshPhrase options is defined, the user is asked for the passphrase to
+	// decrypt the key.
+	if opts.SshPhrase == true {
+		fmt.Print("Enter Password: ")
+		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return nil, err
+		}
+		// The ssh key passphrase is stored in the variable and can be used to retrieve the
+		// ssh key from the file.
+		password = string(bytePassword)
 	}
+	if opts.SSH != "" {
+		return ssh.NewPublicKeysFromFile("git", opts.SSH, password)
+	}
+
 	c, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
 	defaultPath := fmt.Sprintf("%s/.ssh/id_rsa", c.HomeDir)
-	return ssh.NewPublicKeysFromFile("git", defaultPath, "")
+	return ssh.NewPublicKeysFromFile("git", defaultPath, password)
+}
+
+// Open a channel for the users ssh agent and authenticate.
+func SSHAgentAuth(opts Options) (*ssh.PublicKeysCallback, error) {
+	return ssh.NewSSHAgentAuth("git")
 }
 
 // OpenLocal checks what options are set, if no remote targets are set
