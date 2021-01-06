@@ -45,15 +45,17 @@ type Options struct {
 	ReportFormat string `short:"f" long:"format" default:"json" description:"JSON, CSV, SARIF"`
 
 	// Commit Options
-	FilesAtCommit string `long:"files-at-commit" description:"Sha of commit to scan all files at commit"`
-	Commit        string `long:"commit" description:"Sha of commit to scan or \"latest\" to scan the last commit of the repository"`
-	Commits       string `long:"commits" description:"Comma separated list of a commits to scan"`
-	CommitsFile   string `long:"commits-file" description:"Path to file of line separated list of commits to scan"`
-	CommitFrom    string `long:"commit-from" description:"Commit to start scan from"`
-	CommitTo      string `long:"commit-to" description:"Commit to stop scan"`
-	CommitSince   string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	CommitUntil   string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
-	Depth         int    `long:"depth" description:"Number of commits to scan"`
+	FilesAtCommit       string `long:"files-at-commit" description:"Sha of commit to scan all files at commit"`
+	Commit              string `long:"commit" description:"Sha of commit to scan or \"latest\" to scan the last commit of the repository"`
+	Commits             string `long:"commits" description:"Comma separated list of a commits to scan"`
+	CommitsFile         string `long:"commits-file" description:"Path to file of line separated list of commits to scan"`
+	CommitFrom          string `long:"commit-from" description:"Commit to start scan from"`
+	CommitTo            string `long:"commit-to" description:"Commit to stop scan"`
+	CommitSince         string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitSinceDuration string `long:"commit-since-duration" description:"Scan commits more recent than a specific date expresed by an duration (Now() - duration). A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as '300ms', '-1.5h' or '2h45m'. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."`
+	CommitUntil         string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
+	CommitUntilDuration string `long:"commit-until-duration" description:"Scan commits older than a specific date expresed by an duration (Now() - duration). A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as '300ms', '-1.5h' or '2h45m'. Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."`
+	Depth               int    `long:"depth" description:"Number of commits to scan"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct

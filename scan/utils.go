@@ -140,11 +140,29 @@ func logOptions(repo *git.Repository, opts options.Options) (*git.LogOptions, er
 		}
 		logOpts.All = true
 	}
+	if opts.CommitSinceDuration != "" {
+		if duration, err := time.ParseDuration(opts.CommitSinceDuration); err == nil {
+			timeSince := time.Now().Add(-duration)
+			logOpts.Since = &timeSince
+		} else {
+			return nil, err
+		}
+		logOpts.All = true
+	}
 	if opts.CommitUntil != "" {
 		if t, err := time.Parse(timeformat, opts.CommitUntil); err == nil {
 			logOpts.Until = &t
 		} else if t, err := time.Parse(dateformat, opts.CommitUntil); err == nil {
 			logOpts.Until = &t
+		} else {
+			return nil, err
+		}
+		logOpts.All = true
+	}
+	if opts.CommitUntilDuration != "" {
+		if duration, err := time.ParseDuration(opts.CommitUntilDuration); err == nil {
+			timeUntil := time.Now().Add(-duration)
+			logOpts.Until = &timeUntil
 		} else {
 			return nil, err
 		}
