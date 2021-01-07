@@ -69,7 +69,7 @@ func ParseOptions() (Options, error) {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stdout)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	if opts.Version {
