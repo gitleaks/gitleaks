@@ -3,12 +3,12 @@ package scan
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
-	"github.com/zricethezav/gitleaks/v7/options"
-
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/zricethezav/gitleaks/v7/options"
 )
 
 // Leak is a struct that contains information about some line of code that contains
@@ -28,6 +28,7 @@ type Leak struct {
 	File       string    `json:"file"`
 	Date       time.Time `json:"date"`
 	Tags       string    `json:"tags"`
+	Entropy    float64   `json:"entropy"`
 }
 
 // RedactLeak will replace the offending string with "REDACTED" in both
@@ -39,11 +40,12 @@ func RedactLeak(leak Leak) Leak {
 }
 
 // NewLeak creates a new leak from common data all leaks must have, line, offender, linenumber
-func NewLeak(line string, offender string, lineNumber int) Leak {
+func NewLeak(line string, offender string, lineNumber int, entropy float64) Leak {
 	return Leak{
 		Line:       line,
 		Offender:   offender,
 		LineNumber: lineNumber,
+		Entropy:    math.Round(entropy*1000) / 1000, // 3 points precision is plenty
 	}
 }
 

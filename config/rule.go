@@ -23,28 +23,33 @@ type Rule struct {
 }
 
 // Inspect checks the content of a line for a leak
-func (r *Rule) Inspect(line string) string {
+func (r *Rule) Inspect(line string) (string, float64) {
 	offender := r.Regex.FindString(line)
 	if offender == "" {
-		return ""
+		return "", 0
 	}
 
 	// check if offender is allowed
 	if r.RegexAllowed(line) {
-		return ""
+		return "", 0
 	}
 
 	// check entropy
+	var entropy float64
+	var entropyLeak bool
 	groups := r.Regex.FindStringSubmatch(offender)
-	if len(r.Entropies) != 0 && !r.ContainsEntropyLeak(groups) {
-		return ""
+	if len(r.Entropies) != 0 {
+		entropy, entropyLeak = r.ContainsEntropyLeak(groups)
+		if !entropyLeak {
+			return "", 0
+		}
 	}
 
 	// 0 is a match for the full regex pattern
 	if 0 < r.ReportGroup && r.ReportGroup < len(groups) {
 		offender = groups[r.ReportGroup]
 	}
-	return offender
+	return offender, entropy
 }
 
 // RegexAllowed checks if the content is allowlisted
@@ -58,16 +63,16 @@ func (r *Rule) CommitAllowed(commit string) bool {
 }
 
 // ContainsEntropyLeak checks if there is an entropy leak
-func (r *Rule) ContainsEntropyLeak(groups []string) bool {
+func (r *Rule) ContainsEntropyLeak(groups []string) (float64, bool) {
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
 			if entropy >= e.Min && entropy <= e.Max {
-				return true
+				return entropy, true
 			}
 		}
 	}
-	return false
+	return 0, false
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if
