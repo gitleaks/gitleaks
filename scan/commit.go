@@ -112,7 +112,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 							rule.AllowList.CommitAllowed(cs.commit.Hash.String()) {
 							continue
 						}
-						offender := rule.Inspect(line)
+						offender, entropy := rule.Inspect(line)
 						if offender == "" {
 							continue
 						}
@@ -131,6 +131,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
 						leak.File = to.Path()
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
+						leak.Entropy = entropy
 						leak.RepoURL = cs.opts.RepoURL
 						leak.Repo = cs.repoName
 						leak.LeakURL = leak.URL()

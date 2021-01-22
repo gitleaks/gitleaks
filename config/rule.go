@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"math"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // Rule is a struct that contains information that is loaded from a gitleaks config.
@@ -23,28 +25,31 @@ type Rule struct {
 }
 
 // Inspect checks the content of a line for a leak
-func (r *Rule) Inspect(line string) string {
-	offender := r.Regex.FindString(line)
+func (r *Rule) Inspect(line string) (offender string, entropy string) {
+	offender = r.Regex.FindString(line)
 	if offender == "" {
-		return ""
+		return "", ""
 	}
 
 	// check if offender is allowed
 	if r.RegexAllowed(line) {
-		return ""
+		return "", ""
 	}
 
 	// check entropy
 	groups := r.Regex.FindStringSubmatch(offender)
-	if len(r.Entropies) != 0 && !r.ContainsEntropyLeak(groups) {
-		return ""
+	if len(r.Entropies) > 0 && !r.CheckEntropies(groups) {
+		return "", ""
 	}
+
+	// record the actual entropy of the leak and any capturing group
+	entropy = r.ComputeEntropy(groups)
 
 	// 0 is a match for the full regex pattern
 	if 0 < r.ReportGroup && r.ReportGroup < len(groups) {
 		offender = groups[r.ReportGroup]
 	}
-	return offender
+	return offender, entropy
 }
 
 // RegexAllowed checks if the content is allowlisted
@@ -57,8 +62,8 @@ func (r *Rule) CommitAllowed(commit string) bool {
 	return r.AllowList.CommitAllowed(commit)
 }
 
-// ContainsEntropyLeak checks if there is an entropy leak
-func (r *Rule) ContainsEntropyLeak(groups []string) bool {
+// CheckEntropies returns true if a rule entropy definition matches a group
+func (r *Rule) CheckEntropies(groups []string) bool {
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
@@ -68,6 +73,16 @@ func (r *Rule) ContainsEntropyLeak(groups []string) bool {
 		}
 	}
 	return false
+}
+
+// ComputeEntropy returns the entropy of every regex group (including group 0)
+func (r *Rule) ComputeEntropy(groups []string) string {
+	entropies := make([]string, len(groups))
+	for i, group := range groups {
+		entropy := shannonEntropy(group)
+		entropies[i] = fmt.Sprintf("%.2f", entropy)
+	}
+	return strings.Join(entropies, ", ")
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if

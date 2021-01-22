@@ -104,7 +104,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						continue
 					}
 
-					offender := rule.Inspect(line)
+					offender, entropy := rule.Inspect(line)
 					if offender == "" {
 						continue
 					}
@@ -127,6 +127,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						leak.File = relPath
 					}
 					leak.LineNumber = lineNumber
+					leak.Entropy = entropy
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
 

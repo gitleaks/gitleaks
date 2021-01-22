@@ -11,12 +11,13 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-// Leak is a struct that contains information about some line of code that contains
-// sensitive information as determined by the rules set in a gitleaks config
+// Leak is a struct storing information about the location of some
+// sensitive information matched by a rule defined in a gitleaks config
 type Leak struct {
 	Line       string    `json:"line"`
 	LineNumber int       `json:"lineNumber"`
 	Offender   string    `json:"offender"`
+	Entropy    string    `json:"entropy"`
 	Commit     string    `json:"commit"`
 	Repo       string    `json:"repo"`
 	RepoURL    string    `json:"repoURL"`
@@ -31,7 +32,7 @@ type Leak struct {
 }
 
 // RedactLeak will replace the offending string with "REDACTED" in both
-// the offender and line field of the leak which.
+// the offender and line attributes
 func RedactLeak(leak Leak) Leak {
 	leak.Line = strings.Replace(leak.Line, leak.Offender, "REDACTED", -1)
 	leak.Offender = "REDACTED"
