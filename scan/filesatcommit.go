@@ -73,7 +73,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 			}
 
 			if rule.HasFileOrPathLeakOnly(f.Name) {
-				leak := NewLeak("", "Filename or path offender: "+f.Name, defaultLineNumber).WithCommit(fs.commit)
+				leak := NewLeak("", "").WithCommit(fs.commit)
 				leak.Repo = fs.repoName
 				leak.File = f.Name
 				leak.RepoURL = fs.opts.RepoURL
@@ -113,7 +113,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 					continue
 				}
 
-				leak := NewLeak(line, offender, defaultLineNumber).WithCommit(fs.commit)
+				leak := NewLeak(line, offender).WithCommit(fs.commit)
 				leak.File = f.Name
 				leak.LineNumber = i + 1
 				leak.RepoURL = fs.opts.RepoURL

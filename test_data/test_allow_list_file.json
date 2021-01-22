@@ -1,8 +1,8 @@
 [
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: tmp/bad.docx",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "b0f9b62dfe12e4e10de180359c6b9276472494f8",
   "repo": "test_repo_10",
   "repoURL": "",

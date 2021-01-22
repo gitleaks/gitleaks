@@ -72,7 +72,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 
 			for _, rule := range ngs.cfg.Rules {
 				if rule.HasFileOrPathLeakOnly(p) {
-					leak := NewLeak("", "Filename or path offender: "+p, defaultLineNumber)
+					leak := NewLeak("", "")
 					relPath, err := filepath.Rel(ngs.opts.Path, p)
 					if err != nil {
 						leak.File = p
@@ -119,7 +119,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						continue
 					}
 
-					leak := NewLeak(line, offender, defaultLineNumber)
+					leak := NewLeak(line, offender)
 					relPath, err := filepath.Rel(ngs.opts.Path, p)
 					if err != nil {
 						leak.File = p

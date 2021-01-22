@@ -1,8 +1,8 @@
 [
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_10/README.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -17,8 +17,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_2/secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -33,8 +33,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_2/no_secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -49,8 +49,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_3/no_secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -65,8 +65,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_3/secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -81,8 +81,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_4/secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -97,8 +97,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_4/no_secrets.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -113,8 +113,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_5/notes.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",
@@ -129,8 +129,8 @@
  },
  {
   "line": "",
-  "lineNumber": 1,
-  "offender": "Filename or path offender: ../test_data/test_repos/test_repo_8/README.md",
+  "lineNumber": 0,
+  "offender": "",
   "commit": "",
   "repo": "",
   "repoURL": "",

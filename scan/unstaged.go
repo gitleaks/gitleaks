@@ -66,7 +66,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			// Check individual file path ONLY rules
 			for _, rule := range us.cfg.Rules {
 				if rule.HasFileOrPathLeakOnly(fn) {
-					leak := NewLeak("", "Filename or path offender: "+ fn, defaultLineNumber)
+					leak := NewLeak("", "")
 					leak.Repo = us.repoName
 					leak.File = fn
 					leak.RepoURL = us.opts.RepoURL
@@ -101,7 +101,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(workTreeFile.Name())) {
 						continue
 					}
-					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak := NewLeak(line, offender).WithCommit(emptyCommit())
 					leak.File = workTreeFile.Name()
 					leak.LineNumber = lineNumber
 					leak.Repo = us.repoName
@@ -214,7 +214,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(filename)) {
 						continue
 					}
-					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak := NewLeak(line, offender).WithCommit(emptyCommit())
 					leak.File = filename
 					leak.LineNumber = extractLine(prettyDiff, leak, lineLookup) + 1
 					leak.Repo = us.repoName

@@ -23,7 +23,7 @@ const (
 	diffAddPrefix     = "+"
 	diffDelPrefix     = "-"
 	diffLineSignature = " @@"
-	defaultLineNumber = 1
+	defaultLineNumber = 0
 )
 
 func obtainCommit(repo *git.Repository, commitSha string) (*object.Commit, error) {

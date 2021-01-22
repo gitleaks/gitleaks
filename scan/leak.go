@@ -31,19 +31,19 @@ type Leak struct {
 }
 
 // RedactLeak will replace the offending string with "REDACTED" in both
-// the offender and line field of the leak which.
+// the offender and line attributes
 func RedactLeak(leak Leak) Leak {
 	leak.Line = strings.Replace(leak.Line, leak.Offender, "REDACTED", -1)
 	leak.Offender = "REDACTED"
 	return leak
 }
 
-// NewLeak creates a new leak from common data all leaks must have, line, offender, linenumber
-func NewLeak(line string, offender string, lineNumber int) Leak {
+// NewLeak creates a new leak with some basic info
+func NewLeak(line string, offender string) Leak {
 	return Leak{
 		Line:       line,
 		Offender:   offender,
-		LineNumber: lineNumber,
+		LineNumber: defaultLineNumber,
 	}
 }
 
