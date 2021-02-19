@@ -109,7 +109,7 @@ gitleaks --repo-url=https://github.com/my-insecure/repo --commit=commit-sha -v
 gitleaks --path=path/to/local/repo -v
 ```
 
-#### Scan repos contain in a parent directory:
+#### Scan repos contained in a parent directory:
 If you have `repo1`, `repo2`, `repo3` all under `path/to/local`, gitleaks will discover and scan those repos.
 ```
 gitleaks --path=path/to/local/ -v
@@ -136,8 +136,9 @@ gitleaks --path=path/to/local/repo -v --unstaged
 
 
 ### Configuration
-Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. The difference between the two is `--config-path` loads a local gitleaks config whereas `--repo-config-path` will load a configuration present in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
-The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files contain a few different toml tables which will be explained below.
+Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. `--config-path` loads a local gitleaks configuration whereas `--repo-config-path` will load a configuration present just in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
+The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
+
 ### Rules summary
 
 The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in [TomlLoader struct](https://github.com/zricethezav/gitleaks/blob/master/config/config.go#L57-L87), and can be summarized as:
