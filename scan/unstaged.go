@@ -2,7 +2,6 @@ package scan
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os/exec"
 	"path/filepath"
@@ -12,9 +11,9 @@ import (
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 
+	"github.com/andreyvit/diff"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 // UnstagedScanner is an unstaged scanner. This is the scanner used when you don't provide program arguments
@@ -167,20 +166,18 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				}
 			}
 
-			dmp := diffmatchpatch.New()
-			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
-			prettyDiff := diffPrettyText(diffs)
-
-			var diffContents string
-			for _, d := range diffs {
-				if d.Type == diffmatchpatch.DiffInsert {
-					diffContents += fmt.Sprintf("%s\n", d.Text)
-				}
-			}
+			diffLines := diff.LineDiffAsLines(prevFileContents, currFileContents)
+			prettyDiff := strings.Join(diffLines, "\n")
 
 			lineLookup := make(map[string]bool)
 
-			for _, line := range strings.Split(diffContents, "\n") {
+			for _, diffLine := range diffLines {
+				// skip removals and equalities
+				if len(diffLine) < 1 || diffLine[0] != '+' {
+					continue
+				}
+
+				line := diffLine[1:]
 				for _, rule := range us.cfg.Rules {
 					offender := rule.Inspect(line)
 					if offender == "" {
@@ -213,28 +210,6 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 	}
 
 	return scannerReport, err
-}
-
-// DiffPrettyText converts a []Diff into a colored text report.
-// TODO open PR for this
-func diffPrettyText(diffs []diffmatchpatch.Diff) string {
-	var buff bytes.Buffer
-	for _, diff := range diffs {
-		text := diff.Text
-
-		switch diff.Type {
-		case diffmatchpatch.DiffInsert:
-			_, _ = buff.WriteString("+")
-			_, _ = buff.WriteString(text)
-		case diffmatchpatch.DiffDelete:
-			_, _ = buff.WriteString("-")
-			_, _ = buff.WriteString(text)
-		case diffmatchpatch.DiffEqual:
-			_, _ = buff.WriteString(" ")
-			_, _ = buff.WriteString(text)
-		}
-	}
-	return buff.String()
 }
 
 // gitStatus returns the status of modified files in the worktree. It will attempt to execute 'git status'
