@@ -65,7 +65,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			// Check individual file path ONLY rules
 			for _, rule := range us.cfg.Rules {
 				if rule.HasFileOrPathLeakOnly(fn) {
-					leak := NewLeak("", "Filename or path offender: "+ fn, defaultLineNumber)
+					leak := NewLeak("", "Filename or path offender: "+fn, defaultLineNumber)
 					leak.Repo = us.repoName
 					leak.File = fn
 					leak.RepoURL = us.opts.RepoURL
