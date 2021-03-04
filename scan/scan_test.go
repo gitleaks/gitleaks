@@ -242,7 +242,6 @@ func TestScan(t *testing.T) {
 			description: "test local repo four entropy alternative config",
 			opts: options.Options{
 				Path:         "../test_data/test_repos/test_repo_1",
-				Report:       "../test_data/test_regex_allowlist.json.got",
 				ConfigPath:   "../test_data/test_configs/aws_key_aws_allowlisted.toml",
 				ReportFormat: "json",
 			},
@@ -467,24 +466,20 @@ func TestScan(t *testing.T) {
 			description: "test local repo two allowlist Commit config",
 			opts: options.Options{
 				Path:          "../test_data/test_repos/test_repo_2",
-				Report:        "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json.got",
 				ConfigPath:    "../test_data/test_configs/allowlist_commit.toml",
 				ReportFormat:  "json",
 				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
 			},
-			wantPath:  "../test_data/test_local_repo_two_allowlist_commits_files_at_commit.json",
 			wantEmpty: true,
 		},
 		{
 			description: "test local repo two global allowlist commit config",
 			opts: options.Options{
 				Path:          "../test_data/test_repos/test_repo_2",
-				Report:        "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json.got",
 				ConfigPath:    "../test_data/test_configs/allowlist_global_files.toml",
 				ReportFormat:  "json",
 				FilesAtCommit: "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
 			},
-			wantPath:  "../test_data/test_local_repo_two_global_allowlist_files_at_commit.json",
 			wantEmpty: true,
 		},
 	}
@@ -559,10 +554,11 @@ func TestScanUncommited(t *testing.T) {
 		emptyRepo    bool
 		wantEmpty    bool
 		fileToChange string
-		addition     string
+		change       string
+		replace      bool
 	}{
 		{
-			description: "test scan local one leak",
+			description: "test scan local one leak (addition)",
 			opts: options.Options{
 				Path:         "../test_data/test_repos/test_repo_1",
 				Report:       "../test_data/test_local_repo_one_aws_leak_uncommitted.json.got",
@@ -571,7 +567,20 @@ func TestScanUncommited(t *testing.T) {
 			},
 			wantPath:     "../test_data/test_local_repo_one_aws_leak_uncommitted.json",
 			fileToChange: "server.test.py",
-			addition:     " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
+			change:       " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
+		},
+		{
+			description: "test scan local one leak (modification)",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_1",
+				Report:       "../test_data/test_local_repo_one_aws_leak_uncommitted_modify.json.got",
+				Unstaged:     true,
+				ReportFormat: "json",
+			},
+			wantPath:     "../test_data/test_local_repo_one_aws_leak_uncommitted_modify.json",
+			fileToChange: "server.test.py",
+			change:       " aws_access_key_id='AKIAIO5FODNN7DXAMPLE'\n\n",
+			replace:      true,
 		},
 		{
 			description: "test scan local no leak",
@@ -582,7 +591,19 @@ func TestScanUncommited(t *testing.T) {
 			},
 			wantEmpty:    true,
 			fileToChange: "server.test.py",
-			addition:     "nothing bad",
+			change:       "nothing bad",
+		},
+		{
+			description: "test scan local no leak (modification)",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_1",
+				Unstaged:     true,
+				ReportFormat: "json",
+			},
+			wantEmpty:    true,
+			fileToChange: "server.test.py",
+			change:       "nothing bad",
+			replace:      true,
 		},
 		{
 			description: "test scan repo with no commits",
@@ -606,13 +627,21 @@ func TestScanUncommited(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+
+			flags := os.O_WRONLY
+			if !test.replace {
+				flags |= os.O_APPEND
+			} else {
+				flags |= os.O_TRUNC
+			}
+
 			altered, err := os.OpenFile(fmt.Sprintf("%s/%s", test.opts.Path, test.fileToChange),
-				os.O_WRONLY|os.O_APPEND, 0644)
+				flags, 0644)
 			if err != nil {
 				t.Error(err)
 			}
 
-			_, err = altered.WriteString(test.addition)
+			_, err = altered.WriteString(test.change)
 			if err != nil {
 				t.Error(err)
 			}
