@@ -56,6 +56,28 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			if err != nil {
 				continue
 			}
+
+			// Check if file is allow listed
+			if us.cfg.Allowlist.FileAllowed(filepath.Base(fn)) ||
+				us.cfg.Allowlist.PathAllowed(fn) {
+				continue
+			}
+			// Check individual file path ONLY rules
+			for _, rule := range us.cfg.Rules {
+				if rule.HasFileOrPathLeakOnly(fn) {
+					leak := NewLeak("", "Filename or path offender: "+ fn, defaultLineNumber)
+					leak.Repo = us.repoName
+					leak.File = fn
+					leak.RepoURL = us.opts.RepoURL
+					leak.LeakURL = leak.URL()
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+					leak.Log(us.opts)
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
+					continue
+				}
+			}
+
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}

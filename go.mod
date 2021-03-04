@@ -1,6 +1,6 @@
 module github.com/zricethezav/gitleaks/v7
 
-go 1.15
+go 1.16
 
 replace github.com/go-git/go-git/v5 => github.com/zricethezav/go-git/v5 v5.2.2
 

@@ -108,7 +108,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Slack Webhook"
-	regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'''
+	regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
 	tags = ["key", "slack"]
 
 [[rules]]
