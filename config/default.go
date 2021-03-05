@@ -43,7 +43,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Github"
-	regex = '''(?i)github(.{0,20})?(?-i)[0-9a-zA-Z]{35,40}'''
+	regex = '''(?i)github.{0,3}((?i)token|api|key).{0,10}?(?-i)([0-9a-zA-Z]{35,40})'''
 	tags = ["key", "Github"]
 
 [[rules]]
