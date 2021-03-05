@@ -1,0 +1,3 @@
+[allowlist]
+	description = "Allowlisted files"
+	files = [ '''bad.docx''']
