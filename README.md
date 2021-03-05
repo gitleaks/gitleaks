@@ -69,6 +69,8 @@ Application Options:
       --leaks-exit-code=  Exit code when leaks have been encountered (default: 1) 
       --no-git            Treat git repos as plain directories and scan those
                           files
+      --append-repo-config  Append the provided or default config with the repo config.
+      --additional-config=  Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations
   -o, --report=           Report output path
   -f, --format=           JSON, CSV, SARIF (default: json)
       --files-at-commit=  Sha of commit to scan all files at commit
