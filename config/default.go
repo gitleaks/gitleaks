@@ -43,7 +43,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Github"
-	regex = '''(?i)github(.{0,20})?(?-i)[0-9a-zA-Z]{35,40}'''
+	regex = '''(?i)github.{0,3}((?i)token|api|key).{0,10}?(?-i)([0-9a-zA-Z]{35,40})'''
 	tags = ["key", "Github"]
 
 [[rules]]
@@ -108,7 +108,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Slack Webhook"
-	regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'''
+	regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
 	tags = ["key", "slack"]
 
 [[rules]]

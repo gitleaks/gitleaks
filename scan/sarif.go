@@ -110,7 +110,8 @@ func configToRules(cfg config.Config) []Rules {
 }
 
 func leaksToResults(leaks []Leak) []Results {
-	var results []Results
+	results := make([]Results, 0)
+
 	for _, leak := range leaks {
 		results = append(results, Results{
 			Message: Message{

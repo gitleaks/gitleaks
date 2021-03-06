@@ -27,7 +27,6 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 		logrus.Warn("leaks found: ", len(report.Leaks))
 	} else {
 		logrus.Info("No leaks found")
-		return nil
 	}
 
 	if opts.Report == "" {

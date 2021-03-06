@@ -43,6 +43,14 @@ func (cs *CommitScanner) SetRepoName(repoName string) {
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
 
+	defer func() {
+		if err := recover(); err != nil {
+			// sometimes the Patch generation will fail due to a known bug in
+			// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+			return
+		}
+	}()
+
 	if cs.cfg.Allowlist.CommitAllowed(cs.commit.Hash.String()) {
 		return scannerReport, nil
 	}
@@ -62,7 +70,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 	}
 
 	patch, err := parent.Patch(cs.commit)
-	if err != nil {
+	if err != nil || patch == nil {
 		return scannerReport, fmt.Errorf("could not generate Patch")
 	}
 
