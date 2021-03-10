@@ -184,6 +184,10 @@ func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
 		return nil, fmt.Errorf("user must be specified in the URL")
 	}
 
+	// the part of the RepoURL before the "@" (params[0]) can be something like:
+	// - "ssh://user" if RepoURL is an ssh:// URL
+	// - "user" if RepoURL uses scp-like syntax
+	// we must strip the protocol if it is present so that we only have "user"
 	username := strings.Replace(params[0], "ssh://", "", 1)
 
 	if opts.SSH != "" {
