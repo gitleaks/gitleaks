@@ -155,6 +155,12 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			continue
 		}
 
+		if us.cfg.Allowlist.FileAllowed(filepath.Base(fn)) ||
+			us.cfg.Allowlist.PathAllowed(fn) {
+			// file or path is allowlisted, no need to compute diff or check other rules
+			continue
+		}
+
 		if state.Staging != git.Untracked {
 			if state.Staging == git.Deleted {
 				// file in staging has been deleted, aka it is not on the filesystem
