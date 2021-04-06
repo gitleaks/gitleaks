@@ -262,9 +262,8 @@ Gamma proactively detects and remediates data leaks across cloud apps. Scan your
 #### Individual Sponsors 
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
-[![Adam Shannon](https://github.com/adamdecaf.png?size=50)](https://github.com/adamdecaf) | 
----|
-----
+- [Adam Shannon](https://github.com/adamdecaf)
+- [ProjectDiscovery](https://projectdiscovery.io/#/)
 
 
 #### Logo Attribution
