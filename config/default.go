@@ -42,8 +42,8 @@ title = "gitleaks config"
 	tags = ["client", "Twitter"]
 
 [[rules]]
-	description = "Github"
-	regex = '''(?i)github.{0,3}((?i)token|api|key).{0,10}?(?-i)([0-9a-zA-Z]{35,40})'''
+	description = "Github Auth Token"
+	regex = '''(ghp|gho|ghu|ghs|ghr)_[0-9a-zA-Z]{32-40}'''
 	tags = ["key", "Github"]
 
 [[rules]]
@@ -155,6 +155,11 @@ title = "gitleaks config"
 	description = "Shopify private app access token"
 	regex = '''shppa_[a-fA-F0-9]{32}'''
 	tags = ["key", "Shopify"]
+
+[[rules]]
+    description = "PyPI upload token"
+    regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
+	tags = ["key", "pypi"]
 
 [allowlist]
 	description = "Allowlisted files"
