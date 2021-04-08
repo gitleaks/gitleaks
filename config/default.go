@@ -42,8 +42,8 @@ title = "gitleaks config"
 	tags = ["client", "Twitter"]
 
 [[rules]]
-	description = "Github"
-	regex = '''(?i)github.{0,3}((?i)token|api|key).{0,10}?(?-i)([0-9a-zA-Z]{35,40})'''
+	description = "Github Auth Token"
+	regex = '''(ghp|gho|ghu|ghs|ghr)_[0-9a-zA-Z]{32-40}'''
 	tags = ["key", "Github"]
 
 [[rules]]
@@ -160,54 +160,6 @@ title = "gitleaks config"
     description = "PyPI upload token"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
 	tags = ["key", "pypi"]
-
-# Azure rules
-# source: https://www.powershellgallery.com/packages/AzSK.AzureDevOps/0.9.8/Content/Framework%5CConfigurations%5CSVT%5CAzureDevOps%5CCredentialPatterns.xml
-[[rules]]
-	description = "CSCAN0020: Base64EncodedCertificateInCode"
-	regex = '''['">;=]MII[a-z0-9/+]{200}'''
-	file = '''\.(?:cs|ini|json|ps1|publishsettings|template|trd|ts|xml)$'''
-[[rules]]
-	description = "CSCAN0020: Base64EncodedCertificateInFile"
-	regex = '''MII[A-Za-z0-9/+]{60}'''
-	file = '''\.(?:cert|cer)$'''
-[[rules]]
-	description = "CSCAN0093: StorageAccountKeyInConfig 1" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9/+]{86}=='''
-	file = '''\.(?:xml|pubxml|definitions|ps1|wadcfgx|ccf|config|cscfg|json|js|txt|cpp|sql|dtsx|md|java|FF|template|settings|ini|BF|ste|isml|test|ts|resx|Azure|sample|backup|rd|hpp|psm1|cshtml|htm|bat|waz|yml|Beta|py|sh|m|php|xaml|keys|cmd|rds|loadtest|properties)$|hubot'''
-[[rules]]
-	description = "CSCAN0041: StorageAccountKeyInCode 1" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9/+]{86}=='''
-	file = '''(?:\.(?:cs|js|ts|cpp)|policy_and_key\.hpp|AccountConfig\.h)$'''
-[[rules]]
-	description = "CSCAN0094: SharedAccessSignatureInCode 1" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9/+]{43}=[^{@]'''
-	file = '''(?:\.(?:cs|js|ts|cpp)|policy_and_key\.hpp|AccountConfig\.h)$'''
-[[rules]]
-	description = "CSCAN0094: SharedAccessSignatureInCode 2" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9%]{43,53}%3d[^a-z0-9%]'''
-	file = '''(?:\.(?:cs|js|ts|cpp)|policy_and_key\.hpp|AccountConfig\.h)$'''
-[[rules]]
-	description = "CSCAN0094: SharedAccessSignatureInConfig 1" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9/+]{43}=[^{@]'''
-	file = '''\.(?:xml|pubxml|definitions|ps1|wadcfgx|ccf|config|cscfg|json|js|txt|cpp|sql|dtsx|md|java|FF|template|settings|ini|BF|ste|isml|test|ts|resx|Azure|sample|backup|rd|hpp|psm1|cshtml|htm|bat|waz|yml|Beta|py|sh|m|php|xaml|keys|cmd|rds|loadtest|properties)$|hubot'''
-[[rules]]
-	description = "CSCAN0094: SharedAccessSignatureInConfig 2" 
-	regex = '''[^a-z0-9/\+\._\-\$,\\][a-z0-9%]{43,53}%3d[^a-z0-9%]'''
-	file = '''\.(?:xml|pubxml|definitions|ps1|wadcfgx|ccf|config|cscfg|json|js|txt|cpp|sql|dtsx|md|java|FF|template|settings|ini|BF|ste|isml|test|ts|resx|Azure|sample|backup|rd|hpp|psm1|cshtml|htm|bat|waz|yml|Beta|py|sh|m|php|xaml|keys|cmd|rds|loadtest|properties)$|hubot'''
-[[rules]]
-	description = "CSCAN0110: ScriptPassword 1" 
-	regex = '''\s-Password\s+(?:"[^"]*"|'[^']*')'''
-	file = '''(?:\.cmd|\.ps|\.ps1|\.psm1)$'''
-[[rules]]
-	description = "CSCAN0110: ScriptPassword 2" 
-	regex = '''\s-Password\s+[^$\(\)\[\{<\-\r?\n]+\s*(?:\r?\n|\-)'''
-	file = '''(?:\.cmd|\.ps|\.ps1|\.psm1)$'''
-[[rules]]
-	description = "CSCAN0120: ExternalApiSecret" 
-	regex = '''(private\sconst\sstring\sAccessTokenSecret|private\sconst\sstring\saccessToken|private\sconst\sstring\sconsumerSecret|private\sconst\sstring\sconsumerKey|pageAccessToken|private\sstring\stwilioAccountSid|private\sstring\stwilioAuthToken)\s=\s".*";'''
-	file = '''\.cs$|\.cpp$|\.c$'''
-
 
 [allowlist]
 	description = "Allowlisted files"
