@@ -2,7 +2,6 @@
   <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleakslogo.png" height="70" />
   <p align="center">
       <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
-      <a href="https://gitter.im/gitleaks/gitleaks"><img alt="Travis" src="https://badges.gitter.im/gitleaks/gitleaks.svg?style=flat-square"></a>
   </p>
 </p>
 
