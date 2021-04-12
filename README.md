@@ -253,7 +253,7 @@ You can always set the exit code when leaves are encountered with the `--leaks-e
 ```
 
 ###  Sponsors ❤️
-#### Corporate Sponsors
+#### Organization Sponsors
 [![gammanet](https://gammanet.com/assets/images/new-design/gamma-logo.png)](https://gammanet.com/?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
 
 Gamma proactively detects and remediates data leaks across cloud apps. Scan your public repos for secret leaks with [Gamma](https://gammanet.com/github-demo?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
