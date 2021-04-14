@@ -58,12 +58,12 @@ func (r *Rule) Inspect(line string) *Offender {
 
 	// check entropy
 	groups := r.Regex.FindStringSubmatch(match)
-	entropyLevel := r.CheckEntropyLevel(groups)
+	entropyWithinRange, entropyLevel := r.CheckEntropy(groups)
 
-	if len(r.Entropies) != 0 && entropyLevel == 0 {
+	if len(r.Entropies) != 0 && !entropyWithinRange {
 		return &Offender{
 			Match:        "",
-			EntropyLevel: 0,
+			EntropyLevel: entropyLevel,
 		}
 	}
 
@@ -88,18 +88,28 @@ func (r *Rule) CommitAllowed(commit string) bool {
 	return r.AllowList.CommitAllowed(commit)
 }
 
-// CheckEntropyLevel checks if there is an entropy leak
-func (r *Rule) CheckEntropyLevel(groups []string) float64 {
+// CheckEntropy checks if there is an entropy leak
+func (r *Rule) CheckEntropy(groups []string) (bool, float64) {
+	var highestFound float64 = 0
+
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
 			if entropy >= e.Min && entropy <= e.Max {
-				return entropy
+				return true, entropy
+			} else if entropy > highestFound {
+				highestFound = entropy
 			}
 		}
 	}
 
-	return 0
+	if len(r.Entropies) == 0 {
+		// entropies not checked
+		return false, -1
+	} else {
+		// entropies checked but not within the range
+		return false, highestFound
+	}
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if
