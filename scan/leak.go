@@ -42,9 +42,10 @@ func RedactLeak(leak Leak) Leak {
 // NewLeak creates a new leak from common data all leaks must have, line, offender, linenumber
 func NewLeak(line string, offender string, lineNumber int) Leak {
 	return Leak{
-		Line:       line,
-		Offender:   offender,
-		LineNumber: lineNumber,
+		Line:            line,
+		Offender:        offender,
+		LineNumber:      lineNumber,
+		OffenderEntropy: -1, // -1 means not checked
 	}
 }
 

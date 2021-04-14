@@ -38,24 +38,27 @@ type Rule struct {
 // Inspect checks the content of a line for a leak
 func (r *Rule) Inspect(line string) *Offender {
 	match := r.Regex.FindString(line)
+
+	// EntropyLevel -1 means not checked
 	if match == "" {
 		return &Offender{
 			Match:        "",
-			EntropyLevel: 0,
+			EntropyLevel: -1,
 		}
 	}
 
 	// check if offender is allowed
+	// EntropyLevel -1 means not checked
 	if r.RegexAllowed(line) {
 		return &Offender{
 			Match:        "",
-			EntropyLevel: 0,
+			EntropyLevel: -1,
 		}
 	}
 
 	// check entropy
 	groups := r.Regex.FindStringSubmatch(match)
-	entropyLevel := r.ContainsEntropyLeak(groups)
+	entropyLevel := r.CheckEntropyLevel(groups)
 
 	if len(r.Entropies) != 0 && entropyLevel == 0 {
 		return &Offender{
@@ -85,8 +88,8 @@ func (r *Rule) CommitAllowed(commit string) bool {
 	return r.AllowList.CommitAllowed(commit)
 }
 
-// ContainsEntropyLeak checks if there is an entropy leak
-func (r *Rule) ContainsEntropyLeak(groups []string) float64 {
+// CheckEntropyLevel checks if there is an entropy leak
+func (r *Rule) CheckEntropyLevel(groups []string) float64 {
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
@@ -95,6 +98,7 @@ func (r *Rule) ContainsEntropyLeak(groups []string) float64 {
 			}
 		}
 	}
+
 	return 0
 }
 
