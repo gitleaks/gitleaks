@@ -6,6 +6,19 @@ import (
 	"regexp"
 )
 
+type Offender struct {
+	Match        string
+	EntropyLevel float64
+}
+
+func (o *Offender) IsEmpty() bool {
+	return o.Match == ""
+}
+
+func (o *Offender) ToString() string {
+	return o.Match
+}
+
 // Rule is a struct that contains information that is loaded from a gitleaks config.
 // This struct is used in the Config struct as an array of Rules and is iterated
 // over during an scan. Each rule will be checked. If a regex match is found AND
@@ -23,28 +36,43 @@ type Rule struct {
 }
 
 // Inspect checks the content of a line for a leak
-func (r *Rule) Inspect(line string) string {
-	offender := r.Regex.FindString(line)
-	if offender == "" {
-		return ""
+func (r *Rule) Inspect(line string) *Offender {
+	match := r.Regex.FindString(line)
+	if match == "" {
+		return &Offender{
+			Match:        "",
+			EntropyLevel: 0,
+		}
 	}
 
 	// check if offender is allowed
 	if r.RegexAllowed(line) {
-		return ""
+		return &Offender{
+			Match:        "",
+			EntropyLevel: 0,
+		}
 	}
 
 	// check entropy
-	groups := r.Regex.FindStringSubmatch(offender)
-	if len(r.Entropies) != 0 && !r.ContainsEntropyLeak(groups) {
-		return ""
+	groups := r.Regex.FindStringSubmatch(match)
+	entropyLevel := r.ContainsEntropyLeak(groups)
+
+	if len(r.Entropies) != 0 && entropyLevel == 0 {
+		return &Offender{
+			Match:        "",
+			EntropyLevel: 0,
+		}
 	}
 
 	// 0 is a match for the full regex pattern
 	if 0 < r.ReportGroup && r.ReportGroup < len(groups) {
-		offender = groups[r.ReportGroup]
+		match = groups[r.ReportGroup]
 	}
-	return offender
+
+	return &Offender{
+		Match:        match,
+		EntropyLevel: entropyLevel,
+	}
 }
 
 // RegexAllowed checks if the content is allowlisted
@@ -58,16 +86,16 @@ func (r *Rule) CommitAllowed(commit string) bool {
 }
 
 // ContainsEntropyLeak checks if there is an entropy leak
-func (r *Rule) ContainsEntropyLeak(groups []string) bool {
+func (r *Rule) ContainsEntropyLeak(groups []string) float64 {
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
 			if entropy >= e.Min && entropy <= e.Max {
-				return true
+				return entropy
 			}
 		}
 	}
-	return false
+	return 0
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if

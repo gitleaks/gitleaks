@@ -121,7 +121,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 							continue
 						}
 						offender := rule.Inspect(line)
-						if offender == "" {
+						if offender.IsEmpty() {
 							continue
 						}
 
@@ -136,7 +136,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 							continue
 						}
 
-						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
+						leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(cs.commit).WithEntropy(offender.EntropyLevel)
 						leak.File = to.Path()
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 						leak.RepoURL = cs.opts.RepoURL

@@ -14,20 +14,21 @@ import (
 // Leak is a struct that contains information about some line of code that contains
 // sensitive information as determined by the rules set in a gitleaks config
 type Leak struct {
-	Line       string    `json:"line"`
-	LineNumber int       `json:"lineNumber"`
-	Offender   string    `json:"offender"`
-	Commit     string    `json:"commit"`
-	Repo       string    `json:"repo"`
-	RepoURL    string    `json:"repoURL"`
-	LeakURL    string    `json:"leakURL"`
-	Rule       string    `json:"rule"`
-	Message    string    `json:"commitMessage"`
-	Author     string    `json:"author"`
-	Email      string    `json:"email"`
-	File       string    `json:"file"`
-	Date       time.Time `json:"date"`
-	Tags       string    `json:"tags"`
+	Line            string    `json:"line"`
+	LineNumber      int       `json:"lineNumber"`
+	Offender        string    `json:"offender"`
+	OffenderEntropy float64   `json:"offenderEntropy"`
+	Commit          string    `json:"commit"`
+	Repo            string    `json:"repo"`
+	RepoURL         string    `json:"repoURL"`
+	LeakURL         string    `json:"leakURL"`
+	Rule            string    `json:"rule"`
+	Message         string    `json:"commitMessage"`
+	Author          string    `json:"author"`
+	Email           string    `json:"email"`
+	File            string    `json:"file"`
+	Date            time.Time `json:"date"`
+	Tags            string    `json:"tags"`
 }
 
 // RedactLeak will replace the offending string with "REDACTED" in both
@@ -54,6 +55,11 @@ func (leak Leak) WithCommit(commit *object.Commit) Leak {
 	leak.Email = commit.Author.Email
 	leak.Message = commit.Message
 	leak.Date = commit.Author.When
+	return leak
+}
+
+func (leak Leak) WithEntropy(entropyLevel float64) Leak {
+	leak.OffenderEntropy = entropyLevel
 	return leak
 }
 
