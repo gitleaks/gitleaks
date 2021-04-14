@@ -6,15 +6,19 @@ import (
 	"regexp"
 )
 
+// Offender is a struct that contains the information matched when searching
+// content and information on why it matched (i.e. the EntropyLevel)
 type Offender struct {
 	Match        string
 	EntropyLevel float64
 }
 
+// IsEmpty checks to see if nothing was found in the match
 func (o *Offender) IsEmpty() bool {
 	return o.Match == ""
 }
 
+// ToString the contents of the match
 func (o *Offender) ToString() string {
 	return o.Match
 }
