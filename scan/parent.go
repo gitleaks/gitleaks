@@ -30,7 +30,7 @@ func NewParentScanner(opts options.Options, cfg config.Config) *ParentScanner {
 // Scan kicks off a ParentScanner scan. This uses the directory from --path to discovery repos
 func (ds *ParentScanner) Scan() (Report, error) {
 	var scannerReport Report
-	log.Debugf("scanning repos in %s\n", ds.opts.Path)
+	log.Debugf("scanning repos in %s", ds.opts.Path)
 
 	files, err := ioutil.ReadDir(ds.opts.Path)
 	if err != nil {

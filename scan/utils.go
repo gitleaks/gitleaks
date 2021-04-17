@@ -54,7 +54,7 @@ func getRepoName(opts options.Options) string {
 func getRepo(opts options.Options) (*git.Repository, error) {
 	if opts.OpenLocal() {
 		if opts.Path != "" {
-			log.Infof("opening %s\n", opts.Path)
+			log.Infof("opening %s", opts.Path)
 		} else {
 			log.Info("opening .")
 		}
@@ -66,7 +66,7 @@ func getRepo(opts options.Options) (*git.Repository, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Debugf("opening %s as a repo\n", dir)
+		log.Debugf("opening %s as a repo", dir)
 		return git.PlainOpen(dir)
 	}
 	return cloneRepo(opts)
