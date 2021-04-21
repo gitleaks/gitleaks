@@ -11,4 +11,4 @@ repos:
     args:
     - --config-path
     - .gitleaks.toml
-    - --verbos
+    - --verbose
