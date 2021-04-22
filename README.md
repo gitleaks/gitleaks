@@ -24,7 +24,7 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 
 
 ### Installation
-Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases).
+Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
 ##### MacOS
 
@@ -41,6 +41,18 @@ docker pull zricethezav/gitleaks
 ##### Go
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
+```
+##### As a pre-commit hook
+
+See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
+
+Sample `.pre-commit-config.yaml`
+
+```yaml
+-   repo: https://github.com/zricethezav/gitleaks
+    rev: v7.4.0
+    hooks:
+    -   id: gitleaks
 ```
 
 ### Usage and Options
