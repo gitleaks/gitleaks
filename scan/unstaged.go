@@ -205,7 +205,6 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 			for _, line := range strings.Split(diffContents, "\n") {
 				for _, rule := range us.cfg.Rules {
-
 					offender := rule.Inspect(line)
 					if offender == "" {
 						continue
