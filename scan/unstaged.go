@@ -184,6 +184,12 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				}
 			}
 
+			// Check if file is allow listed
+			if us.cfg.Allowlist.FileAllowed(filepath.Base(filename)) ||
+				us.cfg.Allowlist.PathAllowed(filename) {
+				continue
+			}
+
 			dmp := diffmatchpatch.New()
 			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
 			prettyDiff := diffPrettyText(diffs)
@@ -199,6 +205,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 			for _, line := range strings.Split(diffContents, "\n") {
 				for _, rule := range us.cfg.Rules {
+
 					offender := rule.Inspect(line)
 					if offender == "" {
 						continue
