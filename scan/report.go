@@ -58,12 +58,12 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 			}
 		case "csv":
 			w := csv.NewWriter(file)
-			err = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
+			err = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "file_hash", "date"})
 			if err != nil {
 				return err
 			}
 			for _, leak := range report.Leaks {
-				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.FileHash, leak.Date.Format(time.RFC3339)})
 				if err != nil {
 					return err
 				}
