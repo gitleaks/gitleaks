@@ -77,6 +77,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.Repo = fs.repoName
 				leak.File = f.Name
 				leak.RepoURL = fs.opts.RepoURL
+				leak.FileHash = f.Hash.String()
 				leak.LeakURL = leak.URL()
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")
@@ -118,6 +119,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.LineNumber = i + 1
 				leak.RepoURL = fs.opts.RepoURL
 				leak.Repo = fs.repoName
+				leak.FileHash = f.Hash.String()
 				leak.LeakURL = leak.URL()
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")

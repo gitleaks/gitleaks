@@ -26,6 +26,7 @@ type Leak struct {
 	Author     string    `json:"author"`
 	Email      string    `json:"email"`
 	File       string    `json:"file"`
+	FileHash   string    `json:"file_hash"`
 	Date       time.Time `json:"date"`
 	Tags       string    `json:"tags"`
 }

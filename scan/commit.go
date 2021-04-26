@@ -98,6 +98,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak := NewLeak("", "Filename or path offender: "+to.Path(), defaultLineNumber).WithCommit(cs.commit)
 						leak.Repo = cs.repoName
 						leak.File = to.Path()
+						leak.FileHash = to.Hash().String()
 						leak.RepoURL = cs.opts.RepoURL
 						leak.LeakURL = leak.URL()
 						leak.Rule = rule.Description
@@ -138,6 +139,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 
 						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
 						leak.File = to.Path()
+						leak.FileHash = to.Hash().String()
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 						leak.RepoURL = cs.opts.RepoURL
 						leak.Repo = cs.repoName
