@@ -760,7 +760,7 @@ func fileCheck(wantPath, gotPath string) error {
 			}
 		}
 		if !found {
-			return fmt.Errorf("unable to find %+v in got leaks", wantLeak)
+			return fmt.Errorf("unable to find %+v in %s", wantLeak, gotPath)
 		}
 	}
 
@@ -776,6 +776,10 @@ func same(l1, l2 Leak) bool {
 	}
 
 	if l1.Offender != l2.Offender {
+		return false
+	}
+
+	if l1.OffenderEntropy != l2.OffenderEntropy {
 		return false
 	}
 

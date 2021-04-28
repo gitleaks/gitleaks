@@ -110,10 +110,10 @@ func (r *Rule) CheckEntropy(groups []string) (bool, float64) {
 	if len(r.Entropies) == 0 {
 		// entropies not checked
 		return false, -1
-	} else {
-		// entropies checked but not within the range
-		return false, highestFound
 	}
+
+	// entropies checked but not within the range
+	return false, highestFound
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if

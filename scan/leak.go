@@ -3,6 +3,7 @@ package scan
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -59,8 +60,9 @@ func (leak Leak) WithCommit(commit *object.Commit) Leak {
 	return leak
 }
 
+// WithEntropy adds OffenderEntropy data to the leak
 func (leak Leak) WithEntropy(entropyLevel float64) Leak {
-	leak.OffenderEntropy = entropyLevel
+	leak.OffenderEntropy = math.Round(entropyLevel*1000) / 1000
 	return leak
 }
 
