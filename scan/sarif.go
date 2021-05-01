@@ -1,8 +1,10 @@
-package manager
+package scan
 
 import (
 	"fmt"
 	"time"
+
+	"github.com/zricethezav/gitleaks/v7/config"
 )
 
 //Sarif ...
@@ -24,8 +26,8 @@ type FullDescription struct {
 
 //Rules ...
 type Rules struct {
-	ID         string          `json:"id"`
-	Name       string          `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 //Driver ...
@@ -87,7 +89,6 @@ type ResultProperties struct {
 	Author        string    `json:"author"`
 	Email         string    `json:"email"`
 	CommitMessage string    `json:"commitMessage"`
-	Operation     string    `json:"gitOperation"`
 	Repo          string    `json:"repo"`
 }
 
@@ -97,9 +98,9 @@ type Runs struct {
 	Results []Results `json:"results"`
 }
 
-func (manager *Manager) configToRules() []Rules {
+func configToRules(cfg config.Config) []Rules {
 	var rules []Rules
-	for _, rule := range manager.Config.Rules {
+	for _, rule := range cfg.Rules {
 		rules = append(rules, Rules{
 			ID:   rule.Description,
 			Name: rule.Description,
@@ -108,9 +109,10 @@ func (manager *Manager) configToRules() []Rules {
 	return rules
 }
 
-func (manager *Manager) leaksToResults() []Results {
-	var results []Results
-	for _, leak := range manager.leaks {
+func leaksToResults(leaks []Leak) []Results {
+	results := make([]Results, 0)
+
+	for _, leak := range leaks {
 		results = append(results, Results{
 			Message: Message{
 				Text: fmt.Sprintf("%s secret detected", leak.Rule),
@@ -122,7 +124,6 @@ func (manager *Manager) leaksToResults() []Results {
 				Author:        leak.Author,
 				Email:         leak.Email,
 				CommitMessage: leak.Message,
-				Operation:     leak.Operation,
 				Repo:          leak.Repo,
 			},
 			Locations: leakToLocation(leak),
@@ -133,12 +134,15 @@ func (manager *Manager) leaksToResults() []Results {
 }
 
 func leakToLocation(leak Leak) []Locations {
+	uri := leak.File
+	if leak.LeakURL != "" {
+		uri = leak.LeakURL
+	}
 	return []Locations{
 		{
-			PhysicalLocation:
-			PhysicalLocation{
+			PhysicalLocation: PhysicalLocation{
 				ArtifactLocation: ArtifactLocation{
-					URI: leak.File,
+					URI: uri,
 				},
 				Region: Region{
 					StartLine: leak.LineNumber,
@@ -150,4 +154,3 @@ func leakToLocation(leak Leak) []Locations {
 		},
 	}
 }
-

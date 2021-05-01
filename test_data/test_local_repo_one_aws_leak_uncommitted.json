@@ -5,13 +5,14 @@
   "offender": "AKIAIO5FODNN7DXAMPLE",
   "commit": "0000000000000000000000000000000000000000",
   "repo": "test_repo_1",
-  "rule": "AWS Manager ID",
-  "commitMessage": "***STAGED CHANGES***",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "",
   "author": "",
   "email": "",
   "file": "server.test.py",
   "date": "1970-01-01T00:00:00Z",
-  "tags": "key, AWS",
-  "operation": "equal"
+  "tags": "key, AWS"
  }
 ]

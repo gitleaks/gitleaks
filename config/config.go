@@ -2,25 +2,25 @@ package config
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 
-	"github.com/zricethezav/gitleaks/v6/options"
+	"github.com/zricethezav/gitleaks/v7/options"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
 
-// AllowList is struct containing items that if encountered will allowlist
-// a commit/line of code that would be considered a leak.
-type AllowList struct {
-	Description string
-	Regexes     []*regexp.Regexp
-	Commits     []string
-	Files       []*regexp.Regexp
-	Paths       []*regexp.Regexp
-	Repos       []*regexp.Regexp
+// Config is a composite struct of Rules and Allowlists
+// Each Rule contains a description, regular expression, tags, and allowlists if available
+type Config struct {
+	Rules     []Rule
+	Allowlist AllowList
 }
 
 // Entropy represents an entropy range
@@ -28,28 +28,6 @@ type Entropy struct {
 	Min   float64
 	Max   float64
 	Group int
-}
-
-// Rule is a struct that contains information that is loaded from a gitleaks config.
-// This struct is used in the Config struct as an array of Rules and is iterated
-// over during an scan. Each rule will be checked. If a regex match is found AND
-// that match is not allowlisted (globally or locally), then a leak will be appended
-// to the final scan report.
-type Rule struct {
-	Description string
-	Regex       *regexp.Regexp
-	File        *regexp.Regexp
-	Path        *regexp.Regexp
-	Tags        []string
-	AllowList   AllowList
-	Entropies   []Entropy
-}
-
-// Config is a composite struct of Rules and Allowlists
-// Each Rule contains a description, regular expression, tags, and allowlists if available
-type Config struct {
-	Rules     []Rule
-	Allowlist AllowList
 }
 
 // TomlAllowList is a struct used in the TomlLoader that loads in allowlists from
@@ -73,6 +51,7 @@ type TomlLoader struct {
 		Regex       string
 		File        string
 		Path        string
+		ReportGroup int
 		Tags        []string
 		Entropies   []struct {
 			Min   string
@@ -92,10 +71,10 @@ func NewConfig(options options.Options) (Config, error) {
 	tomlLoader := TomlLoader{}
 
 	var err error
-	if options.Config != "" {
-		_, err = toml.DecodeFile(options.Config, &tomlLoader)
+	if options.ConfigPath != "" {
+		_, err = toml.DecodeFile(options.ConfigPath, &tomlLoader)
 		// append a allowlist rule for allowlisting the config
-		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.Config))
+		tomlLoader.AllowList.Files = append(tomlLoader.AllowList.Files, path.Base(options.ConfigPath))
 	} else {
 		_, err = toml.Decode(DefaultConfig, &tomlLoader)
 	}
@@ -137,6 +116,8 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 		// rule specific allowlists
 		var allowList AllowList
 
+		allowList.Description = rule.AllowList.Description
+
 		// rule specific regexes
 		for _, re := range rule.AllowList.Regexes {
 			allowListedRegex, err := regexp.Compile(re)
@@ -163,6 +144,9 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			}
 			allowList.Paths = append(allowList.Paths, allowListedRegex)
 		}
+
+		// rule specific commits
+		allowList.Commits = rule.AllowList.Commits
 
 		var entropies []Entropy
 		for _, e := range rule.Entropies {
@@ -198,6 +182,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			Regex:       re,
 			File:        fileNameRe,
 			Path:        filePathRe,
+			ReportGroup: rule.ReportGroup,
 			Tags:        rule.Tags,
 			AllowList:   allowList,
 			Entropies:   entropies,
@@ -246,4 +231,89 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 	cfg.Allowlist.Description = tomlLoader.AllowList.Description
 
 	return cfg, nil
+}
+
+// LoadRepoConfig accepts a repo and config path related to the target repo's root.
+func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
+	gitRepoConfig, err := repo.Config()
+	if err != nil {
+		return Config{}, err
+	}
+	if !gitRepoConfig.Core.IsBare {
+		wt, err := repo.Worktree()
+		if err != nil {
+			return Config{}, err
+		}
+		_, err = wt.Filesystem.Stat(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		r, err := wt.Filesystem.Open(repoConfig)
+		if err != nil {
+			return Config{}, err
+		}
+		return parseTomlFile(r)
+	}
+
+	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
+	ref, err := repo.Head()
+	if err != nil {
+		return Config{}, err
+	}
+
+	c, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return Config{}, err
+	}
+
+	f, err := c.File(repoConfig)
+	if err != nil {
+		return Config{}, err
+	}
+
+	r, err := f.Reader()
+
+	if err != nil {
+		return Config{}, err
+	}
+
+	return parseTomlFile(r)
+}
+
+// LoadAdditionalConfig Accepts a path to a gitleaks config and returns a Config struct
+func LoadAdditionalConfig(repoConfig string) (Config, error) {
+	file, err := os.Open(filepath.Clean(repoConfig))
+	if err != nil {
+		return Config{}, err
+	}
+
+	return parseTomlFile(file)
+}
+
+// AppendConfig Accepts a Config struct and will append those fields to this Config Struct's fields
+func (config *Config) AppendConfig(configToBeAppended Config) Config {
+	newAllowList := AllowList{
+		Description: "Appended Configuration",
+		Commits:     append(config.Allowlist.Commits, configToBeAppended.Allowlist.Commits...),
+		Files:       append(config.Allowlist.Files, configToBeAppended.Allowlist.Files...),
+		Paths:       append(config.Allowlist.Paths, configToBeAppended.Allowlist.Paths...),
+		Regexes:     append(config.Allowlist.Regexes, configToBeAppended.Allowlist.Regexes...),
+		Repos:       append(config.Allowlist.Repos, configToBeAppended.Allowlist.Repos...),
+	}
+
+	return Config{
+		Rules:     append(config.Rules, configToBeAppended.Rules...),
+		Allowlist: newAllowList,
+	}
+}
+
+// takes a File, makes sure it is a valid config, and parses it
+func parseTomlFile(f io.Reader) (Config, error) {
+	var tomlLoader TomlLoader
+	_, err := toml.DecodeReader(f, &tomlLoader)
+	if err != nil {
+		log.Errorf("Unable to read gitleaks config. Using defaults. Error: %s", err)
+		return Config{}, err
+	}
+	return tomlLoader.Parse()
 }

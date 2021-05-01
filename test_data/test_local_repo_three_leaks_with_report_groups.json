@@ -1,0 +1,50 @@
+[
+ {
+  "line": "AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "lineNumber": 5,
+  "offender": "AKIALALEMEL33243OLIA",
+  "commit": "deea550dd6c7acaf0e59432600593533984a2125",
+  "repo": "test_repo_3",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "dev branch\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:35:03-04:00",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
+  "lineNumber": 3,
+  "offender": "AKIALALEMEL33243OLIA",
+  "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
+  "repo": "test_repo_3",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "wait this is actually adding an aws secret\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T13:01:27-04:00",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "Here's an AWS secret: AKIALALEMEL33243OLIAE",
+  "lineNumber": 3,
+  "offender": "AKIALALEMEL33243OLIA",
+  "commit": "b10b3e2cb320a8c211fda94c4567299d37de7776",
+  "repo": "test_repo_3",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "adding aws key\n",
+  "author": "zach rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.md",
+  "date": "2019-10-25T12:58:39-04:00",
+  "tags": "key, AWS"
+ }
+]

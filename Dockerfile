@@ -1,4 +1,4 @@
-FROM golang:1.14.1 AS build
+FROM golang:1.15.5 AS build
 WORKDIR /go/src/github.com/zricethezav/gitleaks
 ARG ldflags
 COPY . .
@@ -12,6 +12,6 @@ ENTRYPOINT ["gitleaks"]
 # How to use me :
 
 # docker build -t gitleaks .
-# docker run --rm --name=gitleaks gitleaks --repo=https://github.com/zricethezav/gitleaks
+# docker run --rm --name=gitleaks gitleaks --repo-url=https://github.com/zricethezav/gitleaks
 
 # This will check for secrets in https://github.com/zricethezav/gitleaks
