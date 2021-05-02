@@ -80,7 +80,7 @@ title = "gitleaks config"
 
 [[rules]]
     description = "Google API key"
-    regex = '''AIza[0-9A-Za-z\\-_]{35}'''
+    regex = '''AIza[0-9A-Za-z\-_]{35}'''
     tags = ["key", "Google"]
 
 [[rules]]
@@ -135,7 +135,7 @@ title = "gitleaks config"
 
 [[rules]]
     description = "Square OAuth secret"
-    regex = '''sq0csp-[0-9A-Za-z\\-_]{43}'''
+    regex = '''sq0csp-[0-9A-Za-z\-_]{43}'''
     tags = ["key", "square"]
 
 [[rules]]
