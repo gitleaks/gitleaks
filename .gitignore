@@ -6,6 +6,7 @@
 *.dylib
 *.DS_STORE
 *.idea
+*.got
 gitleaks
 build
 
