@@ -105,7 +105,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					}
 
 					offender := rule.Inspect(line)
-					if offender == "" {
+					if offender.IsEmpty() {
 						continue
 					}
 					if ngs.cfg.Allowlist.RegexAllowed(line) {
@@ -119,7 +119,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						continue
 					}
 
-					leak := NewLeak(line, offender, defaultLineNumber)
+					leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithEntropy(offender.EntropyLevel)
 					relPath, err := filepath.Rel(ngs.opts.Path, p)
 					if err != nil {
 						leak.File = p
