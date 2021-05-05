@@ -50,7 +50,7 @@ Sample `.pre-commit-config.yaml`
 
 ```yaml
 -   repo: https://github.com/zricethezav/gitleaks
-    rev: v7.4.0
+    rev: v7.5.0
     hooks:
     -   id: gitleaks
 ```
