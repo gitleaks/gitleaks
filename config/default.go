@@ -7,6 +7,11 @@ const DefaultConfig = `
 title = "gitleaks config"
 
 [[rules]]
+    description = "CKAN Key"
+    regex = '''\w{8}-\w{4}-\w{4}-\w{4}-\w{12}'''
+    tags = ["key", "AWS"]
+
+[[rules]]
     description = "AWS Access Key"
     regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
