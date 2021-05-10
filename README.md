@@ -44,6 +44,9 @@ brew install gitleaks
 
 ```bash
 docker pull zricethezav/gitleaks
+# or
+cd to/your/repo/
+docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --path="/my-repo" [OPTIONS]
 ```
 
 ##### Go
