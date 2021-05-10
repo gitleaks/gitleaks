@@ -36,7 +36,7 @@ Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also availa
 
 ##### MacOS
 
-```
+```bash
 brew install gitleaks
 ```
 
@@ -114,49 +114,49 @@ Help Options:
 
 #### Basic repo-url scan:
 This scans the entire history of tests/secrets and logs leaks as they are encountered `-v`/`--verbose` being set.
-```
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo -v
 ```
 
 
 #### Basic repo-url scan output to a report:
 If you want the report in sarif or csv you can set the `-f/--format` option
-```
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo -v --report=my-report.json
 ```
 
 #### Scan specific commit:
-```
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo --commit=commit-sha -v
 ```
 
 #### Scan local repo:
-```
+```bash
 gitleaks --path=path/to/local/repo -v
 ```
 
 #### Scan repos contained in a parent directory:
 If you have `repo1`, `repo2`, `repo3` all under `path/to/local`, gitleaks will discover and scan those repos.
-```
+```bash
 gitleaks --path=path/to/local/ -v
 ```
 
 #### Scan local directory:
 If you want to scan the current contents of a repo, ignoring git alltogether. You can use the `--no-git` option to do this.
-```
+```bash
 gitleaks --path=path/to/local/repo -v --no-git
 ```
 
 #### Scan a file:
 Or if you want to scan a single file using gitleaks rules. You can do this by specifying the file in `--path` and including the `--no-git` option.
-```
+```bash
 gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
 If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a 
 path, you can run:
-```
+```bash
 gitleaks --path=path/to/local/repo -v --unstaged
 ```
 
@@ -290,4 +290,3 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
 #### Logo Attribution
 The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
-
