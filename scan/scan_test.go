@@ -442,6 +442,16 @@ func TestScan(t *testing.T) {
 			wantPath: "../test_data/test_allow_list_file.json",
 		},
 		{
+			description: "test allowlist files",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_10",
+				Report:       "../test_data/test_allow_list_file.json.got",
+				ReportFormat: "json",
+				ConfigPath:   "../test_data/test_configs/allowlist_files.toml",
+			},
+			wantPath: "../test_data/test_allow_list_file.json",
+		},
+		{
 			description: "test allowlist files no-git",
 			opts: options.Options{
 				Path:         "../test_data/test_repos/test_repo_10",
@@ -462,6 +472,66 @@ func TestScan(t *testing.T) {
 				NoGit:        true,
 			},
 			wantPath: "../test_data/test_allow_list_docx_no_git.json",
+		},
+		{
+			description: "test append repo config",
+			opts: options.Options{
+				Path:             "../test_data/test_repos/test_repo_10",
+				Report:           "../test_data/test_append_repo.json.got",
+				ReportFormat:     "json",
+				ConfigPath:       "../test_data/test_configs/nozips.toml",
+				RepoConfigPath:   ".gitleaks.toml",
+				AppendRepoConfig: true,
+			},
+			wantPath: "../test_data/test_append_repo.json",
+		},
+		{
+			description: "test additional config",
+			opts: options.Options{
+				Path:             "../test_data/test_repos/test_repo_10",
+				Report:           "../test_data/test_additional_config.json.got",
+				ReportFormat:     "json",
+				ConfigPath:       "../test_data/test_configs/nozips.toml",
+				AdditionalConfig: "../test_data/test_repos/test_repo_10/.gitleaks.toml",
+			},
+			wantPath: "../test_data/test_additional_config.json",
+		},
+		{
+			description: "test append repo config with additional config",
+			opts: options.Options{
+				Path:             "../test_data/test_repos/test_repo_10",
+				Report:           "../test_data/test_append_repo_additional_config.json.got",
+				ReportFormat:     "json",
+				ConfigPath:       "../test_data/test_configs/nozips.toml",
+				RepoConfigPath:   ".gitleaks.toml",
+				AppendRepoConfig: true,
+				AdditionalConfig: "../test_data/test_configs/allowlist_bad_docx_10.toml",
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test append repo config with additional config",
+			opts: options.Options{
+				Path:             "../test_data/test_repos/test_repo_10",
+				Report:           "../test_data/test_append_repo_additional_config.json.got",
+				ReportFormat:     "json",
+				ConfigPath:       "../test_data/test_configs/nozips.toml",
+				RepoConfigPath:   ".gitleaks.toml",
+				AppendRepoConfig: true,
+				AdditionalConfig: "../test_data/test_configs/allowlist_bad_docx_10.toml",
+			},
+			wantEmpty: true,
+		},
+		{
+			description: "test file with no leak due to additional config no git",
+			opts: options.Options{
+				Path:             "../test_data/test_repos/test_dir_1",
+				Report:           "../test_data/fail.json.got",
+				ReportFormat:     "json",
+				NoGit:            false,
+				AdditionalConfig: "../test_data/test_configs/allowlist_allow_all_repo_1.toml",
+			},
+			wantEmpty: true,
 		},
 	}
 
@@ -690,7 +760,7 @@ func fileCheck(wantPath, gotPath string) error {
 			}
 		}
 		if !found {
-			return fmt.Errorf("unable to find %+v in got leaks", wantLeak)
+			return fmt.Errorf("unable to find %+v in %s", wantLeak, gotPath)
 		}
 	}
 
@@ -706,6 +776,10 @@ func same(l1, l2 Leak) bool {
 	}
 
 	if l1.Offender != l2.Offender {
+		return false
+	}
+
+	if l1.OffenderEntropy != l2.OffenderEntropy {
 		return false
 	}
 

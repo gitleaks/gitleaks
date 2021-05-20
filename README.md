@@ -1,29 +1,42 @@
 <p align="center">
   <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleakslogo.png" height="70" />
   <p align="center">
-      <a href="https://travis-ci.org/zricethezav/gitleaks"><img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square"></a>
+	  <a href="https://travis-ci.org/zricethezav/gitleaks">
+		  <img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square">
+	  </a>
+	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
+		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
+	  </a>
+	  <a href="https://twitter.com/intent/follow?screen_name=zricethezav">
+		  <img src="https://img.shields.io/twitter/follow/zricethezav?label=Follow%20zricethezav&style=social&color=blue" alt="Follow @zricethezav" />
+	  </a>
   </p>
 </p>
 
-Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks aims to be the **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code. 
- 
+Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code. 
+
+### Introduction Video
+<p align="left">
+      <a href="https://www.youtube.com/watch?v=VUq2eII20S4"><img alt="intro" src="https://img.youtube.com/vi/VUq2eII20S4/maxresdefault.jpg" height="200"></a>
+</p>
+
 ### Features:
 - Scan for [commited](https://github.com/zricethezav/gitleaks#Scanning) secrets
-- Scan for [unstaged](https://github.com/zricethezav/gitleaks#scan-unstaged-changes) secrets as part of shifting security left
+- Scan for [unstaged](https://github.com/zricethezav/gitleaks#scan-unstaged-changes) secrets to shift security left
 - Scan [directories and files](https://github.com/zricethezav/gitleaks#scan-local-directory)
-- Available [Github Action](https://github.com/marketplace/actions/gitleaks)
+- Run [Gitleaks Action](https://github.com/marketplace/actions/gitleaks) in your CI/CD pipeline
 - [Custom rules](https://github.com/zricethezav/gitleaks#configuration) via toml configuration
-- High performance using [go-git](https://github.com/go-git/go-git)
+- Increased performance using [go-git](https://github.com/go-git/go-git)
 - JSON, SARIF, and CSV reporting
 - Private repo scans using key or password based authentication
 
 
 ### Installation
-Written in Go, gitleaks is available in binary form for many popular platforms and OS types from the [releases page](https://github.com/zricethezav/gitleaks/releases). Alternatively, executed via Docker or it can be installed using Go directly.
+Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
 ##### MacOS
 
-```
+```bash
 brew install gitleaks
 ```
 
@@ -31,11 +44,26 @@ brew install gitleaks
 
 ```bash
 docker pull zricethezav/gitleaks
+# or
+cd to/your/repo/
+docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --path="/my-repo" [OPTIONS]
 ```
 
 ##### Go
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
+```
+##### As a pre-commit hook
+
+See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
+
+Sample `.pre-commit-config.yaml`
+
+```yaml
+-   repo: https://github.com/zricethezav/gitleaks
+    rev: v7.5.0
+    hooks:
+    -   id: gitleaks
 ```
 
 ### Usage and Options
@@ -44,41 +72,41 @@ Usage:
   gitleaks [OPTIONS]
 
 Application Options:
-  -v, --verbose           Show verbose output from scan
-  -r, --repo-url=         Repository URL
-  -p, --path=             Path to directory (repo if contains .git) or file
-  -c, --config-path=      Path to config
-      --repo-config-path= Path to gitleaks config relative to repo root
-      --version           Version number
-      --username=         Username for git repo
-      --password=         Password for git repo
-      --access-token=     Access token for git repo
-      --threads=          Maximum number of threads gitleaks spawns
-      --ssh-key=          Path to ssh key used for auth
-      --unstaged          Run gitleaks on unstaged code
-      --branch=           Branch to scan
-      --redact            Redact secrets from log messages and leaks
-      --debug             Log debug messages
-      --leaks-exit-code=  Exit code when leaks have been encountered (default: 1) 
-      --no-git            Treat git repos as plain directories and scan those
-                          files
-  -o, --report=           Report output path
-  -f, --format=           JSON, CSV, SARIF (default: json)
-      --files-at-commit=  Sha of commit to scan all files at commit
-      --commit=           Sha of commit to scan or "latest" to scan the last
-                          commit of the repository
-      --commits=          Comma separated list of a commits to scan
-      --commits-file=     Path to file of line separated list of commits to scan
-      --commit-from=      Commit to start scan from
-      --commit-to=        Commit to stop scan
-      --commit-since=     Scan commits more recent than a specific date. Ex:
-                          '2006-01-02' or '2006-01-02T15:04:05-0700' format.
-      --commit-until=     Scan commits older than a specific date. Ex:
-                          '2006-01-02' or '2006-01-02T15:04:05-0700' format.
-      --depth=            Number of commits to scan
+  -v, --verbose             Show verbose output from scan
+  -q, --quiet               Sets log level to error and only output leaks, one json object per line
+  -r, --repo-url=           Repository URL
+  -p, --path=               Path to directory (repo if contains .git) or file
+  -c, --config-path=        Path to config
+      --repo-config-path=   Path to gitleaks config relative to repo root
+      --clone-path=         Path to clone repo to disk
+      --version             Version number
+      --username=           Username for git repo
+      --password=           Password for git repo
+      --access-token=       Access token for git repo
+      --threads=            Maximum number of threads gitleaks spawns
+      --ssh-key=            Path to ssh key used for auth
+      --unstaged            Run gitleaks on unstaged code
+      --branch=             Branch to scan
+      --redact              Redact secrets from log messages and leaks
+      --debug               Log debug messages
+      --no-git              Treat git repos as plain directories and scan those files
+      --leaks-exit-code=    Exit code when leaks have been encountered (default: 1)
+      --append-repo-config  Append the provided or default config with the repo config.
+      --additional-config=  Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations
+  -o, --report=             Report output path
+  -f, --format=             JSON, CSV, SARIF (default: json)
+      --files-at-commit=    Sha of commit to scan all files at commit
+      --commit=             Sha of commit to scan or "latest" to scan the last commit of the repository
+      --commits=            Comma separated list of a commits to scan
+      --commits-file=       Path to file of line separated list of commits to scan
+      --commit-from=        Commit to start scan from
+      --commit-to=          Commit to stop scan
+      --commit-since=       Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
+      --commit-until=       Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
+      --depth=              Number of commits to scan
 
 Help Options:
-  -h, --help              Show this help message
+  -h, --help                Show this help message
 ```
 
 
@@ -86,56 +114,57 @@ Help Options:
 
 #### Basic repo-url scan:
 This scans the entire history of tests/secrets and logs leaks as they are encountered `-v`/`--verbose` being set.
-```
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo -v
 ```
 
 
 #### Basic repo-url scan output to a report:
-If we want the report in sarif or csv we can set the `-f/--format` option
-```
+If you want the report in sarif or csv you can set the `-f/--format` option
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo -v --report=my-report.json
 ```
 
 #### Scan specific commit:
-```
+```bash
 gitleaks --repo-url=https://github.com/my-insecure/repo --commit=commit-sha -v
 ```
 
 #### Scan local repo:
-```
+```bash
 gitleaks --path=path/to/local/repo -v
 ```
 
-#### Scan repos contain in a parent directory:
-If we had `repo1`, `repo2`, `repo3` all under `path/to/local`, gitleaks will discover and scan those repos.
-```
+#### Scan repos contained in a parent directory:
+If you have `repo1`, `repo2`, `repo3` all under `path/to/local`, gitleaks will discover and scan those repos.
+```bash
 gitleaks --path=path/to/local/ -v
 ```
 
 #### Scan local directory:
-You might want to scan the current contents of a repo, ignoring git alltogether. You can use the `--no-git` option to do this.
-```
+If you want to scan the current contents of a repo, ignoring git alltogether. You can use the `--no-git` option to do this.
+```bash
 gitleaks --path=path/to/local/repo -v --no-git
 ```
 
 #### Scan a file:
-Or you might want to scan a single file using gitleaks rules. You can do this by specifying the file in `--path` and including the `--no-git` option.
-```
+Or if you want to scan a single file using gitleaks rules. You can do this by specifying the file in `--path` and including the `--no-git` option.
+```bash
 gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
 If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a 
 path, you can run:
-```
+```bash
 gitleaks --path=path/to/local/repo -v --unstaged
 ```
 
 
 ### Configuration
-Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. The difference between the two is `--config-path` loads a local gitleaks config whereas `--repo-config-path` will load a configuration present in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
-The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files contain a few different toml tables which will be explained below.
+Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. `--config-path` loads a local gitleaks configuration whereas `--repo-config-path` will load a configuration present just in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
+The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
+
 ### Rules summary
 
 The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in [TomlLoader struct](https://github.com/zricethezav/gitleaks/blob/master/config/config.go#L57-L87), and can be summarized as:
@@ -247,7 +276,7 @@ You can always set the exit code when leaves are encountered with the `--leaks-e
 ```
 
 ###  Sponsors ❤️
-#### Corporate Sponsors
+#### Organization Sponsors
 [![gammanet](https://gammanet.com/assets/images/new-design/gamma-logo.png)](https://gammanet.com/?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
 
 Gamma proactively detects and remediates data leaks across cloud apps. Scan your public repos for secret leaks with [Gamma](https://gammanet.com/github-demo?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
@@ -255,11 +284,9 @@ Gamma proactively detects and remediates data leaks across cloud apps. Scan your
 #### Individual Sponsors 
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
-[![Adam Shannon](https://github.com/adamdecaf.png?size=50)](https://github.com/adamdecaf) | 
----|
-----
+- [Adam Shannon](https://github.com/adamdecaf)
+- [ProjectDiscovery](https://projectdiscovery.io/#/)
 
 
 #### Logo Attribution
 The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
-

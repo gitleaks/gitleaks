@@ -3,6 +3,7 @@
   "line": "AKIAIO5FODNN7EXAMPLE",
   "lineNumber": 5,
   "offender": "AKIAIO5FODNN7EXAMPLE",
+  "offenderEntropy": -1,
   "commit": "0000000000000000000000000000000000000000",
   "repo": "test_repo_7",
   "rule": "AWS Access Key",

@@ -3,6 +3,7 @@
   "line": "Here's an AWS secret: \"AKIALALEMEL33243OLIAE\"",
   "lineNumber": 3,
   "offender": "AKIALALEMEL33243OLIA",
+  "offenderEntropy": -1,
   "commit": "17471a5fda722a9e423f1a0d3f0d267ea009d41c",
   "repo": "test_repo_2",
   "repoURL": "",

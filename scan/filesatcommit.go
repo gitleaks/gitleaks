@@ -38,6 +38,11 @@ func NewFilesAtCommitScanner(opts options.Options, cfg config.Config, repo *git.
 // Scan kicks off a FilesAtCommitScanner Scan
 func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 	var scannerReport Report
+
+	if fs.cfg.Allowlist.CommitAllowed(fs.commit.Hash.String()) {
+		return scannerReport, nil
+	}
+
 	fIter, err := fs.commit.Files()
 	if err != nil {
 		return scannerReport, err
@@ -49,6 +54,11 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 			return nil
 		} else if err != nil {
 			return err
+		}
+
+		if fs.cfg.Allowlist.FileAllowed(filepath.Base(f.Name)) ||
+			fs.cfg.Allowlist.PathAllowed(f.Name) {
+			return nil
 		}
 
 		content, err := f.Contents()
@@ -71,9 +81,8 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")
 
-				if fs.opts.Verbose {
-					leak.Log(fs.opts.Redact)
-				}
+				leak.Log(fs.opts)
+
 				scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				continue
 			}
@@ -88,8 +97,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				}
 
 				offender := rule.Inspect(line)
-
-				if offender == "" {
+				if offender.IsEmpty() {
 					continue
 				}
 
@@ -104,7 +112,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 					continue
 				}
 
-				leak := NewLeak(line, offender, defaultLineNumber).WithCommit(fs.commit)
+				leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(fs.commit).WithEntropy(offender.EntropyLevel)
 				leak.File = f.Name
 				leak.LineNumber = i + 1
 				leak.RepoURL = fs.opts.RepoURL
@@ -112,9 +120,9 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				leak.LeakURL = leak.URL()
 				leak.Rule = rule.Description
 				leak.Tags = strings.Join(rule.Tags, ", ")
-				if fs.opts.Verbose {
-					leak.Log(fs.opts.Redact)
-				}
+
+				leak.Log(fs.opts)
+
 				scannerReport.Leaks = append(scannerReport.Leaks, leak)
 			}
 		}

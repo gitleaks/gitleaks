@@ -10,15 +10,16 @@ test-cover:
 	go test ./... --race $(COVER) $(PKG) -v
 	go tool cover -html=cover.out
 
-test:
-	go get golang.org/x/lint/golint
+format:
 	go fmt ./...
+
+test: format
+	go get golang.org/x/lint/golint
 	go vet ./...
 	golint ./...
 	go test ./... --race $(PKG) -v
 
-build:
-	go fmt ./...
+build: format
 	golint ./...
 	go vet ./...
 	go mod tidy
@@ -41,9 +42,9 @@ release-builds:
 
 deploy:
 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
-	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
+	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) .
 	echo "Pushing zricethezav/gitleaks:$(VERSION) and zricethezav/gitleaks:latest"
 	docker push zricethezav/gitleaks
 
-dockerbuild: 
-	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) . 
+dockerbuild:
+	docker build --build-arg ldflags=$(_LDFLAGS) -f Dockerfile -t zricethezav/gitleaks:latest -t zricethezav/gitleaks:$(VERSION) .

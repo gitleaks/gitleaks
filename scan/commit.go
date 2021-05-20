@@ -42,6 +42,19 @@ func (cs *CommitScanner) SetRepoName(repoName string) {
 // Scan kicks off a CommitScanner Scan
 func (cs *CommitScanner) Scan() (Report, error) {
 	var scannerReport Report
+
+	defer func() {
+		if err := recover(); err != nil {
+			// sometimes the Patch generation will fail due to a known bug in
+			// sergi's go-diff: https://github.com/sergi/go-diff/issues/89.
+			return
+		}
+	}()
+
+	if cs.cfg.Allowlist.CommitAllowed(cs.commit.Hash.String()) {
+		return scannerReport, nil
+	}
+
 	if len(cs.commit.ParentHashes) == 0 {
 		facScanner := NewFilesAtCommitScanner(cs.opts, cs.cfg, cs.repo, cs.commit)
 		return facScanner.Scan()
@@ -57,7 +70,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 	}
 
 	patch, err := parent.Patch(cs.commit)
-	if err != nil {
+	if err != nil || patch == nil {
 		return scannerReport, fmt.Errorf("could not generate Patch")
 	}
 
@@ -90,9 +103,8 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
 
-						if cs.opts.Verbose {
-							leak.Log(cs.opts.Redact)
-						}
+						leak.Log(cs.opts)
+
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 						continue
 					}
@@ -109,7 +121,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 							continue
 						}
 						offender := rule.Inspect(line)
-						if offender == "" {
+						if offender.IsEmpty() {
 							continue
 						}
 
@@ -124,7 +136,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 							continue
 						}
 
-						leak := NewLeak(line, offender, defaultLineNumber).WithCommit(cs.commit)
+						leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(cs.commit).WithEntropy(offender.EntropyLevel)
 						leak.File = to.Path()
 						leak.LineNumber = extractLine(patchContent, leak, lineLookup)
 						leak.RepoURL = cs.opts.RepoURL
@@ -132,9 +144,9 @@ func (cs *CommitScanner) Scan() (Report, error) {
 						leak.LeakURL = leak.URL()
 						leak.Rule = rule.Description
 						leak.Tags = strings.Join(rule.Tags, ", ")
-						if cs.opts.Verbose {
-							leak.Log(cs.opts.Redact)
-						}
+
+						leak.Log(cs.opts)
+
 						scannerReport.Leaks = append(scannerReport.Leaks, leak)
 					}
 				}

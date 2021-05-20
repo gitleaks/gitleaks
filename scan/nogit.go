@@ -73,18 +73,22 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 			for _, rule := range ngs.cfg.Rules {
 				if rule.HasFileOrPathLeakOnly(p) {
 					leak := NewLeak("", "Filename or path offender: "+p, defaultLineNumber)
-					leak.File = p
+					relPath, err := filepath.Rel(ngs.opts.Path, p)
+					if err != nil {
+						leak.File = p
+					} else {
+						leak.File = relPath
+					}
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
 
-					if ngs.opts.Verbose {
-						leak.Log(ngs.opts.Redact)
-					}
+					leak.Log(ngs.opts)
+
 					leaks <- leak
 				}
 			}
 
-			f, err := os.Open(p)
+			f, err := os.Open(p) // #nosec
 			if err != nil {
 				return err
 			}
@@ -101,7 +105,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					}
 
 					offender := rule.Inspect(line)
-					if offender == "" {
+					if offender.IsEmpty() {
 						continue
 					}
 					if ngs.cfg.Allowlist.RegexAllowed(line) {
@@ -115,14 +119,19 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						continue
 					}
 
-					leak := NewLeak(line, offender, defaultLineNumber)
-					leak.File = p
+					leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithEntropy(offender.EntropyLevel)
+					relPath, err := filepath.Rel(ngs.opts.Path, p)
+					if err != nil {
+						leak.File = p
+					} else {
+						leak.File = relPath
+					}
 					leak.LineNumber = lineNumber
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
-					if ngs.opts.Verbose {
-						leak.Log(ngs.opts.Redact)
-					}
+
+					leak.Log(ngs.opts)
+
 					leaks <- leak
 				}
 			}
@@ -131,7 +140,9 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	}
 
 	go func() {
-		g.Wait()
+		if err := g.Wait(); err != nil {
+			log.Error(err)
+		}
 		close(leaks)
 	}()
 

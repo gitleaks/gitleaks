@@ -20,24 +20,27 @@ import (
 
 // Options stores values of command line options
 type Options struct {
-	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
-	RepoURL        string `short:"r" long:"repo-url" description:"Repository URL"`
-	Path           string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
-	ConfigPath     string `short:"c" long:"config-path" description:"Path to config"`
-	RepoConfigPath string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
-	ClonePath      string `long:"clone-path" description:"Path to clone repo to disk"`
-	Version        bool   `long:"version" description:"Version number"`
-	Username       string `long:"username" description:"Username for git repo"`
-	Password       string `long:"password" description:"Password for git repo"`
-	AccessToken    string `long:"access-token" description:"Access token for git repo"`
-	Threads        int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
-	SSH            string `long:"ssh-key" description:"Path to ssh key used for auth"`
-	Unstaged       bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
-	Branch         string `long:"branch" description:"Branch to scan"`
-	Redact         bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
-	Debug          bool   `long:"debug" description:"Log debug messages"`
-	NoGit          bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
-	CodeOnLeak     int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
+	Verbose          bool   `short:"v" long:"verbose" description:"Show verbose output from scan"`
+	Quiet            bool   `short:"q" long:"quiet" description:"Sets log level to error and only output leaks, one json object per line"`
+	RepoURL          string `short:"r" long:"repo-url" description:"Repository URL"`
+	Path             string `short:"p" long:"path" description:"Path to directory (repo if contains .git) or file"`
+	ConfigPath       string `short:"c" long:"config-path" description:"Path to config"`
+	RepoConfigPath   string `long:"repo-config-path" description:"Path to gitleaks config relative to repo root"`
+	ClonePath        string `long:"clone-path" description:"Path to clone repo to disk"`
+	Version          bool   `long:"version" description:"Version number"`
+	Username         string `long:"username" description:"Username for git repo"`
+	Password         string `long:"password" description:"Password for git repo"`
+	AccessToken      string `long:"access-token" description:"Access token for git repo"`
+	Threads          int    `long:"threads" description:"Maximum number of threads gitleaks spawns"`
+	SSH              string `long:"ssh-key" description:"Path to ssh key used for auth"`
+	Unstaged         bool   `long:"unstaged" description:"Run gitleaks on unstaged code"`
+	Branch           string `long:"branch" description:"Branch to scan"`
+	Redact           bool   `long:"redact" description:"Redact secrets from log messages and leaks"`
+	Debug            bool   `long:"debug" description:"Log debug messages"`
+	NoGit            bool   `long:"no-git" description:"Treat git repos as plain directories and scan those files"`
+	CodeOnLeak       int    `long:"leaks-exit-code" default:"1" description:"Exit code when leaks have been encountered"`
+	AppendRepoConfig bool   `long:"append-repo-config" description:"Append the provided or default config with the repo config."`
+	AdditionalConfig string `long:"additional-config" description:"Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations"`
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
@@ -68,7 +71,7 @@ func ParseOptions() (Options, error) {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stdout)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	if opts.Version {
@@ -82,6 +85,9 @@ func ParseOptions() (Options, error) {
 
 	if opts.Debug {
 		log.SetLevel(log.DebugLevel)
+	}
+	if opts.Quiet {
+		log.SetLevel(log.ErrorLevel)
 	}
 
 	return opts, nil
@@ -138,8 +144,8 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 
 	var auth transport.AuthMethod
 
-	if strings.HasPrefix(opts.RepoURL, "git") {
-		// using git protocol so needs ssh auth
+	if strings.HasPrefix(opts.RepoURL, "ssh://") || (!strings.Contains(opts.RepoURL, "://") && strings.Contains(opts.RepoURL, ":")) {
+		// using ssh:// url or scp-like syntax
 		auth, err = SSHAuth(opts)
 		if err != nil {
 			return nil, err
@@ -170,17 +176,29 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 // SSHAuth tried to generate ssh public keys based on what was passed via cli. If no
 // path was passed via cli then this will attempt to retrieve keys from the default
 // location for ssh keys, $HOME/.ssh/id_rsa. This function is only called if the
-// repo url using the git:// protocol.
+// repo url using the ssh:// protocol or scp-like syntax.
 func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
+	params := strings.Split(opts.RepoURL, "@")
+
+	if len(params) != 2 {
+		return nil, fmt.Errorf("user must be specified in the URL")
+	}
+
+	// the part of the RepoURL before the "@" (params[0]) can be something like:
+	// - "ssh://user" if RepoURL is an ssh:// URL
+	// - "user" if RepoURL uses scp-like syntax
+	// we must strip the protocol if it is present so that we only have "user"
+	username := strings.Replace(params[0], "ssh://", "", 1)
+
 	if opts.SSH != "" {
-		return ssh.NewPublicKeysFromFile("git", opts.SSH, "")
+		return ssh.NewPublicKeysFromFile(username, opts.SSH, "")
 	}
 	c, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
 	defaultPath := fmt.Sprintf("%s/.ssh/id_rsa", c.HomeDir)
-	return ssh.NewPublicKeysFromFile("git", defaultPath, "")
+	return ssh.NewPublicKeysFromFile(username, defaultPath, "")
 }
 
 // OpenLocal checks what options are set, if no remote targets are set

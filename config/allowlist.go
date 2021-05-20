@@ -4,6 +4,10 @@ import (
 	"regexp"
 )
 
+// used for ignoring .git directories when the --no-git flag is set
+// related issue: https://github.com/zricethezav/gitleaks/issues/486
+const dotGit = `/\.git/`
+
 // AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
 type AllowList struct {
@@ -45,9 +49,9 @@ func (a *AllowList) RepoAllowed(repo string) bool {
 	return anyRegexMatch(repo, a.Repos)
 }
 
-// IgnoreDotGit appends a `.git$` rule to ignore all .git paths. This is used for --no-git scans
+// IgnoreDotGit appends a `\.git` rule to ignore all .git paths. This is used for --no-git scans
 func (a *AllowList) IgnoreDotGit() error {
-	re, err := regexp.Compile(".git")
+	re, err := regexp.Compile(dotGit)
 	if err != nil {
 		return err
 	}

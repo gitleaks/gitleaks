@@ -1,0 +1,14 @@
+# pre-commit configuration example to add docker-based hook that executes gitleaks
+# This should be added to .pre-commit-config.yaml coniguration file: https://pre-commit.com/#2-add-a-pre-commit-configuration
+
+repos:
+- repo: local
+  hooks:
+  - id: gitleaks
+    name: Gitleaks
+    language: docker_image
+    entry: zricethezav/gitleaks:v7.4.0
+    args:
+    - --config-path
+    - .gitleaks.toml
+    - --verbose

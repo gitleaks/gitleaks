@@ -1,8 +1,8 @@
 language: go
 go:
-- 1.14.x
+  - 1.16.x
 services:
-- docker
+  - docker
 script:
-- make test
-- make security-scan
+  - make test
+  - make security-scan

@@ -3,6 +3,7 @@
   "line": "    aws_access_key_id='AKIAIO5FODNN7EXAMPLE',",
   "lineNumber": 5,
   "offender": "AKIAIO5FODNN7EXAMPLE",
+  "offenderEntropy": -1,
   "commit": "",
   "repo": "",
   "repoURL": "",

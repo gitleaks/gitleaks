@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 
@@ -249,13 +252,7 @@ func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
 		if err != nil {
 			return Config{}, err
 		}
-		var tomlLoader TomlLoader
-		_, err = toml.DecodeReader(r, &tomlLoader)
-		if err != nil {
-			return Config{}, err
-		}
-
-		return tomlLoader.Parse()
+		return parseTomlFile(r)
 	}
 
 	log.Debug("attempting to load repo config from bare worktree, this may use an old config")
@@ -274,15 +271,49 @@ func LoadRepoConfig(repo *git.Repository, repoConfig string) (Config, error) {
 		return Config{}, err
 	}
 
-	var tomlLoader TomlLoader
 	r, err := f.Reader()
-	if err != nil {
-		return Config{}, err
-	}
-	_, err = toml.DecodeReader(r, &tomlLoader)
+
 	if err != nil {
 		return Config{}, err
 	}
 
+	return parseTomlFile(r)
+}
+
+// LoadAdditionalConfig Accepts a path to a gitleaks config and returns a Config struct
+func LoadAdditionalConfig(repoConfig string) (Config, error) {
+	file, err := os.Open(filepath.Clean(repoConfig))
+	if err != nil {
+		return Config{}, err
+	}
+
+	return parseTomlFile(file)
+}
+
+// AppendConfig Accepts a Config struct and will append those fields to this Config Struct's fields
+func (config *Config) AppendConfig(configToBeAppended Config) Config {
+	newAllowList := AllowList{
+		Description: "Appended Configuration",
+		Commits:     append(config.Allowlist.Commits, configToBeAppended.Allowlist.Commits...),
+		Files:       append(config.Allowlist.Files, configToBeAppended.Allowlist.Files...),
+		Paths:       append(config.Allowlist.Paths, configToBeAppended.Allowlist.Paths...),
+		Regexes:     append(config.Allowlist.Regexes, configToBeAppended.Allowlist.Regexes...),
+		Repos:       append(config.Allowlist.Repos, configToBeAppended.Allowlist.Repos...),
+	}
+
+	return Config{
+		Rules:     append(config.Rules, configToBeAppended.Rules...),
+		Allowlist: newAllowList,
+	}
+}
+
+// takes a File, makes sure it is a valid config, and parses it
+func parseTomlFile(f io.Reader) (Config, error) {
+	var tomlLoader TomlLoader
+	_, err := toml.DecodeReader(f, &tomlLoader)
+	if err != nil {
+		log.Errorf("Unable to read gitleaks config. Using defaults. Error: %s", err)
+		return Config{}, err
+	}
 	return tomlLoader.Parse()
 }

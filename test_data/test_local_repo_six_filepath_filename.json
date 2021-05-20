@@ -3,6 +3,7 @@
   "line": "apiToken=d41d8cd98f00b204e9800998ecf8427e",
   "lineNumber": 2,
   "offender": "Token=d41d8cd98f00b204e9800998ecf8427e",
+  "offenderEntropy": -1,
   "commit": "98b6c7cb3fb29a5993c4c95c56a2dc53050b9247",
   "repo": "test_repo_6",
   "rule": "Generic password",

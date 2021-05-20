@@ -57,6 +57,28 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			if err != nil {
 				continue
 			}
+
+			// Check if file is allow listed
+			if us.cfg.Allowlist.FileAllowed(filepath.Base(fn)) ||
+				us.cfg.Allowlist.PathAllowed(fn) {
+				continue
+			}
+			// Check individual file path ONLY rules
+			for _, rule := range us.cfg.Rules {
+				if rule.HasFileOrPathLeakOnly(fn) {
+					leak := NewLeak("", "Filename or path offender: "+fn, defaultLineNumber)
+					leak.Repo = us.repoName
+					leak.File = fn
+					leak.RepoURL = us.opts.RepoURL
+					leak.LeakURL = leak.URL()
+					leak.Rule = rule.Description
+					leak.Tags = strings.Join(rule.Tags, ", ")
+					leak.Log(us.opts)
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
+					continue
+				}
+			}
+
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}
@@ -65,7 +87,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				lineNumber++
 				for _, rule := range us.cfg.Rules {
 					offender := rule.Inspect(line)
-					if offender == "" {
+					if offender.IsEmpty() {
 						continue
 					}
 					if us.cfg.Allowlist.RegexAllowed(line) ||
@@ -79,14 +101,14 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(workTreeFile.Name())) {
 						continue
 					}
-					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
 					leak.File = workTreeFile.Name()
 					leak.LineNumber = lineNumber
 					leak.Repo = us.repoName
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
 					if us.opts.Verbose {
-						leak.Log(us.opts.Redact)
+						leak.Log(us.opts)
 					}
 					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
@@ -162,6 +184,12 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				}
 			}
 
+			// Check if file is allow listed
+			if us.cfg.Allowlist.FileAllowed(filepath.Base(filename)) ||
+				us.cfg.Allowlist.PathAllowed(filename) {
+				continue
+			}
+
 			dmp := diffmatchpatch.New()
 			diffs := dmp.DiffMain(prevFileContents, currFileContents, false)
 			prettyDiff := diffPrettyText(diffs)
@@ -178,7 +206,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			for _, line := range strings.Split(diffContents, "\n") {
 				for _, rule := range us.cfg.Rules {
 					offender := rule.Inspect(line)
-					if offender == "" {
+					if offender.IsEmpty() {
 						continue
 					}
 					if us.cfg.Allowlist.RegexAllowed(line) ||
@@ -192,15 +220,15 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					if rule.Path.String() != "" && !rule.HasFilePathLeak(filepath.Base(filename)) {
 						continue
 					}
-					leak := NewLeak(line, offender, defaultLineNumber).WithCommit(emptyCommit())
+					leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
 					leak.File = filename
 					leak.LineNumber = extractLine(prettyDiff, leak, lineLookup) + 1
 					leak.Repo = us.repoName
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
-					if us.opts.Verbose {
-						leak.Log(us.opts.Redact)
-					}
+
+					leak.Log(us.opts)
+
 					scannerReport.Leaks = append(scannerReport.Leaks, leak)
 				}
 			}
