@@ -27,7 +27,7 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 - Run [Gitleaks Action](https://github.com/marketplace/actions/gitleaks) in your CI/CD pipeline
 - [Custom rules](https://github.com/zricethezav/gitleaks#configuration) via toml configuration
 - Increased performance using [go-git](https://github.com/go-git/go-git)
-- JSON, SARIF, and CSV reporting
+- json, sarif, and csv reporting
 - Private repo scans using key or password based authentication
 
 
@@ -94,7 +94,7 @@ Application Options:
       --append-repo-config  Append the provided or default config with the repo config.
       --additional-config=  Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations
   -o, --report=             Report output path
-  -f, --format=             JSON, CSV, SARIF (default: json)
+  -f, --format=             json, csv, sarif (default: json)
       --files-at-commit=    Sha of commit to scan all files at commit
       --commit=             Sha of commit to scan or "latest" to scan the last commit of the repository
       --commits=            Comma separated list of a commits to scan
