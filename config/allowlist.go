@@ -6,7 +6,7 @@ import (
 
 // used for ignoring .git directories when the --no-git flag is set
 // related issue: https://github.com/zricethezav/gitleaks/issues/486
-const dotGit = `/\.git/`
+const dotGit = `^\.git/`
 
 // AllowList is struct containing items that if encountered will allowlist
 // a commit/line of code that would be considered a leak.
