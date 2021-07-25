@@ -90,6 +90,35 @@ func (cs *CommitScanner) Scan() (Report, error) {
 
 				// Check individual file path ONLY rules
 				for _, rule := range cs.cfg.Rules {
+					if rule.Multiline {
+						offenders := rule.InspectFile(chunk.Content())
+						if offenders != nil {
+							for _, offender := range offenders {
+								if cs.cfg.Allowlist.RegexAllowed(chunk.Content()) {
+									continue
+								}
+
+								if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(to.Path())) {
+									continue
+								}
+
+								if rule.Path.String() != "" && !rule.HasFilePathLeak(to.Path()) {
+									continue
+								}
+
+								leak := NewLeak("", offender.ToString(), 0).WithCommit(cs.commit).WithEntropy(offender.EntropyLevel)
+								leak.File = to.Path()
+								leak.RepoURL = cs.opts.RepoURL
+								leak.Repo = cs.repoName
+								leak.LeakURL = leak.URL()
+								leak.Rule = rule.Description
+								leak.Tags = strings.Join(rule.Tags, ", ")
+								leak.Log(cs.opts)
+								scannerReport.Leaks = append(scannerReport.Leaks, leak)
+							}
+						}
+					}
+
 					if rule.CommitAllowed(cs.commit.Hash.String()) {
 						continue
 					}

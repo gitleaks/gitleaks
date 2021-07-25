@@ -68,6 +68,46 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 
 		// Check individual file path ONLY rules
 		for _, rule := range fs.cfg.Rules {
+			if rule.AllowList.FileAllowed(filepath.Base(f.Name)) ||
+				rule.AllowList.PathAllowed(f.Name) ||
+				rule.AllowList.CommitAllowed(fs.commit.Hash.String()) {
+				continue
+			}
+			if rule.Multiline {
+				offenders := rule.InspectFile(content)
+				if offenders != nil {
+					for _, offender := range offenders {
+
+						if offender.IsEmpty() {
+							continue
+						}
+
+						if fs.cfg.Allowlist.RegexAllowed(content) {
+							continue
+						}
+
+						if rule.File.String() != "" && !rule.HasFileLeak(filepath.Base(f.Name)) {
+							continue
+						}
+						if rule.Path.String() != "" && !rule.HasFilePathLeak(f.Name) {
+							continue
+						}
+
+						leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(fs.commit).WithEntropy(offender.EntropyLevel)
+						leak.File = f.Name
+						leak.RepoURL = fs.opts.RepoURL
+						leak.Repo = fs.repoName
+						leak.LeakURL = leak.URL()
+						leak.Rule = rule.Description
+						leak.Tags = strings.Join(rule.Tags, ", ")
+
+						leak.Log(fs.opts)
+
+						scannerReport.Leaks = append(scannerReport.Leaks, leak)
+					}
+				}
+			}
+
 			if rule.CommitAllowed(fs.commit.Hash.String()) {
 				continue
 			}

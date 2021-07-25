@@ -173,6 +173,12 @@ title = "gitleaks config"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
 
+[[rules]]
+    description = "Defaultvalue Leak"
+    regex = '''(?i)("|')?(((DefaultValue\((.\S{1,}.+)\)\s*.)|(ConfigurationProperty\(.*(DefaultValue)("|')?\s*(:|=){1,3}\s*("|')[a-zA-Z0-9ñ\@\#\$\%\^\&\-\+\=\(\)\/\.\_\<\;\:\>\\\!\[\]\?\{\}\|\*]+("|')\)\s*.))\n.*(key|Password|Token|Secret|Senha|pwd))'''
+    tags = ["key", "Default", "Default String Secret"]
+    multiline = true
+
 [allowlist]
     description = "Allowlisted files"
     files = ['''^\.?gitleaks.toml$''',

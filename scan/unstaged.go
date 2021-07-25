@@ -64,7 +64,9 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				continue
 			}
 			// Check individual file path ONLY rules
+
 			for _, rule := range us.cfg.Rules {
+
 				if rule.HasFileOrPathLeakOnly(fn) {
 					leak := NewLeak("", "Filename or path offender: "+fn, defaultLineNumber)
 					leak.Repo = us.repoName
@@ -82,6 +84,27 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}
+
+			for _, rule := range us.cfg.Rules {
+				if rule.Multiline {
+					offenders := rule.InspectFile(workTreeBuf.String())
+					if offenders != nil {
+						for _, offender := range offenders {
+							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
+							leak.File = workTreeFile.Name()
+							leak.Repo = us.repoName
+							leak.Rule = rule.Description
+							leak.Tags = strings.Join(rule.Tags, ", ")
+							if us.opts.Verbose {
+								leak.Log(us.opts)
+							}
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
+						}
+
+					}
+				}
+			}
+
 			lineNumber := 0
 			for _, line := range strings.Split(workTreeBuf.String(), "\n") {
 				lineNumber++
@@ -202,6 +225,26 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 			}
 
 			lineLookup := make(map[string]bool)
+			for _, rule := range us.cfg.Rules {
+				fmt.Print(rule.Description)
+				fmt.Print(rule.Multiline)
+				if rule.Multiline {
+					offenders := rule.InspectFile(diffContents)
+					if offenders != nil {
+						for _, offender := range offenders {
+							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
+							leak.File = filename
+							leak.LineNumber = extractLine(prettyDiff, leak, lineLookup) + 1
+							leak.Repo = us.repoName
+							leak.Rule = rule.Description
+							leak.Tags = strings.Join(rule.Tags, ", ")
+							leak.Log(us.opts)
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
+						}
+
+					}
+				}
+			}
 
 			for _, line := range strings.Split(diffContents, "\n") {
 				for _, rule := range us.cfg.Rules {

@@ -608,6 +608,16 @@ func TestScanUncommited(t *testing.T) {
 		addition     string
 	}{
 		{
+			description: "test scan repo with multiline template with no commit",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_repo_11",
+				Report:       "../test_data/test_local_repo_eleven_default_value_dotnet_multline_leak_uncommitted.json.got",
+				Unstaged:     true,
+				ReportFormat: "json",
+			},
+			wantPath: "../test_data/test_local_repo_eleven_default_value_dotnet_multline_leak_uncommitted.json",
+		},
+		{
 			description: "test scan local one leak",
 			opts: options.Options{
 				Path:         "../test_data/test_repos/test_repo_1",

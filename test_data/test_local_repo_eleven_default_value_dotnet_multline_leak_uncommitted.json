@@ -1,0 +1,33 @@
+[
+ {
+  "lineNumber": 1,
+  "offender": "ConfigurationProperty(\"apiKey\", DefaultValue = \"2f12779e593499b981beb7fe9644bb955b9dada7\")]\n        public string ApiKey",
+  "offenderEntropy": -1,
+  "commit": "0000000000000000000000000000000000000000",
+  "repo": "test_repo_11",
+  "rule": "Defaultvalue Leak",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "dotnetfile.cs",
+  "date": "1970-01-01T00:00:00Z",
+  "tags": "key, Default, Default String Secret",
+  "operation": "equal"
+ },
+
+ {
+    "lineNumber": 1,
+    "offender": "DefaultValue(\"6a7r756enumfbu\")]\n        public string MachineKey",
+    "offenderEntropy": -1,
+    "commit": "0000000000000000000000000000000000000000",
+    "repo": "test_repo_11",
+    "rule": "Defaultvalue Leak",
+    "commitMessage": "",
+    "author": "",
+    "email": "",
+    "file": "dotnetfile.cs",
+    "date": "1970-01-01T00:00:00Z",
+    "tags": "key, Default, Default String Secret",
+    "operation": "equal"
+   }
+]

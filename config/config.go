@@ -52,6 +52,7 @@ type TomlLoader struct {
 		File        string
 		Path        string
 		ReportGroup int
+		Multiline   bool
 		Tags        []string
 		Entropies   []struct {
 			Min   string
@@ -183,6 +184,7 @@ func (tomlLoader TomlLoader) Parse() (Config, error) {
 			File:        fileNameRe,
 			Path:        filePathRe,
 			ReportGroup: rule.ReportGroup,
+			Multiline:   rule.Multiline,
 			Tags:        rule.Tags,
 			AllowList:   allowList,
 			Entropies:   entropies,

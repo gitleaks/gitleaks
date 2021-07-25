@@ -3,6 +3,7 @@ package scan
 import (
 	"bufio"
 	"context"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,6 +72,28 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 			}
 
 			for _, rule := range ngs.cfg.Rules {
+				if rule.Multiline {
+					bytesRead, _ := ioutil.ReadFile(p)
+					offenders := rule.InspectFile(string(bytesRead))
+					if offenders != nil {
+						for _, offender := range offenders {
+							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithEntropy(offender.EntropyLevel)
+							relPath, err := filepath.Rel(ngs.opts.Path, p)
+							if err != nil {
+								leak.File = p
+							} else {
+								leak.File = relPath
+							}
+							leak.Rule = rule.Description
+							leak.Tags = strings.Join(rule.Tags, ", ")
+
+							leak.Log(ngs.opts)
+
+							leaks <- leak
+						}
+					}
+				}
+
 				if rule.HasFileOrPathLeakOnly(p) {
 					leak := NewLeak("", "Filename or path offender: "+p, defaultLineNumber)
 					relPath, err := filepath.Rel(ngs.opts.Path, p)
