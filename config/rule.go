@@ -4,7 +4,6 @@ import (
 	"math"
 	"path/filepath"
 	"regexp"
-
 	"strings"
 )
 
@@ -13,6 +12,7 @@ import (
 type Offender struct {
 	Match        string
 	EntropyLevel float64
+	Line         int
 }
 
 // IsEmpty checks to see if nothing was found in the match
@@ -100,11 +100,21 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 
 	// check entropy
 	var result []Offender
+
 	for _, m := range matches {
+		lineToDetect := strings.Split(m[0], "\n")[0]
+		fileLinesList := strings.Split(fileLines, "\n")
+		line := 1
+		for i, _ := range fileLinesList {
+			if strings.Contains(fileLinesList[i], lineToDetect) {
+				line = i
+			}
+		}
 
 		result = append(result, Offender{
 			Match:        m[0],
 			EntropyLevel: -1,
+			Line:         line,
 		})
 
 	}

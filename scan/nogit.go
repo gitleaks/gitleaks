@@ -77,7 +77,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					offenders := rule.InspectFile(string(bytesRead))
 					if offenders != nil {
 						for _, offender := range offenders {
-							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithEntropy(offender.EntropyLevel)
+							leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithEntropy(offender.EntropyLevel)
 							relPath, err := filepath.Rel(ngs.opts.Path, p)
 							if err != nil {
 								leak.File = p

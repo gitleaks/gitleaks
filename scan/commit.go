@@ -106,7 +106,7 @@ func (cs *CommitScanner) Scan() (Report, error) {
 									continue
 								}
 
-								leak := NewLeak("", offender.ToString(), 0).WithCommit(cs.commit).WithEntropy(offender.EntropyLevel)
+								leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithCommit(cs.commit).WithEntropy(offender.EntropyLevel)
 								leak.File = to.Path()
 								leak.RepoURL = cs.opts.RepoURL
 								leak.Repo = cs.repoName

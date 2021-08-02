@@ -90,7 +90,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					offenders := rule.InspectFile(workTreeBuf.String())
 					if offenders != nil {
 						for _, offender := range offenders {
-							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
+							leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
 							leak.File = workTreeFile.Name()
 							leak.Repo = us.repoName
 							leak.Rule = rule.Description
@@ -232,7 +232,7 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 					offenders := rule.InspectFile(diffContents)
 					if offenders != nil {
 						for _, offender := range offenders {
-							leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
+							leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithCommit(emptyCommit()).WithEntropy(offender.EntropyLevel)
 							leak.File = filename
 							leak.LineNumber = extractLine(prettyDiff, leak, lineLookup) + 1
 							leak.Repo = us.repoName

@@ -93,7 +93,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 							continue
 						}
 
-						leak := NewLeak("", offender.ToString(), defaultLineNumber).WithCommit(fs.commit).WithEntropy(offender.EntropyLevel)
+						leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithCommit(fs.commit).WithEntropy(offender.EntropyLevel)
 						leak.File = f.Name
 						leak.RepoURL = fs.opts.RepoURL
 						leak.Repo = fs.repoName

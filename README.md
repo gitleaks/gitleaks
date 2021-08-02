@@ -178,6 +178,7 @@ The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in
   file = '''a-file-name-regex'''
   path = '''a-file-path-regex'''
   tags = ["tag","another tag"]
+  multline = true # boolean to enable multline regex ( Default : false)
   [[rules.entropies]] # note these are strings, not floats
     Min = "3.5"
     Max = "4.5"
@@ -277,9 +278,7 @@ You can always set the exit code when leaves are encountered with the `--leaks-e
 
 ###  Sponsors ❤️
 #### Organization Sponsors
-[![gammanet](https://gammanet.com/assets/images/new-design/gamma-logo.png)](https://gammanet.com/?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
-
-Gamma proactively detects and remediates data leaks across cloud apps. Scan your public repos for secret leaks with [Gamma](https://gammanet.com/github-demo?utm_source=gitleaks&utm_medium=homepage&utm_campaign=gitleaks_promotion)
+Sir, ehm, this is uhh... this is empty [😭](https://www.youtube.com/watch?v=w1o4O2SfQ5g)
 
 #### Individual Sponsors 
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
