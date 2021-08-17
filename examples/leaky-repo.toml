@@ -186,7 +186,7 @@ title = "gitleaks config"
 
 [[rules]]
 	description = "Files with keys and credentials"
-	files = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
+	file = '''(?i)(id_rsa|passwd|id_rsa.pub|pgpass|pem|key|shadow)'''
 
 # Global allowlist
 [allowlist]

@@ -285,6 +285,8 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
 - [Adam Shannon](https://github.com/adamdecaf)
 - [ProjectDiscovery](https://projectdiscovery.io/#/)
+- [Ben "Ihavespoons"](https://github.com/ihavespoons)
+- [Henry Sachs](https://github.com/henrysachs)
 
 
 #### Logo Attribution
