@@ -13,7 +13,7 @@
   </p>
 </p>
 
-Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code. 
+Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code.
 
 ### Introduction Video
 <p align="left">
@@ -99,8 +99,6 @@ Application Options:
       --commit=             Sha of commit to scan or "latest" to scan the last commit of the repository
       --commits=            Comma separated list of a commits to scan
       --commits-file=       Path to file of line separated list of commits to scan
-      --commit-from=        Commit to start scan from
-      --commit-to=          Commit to stop scan
       --commit-since=       Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
       --commit-until=       Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
       --depth=              Number of commits to scan
@@ -154,7 +152,7 @@ gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
-If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a 
+If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
 path, you can run:
 ```bash
 gitleaks --path=path/to/local/repo -v --unstaged
@@ -174,7 +172,7 @@ The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in
 
 [[rules]]
   description = "a string describing one of many rule in this config"
-  regex = '''one-go-style-regex-for-this-rule''' 
+  regex = '''one-go-style-regex-for-this-rule'''
   file = '''a-file-name-regex'''
   path = '''a-file-path-regex'''
   tags = ["tag","another tag"]
@@ -224,11 +222,11 @@ We can also **combine** regular expressions AND entropy:
 Translating this rule to English, this rule states: "if we encounter a line of code that matches *regex* AND the line falls within the bounds of a [Shannon entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)) of 4.5 to 4.7, then the line must be a leak"
 
 #### Example 3
-Let's compare two lines of code: 
+Let's compare two lines of code:
 ```
 aws_secret='ABCDEF+c2L7yXeGvUyrPgYsDnWRRC1AYEXAMPLE'
 ```
-and 
+and
 ```
 aws_secret=os.getenv('AWS_SECRET_ACCESS_KEY')
 
@@ -251,7 +249,7 @@ The proper Perl regex for AWS secret keys is
 `(?<![A-Za-z0-9\\+])[A-Za-z0-9\\+=]{40}(?![A-Za-z0-9\\+=])`
 but the Go library doesn't do lookahead/lookbehind, so
 we'll look for 40 base64 characters, then allowlist
-if they're embedded in a string of 41 base64 characters, that is, 
+if they're embedded in a string of 41 base64 characters, that is,
 without any delimiters. This will make a false negative for, say:
 ```
     foo=+awsSecretAccessKeyisBase64=40characters
@@ -264,7 +262,7 @@ So you can use the following to effectively create the proper Perl regex:
 	[rules.allowlist]
                 description = "41 base64 characters is not an AWS secret key"
 		regexes = ['''[A-Za-z0-9\\+=]{41}''']
-		
+
 ```
 
 
@@ -280,7 +278,7 @@ You can always set the exit code when leaves are encountered with the `--leaks-e
 #### Organization Sponsors
 Sir, ehm, this is uhh... this is empty [😭](https://www.youtube.com/watch?v=w1o4O2SfQ5g)
 
-#### Individual Sponsors 
+#### Individual Sponsors
 These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 
 - [Adam Shannon](https://github.com/adamdecaf)
