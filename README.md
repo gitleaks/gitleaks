@@ -74,7 +74,7 @@ Usage:
 Application Options:
   -v, --verbose             Show verbose output from scan
   -q, --quiet               Sets log level to error and only output leaks, one json object per line
-  -r, --repo-url=           Repository URL
+  -r, --repo=           Repository URL
   -p, --path=               Path to directory (repo if contains .git) or file
   -c, --config-path=        Path to config
       --repo-config-path=   Path to gitleaks config relative to repo root
@@ -113,19 +113,19 @@ Help Options:
 #### Basic repo-url scan:
 This scans the entire history of tests/secrets and logs leaks as they are encountered `-v`/`--verbose` being set.
 ```bash
-gitleaks --repo-url=https://github.com/my-insecure/repo -v
+gitleaks --repo=https://github.com/my-insecure/repo -v
 ```
 
 
 #### Basic repo-url scan output to a report:
 If you want the report in sarif or csv you can set the `-f/--format` option
 ```bash
-gitleaks --repo-url=https://github.com/my-insecure/repo -v --report=my-report.json
+gitleaks --repo=https://github.com/my-insecure/repo -v --report=my-report.json
 ```
 
 #### Scan specific commit:
 ```bash
-gitleaks --repo-url=https://github.com/my-insecure/repo --commit=commit-sha -v
+gitleaks --repo=https://github.com/my-insecure/repo --commit=commit-sha -v
 ```
 
 #### Scan local repo:
@@ -152,7 +152,7 @@ gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
-If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
+If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo` specified which will run a scan on your uncommitted changes. Or if you want to specify a
 path, you can run:
 ```bash
 gitleaks --path=path/to/local/repo -v --unstaged
