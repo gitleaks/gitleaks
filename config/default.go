@@ -33,12 +33,12 @@ title = "gitleaks config"
 
 [[rules]]
     description = "Twitter Secret Key"
-    regex = '''(?i)twitter(.{0,20})?[0-9a-z]{35,44}'''
+    regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{35,44}['\"]'''
     tags = ["key", "Twitter"]
 
 [[rules]]
     description = "Twitter Client ID"
-    regex = '''(?i)twitter(.{0,20})?[0-9a-z]{18,25}'''
+    regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{18,25}['\"]'''
     tags = ["client", "Twitter"]
 
 [[rules]]
