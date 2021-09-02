@@ -1,4 +1,4 @@
-name: Go
+name: Test
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
       - "*"
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -24,4 +23,4 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: make test
