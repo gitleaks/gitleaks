@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -156,6 +157,9 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				// file in staging has been deleted, aka it is not on the filesystem
 				// so the contents of the file are ""
 				currFileContents = ""
+				//check if file is symlink
+			} else if fc, err := os.Readlink(fn); err == nil {
+				currFileContents = fc
 			} else {
 				workTreeBuf := bytes.NewBuffer(nil)
 				workTreeFile, err := wt.Filesystem.Open(fn)
