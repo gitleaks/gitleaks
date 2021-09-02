@@ -25,10 +25,6 @@ build: format
 	go mod tidy
 	go build $(LDFLAGS)
 
-security-scan:
-	go get github.com/securego/gosec/cmd/gosec
-	gosec -no-fail ./...
-
 release-builds:
 	rm -rf build
 	mkdir build
