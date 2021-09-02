@@ -1,0 +1,15 @@
+name: Gitleaks Test
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16.0' # The Go version to download (if necessary) and use.
+      - run: make test
