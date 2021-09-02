@@ -1,4 +1,4 @@
-FROM golang:1.15.5 AS build
+FROM golang:1.17 AS build
 WORKDIR /go/src/github.com/zricethezav/gitleaks
 ARG ldflags
 COPY . .
