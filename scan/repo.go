@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -21,6 +22,7 @@ type RepoScanner struct {
 	repo     *git.Repository
 	throttle *Throttle
 	repoName string
+	mtx      *sync.Mutex
 }
 
 // NewRepoScanner returns a new repo scanner (go figure). This function also
@@ -32,6 +34,7 @@ func NewRepoScanner(opts options.Options, cfg config.Config, repo *git.Repositor
 		repo:     repo,
 		throttle: NewThrottle(opts),
 		repoName: getRepoName(opts),
+		mtx:      &sync.Mutex{},
 	}
 
 	return rs
@@ -54,7 +57,6 @@ func (rs *RepoScanner) Scan() (Report, error) {
 
 	g, _ := errgroup.WithContext(context.Background())
 	commits = make(chan *object.Commit)
-	leaks := make(chan Leak)
 
 	commitNum := 0
 	g.Go(func() error {
@@ -91,25 +93,20 @@ func (rs *RepoScanner) Scan() (Report, error) {
 				log.Error(err)
 			}
 			for _, leak := range report.Leaks {
-				leaks <- leak
+				rs.mtx.Lock()
+				scannerReport.Leaks = append(scannerReport.Leaks, leak)
+				rs.mtx.Unlock()
 			}
 			return nil
 		})
 	}
 
-	go func() {
-		if err := g.Wait(); err != nil {
-			log.Error(err)
-		}
-		close(leaks)
-	}()
-
-	for leak := range leaks {
-		scannerReport.Leaks = append(scannerReport.Leaks, leak)
+	if err := g.Wait(); err != nil {
+		log.Error(err)
 	}
 
 	scannerReport.Commits = commitNum
-	return scannerReport, g.Wait()
+	return scannerReport, nil
 }
 
 // SetRepoName sets the repo name
