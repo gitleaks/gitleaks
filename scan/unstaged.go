@@ -80,7 +80,9 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 				}
 			}
 
-			if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
+			if fc, err := os.Readlink(fn); err == nil {
+				workTreeBuf = bytes.NewBufferString(fc)
+			} else if _, err := io.Copy(workTreeBuf, workTreeFile); err != nil {
 				return scannerReport, err
 			}
 			lineNumber := 0
