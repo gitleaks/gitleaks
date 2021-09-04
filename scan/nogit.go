@@ -51,7 +51,6 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	g, _ := errgroup.WithContext(context.Background())
 
 	paths := make(chan string)
-	filesScanned := 0
 
 	g.Go(func() error {
 		defer close(paths)
@@ -69,7 +68,6 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 
 	for path := range paths {
 		p := path
-		filesScanned++
 		ngs.throttle.Limit()
 		g.Go(func() error {
 			defer ngs.throttle.Release()
@@ -153,8 +151,6 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	if err := g.Wait(); err != nil {
 		log.Error(err)
 	}
-
-	log.Info(filesScanned)
 
 	return scannerReport, nil
 }
