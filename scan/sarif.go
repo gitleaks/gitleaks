@@ -77,6 +77,7 @@ type Locations struct {
 //Results ...
 type Results struct {
 	Message    Message          `json:"message"`
+	RuleId     string           `json:"ruleId"`
 	Properties ResultProperties `json:"properties"`
 	Locations  []Locations      `json:"locations"`
 }
@@ -117,6 +118,7 @@ func leaksToResults(leaks []Leak) []Results {
 			Message: Message{
 				Text: fmt.Sprintf("%s secret detected", leak.Rule),
 			},
+			RuleId: leak.Rule,
 			Properties: ResultProperties{
 				Commit:        leak.Commit,
 				Offender:      leak.Offender,

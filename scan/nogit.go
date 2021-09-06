@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -18,15 +19,19 @@ import (
 
 // NoGitScanner is a scanner that absolutely despises git
 type NoGitScanner struct {
-	opts options.Options
-	cfg  config.Config
+	opts     options.Options
+	cfg      config.Config
+	throttle *Throttle
+	mtx      *sync.Mutex
 }
 
 // NewNoGitScanner creates and returns a nogit scanner. This is used for scanning files and directories
 func NewNoGitScanner(opts options.Options, cfg config.Config) *NoGitScanner {
 	ngs := &NoGitScanner{
-		opts: opts,
-		cfg:  cfg,
+		opts:     opts,
+		cfg:      cfg,
+		throttle: NewThrottle(opts),
+		mtx:      &sync.Mutex{},
 	}
 
 	// no-git scans should ignore .git folders by default
@@ -45,7 +50,8 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	var scannerReport Report
 
 	g, _ := errgroup.WithContext(context.Background())
-	paths := make(chan string, 100)
+
+	paths := make(chan string)
 
 	g.Go(func() error {
 		defer close(paths)
@@ -61,11 +67,11 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 			})
 	})
 
-	leaks := make(chan Leak, 100)
-
 	for path := range paths {
 		p := path
+		ngs.throttle.Limit()
 		g.Go(func() error {
+			defer ngs.throttle.Release()
 			if ngs.cfg.Allowlist.FileAllowed(filepath.Base(p)) ||
 				ngs.cfg.Allowlist.PathAllowed(p) {
 				return nil
@@ -107,7 +113,9 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 
 					leak.Log(ngs.opts)
 
-					leaks <- leak
+					ngs.mtx.Lock()
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
+					ngs.mtx.Unlock()
 				}
 			}
 
@@ -152,26 +160,20 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 					leak.LineNumber = lineNumber
 					leak.Rule = rule.Description
 					leak.Tags = strings.Join(rule.Tags, ", ")
-
 					leak.Log(ngs.opts)
 
-					leaks <- leak
+					ngs.mtx.Lock()
+					scannerReport.Leaks = append(scannerReport.Leaks, leak)
+					ngs.mtx.Unlock()
 				}
 			}
 			return f.Close()
 		})
 	}
 
-	go func() {
-		if err := g.Wait(); err != nil {
-			log.Error(err)
-		}
-		close(leaks)
-	}()
-
-	for leak := range leaks {
-		scannerReport.Leaks = append(scannerReport.Leaks, leak)
+	if err := g.Wait(); err != nil {
+		log.Error(err)
 	}
 
-	return scannerReport, g.Wait()
+	return scannerReport, nil
 }
