@@ -1,9 +1,4 @@
-package config
 
-// DefaultConfig is the default gitleaks configuration. If --config={path-to-config} is set than the config located
-// at {path-to-config} will be used. Alternatively, if --repo-config is set then gitleaks will attempt to
-// use the config set in a gitleaks.toml or .gitleaks.toml file in the repo that is run with --repo-config set.
-const DefaultConfig = `
 title = "gitleaks config"
 
 [[rules]]
@@ -33,12 +28,12 @@ title = "gitleaks config"
 
 [[rules]]
     description = "Twitter Secret Key"
-    regex = '''(?i)twitter(.{0,20})?[0-9a-z]{35,44}'''
+    regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{35,44}['\"]'''
     tags = ["key", "Twitter"]
 
 [[rules]]
     description = "Twitter Client ID"
-    regex = '''(?i)twitter(.{0,20})?[0-9a-z]{18,25}'''
+    regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{18,25}['\"]'''
     tags = ["client", "Twitter"]
 
 [[rules]]
@@ -184,4 +179,3 @@ title = "gitleaks config"
     files = ['''^\.?gitleaks.toml$''',
     '''(.*?)(png|jpg|gif|doc|docx|pdf|bin|xls|pyc|zip)$''',
     '''(go.mod|go.sum)$''']
-`
