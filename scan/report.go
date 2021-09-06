@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -27,28 +28,27 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 		logrus.Warn("leaks found: ", len(report.Leaks))
 	} else {
 		logrus.Info("No leaks found")
+		return nil
 	}
 
 	if opts.Report == "" {
 		return nil
-	}
-
-	if opts.Redact {
-		var redactedLeaks []Leak
-		for _, leak := range report.Leaks {
-			redactedLeaks = append(redactedLeaks, RedactLeak(leak))
+	} else {
+		if opts.Redact {
+			var redactedLeaks []Leak
+			for _, leak := range report.Leaks {
+				redactedLeaks = append(redactedLeaks, RedactLeak(leak))
+			}
+			report.Leaks = redactedLeaks
 		}
-		report.Leaks = redactedLeaks
-	}
 
-	file, err := os.Create(opts.Report)
-	if err != nil {
-		return err
-	}
-	defer rable(file.Close)
+		file, err := os.Create(opts.Report)
+		if err != nil {
+			return err
+		}
+		defer rable(file.Close)
 
-	if opts.Report != "" {
-		switch opts.ReportFormat {
+		switch strings.ToLower(opts.ReportFormat) {
 		case "json":
 			encoder := json.NewEncoder(file)
 			encoder.SetIndent("", " ")
