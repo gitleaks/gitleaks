@@ -95,7 +95,7 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 
 							leak.Log(ngs.opts)
 
-							leaks <- leak
+							scannerReport.Leaks = append(scannerReport.Leaks, leak)
 						}
 					}
 				}
