@@ -1,8 +1,17 @@
-<p align="center">
-  <img alt="gitleaks" src="https://raw.githubusercontent.com/zricethezav/gifs/master/gitleakslogo.png" height="70" />
-  <p align="center">
-	  <a href="https://travis-ci.org/zricethezav/gitleaks">
-		  <img alt="Travis" src="https://img.shields.io/travis/zricethezav/gitleaks/master.svg?style=flat-square">
+
+```
+○
+│╲
+│ ○
+○ ░
+░    gitleaks 
+```
+
+
+<p align="left">
+  <p align="left">
+	  <a href="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml">
+		  <img alt="Github Test" src="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml/badge.svg">
 	  </a>
 	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
@@ -15,10 +24,8 @@
 
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for finding secrets, past or present, in your code.
 
-### Introduction Video
-<p align="left">
-      <a href="https://www.youtube.com/watch?v=VUq2eII20S4"><img alt="intro" src="https://img.youtube.com/vi/VUq2eII20S4/maxresdefault.jpg" height="200"></a>
-</p>
+### [Introduction Video](https://www.youtube.com/watch?v=VUq2eII20S4)
+
 
 ### Features:
 - Scan for [commited](https://github.com/zricethezav/gitleaks#Scanning) secrets
@@ -27,7 +34,7 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 - Run [Gitleaks Action](https://github.com/marketplace/actions/gitleaks) in your CI/CD pipeline
 - [Custom rules](https://github.com/zricethezav/gitleaks#configuration) via toml configuration
 - Increased performance using [go-git](https://github.com/go-git/go-git)
-- JSON, SARIF, and CSV reporting
+- json, sarif, and csv reporting
 - Private repo scans using key or password based authentication
 
 
@@ -43,8 +50,9 @@ brew install gitleaks
 ##### Docker
 
 ```bash
-docker pull zricethezav/gitleaks
-# or
+# To just pull the image
+docker pull zricethezav/gitleaks:latest
+# To run it from your cloned repo
 cd to/your/repo/
 docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --path="/my-repo" [OPTIONS]
 ```
@@ -60,8 +68,11 @@ See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
 Sample `.pre-commit-config.yaml`
 
 ```yaml
+# The revision doesn't get updated manually
+# check this https://github.com/zricethezav/gitleaks/releases
+# to see if there are newer versions
 -   repo: https://github.com/zricethezav/gitleaks
-    rev: v7.5.0
+    rev: v7.6.0
     hooks:
     -   id: gitleaks
 ```
@@ -94,7 +105,7 @@ Application Options:
       --append-repo-config  Append the provided or default config with the repo config.
       --additional-config=  Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config to append up to three configurations
   -o, --report=             Report output path
-  -f, --format=             JSON, CSV, SARIF (default: json)
+  -f, --format=             json, csv, sarif (default: json)
       --files-at-commit=    Sha of commit to scan all files at commit
       --commit=             Sha of commit to scan or "latest" to scan the last commit of the repository
       --commits=            Comma separated list of a commits to scan
@@ -167,9 +178,7 @@ The default configuration Gitleaks uses is located [here](https://github.com/zri
 
 The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in [TomlLoader struct](https://github.com/zricethezav/gitleaks/blob/master/config/config.go#L57-L87), and can be summarized as:
 
-```
-
-
+```toml
 [[rules]]
   description = "a string describing one of many rule in this config"
   regex = '''one-go-style-regex-for-this-rule'''
@@ -202,7 +211,7 @@ Regular expressions are _NOT_ the full Perl set, so there are no look-aheads or 
 ### Examples
 #### Example 1
 The first and most commonly edited array of tables is `[[rules]]`. This is where you can define your own custom rules for Gitleaks to use while scanning repos. Example keys/values within the `[[rules]]` table:
-```
+```toml
 [[rules]]
   description = "generic secret regex"
   regex = '''secret(.{0,20})([0-9a-zA-Z-._{}$\/\+=]{20,120})'''
@@ -210,13 +219,13 @@ The first and most commonly edited array of tables is `[[rules]]`. This is where
 ```
 #### Example 2
 We can also **combine** regular expressions AND entropy:
-```
+```toml
 [[rules]]
   description = "entropy and regex example"
   regex = '''secret(.{0,20})['|"]([0-9a-zA-Z-._{}$\/\+=]{20,120})['|"]'''
   [[rules.Entropies]]
-	Min = "4.5"
-        Max = "4.7"
+    Min = "4.5"
+    Max = "4.7"
 ```
 Translating this rule to English, this rule states: "if we encounter a line of code that matches *regex* AND the line falls within the bounds of a [Shannon entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)) of 4.5 to 4.7, then the line must be a leak"
 
@@ -228,17 +237,16 @@ aws_secret='ABCDEF+c2L7yXeGvUyrPgYsDnWRRC1AYEXAMPLE'
 and
 ```
 aws_secret=os.getenv('AWS_SECRET_ACCESS_KEY')
-
 ```
 The first line of code is an example of a hardcoded secret being assigned to the variable `aws_secret`. The second line of code is an example of a secret being assigned via env variables to `aws_secret`. Both would be caught by the rule defined in *example 2* but only the first line is actually a leak. Let's define a new rule that will capture only the first line of code. We can do this by combining regular expression **groups** and entropy.
-```
+```toml
 [[rules]]
   description = "entropy and regex example"
   regex = '''secret(.{0,20})['|"]([0-9a-zA-Z-._{}$\/\+=]{20,120})['|"]'''
   [[rules.Entropies]]
-	Min = "4.5"
-        Max = "4.7"
-        Group = "2"
+    Min = "4.5"
+    Max = "4.7"
+    Group = "2"
 ```
 Notice how we added `Group = "2"` to this rule. We can translate this rule to English: "if we encounter a line of code that matches regex AND the entropy of the *second regex group* falls within the bounds of a [Shannon entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)) of 4.5 to 4.7, then the line must be a leak"
 
@@ -254,16 +262,14 @@ without any delimiters. This will make a false negative for, say:
     foo=+awsSecretAccessKeyisBase64=40characters
 ```
 So you can use the following to effectively create the proper Perl regex:
-```
+```toml
 [[rules]]
-	description = "AWS secret key regardless of labeling"
-	regex = '''.?[A-Za-z0-9\\+=]{40}.?'''
-	[rules.allowlist]
-                description = "41 base64 characters is not an AWS secret key"
-		regexes = ['''[A-Za-z0-9\\+=]{41}''']
-
+  description = "AWS secret key regardless of labeling"
+  regex = '''.?[A-Za-z0-9\\+=]{40}.?'''
+  [rules.allowlist]
+    description = "41 base64 characters is not an AWS secret key"
+    regexes = ['''[A-Za-z0-9\\+=]{41}''']
 ```
-
 
 
 ### Exit Codes
@@ -284,7 +290,6 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 - [ProjectDiscovery](https://projectdiscovery.io/#/)
 - [Ben "Ihavespoons"](https://github.com/ihavespoons)
 - [Henry Sachs](https://github.com/henrysachs)
-
 
 #### Logo Attribution
 The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.

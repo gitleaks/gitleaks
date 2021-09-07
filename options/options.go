@@ -44,7 +44,7 @@ type Options struct {
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
-	ReportFormat string `short:"f" long:"format" default:"json" description:"JSON, CSV, SARIF"`
+	ReportFormat string `short:"f" long:"format" default:"json" description:"json, csv, sarif"`
 
 	// Commit Options
 	FilesAtCommit string `long:"files-at-commit" description:"Sha of commit to scan all files at commit"`
