@@ -14,7 +14,7 @@ func TestRepoScan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-    //defer moveDotGit(".git", "dotGit")
+    defer moveDotGit(".git", "dotGit")
 	tests := []struct {
 		description string
 		opts        options.Options

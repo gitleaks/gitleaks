@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 ae8db4a2306798fcb3a5b9cbe8c486027fc1931f Zach Rice <zricer@protonmail.com> 1631064384 -0500	commit (initial): First commit, README only
+ae8db4a2306798fcb3a5b9cbe8c486027fc1931f e7c0aff3e8a60b50a85432fdf933f8beff013743 Zach Rice <zricer@protonmail.com> 1631064550 -0500	commit: adding yelp secrets file
+e7c0aff3e8a60b50a85432fdf933f8beff013743 208ae4669ade2563fcaf9f12922fa2c0a5b37c63 Zach Rice <zricer@protonmail.com> 1631067099 -0500	commit: adding another aws secrets
