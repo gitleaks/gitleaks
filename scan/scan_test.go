@@ -1,10 +1,12 @@
-package scan
+package scan_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/zricethezav/gitleaks/v7/scan"
 )
 
 const repoBasePath = "../testdata/repos/"
@@ -37,15 +39,14 @@ func moveDotGit(from, to string) error {
 		if err != nil {
 			return err
 		}
-		// fmt.Println("RENAMED")
 	}
 	return nil
 }
 
 func fileCheck(wantPath, gotPath string) error {
 	var (
-		gotLeaks  []Leak
-		wantLeaks []Leak
+		gotLeaks  []scan.Leak
+		wantLeaks []scan.Leak
 	)
 	want, err := ioutil.ReadFile(wantPath)
 	if err != nil {
@@ -89,7 +90,7 @@ func fileCheck(wantPath, gotPath string) error {
 	return nil
 }
 
-func same(l1, l2 Leak) bool {
+func same(l1, l2 scan.Leak) bool {
 	if l1.Commit != l2.Commit {
 		return false
 	}

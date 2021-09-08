@@ -1,9 +1,10 @@
-package scan
+package scan_test
 
 import (
 	"path/filepath"
 	"testing"
 
+	"github.com/zricethezav/gitleaks/v7/scan"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 )
@@ -28,15 +29,6 @@ func TestCommitScan(t *testing.T) {
 			},
 			empty: true,
 		},
-		// {
-		// 	description: "empty repo with non-existent commit",
-		// 	opts: options.Options{
-		// 		Path:    filepath.Join(repoBasePath, "empty"),
-		// 		Report:  filepath.Join(expectPath, "empty", "empty_report.json.got"),
-		// 		Commit: "a",
-		// 	},
-		// 	empty: true,
-		// },
 		{
 			description: "basic repo with default config at specific commit",
 			opts: options.Options{
@@ -47,6 +39,17 @@ func TestCommitScan(t *testing.T) {
 			},
 			wantPath: filepath.Join(expectPath, "basic", "results_208ae46.json"),
 		},
+		{
+			description: "basic repo with default config at specific commit",
+			opts: options.Options{
+				Path:           filepath.Join(repoBasePath, "with_config"),
+				Report:         filepath.Join(expectPath, "with_config", "results_73af363.json.got"),
+				ReportFormat:   "json",
+				RepoConfigPath: "gitleaks.toml",
+				Commit:         "73af3630c83033c84e0009fd6fbbd879a44ef825",
+			},
+			wantPath: filepath.Join(expectPath, "with_config", "results_73af363.json"),
+		},
 	}
 
 	for _, test := range tests {
@@ -55,7 +58,7 @@ func TestCommitScan(t *testing.T) {
 			t.Error(err)
 		}
 
-		scanner, err := NewScanner(test.opts, cfg)
+		scanner, err := scan.NewScanner(test.opts, cfg)
 		if err != nil {
 			t.Error(test.description, err)
 		}
@@ -65,7 +68,7 @@ func TestCommitScan(t *testing.T) {
 			t.Fatal(test.description, err)
 		}
 
-		err = WriteReport(scannerReport, test.opts, cfg)
+		err = scan.WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(test.description, err)
 		}

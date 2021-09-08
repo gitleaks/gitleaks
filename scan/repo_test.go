@@ -1,10 +1,10 @@
-package scan
+package scan_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
+	"github.com/zricethezav/gitleaks/v7/scan"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 )
@@ -14,7 +14,7 @@ func TestRepoScan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-    defer moveDotGit(".git", "dotGit")
+	defer moveDotGit(".git", "dotGit")
 	tests := []struct {
 		description string
 		opts        options.Options
@@ -51,13 +51,12 @@ func TestRepoScan(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		fmt.Println(test.description)
 		cfg, err := config.NewConfig(test.opts)
 		if err != nil {
 			t.Error(err)
 		}
 
-		scanner, err := NewScanner(test.opts, cfg)
+		scanner, err := scan.NewScanner(test.opts, cfg)
 		if err != nil {
 			t.Error(test.description, err)
 		}
@@ -67,7 +66,7 @@ func TestRepoScan(t *testing.T) {
 			t.Fatal(test.description, err)
 		}
 
-		err = WriteReport(scannerReport, test.opts, cfg)
+		err = scan.WriteReport(scannerReport, test.opts, cfg)
 		if err != nil {
 			t.Error(test.description, err)
 		}
