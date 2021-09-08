@@ -1,0 +1,3 @@
+[submodule "testdata/repos/basic"]
+	path = testdata/repos/basic
+	url = https://github.com/zricethezav/basic.git
