@@ -1,0 +1,8 @@
+[[rules]]
+	description = "Generic Credential"
+	regex = '''(?i)(dbpasswd|dbuser|dbname|dbhost|api_key|apikey|secret|key|api|password|user|guid|hostname|pw|auth)(.{0,20})?['|"]([0-9a-zA-Z-_\/+!{}/=]{4,120})['|"]'''
+	tags = ["key", "API", "generic"]
+	[rules.allowlist]
+		description = "ignore gitleaks config"
+		regexes = ['''gitleaks.toml''']
+
