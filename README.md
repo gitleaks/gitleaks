@@ -172,7 +172,7 @@ gitleaks --path=path/to/local/repo -v --unstaged
 
 ### Configuration
 Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. `--config-path` loads a local gitleaks configuration whereas `--repo-config-path` will load a configuration present just in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
-The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
+The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
 
 ### Rules summary
 
