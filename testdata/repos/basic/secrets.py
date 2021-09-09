@@ -11,7 +11,3 @@ aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
 
 # another aws secrets
 aws_access_key_1 = 'AKIAIOSFODNN7EXAMPLE'
-
-nice_variable='is_nice''
-
-nice_variable='is_nice''

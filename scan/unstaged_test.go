@@ -77,7 +77,7 @@ func TestUnstaged(t *testing.T) {
 
 		scanner, err := scan.NewScanner(test.opts, cfg)
 		if err != nil {
-			t.Error(test.description, err)
+			t.Fatal(test.description, err)
 		}
 
 		scannerReport, err := scanner.Scan()
@@ -94,7 +94,6 @@ func TestUnstaged(t *testing.T) {
 			if len(scannerReport.Leaks) != 0 {
 				t.Errorf("%s wanted no leaks but got some instead: %+v", test.description, scannerReport.Leaks)
 			}
-			continue
 		}
 
 		if test.wantPath != "" {
