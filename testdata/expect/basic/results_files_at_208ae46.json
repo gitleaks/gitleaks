@@ -1,0 +1,36 @@
+[
+ {
+  "line": "aws_access_key = 'AKIAIOSFODNN7EXAMPLE'",
+  "lineNumber": 9,
+  "offender": "AKIAIOSFODNN7EXAMPLE",
+  "offenderEntropy": -1,
+  "commit": "208ae4669ade2563fcaf9f12922fa2c0a5b37c63",
+  "repo": "basic",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "adding another aws secrets\n",
+  "author": "Zach Rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.py",
+  "date": "2021-09-07T21:11:39-05:00",
+  "tags": "key, AWS"
+ },
+ {
+  "line": "aws_access_key_1 = 'AKIAIOSFODNN7EXAMPLE'",
+  "lineNumber": 13,
+  "offender": "AKIAIOSFODNN7EXAMPLE",
+  "offenderEntropy": -1,
+  "commit": "208ae4669ade2563fcaf9f12922fa2c0a5b37c63",
+  "repo": "basic",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "adding another aws secrets\n",
+  "author": "Zach Rice",
+  "email": "zricer@protonmail.com",
+  "file": "secrets.py",
+  "date": "2021-09-07T21:11:39-05:00",
+  "tags": "key, AWS"
+ }
+]
