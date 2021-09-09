@@ -4,10 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
-
-	"github.com/zricethezav/gitleaks/v7/scan"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
+	"github.com/zricethezav/gitleaks/v7/scan"
 )
 
 func TestCommitsScan(t *testing.T) {
@@ -36,12 +35,12 @@ func TestCommitsScan(t *testing.T) {
 			description: "repo with config first two commits",
 			opts: options.Options{
 				Path:           filepath.Join(repoBasePath, "with_config"),
-				Report:         filepath.Join(expectPath, "with_config", "results_cb8877ea_73af363.json.got"),
+				Report:         filepath.Join(expectPath, "with_config", "results_ae8db4a_e7c0aff.json.got"),
 				ReportFormat:   "json",
 				RepoConfigPath: "gitleaks.toml",
-				Commits:        "cb8877ea77f9823aad0ae995e403039deab18c8e,73af3630c83033c84e0009fd6fbbd879a44ef825",
+				Commits:        "ae8db4a2306798fcb3a5b9cbe8c486027fc1931f,e7c0aff3e8a60b50a85432fdf933f8beff013743",
 			},
-			wantPath: filepath.Join(expectPath, "with_config", "results_cb8877ea_73af363.json"),
+			wantPath: filepath.Join(expectPath, "with_config", "results_ae8db4a_e7c0aff.json"),
 		},
 		{
 			description: "basic repo with depth=1",

@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v7/scan"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
+	"github.com/zricethezav/gitleaks/v7/scan"
 )
 
 func TestRepoScan(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/zricethezav/gitleaks/v7/scan"
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
+	"github.com/zricethezav/gitleaks/v7/scan"
 )
 
 func TestCommitScan(t *testing.T) {
@@ -40,15 +40,15 @@ func TestCommitScan(t *testing.T) {
 			wantPath: filepath.Join(expectPath, "basic", "results_208ae46.json"),
 		},
 		{
-			description: "basic repo with default config at specific commit",
+			description: "basic repo with custom config at specific commit",
 			opts: options.Options{
 				Path:           filepath.Join(repoBasePath, "with_config"),
-				Report:         filepath.Join(expectPath, "with_config", "results_73af363.json.got"),
+				Report:         filepath.Join(expectPath, "with_config", "results_e7c0aff3.json.got"),
 				ReportFormat:   "json",
 				RepoConfigPath: "gitleaks.toml",
-				Commit:         "73af3630c83033c84e0009fd6fbbd879a44ef825",
+				Commit:         "e7c0aff3e8a60b50a85432fdf933f8beff013743",
 			},
-			wantPath: filepath.Join(expectPath, "with_config", "results_73af363.json"),
+			wantPath: filepath.Join(expectPath, "with_config", "results_e7c0aff3.json"),
 		},
 	}
 

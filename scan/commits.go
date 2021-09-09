@@ -36,7 +36,7 @@ func (css *CommitsScanner) Scan() (Report, error) {
 		c, err := obtainCommit(css.repo, commitHash)
 		if err != nil {
 			log.Errorf("skipping %s, err: %v", commitHash, err)
-            continue
+			continue
 		}
 		cs := NewCommitScanner(css.opts, css.cfg, css.repo, c)
 		commitReport, err := cs.Scan()
