@@ -44,7 +44,7 @@ type Options struct {
 
 	// Report Options
 	Report       string `short:"o" long:"report" description:"Report output path"`
-	ReportFormat string `short:"f" long:"format" default:"json" description:"JSON, CSV, SARIF"`
+	ReportFormat string `short:"f" long:"format" default:"json" description:"json, csv, sarif"`
 
 	// Commit Options
 	FilesAtCommit string `long:"files-at-commit" description:"Sha of commit to scan all files at commit"`
@@ -144,8 +144,8 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 
 	var auth transport.AuthMethod
 
-	if strings.HasPrefix(opts.RepoURL, "git") {
-		// using git protocol so needs ssh auth
+	if strings.HasPrefix(opts.RepoURL, "ssh://") || (!strings.Contains(opts.RepoURL, "://") && strings.Contains(opts.RepoURL, ":")) {
+		// using ssh:// url or scp-like syntax
 		auth, err = SSHAuth(opts)
 		if err != nil {
 			return nil, err
@@ -176,17 +176,29 @@ func (opts Options) CloneOptions() (*git.CloneOptions, error) {
 // SSHAuth tried to generate ssh public keys based on what was passed via cli. If no
 // path was passed via cli then this will attempt to retrieve keys from the default
 // location for ssh keys, $HOME/.ssh/id_rsa. This function is only called if the
-// repo url using the git:// protocol.
+// repo url using the ssh:// protocol or scp-like syntax.
 func SSHAuth(opts Options) (*ssh.PublicKeys, error) {
+	params := strings.Split(opts.RepoURL, "@")
+
+	if len(params) != 2 {
+		return nil, fmt.Errorf("user must be specified in the URL")
+	}
+
+	// the part of the RepoURL before the "@" (params[0]) can be something like:
+	// - "ssh://user" if RepoURL is an ssh:// URL
+	// - "user" if RepoURL uses scp-like syntax
+	// we must strip the protocol if it is present so that we only have "user"
+	username := strings.Replace(params[0], "ssh://", "", 1)
+
 	if opts.SSH != "" {
-		return ssh.NewPublicKeysFromFile("git", opts.SSH, "")
+		return ssh.NewPublicKeysFromFile(username, opts.SSH, "")
 	}
 	c, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
 	defaultPath := fmt.Sprintf("%s/.ssh/id_rsa", c.HomeDir)
-	return ssh.NewPublicKeysFromFile("git", defaultPath, "")
+	return ssh.NewPublicKeysFromFile(username, defaultPath, "")
 }
 
 // OpenLocal checks what options are set, if no remote targets are set

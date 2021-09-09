@@ -6,6 +6,23 @@ import (
 	"regexp"
 )
 
+// Offender is a struct that contains the information matched when searching
+// content and information on why it matched (i.e. the EntropyLevel)
+type Offender struct {
+	Match        string
+	EntropyLevel float64
+}
+
+// IsEmpty checks to see if nothing was found in the match
+func (o *Offender) IsEmpty() bool {
+	return o.Match == ""
+}
+
+// ToString the contents of the match
+func (o *Offender) ToString() string {
+	return o.Match
+}
+
 // Rule is a struct that contains information that is loaded from a gitleaks config.
 // This struct is used in the Config struct as an array of Rules and is iterated
 // over during an scan. Each rule will be checked. If a regex match is found AND
@@ -23,28 +40,46 @@ type Rule struct {
 }
 
 // Inspect checks the content of a line for a leak
-func (r *Rule) Inspect(line string) string {
-	offender := r.Regex.FindString(line)
-	if offender == "" {
-		return ""
+func (r *Rule) Inspect(line string) *Offender {
+	match := r.Regex.FindString(line)
+
+	// EntropyLevel -1 means not checked
+	if match == "" {
+		return &Offender{
+			Match:        "",
+			EntropyLevel: -1,
+		}
 	}
 
 	// check if offender is allowed
+	// EntropyLevel -1 means not checked
 	if r.RegexAllowed(line) {
-		return ""
+		return &Offender{
+			Match:        "",
+			EntropyLevel: -1,
+		}
 	}
 
 	// check entropy
-	groups := r.Regex.FindStringSubmatch(offender)
-	if len(r.Entropies) != 0 && !r.ContainsEntropyLeak(groups) {
-		return ""
+	groups := r.Regex.FindStringSubmatch(match)
+	entropyWithinRange, entropyLevel := r.CheckEntropy(groups)
+
+	if len(r.Entropies) != 0 && !entropyWithinRange {
+		return &Offender{
+			Match:        "",
+			EntropyLevel: entropyLevel,
+		}
 	}
 
 	// 0 is a match for the full regex pattern
 	if 0 < r.ReportGroup && r.ReportGroup < len(groups) {
-		offender = groups[r.ReportGroup]
+		match = groups[r.ReportGroup]
 	}
-	return offender
+
+	return &Offender{
+		Match:        match,
+		EntropyLevel: entropyLevel,
+	}
 }
 
 // RegexAllowed checks if the content is allowlisted
@@ -57,17 +92,28 @@ func (r *Rule) CommitAllowed(commit string) bool {
 	return r.AllowList.CommitAllowed(commit)
 }
 
-// ContainsEntropyLeak checks if there is an entropy leak
-func (r *Rule) ContainsEntropyLeak(groups []string) bool {
+// CheckEntropy checks if there is an entropy leak
+func (r *Rule) CheckEntropy(groups []string) (bool, float64) {
+	var highestFound float64 = 0
+
 	for _, e := range r.Entropies {
 		if len(groups) > e.Group {
 			entropy := shannonEntropy(groups[e.Group])
 			if entropy >= e.Min && entropy <= e.Max {
-				return true
+				return true, entropy
+			} else if entropy > highestFound {
+				highestFound = entropy
 			}
 		}
 	}
-	return false
+
+	if len(r.Entropies) == 0 {
+		// entropies not checked
+		return false, -1
+	}
+
+	// entropies checked but not within the range
+	return false, highestFound
 }
 
 // HasFileOrPathLeakOnly first checks if there are no entropy/regex rules, then checks if

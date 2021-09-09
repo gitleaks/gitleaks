@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	log "github.com/sirupsen/logrus"
 )
+
+//go:embed gitleaks.toml
+var DefaultConfig string
 
 // Config is a composite struct of Rules and Allowlists
 // Each Rule contains a description, regular expression, tags, and allowlists if available
@@ -42,7 +46,7 @@ type TomlAllowList struct {
 }
 
 // TomlLoader gets loaded with the values from a gitleaks toml config
-// see the config in config/defaults.go for an example. TomlLoader is used
+// see the config in config/gitleaks.toml for an example. TomlLoader is used
 // to generate Config values (compiling regexes, etc).
 type TomlLoader struct {
 	AllowList TomlAllowList

@@ -97,8 +97,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 				}
 
 				offender := rule.Inspect(line)
-
-				if offender == "" {
+				if offender.IsEmpty() {
 					continue
 				}
 
@@ -113,7 +112,7 @@ func (fs *FilesAtCommitScanner) Scan() (Report, error) {
 					continue
 				}
 
-				leak := NewLeak(line, offender, defaultLineNumber).WithCommit(fs.commit)
+				leak := NewLeak(line, offender.ToString(), defaultLineNumber).WithCommit(fs.commit).WithEntropy(offender.EntropyLevel)
 				leak.File = f.Name
 				leak.LineNumber = i + 1
 				leak.RepoURL = fs.opts.RepoURL
