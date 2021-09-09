@@ -1,0 +1,36 @@
+[
+  {
+   "line": "SQUARE_OAUTH=sq0csp-QZxqK3fHycIxFsjZ7_HoqRN08qY2by3wLXcfJCfsKEg",
+   "lineNumber": 1,
+   "offender": "sq0csp-QZxqK3fHycIxFsjZ7_HoqRN08qY2by3wLXcfJCfsKEg",
+   "offenderEntropy": -1,
+   "commit": "",
+   "repo": "",
+   "repoURL": "",
+   "leakURL": "",
+   "rule": "Square OAuth secret",
+   "commitMessage": "",
+   "author": "",
+   "email": "",
+   "file": ".",
+   "date": "0001-01-01T00:00:00Z",
+   "tags": "key, square"
+  },
+  {
+   "line": "GOOGLE_MAPS_KEY=AIzaSyDtz3Di0ZrzeU5ET3UFU0p-xP4bx2FkSrg",
+   "lineNumber": 3,
+   "offender": "AIzaSyDtz3Di0ZrzeU5ET3UFU0p-xP4bx2FkSrg",
+   "offenderEntropy": -1,
+   "commit": "",
+   "repo": "",
+   "repoURL": "",
+   "leakURL": "",
+   "rule": "Google API key",
+   "commitMessage": "",
+   "author": "",
+   "email": "",
+   "file": ".",
+   "date": "0001-01-01T00:00:00Z",
+   "tags": "key, Google"
+  }
+ ]

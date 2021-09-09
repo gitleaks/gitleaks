@@ -533,6 +533,16 @@ func TestScan(t *testing.T) {
 			},
 			wantEmpty: true,
 		},
+		{
+			description: "test dir two google api key leak AND square oauth leak",
+			opts: options.Options{
+				Path:         "../test_data/test_repos/test_dir_2",
+				Report:       "../test_data/test_dir_one_google_leak_and_square_leak.json.got",
+				ReportFormat: "json",
+				NoGit:				true,
+			},
+			wantPath: "../test_data/test_dir_one_google_leak_and_square_leak.json",
+		},
 	}
 
 	for _, test := range tests {
