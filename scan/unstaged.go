@@ -82,7 +82,6 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 			// If file is a symbolic link, resolve target and copy its content to buf.
 			if fc, err := os.Readlink(fn); err == nil {
-				workTreeBuf = bytes.NewBufferString(fc)
 				symlinkFile, err := os.Open(fc)
 				if err != nil {
 					return scannerReport, err
