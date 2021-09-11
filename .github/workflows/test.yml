@@ -10,6 +10,8 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
@@ -25,6 +27,8 @@ jobs:
       run: go build -v ./...
 
   test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on
