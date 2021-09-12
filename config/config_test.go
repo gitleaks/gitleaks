@@ -1,14 +1,18 @@
-package config
+package config_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
+	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 )
+
+const configPath = "../testdata/configs/"
 
 func TestParse(t *testing.T) {
 	tests := []struct {
@@ -17,7 +21,7 @@ func TestParse(t *testing.T) {
 		wantErr       error
 		wantFileRegex *regexp.Regexp
 		wantMessages  *regexp.Regexp
-		wantAllowlist AllowList
+		wantAllowlist config.AllowList
 	}{
 		{
 			description: "default config",
@@ -26,102 +30,102 @@ func TestParse(t *testing.T) {
 		{
 			description: "test successful load",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/aws_key.toml",
+				ConfigPath: filepath.Join(configPath, "aws_key.toml"),
 			},
 		},
 		{
 			description: "test bad toml",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_aws_key.toml",
+				ConfigPath: filepath.Join(configPath, "bad_aws_key.toml"),
 			},
 			wantErr: fmt.Errorf("Near line 7 (last key parsed 'rules.description'): expected value but found \"AWS\" instead"),
 		},
 		{
 			description: "test bad regex",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_regex_aws_key.toml",
+				ConfigPath: filepath.Join(configPath, "bad_regex_aws_key.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: invalid nested repetition operator: `???`"),
 		},
 		{
 			description: "test bad global allowlist file regex",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_aws_key_global_allowlist_file.toml",
+				ConfigPath: filepath.Join(configPath, "bad_aws_key_global_allowlist_file.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
 		{
 			description: "test bad global file regex",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_aws_key_file_regex.toml",
+				ConfigPath: filepath.Join(configPath, "bad_aws_key_file_regex.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
 		{
 			description: "test successful load big ol thing",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/large.toml",
+				ConfigPath: filepath.Join(configPath, "large.toml"),
 			},
 		},
 		{
 			description: "test load entropy",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/entropy.toml",
+				ConfigPath: filepath.Join(configPath, "entropy.toml"),
 			},
 		},
 		{
 			description: "test entropy bad range",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_1.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_1.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value"),
 		},
 		{
 			description: "test entropy value max",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_2.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_2.toml"),
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value min",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_3.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_3.toml"),
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_4.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_4.toml"),
 			},
 			wantErr: fmt.Errorf("strconv.ParseInt: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_5.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_5.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: group cannot be lower than 0"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_6.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_6.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp"),
 		},
 		{
 			description: "test entropy range limits",
 			opts: options.Options{
-				ConfigPath: "../test_data/test_configs/bad_entropy_7.toml",
+				ConfigPath: filepath.Join(configPath, "bad_entropy_7.toml"),
 			},
 			wantErr: fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0"),
 		},
 	}
 
 	for _, test := range tests {
-		_, err := NewConfig(test.opts)
+		_, err := config.NewConfig(test.opts)
 		if err != nil {
 			if test.wantErr == nil {
 				t.Error(test.description, err)
@@ -151,7 +155,7 @@ func TestParseFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	config, err := NewConfig(options.Options{ConfigPath: configPath})
+	config, err := config.NewConfig(options.Options{ConfigPath: configPath})
 	if err != nil {
 		t.Fatalf("Couldn't parse config: %v", err)
 	}
@@ -185,7 +189,7 @@ func TestParseFields(t *testing.T) {
 	}
 }
 
-func findRuleByDescription(rules []Rule, description string) (*Rule, error) {
+func findRuleByDescription(rules []config.Rule, description string) (*config.Rule, error) {
 	for _, rule := range rules {
 		if rule.Description == description {
 			return &rule, nil
@@ -216,7 +220,7 @@ func TestAppendingConfiguration(t *testing.T) {
 	testRegexA, _ := regexp.Compile("a")
 	testRegexB, _ := regexp.Compile("b")
 
-	allowListA := AllowList{
+	allowListA := config.AllowList{
 		Description: "Test Description",
 		Commits:     []string{"a"},
 		Files:       []*regexp.Regexp{testRegexA},
@@ -225,7 +229,7 @@ func TestAppendingConfiguration(t *testing.T) {
 		Repos:       []*regexp.Regexp{testRegexA},
 	}
 
-	allowListB := AllowList{
+	allowListB := config.AllowList{
 		Description: "Test Description",
 		Commits:     []string{"b"},
 		Files:       []*regexp.Regexp{testRegexB},
@@ -234,18 +238,18 @@ func TestAppendingConfiguration(t *testing.T) {
 		Repos:       []*regexp.Regexp{testRegexB},
 	}
 
-	ruleA := Rule{Description: "a"}
-	ruleB := Rule{Description: "b"}
+	ruleA := config.Rule{Description: "a"}
+	ruleB := config.Rule{Description: "b"}
 
-	rulesA := []Rule{ruleA}
-	rulesB := []Rule{ruleB}
+	rulesA := []config.Rule{ruleA}
+	rulesB := []config.Rule{ruleB}
 
-	cfgA := Config{
+	cfgA := config.Config{
 		Rules:     rulesA,
 		Allowlist: allowListA,
 	}
 
-	cfgB := Config{
+	cfgB := config.Config{
 		Rules:     rulesB,
 		Allowlist: allowListB,
 	}

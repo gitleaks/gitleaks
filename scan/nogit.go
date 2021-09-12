@@ -10,11 +10,10 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
-
-	"golang.org/x/sync/errgroup"
 )
 
 // NoGitScanner is a scanner that absolutely despises git
@@ -48,11 +47,8 @@ func NewNoGitScanner(opts options.Options, cfg config.Config) *NoGitScanner {
 // Scan kicks off a NoGitScanner Scan
 func (ngs *NoGitScanner) Scan() (Report, error) {
 	var scannerReport Report
-
 	g, _ := errgroup.WithContext(context.Background())
-
 	paths := make(chan string)
-
 	g.Go(func() error {
 		defer close(paths)
 		return filepath.Walk(ngs.opts.Path,
