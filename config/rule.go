@@ -87,18 +87,20 @@ func (r *Rule) Inspect(line string) *Offender {
 
 func (r *Rule) InspectFile(fileLines string) []Offender {
 	fileLines = regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(fileLines), "\n")
-	matches := r.Regex.FindAllStringSubmatch(fileLines, -1)
-	// EntropyLevel -1 means not checked
+	matches := r.Regex.FindAllStringSubmatch(fileLines, 0)
 	if matches == nil {
 		return nil
 	}
+
 	// check if offender is allowed
 	if r.RegexAllowed(fileLines) {
 		return nil
 	}
 
 	var result []Offender
+OUTER:
 	for _, m := range matches {
+
 		lineToDetect := strings.Split(m[0], "\n")[0]
 		fileLinesList := strings.Split(fileLines, "\n")
 		line := 1
@@ -107,10 +109,16 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 				line = i
 			}
 		}
+		// stop duplicated match in some versions of go
+		for _, i := range result {
+			if i.Line == line {
+				continue OUTER
+			}
+		}
 
 		result = append(result, Offender{
 			Match:        m[0],
-			EntropyLevel: -1,
+			EntropyLevel: 0,
 			Line:         line,
 		})
 
