@@ -85,10 +85,9 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 						for _, offender := range offenders {
 							leak := NewLeak(offender.Match, offender.ToString(), offender.Line).WithEntropy(offender.EntropyLevel)
 							relPath, err := filepath.Rel(ngs.opts.Path, p)
+							leak.File = relPath
 							if err != nil {
 								leak.File = p
-							} else {
-								leak.File = relPath
 							}
 							leak.Rule = rule.Description
 							leak.Tags = strings.Join(rule.Tags, ", ")

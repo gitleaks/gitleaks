@@ -93,14 +93,11 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 		return nil
 	}
 	// check if offender is allowed
-	// EntropyLevel -1 means not checked
 	if r.RegexAllowed(fileLines) {
 		return nil
 	}
 
-	// check entropy
 	var result []Offender
-
 	for _, m := range matches {
 		lineToDetect := strings.Split(m[0], "\n")[0]
 		fileLinesList := strings.Split(fileLines, "\n")
