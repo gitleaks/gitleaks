@@ -232,8 +232,6 @@ func (us *UnstagedScanner) Scan() (Report, error) {
 
 			lineLookup := make(map[string]bool)
 			for _, rule := range us.cfg.Rules {
-				fmt.Print(rule.Description)
-				fmt.Print(rule.Multiline)
 				if rule.Multiline {
 					offenders := rule.InspectFile(diffContents)
 					if offenders != nil {

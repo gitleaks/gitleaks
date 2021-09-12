@@ -85,6 +85,7 @@ func (r *Rule) Inspect(line string) *Offender {
 	}
 }
 
+// InspectFile checks the content of the file for  multilines leaks
 func (r *Rule) InspectFile(fileLines string) []Offender {
 	fileLines = regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(fileLines), "\n")
 	matches := r.Regex.FindAllStringSubmatch(fileLines, 0)
@@ -104,7 +105,7 @@ OUTER:
 		lineToDetect := strings.Split(m[0], "\n")[0]
 		fileLinesList := strings.Split(fileLines, "\n")
 		line := 1
-		for i, _ := range fileLinesList {
+		for i := range fileLinesList {
 			if strings.Contains(fileLinesList[i], lineToDetect) {
 				line = i
 			}
