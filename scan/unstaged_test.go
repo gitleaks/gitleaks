@@ -49,16 +49,6 @@ func TestUnstaged(t *testing.T) {
 			fileToChange: filepath.Join(repoBasePath, "basic", "secrets.py"),
 			change:       "\nnice_variable='is_nice''\n",
 		},
-		{
-			description: "basic repo with unstagged change containing a  Multi-line secret",
-			opts: options.Options{
-				Path:         filepath.Join(repoBasePath, "multi"),
-				Report:       filepath.Join(expectPath, "multi", "results_unstaged_multi.json.got"),
-				ReportFormat: "json",
-				Unstaged:     true,
-			},
-			wantPath: filepath.Join(expectPath, "multi", "results_unstaged_multi.json"),
-		},
 	}
 
 	for _, test := range tests {
@@ -114,6 +104,7 @@ func TestUnstaged(t *testing.T) {
 		}
 		err = ioutil.WriteFile(test.fileToChange, old, 0)
 		if err != nil {
+
 			t.Error(err)
 		}
 

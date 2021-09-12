@@ -41,6 +41,16 @@ func TestNoGit(t *testing.T) {
 			},
 			empty: true,
 		},
+		{
+			description: "[nogit] basic repo multi-line",
+			opts: options.Options{
+				Path:         filepath.Join(repoBasePath, "multi"),
+				Report:       filepath.Join(expectPath, "multi", "results_no_git_multi.json.got"),
+				ReportFormat: "json",
+				NoGit:        true,
+			},
+			wantPath: filepath.Join(expectPath, "multi", "results_no_git_multi.json"),
+		},
 	}
 
 	for _, test := range tests {
