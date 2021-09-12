@@ -99,7 +99,7 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 	}
 
 	var result []Offender
-OUTER:
+
 	for _, m := range matches {
 
 		lineToDetect := strings.Split(m[0], "\n")[0]
@@ -111,12 +111,16 @@ OUTER:
 			}
 		}
 		// stop duplicated match in some versions of go
+		contains := false
 		for _, i := range result {
 			if i.Line == line {
-				continue OUTER
+				contains = true
 			}
 		}
 
+		if contains {
+			continue
+		}
 		result = append(result, Offender{
 			Match:        m[0],
 			EntropyLevel: 0,
