@@ -87,8 +87,9 @@ func (r *Rule) Inspect(line string) *Offender {
 
 // InspectFile checks the content of the file for  multilines leaks
 func (r *Rule) InspectFile(fileLines string) []Offender {
+
 	fileLines = regexp.MustCompile(`[\t\r\n]+`).ReplaceAllString(strings.TrimSpace(fileLines), "\n")
-	matches := r.Regex.FindAllStringSubmatch(fileLines, 0)
+	matches := r.Regex.FindAllStringSubmatch(fileLines, -1)
 	if matches == nil {
 		return nil
 	}
@@ -99,7 +100,7 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 	}
 
 	var result []Offender
-
+OUTER:
 	for _, m := range matches {
 
 		lineToDetect := strings.Split(m[0], "\n")[0]
@@ -111,16 +112,12 @@ func (r *Rule) InspectFile(fileLines string) []Offender {
 			}
 		}
 		// stop duplicated match in some versions of go
-		contains := false
 		for _, i := range result {
 			if i.Line == line {
-				contains = true
+				continue OUTER
 			}
 		}
 
-		if contains {
-			continue
-		}
 		result = append(result, Offender{
 			Match:        m[0],
 			EntropyLevel: 0,
