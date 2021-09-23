@@ -167,6 +167,16 @@ title = "gitleaks config"
     description = "PyPI upload token"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
+    
+[[rules]]
+    description = "Octopus deploy"
+    regex = '''api-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
+    tags = ["key", "API"]
+    
+[[rules]]
+    description = "Sonarqube and other scanner tools"
+    regex = '''api-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
+    tags = ["key", "api"]
 
 [allowlist]
     description = "Allowlisted files"
