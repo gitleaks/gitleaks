@@ -170,7 +170,7 @@ title = "gitleaks config"
     
 [[rules]]
     description = "Octopus deploy"
-    regex = '''api-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
+    regex = '''API-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "API"]
     
 [[rules]]
@@ -178,6 +178,16 @@ title = "gitleaks config"
     regex = '''api-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "api"]
 
+[[rules]]
+    description = "Authoraization Bearer token"
+    regex = '''Bearer\s[\d|a-f]{8}-([\d|a-f]{4}-){3}[\d|a-f]{12}'''
+    tags = ["key", "Bearer"]
+    
+[[rules]]
+    description = "JWT token found in gitlab ci file"
+    regex = '''^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'''
+    tags = ["key", "JWT"]
+    
 [allowlist]
     description = "Allowlisted files"
     files = ['''^\.?gitleaks.toml$''',
