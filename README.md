@@ -180,7 +180,7 @@ The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in
 
 ```toml
 [[rules]]
-  description = "a string describing one of many rule in this config"
+  description = "a string describing one of many rules in this config"
   regex = '''one-go-style-regex-for-this-rule'''
   file = '''a-file-name-regex'''
   path = '''a-file-path-regex'''
