@@ -11,6 +11,5 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.4.2
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 )
