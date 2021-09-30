@@ -58,6 +58,7 @@ docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --path="/my-repo" [OPT
 ```
 
 ##### Go
+Go 1.16+ required.
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
