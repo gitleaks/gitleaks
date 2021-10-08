@@ -37,7 +37,6 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 - json, sarif, and csv reporting
 - Private repo scans using key or password based authentication
 
-
 ### Installation
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
@@ -62,6 +61,7 @@ Go 1.16+ required.
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
+
 ##### As a pre-commit hook
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
@@ -72,10 +72,10 @@ Sample `.pre-commit-config.yaml`
 # The revision doesn't get updated manually
 # check this https://github.com/zricethezav/gitleaks/releases
 # to see if there are newer versions
--   repo: https://github.com/zricethezav/gitleaks
-    rev: v7.6.0
-    hooks:
-    -   id: gitleaks
+- repo: https://github.com/zricethezav/gitleaks
+  rev: v7.6.1
+  hooks:
+    - id: gitleaks
 ```
 
 ### Usage and Options
@@ -128,7 +128,6 @@ This scans the entire history of tests/secrets and logs leaks as they are encoun
 gitleaks --repo-url=https://github.com/my-insecure/repo -v
 ```
 
-
 #### Basic repo-url scan output to a report:
 If you want the report in sarif or csv you can set the `-f/--format` option
 ```bash
@@ -164,7 +163,7 @@ gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
-If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
+If you have unstaged changes are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
 path, you can run:
 ```bash
 gitleaks --path=path/to/local/repo -v --unstaged
@@ -293,4 +292,4 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 - [Henry Sachs](https://github.com/henrysachs)
 
 #### Logo Attribution
-The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
+The Gitleaks logo uses the Git Logo created by [Jason Long](https://twitter.com/jasonlong) and is licensed under the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/).
