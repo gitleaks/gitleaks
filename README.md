@@ -58,6 +58,7 @@ docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --path="/my-repo" [OPT
 ```
 
 ##### Go
+Go 1.16+ required.
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
@@ -172,7 +173,7 @@ gitleaks --path=path/to/local/repo -v --unstaged
 
 ### Configuration
 Provide your own gitleaks configurations with `--config-path` or `--repo-config-path`. `--config-path` loads a local gitleaks configuration whereas `--repo-config-path` will load a configuration present just in the repo you want to scan. For example, `gitleaks --repo-config-path=".github/gitleaks.config"`.
-The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/default.go). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
+The default configuration Gitleaks uses is located [here](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml). More configuration examples can be seen [here](https://github.com/zricethezav/gitleaks/tree/master/examples). Configuration files will contain a few different toml tables. Further explanation is provided below.
 
 ### Rules summary
 
@@ -180,7 +181,7 @@ The rules are written in [TOML](https://github.com/toml-lang/toml) as defined in
 
 ```toml
 [[rules]]
-  description = "a string describing one of many rule in this config"
+  description = "a string describing one of many rules in this config"
   regex = '''one-go-style-regex-for-this-rule'''
   file = '''a-file-name-regex'''
   path = '''a-file-path-regex'''

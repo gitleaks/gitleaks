@@ -3,3 +3,4 @@
   description: Detect hardcoded secrets using Gitleaks
   entry: gitleaks
   language: golang
+  pass_filenames: false

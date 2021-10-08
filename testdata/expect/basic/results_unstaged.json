@@ -1,0 +1,19 @@
+[
+ {
+  "line": "added_aws_access_key_id='AKIAIO5FODNN7DXAMPLE'",
+  "lineNumber": 2,
+  "offender": "AKIAIO5FODNN7DXAMPLE",
+  "offenderEntropy": -1,
+  "commit": "0000000000000000000000000000000000000000",
+  "repo": "basic",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Access Key",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "secrets.py",
+  "date": "1970-01-01T00:00:00Z",
+  "tags": "key, AWS"
+ }
+]

@@ -2,6 +2,8 @@ package scan
 
 import (
 	"github.com/go-git/go-git/v5"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/zricethezav/gitleaks/v7/config"
 	"github.com/zricethezav/gitleaks/v7/options"
 )
@@ -30,10 +32,11 @@ func NewCommitsScanner(opts options.Options, cfg config.Config, repo *git.Reposi
 // Scan kicks off a CommitsScanner Scan
 func (css *CommitsScanner) Scan() (Report, error) {
 	var scannerReport Report
-	for _, c := range css.commits {
-		c, err := obtainCommit(css.repo, c)
+	for _, commitHash := range css.commits {
+		c, err := obtainCommit(css.repo, commitHash)
 		if err != nil {
-			return scannerReport, nil
+			log.Errorf("skipping %s, err: %v", commitHash, err)
+			continue
 		}
 		cs := NewCommitScanner(css.opts, css.cfg, css.repo, c)
 		commitReport, err := cs.Scan()
