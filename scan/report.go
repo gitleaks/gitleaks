@@ -4,8 +4,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"os"
-	"strings"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
