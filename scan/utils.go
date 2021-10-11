@@ -212,6 +212,8 @@ func extractLine(patchContent string, leak Leak, lineLookup map[string]bool) int
 			if _, ok := lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)]; !ok {
 				lineLookup[fmt.Sprintf("%s%s%d%s", leak.Offender, leak.Line, lineNumber, leak.File)] = true
 				return lineNumber
+			} else if ok {
+				return lineNumber
 			}
 		}
 		currLine++

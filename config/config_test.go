@@ -30,95 +30,95 @@ func TestParse(t *testing.T) {
 		{
 			description: "test successful load",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "aws_key.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "aws_key.toml")),
 			},
 		},
 		{
 			description: "test bad toml",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_aws_key.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_aws_key.toml")),
 			},
 			wantErr: fmt.Errorf("Near line 7 (last key parsed 'rules.description'): expected value but found \"AWS\" instead"),
 		},
 		{
 			description: "test bad regex",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_regex_aws_key.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_regex_aws_key.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: invalid nested repetition operator: `???`"),
 		},
 		{
 			description: "test bad global allowlist file regex",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_aws_key_global_allowlist_file.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_aws_key_global_allowlist_file.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
 		{
 			description: "test bad global file regex",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_aws_key_file_regex.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_aws_key_file_regex.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: error parsing regexp: missing argument to repetition operator: `??`"),
 		},
 		{
 			description: "test successful load big ol thing",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "large.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "large.toml")),
 			},
 		},
 		{
 			description: "test load entropy",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "entropy.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "entropy.toml")),
 			},
 		},
 		{
 			description: "test entropy bad range",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_1.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_1.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: entropy Min value cannot be higher than Max value"),
 		},
 		{
 			description: "test entropy value max",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_2.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_2.toml")),
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value min",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_3.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_3.toml")),
 			},
 			wantErr: fmt.Errorf("strconv.ParseFloat: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_4.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_4.toml")),
 			},
 			wantErr: fmt.Errorf("strconv.ParseInt: parsing \"x\": invalid syntax"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_5.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_5.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: group cannot be lower than 0"),
 		},
 		{
 			description: "test entropy value group",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_6.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_6.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: group cannot be higher than number of groups in regexp"),
 		},
 		{
 			description: "test entropy range limits",
 			opts: options.Options{
-				ConfigPath: filepath.Join(configPath, "bad_entropy_7.toml"),
+				ConfigPath: filepath.ToSlash(filepath.Join(configPath, "bad_entropy_7.toml")),
 			},
 			wantErr: fmt.Errorf("problem loading config: invalid entropy ranges, must be within 0.0-8.0"),
 		},
@@ -200,7 +200,7 @@ func findRuleByDescription(rules []config.Rule, description string) (*config.Rul
 }
 
 func writeTestConfig(toml string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", "testConfig")
+	tmpfile, err := ioutil.TempFile(".", "testConfig")
 	if err != nil {
 		return "", fmt.Errorf("Couldn't create test config got: %w", err)
 	}
