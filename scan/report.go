@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -57,13 +58,15 @@ func WriteReport(report Report, opts options.Options, cfg config.Config) error {
 				return err
 			}
 		case "csv":
+			newLineRegex := regexp.MustCompile("[\r]*\n")
 			w := csv.NewWriter(file)
 			err = w.Write([]string{"repo", "line", "commit", "offender", "leakURL", "rule", "tags", "commitMsg", "author", "email", "file", "date"})
 			if err != nil {
 				return err
 			}
 			for _, leak := range report.Leaks {
-				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, leak.Message, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
+				commitFirstLine := newLineRegex.ReplaceAllString(leak.Message, " ")
+				err := w.Write([]string{leak.Repo, leak.Line, leak.Commit, leak.Offender, leak.LeakURL, leak.Rule, leak.Tags, commitFirstLine, leak.Author, leak.Email, leak.File, leak.Date.Format(time.RFC3339)})
 				if err != nil {
 					return err
 				}
