@@ -2,5 +2,5 @@
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
   entry: gitleaks
+  args: [--all-files]
   language: golang
-  pass_filenames: false

@@ -50,16 +50,29 @@ func (ngs *NoGitScanner) Scan() (Report, error) {
 	paths := make(chan string)
 	g.Go(func() error {
 		defer close(paths)
-		return filepath.Walk(ngs.opts.Path,
-			func(path string, fInfo os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if fInfo.Mode().IsRegular() {
-					paths <- path
-				}
-				return nil
-			})
+		if len(ngs.opts.ListOfFiles) == 0 {
+			return filepath.Walk(ngs.opts.Path,
+				func(path string, fInfo os.FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+					if fInfo.Mode().IsRegular() {
+						paths <- path
+					}
+					return nil
+				})
+		}
+
+		for _, path := range ngs.opts.ListOfFiles {
+			filepath.Walk(path,
+				func(path string, fInfo os.FileInfo, err error) error {
+					if fInfo.Mode().IsRegular() {
+						paths <- path
+					}
+					return nil
+				})
+		}
+		return nil
 	})
 
 	for path := range paths {

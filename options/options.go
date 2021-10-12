@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"reflect"
 	"strings"
 
 	"github.com/zricethezav/gitleaks/v7/version"
@@ -56,6 +57,9 @@ type Options struct {
 	CommitSince   string `long:"commit-since" description:"Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	CommitUntil   string `long:"commit-until" description:"Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format."`
 	Depth         int    `long:"depth" description:"Number of commits to scan"`
+
+	// Pre commit option helper
+	ListOfFiles []string `long:"all-files" description:"Paths to files"`
 }
 
 // ParseOptions is responsible for parsing options passed in by cli. An Options struct
@@ -65,13 +69,17 @@ type Options struct {
 func ParseOptions() (Options, error) {
 	var opts Options
 	parser := flags.NewParser(&opts, flags.Default)
-	_, err := parser.Parse()
+	tail, err := parser.Parse()
 
 	if err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type != flags.ErrHelp {
 			parser.WriteHelp(os.Stdout)
 		}
 		os.Exit(1)
+	}
+
+	if len(opts.ListOfFiles) == 1 {
+		opts.ListOfFiles = append(opts.ListOfFiles, tail...)
 	}
 
 	if opts.Version {
@@ -217,7 +225,7 @@ func (opts Options) CheckUncommitted() bool {
 	if opts.Unstaged {
 		return true
 	}
-	if opts == (Options{}) {
+	if reflect.DeepEqual(opts, Options{}) {
 		return true
 	}
 	if opts.RepoURL != "" {

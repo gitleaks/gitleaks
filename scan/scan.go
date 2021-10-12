@@ -148,6 +148,9 @@ func scanType(opts options.Options) (ScannerType, error) {
 		}
 		return typeNoGitScanner, nil
 	}
+	if len(opts.ListOfFiles) != 0 {
+		return typeNoGitScanner, nil
+	}
 	if opts.CheckUncommitted() {
 		return typeUnstagedScanner, nil
 	}
