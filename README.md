@@ -62,6 +62,16 @@ Go 1.16+ required.
 ```bash
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
+
+##### From bin:
+Curl required:
+``` #!/bin/bash
+GITLEAKS_VERSION=$(curl -s https://api.github.com/repos/zricethezav/gitleaks/releases/latest |  grep -oP '"tag_name": "\K(.*)(?=")') && wget https://github.com/zricethezav/gitleaks/releases/download/$GITLEAKS_VERSION/gitleaks-linux-amd64
+mv gitleaks-linux-amd64 gitleaks
+chmod +x gitleaks
+sudo mv gitleaks /usr/local/bin/
+```
+
 ##### As a pre-commit hook
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
