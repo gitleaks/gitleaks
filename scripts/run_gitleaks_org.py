@@ -1,3 +1,4 @@
+# Requirements: python3-pygithub and gitleaks
 from github import Github as gh
 from github import GithubException
 from os import getenv, popen, path, getcwd
