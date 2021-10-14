@@ -164,8 +164,8 @@ gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
-If you have unstaged changes are are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
-path, you can run:
+If you have unstaged changes that are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes.  
+Or if you want to specify a path, you can run:
 ```bash
 gitleaks --path=path/to/local/repo -v --unstaged
 ```
