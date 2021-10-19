@@ -2,17 +2,17 @@
 
 Useg this script to run gitleaks on an organization's private and public repositories:
 
-`for repo in self.GH_ORG.get_repos("visibility=all"):`
+>for repo in self.GH_ORG.get_repos("visibility=all"):
 
 If gitleaks output is NULL, the file will be deleted:
 
-```
-if "No leaks found" in stream.read():
-                 popen(f'rm -f {report}')
-```
+>popen(f'rm -f {report}')
+
 
 So we will have the individual report of each private repository:
-`report = path.join(location,f'{repo.name}.leaks.json')`
+
+>report = path.join(location,f'{repo.name}.leaks.json')`
+
 
 
 **How to:**
@@ -31,4 +31,6 @@ So we will have the individual report of each private repository:
 
 `wget https://raw.githubusercontent.com/zricethezav/gitleaks/master/scripts/python/run_gitleaks_org_repos.py`
 
-5- And... `python3 run_gitleaks_org_repos.py -o your-org-name-here`
+5- And... 
+
+`python3 run_gitleaks_org_repos.py -o your-org-name-here`
