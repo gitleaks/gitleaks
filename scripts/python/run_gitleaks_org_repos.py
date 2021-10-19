@@ -37,7 +37,7 @@ class RunGitLeaksOrg(gh):
                 sleep(60) 
             stream = ''
             report = path.join(location,f'{repo.name}.leaks.json')
-            stream = popen(f'gitleaks -r {repo.html_url} --access-token={self.GIT_TOKEN} -o {report}')
+            stream = popen(f'gitleaks -r {repo.html_url} --redact --access-token={self.GIT_TOKEN} -o {report}')
             
             if "No leaks found" in stream.read():
                 popen(f'rm -f {report}')
