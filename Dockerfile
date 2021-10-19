@@ -4,7 +4,7 @@ ARG ldflags
 COPY . .
 RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks -ldflags "-X="${ldflags} *.go 
 
-FROM alpine:3.14.1
+FROM alpine:3.14.2
 RUN adduser -D gitleaks && \
     apk add --no-cache bash git openssh-client
 COPY --from=build /go/src/github.com/zricethezav/gitleaks/bin/* /usr/bin/

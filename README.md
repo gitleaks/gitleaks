@@ -62,6 +62,15 @@ Go 1.16+ required.
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v7
 ```
 
+##### From bin:
+
+```bash
+GITLEAKS_VERSION=$(curl -s https://api.github.com/repos/zricethezav/gitleaks/releases/latest |  grep -oP '"tag_name": "\K(.*)(?=")') && wget https://github.com/zricethezav/gitleaks/releases/download/$GITLEAKS_VERSION/gitleaks-linux-amd64
+mv gitleaks-linux-amd64 gitleaks
+chmod +x gitleaks
+sudo mv gitleaks /usr/local/bin/
+```
+
 ##### As a pre-commit hook
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
@@ -163,8 +172,8 @@ gitleaks --path=path/to/local/repo/main.go -v --no-git
 ```
 
 #### Scan unstaged changes:
-If you have unstaged changes are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes. Or if you want to specify a
-path, you can run:
+If you have unstaged changes that are currently at the root of the repo, you can run `gitleaks` with no `--path` or `--repo-url` specified which will run a scan on your uncommitted changes.  
+Or if you want to specify a path, you can run:
 ```bash
 gitleaks --path=path/to/local/repo -v --unstaged
 ```

@@ -5,12 +5,70 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"testing"
 
+	"github.com/zricethezav/gitleaks/v7/config"
+	"github.com/zricethezav/gitleaks/v7/options"
 	"github.com/zricethezav/gitleaks/v7/scan"
 )
 
 const repoBasePath = "../testdata/repos/"
 const expectPath = "../testdata/expect/"
+
+func TestScan(t *testing.T) {
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer moveDotGit(".git", "dotGit")
+	tests := []struct {
+		description string
+		opts        options.Options
+		wantPath    string
+	}{
+		{
+			description: "test google api key leak AND square oauth leak",
+			opts: options.Options{
+				Path:         filepath.Join(repoBasePath, "with_square_and_google"),
+				Report:       filepath.Join(expectPath, "results_square_and_google.json.got"),
+				ReportFormat: "json",
+				NoGit:				true,
+			},
+			wantPath: filepath.Join(expectPath, "results_square_and_google.json"),
+		},
+	}
+
+	for _, test := range tests {
+		cfg, err := config.NewConfig(test.opts)
+		if err != nil {
+			t.Error(err)
+		}
+
+		scanner, err := scan.NewScanner(test.opts, cfg)
+		if err != nil {
+			t.Error(test.description, err)
+		}
+
+		scannerReport, err := scanner.Scan()
+		if err != nil {
+			t.Fatal(test.description, err)
+		}
+
+		err = scan.WriteReport(scannerReport, test.opts, cfg)
+		if err != nil {
+			t.Error(test.description, err)
+		}
+
+		if test.wantPath != "" {
+			err := fileCheck(test.wantPath, test.opts.Report)
+			if err != nil {
+				t.Error(test.description, err)
+			}
+		}
+	}
+}
+
 
 func moveDotGit(from, to string) error {
 	repoDirs, err := ioutil.ReadDir("../testdata/repos")
