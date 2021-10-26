@@ -33,7 +33,7 @@ func TestScan(t *testing.T) {
 				Path:         filepath.Join(repoBasePath, "with_square_and_google"),
 				Report:       filepath.Join(expectPath, "results_square_and_google.json.got"),
 				ReportFormat: "json",
-				NoGit:				true,
+				NoGit:        true,
 			},
 			wantPath: filepath.Join(expectPath, "results_square_and_google.json"),
 		},
@@ -68,7 +68,6 @@ func TestScan(t *testing.T) {
 		}
 	}
 }
-
 
 func moveDotGit(from, to string) error {
 	repoDirs, err := ioutil.ReadDir("../testdata/repos")

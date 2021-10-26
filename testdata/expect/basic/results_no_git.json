@@ -17,6 +17,23 @@
   "tags": "key, AWS"
  },
  {
+  "line": "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'",
+  "lineNumber": 10,
+  "offender": "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+  "offenderEntropy": -1,
+  "commit": "",
+  "repo": "",
+  "repoURL": "",
+  "leakURL": "",
+  "rule": "AWS Secret Key",
+  "commitMessage": "",
+  "author": "",
+  "email": "",
+  "file": "secrets.py",
+  "date": "0001-01-01T00:00:00Z",
+  "tags": "key, AWS"
+ },
+ {
   "line": "aws_access_key_1 = 'AKIAIOSFODNN7EXAMPLE'",
   "lineNumber": 13,
   "offender": "AKIAIOSFODNN7EXAMPLE",
