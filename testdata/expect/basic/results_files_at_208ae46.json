@@ -19,7 +19,7 @@
  {
   "line": "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'",
   "lineNumber": 10,
-  "offender": "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKE",
+  "offender": "aws_secret_access_key = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
   "offenderEntropy": -1,
   "commit": "208ae4669ade2563fcaf9f12922fa2c0a5b37c63",
   "repo": "basic",
