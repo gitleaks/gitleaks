@@ -1,6 +1,6 @@
 #### Script: "run_gitleaks_org_repos.py"
 
-Useg this script to run gitleaks on an organization's private and public repositories:
+Use this script to run gitleaks on an organization's private and public repositories:
 
 >for repo in self.GH_ORG.get_repos("visibility=all"):
 
