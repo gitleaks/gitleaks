@@ -149,7 +149,7 @@ gitleaks --repo-url=https://github.com/my-insecure/repo -v --report=my-report.js
 gitleaks --repo-url=https://github.com/my-insecure/repo --commit=commit-sha -v
 ```
 #### Scan All Organization repos:
- - [With python script](https://github.com/zricethezav/gitleaks/master/scripts/python/README.md)
+ - [Using a python script](https://github.com/zricethezav/gitleaks/master/scripts/python/README.md)
 
 
 #### Scan local repo:
