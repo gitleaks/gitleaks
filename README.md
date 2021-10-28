@@ -282,7 +282,7 @@ So you can use the following to effectively create the proper Perl regex:
 
 
 ### Exit Codes
-You can always set the exit code when leaves are encountered with the `--leaks-exit-code` flag. Default exit codes below:
+You can always set the exit code when leaks are encountered with the `--leaks-exit-code` flag. Default exit codes below:
 ```
 0 - no leaks present
 1 - leaks or error encountered
