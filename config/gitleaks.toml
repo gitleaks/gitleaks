@@ -1,5 +1,5 @@
-
 title = "gitleaks config"
+# https://learnxinyminutes.com/docs/toml/ for toml reference
 
 [[rules]]
     description = "AWS Access Key"
@@ -168,8 +168,3 @@ title = "gitleaks config"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
 
-[allowlist]
-    description = "Allowlisted files"
-    files = ['''^\.?gitleaks.toml$''',
-    '''(.*?)(png|jpg|gif|doc|docx|pdf|bin|xls|pyc|zip)$''',
-    '''(go.mod|go.sum)$''']

@@ -1,15 +1,17 @@
-module github.com/zricethezav/gitleaks/v7
+module github.com/zricethezav/gitleaks/v8
 
 go 1.16
 
-replace github.com/go-git/go-git/v5 => github.com/zricethezav/go-git/v5 v5.3.0
+// replace github.com/gitleaks/go-gitdiff => ./../gitleaks-org/go-gitdiff
 
 require (
-	github.com/BurntSushi/toml v0.3.1
-	github.com/go-git/go-git/v5 v5.3.0
-	github.com/hako/durafmt v0.0.0-20191009132224-3f39dc1ed9f4
-	github.com/jessevdk/go-flags v1.5.0
-	github.com/sergi/go-diff v1.1.0
-	github.com/sirupsen/logrus v1.4.2
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	github.com/gitleaks/go-gitdiff v0.7.2
+	github.com/mitchellh/go-homedir v1.1.0
+	github.com/rs/zerolog v1.25.0
+	github.com/spf13/cobra v1.2.1
+	github.com/spf13/viper v1.8.1
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
+	golang.org/x/tools v0.1.5
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

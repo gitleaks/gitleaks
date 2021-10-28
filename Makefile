@@ -35,7 +35,6 @@ release-builds:
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips" $(LDFLAGS)
 	env GOOS="linux" GOARCH="mips" go build -o "build/gitleaks-linux-mips" $(LDFLAGS)
 	env GOOS="darwin" GOARCH="amd64" go build -o "build/gitleaks-darwin-amd64" $(LDFLAGS)
-	env GOOS="darwin" GOARCH="arm64" go build -o "build/gitleaks-darwin-arm64" $(LDFLAGS)
 
 deploy:
 	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
