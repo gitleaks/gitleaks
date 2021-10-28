@@ -48,6 +48,12 @@ brew install gitleaks
 
 ##### Docker
 
+Building the image after cloning the repo:
+```bash
+make dockerbuild
+```
+
+Using the image from DockerHub:
 ```bash
 # To just pull the image
 docker pull zricethezav/gitleaks:latest
