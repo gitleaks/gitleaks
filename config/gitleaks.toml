@@ -8,7 +8,7 @@ title = "gitleaks config"
 
 [[rules]]
     description = "AWS Secret Key"
-    regex = '''(?i)aws(.{0,20})?(?-i)['\"][0-9a-zA-Z\/+]{40}['\"]'''
+    regex = '''(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}'''
     tags = ["key", "AWS"]
 
 [[rules]]

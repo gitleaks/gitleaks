@@ -37,7 +37,6 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 - json, sarif, and csv reporting
 - Private repo scans using key or password based authentication
 
-
 ### Installation
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
@@ -49,6 +48,12 @@ brew install gitleaks
 
 ##### Docker
 
+Building the image after cloning the repo:
+```bash
+make dockerbuild
+```
+
+Using the image from DockerHub:
 ```bash
 # To just pull the image
 docker pull zricethezav/gitleaks:latest
@@ -82,10 +87,10 @@ Sample `.pre-commit-config.yaml`
 # The revision doesn't get updated manually
 # check this https://github.com/zricethezav/gitleaks/releases
 # to see if there are newer versions
--   repo: https://github.com/zricethezav/gitleaks
-    rev: v7.6.0
-    hooks:
-    -   id: gitleaks
+- repo: https://github.com/zricethezav/gitleaks
+  rev: v7.6.1
+  hooks:
+    - id: gitleaks
 ```
 
 ### Usage and Options
@@ -286,7 +291,7 @@ So you can use the following to effectively create the proper Perl regex:
 
 
 ### Exit Codes
-You can always set the exit code when leaves are encountered with the `--leaks-exit-code` flag. Default exit codes below:
+You can always set the exit code when leaks are encountered with the `--leaks-exit-code` flag. Default exit codes below:
 ```
 0 - no leaks present
 1 - leaks or error encountered
@@ -305,4 +310,4 @@ These users are [sponsors](https://github.com/sponsors/zricethezav) of gitleaks:
 - [Henry Sachs](https://github.com/henrysachs)
 
 #### Logo Attribution
-The Gitleaks logo uses the Git Logo created <a href="https://twitter.com/jasonlong">Jason Long</a> is licensed under the <a href="https://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
+The Gitleaks logo uses the Git Logo created by [Jason Long](https://twitter.com/jasonlong) and is licensed under the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/).
