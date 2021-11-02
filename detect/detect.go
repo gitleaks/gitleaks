@@ -18,7 +18,7 @@ func processBytes(cfg config.Config, b []byte, ext string) []report.Finding {
 	var findings []report.Finding
 	linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
 	for _, r := range cfg.Rules {
-		matchIndices := r.RegexCompiled.FindAllIndex(b, -1)
+		matchIndices := r.Regex.FindAllIndex(b, -1)
 		for _, m := range matchIndices {
 			location := getLocation(linePairs, m[0], m[1])
 			f := report.Finding{

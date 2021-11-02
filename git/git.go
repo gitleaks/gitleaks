@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// GitLog returns a channel of gitdiff.File objects from the git log -p command for the given source.
 func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
@@ -42,6 +43,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	return gitdiff.Parse(stdout)
 }
 
+// GitDiff returns a channel of gitdiff.File objects from the git diff command for the given source.
 func GitDiff(source string) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	cmd := exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")

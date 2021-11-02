@@ -24,10 +24,11 @@ var ingestCmd = &cobra.Command{
 }
 
 func runIngest(cmd *cobra.Command, args []string) {
-	var cfg config.Config
+	var vc config.ViperConfig
 
-	viper.Unmarshal(&cfg)
-	cfg.Compile()
+	viper.Unmarshal(&vc)
+	cfg := vc.Translate()
+	fmt.Println(cfg)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

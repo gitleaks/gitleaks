@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -29,13 +28,13 @@ var detectCmd = &cobra.Command{
 
 func runDetect(cmd *cobra.Command, args []string) {
 	var (
-		cfg      config.Config
+		vc       config.ViperConfig
 		findings []report.Finding
 		err      error
 	)
 
-	viper.Unmarshal(&cfg)
-	cfg.Compile()
+	viper.Unmarshal(&vc)
+	cfg := vc.Translate()
 
 	source, _ := cmd.Flags().GetString("source")
 	logOpts, _ := cmd.Flags().GetString("log-opts")
@@ -61,7 +60,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbosity, Redact: redact})
 	}
 
-	// log duration of scan using durafmt
+	if len(findings) != 0 {
+		log.Warn().Msgf("leaks found: %d", len(findings))
+	} else {
+		log.Info().Msg("no leaks found")
+	}
+
 	log.Info().Msgf("scan completed in %s", time.Since(start))
 
 	reportPath, _ := cmd.Flags().GetString("report-path")

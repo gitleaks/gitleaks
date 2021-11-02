@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync"
 
 	godocutil "golang.org/x/tools/godoc/util"
 
@@ -16,7 +17,10 @@ import (
 // FromFiles opens the directory or file specified in source and checks each file against the rules
 // from the configuration. If any secrets are found, they are added to the list of findings.
 func FromFiles(source string, cfg config.Config, outputOptions Options) ([]report.Finding, error) {
-	var findings []report.Finding
+	var (
+		findings []report.Finding
+		mu       sync.Mutex
+	)
 	g, _ := errgroup.WithContext(context.Background())
 	paths := make(chan string)
 	g.Go(func() error {
@@ -46,7 +50,20 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 			if !godocutil.IsText(b) {
 				return nil
 			}
-			findings = append(findings, processBytes(cfg, b, filepath.Ext(p))...)
+			fis := processBytes(cfg, b, filepath.Ext(p))
+			for _, fi := range fis {
+				fi.File = p
+				if outputOptions.Redact {
+					fi.Redact()
+				}
+				if outputOptions.Verbose {
+					printFinding(fi)
+				}
+				mu.Lock()
+				findings = append(findings, fi)
+				mu.Unlock()
+			}
+
 			return nil
 		})
 	}

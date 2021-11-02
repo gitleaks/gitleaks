@@ -26,10 +26,10 @@ var protectCmd = &cobra.Command{
 }
 
 func runProtect(cmd *cobra.Command, args []string) {
-	var cfg config.Config
+	var vc config.ViperConfig
 
-	viper.Unmarshal(&cfg)
-	cfg.Compile()
+	viper.Unmarshal(&vc)
+	cfg := vc.Translate()
 
 	source, _ := cmd.Flags().GetString("source")
 	verbosity, _ := cmd.Flags().GetBool("verbose")
@@ -42,9 +42,13 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 
 	findings := detect.FromGit(files, cfg, detect.Options{Verbose: verbosity, Redact: redact})
+	if len(findings) != 0 {
+		log.Warn().Msgf("leaks found: %d", len(findings))
+	} else {
+		log.Info().Msg("no leaks found")
+	}
 
-	// log duration of scan using durafmt
-	log.Info().Msgf("scan completed in %s", time.Since(start))
+	log.Info().Msgf("scan duration: %s", time.Since(start))
 
 	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
