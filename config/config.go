@@ -8,6 +8,9 @@ import (
 //go:embed gitleaks.toml
 var DefaultConfig string
 
+// ViperConfig is the config struct used by the Viper config package
+// to parse the config file. This struct does not include regular expressions.
+// It is used as an intermediary to convert the Viper config to the Config struct.
 type ViperConfig struct {
 	Description string
 	Rules       []struct {
@@ -32,8 +35,7 @@ type ViperConfig struct {
 	}
 }
 
-// Config a a struct the viper library uses to unmarshal data into.
-// This is a temporary structure that is an argument used in Translate.
+// Config is a configuration struct that contains rules and an allowlist if present.
 type Config struct {
 	Description string
 	Rules       []*Rule

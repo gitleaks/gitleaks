@@ -34,7 +34,7 @@ func init() {
 	// If that file does not exist gitleaks will save the default configuration file to that
 	// location.
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.config/gitleaks/.gitleaks.toml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.config/gitleaks/gitleaks.toml)")
 	rootCmd.PersistentFlags().String("exit-code", "", "exit code when leaks have been encountered (default: 1)")
 	rootCmd.PersistentFlags().StringP("source", "s", "", "path to source")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
