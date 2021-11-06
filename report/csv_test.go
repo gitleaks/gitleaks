@@ -45,24 +45,29 @@ func TestWriteCSV(t *testing.T) {
 	for _, test := range tests {
 		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".csv"))
 		if err != nil {
+			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		err = writeCsv(test.findings, tmpfile)
 		if err != nil {
+			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		got, err := os.ReadFile(tmpfile.Name())
 		if err != nil {
+			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		if test.wantEmpty {
 			if len(got) > 0 {
 				t.Errorf("Expected empty file, got %s", got)
 			}
+			os.Remove(tmpfile.Name())
 			continue
 		}
 		want, err := os.ReadFile(test.expected)
 		if err != nil {
+			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 
