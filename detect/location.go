@@ -18,16 +18,16 @@ func getLocation(linePairs [][]int, start int, end int) Location {
 
 	for lineNum, pair := range linePairs {
 		newLineByteIndex := pair[0]
-		if prevNewLine < start && start < newLineByteIndex {
+		if prevNewLine <= start && start < newLineByteIndex {
 			location.startLine = lineNum
 			location.endLine = lineNum
-			location.startColumn = start - prevNewLine
-			location.startLineIndex = prevNewLine + 1 // +1 to account for newline
+			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
+			location.startLineIndex = prevNewLine + 1        // +1 to account for newline
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
 			location.endLine = lineNum
-			location.endColumn = (end - prevNewLine) - 1
+			location.endColumn = (end - prevNewLine)
 			location.endLineIndex = newLineByteIndex
 		}
 
