@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-const expectPath = "../testdata/expected/"
-
 func TestWriteJSON(t *testing.T) {
 	tests := []struct {
 		findings       []Finding
@@ -46,7 +44,7 @@ func TestWriteJSON(t *testing.T) {
 
 	for _, test := range tests {
 		// create tmp file using os.TempDir()
-		tmpfile, err := os.Create(os.TempDir() + test.testReportName + ".json")
+		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".json"))
 		if err != nil {
 			t.Error(err)
 		}

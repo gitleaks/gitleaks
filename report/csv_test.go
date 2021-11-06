@@ -43,8 +43,7 @@ func TestWriteCSV(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// create tmp file using os.TempDir()
-		tmpfile, err := os.Create(os.TempDir() + test.testReportName + ".csv")
+		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".csv"))
 		if err != nil {
 			t.Error(err)
 		}
