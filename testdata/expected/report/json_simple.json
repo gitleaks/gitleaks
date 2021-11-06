@@ -1,0 +1,18 @@
+[
+ {
+  "StartLine": 1,
+  "EndLine": 2,
+  "StartColumn": 1,
+  "EndColumn": 2,
+  "Line": "line containing secret",
+  "Content": "a secret",
+  "File": "auth.py",
+  "Commit": "0000000000000000",
+  "Entropy": 0,
+  "Author": "John Doe",
+  "Email": "johndoe@gmail.com",
+  "Date": "10-19-2003",
+  "Message": "opps",
+  "RuleID": "test-rule"
+ }
+]

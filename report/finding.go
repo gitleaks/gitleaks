@@ -28,6 +28,9 @@ type Finding struct {
 	Email   string
 	Date    string
 	Message string
+
+	// Rule is the name of the rule that was matched
+	RuleID string
 }
 
 // Redact removes sensitive information from a finding.

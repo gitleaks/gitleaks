@@ -22,11 +22,11 @@ func TestGitLog(t *testing.T) {
 	}{
 		{
 			source:   filepath.Join(repoBasePath, "small"),
-			expected: filepath.Join(expectPath, "gitlog", "small.txt"),
+			expected: filepath.Join(expectPath, "git", "small.txt"),
 		},
 		{
 			source:   filepath.Join(repoBasePath, "small"),
-			expected: filepath.Join(expectPath, "gitlog", "small-branch-foo.txt"),
+			expected: filepath.Join(expectPath, "git", "small-branch-foo.txt"),
 			logOpts:  "--all foo...",
 		},
 	}

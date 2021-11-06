@@ -22,6 +22,7 @@ func processBytes(cfg config.Config, b []byte, ext string) []report.Finding {
 		for _, m := range matchIndices {
 			location := getLocation(linePairs, m[0], m[1])
 			f := report.Finding{
+				RuleID:      r.RuleID,
 				StartLine:   location.startLine,
 				EndLine:     location.endLine,
 				StartColumn: location.startColumn,

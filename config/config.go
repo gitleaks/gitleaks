@@ -14,7 +14,7 @@ var DefaultConfig string
 type ViperConfig struct {
 	Description string
 	Rules       []struct {
-		RuleID      string
+		ID          string
 		Description string
 		Entropy     float32
 		Regex       string
@@ -74,6 +74,7 @@ func (vc *ViperConfig) Translate() Config {
 
 		rules = append(rules, &Rule{
 			Description: r.Description,
+			RuleID:      r.ID,
 			Entropy:     r.Entropy,
 			Regex:       regexp.MustCompile(r.Regex),
 			Path:        regexp.MustCompile(r.Path),

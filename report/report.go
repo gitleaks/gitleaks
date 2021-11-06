@@ -3,7 +3,12 @@ package report
 import (
 	"os"
 	"strings"
+)
 
+const (
+	// https://cwe.mitre.org/data/definitions/798.html
+	CWE             = "CWE-798"
+	CWE_DESCRIPTION = "Use of Hard-coded Credentials"
 )
 
 func Write(findings []Finding, ext string, reportPath string) error {
@@ -16,7 +21,7 @@ func Write(findings []Finding, ext string, reportPath string) error {
 	case ".json", "json":
 		writeJson(findings, file)
 	case ".csv", "csv":
-
+		writeCsv(findings, file)
 	case ".sarif", "sarif":
 
 	}
