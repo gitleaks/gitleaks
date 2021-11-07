@@ -11,7 +11,7 @@ const (
 	CWE_DESCRIPTION = "Use of Hard-coded Credentials"
 )
 
-func Write(findings []Finding, ext string, reportPath string) error {
+func Write(findings []*Finding, ext string, reportPath string) error {
 	if len(findings) == 0 {
 		return nil
 	}

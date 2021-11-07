@@ -7,7 +7,7 @@ import (
 )
 
 // writeCsv writes the list of findings to a writeCloser.
-func writeCsv(f []Finding, w io.WriteCloser) error {
+func writeCsv(f []*Finding, w io.WriteCloser) error {
 	if len(f) == 0 {
 		return nil
 	}

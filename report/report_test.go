@@ -14,13 +14,13 @@ const (
 
 func TestReport(t *testing.T) {
 	tests := []struct {
-		findings  []Finding
+		findings  []*Finding
 		ext       string
 		wantEmpty bool
 	}{
 		{
 			ext: "json",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},
@@ -28,7 +28,7 @@ func TestReport(t *testing.T) {
 		},
 		{
 			ext: ".json",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},
@@ -36,7 +36,7 @@ func TestReport(t *testing.T) {
 		},
 		{
 			ext: ".jsonj",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},
@@ -45,7 +45,7 @@ func TestReport(t *testing.T) {
 		},
 		{
 			ext: ".csv",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},
@@ -53,7 +53,7 @@ func TestReport(t *testing.T) {
 		},
 		{
 			ext: "csv",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},
@@ -61,7 +61,7 @@ func TestReport(t *testing.T) {
 		},
 		{
 			ext: "CSV",
-			findings: []Finding{
+			findings: []*Finding{
 				{
 					RuleID: "test-rule",
 				},

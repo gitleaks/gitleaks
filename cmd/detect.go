@@ -28,7 +28,7 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	var (
 		vc       config.ViperConfig
-		findings []report.Finding
+		findings []*report.Finding
 		err      error
 	)
 

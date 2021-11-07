@@ -47,7 +47,6 @@ func init() {
 func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
-
 	} else {
 		home, err := homedir.Dir()
 		if err != nil {
