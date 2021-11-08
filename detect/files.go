@@ -50,7 +50,7 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]*repo
 			if !godocutil.IsText(b) {
 				return nil
 			}
-			fis := processBytes(cfg, b, filepath.Ext(p))
+			fis := processBytes(cfg, b, p)
 			for _, fi := range fis {
 				fi.File = p
 				if outputOptions.Redact {

@@ -1,10 +1,10 @@
 ### TODO list
 - [x] ViperConfig -> Config conversion
-- [ ] Unittests
+- [x] Unittests
 - [ ] Github Docker Container Registry 
 - [ ] Sairf/csv support
 - [ ] Validate Config
-- [ ] Add RuleID to rules
+- [x] Add RuleID to rules
 
 
 ### v8.0.0

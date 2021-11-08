@@ -40,12 +40,13 @@ func TestFromGit(t *testing.T) {
 					EndColumn:   38,
 					Content:     "AKIALALEMEL33243OLIA",
 					File:        "main.go",
-					Commit:      "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
-					Author:      "Zachary Rice",
-					Email:       "zricer@protonmail.com",
-					Date:        "2021-11-02 18:37:53 -0500 CDT",
-					Message:     "Accidentally add a secret",
-					RuleID:      "aws-access-key",
+					// Line:        "\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Commit:  "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
+					Author:  "Zachary Rice",
+					Email:   "zricer@protonmail.com",
+					Date:    "2021-11-02 18:37:53 -0500 CDT",
+					Message: "Accidentally add a secret",
+					RuleID:  "aws-access-key",
 				},
 				{
 					StartLine:   9,
@@ -54,12 +55,13 @@ func TestFromGit(t *testing.T) {
 					EndColumn:   36,
 					Content:     "AKIALALEMEL33243OLIA",
 					File:        "foo/foo.go",
-					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
-					Author:      "Zach Rice",
-					Email:       "zricer@protonmail.com",
-					Date:        "2021-11-02 18:48:06 -0500 CDT",
-					Message:     "adding foo package with secret",
-					RuleID:      "aws-access-key",
+					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
+					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:  "Zach Rice",
+					Email:   "zricer@protonmail.com",
+					Date:    "2021-11-02 18:48:06 -0500 CDT",
+					Message: "adding foo package with secret",
+					RuleID:  "aws-access-key",
 				},
 			},
 		},
@@ -75,13 +77,14 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 17,
 					EndColumn:   36,
 					Content:     "AKIALALEMEL33243OLIA",
-					File:        "foo/foo.go",
-					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
-					Author:      "Zach Rice",
-					Email:       "zricer@protonmail.com",
-					Date:        "2021-11-02 18:48:06 -0500 CDT",
-					Message:     "adding foo package with secret",
-					RuleID:      "aws-access-key",
+					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
+					File:    "foo/foo.go",
+					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:  "Zach Rice",
+					Email:   "zricer@protonmail.com",
+					Date:    "2021-11-02 18:48:06 -0500 CDT",
+					Message: "adding foo package with secret",
+					RuleID:  "aws-access-key",
 				},
 			},
 		},
@@ -116,14 +119,6 @@ func TestFromGit(t *testing.T) {
 			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
 		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
-
-	}
-}
-
-func restore(path string, data []byte, t *testing.T) {
-	err := os.WriteFile(path, data, 0644)
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 

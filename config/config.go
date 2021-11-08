@@ -106,6 +106,41 @@ func (vc *ViperConfig) Translate() Config {
 	}
 }
 
-func (c *Config) GloballyAllowedPath(path string) bool {
+func (c *Config) CommitAllowed(commit string) bool {
+	return false
+}
+
+func (a *Allowlist) CommitAllowed(c string) bool {
+	return false
+}
+
+func (a *Allowlist) PathAllowed(path string) bool {
+	return false
+}
+
+func (a *Allowlist) RegexAllowed(s string) bool {
+	return false
+}
+
+// anyRegexMatch matched an interface to a regular expression. The interface f can
+// be a string type or go-git *object.File type.
+func anyRegexMatch(f string, res []*regexp.Regexp) bool {
+	for _, re := range res {
+		if regexMatched(f, re) {
+			return true
+		}
+	}
+	return false
+}
+
+// regexMatched matched an interface to a regular expression. The interface f can
+// be a string type or go-git *object.File type.
+func regexMatched(f string, re *regexp.Regexp) bool {
+	if re == nil {
+		return false
+	}
+	if re.FindString(f) != "" {
+		return true
+	}
 	return false
 }

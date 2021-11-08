@@ -1,12 +1,12 @@
 package detect
 
 import (
-	"path/filepath"
 	"sync"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
+	godocutil "golang.org/x/tools/godoc/util"
 )
 
 // FromGit accepts a gitdiff.File channel (structure output from `git log -p`) and a configuration
@@ -28,13 +28,29 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 				return
 			}
 
+			commitSHA := ""
+
+			// Check if commit is allowed
+			if f.PatchHeader != nil {
+				commitSHA = f.PatchHeader.SHA
+
+				if cfg.Allowlist.CommitAllowed(f.PatchHeader.SHA) {
+					return
+				}
+			}
+
 			for _, tf := range f.TextFragments {
 				if f.TextFragments == nil {
+					// TODO fix this in gitleaks gitdiff fork
 					// https://github.com/gitleaks/gitleaks/issues/11
 					continue
 				}
 
-				for _, fi := range processBytes(cfg, []byte(tf.Raw(gitdiff.OpAdd)), filepath.Ext(f.NewName)) {
+				if !godocutil.IsText([]byte(tf.Raw(gitdiff.OpAdd))) {
+					continue
+				}
+
+				for _, fi := range processGitBytes(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
 					fi.StartLine += int(tf.NewPosition)
 					fi.EndLine += int(tf.NewPosition)
 					fi.File = f.NewName
