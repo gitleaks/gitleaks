@@ -118,6 +118,8 @@ func TestFromGit(t *testing.T) {
 			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
 		}
 		if !findingsMatch(findings, tt.expectedFindings) {
+			t.Error("got: ", findings)
+			t.Error("want: ", tt.expectedFindings)
 			t.Error("findings don't match")
 		}
 	}
