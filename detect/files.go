@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	godocutil "golang.org/x/tools/godoc/util"
-
 	"golang.org/x/sync/errgroup"
+	godocutil "golang.org/x/tools/godoc/util"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -50,7 +49,7 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]*repo
 			if !godocutil.IsText(b) {
 				return nil
 			}
-			fis := processBytes(cfg, b, p)
+			fis := DetectFindings(cfg, b, p, "")
 			for _, fi := range fis {
 				fi.File = p
 				if outputOptions.Redact {
@@ -63,7 +62,6 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]*repo
 				findings = append(findings, &fi)
 				mu.Unlock()
 			}
-
 			return nil
 		})
 	}

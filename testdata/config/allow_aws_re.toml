@@ -1,0 +1,9 @@
+title = "simple config with allowlist for aws"
+
+[[rules]]
+    description = "AWS Access Key"
+    id = "aws-access-key"
+    regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+    tags = ["key", "AWS"]
+    [rules.allowlist]
+        regexes = ['''AKIALALEMEL33243OLIA''']

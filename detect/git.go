@@ -50,10 +50,9 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 					continue
 				}
 
-				for _, fi := range processGitBytes(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
+				for _, fi := range DetectFindings(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
 					fi.StartLine += int(tf.NewPosition)
 					fi.EndLine += int(tf.NewPosition)
-					fi.File = f.NewName
 					if f.PatchHeader != nil {
 						fi.Commit = f.PatchHeader.SHA
 						fi.Message = f.PatchHeader.Message()
