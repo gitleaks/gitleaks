@@ -1,12 +1,11 @@
 package detect
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"path/filepath"
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -72,40 +71,6 @@ func TestFromFiles(t *testing.T) {
 			t.Error(err)
 		}
 
-		if !findingsMatch(t, findings, tt.expectedFindings) {
-			for _, f := range findings {
-				t.Errorf("got:    %v", *f)
-			}
-			for _, f := range tt.expectedFindings {
-				t.Errorf("want:   %v", *f)
-			}
-			t.Error("findings don't match")
-			t.Error("got: ", findings)
-			t.Error("want: ", tt.expectedFindings)
-		}
-
-		// assert.ElementsMatch(t, tt.expectedFindings, findings)
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
-}
-
-func findingsMatch(t *testing.T, got []*report.Finding, want []*report.Finding) bool {
-	if len(got) != len(want) {
-		return false
-	}
-	m := make(map[string]bool)
-	for _, f := range got {
-		h := sha256.New()
-		h.Write([]byte(fmt.Sprintf("%v", *f)))
-		m[fmt.Sprintf("%x", h.Sum(nil))] = true
-	}
-
-	for _, f := range want {
-		h := sha256.New()
-		h.Write([]byte(fmt.Sprintf("%v", *f)))
-		if _, ok := m[fmt.Sprintf("%x", h.Sum(nil))]; !ok {
-			return false
-		}
-
-	}
-	return true
 }

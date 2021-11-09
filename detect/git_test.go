@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/git"
@@ -43,7 +44,6 @@ func TestFromGit(t *testing.T) {
 					Commit:  "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
 					Author:  "Zachary Rice",
 					Email:   "zricer@protonmail.com",
-					Date:    "2021-11-02 18:37:53 -0500 CDT",
 					Message: "Accidentally add a secret",
 					RuleID:  "aws-access-key",
 				},
@@ -58,7 +58,6 @@ func TestFromGit(t *testing.T) {
 					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
 					Author:  "Zach Rice",
 					Email:   "zricer@protonmail.com",
-					Date:    "2021-11-02 18:48:06 -0500 CDT",
 					Message: "adding foo package with secret",
 					RuleID:  "aws-access-key",
 				},
@@ -81,7 +80,6 @@ func TestFromGit(t *testing.T) {
 					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
 					Author:  "Zach Rice",
 					Email:   "zricer@protonmail.com",
-					Date:    "2021-11-02 18:48:06 -0500 CDT",
 					Message: "adding foo package with secret",
 					RuleID:  "aws-access-key",
 				},
@@ -116,18 +114,9 @@ func TestFromGit(t *testing.T) {
 		findings := FromGit(files, cfg, tt.opts)
 		for _, f := range findings {
 			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
+			f.Date = ""
 		}
-		if !findingsMatch(t, findings, tt.expectedFindings) {
-			for _, f := range findings {
-				t.Errorf("got:    %v", *f)
-			}
-			for _, f := range tt.expectedFindings {
-				t.Errorf("want:   %v", *f)
-			}
-			t.Error("got: ", findings)
-			t.Error("want: ", tt.expectedFindings)
-			t.Error("findings don't match")
-		}
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
 
