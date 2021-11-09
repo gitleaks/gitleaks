@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/git"
@@ -118,7 +117,9 @@ func TestFromGit(t *testing.T) {
 		for _, f := range findings {
 			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
 		}
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+		if !findingsMatch(findings, tt.expectedFindings) {
+			t.Error("findings don't match")
+		}
 	}
 }
 
