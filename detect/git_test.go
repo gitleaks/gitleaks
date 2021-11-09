@@ -117,7 +117,13 @@ func TestFromGit(t *testing.T) {
 		for _, f := range findings {
 			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
 		}
-		if !findingsMatch(findings, tt.expectedFindings) {
+		if !findingsMatch(t, findings, tt.expectedFindings) {
+			for _, f := range findings {
+				t.Errorf("got:    %v", *f)
+			}
+			for _, f := range tt.expectedFindings {
+				t.Errorf("want:   %v", *f)
+			}
 			t.Error("got: ", findings)
 			t.Error("want: ", tt.expectedFindings)
 			t.Error("findings don't match")
