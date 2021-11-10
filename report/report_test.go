@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+
+	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 const (
@@ -83,7 +85,7 @@ func TestReport(t *testing.T) {
 			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
-		err = Write(test.findings, test.ext, tmpfile.Name())
+		err = Write(test.findings, config.Config{}, test.ext, tmpfile.Name())
 		if err != nil {
 			os.Remove(tmpfile.Name())
 			t.Error(err)

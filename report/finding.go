@@ -10,11 +10,11 @@ type Finding struct {
 	StartColumn int
 	EndColumn   int
 
-	Line string
+	Context string
 
-	// Content contains the full content of what is matched in
+	// Secret contains the full content of what is matched in
 	// the tree-sitter query.
-	Content string
+	Secret string
 
 	// File is the name of the file containing the finding
 	File string
@@ -35,6 +35,6 @@ type Finding struct {
 
 // Redact removes sensitive information from a finding.
 func (f *Finding) Redact() {
-	f.Line = strings.Replace(f.Line, f.Content, "REDACTED", -1)
-	f.Content = "REDACT"
+	f.Context = strings.Replace(f.Context, f.Secret, "REDACTED", -1)
+	f.Secret = "REDACT"
 }

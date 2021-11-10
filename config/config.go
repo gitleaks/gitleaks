@@ -53,13 +53,6 @@ type Rule struct {
 	Allowlist   Allowlist
 }
 
-type Allowlist struct {
-	Description string
-	Regexes     []*regexp.Regexp
-	Paths       []*regexp.Regexp
-	Commits     []string
-}
-
 func (vc *ViperConfig) Translate() Config {
 	var rules []*Rule
 	for _, r := range vc.Rules {
@@ -104,54 +97,4 @@ func (vc *ViperConfig) Translate() Config {
 			Commits: vc.Allowlist.Commits,
 		},
 	}
-}
-
-func (a *Allowlist) CommitAllowed(c string) bool {
-	if c == "" {
-		return false
-	}
-	for _, commit := range a.Commits {
-		if commit == c {
-			return true
-		}
-	}
-	return false
-}
-
-func (a *Allowlist) PathAllowed(path string) bool {
-	if anyRegexMatch(path, a.Paths) {
-		return true
-	}
-	return false
-}
-
-func (a *Allowlist) RegexAllowed(s string) bool {
-	if anyRegexMatch(s, a.Regexes) {
-		return true
-	}
-
-	return false
-}
-
-// anyRegexMatch matched an interface to a regular expression. The interface f can
-// be a string type or go-git *object.File type.
-func anyRegexMatch(f string, res []*regexp.Regexp) bool {
-	for _, re := range res {
-		if regexMatched(f, re) {
-			return true
-		}
-	}
-	return false
-}
-
-// regexMatched matched an interface to a regular expression. The interface f can
-// be a string type or go-git *object.File type.
-func regexMatched(f string, re *regexp.Regexp) bool {
-	if re == nil {
-		return false
-	}
-	if re.FindString(f) != "" {
-		return true
-	}
-	return false
 }

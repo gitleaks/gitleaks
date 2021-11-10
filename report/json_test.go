@@ -20,8 +20,8 @@ func TestWriteJSON(t *testing.T) {
 			findings: []*Finding{
 				{
 					RuleID:      "test-rule",
-					Line:        "line containing secret",
-					Content:     "a secret",
+					Context:     "line containing secret",
+					Secret:      "a secret",
 					StartLine:   1,
 					EndLine:     2,
 					StartColumn: 1,

@@ -52,6 +52,6 @@ func runProtect(cmd *cobra.Command, args []string) {
 	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
-		report.Write(findings, ext, reportPath)
+		report.Write(findings, cfg, ext, reportPath)
 	}
 }

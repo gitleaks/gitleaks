@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -41,11 +42,11 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				EndLine:     location.endLine,
 				StartColumn: location.startColumn,
 				EndColumn:   location.endColumn,
-				Content:     string(b[m[0]:m[1]]),
-				Line:        string(b[location.startLineIndex:location.endLineIndex]),
+				Secret:      strings.Trim(string(b[m[0]:m[1]]), "\n"),
+				Context:     strings.Trim(string(b[location.startLineIndex:location.endLineIndex]), "\n"),
 			}
 
-			if r.Allowlist.RegexAllowed(f.Content) {
+			if r.Allowlist.RegexAllowed(f.Secret) {
 				continue
 			}
 

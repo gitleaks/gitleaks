@@ -25,9 +25,9 @@ func TestDetectFindings(t *testing.T) {
 			filePath: "tmp.go",
 			expectedFindings: []report.Finding{
 				{
-					Content: "AKIALALEMEL33243OLIA",
-					File:    "tmp.go",
-					RuleID:  "aws-access-key",
+					Secret: "AKIALALEMEL33243OLIA",
+					File:   "tmp.go",
+					RuleID: "aws-access-key",
 				},
 			},
 		},
@@ -68,7 +68,7 @@ func TestDetectFindings(t *testing.T) {
 
 		findings := DetectFindings(cfg, tt.bytes, tt.filePath, tt.commit)
 		for _, f := range findings {
-			f.Line = "" // remove lines cause copying and pasting them has some wack formatting
+			f.Context = "" // remove lines cause copying and pasting them has some wack formatting
 			f.Date = ""
 		}
 

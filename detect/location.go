@@ -22,7 +22,7 @@ func getLocation(linePairs [][]int, start int, end int) Location {
 			location.startLine = lineNum
 			location.endLine = lineNum
 			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-			location.startLineIndex = prevNewLine + 1        // +1 to account for newline
+			location.startLineIndex = prevNewLine
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {

@@ -3,6 +3,8 @@ package report
 import (
 	"os"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 const (
@@ -11,7 +13,7 @@ const (
 	CWE_DESCRIPTION = "Use of Hard-coded Credentials"
 )
 
-func Write(findings []*Finding, ext string, reportPath string) error {
+func Write(findings []*Finding, cfg config.Config, ext string, reportPath string) error {
 	if len(findings) == 0 {
 		return nil
 	}
@@ -26,6 +28,7 @@ func Write(findings []*Finding, ext string, reportPath string) error {
 	case ".csv", "csv":
 		writeCsv(findings, file)
 	case ".sarif", "sarif":
+		writeSarif(cfg, findings, file)
 
 	}
 

@@ -11,16 +11,16 @@ func TestRedact(t *testing.T) {
 			redact: true,
 			findings: []Finding{
 				{
-					Line:    "line containing secret",
-					Content: "secret",
+					Secret:  "line containing secret",
+					Context: "secret",
 				},
 			}},
 	}
 	for _, test := range tests {
 		for _, f := range test.findings {
 			f.Redact()
-			if f.Content != "REDACT" {
-				t.Error("redact not redacting: ", f.Content)
+			if f.Secret != "REDACT" {
+				t.Error("redact not redacting: ", f.Secret)
 			}
 		}
 	}
