@@ -1,0 +1,22 @@
+project_name: gitleaks
+
+builds:
+  - main: main.go
+    binary: gitleaks
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - builds: [gitleaks]
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      amd64: x64
+      386: x32
+release:
+  prerelease: true
