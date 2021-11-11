@@ -17,6 +17,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	for f := range files {
+
 		wg.Add(1)
 		go func(f *gitdiff.File) {
 			defer wg.Done()

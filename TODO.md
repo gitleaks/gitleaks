@@ -2,7 +2,7 @@
 - [x] ViperConfig -> Config conversion
 - [x] Unittests
 - [ ] Github Docker Container Registry 
-- [ ] Sairf/csv support
+- [x] Sairf/csv support
 - [ ] Validate Config
 - [x] Add RuleID to rules
 
