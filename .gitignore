@@ -12,3 +12,5 @@ build
 
 # Test binary
 *.out
+
+dist/

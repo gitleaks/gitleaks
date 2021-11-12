@@ -6,9 +6,8 @@ go 1.16
 
 require (
 	github.com/gitleaks/go-gitdiff v0.7.2
-	github.com/google/pprof v0.0.0-20211108044417-e9b028704de0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pkg/profile v1.6.0 // indirect
+	github.com/pkg/profile v1.6.0
 	github.com/rs/zerolog v1.25.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
