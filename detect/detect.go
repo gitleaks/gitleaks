@@ -15,7 +15,6 @@ type Options struct {
 	Redact  bool
 }
 
-// TODO dry up processGitBytes and processBytes
 func DetectFindings(cfg config.Config, b []byte, filePath string, commit string) []report.Finding {
 	var findings []report.Finding
 	linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
@@ -50,7 +49,16 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				continue
 			}
 
-			findings = append(findings, f)
+			// CheckEntropy
+			if r.EntropySet() {
+				include, entropy := r.IncludeEntropy(strings.Trim(string(b[m[0]:m[1]]), "\n"))
+				if include {
+					f.Entropy = entropy
+					findings = append(findings, f)
+				}
+			} else {
+				findings = append(findings, f)
+			}
 		}
 	}
 

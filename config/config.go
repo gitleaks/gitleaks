@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"math"
 	"regexp"
 )
 
@@ -14,13 +15,14 @@ var DefaultConfig string
 type ViperConfig struct {
 	Description string
 	Rules       []struct {
-		ID          string
-		Description string
-		Entropy     float32
-		Regex       string
-		Path        string
-		ReportGroup int
-		Tags        []string
+		ID           string
+		Description  string
+		Entropy      float64
+		EntropyGroup int
+		Regex        string
+		Path         string
+		ReportGroup  int
+		Tags         []string
 
 		Allowlist struct {
 			Regexes []string
@@ -43,14 +45,14 @@ type Config struct {
 }
 
 type Rule struct {
-	Description string
-	RuleID      string
-	Entropy     float32
-	Regex       *regexp.Regexp
-	Path        *regexp.Regexp
-	ReportGroup int
-	Tags        []string
-	Allowlist   Allowlist
+	Description    string
+	RuleID         string
+	Entropy        float64
+	EntropyReGroup int
+	Regex          *regexp.Regexp
+	Path           *regexp.Regexp
+	Tags           []string
+	Allowlist      Allowlist
 }
 
 func (vc *ViperConfig) Translate() Config {
@@ -66,13 +68,13 @@ func (vc *ViperConfig) Translate() Config {
 		}
 
 		rules = append(rules, &Rule{
-			Description: r.Description,
-			RuleID:      r.ID,
-			Entropy:     r.Entropy,
-			Regex:       regexp.MustCompile(r.Regex),
-			Path:        regexp.MustCompile(r.Path),
-			ReportGroup: r.ReportGroup,
-			Tags:        r.Tags,
+			Description:    r.Description,
+			RuleID:         r.ID,
+			Regex:          regexp.MustCompile(r.Regex),
+			Path:           regexp.MustCompile(r.Path),
+			EntropyReGroup: r.EntropyGroup,
+			Entropy:        r.Entropy,
+			Tags:           r.Tags,
 
 			Allowlist: Allowlist{
 				Regexes: alr,
@@ -97,4 +99,45 @@ func (vc *ViperConfig) Translate() Config {
 			Commits: vc.Allowlist.Commits,
 		},
 	}
+}
+
+func (r *Rule) EntropySet() bool {
+	if r.Entropy == 0.0 {
+		return false
+	}
+	return true
+}
+
+func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
+	groups := r.Regex.FindStringSubmatch(secret)
+	e := ShannonEntropy(groups[r.EntropyReGroup])
+	if e > r.Entropy {
+		return true, e
+	}
+
+	return false, 0.0
+}
+
+// shannonEntropy calculates the entropy of data using the formula defined here:
+// https://en.wiktionary.org/wiki/Shannon_entropy
+// Another way to think about what this is doing is calculating the number of bits
+// needed to on average encode the data. So, the higher the entropy, the more random the data, the
+// more bits needed to encode that data.
+func ShannonEntropy(data string) (entropy float64) {
+	if data == "" {
+		return 0
+	}
+
+	charCounts := make(map[rune]int)
+	for _, char := range data {
+		charCounts[char]++
+	}
+
+	invLength := 1.0 / float64(len(data))
+	for _, count := range charCounts {
+		freq := float64(count) * invLength
+		entropy -= freq * math.Log2(freq)
+	}
+
+	return entropy
 }
