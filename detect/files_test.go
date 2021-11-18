@@ -24,6 +24,7 @@ func TestFromFiles(t *testing.T) {
 			cfgName: "simple",
 			expectedFindings: []*report.Finding{
 				{
+					Description: "AWS Access Key",
 					StartLine:   19,
 					EndLine:     19,
 					StartColumn: 16,
@@ -40,6 +41,7 @@ func TestFromFiles(t *testing.T) {
 			cfgName: "simple",
 			expectedFindings: []*report.Finding{
 				{
+					Description: "AWS Access Key",
 					StartLine:   19,
 					EndLine:     19,
 					StartColumn: 16,

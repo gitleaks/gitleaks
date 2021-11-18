@@ -5,6 +5,7 @@ import "strings"
 // Finding contains information about strings that
 // have been captured by a tree-sitter query.
 type Finding struct {
+	Description string
 	StartLine   int
 	EndLine     int
 	StartColumn int

@@ -35,6 +35,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 		for _, m := range matchIndices {
 			location := getLocation(linePairs, m[0], m[1])
 			f := report.Finding{
+				Description: r.Description,
 				File:        filePath,
 				RuleID:      r.RuleID,
 				StartLine:   location.startLine,

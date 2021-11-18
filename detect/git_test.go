@@ -34,6 +34,7 @@ func TestFromGit(t *testing.T) {
 			cfgName:  "simple",
 			expectedFindings: []*report.Finding{
 				{
+					Description: "AWS Access Key",
 					StartLine:   20,
 					EndLine:     20,
 					StartColumn: 19,
@@ -48,6 +49,7 @@ func TestFromGit(t *testing.T) {
 					RuleID:  "aws-access-key",
 				},
 				{
+					Description: "AWS Access Key",
 					StartLine:   9,
 					EndLine:     9,
 					StartColumn: 17,
@@ -70,6 +72,7 @@ func TestFromGit(t *testing.T) {
 			cfgName:  "simple",
 			expectedFindings: []*report.Finding{
 				{
+					Description: "AWS Access Key",
 					StartLine:   9,
 					EndLine:     9,
 					StartColumn: 17,

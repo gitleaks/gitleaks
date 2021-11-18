@@ -19,6 +19,8 @@ func TestWriteJSON(t *testing.T) {
 			expected:       filepath.Join(expectPath, "report", "json_simple.json"),
 			findings: []*Finding{
 				{
+
+					Description: "",
 					RuleID:      "test-rule",
 					Context:     "line containing secret",
 					Secret:      "a secret",

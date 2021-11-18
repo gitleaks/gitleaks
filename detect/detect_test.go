@@ -27,9 +27,10 @@ func TestDetectFindings(t *testing.T) {
 			filePath: "tmp.go",
 			expectedFindings: []report.Finding{
 				{
-					Secret: "AKIALALEMEL33243OLIA",
-					File:   "tmp.go",
-					RuleID: "aws-access-key",
+					Description: "AWS Access Key",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "tmp.go",
+					RuleID:      "aws-access-key",
 				},
 			},
 		},
@@ -58,10 +59,11 @@ func TestDetectFindings(t *testing.T) {
 			filePath: "tmp.go",
 			expectedFindings: []report.Finding{
 				{
-					Secret:  "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
-					File:    "tmp.go",
-					RuleID:  "discord-api-key",
-					Entropy: 3.7906237,
+					Description: "Discord API key",
+					Secret:      "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					File:        "tmp.go",
+					RuleID:      "discord-api-key",
+					Entropy:     3.7906237,
 				},
 			},
 		},
