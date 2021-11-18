@@ -14,6 +14,7 @@ func writeCsv(f []*Finding, w io.WriteCloser) error {
 	defer w.Close()
 	cw := csv.NewWriter(w)
 	err := cw.Write([]string{"RuleID",
+        "Description",
 		"Commit",
 		"File",
 		"Secret",
@@ -32,6 +33,7 @@ func writeCsv(f []*Finding, w io.WriteCloser) error {
 	}
 	for _, f := range f {
 		err = cw.Write([]string{f.RuleID,
+            f.Description,
 			f.Commit,
 			f.File,
 			f.Secret,

@@ -37,6 +37,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 			f := report.Finding{
 				File:        filePath,
 				RuleID:      r.RuleID,
+				Description: r.Description,
 				StartLine:   location.startLine,
 				EndLine:     location.endLine,
 				StartColumn: location.startColumn,

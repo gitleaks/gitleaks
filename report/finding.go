@@ -30,7 +30,8 @@ type Finding struct {
 	Message string
 
 	// Rule is the name of the rule that was matched
-	RuleID string
+	RuleID      string
+	Description string
 }
 
 // Redact removes sensitive information from a finding.
