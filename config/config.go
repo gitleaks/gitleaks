@@ -116,7 +116,7 @@ func (r *Rule) EntropySet() bool {
 
 func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
 	groups := r.Regex.FindStringSubmatch(secret)
-	if len(groups)-1 > r.EntropyReGroup {
+	if len(groups)-1 > r.EntropyReGroup || len(groups) == 0 {
 		// Config validation should prevent this
 		return false, 0.0
 	}
