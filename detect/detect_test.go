@@ -25,9 +25,10 @@ func TestDetectFindings(t *testing.T) {
 			filePath: "tmp.go",
 			expectedFindings: []report.Finding{
 				{
-					Secret: "AKIALALEMEL33243OLIA",
-					File:   "tmp.go",
-					RuleID: "aws-access-key",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "tmp.go",
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
 				},
 			},
 		},

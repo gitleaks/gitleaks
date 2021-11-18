@@ -20,6 +20,7 @@ func TestWriteCSV(t *testing.T) {
 			findings: []*Finding{
 				{
 					RuleID:      "test-rule",
+					Description: "",
 					Context:     "line containing secret",
 					Secret:      "a secret",
 					StartLine:   1,

@@ -13,6 +13,7 @@
   "Email": "johndoe@gmail.com",
   "Date": "10-19-2003",
   "Message": "opps",
-  "RuleID": "test-rule"
+  "RuleID": "test-rule",
+  "Description": ""
  }
 ]
