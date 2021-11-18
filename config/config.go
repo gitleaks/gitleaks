@@ -120,7 +120,7 @@ func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
 		return false, 0.0
 	}
 	// group = 0 will check the entropy of the whole regex match
-	e := ShannonEntropy(groups[r.EntropyReGroup])
+	e := shannonEntropy(groups[r.EntropyReGroup])
 	if e > r.Entropy {
 		return true, e
 	}
@@ -133,7 +133,7 @@ func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
 // Another way to think about what this is doing is calculating the number of bits
 // needed to on average encode the data. So, the higher the entropy, the more random the data, the
 // more bits needed to encode that data.
-func ShannonEntropy(data string) (entropy float64) {
+func shannonEntropy(data string) (entropy float64) {
 	if data == "" {
 		return 0
 	}
