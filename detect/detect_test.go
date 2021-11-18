@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -18,6 +19,7 @@ func TestDetectFindings(t *testing.T) {
 		bytes            []byte
 		commit           string
 		expectedFindings []report.Finding
+		wantError        error
 	}{
 		{
 			cfgName:  "simple",
@@ -50,6 +52,26 @@ func TestDetectFindings(t *testing.T) {
 			expectedFindings: []report.Finding{},
 			commit:           "allowthiscommit",
 		},
+		{
+			cfgName:  "entropy_group",
+			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
+			filePath: "tmp.go",
+			expectedFindings: []report.Finding{
+				{
+					Secret:  "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					File:    "tmp.go",
+					RuleID:  "discord-api-key",
+					Entropy: 3.7906237,
+				},
+			},
+		},
+		{
+			cfgName:          "bad_entropy_group",
+			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
+			filePath:         "tmp.go",
+			expectedFindings: []report.Finding{},
+			wantError:        fmt.Errorf("Discord API key invalid regex entropy group 5, max regex entropy group 3"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -64,7 +86,13 @@ func TestDetectFindings(t *testing.T) {
 
 		var vc config.ViperConfig
 		viper.Unmarshal(&vc)
-		cfg := vc.Translate()
+		cfg, err := vc.Translate()
+		if tt.wantError != nil {
+			if err == nil {
+				t.Errorf("expected error")
+			}
+			assert.Equal(t, tt.wantError, err)
+		}
 
 		findings := DetectFindings(cfg, tt.bytes, tt.filePath, tt.commit)
 		for _, f := range findings {

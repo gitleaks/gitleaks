@@ -64,7 +64,7 @@ func TestFromFiles(t *testing.T) {
 
 		var vc config.ViperConfig
 		viper.Unmarshal(&vc)
-		cfg := vc.Translate()
+		cfg, _ := vc.Translate()
 
 		findings, err := FromFiles(tt.source, cfg, tt.opts)
 		if err != nil {

@@ -109,7 +109,7 @@ func TestFromGit(t *testing.T) {
 
 		var vc config.ViperConfig
 		viper.Unmarshal(&vc)
-		cfg := vc.Translate()
+		cfg, _ := vc.Translate()
 
 		findings := FromGit(files, cfg, tt.opts)
 		for _, f := range findings {

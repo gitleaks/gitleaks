@@ -28,7 +28,10 @@ func runProtect(cmd *cobra.Command, args []string) {
 	var vc config.ViperConfig
 
 	viper.Unmarshal(&vc)
-	cfg := vc.Translate()
+	cfg, err := vc.Translate()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to load config")
+	}
 
 	source, _ := cmd.Flags().GetString("source")
 	verbosity, _ := cmd.Flags().GetBool("verbose")

@@ -49,11 +49,10 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				continue
 			}
 
-			// CheckEntropy
 			if r.EntropySet() {
 				include, entropy := r.IncludeEntropy(strings.Trim(string(b[m[0]:m[1]]), "\n"))
 				if include {
-					f.Entropy = entropy
+					f.Entropy = float32(entropy)
 					findings = append(findings, f)
 				}
 			} else {

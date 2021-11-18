@@ -22,7 +22,7 @@ type Finding struct {
 	Commit string
 
 	// Entropy is the shannon entropy of Value
-	Entropy float64
+	Entropy float32
 
 	Author  string
 	Email   string

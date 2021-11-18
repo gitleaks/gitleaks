@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"fmt"
 	"math"
 	"regexp"
 )
@@ -21,7 +22,6 @@ type ViperConfig struct {
 		EntropyGroup int
 		Regex        string
 		Path         string
-		ReportGroup  int
 		Tags         []string
 
 		Allowlist struct {
@@ -55,7 +55,7 @@ type Rule struct {
 	Allowlist      Allowlist
 }
 
-func (vc *ViperConfig) Translate() Config {
+func (vc *ViperConfig) Translate() (Config, error) {
 	var rules []*Rule
 	for _, r := range vc.Rules {
 		var alr []*regexp.Regexp
@@ -67,7 +67,7 @@ func (vc *ViperConfig) Translate() Config {
 			alp = append(alp, regexp.MustCompile(a))
 		}
 
-		rules = append(rules, &Rule{
+		r := &Rule{
 			Description:    r.Description,
 			RuleID:         r.ID,
 			Regex:          regexp.MustCompile(r.Regex),
@@ -75,12 +75,17 @@ func (vc *ViperConfig) Translate() Config {
 			EntropyReGroup: r.EntropyGroup,
 			Entropy:        r.Entropy,
 			Tags:           r.Tags,
-
 			Allowlist: Allowlist{
 				Regexes: alr,
 				Paths:   alp,
 				Commits: r.Allowlist.Commits,
-			}})
+			},
+		}
+		if r.EntropyReGroup > r.Regex.NumSubexp() {
+			return Config{}, fmt.Errorf("%s invalid regex entropy group %d, max regex entropy group %d", r.Description, r.EntropyReGroup, r.Regex.NumSubexp())
+		}
+		rules = append(rules, r)
+
 	}
 	var alr []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {
@@ -98,7 +103,7 @@ func (vc *ViperConfig) Translate() Config {
 			Paths:   alp,
 			Commits: vc.Allowlist.Commits,
 		},
-	}
+	}, nil
 }
 
 func (r *Rule) EntropySet() bool {
@@ -110,6 +115,11 @@ func (r *Rule) EntropySet() bool {
 
 func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
 	groups := r.Regex.FindStringSubmatch(secret)
+	if len(groups)-1 > r.EntropyReGroup {
+		// Config validation should prevent this
+		return false, 0.0
+	}
+	// group = 0 will check the entropy of the whole regex match
 	e := ShannonEntropy(groups[r.EntropyReGroup])
 	if e > r.Entropy {
 		return true, e
