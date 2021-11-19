@@ -36,7 +36,6 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().String("exit-code", "", "exit code when leaks have been encountered (default: 1)")
@@ -72,25 +71,26 @@ func initLog() {
 }
 
 func initConfig() {
+	fmt.Fprintf(os.Stderr, banner)
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {
 		log.Fatal().Err(err)
 	}
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
-		log.Debug().Msgf("Using gitleaks config %s\n", cfgPath)
+		log.Debug().Msgf("Using gitleaks config %s", cfgPath)
 	} else {
 		source, err := rootCmd.Flags().GetString("source")
 		if err != nil {
 			log.Fatal().Err(err)
 		}
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
-			log.Debug().Msgf("No gitleaks config found, writing default gitleaks config to %s\n", filepath.Join(source, ".gitleaks.toml"))
+			log.Debug().Msgf("No gitleaks config found, writing default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml"))
 			if err := os.WriteFile(filepath.Join(source, ".gitleaks.toml"), []byte(config.DefaultConfig), os.ModePerm); err != nil {
-				log.Debug().Msgf("Unable to write default gitleaks config to %s\n", filepath.Join(source, ".gitleaks.toml"))
+				log.Debug().Msgf("Unable to write default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml"))
 			}
 		} else {
-			log.Debug().Msgf("Using gitleaks config %s\n", filepath.Join(source, ".gitleaks.toml"))
+			log.Debug().Msgf("Using existing gitleaks config %s", filepath.Join(source, ".gitleaks.toml"))
 		}
 
 		viper.AddConfigPath(source)
@@ -103,7 +103,6 @@ func initConfig() {
 }
 
 func Execute() {
-	fmt.Fprintf(os.Stderr, banner)
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal().Err(err)
 	}

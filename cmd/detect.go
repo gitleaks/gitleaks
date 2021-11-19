@@ -21,11 +21,12 @@ func init() {
 
 var detectCmd = &cobra.Command{
 	Use:   "detect",
-	Short: "Detect secrets in code",
+	Short: "detect secrets in code",
 	Run:   runDetect,
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
+	initConfig()
 	var (
 		vc       config.ViperConfig
 		findings []*report.Finding
@@ -40,14 +41,17 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	source, _ := cmd.Flags().GetString("source")
 	logOpts, _ := cmd.Flags().GetString("log-opts")
-	verbosity, _ := cmd.Flags().GetBool("verbose")
+	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	noGit, _ := cmd.Flags().GetBool("no-git")
 	start := time.Now()
 
 	if noGit {
+		if logOpts != "" {
+			log.Fatal().Err(err).Msg("--log-opts cannot be used with --no-git")
+		}
 		findings, err = detect.FromFiles(source, cfg, detect.Options{
-			Verbose: verbosity,
+			Verbose: verbose,
 			Redact:  redact,
 		})
 		if err != nil {
@@ -59,7 +63,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.Fatal().Err(err).Msg("Failed to get git log")
 		}
 
-		findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbosity, Redact: redact})
+		findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbose, Redact: redact})
 	}
 
 	if len(findings) != 0 {

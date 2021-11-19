@@ -43,7 +43,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				StartColumn: location.startColumn,
 				EndColumn:   location.endColumn,
 				Secret:      strings.Trim(string(b[m[0]:m[1]]), "\n"),
-				Context:     strings.Trim(string(b[location.startLineIndex:location.endLineIndex]), "\n"),
+				Context:     limit(strings.Trim(string(b[location.startLineIndex:location.endLineIndex]), "\n")),
 			}
 
 			if r.Allowlist.RegexAllowed(f.Secret) {
@@ -63,6 +63,13 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	}
 
 	return findings
+}
+
+func limit(s string) string {
+	if len(s) > 500 {
+		return s[:500] + "..."
+	}
+	return s
 }
 
 func printFinding(f report.Finding) {

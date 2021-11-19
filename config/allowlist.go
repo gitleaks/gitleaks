@@ -32,6 +32,5 @@ func (a *Allowlist) RegexAllowed(s string) bool {
 	if anyRegexMatch(s, a.Regexes) {
 		return true
 	}
-
 	return false
 }

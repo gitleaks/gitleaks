@@ -20,11 +20,12 @@ func init() {
 
 var protectCmd = &cobra.Command{
 	Use:   "protect",
-	Short: "Protect secrets in code",
+	Short: "protect secrets in code",
 	Run:   runProtect,
 }
 
 func runProtect(cmd *cobra.Command, args []string) {
+	initConfig()
 	var vc config.ViperConfig
 
 	viper.Unmarshal(&vc)
@@ -34,7 +35,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 
 	source, _ := cmd.Flags().GetString("source")
-	verbosity, _ := cmd.Flags().GetBool("verbose")
+	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	start := time.Now()
 
@@ -43,7 +44,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("Failed to get git log")
 	}
 
-	findings := detect.FromGit(files, cfg, detect.Options{Verbose: verbosity, Redact: redact})
+	findings := detect.FromGit(files, cfg, detect.Options{Verbose: verbose, Redact: redact})
 	if len(findings) != 0 {
 		log.Warn().Msgf("leaks found: %d", len(findings))
 	} else {

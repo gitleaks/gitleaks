@@ -9,13 +9,12 @@ import (
 const Version = "v8.0.0"
 
 func init() {
-	// TODO
 	rootCmd.AddCommand(versionCmd)
 }
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Display gitleaks version",
+	Short: "display gitleaks version",
 	Run:   runVersion,
 }
 

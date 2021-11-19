@@ -3,9 +3,7 @@ package config
 import (
 	_ "embed"
 	"fmt"
-	"math"
 	"regexp"
-	"strings"
 )
 
 //go:embed gitleaks.toml
@@ -45,27 +43,16 @@ type Config struct {
 	Allowlist   Allowlist
 }
 
-type Rule struct {
-	Description    string
-	RuleID         string
-	Entropy        float64
-	EntropyReGroup int
-	Regex          *regexp.Regexp
-	Path           *regexp.Regexp
-	Tags           []string
-	Allowlist      Allowlist
-}
-
 func (vc *ViperConfig) Translate() (Config, error) {
 	var rules []*Rule
 	for _, r := range vc.Rules {
-		var alr []*regexp.Regexp
+		var allowlistRegexes []*regexp.Regexp
 		for _, a := range r.Allowlist.Regexes {
-			alr = append(alr, regexp.MustCompile(a))
+			allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
 		}
-		var alp []*regexp.Regexp
+		var allowlistPaths []*regexp.Regexp
 		for _, a := range r.Allowlist.Paths {
-			alp = append(alp, regexp.MustCompile(a))
+			allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 		}
 
 		r := &Rule{
@@ -77,8 +64,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Entropy:        r.Entropy,
 			Tags:           r.Tags,
 			Allowlist: Allowlist{
-				Regexes: alr,
-				Paths:   alp,
+				Regexes: allowlistRegexes,
+				Paths:   allowlistPaths,
 				Commits: r.Allowlist.Commits,
 			},
 		}
@@ -88,90 +75,21 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		rules = append(rules, r)
 
 	}
-	var alr []*regexp.Regexp
+	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {
-		alr = append(alr, regexp.MustCompile(a))
+		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
 	}
-	var alp []*regexp.Regexp
+	var allowlistPaths []*regexp.Regexp
 	for _, a := range vc.Allowlist.Paths {
-		alp = append(alp, regexp.MustCompile(a))
+		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 	}
 	return Config{
 		Description: vc.Description,
 		Rules:       rules,
 		Allowlist: Allowlist{
-			Regexes: alr,
-			Paths:   alp,
+			Regexes: allowlistRegexes,
+			Paths:   allowlistPaths,
 			Commits: vc.Allowlist.Commits,
 		},
 	}, nil
-}
-
-func (r *Rule) EntropySet() bool {
-	if r.Entropy == 0.0 {
-		return false
-	}
-	return true
-}
-
-func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
-	groups := r.Regex.FindStringSubmatch(secret)
-	if len(groups)-1 > r.EntropyReGroup || len(groups) == 0 {
-		// Config validation should prevent this
-		return false, 0.0
-	}
-
-	// NOTE: this is a goofy hack to get around the fact there golang's regex engine
-	// does not support positive lookaheads. Ideally we would want to add a
-	// restriction on generic rules regex that requires the secret match group
-	// contains both numbers and alphabetical characters. What this does is
-	// check if the ruleid is prepended with "generic" and enforces the
-	// secret contains both digits and alphabetical characters
-	if strings.HasPrefix(r.RuleID, "generic") {
-		if !containsDigit(groups[r.EntropyReGroup]) {
-			return false, 0.0
-		}
-	}
-	// group = 0 will check the entropy of the whole regex match
-	e := shannonEntropy(groups[r.EntropyReGroup])
-	if e > r.Entropy {
-		return true, e
-	}
-
-	return false, 0.0
-}
-
-func containsDigit(s string) bool {
-	for _, c := range s {
-		switch c {
-		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			return true
-		}
-
-	}
-	return false
-}
-
-// shannonEntropy calculates the entropy of data using the formula defined here:
-// https://en.wiktionary.org/wiki/Shannon_entropy
-// Another way to think about what this is doing is calculating the number of bits
-// needed to on average encode the data. So, the higher the entropy, the more random the data, the
-// more bits needed to encode that data.
-func shannonEntropy(data string) (entropy float64) {
-	if data == "" {
-		return 0
-	}
-
-	charCounts := make(map[rune]int)
-	for _, char := range data {
-		charCounts[char]++
-	}
-
-	invLength := 1.0 / float64(len(data))
-	for _, count := range charCounts {
-		freq := float64(count) * invLength
-		entropy -= freq * math.Log2(freq)
-	}
-
-	return entropy
 }
