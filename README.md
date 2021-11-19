@@ -100,3 +100,24 @@ Flags:
 Use "gitleaks [command] --help" for more information about a command.
 ```
 
+#### Commands
+There are two commands you will use to detect secrets; `detect` and `protect`.
+##### Detect
+The `detect` command is used to scan repos, directories, and files.  This comand can be used on developer machines and in CI environments. 
+
+When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed 
+[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)). 
+[`git log -p` generates patches](https://git-scm.com/docs/git-log#_generating_patch_text_with_p) which gitleaks will use to detect secrets. 
+You can configure what commits `git log` will range over by using the `--log-opts` flag. `--log-opts` accepts any option for `git log -p`. 
+For example, if you wanted to run gitleaks on a range of commits you could use the following command: `gitleaks --source . --log-opts="--all commitA..commitB"`. 
+See the `git log` [documentation](https://git-scm.com/docs/git-log) for more information.
+
+You can scan files and directories by using the `--no-git` option.
+
+##### Protect
+The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with 
+[shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security). 
+When running `detect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
+[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)).
+
+**NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
