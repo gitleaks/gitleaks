@@ -87,7 +87,10 @@ func initConfig() {
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
 			log.Debug().Msgf("No gitleaks config found, writing default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml"))
 			if err := os.WriteFile(filepath.Join(source, ".gitleaks.toml"), []byte(config.DefaultConfig), os.ModePerm); err != nil {
-				log.Debug().Msgf("Unable to write default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml"))
+				log.Debug().Msgf("Unable to write default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml, using default config"))
+				viper.SetConfigType("toml")
+				viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+				return
 			}
 		} else {
 			log.Debug().Msgf("Using existing gitleaks config %s", filepath.Join(source, ".gitleaks.toml"))

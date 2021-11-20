@@ -47,6 +47,7 @@ func TestFromGit(t *testing.T) {
 					Email:   "zricer@protonmail.com",
 					Message: "Accidentally add a secret",
 					RuleID:  "aws-access-key",
+					Tags:    []string{"key", "AWS"},
 				},
 				{
 					Description: "AWS Access Key",
@@ -62,6 +63,7 @@ func TestFromGit(t *testing.T) {
 					Email:   "zricer@protonmail.com",
 					Message: "adding foo package with secret",
 					RuleID:  "aws-access-key",
+					Tags:    []string{"key", "AWS"},
 				},
 			},
 		},
@@ -85,6 +87,7 @@ func TestFromGit(t *testing.T) {
 					Email:   "zricer@protonmail.com",
 					Message: "adding foo package with secret",
 					RuleID:  "aws-access-key",
+					Tags:    []string{"key", "AWS"},
 				},
 			},
 		},

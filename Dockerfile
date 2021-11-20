@@ -2,7 +2,7 @@ FROM golang:1.17 AS build
 WORKDIR /go/src/github.com/zricethezav/gitleaks
 ARG ldflags
 COPY . .
-RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks -ldflags "-X="${ldflags} *.go 
+RUN GO111MODULE=on CGO_ENABLED=0 go build -o bin/gitleaks
 
 FROM alpine:3.14.2
 RUN adduser -D gitleaks && \

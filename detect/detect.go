@@ -44,6 +44,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				EndColumn:   location.endColumn,
 				Secret:      strings.Trim(string(b[m[0]:m[1]]), "\n"),
 				Context:     limit(strings.Trim(string(b[location.startLineIndex:location.endLineIndex]), "\n")),
+				Tags:        r.Tags,
 			}
 
 			if r.Allowlist.RegexAllowed(f.Secret) {

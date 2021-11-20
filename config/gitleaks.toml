@@ -34,13 +34,11 @@ title = "gitleaks config"
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"
 regex = '''glpat-[0-9a-zA-Z\-]{20}'''
-tags = ["gitlab", "revocation_type"]
 
 [[rules]]
 id = "aws-access-token"
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
-tags = ["aws", "revocation_type"]
 
 # Cryptographic keys
 [[rules]]

@@ -10,11 +10,6 @@ import (
 )
 
 func main() {
-	// defer profile.Start(profile.ProfilePath(".")).Stop()
-	// defer profile.Start(profile.MemProfileHeap).Stop()
-	// defer profile.Start(profile.MemProfileAllocs).Stop()
-	// defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
-
 	// send all logs to stdout
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
