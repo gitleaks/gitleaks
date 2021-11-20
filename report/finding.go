@@ -29,6 +29,7 @@ type Finding struct {
 	Email   string
 	Date    string
 	Message string
+	Tags    []string
 
 	// Rule is the name of the rule that was matched
 	RuleID string

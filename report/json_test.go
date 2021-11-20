@@ -34,6 +34,7 @@ func TestWriteJSON(t *testing.T) {
 					Author:      "John Doe",
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
+					Tags:        []string{},
 				},
 			}},
 		{
