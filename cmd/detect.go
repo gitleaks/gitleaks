@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -44,6 +45,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	noGit, _ := cmd.Flags().GetBool("no-git")
+	exitCode, _ := cmd.Flags().GetInt("exit-code")
 	start := time.Now()
 
 	if noGit {
@@ -78,5 +80,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		report.Write(findings, cfg, ext, reportPath)
+	}
+
+	if len(findings) != 0 {
+		os.Exit(exitCode)
 	}
 }

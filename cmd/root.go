@@ -38,7 +38,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
-	rootCmd.PersistentFlags().String("exit-code", "", "exit code when leaks have been encountered (default: 1)")
+	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered (default: 1)")
 	rootCmd.PersistentFlags().StringP("source", "s", "", "path to source (git repo, directory, file)")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, sarif)")

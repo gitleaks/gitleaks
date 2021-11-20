@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	source, _ := cmd.Flags().GetString("source")
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
+	exitCode, _ := cmd.Flags().GetInt("exit-code")
 	start := time.Now()
 
 	files, err := git.GitDiff(source)
@@ -57,5 +59,8 @@ func runProtect(cmd *cobra.Command, args []string) {
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		report.Write(findings, cfg, ext, reportPath)
+	}
+	if len(findings) != 0 {
+		os.Exit(exitCode)
 	}
 }
