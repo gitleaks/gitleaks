@@ -19,3 +19,6 @@ build: format
 	go mod tidy
 	go build
 
+clean:
+	find . -type f -name '*.got.*' -delete
+	find . -type f -name '*.out' -delete
