@@ -55,20 +55,6 @@ Go 1.16+ required.
 GO111MODULE=on go get github.com/zricethezav/gitleaks/v8
 ```
 
-
-##### As a pre-commit hook
-
-See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions.
-
-Sample `.pre-commit-config.yaml`
-
-```yaml
-- repo: https://github.com/zricethezav/gitleaks
-  rev: {version}
-  hooks:
-    - id: gitleaks
-```
-
 ## Usage
 ```
 Usage:
@@ -121,6 +107,56 @@ When running `detect` on a git repository, gitleaks will parse the output of a `
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)).
 
 **NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
+
+### Verify Findings
+You can verify a finding found by gitleaks using a `git log` command.
+Example output:
+```
+{
+        "Description": "AWS",
+        "StartLine": 37,
+        "EndLine": 37,
+        "StartColumn": 19,
+        "EndColumn": 38,
+        "Context": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
+        "Secret": "AKIAIMNOJVGFDXXXE4OA",
+        "File": "checks_test.go",
+        "Commit": "ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29",
+        "Entropy": 0,
+        "Author": "zricethezav",
+        "Email": "thisispublicanyways@gmail.com",
+        "Date": "2018-01-28 17:39:00 -0500 -0500",
+        "Message": "[update] entropy check",
+        "Tags": [],
+        "RuleID": "aws-access-token"
+}
+
+```
+We can use the following format to verify the leak:
+
+```
+git log -L {StartLine,EndLine}:{File} {Commit}
+```
+So in this example it would look like:
+```
+git log -L 37,37:checks_test.go ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
+```
+Which gives us:
+
+```
+commit ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
+Author: zricethezav <thisispublicanyways@gmail.com>
+Date:   Sun Jan 28 17:39:00 2018 -0500
+
+    [update] entropy check
+
+diff --git a/checks_test.go b/checks_test.go
+--- a/checks_test.go
++++ b/checks_test.go
+@@ -28,0 +37,1 @@
++               "aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
+
+```
 
 
 ## Configuration

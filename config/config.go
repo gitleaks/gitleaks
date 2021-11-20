@@ -55,6 +55,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 		}
 
+		if r.Tags == nil {
+			r.Tags = []string{}
+		}
+
 		r := &Rule{
 			Description:    r.Description,
 			RuleID:         r.ID,

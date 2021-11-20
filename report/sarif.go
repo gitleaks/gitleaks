@@ -44,7 +44,7 @@ func getRules(cfg config.Config) []Rules {
 	var rules []Rules
 	for _, rule := range cfg.Rules {
 		rules = append(rules, Rules{
-			ID:   rule.Description,
+			ID:   rule.RuleID,
 			Name: rule.Description,
 			Description: ShortDescription{
 				Text: rule.Regex.String(),

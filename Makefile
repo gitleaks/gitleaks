@@ -1,4 +1,4 @@
-.PHONY: test test-cover build release-builds
+.PHONY: test test-cover
 
 PKG=github.com/zricethezav/gitleaks
 COVER=--cover --coverprofile=cover.out

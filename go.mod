@@ -2,12 +2,8 @@ module github.com/zricethezav/gitleaks/v8
 
 go 1.16
 
-// replace github.com/gitleaks/go-gitdiff => ./../gitleaks-org/go-gitdiff
-
 require (
 	github.com/gitleaks/go-gitdiff v0.7.2
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pkg/profile v1.6.0
 	github.com/rs/zerolog v1.25.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1

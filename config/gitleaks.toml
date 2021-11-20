@@ -31,161 +31,184 @@ title = "gitleaks config"
 #                                                                                                      
 
 [[rules]]
+id = "gitlab-pat"
 description = "GitLab Personal Access Token"
 regex = '''glpat-[0-9a-zA-Z\-]{20}'''
 tags = ["gitlab", "revocation_type"]
 
 [[rules]]
+id = "aws-access-token"
 description = "AWS"
 regex = '''AKIA[0-9A-Z]{16}'''
 tags = ["aws", "revocation_type"]
 
 # Cryptographic keys
 [[rules]]
+id = "PKCS8-PK"
 description = "PKCS8 private key"
 regex = '''-----BEGIN PRIVATE KEY-----'''
 
 [[rules]]
+id = "RSA-PK"
 description = "RSA private key"
 regex = '''-----BEGIN RSA PRIVATE KEY-----'''
 
 [[rules]]
+id = "OPENSSH-PK"
 description = "SSH private key"
 regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
 
 [[rules]]
+id = "PGP-PK"
 description = "PGP private key"
 regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 
 [[rules]]
+id = "github-pat"
 description = "Github Personal Access Token"
 regex = '''ghp_[0-9a-zA-Z]{36}'''
 
 [[rules]]
+id = "github-oauth"
 description = "Github OAuth Access Token"
 regex = '''gho_[0-9a-zA-Z]{36}'''
 
 [[rules]]
+id = "SSH-DSA-PK"
 description = "SSH (DSA) private key"
 regex = '''-----BEGIN DSA PRIVATE KEY-----'''
 
 [[rules]]
+id = "SSH-EC-PK"
 description = "SSH (EC) private key"
 regex = '''-----BEGIN EC PRIVATE KEY-----'''
 
 
 [[rules]]
+id = "github-app-token"
 description = "Github App Token"
 regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
 
 [[rules]]
+id = "github-refresh-token"
 description = "Github Refresh Token"
 regex = '''ghr_[0-9a-zA-Z]{76}'''
 
 [[rules]]
+id = "shopify-shared-secret"
 description = "Shopify shared secret"
 regex = '''shpss_[a-fA-F0-9]{32}'''
 
 [[rules]]
+id = "shopify-access-token"
 description = "Shopify access token"
 regex = '''shpat_[a-fA-F0-9]{32}'''
 
 [[rules]]
+id = "shopify-custom-access-token"
 description = "Shopify custom app access token"
 regex = '''shpca_[a-fA-F0-9]{32}'''
 
 [[rules]]
+id = "shopify-private-app-access-token"
 description = "Shopify private app access token"
 regex = '''shppa_[a-fA-F0-9]{32}'''
 
 [[rules]]
+id = "slack-access-token"
 description = "Slack token"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
 
 [[rules]]
+id = "stripe-access-token"
 description = "Stripe"
 regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
 
 [[rules]]
+id = "pypi-upload-token"
 description = "PyPI upload token"
 regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
-tags = ["pypi", "revocation_type"]
 
 [[rules]]
-description = "Generic API Key"
 id = "generic-api-key"
+description = "Generic API Key"
 regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
 entropy = 3.7
 entropyGroup = 4
 
+# ➜  ~/code/gitleaks (v8) git show ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29 -- checks_test.go
 [[rules]]
+id = "gcp-service-account"
 description = "Google (GCP) Service-account"
 regex = '''\"type\": \"service_account\"'''
 
 [[rules]]
+id = "heroku-api-key"
 description = "Heroku API Key"
 regex = ''' (?i)(heroku[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})['\"]'''
 
-
 [[rules]]
-# demo of this regex not matching passwords in urls that contain env vars:
-# https://regex101.com/r/rT9Lv9/3
-description = "Password in URL"
-regex = '''[a-zA-Z]{3,10}:\/\/[^$][^:@]{3,20}:[^$][^:@]{3,40}@.{1,100}'''
-
-[[rules]]
+id = "slack-web-hook"
 description = "Slack Webhook"
 regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'''
 
 [[rules]]
+id = "twilio-api-key"
 description = "Twilio API Key"
 regex = '''SK[0-9a-fA-F]{32}'''
 
 [[rules]]
-description = "Social Security Number"
-regex = '''\d{3}-\d{2}-\d{4}'''
-
-[[rules]]
+id = "age-secret-key"
 description = "Age secret key"
 regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
 
 [[rules]]
+id = "facebook-token"
 description = "Facebook token"
 regex = '''(?i)(facebook[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
 
 [[rules]]
+id = "twitter-token"
 description = "Twitter token"
 regex = '''(?i)(twitter[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{35,44})['\"]'''
 
 [[rules]]
+id = "adobe-client-id"
 description = "Adobe Client ID (Oauth Web)"
 regex = '''(?i)(adobe[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
 
 [[rules]]
+id = "adobe-client-secret"
 description = "Adobe Client Secret"
 regex = '''(p8e-)(?i)[a-z0-9]{32}'''
 
 [[rules]]
+id = "alibaba-access-key-id"
 description = "Alibaba AccessKey ID"
 regex = '''(LTAI)(?i)[a-z0-9]{20}'''
 
 [[rules]]
+id = "alibaba-secret-key"
 description = "Alibaba Secret Key"
 regex = '''(?i)(alibaba[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{30})['\"]'''
 
 [[rules]]
+id = "asana-client-id"
 description = "Asana Client ID"
 regex = '''(?i)(asana[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9]{16})['\"]'''
 
 [[rules]]
+id = "asana-client-secret"
 description = "Asana Client Secret"
 regex = '''(?i)(asana[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{32})['\"]'''
 
 [[rules]]
+id = "atlassian-api-token"
 description = "Atlassian API token"
 regex = '''(?i)(atlassian[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{24})['\"]'''
 
 [[rules]]
+id = "bitbucket-client-id"
 description = "Bitbucket client ID"
 regex = '''(?i)(bitbucket[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{32})['\"]'''
 

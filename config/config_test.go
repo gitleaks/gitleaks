@@ -84,6 +84,7 @@ func TestTranslate(t *testing.T) {
 						Allowlist:      Allowlist{},
 						Entropy:        3.5,
 						EntropyReGroup: 3,
+						Tags:           []string{},
 					},
 				},
 			},
