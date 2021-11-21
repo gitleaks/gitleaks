@@ -44,10 +44,13 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 }
 
 // GitDiff returns a channel of gitdiff.File objects from the git diff command for the given source.
-func GitDiff(source string) (<-chan *gitdiff.File, error) {
+func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
-	cmd := exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
-
+	var cmd *exec.Cmd
+	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
+	if staged {
+		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--staged", ".")
+	}
 	log.Debug().Msgf("executing: %s", cmd.String())
 
 	stdout, err := cmd.StdoutPipe()

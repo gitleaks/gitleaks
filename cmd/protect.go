@@ -15,6 +15,7 @@ import (
 )
 
 func init() {
+	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
 	rootCmd.AddCommand(protectCmd)
 }
 
@@ -38,9 +39,10 @@ func runProtect(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	exitCode, _ := cmd.Flags().GetInt("exit-code")
+	staged, _ := cmd.Flags().GetBool("staged")
 	start := time.Now()
 
-	files, err := git.GitDiff(source)
+	files, err := git.GitDiff(source, staged)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get git log")
 	}

@@ -104,7 +104,9 @@ You can scan files and directories by using the `--no-git` option.
 The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with 
 [shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security). 
 When running `detect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)).
+[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the 
+`--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
+as a pre-commit.
 
 **NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
 
@@ -157,7 +159,6 @@ diff --git a/checks_test.go b/checks_test.go
 +               "aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
 
 ```
-
 
 ## Configuration
 Gitleaks offers a configuration format you can follow to write your own secret detection rules:
