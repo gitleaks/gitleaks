@@ -98,7 +98,7 @@ func TestGitDiff(t *testing.T) {
 			t.Error(err)
 		}
 
-		files, err := git.GitDiff(tt.source)
+		files, err := git.GitDiff(tt.source, false)
 		if err != nil {
 			restore(tt.target, noChanges, t)
 			t.Error(err)
