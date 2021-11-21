@@ -27,33 +27,32 @@ Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys
 ## Getting Started
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
-##### MacOS
+### MacOS
 
 ```bash
 brew install gitleaks
 ```
 
-##### Docker
-
-Building the image after cloning the repo:
-```bash
-make dockerbuild
-```
-
+### Docker
 Using the image from DockerHub:
 ```bash
-# To just pull the image
 docker pull zricethezav/gitleaks:latest
-# To run it from your cloned repo
-cd to/your/repo/
-docker run -v ${PWD}:/my-repo zricethezav/gitleaks:latest --source="/source" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+```
+NOTE: this does not include `-ldflags` which will not set the version.
+
+### From Source
+1. Download and install Go from https://golang.org/dl/
+2. Clone the repo
+```bash
+git clone https://github.com/zricethezav/gitleaks.git
+```
+3. Build the binary
+```bash
+cd gitleaks
+make build
 ```
 
-##### Go
-Go 1.16+ required.
-```bash
-GO111MODULE=on go get github.com/zricethezav/gitleaks/v8
-```
 
 ## Usage
 ```
@@ -159,6 +158,10 @@ diff --git a/checks_test.go b/checks_test.go
 +               "aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
 
 ```
+
+## Pre-Commit hook
+You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into 
+your `.git/hooks/` directory.
 
 ## Configuration
 Gitleaks offers a configuration format you can follow to write your own secret detection rules:

@@ -1,6 +1,9 @@
 .PHONY: test test-cover
 
 PKG=github.com/zricethezav/gitleaks
+VERSION := `git fetch --tags && git tag | sort -V | tail -1`
+LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v8/cmd.Version=$(VERSION)"
+_LDFLAGS="github.com/zricethezav/gitleaks/v8/cmd.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:
@@ -17,7 +20,7 @@ test: format
 build: format
 	go vet ./...
 	go mod tidy
-	go build
+	go build $(LDFLAGS)
 
 clean:
 	find . -type f -name '*.got.*' -delete

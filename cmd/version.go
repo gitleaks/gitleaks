@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const Version = "v8.0.0"
+var Version = "version is set by build process"
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
