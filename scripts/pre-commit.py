@@ -16,7 +16,7 @@ To disable the gitleaks precommit hook run the following command:
 
     git config hooks.gitleaks false
 ''')
-    sys.exit(1)
+        sys.exit(1)
 else:
     print('gitleaks precommit disabled (enable with `git config hooks.gitleaks true`)')
 
