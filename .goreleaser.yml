@@ -9,7 +9,8 @@ builds:
       - windows
     goarch:
       - amd64
-      - arm64
+    ldflags:
+      - -s -w -X cmd/version.Version={{.Version}}
 archives:
   - builds: [gitleaks]
     format_overrides:
