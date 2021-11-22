@@ -10,7 +10,7 @@ builds:
     goarch:
       - amd64
     ldflags:
-      - -s -w -X cmd/version.Version={{.Version}}
+      - -s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version={{.Version}}
 archives:
   - builds: [gitleaks]
     format_overrides:
