@@ -9,6 +9,9 @@
 *.got
 gitleaks
 build
+.gitleaks.toml
 
 # Test binary
 *.out
+
+dist/
