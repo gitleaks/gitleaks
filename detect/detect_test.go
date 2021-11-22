@@ -70,6 +70,41 @@ func TestDetectFindings(t *testing.T) {
 			},
 		},
 		{
+			cfgName:          "generic_with_py_path",
+			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
+			filePath:         "tmp.go",
+			expectedFindings: []report.Finding{},
+		},
+		{
+			cfgName:  "generic_with_py_path",
+			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
+			filePath: "tmp.py",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Generic API Key",
+					Secret:      "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					File:        "tmp.py",
+					RuleID:      "generic-api-key",
+					Tags:        []string{},
+					Entropy:     3.7906237,
+				},
+			},
+		},
+		{
+			cfgName:  "path_only",
+			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
+			filePath: "tmp.py",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Python Files",
+					Context:     "file detected: tmp.py",
+					File:        "tmp.py",
+					RuleID:      "python-files-only",
+					Tags:        []string{},
+				},
+			},
+		},
+		{
 			cfgName:          "bad_entropy_group",
 			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
 			filePath:         "tmp.go",
@@ -103,7 +138,6 @@ func TestDetectFindings(t *testing.T) {
 			f.Context = "" // remove lines cause copying and pasting them has some wack formatting
 			f.Date = ""
 		}
-
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }

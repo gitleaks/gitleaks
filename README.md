@@ -39,7 +39,6 @@ Using the image from DockerHub:
 docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 ```
-NOTE: this does not include `-ldflags` which will not set the version.
 
 ### From Source
 1. Download and install Go from https://golang.org/dl/
