@@ -59,11 +59,23 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			r.Tags = []string{}
 		}
 
+		var configRegex *regexp.Regexp
+		var configPathRegex *regexp.Regexp
+		if r.Regex == "" {
+			configRegex = nil
+		} else {
+			configRegex = regexp.MustCompile(r.Regex)
+		}
+		if r.Path == "" {
+			configPathRegex = nil
+		} else {
+			configPathRegex = regexp.MustCompile(r.Path)
+		}
 		r := &Rule{
 			Description:    r.Description,
 			RuleID:         r.ID,
-			Regex:          regexp.MustCompile(r.Regex),
-			Path:           regexp.MustCompile(r.Path),
+			Regex:          configRegex,
+			Path:           configPathRegex,
 			EntropyReGroup: r.EntropyGroup,
 			Entropy:        r.Entropy,
 			Tags:           r.Tags,
@@ -73,7 +85,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				Commits: r.Allowlist.Commits,
 			},
 		}
-		if r.EntropyReGroup > r.Regex.NumSubexp() {
+		if r.Regex != nil && r.EntropyReGroup > r.Regex.NumSubexp() {
 			return Config{}, fmt.Errorf("%s invalid regex entropy group %d, max regex entropy group %d", r.Description, r.EntropyReGroup, r.Regex.NumSubexp())
 		}
 		rules = append(rules, r)

@@ -25,12 +25,37 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	}
 
 	for _, r := range cfg.Rules {
+		pathSkip := false
 		if r.Allowlist.CommitAllowed(commit) {
 			continue
 		}
 		if r.Allowlist.PathAllowed(filePath) {
 			continue
 		}
+
+		// Check if path should be considered
+		if r.Path != nil {
+			if r.Path.Match([]byte(filePath)) {
+				if r.Regex == nil {
+					// This is a path only rule
+					f := report.Finding{
+						Description: r.Description,
+						File:        filePath,
+						RuleID:      r.RuleID,
+						Context:     fmt.Sprintf("file detected: %s", filePath),
+						Tags:        r.Tags,
+					}
+					findings = append(findings, f)
+					pathSkip = true
+				}
+			} else {
+				pathSkip = true
+			}
+		}
+		if pathSkip {
+			continue
+		}
+
 		matchIndices := r.Regex.FindAllIndex(b, -1)
 		for _, m := range matchIndices {
 			location := getLocation(linePairs, m[0], m[1])

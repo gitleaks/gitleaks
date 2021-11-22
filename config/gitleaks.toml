@@ -29,7 +29,6 @@ title = "gitleaks config"
 #              identifier                  assignment symbol                                           
 #                                                                                Secret                
 #                                                                                                      
-
 [[rules]]
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"

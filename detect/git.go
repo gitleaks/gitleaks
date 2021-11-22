@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
@@ -52,8 +53,11 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 				}
 
 				for _, fi := range DetectFindings(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
-					fi.StartLine += int(tf.NewPosition)
-					fi.EndLine += int(tf.NewPosition)
+					// don't add to start/end lines if finding is from a file only rule
+					if !strings.HasPrefix(fi.Context, "file detected") {
+						fi.StartLine += int(tf.NewPosition)
+						fi.EndLine += int(tf.NewPosition)
+					}
 					if f.PatchHeader != nil {
 						fi.Commit = f.PatchHeader.SHA
 						fi.Message = f.PatchHeader.Message()
