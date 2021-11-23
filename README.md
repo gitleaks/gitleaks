@@ -61,32 +61,45 @@ make build
 ## Usage
 ```
 Usage:
-  gitleaks [command]
+  gitleaks [OPTIONS]
 
-Available Commands:
-  completion  generate the autocompletion script for the specified shell
-  detect      Detect secrets in code
-  help        Help about any command
-  protect     Protect secrets in code
-  version     Display gitleaks version
+Application Options:
+  -v, --verbose             Show verbose output from scan
+  -q, --quiet               Sets log level to error and only output leaks, one json object per line
+  -r, --repo-url=           Repository URL
+  -p, --path=               Path to directory (repo if contains .git) or file
+  -c, --config-path=        Path to config
+      --repo-config-path=   Path to gitleaks config relative to repo root
+      --clone-path=         Path to clone repo to disk
+      --version             Version number
+      --username=           Username for git repo
+      --password=           Password for git repo
+      --access-token=       Access token for git repo
+      --threads=            Maximum number of threads gitleaks spawns
+      --ssh-key=            Path to ssh key used for auth
+      --unstaged            Run gitleaks on unstaged code
+      --branch=             Branch to scan
+      --redact              Redact secrets from log messages and leaks
+      --debug               Log debug messages
+      --no-git              Treat git repos as plain directories and scan those files
+      --leaks-exit-code=    Exit code when leaks have been encountered (default: 1)
+      --append-repo-config  Append the provided or default config with the repo config.
+      --additional-config=  Path to an additional gitleaks config to append with an existing config. Can be used with --append-repo-config
+                            to append up to three configurations
+  -o, --report=             Report output path
+  -f, --format=             json, csv, sarif (default: json)
+      --files-at-commit=    Sha of commit to scan all files at commit
+      --commit=             Sha of commit to scan or "latest" to scan the last commit of the repository
+      --commits=            Comma separated list of a commits to scan
+      --commits-file=       Path to file of line separated list of commits to scan
+      --commit-from=        Commit to start scan from
+      --commit-to=          Commit to stop scan
+      --commit-since=       Scan commits more recent than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
+      --commit-until=       Scan commits older than a specific date. Ex: '2006-01-02' or '2006-01-02T15:04:05-0700' format.
+      --depth=              Number of commits to scan
 
-Flags:
-  -c, --config string          config file path
-                               order of precedence:
-                               1. --config/-c
-                               2. (--source/-s)/.gitleaks.toml
-                               if --config/-c is not set and no .gitleaks.toml/gitleaks.toml present
-                               then .gitleaks.toml will be written to (--source/-s)/.gitleaks.toml for future use
-      --exit-code string       exit code when leaks have been encountered (default: 1)
-  -h, --help                   help for gitleaks
-  -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
-      --redact                 redact secrets from logs and stdout
-  -f, --report-format string   output format (json, csv, sarif)
-  -r, --report-path string     report file
-  -s, --source string          path to source (git repo, directory, file)
-  -v, --verbose                show verbose output from scan
-
-Use "gitleaks [command] --help" for more information about a command.
+Help Options:
+  -h, --help                Show this help message
 ```
 
 ### Commands
