@@ -21,7 +21,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 		args = append(args, strings.Split(logOpts, " ")...)
 		cmd = exec.Command("git", args...)
 	} else {
-		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0", "--full-history", "--show-pulls", "--all")
+		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0", "--full-history", "--all")
 	}
 
 	log.Debug().Msgf("executing: %s", cmd.String())
