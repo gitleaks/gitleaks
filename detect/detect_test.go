@@ -118,6 +118,12 @@ func TestDetectFindings(t *testing.T) {
 			filePath:         filepath.Join(configPath, "simple.toml"),
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName:          "allow_global_aws_re",
+			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
+			filePath:         "tmp.go",
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {

@@ -72,7 +72,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				Tags:        r.Tags,
 			}
 
-			if r.Allowlist.RegexAllowed(f.Secret) {
+			if r.Allowlist.RegexAllowed(f.Secret) || cfg.Allowlist.RegexAllowed(f.Secret) {
 				continue
 			}
 
