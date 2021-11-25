@@ -40,6 +40,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 
 			// Check if commit is allowed
 			if f.PatchHeader != nil {
+				commitSHA = f.PatchHeader.SHA
 				if cfg.Allowlist.CommitAllowed(f.PatchHeader.SHA) {
 					return
 				}
