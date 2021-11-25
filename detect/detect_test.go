@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -111,6 +112,12 @@ func TestDetectFindings(t *testing.T) {
 			expectedFindings: []report.Finding{},
 			wantError:        fmt.Errorf("Discord API key invalid regex entropy group 5, max regex entropy group 3"),
 		},
+		{
+			cfgName:          "simple",
+			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
+			filePath:         filepath.Join(configPath, "simple.toml"),
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -126,6 +133,7 @@ func TestDetectFindings(t *testing.T) {
 		var vc config.ViperConfig
 		viper.Unmarshal(&vc)
 		cfg, err := vc.Translate()
+		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
 		if tt.wantError != nil {
 			if err == nil {
 				t.Errorf("expected error")

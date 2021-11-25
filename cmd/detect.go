@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -40,12 +41,16 @@ func runDetect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
+	cfg.Path, _ = cmd.Flags().GetString("config")
 	source, _ := cmd.Flags().GetString("source")
 	logOpts, _ := cmd.Flags().GetString("log-opts")
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	noGit, _ := cmd.Flags().GetBool("no-git")
 	exitCode, _ := cmd.Flags().GetInt("exit-code")
+	if cfg.Path == "" {
+		cfg.Path = filepath.Join(source, ".gitleaks.toml")
+	}
 	start := time.Now()
 
 	if noGit {

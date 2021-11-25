@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -35,11 +36,15 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
+	cfg.Path, _ = cmd.Flags().GetString("config")
 	source, _ := cmd.Flags().GetString("source")
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	redact, _ := cmd.Flags().GetBool("redact")
 	exitCode, _ := cmd.Flags().GetInt("exit-code")
 	staged, _ := cmd.Flags().GetBool("staged")
+	if cfg.Path == "" {
+		cfg.Path = filepath.Join(source, ".gitleaks.toml")
+	}
 	start := time.Now()
 
 	files, err := git.GitDiff(source, staged)

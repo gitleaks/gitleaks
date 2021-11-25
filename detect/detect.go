@@ -19,8 +19,8 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	var findings []report.Finding
 	linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
 
-	// check if we should skip file based on the global allowlist
-	if cfg.Allowlist.PathAllowed(filePath) {
+	// check if we should skip file based on the global allowlist or if the file is the same as the gitleaks config
+	if cfg.Allowlist.PathAllowed(filePath) || filePath == cfg.Path {
 		return findings
 	}
 
