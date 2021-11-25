@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 	godocutil "golang.org/x/tools/godoc/util"
@@ -17,7 +18,12 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 	var findings []*report.Finding
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
+	commitMap := make(map[string]bool)
 	for f := range files {
+		// keep track of commits for logging
+		if f.PatchHeader != nil {
+			commitMap[f.PatchHeader.SHA] = true
+		}
 
 		wg.Add(1)
 		go func(f *gitdiff.File) {
@@ -35,7 +41,6 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 			// Check if commit is allowed
 			if f.PatchHeader != nil {
 				commitSHA = f.PatchHeader.SHA
-
 				if cfg.Allowlist.CommitAllowed(f.PatchHeader.SHA) {
 					return
 				}
@@ -85,5 +90,6 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 	}
 
 	wg.Wait()
+	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(commitMap))
 	return findings
 }
