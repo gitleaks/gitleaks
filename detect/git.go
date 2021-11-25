@@ -89,6 +89,6 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 	}
 
 	wg.Wait()
-	log.Debug().Msgf("%d commits scanned (this number might be smaller than expected due to commits with no additions)", len(commitMap))
+	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(commitMap))
 	return findings
 }
