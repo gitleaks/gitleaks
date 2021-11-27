@@ -127,14 +127,6 @@ description = "PyPI upload token"
 regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
 
 [[rules]]
-id = "generic-api-key"
-description = "Generic API Key"
-regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
-entropy = 3.7
-entropyGroup = 4
-
-# ➜  ~/code/gitleaks (v8) git show ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29 -- checks_test.go
-[[rules]]
 id = "gcp-service-account"
 description = "Google (GCP) Service-account"
 regex = '''\"type\": \"service_account\"'''
@@ -440,6 +432,13 @@ regex = '''(?i)(twitch[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-
 [[rules]]
 description = "Typeform API token"
 regex = '''(?i)(typeform[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}(tfp_[a-z0-9\-_\.=]{59})'''
+
+# [[rules]]
+# id = "generic-api-key"
+# description = "Generic API Key"
+# regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+# entropy = 3.7
+# entropyGroup = 4
 
 
 [allowlist]
