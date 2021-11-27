@@ -211,6 +211,37 @@ regexes = ['''one-regex-within-the-already-matched-regex''']
 ```
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/v8/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.
 
+### Tips on Writing Regular Expressions
+ Gitleaks rules are defined by regular expressions and entropy ranges.
+ Some secrets have unique signatures which make detecting those secrets easy.
+ Examples of those secrets would be Gitlab Personal Access Tokens, AWS keys, and Github Access Tokens. 
+ All these examples have defined prefixes like `glpat`, `AKIA`, `ghp_`, etc.
+ 
+ Other secrets might just be a hash which means we need to write more complex rules to verify
+ that what we are matching is a secret.
+ 
+ Here is an example of a semi-generic secret
+```
+discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"
+```
+ We can write a regular expression to capture the variable name (identifier), 
+ the assignment symbol (like '=' or ':='), and finally the actual secret.
+ The structure of a rule to match this example secret is below:
+
+                                                           Beginning string                           
+                                                               quotation                              
+                                                                   │            End string quotation  
+                                                                   │                      │           
+                                                                   ▼                      ▼           
+    (?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]         
+                                                                                                      
+                   ▲                              ▲                                ▲                  
+                   │                              │                                │                  
+                   │                              │                                │                  
+              identifier                  assignment symbol                                           
+                                                                                Secret                
+                                                                                                      
+
 
 ## Exit Codes
 You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
