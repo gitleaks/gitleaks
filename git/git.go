@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
@@ -39,6 +40,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	}
 
 	go listenForStdErr(stderr)
+	time.Sleep(50 * time.Millisecond) // HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 
 	return gitdiff.Parse(stdout)
 }
@@ -66,6 +68,7 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	}
 
 	go listenForStdErr(stderr)
+	time.Sleep(50 * time.Millisecond) // HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 
 	return gitdiff.Parse(stdout)
 }
