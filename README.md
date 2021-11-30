@@ -248,4 +248,5 @@ You can always set the exit code when leaks are encountered with the --exit-code
 ```
 0 - no leaks present
 1 - leaks or error encountered
+126 - unknown flag
 ```
