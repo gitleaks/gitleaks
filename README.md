@@ -209,7 +209,7 @@ commits = [ "commit-A", "commit-B"]
 paths = ['''one-file-path-regex''']
 regexes = ['''one-regex-within-the-already-matched-regex''']
 ```
-Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/v8/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.
+Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.
 
 ### Tips on Writing Regular Expressions
  Gitleaks rules are defined by regular expressions and entropy ranges.
