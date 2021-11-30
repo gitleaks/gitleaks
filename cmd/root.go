@@ -52,7 +52,7 @@ func initLog() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	ll, err := rootCmd.Flags().GetString("log-level")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Msg(err.Error())
 	}
 	switch strings.ToLower(ll) {
 	case "debug":
@@ -74,7 +74,7 @@ func initConfig() {
 	fmt.Fprintf(os.Stderr, banner)
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Msg(err.Error())
 	}
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
@@ -82,12 +82,25 @@ func initConfig() {
 	} else {
 		source, err := rootCmd.Flags().GetString("source")
 		if err != nil {
-			log.Fatal().Err(err)
+			log.Fatal().Msg(err.Error())
 		}
+		fileInfo, err := os.Stat(source)
+		if err != nil {
+			log.Fatal().Msg(err.Error())
+		}
+
+		if !fileInfo.IsDir() {
+			log.Debug().Msgf("Unable to write default gitleaks config to %s since --source=%s is a file, using default config",
+				filepath.Join(source, ".gitleaks.toml"), source)
+			viper.SetConfigType("toml")
+			viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+			return
+		}
+
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
 			log.Debug().Msgf("No gitleaks config found, writing default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml"))
 			if err := os.WriteFile(filepath.Join(source, ".gitleaks.toml"), []byte(config.DefaultConfig), os.ModePerm); err != nil {
-				log.Debug().Msgf("Unable to write default gitleaks config to %s", filepath.Join(source, ".gitleaks.toml, using default config"))
+				log.Debug().Msgf("Unable to write default gitleaks config to %s, using default config", filepath.Join(source, ".gitleaks.toml"))
 				viper.SetConfigType("toml")
 				viper.ReadConfig(strings.NewReader(config.DefaultConfig))
 				return
@@ -107,6 +120,10 @@ func initConfig() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal().Err(err)
+		if strings.Contains(err.Error(), "unknown flag") {
+			// exit code 126: Command invoked cannot execute
+			os.Exit(126)
+		}
+		log.Fatal().Msg(err.Error())
 	}
 }
