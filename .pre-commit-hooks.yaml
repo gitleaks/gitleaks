@@ -1,6 +1,6 @@
 - id: gitleaks
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks protect -v --staged
+  entry: gitleaks protect -v --staged --log-level=debug
   language: golang
   pass_filenames: false
