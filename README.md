@@ -79,7 +79,7 @@ Flags:
                                order of precedence:
                                1. --config/-c
                                2. (--source/-s)/.gitleaks.toml
-                               if --config/-c is not set and no .gitleaks.toml/gitleaks.toml present
+                               if --config/-c is not set and no (--source/-s)/.gitleaks.toml present
                                then .gitleaks.toml will be written to (--source/-s)/.gitleaks.toml for future use
       --exit-code string       exit code when leaks have been encountered (default: 1)
   -h, --help                   help for gitleaks
@@ -110,7 +110,7 @@ You can scan files and directories by using the `--no-git` option.
 #### Protect
 The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with 
 [shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security). 
-When running `detect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
+When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the 
 `--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
 as a pre-commit.
