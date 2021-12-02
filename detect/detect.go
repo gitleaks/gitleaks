@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -88,7 +89,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 		}
 	}
 
-	return findings
+	return dedupe(findings)
 }
 
 func limit(s string) string {
@@ -102,4 +103,31 @@ func printFinding(f report.Finding) {
 	var b []byte
 	b, _ = json.MarshalIndent(f, "", "	")
 	fmt.Println(string(b))
+}
+
+func dedupe(findings []report.Finding) []report.Finding {
+	var retFindings []report.Finding
+	for _, f := range findings {
+		include := true
+		if strings.Contains(f.RuleID, "generic") {
+			for _, fPrime := range findings {
+				if f.StartLine == fPrime.StartLine &&
+					f.EndLine == fPrime.EndLine &&
+					f.Commit == fPrime.Commit &&
+					f.RuleID != fPrime.RuleID &&
+					strings.Contains(fPrime.Secret, f.Secret) &&
+					!strings.Contains(fPrime.RuleID, "generic") {
+
+					log.Debug().Msgf("skipping finding %s since %s", fPrime.RuleID, f.RuleID)
+					include = false
+					break
+				}
+			}
+		}
+		if include {
+			retFindings = append(retFindings, f)
+		}
+	}
+
+	return retFindings
 }
