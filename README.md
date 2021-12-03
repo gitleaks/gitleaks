@@ -127,7 +127,7 @@ Example output:
         "EndLine": 37,
         "StartColumn": 19,
         "EndColumn": 38,
-        "Context": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
+        "Match": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
         "Secret": "AKIAIMNOJVGFDXXXE4OA",
         "File": "checks_test.go",
         "Commit": "ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29",
@@ -192,8 +192,9 @@ regex = '''one-go-style-regex-for-this-rule'''
 path = '''a-file-path-regex'''
 # Array of strings used for metadata and reporting purposes.
 tags = ["tag","another tag"]
-# Int used to check shannon entropy of a specific group in a regex match. 
-entropyGroup = 3
+# Int used to extract secret group from regex matches and used as the group that will have 
+# its entropy checked if `entropy` is set. 
+secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret. 
 entropy = 3.5
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
