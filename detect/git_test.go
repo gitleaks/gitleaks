@@ -42,6 +42,7 @@ func TestFromGit(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OLIA",
 					File:        "main.go",
 					// Line:        "\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Date:    "2021-11-02T23:37:53Z",
 					Commit:  "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
 					Author:  "Zachary Rice",
 					Email:   "zricer@protonmail.com",
@@ -58,6 +59,7 @@ func TestFromGit(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OLIA",
 					File:        "foo/foo.go",
 					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
+					Date:    "2021-11-02T23:48:06Z",
 					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
 					Author:  "Zach Rice",
 					Email:   "zricer@protonmail.com",
@@ -81,6 +83,7 @@ func TestFromGit(t *testing.T) {
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
 					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
+					Date:    "2021-11-02T23:48:06Z",
 					File:    "foo/foo.go",
 					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
 					Author:  "Zach Rice",
@@ -120,7 +123,6 @@ func TestFromGit(t *testing.T) {
 		findings := FromGit(files, cfg, tt.opts)
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
-			f.Date = ""
 		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
