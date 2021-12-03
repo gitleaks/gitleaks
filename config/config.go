@@ -15,13 +15,13 @@ var DefaultConfig string
 type ViperConfig struct {
 	Description string
 	Rules       []struct {
-		ID           string
-		Description  string
-		Entropy      float64
-		EntropyGroup int
-		Regex        string
-		Path         string
-		Tags         []string
+		ID          string
+		Description string
+		Entropy     float64
+		SecretGroup int
+		Regex       string
+		Path        string
+		Tags        []string
 
 		Allowlist struct {
 			Regexes []string
@@ -73,21 +73,21 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			configPathRegex = regexp.MustCompile(r.Path)
 		}
 		r := &Rule{
-			Description:    r.Description,
-			RuleID:         r.ID,
-			Regex:          configRegex,
-			Path:           configPathRegex,
-			EntropyReGroup: r.EntropyGroup,
-			Entropy:        r.Entropy,
-			Tags:           r.Tags,
+			Description: r.Description,
+			RuleID:      r.ID,
+			Regex:       configRegex,
+			Path:        configPathRegex,
+			SecretGroup: r.SecretGroup,
+			Entropy:     r.Entropy,
+			Tags:        r.Tags,
 			Allowlist: Allowlist{
 				Regexes: allowlistRegexes,
 				Paths:   allowlistPaths,
 				Commits: r.Allowlist.Commits,
 			},
 		}
-		if r.Regex != nil && r.EntropyReGroup > r.Regex.NumSubexp() {
-			return Config{}, fmt.Errorf("%s invalid regex entropy group %d, max regex entropy group %d", r.Description, r.EntropyReGroup, r.Regex.NumSubexp())
+		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
+			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
 		}
 		rules = append(rules, r)
 

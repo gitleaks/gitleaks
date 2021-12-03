@@ -59,7 +59,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 
 				for _, fi := range DetectFindings(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
 					// don't add to start/end lines if finding is from a file only rule
-					if !strings.HasPrefix(fi.Context, "file detected") {
+					if !strings.HasPrefix(fi.Match, "file detected") {
 						fi.StartLine += int(tf.NewPosition)
 						fi.EndLine += int(tf.NewPosition)
 					}
