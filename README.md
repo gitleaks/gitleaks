@@ -24,6 +24,10 @@
 
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
+#### 💫⭐✨ Temporary README message 💫⭐✨
+It would be so great if you could fill out this quick gitleaks [user survey](https://docs.google.com/forms/d/1poUqZfEamDY1kCp8v8hU6N3fUj8C5_lVNBD_cDe-GT4).
+<3
+
 ## Getting Started
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
@@ -75,7 +79,7 @@ Flags:
                                order of precedence:
                                1. --config/-c
                                2. (--source/-s)/.gitleaks.toml
-                               if --config/-c is not set and no .gitleaks.toml/gitleaks.toml present
+                               if --config/-c is not set and no (--source/-s)/.gitleaks.toml present
                                then .gitleaks.toml will be written to (--source/-s)/.gitleaks.toml for future use
       --exit-code string       exit code when leaks have been encountered (default: 1)
   -h, --help                   help for gitleaks
@@ -106,7 +110,7 @@ You can scan files and directories by using the `--no-git` option.
 #### Protect
 The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with 
 [shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security). 
-When running `detect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
+When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the 
 `--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
 as a pre-commit.
@@ -123,7 +127,7 @@ Example output:
         "EndLine": 37,
         "StartColumn": 19,
         "EndColumn": 38,
-        "Context": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
+        "Match": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
         "Secret": "AKIAIMNOJVGFDXXXE4OA",
         "File": "checks_test.go",
         "Commit": "ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29",
@@ -188,8 +192,9 @@ regex = '''one-go-style-regex-for-this-rule'''
 path = '''a-file-path-regex'''
 # Array of strings used for metadata and reporting purposes.
 tags = ["tag","another tag"]
-# Int used to check shannon entropy of a specific group in a regex match. 
-entropyGroup = 3
+# Int used to extract secret from regex match and used as the group that will have 
+# its entropy checked if `entropy` is set. 
+secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret. 
 entropy = 3.5
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
@@ -241,6 +246,27 @@ discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"
               identifier                  assignment symbol                                           
                                                                                 Secret                
                                                                                                       
+
+#### A Note on Generic Secrets
+Let's continue with the example `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`. 
+This secret would match both the `discord-client-secret` rule and the `generic-api-key` rule in the default config.
+```
+[[rules]]
+id = "discord-client-secret"
+description = "Discord client secret"
+regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]'''
+secretGroup = 3
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+entropy = 3.7
+secretGroup = 4
+```
+If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because 
+the generic rule has the string `generic` somewhere in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
+will be given precedence. 
 
 
 ## Exit Codes

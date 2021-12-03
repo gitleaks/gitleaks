@@ -11,8 +11,8 @@ func TestRedact(t *testing.T) {
 			redact: true,
 			findings: []Finding{
 				{
-					Secret:  "line containing secret",
-					Context: "secret",
+					Secret: "line containing secret",
+					Match:  "secret",
 				},
 			}},
 	}

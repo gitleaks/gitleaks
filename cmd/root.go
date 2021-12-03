@@ -27,7 +27,7 @@ const configDescription = `config file path
 order of precedence: 
 1. --config/-c 
 2. (--source/-s)/.gitleaks.toml
-if --config/-c is not set and no .gitleaks.toml/gitleaks.toml present 
+if --config/-c is not set and no (--source/s)/.gitleaks.toml is present 
 then .gitleaks.toml will be written to (--source/-s)/.gitleaks.toml for future use`
 
 var rootCmd = &cobra.Command{

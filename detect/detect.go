@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -42,7 +43,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 						Description: r.Description,
 						File:        filePath,
 						RuleID:      r.RuleID,
-						Context:     fmt.Sprintf("file detected: %s", filePath),
+						Match:       fmt.Sprintf("file detected: %s", filePath),
 						Tags:        r.Tags,
 					}
 					findings = append(findings, f)
@@ -59,6 +60,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 		matchIndices := r.Regex.FindAllIndex(b, -1)
 		for _, m := range matchIndices {
 			location := getLocation(linePairs, m[0], m[1])
+			secret := strings.Trim(string(b[m[0]:m[1]]), "\n")
 			f := report.Finding{
 				Description: r.Description,
 				File:        filePath,
@@ -67,8 +69,8 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				EndLine:     location.endLine,
 				StartColumn: location.startColumn,
 				EndColumn:   location.endColumn,
-				Secret:      strings.Trim(string(b[m[0]:m[1]]), "\n"),
-				Context:     limit(strings.Trim(string(b[location.startLineIndex:location.endLineIndex]), "\n")),
+				Secret:      secret,
+				Match:       secret,
 				Tags:        r.Tags,
 			}
 
@@ -76,8 +78,20 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 				continue
 			}
 
+			// extract secret from secret group if set
+			if r.SecretGroup != 0 {
+				groups := r.Regex.FindStringSubmatch(secret)
+				if len(groups)-1 > r.SecretGroup || len(groups) == 0 {
+					// Config validation should prevent this
+					break
+				}
+				secret = groups[r.SecretGroup]
+				f.Secret = secret
+			}
+
+			// extract secret from secret group if set
 			if r.EntropySet() {
-				include, entropy := r.IncludeEntropy(strings.Trim(string(b[m[0]:m[1]]), "\n"))
+				include, entropy := r.IncludeEntropy(secret)
 				if include {
 					f.Entropy = float32(entropy)
 					findings = append(findings, f)
@@ -88,7 +102,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 		}
 	}
 
-	return findings
+	return dedupe(findings)
 }
 
 func limit(s string) string {
@@ -102,4 +116,33 @@ func printFinding(f report.Finding) {
 	var b []byte
 	b, _ = json.MarshalIndent(f, "", "	")
 	fmt.Println(string(b))
+}
+
+func dedupe(findings []report.Finding) []report.Finding {
+	var retFindings []report.Finding
+	for _, f := range findings {
+		include := true
+		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
+			for _, fPrime := range findings {
+				if f.StartLine == fPrime.StartLine &&
+					f.EndLine == fPrime.EndLine &&
+					f.Commit == fPrime.Commit &&
+					f.RuleID != fPrime.RuleID &&
+					strings.Contains(fPrime.Secret, f.Secret) &&
+					!strings.Contains(strings.ToLower(fPrime.RuleID), "generic") {
+
+					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
+					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
+					log.Debug().Msgf("skipping %s finding (%s), %s rule takes precendence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
+					include = false
+					break
+				}
+			}
+		}
+		if include {
+			retFindings = append(retFindings, f)
+		}
+	}
+
+	return retFindings
 }

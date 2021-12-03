@@ -30,6 +30,7 @@ func TestDetectFindings(t *testing.T) {
 				{
 					Description: "AWS Access Key",
 					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
 					File:        "tmp.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -62,7 +63,8 @@ func TestDetectFindings(t *testing.T) {
 			expectedFindings: []report.Finding{
 				{
 					Description: "Discord API key",
-					Secret:      "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					Match:       "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
 					File:        "tmp.go",
 					RuleID:      "discord-api-key",
 					Tags:        []string{},
@@ -83,7 +85,8 @@ func TestDetectFindings(t *testing.T) {
 			expectedFindings: []report.Finding{
 				{
 					Description: "Generic API Key",
-					Secret:      "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					Match:       "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
 					File:        "tmp.py",
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
@@ -98,7 +101,7 @@ func TestDetectFindings(t *testing.T) {
 			expectedFindings: []report.Finding{
 				{
 					Description: "Python Files",
-					Context:     "file detected: tmp.py",
+					Match:       "file detected: tmp.py",
 					File:        "tmp.py",
 					RuleID:      "python-files-only",
 					Tags:        []string{},
@@ -110,7 +113,7 @@ func TestDetectFindings(t *testing.T) {
 			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
 			filePath:         "tmp.go",
 			expectedFindings: []report.Finding{},
-			wantError:        fmt.Errorf("Discord API key invalid regex entropy group 5, max regex entropy group 3"),
+			wantError:        fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName:          "simple",
@@ -148,10 +151,6 @@ func TestDetectFindings(t *testing.T) {
 		}
 
 		findings := DetectFindings(cfg, tt.bytes, tt.filePath, tt.commit)
-		for _, f := range findings {
-			f.Context = "" // remove lines cause copying and pasting them has some wack formatting
-			f.Date = ""
-		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }

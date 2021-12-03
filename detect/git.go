@@ -3,6 +3,7 @@ package detect
 import (
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
@@ -59,7 +60,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 
 				for _, fi := range DetectFindings(cfg, []byte(tf.Raw(gitdiff.OpAdd)), f.NewName, commitSHA) {
 					// don't add to start/end lines if finding is from a file only rule
-					if !strings.HasPrefix(fi.Context, "file detected") {
+					if !strings.HasPrefix(fi.Match, "file detected") {
 						fi.StartLine += int(tf.NewPosition)
 						fi.EndLine += int(tf.NewPosition)
 					}
@@ -70,7 +71,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 							fi.Author = f.PatchHeader.Author.Name
 							fi.Email = f.PatchHeader.Author.Email
 						}
-						fi.Date = f.PatchHeader.AuthorDate.String()
+						fi.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
 					}
 
 					if outputOptions.Redact {
