@@ -127,7 +127,7 @@ Example output:
         "EndLine": 37,
         "StartColumn": 19,
         "EndColumn": 38,
-        "Context": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
+        "Match": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
         "Secret": "AKIAIMNOJVGFDXXXE4OA",
         "File": "checks_test.go",
         "Commit": "ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29",
@@ -192,8 +192,9 @@ regex = '''one-go-style-regex-for-this-rule'''
 path = '''a-file-path-regex'''
 # Array of strings used for metadata and reporting purposes.
 tags = ["tag","another tag"]
-# Int used to check shannon entropy of a specific group in a regex match. 
-entropyGroup = 3
+# Int used to extract secret from regex match and used as the group that will have 
+# its entropy checked if `entropy` is set. 
+secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret. 
 entropy = 3.5
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
@@ -245,6 +246,27 @@ discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"
               identifier                  assignment symbol                                           
                                                                                 Secret                
                                                                                                       
+
+#### A Note on Generic Secrets
+Let's continue with the example `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`. 
+This secret would match both the `discord-client-secret` rule and the `generic-api-key` rule in the default config.
+```
+[[rules]]
+id = "discord-client-secret"
+description = "Discord client secret"
+regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]'''
+secretGroup = 3
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+entropy = 3.7
+secretGroup = 4
+```
+If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because 
+the generic rule has the string `generic` somewhere in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
+will be given precedence. 
 
 
 ## Exit Codes

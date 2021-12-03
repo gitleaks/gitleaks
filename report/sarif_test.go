@@ -29,7 +29,7 @@ func TestWriteSarif(t *testing.T) {
 
 					Description: "",
 					RuleID:      "test-rule",
-					Context:     "line containing secret",
+					Match:       "line containing secret",
 					Secret:      "a secret",
 					StartLine:   1,
 					EndLine:     2,

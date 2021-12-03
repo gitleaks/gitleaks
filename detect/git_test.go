@@ -119,7 +119,7 @@ func TestFromGit(t *testing.T) {
 
 		findings := FromGit(files, cfg, tt.opts)
 		for _, f := range findings {
-			f.Context = "" // remove lines cause copying and pasting them has some wack formatting
+			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
 			f.Date = ""
 		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
