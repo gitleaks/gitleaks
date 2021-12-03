@@ -265,8 +265,8 @@ entropy = 3.7
 secretGroup = 4
 ```
 If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because 
-the generic rule has `generic` in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
-will be given precedence.
+the generic rule has the string `generic` somewhere in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
+will be given precedence. 
 
 
 ## Exit Codes
