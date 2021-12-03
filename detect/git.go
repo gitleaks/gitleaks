@@ -3,6 +3,7 @@ package detect
 import (
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
@@ -70,7 +71,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 							fi.Author = f.PatchHeader.Author.Name
 							fi.Email = f.PatchHeader.Author.Email
 						}
-						fi.Date = f.PatchHeader.AuthorDate.String()
+						fi.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
 					}
 
 					if outputOptions.Redact {
