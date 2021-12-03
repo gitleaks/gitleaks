@@ -192,7 +192,7 @@ regex = '''one-go-style-regex-for-this-rule'''
 path = '''a-file-path-regex'''
 # Array of strings used for metadata and reporting purposes.
 tags = ["tag","another tag"]
-# Int used to extract secret group from regex matches and used as the group that will have 
+# Int used to extract secret from regex match and used as the group that will have 
 # its entropy checked if `entropy` is set. 
 secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret. 
