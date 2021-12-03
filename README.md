@@ -247,6 +247,27 @@ discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"
                                                                                 Secret                
                                                                                                       
 
+#### A Note on Generic Secrets
+Let's continue with the example `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`. 
+This secret would match both the `discord-client-secret` rule and the `generic-api-key` rule in the default config.
+```
+[[rules]]
+id = "discord-client-secret"
+description = "Discord client secret"
+regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]'''
+secretGroup = 3
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+entropy = 3.7
+secretGroup = 4
+```
+If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because 
+the generic rule has `generic` in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
+will be given precedence.
+
 
 ## Exit Codes
 You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
