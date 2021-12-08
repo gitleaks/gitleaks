@@ -17,12 +17,12 @@ func TestFromFiles(t *testing.T) {
 		cfgName          string
 		opts             Options
 		source           string
-		expectedFindings []*report.Finding
+		expectedFindings []report.Finding
 	}{
 		{
 			source:  filepath.Join(repoBasePath, "nogit"),
 			cfgName: "simple",
-			expectedFindings: []*report.Finding{
+			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
 					StartLine:   19,
@@ -40,7 +40,7 @@ func TestFromFiles(t *testing.T) {
 		{
 			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
 			cfgName: "simple",
-			expectedFindings: []*report.Finding{
+			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
 					StartLine:   19,

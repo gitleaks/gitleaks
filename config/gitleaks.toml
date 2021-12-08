@@ -273,14 +273,19 @@ description = "Dropbox API secret/key"
 regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{15})['\"]'''
 
 [[rules]]
-id = "dropbox-sl-api-token"
+id = "dropbox--api-key"
+description = "Dropbox API secret/key"
+regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{15})['\"]'''
+
+[[rules]]
+id = "dropbox-short-lived-api-token"
 description = "Dropbox short lived API token"
 regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](sl\.[a-z0-9\-=_]{135})['\"]'''
 
 [[rules]]
-id = "dropbox-ll-api-token"
+id = "dropbox-long-lived-api-token"
 description = "Dropbox long lived API token"
-regex = '''(?i)(dropbox)(.{0,20})['\"](?i)[a-z0-9]{11}(AAAAAAAAAA)[a-z0-9-_=]{43}['\"]'''
+regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"][a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43}['\"]'''
 
 [[rules]]
 id = "duffel-api-token"
