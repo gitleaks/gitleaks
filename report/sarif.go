@@ -8,7 +8,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func writeSarif(cfg config.Config, findings []*Finding, w io.WriteCloser) error {
+func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
 	sarif := Sarif{
 		Schema:  "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
 		Version: "2.1.0",
@@ -20,7 +20,7 @@ func writeSarif(cfg config.Config, findings []*Finding, w io.WriteCloser) error 
 	return encoder.Encode(sarif)
 }
 
-func getRuns(cfg config.Config, findings []*Finding) []Runs {
+func getRuns(cfg config.Config, findings []Finding) []Runs {
 	return []Runs{
 		{
 			Tool:    getTool(cfg),
@@ -54,7 +54,7 @@ func getRules(cfg config.Config) []Rules {
 	return rules
 }
 
-func messageText(f *Finding) string {
+func messageText(f Finding) string {
 	if f.Commit == "" {
 		return fmt.Sprintf("%s has detected secret for file %s.", f.RuleID, f.File)
 	}
@@ -63,7 +63,7 @@ func messageText(f *Finding) string {
 
 }
 
-func getResults(findings []*Finding) []Results {
+func getResults(findings []Finding) []Results {
 	var results []Results
 	for _, f := range findings {
 		r := Results{
@@ -87,7 +87,7 @@ func getResults(findings []*Finding) []Results {
 	return results
 }
 
-func getLocation(f *Finding) []Locations {
+func getLocation(f Finding) []Locations {
 	return []Locations{
 		{
 			PhysicalLocation: PhysicalLocation{

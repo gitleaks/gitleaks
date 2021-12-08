@@ -14,7 +14,7 @@ const configPath = "../testdata/config/"
 
 func TestWriteSarif(t *testing.T) {
 	tests := []struct {
-		findings       []*Finding
+		findings       []Finding
 		testReportName string
 		expected       string
 		wantEmpty      bool
@@ -24,7 +24,7 @@ func TestWriteSarif(t *testing.T) {
 			cfgName:        "simple",
 			testReportName: "simple",
 			expected:       filepath.Join(expectPath, "report", "sarif_simple.sarif"),
-			findings: []*Finding{
+			findings: []Finding{
 				{
 
 					Description: "",

@@ -26,13 +26,13 @@ func TestFromGit(t *testing.T) {
 		source           string
 		logOpts          string
 		expected         string
-		expectedFindings []*report.Finding
+		expectedFindings []report.Finding
 	}{
 		{
 			source:   filepath.Join(repoBasePath, "small"),
 			expected: filepath.Join(expectPath, "git", "small.txt"),
 			cfgName:  "simple",
-			expectedFindings: []*report.Finding{
+			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
 					StartLine:   20,
@@ -40,15 +40,15 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 19,
 					EndColumn:   38,
 					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
 					File:        "main.go",
-					// Line:        "\tawsToken := \"AKIALALEMEL33243OLIA\"",
-					Date:    "2021-11-02T23:37:53Z",
-					Commit:  "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
-					Author:  "Zachary Rice",
-					Email:   "zricer@protonmail.com",
-					Message: "Accidentally add a secret",
-					RuleID:  "aws-access-key",
-					Tags:    []string{"key", "AWS"},
+					Date:        "2021-11-02T23:37:53Z",
+					Commit:      "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
+					Author:      "Zachary Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "Accidentally add a secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
 				},
 				{
 					Description: "AWS Access Key",
@@ -57,15 +57,15 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 17,
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
 					File:        "foo/foo.go",
-					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
-					Date:    "2021-11-02T23:48:06Z",
-					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
-					Author:  "Zach Rice",
-					Email:   "zricer@protonmail.com",
-					Message: "adding foo package with secret",
-					RuleID:  "aws-access-key",
-					Tags:    []string{"key", "AWS"},
+					Date:        "2021-11-02T23:48:06Z",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
 				},
 			},
 		},
@@ -74,7 +74,7 @@ func TestFromGit(t *testing.T) {
 			expected: filepath.Join(expectPath, "git", "small-branch-foo.txt"),
 			logOpts:  "--all foo...",
 			cfgName:  "simple",
-			expectedFindings: []*report.Finding{
+			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
 					StartLine:   9,
@@ -82,15 +82,15 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 17,
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
-					// Line:        "\taws_token := \"AKIALALEMEL33243OLIA\"",
-					Date:    "2021-11-02T23:48:06Z",
-					File:    "foo/foo.go",
-					Commit:  "491504d5a31946ce75e22554cc34203d8e5ff3ca",
-					Author:  "Zach Rice",
-					Email:   "zricer@protonmail.com",
-					Message: "adding foo package with secret",
-					RuleID:  "aws-access-key",
-					Tags:    []string{"key", "AWS"},
+					Match:       "AKIALALEMEL33243OLIA",
+					Date:        "2021-11-02T23:48:06Z",
+					File:        "foo/foo.go",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
 				},
 			},
 		},

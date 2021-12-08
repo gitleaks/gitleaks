@@ -31,7 +31,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	initConfig()
 	var (
 		vc       config.ViperConfig
-		findings []*report.Finding
+		findings []report.Finding
 		err      error
 	)
 

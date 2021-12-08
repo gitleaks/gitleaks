@@ -9,7 +9,7 @@ import (
 
 func TestWriteCSV(t *testing.T) {
 	tests := []struct {
-		findings       []*Finding
+		findings       []Finding
 		testReportName string
 		expected       string
 		wantEmpty      bool
@@ -17,7 +17,7 @@ func TestWriteCSV(t *testing.T) {
 		{
 			testReportName: "simple",
 			expected:       filepath.Join(expectPath, "report", "csv_simple.csv"),
-			findings: []*Finding{
+			findings: []Finding{
 				{
 					RuleID:      "test-rule",
 					Match:       "line containing secret",
@@ -39,7 +39,7 @@ func TestWriteCSV(t *testing.T) {
 			wantEmpty:      true,
 			testReportName: "empty",
 			expected:       filepath.Join(expectPath, "report", "this_should_not_exist.csv"),
-			findings:       []*Finding{}},
+			findings:       []Finding{}},
 	}
 
 	for _, test := range tests {

@@ -15,8 +15,8 @@ import (
 // FromGit accepts a gitdiff.File channel (structure output from `git log -p`) and a configuration
 // struct. Files from the gitdiff.File channel are then checked against each rule in the configuration to
 // check for secrets. If any secrets are found, they are added to the list of findings.
-func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Options) []*report.Finding {
-	var findings []*report.Finding
+func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Options) []report.Finding {
+	var findings []report.Finding
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	commitMap := make(map[string]bool)
@@ -82,7 +82,7 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 						printFinding(fi)
 					}
 					mu.Lock()
-					findings = append(findings, &fi)
+					findings = append(findings, fi)
 					mu.Unlock()
 
 				}

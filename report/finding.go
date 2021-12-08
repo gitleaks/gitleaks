@@ -1,6 +1,9 @@
 package report
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // Finding contains information about strings that
 // have been captured by a tree-sitter query.
@@ -39,4 +42,11 @@ type Finding struct {
 func (f *Finding) Redact() {
 	f.Match = strings.Replace(f.Match, f.Secret, "REDACTED", -1)
 	f.Secret = "REDACT"
+}
+
+func (f *Finding) Hash() string {
+	return f.Secret + f.Commit +
+		strconv.Itoa(f.EndLine) +
+		strconv.Itoa(f.StartLine)
+
 }
