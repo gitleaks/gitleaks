@@ -121,10 +121,10 @@ func printFinding(f report.Finding) {
 
 func dedupe(findings []report.Finding) []report.Finding {
 	var retFindings []report.Finding
-	for i, f := range findings {
+	for _, f := range findings {
 		include := true
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
-			for _, fPrime := range findings[i-i:] {
+			for _, fPrime := range findings {
 				if f.StartLine == fPrime.StartLine &&
 					f.EndLine == fPrime.EndLine &&
 					f.Commit == fPrime.Commit &&
