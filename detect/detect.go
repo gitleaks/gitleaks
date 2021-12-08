@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -123,7 +124,7 @@ func dedupe(findings []report.Finding) []report.Finding {
 	for i, f := range findings {
 		include := true
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
-			for _, fPrime := range findings[:i] {
+			for _, fPrime := range findings[i-i:] {
 				if f.StartLine == fPrime.StartLine &&
 					f.EndLine == fPrime.EndLine &&
 					f.Commit == fPrime.Commit &&
