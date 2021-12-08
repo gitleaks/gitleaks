@@ -25,8 +25,8 @@ func TestFromFiles(t *testing.T) {
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
-					StartLine:   19,
-					EndLine:     19,
+					StartLine:   20,
+					EndLine:     20,
 					StartColumn: 16,
 					EndColumn:   35,
 					Match:       "AKIALALEMEL33243OLIA",
@@ -43,8 +43,8 @@ func TestFromFiles(t *testing.T) {
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
-					StartLine:   19,
-					EndLine:     19,
+					StartLine:   20,
+					EndLine:     20,
 					StartColumn: 16,
 					EndColumn:   35,
 					Match:       "AKIALALEMEL33243OLIA",

@@ -51,6 +51,10 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 			}
 			fis := DetectFindings(cfg, b, p, "")
 			for _, fi := range fis {
+				// need to add 1 since line counting starts at 1
+				fi.StartLine++
+				fi.EndLine++
+
 				if outputOptions.Redact {
 					fi.Redact()
 				}
