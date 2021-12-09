@@ -30,6 +30,11 @@ title = "gitleaks config"
 #                                                                                Secret                
 #                                                                                                      
 [[rules]]
+id = "artifactory-pat"
+description = "Artifactory Personal Access Token"
+regex = '''AKC[0-9a-zA-Z\-]{70}'''
+
+[[rules]]
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"
 regex = '''glpat-[0-9a-zA-Z\-]{20}'''
