@@ -28,8 +28,7 @@ order of precedence:
 1. --config/-c 
 2. env var GITLEAKS_CONFIG
 3. (--source/-s)/.gitleaks.toml
-If none of the three options are set, then gitleaks will use the default config
-`
+If none of the three options are used, then gitleaks will use the default config`
 
 var rootCmd = &cobra.Command{
 	Use:   "gitleaks",
@@ -39,10 +38,10 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
-	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered (default: 1)")
+	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source (default: $PWD)")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
-	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, sarif)")
+	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, sarif)")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().Bool("redact", false, "redact secrets from logs and stdout")
