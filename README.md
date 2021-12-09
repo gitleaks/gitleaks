@@ -78,9 +78,9 @@ Flags:
   -c, --config string          config file path
                                order of precedence:
                                1. --config/-c
-                               2. (--source/-s)/.gitleaks.toml
-                               if --config/-c is not set and no (--source/-s)/.gitleaks.toml present
-                               then .gitleaks.toml will be written to (--source/-s)/.gitleaks.toml for future use
+                               2. env var GITLEAKS_CONFIG
+                               3. (--source/-s)/.gitleaks.toml
+                               If none of the three options are used, then gitleaks will use the default config
       --exit-code string       exit code when leaks have been encountered (default: 1)
   -h, --help                   help for gitleaks
   -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
