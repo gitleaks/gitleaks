@@ -30,8 +30,8 @@ title = "gitleaks config"
 #                                                                                Secret                
 #                                                                                                      
 [[rules]]
-id = "artifactory-pat"
-description = "Artifactory Personal Access Token"
+id = "artifactory-api-key"
+description = "Artifactory API Key"
 regex = '''AKC[0-9a-zA-Z\-]{70}'''
 
 [[rules]]
