@@ -61,6 +61,28 @@ cd gitleaks
 make build
 ```
 
+### Pre-Commit
+1. Install pre-commit from https://pre-commit.com/#install
+2. Create a `.pre-commit-config.yaml` file at the root of your repository with the following content:
+```
+repos:
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.2.0
+    hooks:
+      - id: gitleaks
+```
+3. Install with `pre-commit install`
+4. Now you're all set!
+```
+➜ git commit -m "this commit contains a secret"
+Detect hardcoded secrets.................................................Failed
+```
+Note: to disable the gitleaks pre-commit hook you can prepend `SKIP=gitleaks` to the commit command
+and it will skip running gitleaks
+```
+➜ SKIP=gitleaks git commit -m "skip gitleaks check"
+Detect hardcoded secrets................................................Skipped
+```
 
 ## Usage
 ```
@@ -96,22 +118,22 @@ Use "gitleaks [command] --help" for more information about a command.
 ### Commands
 There are two commands you will use to detect secrets; `detect` and `protect`.
 #### Detect
-The `detect` command is used to scan repos, directories, and files.  This comand can be used on developer machines and in CI environments. 
+The `detect` command is used to scan repos, directories, and files.  This comand can be used on developer machines and in CI environments.
 
-When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed 
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)). 
-[`git log -p` generates patches](https://git-scm.com/docs/git-log#_generating_patch_text_with_p) which gitleaks will use to detect secrets. 
-You can configure what commits `git log` will range over by using the `--log-opts` flag. `--log-opts` accepts any option for `git log -p`. 
-For example, if you wanted to run gitleaks on a range of commits you could use the following command: `gitleaks --source . --log-opts="--all commitA..commitB"`. 
+When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed
+[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)).
+[`git log -p` generates patches](https://git-scm.com/docs/git-log#_generating_patch_text_with_p) which gitleaks will use to detect secrets.
+You can configure what commits `git log` will range over by using the `--log-opts` flag. `--log-opts` accepts any option for `git log -p`.
+For example, if you wanted to run gitleaks on a range of commits you could use the following command: `gitleaks --source . --log-opts="--all commitA..commitB"`.
 See the `git log` [documentation](https://git-scm.com/docs/git-log) for more information.
 
 You can scan files and directories by using the `--no-git` option.
 
 #### Protect
-The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with 
-[shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security). 
-When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed 
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the 
+The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with
+[shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security).
+When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed
+[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the
 `--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
 as a pre-commit.
 
@@ -168,34 +190,34 @@ diff --git a/checks_test.go b/checks_test.go
 ```
 
 ## Pre-Commit hook
-You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into 
+You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into
 your `.git/hooks/` directory.
 
 ## Configuration
 Gitleaks offers a configuration format you can follow to write your own secret detection rules:
 ```toml
-# Title for the gitleaks configuration file. 
+# Title for the gitleaks configuration file.
 title = "Gitleaks title"
 
 # An array of tables that contain information that define instructions
-# on how to detect secrets 
+# on how to detect secrets
 [[rules]]
 # Unique identifier for this rule
 id = "awesome-rule-1"
 # Short human readable description of the rule.
-description = "awsome rule 1" 
+description = "awsome rule 1"
 # Golang regular expression used to detect secrets. Note Golang's regex engine
 # does not support lookaheads.
-regex = '''one-go-style-regex-for-this-rule''' 
+regex = '''one-go-style-regex-for-this-rule'''
 # Golang regular expression used to match paths. This can be used as a standalone rule or it can be used
 # in conjunction with a valid `regex` entry.
 path = '''a-file-path-regex'''
 # Array of strings used for metadata and reporting purposes.
 tags = ["tag","another tag"]
-# Int used to extract secret from regex match and used as the group that will have 
-# its entropy checked if `entropy` is set. 
+# Int used to extract secret from regex match and used as the group that will have
+# its entropy checked if `entropy` is set.
 secretGroup = 3
-# Float representing the minimum shannon entropy a regex group must have to be considered a secret. 
+# Float representing the minimum shannon entropy a regex group must have to be considered a secret.
 entropy = 3.5
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
 # with known/rotated secrets
@@ -206,7 +228,7 @@ paths = ['''one-file-path-regex''']
 regexes = ['''one-regex-within-the-already-matched-regex''']
 
 # This is a global allowlist which has a higher order of precendence than rule-specific allowlists.
-# If a commit listed in the `commits` field below is encountered then that commit will be skipped and no 
+# If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
 # secrets will be detected for said commit. The same logic applies for regexes and paths.
 [allowlist]
 description = "ignore commit A"
@@ -219,36 +241,36 @@ Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/b
 ### Tips on Writing Regular Expressions
  Gitleaks rules are defined by regular expressions and entropy ranges.
  Some secrets have unique signatures which make detecting those secrets easy.
- Examples of those secrets would be Gitlab Personal Access Tokens, AWS keys, and Github Access Tokens. 
+ Examples of those secrets would be Gitlab Personal Access Tokens, AWS keys, and Github Access Tokens.
  All these examples have defined prefixes like `glpat`, `AKIA`, `ghp_`, etc.
- 
+
  Other secrets might just be a hash which means we need to write more complex rules to verify
  that what we are matching is a secret.
- 
+
  Here is an example of a semi-generic secret
 ```
 discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"
 ```
- We can write a regular expression to capture the variable name (identifier), 
+ We can write a regular expression to capture the variable name (identifier),
  the assignment symbol (like '=' or ':='), and finally the actual secret.
  The structure of a rule to match this example secret is below:
 
-                                                           Beginning string                           
-                                                               quotation                              
-                                                                   │            End string quotation  
-                                                                   │                      │           
-                                                                   ▼                      ▼           
-    (?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]         
-                                                                                                      
-                   ▲                              ▲                                ▲                  
-                   │                              │                                │                  
-                   │                              │                                │                  
-              identifier                  assignment symbol                                           
-                                                                                Secret                
-                                                                                                      
+                                                           Beginning string
+                                                               quotation
+                                                                   │            End string quotation
+                                                                   │                      │
+                                                                   ▼                      ▼
+    (?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]
+
+                   ▲                              ▲                                ▲
+                   │                              │                                │
+                   │                              │                                │
+              identifier                  assignment symbol
+                                                                                Secret
+
 
 #### A Note on Generic Secrets
-Let's continue with the example `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`. 
+Let's continue with the example `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`.
 This secret would match both the `discord-client-secret` rule and the `generic-api-key` rule in the default config.
 ```
 [[rules]]
@@ -264,9 +286,9 @@ regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|
 entropy = 3.7
 secretGroup = 4
 ```
-If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because 
+If gitleaks encountered `discord_client_secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"`, only the `discord` rule would report a finding because
 the generic rule has the string `generic` somewhere in the rule's `id`. If a secret is encountered and both a `generic` and non-generic rule have discovered the same secret, the non-generic
-will be given precedence. 
+will be given precedence.
 
 
 ## Exit Codes
