@@ -24,7 +24,7 @@
 
 Gitleaks is a SAST tool for detecting hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
-<a href="https://asciinema.org/a/GVKFhV0OVFVsbc8AFDD9GFSLZ" target="_blank"><img src="https://asciinema.org/a/GVKFhV0OVFVsbc8AFDD9GFSLZ.svg" /></a>
+[![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)
 
 ## Getting Started
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
