@@ -37,7 +37,7 @@ regex = '''glpat-[0-9a-zA-Z\-]{20}'''
 [[rules]]
 id = "aws-access-token"
 description = "AWS"
-regex = '''AKIA[0-9A-Z]{16}'''
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 
 # Cryptographic keys
 [[rules]]
@@ -140,7 +140,7 @@ secretGroup = 3
 [[rules]]
 id = "slack-web-hook"
 description = "Slack Webhook"
-regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'''
+regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
 
 [[rules]]
 id = "twilio-api-key"
