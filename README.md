@@ -289,6 +289,10 @@ the generic rule has the string `generic` somewhere in the rule's `id`. If a sec
 will be given precedence.
 
 
+## Sponsorships
+[![Tines-Sponsorship-Badge-Purple](https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png)](https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks)
+
+
 ## Exit Codes
 You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
 ```
