@@ -39,9 +39,8 @@ func TestWriteJSON(t *testing.T) {
 			}},
 		{
 
-			wantEmpty:      true,
 			testReportName: "empty",
-			expected:       filepath.Join(expectPath, "report", "this_should_not_exist.json"),
+			expected:       filepath.Join(expectPath, "report", "empty.json"),
 			findings:       []Finding{}},
 	}
 

@@ -7,7 +7,7 @@ import (
 
 func writeJson(findings []Finding, w io.WriteCloser) error {
 	if len(findings) == 0 {
-		return nil
+		findings = []Finding{}
 	}
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")

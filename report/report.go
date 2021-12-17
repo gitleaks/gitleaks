@@ -14,9 +14,6 @@ const (
 )
 
 func Write(findings []Finding, cfg config.Config, ext string, reportPath string) error {
-	if len(findings) == 0 {
-		return nil
-	}
 	file, err := os.Create(reportPath)
 	if err != nil {
 		return err
