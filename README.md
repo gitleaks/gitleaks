@@ -290,7 +290,17 @@ will be given precedence.
 
 
 ## Sponsorships
-[![Tines-Sponsorship-Badge-Purple](https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png)](https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks)
+<p align="left">
+	  <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">
+		  <img alt="Tines Sponsorship" src="https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png" width=200>
+	  </a>
+	  </p>
+	  <a href="https://www.typeform.com/">
+		  <img src="https://user-images.githubusercontent.com/15034943/146945294-a6473d55-86b8-4f53-941e-7f185ad6b3d7.png" width=200/>
+	  </a>
+  </p>
+
+
 
 
 ## Exit Codes
