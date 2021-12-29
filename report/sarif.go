@@ -64,7 +64,7 @@ func messageText(f Finding) string {
 }
 
 func getResults(findings []Finding) []Results {
-	var results []Results
+	results := []Results{}
 	for _, f := range findings {
 		r := Results{
 			Message: Message{
