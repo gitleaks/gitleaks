@@ -17,6 +17,8 @@ type Options struct {
 	Redact  bool
 }
 
+const MAXGOROUTINES = 4
+
 func DetectFindings(cfg config.Config, b []byte, filePath string, commit string) []report.Finding {
 	var findings []report.Finding
 	linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
