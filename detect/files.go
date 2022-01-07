@@ -20,7 +20,7 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 		findings []report.Finding
 		mu       sync.Mutex
 	)
-	concurrentGoroutines := make(chan struct{}, 4)
+	concurrentGoroutines := make(chan struct{}, MAXGOROUTINES)
 	g, _ := errgroup.WithContext(context.Background())
 	paths := make(chan string)
 	g.Go(func() error {
@@ -41,16 +41,17 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 	})
 	for pa := range paths {
 		p := pa
+		concurrentGoroutines <- struct{}{}
 		g.Go(func() error {
-			concurrentGoroutines <- struct{}{}
+			defer func() {
+				<-concurrentGoroutines
+			}()
 			b, err := os.ReadFile(p)
 			if err != nil {
-				<-concurrentGoroutines
 				return err
 			}
 
 			if !godocutil.IsText(b) {
-				<-concurrentGoroutines
 				return nil
 			}
 			fis := DetectFindings(cfg, b, p, "")
@@ -69,7 +70,6 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 				findings = append(findings, fi)
 				mu.Unlock()
 			}
-			<-concurrentGoroutines
 			return nil
 		})
 	}

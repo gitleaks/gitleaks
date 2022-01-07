@@ -19,16 +19,20 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 	var findings []report.Finding
 	mu := sync.Mutex{}
 	wg := sync.WaitGroup{}
+	concurrentGoroutines := make(chan struct{}, MAXGOROUTINES)
 	commitMap := make(map[string]bool)
 	for f := range files {
 		// keep track of commits for logging
 		if f.PatchHeader != nil {
 			commitMap[f.PatchHeader.SHA] = true
 		}
-
 		wg.Add(1)
+		concurrentGoroutines <- struct{}{}
 		go func(f *gitdiff.File) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				<-concurrentGoroutines
+			}()
 			if f.IsBinary {
 				return
 			}
