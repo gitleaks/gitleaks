@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
-	godocutil "golang.org/x/tools/godoc/util"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -49,10 +48,6 @@ func FromFiles(source string, cfg config.Config, outputOptions Options) ([]repor
 			b, err := os.ReadFile(p)
 			if err != nil {
 				return err
-			}
-
-			if !godocutil.IsText(b) {
-				return nil
 			}
 			fis := DetectFindings(cfg, b, p, "")
 			for _, fi := range fis {

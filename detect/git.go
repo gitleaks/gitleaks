@@ -9,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
-	godocutil "golang.org/x/tools/godoc/util"
 )
 
 // FromGit accepts a gitdiff.File channel (structure output from `git log -p`) and a configuration
@@ -55,10 +54,6 @@ func FromGit(files <-chan *gitdiff.File, cfg config.Config, outputOptions Option
 				if f.TextFragments == nil {
 					// TODO fix this in gitleaks gitdiff fork
 					// https://github.com/gitleaks/gitleaks/issues/11
-					continue
-				}
-
-				if !godocutil.IsText([]byte(tf.Raw(gitdiff.OpAdd))) {
 					continue
 				}
 
