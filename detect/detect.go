@@ -108,6 +108,77 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	return dedupe(findings)
 }
 
+func ValidateExamples(cfg config.Config, ruleID string) []report.Finding {
+	var findings []report.Finding
+
+	if ruleID != "" {
+		for _, r := range cfg.Rules {
+			if r.RuleID == ruleID {
+				cfg.Rules = []*config.Rule{r}
+				break
+			}
+		}
+	}
+
+	for _, r := range cfg.Rules {
+		for _, eg := range r.Examples {
+			b := []byte(eg)
+			linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
+			matchIndices := r.Regex.FindAllIndex(b, -1)
+			for _, m := range matchIndices {
+				location := getLocation(linePairs, m[0], m[1])
+				secret := strings.Trim(string(b[m[0]:m[1]]), "\n")
+				f := report.Finding{
+					Description: r.Description,
+					File:        cfg.Path,
+					RuleID:      r.RuleID,
+					StartLine:   location.startLine,
+					EndLine:     location.endLine,
+					StartColumn: location.startColumn,
+					EndColumn:   location.endColumn,
+					Secret:      secret,
+					Match:       secret,
+					Tags:        r.Tags,
+				}
+
+				if r.Allowlist.RegexAllowed(f.Secret) || cfg.Allowlist.RegexAllowed(f.Secret) {
+					continue
+				}
+
+				// extract secret from secret group if set
+				if r.SecretGroup != 0 {
+					groups := r.Regex.FindStringSubmatch(secret)
+					if len(groups)-1 > r.SecretGroup || len(groups) == 0 {
+						// Config validation should prevent this
+						break
+					}
+					secret = groups[r.SecretGroup]
+					f.Secret = secret
+				}
+
+				// extract secret from secret group if set
+				if r.EntropySet() {
+					include, entropy := r.IncludeEntropy(secret)
+					if include {
+						f.Entropy = float32(entropy)
+						findings = append(findings, f)
+					}
+				} else {
+					findings = append(findings, f)
+				}
+			}
+		}
+
+	}
+	findings = dedupe(findings)
+
+	for _, v := range findings {
+		printFinding(v)
+	}
+
+	return findings
+}
+
 func limit(s string) string {
 	if len(s) > 500 {
 		return s[:500] + "..."

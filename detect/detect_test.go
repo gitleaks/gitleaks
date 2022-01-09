@@ -166,3 +166,140 @@ func TestDetectFindings(t *testing.T) {
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
+
+func TestValidateExamples(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		filePath         string
+		bytes            []byte
+		commit           string
+		expectedFindings []report.Finding
+		wantError        error
+		ruleID           string
+	}{
+		{
+			cfgName:  "validate_example",
+			filePath: filepath.Join(configPath, "validate_example.toml"),
+			ruleID:   "validate-api-key-1",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Validate Examples 1",
+					Match:       "secret = \"8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ\"",
+					Secret:      "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-1",
+					Tags:        []string{},
+					Entropy:     4.41391,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   43,
+				},
+				{
+					Description: "Validate Examples 1",
+					Match:       "token = \"dGVzdCB0b2tlbiB0ZXN0Cg==\"",
+					Secret:      "dGVzdCB0b2tlbiB0ZXN0Cg==",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-1",
+					Tags:        []string{},
+					Entropy:     3.9701755,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   34,
+				},
+			},
+		},
+		{
+			cfgName:  "validate_example",
+			filePath: filepath.Join(configPath, "validate_example.toml"),
+			ruleID:   "validate-api-key-2",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Validate Examples 2",
+					Match:       "password = \"dGVzdCB0b2tlbiB0ZXN0Cg==872986\"",
+					Secret:      "dGVzdCB0b2tlbiB0ZXN0Cg==872986",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-2",
+					Tags:        []string{},
+					Entropy:     4.281728,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   43,
+				},
+			},
+		},
+		{
+			cfgName:  "validate_example",
+			filePath: filepath.Join(configPath, "validate_example.toml"),
+			ruleID:   "",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Validate Examples 1",
+					Match:       "secret = \"8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ\"",
+					Secret:      "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-1",
+					Tags:        []string{},
+					Entropy:     4.41391,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   43,
+				},
+				{
+					Description: "Validate Examples 1",
+					Match:       "token = \"dGVzdCB0b2tlbiB0ZXN0Cg==\"",
+					Secret:      "dGVzdCB0b2tlbiB0ZXN0Cg==",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-1",
+					Tags:        []string{},
+					Entropy:     3.9701755,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   34,
+				},
+				{
+					Description: "Validate Examples 2",
+					Match:       "password = \"dGVzdCB0b2tlbiB0ZXN0Cg==872986\"",
+					Secret:      "dGVzdCB0b2tlbiB0ZXN0Cg==872986",
+					File:        "../testdata/config/validate_example.toml",
+					RuleID:      "validate-api-key-2",
+					Tags:        []string{},
+					Entropy:     4.281728,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   43,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.Reset()
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName(tt.cfgName)
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		viper.Unmarshal(&vc)
+		cfg, err := vc.Translate()
+		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
+		if tt.wantError != nil {
+			if err == nil {
+				t.Errorf("expected error")
+			}
+			assert.Equal(t, tt.wantError, err)
+		}
+
+		findings := ValidateExamples(cfg, tt.ruleID)
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}

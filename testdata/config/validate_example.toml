@@ -1,0 +1,22 @@
+title = "gitleaks config"
+
+[[rules]]
+description = "Validate Examples 1"
+id = "validate-api-key-1"
+regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+entropy = 3.7
+secretGroup = 4
+examples=[
+    '''secret = "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"''',
+    '''token = "dGVzdCB0b2tlbiB0ZXN0Cg=="'''
+]
+
+[[rules]]
+description = "Validate Examples 2"
+id = "validate-api-key-2"
+regex = '''(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
+entropy = 3.7
+secretGroup = 4
+examples=[
+    '''password = "dGVzdCB0b2tlbiB0ZXN0Cg==872986"'''
+]

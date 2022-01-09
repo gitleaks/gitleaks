@@ -14,6 +14,7 @@ type Rule struct {
 	Path        *regexp.Regexp
 	Tags        []string
 	Allowlist   Allowlist
+	Examples    []string
 }
 
 func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
