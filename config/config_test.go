@@ -25,6 +25,7 @@ func TestTranslate(t *testing.T) {
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
+						Examples:    []string{},
 						RuleID:      "aws-access-key",
 						Allowlist: Allowlist{
 							Regexes: []*regexp.Regexp{
@@ -43,6 +44,7 @@ func TestTranslate(t *testing.T) {
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
+						Examples:    []string{},
 						RuleID:      "aws-access-key",
 						Allowlist: Allowlist{
 							Commits: []string{"allowthiscommit"},
@@ -59,6 +61,7 @@ func TestTranslate(t *testing.T) {
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
+						Examples:    []string{},
 						RuleID:      "aws-access-key",
 						Allowlist: Allowlist{
 							Paths: []*regexp.Regexp{
@@ -81,6 +84,7 @@ func TestTranslate(t *testing.T) {
 						Entropy:     3.5,
 						SecretGroup: 3,
 						Tags:        []string{},
+						Examples:    []string{},
 					},
 				},
 			},
