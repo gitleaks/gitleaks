@@ -48,7 +48,7 @@ func runValidate(cmd *cobra.Command, args []string) {
 
 	for _, v := range cfg.Rules {
 		if ruleID == "" || ruleID == v.RuleID {
-			findings = detect.ValidateExamples(cfg, v.RuleID)
+			findings = append(findings, detect.ValidateExamples(cfg, v.RuleID)...)
 		}
 	}
 
