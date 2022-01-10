@@ -52,7 +52,7 @@ func runValidate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	log.Info().Msgf("scan completed in %s", time.Since(start))
+	log.Info().Msgf("config validation completed in %s", time.Since(start))
 
 	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
