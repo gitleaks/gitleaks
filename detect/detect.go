@@ -108,13 +108,6 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	return dedupe(findings)
 }
 
-func limit(s string) string {
-	if len(s) > 500 {
-		return s[:500] + "..."
-	}
-	return s
-}
-
 func printFinding(f report.Finding) {
 	var b []byte
 	b, _ = json.MarshalIndent(f, "", "	")
