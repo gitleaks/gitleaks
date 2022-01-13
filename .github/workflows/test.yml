@@ -11,8 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
     steps:
     - uses: actions/checkout@v2
 
@@ -26,8 +24,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
     steps:
     - uses: actions/checkout@v2
 
