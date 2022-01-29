@@ -116,7 +116,7 @@ Use "gitleaks [command] --help" for more information about a command.
 ### Commands
 There are two commands you will use to detect secrets; `detect` and `protect`.
 #### Detect
-The `detect` command is used to scan repos, directories, and files.  This comand can be used on developer machines and in CI environments.
+The `detect` command is used to scan repos, directories, and files.  This command can be used on developer machines and in CI environments.
 
 When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)).
@@ -203,7 +203,7 @@ title = "Gitleaks title"
 # Unique identifier for this rule
 id = "awesome-rule-1"
 # Short human readable description of the rule.
-description = "awsome rule 1"
+description = "awesome rule 1"
 # Golang regular expression used to detect secrets. Note Golang's regex engine
 # does not support lookaheads.
 regex = '''one-go-style-regex-for-this-rule'''
@@ -225,7 +225,7 @@ commits = [ "commit-A", "commit-B"]
 paths = ['''one-file-path-regex''']
 regexes = ['''one-regex-within-the-already-matched-regex''']
 
-# This is a global allowlist which has a higher order of precendence than rule-specific allowlists.
+# This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
 # secrets will be detected for said commit. The same logic applies for regexes and paths.
 [allowlist]
