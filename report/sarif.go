@@ -30,13 +30,24 @@ func getRuns(cfg config.Config, findings []Finding) []Runs {
 }
 
 func getTool(cfg config.Config) Tool {
-	return Tool{
+	tool := Tool{
 		Driver: Driver{
 			Name:            driver,
 			SemanticVersion: version,
 			Rules:           getRules(cfg),
 		},
 	}
+
+	// if this tool has no rules, ensure that it is represented as [] instead of null/nil
+	if hasEmptyRules(tool) {
+		tool.Driver.Rules = make([]Rules, 0)
+	}
+
+	return tool
+}
+
+func hasEmptyRules(tool Tool) bool {
+	return len(tool.Driver.Rules) == 0
 }
 
 func getRules(cfg config.Config) []Rules {
