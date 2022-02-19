@@ -2,7 +2,7 @@ title = "gitleaks config"
 
 # Gitleaks rules are defined by regular expressions and entropy ranges.
 # Some secrets have unique signatures which make detecting those secrets easy.
-# Examples of those secrets would be Gitlab Personal Access Tokens, AWS keys, and Github Access Tokens.
+# Examples of those secrets would be GitLab Personal Access Tokens, AWS keys, and GitHub Access Tokens.
 # All these examples have defined prefixes like `glpat`, `AKIA`, `ghp_`, etc.
 #
 # Other secrets might just be a hash which means we need to write more complex rules to verify
@@ -62,12 +62,12 @@ regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
 
 [[rules]]
 id = "github-pat"
-description = "Github Personal Access Token"
+description = "GitHub Personal Access Token"
 regex = '''ghp_[0-9a-zA-Z]{36}'''
 
 [[rules]]
 id = "github-oauth"
-description = "Github OAuth Access Token"
+description = "GitHub OAuth Access Token"
 regex = '''gho_[0-9a-zA-Z]{36}'''
 
 [[rules]]
@@ -83,12 +83,12 @@ regex = '''-----BEGIN EC PRIVATE KEY-----'''
 
 [[rules]]
 id = "github-app-token"
-description = "Github App Token"
+description = "GitHub App Token"
 regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
 
 [[rules]]
 id = "github-refresh-token"
-description = "Github Refresh Token"
+description = "GitHub Refresh Token"
 regex = '''ghr_[0-9a-zA-Z]{76}'''
 
 [[rules]]
@@ -326,18 +326,18 @@ regex = '''(?i)(finicity[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([
 secretGroup = 3
 
 [[rules]]
-id = "flutterweave-public-key"
-description = "Flutterweave public key"
+id = "flutterwave-public-key"
+description = "Flutterwave public key"
 regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
 
 [[rules]]
-id = "flutterweave-secret-key"
-description = "Flutterweave secret key"
+id = "flutterwave-secret-key"
+description = "Flutterwave secret key"
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 
 [[rules]]
-id = "flutterweave-enc-key"
-description = "Flutterweave encrypted key"
+id = "flutterwave-enc-key"
+description = "Flutterwave encrypted key"
 regex = '''FLWSECK_TEST[a-h0-9]{12}'''
 
 [[rules]]
@@ -357,12 +357,12 @@ regex = '''['\"]eyJrIjoi(?i)[a-z0-9-_=]{72,92}['\"]'''
 
 [[rules]]
 id = "hashicorp-tf-api-token"
-description = "Hashicorp Terraform user/org API token"
+description = "HashiCorp Terraform user/org API token"
 regex = '''['\"](?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9-_=]{60,70}['\"]'''
 
 [[rules]]
 id = "hubspot-api-token"
-description = "Hubspot API token"
+description = "HubSpot API token"
 regex = '''(?i)(hubspot[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})['\"]'''
 secretGroup = 3
 
@@ -470,12 +470,12 @@ regex = '''['\"](npm_(?i)[a-z0-9]{36})['\"]'''
 
 [[rules]]
 id = "planetscale-password"
-description = "Planetscale password"
+description = "PlanetScale password"
 regex = '''pscale_pw_(?i)[a-z0-9\-_\.]{43}'''
 
 [[rules]]
 id = "planetscale-api-token"
-description = "Planetscale API token"
+description = "PlanetScale API token"
 regex = '''pscale_tkn_(?i)[a-z0-9\-_\.]{43}'''
 
 [[rules]]
@@ -495,7 +495,7 @@ regex = '''rubygems_[a-f0-9]{48}'''
 
 [[rules]]
 id = "sendgrid-api-token"
-description = "Sendgrid API token"
+description = "SendGrid API token"
 regex = '''SG\.(?i)[a-z0-9_\-\.]{66}'''
 
 [[rules]]
@@ -510,13 +510,13 @@ regex = '''shippo_(live|test)_[a-f0-9]{40}'''
 
 [[rules]]
 id = "linedin-client-secret"
-description = "Linkedin Client secret"
+description = "LinkedIn Client secret"
 regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z]{16})['\"]'''
 secretGroup = 3
 
 [[rules]]
 id = "linedin-client-id"
-description = "Linkedin Client ID"
+description = "LinkedIn Client ID"
 regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{14})['\"]'''
 secretGroup = 3
 
