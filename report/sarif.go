@@ -207,14 +207,3 @@ type Runs struct {
 	Tool    Tool      `json:"tool"`
 	Results []Results `json:"results"`
 }
-
-func configToRules(cfg config.Config) []Rules {
-	var rules []Rules
-	for _, rule := range cfg.Rules {
-		rules = append(rules, Rules{
-			ID:   rule.RuleID,
-			Name: rule.Description,
-		})
-	}
-	return rules
-}
