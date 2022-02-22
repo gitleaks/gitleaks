@@ -54,12 +54,22 @@ func getRules(cfg config.Config) []Rules {
 	// TODO	for _, rule := range cfg.Rules {
 	var rules []Rules
 	for _, rule := range cfg.Rules {
-		rules = append(rules, Rules{
-			ID:   rule.RuleID,
-			Name: rule.Description,
-			Description: ShortDescription{
+		shortDescription := ShortDescription{
+			Text: rule.Description,
+		}
+		if rule.Regex != nil {
+			shortDescription = ShortDescription{
 				Text: rule.Regex.String(),
-			},
+			}
+		} else if rule.Path != nil {
+			shortDescription = ShortDescription{
+				Text: rule.Path.String(),
+			}
+		}
+		rules = append(rules, Rules{
+			ID:          rule.RuleID,
+			Name:        rule.Description,
+			Description: shortDescription,
 		})
 	}
 	return rules
