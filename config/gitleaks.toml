@@ -509,13 +509,13 @@ description = "Shippo API token"
 regex = '''shippo_(live|test)_[a-f0-9]{40}'''
 
 [[rules]]
-id = "linedin-client-secret"
+id = "linkedin-client-secret"
 description = "LinkedIn Client secret"
 regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z]{16})['\"]'''
 secretGroup = 3
 
 [[rules]]
-id = "linedin-client-id"
+id = "linkedin-client-id"
 description = "LinkedIn Client ID"
 regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{14})['\"]'''
 secretGroup = 3
