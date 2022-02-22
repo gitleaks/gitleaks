@@ -84,7 +84,7 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 			// extract secret from secret group if set
 			if r.SecretGroup != 0 {
 				groups := r.Regex.FindStringSubmatch(secret)
-				if len(groups)-1 > r.SecretGroup || len(groups) == 0 {
+				if len(groups) <= r.SecretGroup || len(groups) == 0 {
 					// Config validation should prevent this
 					break
 				}
@@ -106,13 +106,6 @@ func DetectFindings(cfg config.Config, b []byte, filePath string, commit string)
 	}
 
 	return dedupe(findings)
-}
-
-func limit(s string) string {
-	if len(s) > 500 {
-		return s[:500] + "..."
-	}
-	return s
 }
 
 func printFinding(f report.Finding) {
