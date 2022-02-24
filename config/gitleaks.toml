@@ -32,7 +32,7 @@ title = "gitleaks config"
 [[rules]]
 id = "gitlab-pat"
 description = "GitLab Personal Access Token"
-regex = '''glpat-[0-9a-zA-Z\-]{20}'''
+regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
 
 [[rules]]
 id = "aws-access-token"
