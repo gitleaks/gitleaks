@@ -23,6 +23,25 @@ func TestDetectFindings(t *testing.T) {
 		wantError        error
 	}{
 		{
+			cfgName:  "escaped_character_group",
+			bytes:    []byte(`pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`),
+			filePath: "tmp.go",
+			expectedFindings: []report.Finding{
+				{
+					Description: "PyPI upload token",
+					Secret:      "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
+					Match:       "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
+					File:        "tmp.go",
+					RuleID:      "pypi-upload-token",
+					Tags:        []string{"key", "pypi"},
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   86,
+				},
+			},
+		},
+		{
 			cfgName:  "simple",
 			bytes:    []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
 			filePath: "tmp.go",

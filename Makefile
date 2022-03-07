@@ -6,7 +6,7 @@ LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v8/cmd.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:
-	go test ./... --race $(COVER) $(PKG) -v
+	go test -v ./... --race $(COVER) $(PKG)
 	go tool cover -html=cover.out
 
 format:
@@ -14,7 +14,7 @@ format:
 
 test: format
 	go vet ./...
-	go test ./... --race $(PKG) -v
+	go test -v ./... --race $(PKG) 
 
 build: format
 	go vet ./...
