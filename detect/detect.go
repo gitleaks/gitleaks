@@ -131,7 +131,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
-		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], " \n")
+		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
 
 		// determine location of match. Note that the location
 		// in the finding will be the line/column numbers of the _match_
@@ -163,7 +163,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			groups := rule.Regex.FindStringSubmatch(secret)
 			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
 				// Config validation should prevent this
-				break
+				continue
 			}
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
@@ -174,7 +174,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		finding.Entropy = float32(entropy)
 		if rule.EntropySet() && entropy <= rule.Entropy {
 			// entropy is too low, skip this finding
-			return findings
+			continue
 		}
 		findings = append(findings, finding)
 	}
