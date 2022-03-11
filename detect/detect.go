@@ -170,12 +170,12 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		}
 
 		// check entropy
-		finding.Entropy = float32(shannonEntropy(secret))
-		if rule.EntropySet() && finding.Entropy <= float32(rule.Entropy) {
+		entropy := shannonEntropy(finding.Secret)
+		finding.Entropy = float32(entropy)
+		if rule.EntropySet() && entropy <= rule.Entropy {
 			// entropy is too low, skip this finding
 			return findings
 		}
-
 		findings = append(findings, finding)
 	}
 	return findings
