@@ -10,7 +10,7 @@ type Location struct {
 	endLineIndex   int
 }
 
-func getLocation(linePairs [][]int, start int, end int) Location {
+func location(fragment Fragment, matchIndex []int) Location {
 	var (
 		prevNewLine int
 		location    Location
@@ -18,7 +18,10 @@ func getLocation(linePairs [][]int, start int, end int) Location {
 		_lineNum    int
 	)
 
-	for lineNum, pair := range linePairs {
+	start := matchIndex[0]
+	end := matchIndex[1]
+
+	for lineNum, pair := range fragment.newlineIndices {
 		_lineNum = lineNum
 		newLineByteIndex := pair[0]
 		if prevNewLine <= start && start < newLineByteIndex {
