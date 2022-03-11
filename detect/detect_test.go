@@ -12,20 +12,21 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-func TestDetectFindings(t *testing.T) {
+const configPath = "../testdata/config/"
+
+func TestDetect(t *testing.T) {
 	tests := []struct {
 		cfgName          string
-		opts             Options
-		filePath         string
-		bytes            []byte
-		commit           string
+		fragment         Fragment
 		expectedFindings []report.Finding
 		wantError        error
 	}{
 		{
-			cfgName:  "escaped_character_group",
-			bytes:    []byte(`pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`),
-			filePath: "tmp.go",
+			cfgName: "escaped_character_group",
+			fragment: Fragment{
+				Raw:      `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{
 				{
 					Description: "PyPI upload token",
@@ -38,13 +39,16 @@ func TestDetectFindings(t *testing.T) {
 					EndLine:     1,
 					StartColumn: 1,
 					EndColumn:   86,
+					Entropy:     1.9606875,
 				},
 			},
 		},
 		{
-			cfgName:  "simple",
-			bytes:    []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath: "tmp.go",
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -57,32 +61,41 @@ func TestDetectFindings(t *testing.T) {
 					EndLine:     1,
 					StartColumn: 15,
 					EndColumn:   34,
+					Entropy:     3.0841837,
 				},
 			},
 		},
 		{
-			cfgName:          "allow_aws_re",
-			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath:         "tmp.go",
+			cfgName: "allow_aws_re",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{},
 		},
 		{
-			cfgName:          "allow_path",
-			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath:         "tmp.go",
+			cfgName: "allow_path",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{},
 		},
 		{
-			cfgName:          "allow_commit",
-			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath:         "tmp.go",
+			cfgName: "allow_commit",
+			fragment: Fragment{
+				Raw:       `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath:  "tmp.go",
+				CommitSHA: "allowthiscommit",
+			},
 			expectedFindings: []report.Finding{},
-			commit:           "allowthiscommit",
 		},
 		{
-			cfgName:  "entropy_group",
-			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
-			filePath: "tmp.go",
+			cfgName: "entropy_group",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{
 				{
 					Description: "Discord API key",
@@ -100,15 +113,19 @@ func TestDetectFindings(t *testing.T) {
 			},
 		},
 		{
-			cfgName:          "generic_with_py_path",
-			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
-			filePath:         "tmp.go",
+			cfgName: "generic_with_py_path",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{},
 		},
 		{
-			cfgName:  "generic_with_py_path",
-			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
-			filePath: "tmp.py",
+			cfgName: "generic_with_py_path",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.py",
+			},
 			expectedFindings: []report.Finding{
 				{
 					Description: "Generic API Key",
@@ -126,9 +143,11 @@ func TestDetectFindings(t *testing.T) {
 			},
 		},
 		{
-			cfgName:  "path_only",
-			bytes:    []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
-			filePath: "tmp.py",
+			cfgName: "path_only",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.py",
+			},
 			expectedFindings: []report.Finding{
 				{
 					Description: "Python Files",
@@ -140,22 +159,28 @@ func TestDetectFindings(t *testing.T) {
 			},
 		},
 		{
-			cfgName:          "bad_entropy_group",
-			bytes:            []byte(`const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`),
-			filePath:         "tmp.go",
+			cfgName: "bad_entropy_group",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{},
 			wantError:        fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
-			cfgName:          "simple",
-			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath:         filepath.Join(configPath, "simple.toml"),
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: filepath.Join(configPath, "simple.toml"),
+			},
 			expectedFindings: []report.Finding{},
 		},
 		{
-			cfgName:          "allow_global_aws_re",
-			bytes:            []byte(`awsToken := \"AKIALALEMEL33243OLIA\"`),
-			filePath:         "tmp.go",
+			cfgName: "allow_global_aws_re",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
 			expectedFindings: []report.Finding{},
 		},
 	}
@@ -180,8 +205,9 @@ func TestDetectFindings(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantError, err)
 		}
+		d := NewDetector(cfg)
 
-		findings := DetectFindings(cfg, tt.bytes, tt.filePath, tt.commit)
+		findings := d.Detect(tt.fragment)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }

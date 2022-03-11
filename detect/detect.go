@@ -18,15 +18,20 @@ import (
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Detector is the main detector struct
 type Detector struct {
-	// cfg is the configuration for the detector
-	cfg config.Config
+	// Config is the configuration for the detector
+	Config config.Config
 
-	redact bool
+	// Redact is a flag to redact findings. This is exported
+	// so users using gitleaks as a library can set this flag
+	// without calling `detector.Start(cmd *cobra.Command)`
+	Redact bool
 
+	// verbose is a flag to print findings
 	verbose bool
 
 	// commitMap is used to keep track of commits that have been scanned.
@@ -37,6 +42,9 @@ type Detector struct {
 	// findings slice when adding findings.
 	findingMutex *sync.Mutex
 
+	// findings is a slice of report.Findings. This is the result
+	// of the detector's scan which can then be used to generate a
+	// report.
 	findings []report.Finding
 }
 
@@ -51,26 +59,32 @@ type Fragment struct {
 	// CommitSHA is the SHA of the commit
 	CommitSHA string
 
-	// RuleID is the ID of the rule that is to be used. If no RuleID is set then the entire
-	// rule set will be used
-	RuleID string
-
+	// newlineIndices is a list of indices of newlines in the raw content.
+	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
 }
 
+// NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
 		commitMap:    make(map[string]bool),
 		findingMutex: &sync.Mutex{},
 		findings:     make([]report.Finding, 0),
-		cfg:          cfg,
+		Config:       cfg,
 	}
 }
 
-func NewDetectorDefaultConfig() *Detector {
-	// TODO load default config
-	// return NewDetector()
-	return nil
+// NewDetectorDefaultConfig creates a new detector with the default config
+func NewDetectorDefaultConfig() (*Detector, error) {
+	viper.SetConfigType("toml")
+	viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+	var vc config.ViperConfig
+	viper.Unmarshal(&vc)
+	cfg, err := vc.Translate()
+	if err != nil {
+		return nil, err
+	}
+	return NewDetector(cfg), nil
 }
 
 // Start is called from cmd
@@ -82,7 +96,7 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 
 	start := time.Now()
 
-	d.cfg.Path, err = cmd.Flags().GetString("config")
+	d.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
 		return findings, err
 	}
@@ -94,8 +108,8 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
 	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
-	if d.cfg.Path == "" {
-		d.cfg.Path = filepath.Join(source, ".gitleaks.toml")
+	if d.Config.Path == "" {
+		d.Config.Path = filepath.Join(source, ".gitleaks.toml")
 	}
 
 	// set verbose flag
@@ -104,7 +118,7 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 	}
 
 	// set redact flag
-	if d.redact, err = cmd.Flags().GetBool("redact"); err != nil {
+	if d.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
 		return findings, err
 	}
 
@@ -116,12 +130,10 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 	if noGit {
 		// TODO treat the repo as a directory
 	} else {
-		// TODO scan git history
 		logOpts, err := cmd.Flags().GetString("log-opts")
 		if err != nil {
 			return findings, err
 		}
-		// TODO abstract git log to "producer" or "pipe"
 		history, err := git.GitLog(source, logOpts)
 		if err != nil {
 			return findings, err
@@ -154,20 +166,21 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
 
 	// check if filepath is allowed
-	if d.cfg.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.cfg.Path {
+	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path {
 		return findings
 	}
 
 	// add newline indices for location calculation in detectRule
 	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
 
-	for _, rule := range d.cfg.Rules {
+	for _, rule := range d.Config.Rules {
 		findings = append(findings, d.detectRule(fragment, rule)...)
 	}
-	return filter(findings, d.redact)
+	return filter(findings, d.Redact)
 }
 
+// detectRule scans the given fragment for the given rule and returns a list of findings
 func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Finding {
 	var findings []report.Finding
 
@@ -224,7 +237,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 
 		// check if the secret is in the allowlist
 		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.cfg.Allowlist.RegexAllowed(finding.Secret) {
+			d.Config.Allowlist.RegexAllowed(finding.Secret) {
 			continue
 		}
 
@@ -251,29 +264,32 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 	return findings
 }
 
+// startGitScan accepts a *gitdiff.File channel which contents a git history generated from
+// the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
+// and determine if the patch contains any findings.
 func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) {
 	s := semgroup.NewGroup(context.Background(), 4)
 
-	for f := range gitdiffFiles {
-		f := f
+	for gitdiffFile := range gitdiffFiles {
+		gitdiffFile := gitdiffFile
 
 		// skip binary files
-		if f.IsBinary || f.IsDelete {
+		if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
 			continue
 		}
 
 		// Check if commit is allowed
 		commitSHA := ""
-		if f.PatchHeader != nil {
-			commitSHA = f.PatchHeader.SHA
-			if d.cfg.Allowlist.CommitAllowed(f.PatchHeader.SHA) {
+		if gitdiffFile.PatchHeader != nil {
+			commitSHA = gitdiffFile.PatchHeader.SHA
+			if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
 				continue
 			}
 		}
 		d.addCommit(commitSHA)
 
 		s.Go(func() error {
-			for _, textFragment := range f.TextFragments {
+			for _, textFragment := range gitdiffFile.TextFragments {
 				if textFragment == nil {
 					return nil
 				}
@@ -281,11 +297,11 @@ func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) {
 				fragment := Fragment{
 					Raw:       textFragment.Raw(gitdiff.OpAdd),
 					CommitSHA: commitSHA,
-					FilePath:  f.NewName,
+					FilePath:  gitdiffFile.NewName,
 				}
 
 				for _, finding := range d.Detect(fragment) {
-					d.addFinding(augmentGitFinding(finding, textFragment, f))
+					d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
 				}
 			}
 			return nil
