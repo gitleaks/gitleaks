@@ -3,19 +3,21 @@ package detect
 import (
 	"context"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/rs/zerolog/log"
+	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/detect/git"
+	"github.com/zricethezav/gitleaks/v8/report"
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/spf13/cobra"
-	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect/git"
-	"github.com/zricethezav/gitleaks/v8/report"
 )
 
 // Detector is the main detector struct
@@ -26,8 +28,6 @@ type Detector struct {
 	redact bool
 
 	verbose bool
-
-	// maybe use cmd?
 
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
@@ -60,7 +60,10 @@ type Fragment struct {
 
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
-		cfg: cfg,
+		commitMap:    make(map[string]bool),
+		findingMutex: &sync.Mutex{},
+		findings:     make([]report.Finding, 0),
+		cfg:          cfg,
 	}
 }
 
@@ -76,6 +79,8 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 		findings []report.Finding
 		err      error
 	)
+
+	start := time.Now()
 
 	d.cfg.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
@@ -93,12 +98,16 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 		d.cfg.Path = filepath.Join(source, ".gitleaks.toml")
 	}
 
+	// set verbose flag
 	if d.verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
 		return findings, err
 	}
+
+	// set redact flag
 	if d.redact, err = cmd.Flags().GetBool("redact"); err != nil {
 		return findings, err
 	}
+
 	noGit, err := cmd.Flags().GetBool("no-git")
 	if err != nil {
 		return findings, err
@@ -113,15 +122,17 @@ func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
 			return findings, err
 		}
 		// TODO abstract git log to "producer" or "pipe"
-		history, err := git.GitLog(d.cfg.Path, logOpts)
+		history, err := git.GitLog(source, logOpts)
 		if err != nil {
 			return findings, err
 		}
-		findings = d.startGitScan(history)
+		d.startGitScan(history)
 	}
 
+	log.Info().Msgf("scan completed in %s", time.Since(start))
+
 	// TODO generate report, check exit code, etc
-	exitCode, err := cmd.Flags().GetInt("exit-code")
+	// exitCode, err := cmd.Flags().GetInt("exit-code")
 
 	return findings, nil
 }
@@ -154,7 +165,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	for _, rule := range d.cfg.Rules {
 		findings = append(findings, d.detectRule(fragment, rule)...)
 	}
-	return findings
+	return filter(findings, d.redact)
 }
 
 func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Finding {
@@ -231,15 +242,16 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		// check entropy
 		finding.Entropy = float32(shannonEntropy(secret))
 		if rule.EntropySet() && finding.Entropy < float32(rule.Entropy) {
+			// entropy is too low, skip this finding
 			return findings
 		}
+
+		findings = append(findings, finding)
 	}
 	return findings
 }
 
-func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) []report.Finding {
-	var findings []report.Finding
-
+func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) {
 	s := semgroup.NewGroup(context.Background(), 4)
 
 	for f := range gitdiffFiles {
@@ -273,15 +285,16 @@ func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) []report.Find
 				}
 
 				for _, finding := range d.Detect(fragment) {
-					d.addFinding(augmentFinding(finding, textFragment, d.redact))
+					d.addFinding(augmentGitFinding(finding, textFragment, f))
 				}
 			}
 			return nil
 		})
-
 	}
 
-	return findings
+	if err := s.Wait(); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (d *Detector) startFileScan(source string) []report.Finding {
@@ -303,7 +316,6 @@ func (d *Detector) startFileScan(source string) []report.Finding {
 				}
 				return nil
 			})
-		return nil
 	})
 	for pa := range paths {
 		p := pa
@@ -316,7 +328,9 @@ func (d *Detector) startFileScan(source string) []report.Finding {
 				Raw:      string(b),
 				FilePath: p,
 			}
-			d.Detect(fragment)
+			for _, finding := range d.Detect(fragment) {
+				d.addFinding(finding)
+			}
 
 			return nil
 		})
@@ -325,52 +339,17 @@ func (d *Detector) startFileScan(source string) []report.Finding {
 	return findings
 }
 
+// addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
+	if d.verbose {
+		printFinding(finding)
+	}
 	d.findingMutex.Unlock()
 }
 
+// addCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
-}
-
-func augmentFinding(finding report.Finding, textFragment *gitdiff.TextFragment, redact bool) report.Finding {
-	if !strings.HasPrefix(finding.Match, "file detected") {
-		finding.StartLine += int(textFragment.NewPosition)
-		finding.EndLine += int(textFragment.NewPosition)
-	}
-
-	// TODO handle redact
-
-	return finding
-}
-
-// filter inspects each finding and removes the findings that are allowed (whether that be by the rule allowlist or global allowlist)
-func (d *Detector) filter(findings []report.Finding) []report.Finding {
-	return findings
-}
-
-// shannonEntropy calculates the entropy of data using the formula defined here:
-// https://en.wiktionary.org/wiki/Shannon_entropy
-// Another way to think about what this is doing is calculating the number of bits
-// needed to on average encode the data. So, the higher the entropy, the more random the data, the
-// more bits needed to encode that data.
-func shannonEntropy(data string) (entropy float64) {
-	if data == "" {
-		return 0
-	}
-
-	charCounts := make(map[rune]int)
-	for _, char := range data {
-		charCounts[char]++
-	}
-
-	invLength := 1.0 / float64(len(data))
-	for _, count := range charCounts {
-		freq := float64(count) * invLength
-		entropy -= freq * math.Log2(freq)
-	}
-
-	return entropy
 }

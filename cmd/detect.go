@@ -1,18 +1,12 @@
 package cmd
 
 import (
-	"os"
-	"path/filepath"
-	"time"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
-	"github.com/zricethezav/gitleaks/v8/git"
-	"github.com/zricethezav/gitleaks/v8/report"
 )
 
 func init() {
@@ -30,9 +24,9 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	initConfig()
 	var (
-		vc       config.ViperConfig
-		findings []report.Finding
-		err      error
+		vc config.ViperConfig
+		// findings []report.Finding
+		err error
 	)
 
 	viper.Unmarshal(&vc)
@@ -42,52 +36,56 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	cfg.Path, _ = cmd.Flags().GetString("config")
-	source, _ := cmd.Flags().GetString("source")
-	logOpts, _ := cmd.Flags().GetString("log-opts")
-	verbose, _ := cmd.Flags().GetBool("verbose")
-	redact, _ := cmd.Flags().GetBool("redact")
-	noGit, _ := cmd.Flags().GetBool("no-git")
-	exitCode, _ := cmd.Flags().GetInt("exit-code")
-	if cfg.Path == "" {
-		cfg.Path = filepath.Join(source, ".gitleaks.toml")
-	}
-	start := time.Now()
 
-	if noGit {
-		if logOpts != "" {
-			log.Fatal().Err(err).Msg("--log-opts cannot be used with --no-git")
-		}
-		findings, err = detect.FromFiles(source, cfg, detect.Options{
-			Verbose: verbose,
-			Redact:  redact,
-		})
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to scan files")
-		}
-	} else {
-		files, err := git.GitLog(source, logOpts)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to get git log")
-		}
+	detector := detect.NewDetector(cfg)
+	detector.Start(cmd)
 
-		findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbose, Redact: redact})
-	}
+	// source, _ := cmd.Flags().GetString("source")
+	// logOpts, _ := cmd.Flags().GetString("log-opts")
+	// verbose, _ := cmd.Flags().GetBool("verbose")
+	// redact, _ := cmd.Flags().GetBool("redact")
+	// noGit, _ := cmd.Flags().GetBool("no-git")
+	// exitCode, _ := cmd.Flags().GetInt("exit-code")
+	// if cfg.Path == "" {
+	// 	cfg.Path = filepath.Join(source, ".gitleaks.toml")
+	// }
+	// start := time.Now()
 
-	if len(findings) != 0 {
-		log.Warn().Msgf("leaks found: %d", len(findings))
-	} else {
-		log.Info().Msg("no leaks found")
-	}
+	// if noGit {
+	// 	if logOpts != "" {
+	// 		log.Fatal().Err(err).Msg("--log-opts cannot be used with --no-git")
+	// 	}
+	// 	findings, err = detect.FromFiles(source, cfg, detect.Options{
+	// 		Verbose: verbose,
+	// 		Redact:  redact,
+	// 	})
+	// 	if err != nil {
+	// 		log.Fatal().Err(err).Msg("Failed to scan files")
+	// 	}
+	// } else {
+	// 	files, err := git.GitLog(source, logOpts)
+	// 	if err != nil {
+	// 		log.Fatal().Err(err).Msg("Failed to get git log")
+	// 	}
 
-	log.Info().Msgf("scan completed in %s", time.Since(start))
+	// 	findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbose, Redact: redact})
+	// }
 
-	reportPath, _ := cmd.Flags().GetString("report-path")
-	ext, _ := cmd.Flags().GetString("report-format")
-	if reportPath != "" {
-		report.Write(findings, cfg, ext, reportPath)
-	}
+	// if len(findings) != 0 {
+	// 	log.Warn().Msgf("leaks found: %d", len(findings))
+	// } else {
+	// 	log.Info().Msg("no leaks found")
+	// }
 
-	if len(findings) != 0 {
-		os.Exit(exitCode)
-	}
+	// log.Info().Msgf("scan completed in %s", time.Since(start))
+
+	// reportPath, _ := cmd.Flags().GetString("report-path")
+	// ext, _ := cmd.Flags().GetString("report-format")
+	// if reportPath != "" {
+	// 	report.Write(findings, cfg, ext, reportPath)
+	// }
+
+	// if len(findings) != 0 {
+	// 	os.Exit(exitCode)
+	// }
 }
