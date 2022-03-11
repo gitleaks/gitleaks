@@ -1,12 +1,17 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
+	"github.com/zricethezav/gitleaks/v8/report"
 )
 
 func init() {
@@ -24,9 +29,9 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	initConfig()
 	var (
-		vc config.ViperConfig
-		// findings []report.Finding
-		err error
+		vc       config.ViperConfig
+		findings []report.Finding
+		err      error
 	)
 
 	viper.Unmarshal(&vc)
@@ -36,56 +41,81 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	cfg.Path, _ = cmd.Flags().GetString("config")
-
 	detector := detect.NewDetector(cfg)
-	detector.Start(cmd)
 
-	// source, _ := cmd.Flags().GetString("source")
-	// logOpts, _ := cmd.Flags().GetString("log-opts")
-	// verbose, _ := cmd.Flags().GetBool("verbose")
-	// redact, _ := cmd.Flags().GetBool("redact")
-	// noGit, _ := cmd.Flags().GetBool("no-git")
-	// exitCode, _ := cmd.Flags().GetInt("exit-code")
-	// if cfg.Path == "" {
-	// 	cfg.Path = filepath.Join(source, ".gitleaks.toml")
-	// }
-	// start := time.Now()
+	start := time.Now()
 
-	// if noGit {
-	// 	if logOpts != "" {
-	// 		log.Fatal().Err(err).Msg("--log-opts cannot be used with --no-git")
-	// 	}
-	// 	findings, err = detect.FromFiles(source, cfg, detect.Options{
-	// 		Verbose: verbose,
-	// 		Redact:  redact,
-	// 	})
-	// 	if err != nil {
-	// 		log.Fatal().Err(err).Msg("Failed to scan files")
-	// 	}
-	// } else {
-	// 	files, err := git.GitLog(source, logOpts)
-	// 	if err != nil {
-	// 		log.Fatal().Err(err).Msg("Failed to get git log")
-	// 	}
+	detector.Config.Path, err = cmd.Flags().GetString("config")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 
-	// 	findings = detect.FromGit(files, cfg, detect.Options{Verbose: verbose, Redact: redact})
-	// }
+	source, err := cmd.Flags().GetString("source")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 
-	// if len(findings) != 0 {
-	// 	log.Warn().Msgf("leaks found: %d", len(findings))
-	// } else {
-	// 	log.Info().Msg("no leaks found")
-	// }
+	exitCode, err := cmd.Flags().GetInt("exit-code")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 
-	// log.Info().Msgf("scan completed in %s", time.Since(start))
+	// if config path is not set, then use the {source}/.gitleaks.toml path.
+	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
+	if detector.Config.Path == "" {
+		detector.Config.Path = filepath.Join(source, ".gitleaks.toml")
+	}
 
-	// reportPath, _ := cmd.Flags().GetString("report-path")
-	// ext, _ := cmd.Flags().GetString("report-format")
-	// if reportPath != "" {
-	// 	report.Write(findings, cfg, ext, reportPath)
-	// }
+	// set verbose flag
+	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
+		log.Fatal().Err(err)
+	}
 
-	// if len(findings) != 0 {
-	// 	os.Exit(exitCode)
-	// }
+	// set redact flag
+	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
+		log.Fatal().Err(err)
+	}
+
+	noGit, err := cmd.Flags().GetBool("no-git")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+
+	if noGit {
+		// TODO treat the repo as a directory
+		findings, err = detector.DetectFiles(source)
+		if err != nil {
+			// don't exit on error, just log it
+			log.Error().Err(err)
+		}
+
+	} else {
+		logOpts, err := cmd.Flags().GetString("log-opts")
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		findings, err = detector.DetectGit(source, logOpts)
+		if err != nil {
+			// don't exit on error, just log it
+			log.Error().Err(err)
+		}
+	}
+
+	log.Info().Msgf("scan completed in %s", time.Since(start))
+
+	if len(findings) != 0 {
+		log.Warn().Msgf("leaks found: %d", len(findings))
+	} else {
+		log.Info().Msg("no leaks found")
+	}
+
+	reportPath, _ := cmd.Flags().GetString("report-path")
+	ext, _ := cmd.Flags().GetString("report-format")
+	if reportPath != "" {
+		report.Write(findings, cfg, ext, reportPath)
+	}
+
+	if len(findings) != 0 {
+		os.Exit(exitCode)
+	}
 }

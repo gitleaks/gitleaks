@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -17,7 +16,6 @@ import (
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -32,7 +30,7 @@ type Detector struct {
 	Redact bool
 
 	// verbose is a flag to print findings
-	verbose bool
+	Verbose bool
 
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
@@ -48,15 +46,15 @@ type Detector struct {
 	findings []report.Finding
 }
 
-// Fragment contains the data to be scanned. Other names to consider: segment, section, part
+// Fragment contains the data to be scanned
 type Fragment struct {
 	// Raw is the raw content of the fragment
 	Raw string
 
-	// FilePath is the path to the file
+	// FilePath is the path to the file if applicable
 	FilePath string
 
-	// CommitSHA is the SHA of the commit
+	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
 
 	// newlineIndices is a list of indices of newlines in the raw content.
@@ -87,68 +85,6 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 	return NewDetector(cfg), nil
 }
 
-// Start is called from cmd
-func (d *Detector) Start(cmd *cobra.Command) ([]report.Finding, error) {
-	var (
-		findings []report.Finding
-		err      error
-	)
-
-	start := time.Now()
-
-	d.Config.Path, err = cmd.Flags().GetString("config")
-	if err != nil {
-		return findings, err
-	}
-
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		return findings, err
-	}
-
-	// if config path is not set, then use the {source}/.gitleaks.toml path.
-	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
-	if d.Config.Path == "" {
-		d.Config.Path = filepath.Join(source, ".gitleaks.toml")
-	}
-
-	// set verbose flag
-	if d.verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		return findings, err
-	}
-
-	// set redact flag
-	if d.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
-		return findings, err
-	}
-
-	noGit, err := cmd.Flags().GetBool("no-git")
-	if err != nil {
-		return findings, err
-	}
-
-	if noGit {
-		// TODO treat the repo as a directory
-	} else {
-		logOpts, err := cmd.Flags().GetString("log-opts")
-		if err != nil {
-			return findings, err
-		}
-		history, err := git.GitLog(source, logOpts)
-		if err != nil {
-			return findings, err
-		}
-		d.startGitScan(history)
-	}
-
-	log.Info().Msgf("scan completed in %s", time.Since(start))
-
-	// TODO generate report, check exit code, etc
-	// exitCode, err := cmd.Flags().GetInt("exit-code")
-
-	return findings, nil
-}
-
 // DetectBytes scans the given bytes and returns a list of findings
 func (d *Detector) DetectBytes(content []byte) []report.Finding {
 	return d.DetectString(string(content))
@@ -159,25 +95,6 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	return d.Detect(Fragment{
 		Raw: content,
 	})
-}
-
-// Detect scans the given fragment and returns a list of findings
-func (d *Detector) Detect(fragment Fragment) []report.Finding {
-	var findings []report.Finding
-
-	// check if filepath is allowed
-	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path {
-		return findings
-	}
-
-	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
-
-	for _, rule := range d.Config.Rules {
-		findings = append(findings, d.detectRule(fragment, rule)...)
-	}
-	return filter(findings, d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -254,7 +171,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 
 		// check entropy
 		finding.Entropy = float32(shannonEntropy(secret))
-		if rule.EntropySet() && finding.Entropy < float32(rule.Entropy) {
+		if rule.EntropySet() && finding.Entropy <= float32(rule.Entropy) {
 			// entropy is too low, skip this finding
 			return findings
 		}
@@ -264,13 +181,18 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 	return findings
 }
 
-// startGitScan accepts a *gitdiff.File channel which contents a git history generated from
+// GitScan accepts a *gitdiff.File channel which contents a git history generated from
 // the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
 // and determine if the patch contains any findings.
-func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) {
+func (d *Detector) DetectGit(source string, logOpts string) ([]report.Finding, error) {
+	history, err := git.GitLog(source, logOpts)
+	if err != nil {
+		return d.findings, err
+	}
+
 	s := semgroup.NewGroup(context.Background(), 4)
 
-	for gitdiffFile := range gitdiffFiles {
+	for gitdiffFile := range history {
 		gitdiffFile := gitdiffFile
 
 		// skip binary files
@@ -309,12 +231,13 @@ func (d *Detector) startGitScan(gitdiffFiles <-chan *gitdiff.File) {
 	}
 
 	if err := s.Wait(); err != nil {
-		fmt.Println(err)
+		return d.findings, err
 	}
+	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	return d.findings, nil
 }
 
-func (d *Detector) startFileScan(source string) []report.Finding {
-	var findings []report.Finding
+func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
 	paths := make(chan string)
 	s.Go(func() error {
@@ -352,14 +275,37 @@ func (d *Detector) startFileScan(source string) []report.Finding {
 		})
 	}
 
-	return findings
+	if err := s.Wait(); err != nil {
+		return d.findings, err
+	}
+
+	return d.findings, nil
+}
+
+// Detect scans the given fragment and returns a list of findings
+func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	var findings []report.Finding
+
+	// check if filepath is allowed
+	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path {
+		return findings
+	}
+
+	// add newline indices for location calculation in detectRule
+	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
+
+	for _, rule := range d.Config.Rules {
+		findings = append(findings, d.detectRule(fragment, rule)...)
+	}
+	return filter(findings, d.Redact)
 }
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
-	if d.verbose {
+	if d.Verbose {
 		printFinding(finding)
 	}
 	d.findingMutex.Unlock()
