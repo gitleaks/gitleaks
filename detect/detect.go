@@ -9,13 +9,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -172,10 +172,25 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
-		if rule.EntropySet() && entropy <= rule.Entropy {
-			// entropy is too low, skip this finding
-			continue
+		if rule.EntropySet() {
+			if entropy <= rule.Entropy {
+				// entropy is too low, skip this finding
+				continue
+			}
+			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
+			// does not support positive lookaheads. Ideally we would want to add a
+			// restriction on generic rules regex that requires the secret match group
+			// contains both numbers and alphabetical characters. What this bit of code does is
+			// check if the ruleid is prepended with "generic" and enforces the
+			// secret contains both digits and alphabetical characters.
+			// TODO: this should be replaced with stop words
+			if strings.HasPrefix(rule.RuleID, "generic") {
+				if !containsDigit(secret) {
+					continue
+				}
+			}
 		}
+
 		findings = append(findings, finding)
 	}
 	return findings

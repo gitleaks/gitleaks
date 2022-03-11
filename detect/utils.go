@@ -94,3 +94,14 @@ func printFinding(f report.Finding) {
 	b, _ = json.MarshalIndent(f, "", "	")
 	fmt.Println(string(b))
 }
+
+func containsDigit(s string) bool {
+	for _, c := range s {
+		switch c {
+		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			return true
+		}
+
+	}
+	return false
+}
