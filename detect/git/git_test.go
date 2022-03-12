@@ -70,61 +70,64 @@ func TestGitLog(t *testing.T) {
 	}
 }
 
-func TestGitDiff(t *testing.T) {
-	tests := []struct {
-		source    string
-		expected  string
-		additions string
-		target    string
-	}{
-		{
-			source:    filepath.Join(repoBasePath, "small"),
-			expected:  "this line is added\nand another one",
-			additions: "this line is added\nand another one",
-			target:    filepath.Join(repoBasePath, "small", "main.go"),
-		},
-	}
+// TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
+// -- use `git stash` instead of `restore()`
 
-	err := moveDotGit("dotGit", ".git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err = moveDotGit(".git", "dotGit"); err != nil {
-			t.Fatal(err)
-		}
-	}()
+// func TestGitDiff(t *testing.T) {
+// 	tests := []struct {
+// 		source    string
+// 		expected  string
+// 		additions string
+// 		target    string
+// 	}{
+// 		{
+// 			source:    filepath.Join(repoBasePath, "small"),
+// 			expected:  "this line is added\nand another one",
+// 			additions: "this line is added\nand another one",
+// 			target:    filepath.Join(repoBasePath, "small", "main.go"),
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		noChanges, err := os.ReadFile(tt.target)
-		if err != nil {
-			t.Error(err)
-		}
-		err = os.WriteFile(tt.target, []byte(tt.additions), 0644)
-		if err != nil {
-			restore(tt.target, noChanges, t)
-			t.Error(err)
-		}
+// 	err := moveDotGit("dotGit", ".git")
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	defer func() {
+// 		if err = moveDotGit(".git", "dotGit"); err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	}()
 
-		files, err := git.GitDiff(tt.source, false)
-		if err != nil {
-			restore(tt.target, noChanges, t)
-			t.Error(err)
-		}
+// 	for _, tt := range tests {
+// 		noChanges, err := os.ReadFile(tt.target)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+// 		err = os.WriteFile(tt.target, []byte(tt.additions), 0644)
+// 		if err != nil {
+// 			restore(tt.target, noChanges, t)
+// 			t.Error(err)
+// 		}
 
-		for f := range files {
-			sb := strings.Builder{}
-			for _, tf := range f.TextFragments {
-				sb.WriteString(tf.Raw(gitdiff.OpAdd))
-			}
-			if sb.String() != tt.expected {
-				restore(tt.target, noChanges, t)
-				t.Error("expected: ", tt.expected, "got: ", sb.String())
-			}
-		}
-		restore(tt.target, noChanges, t)
-	}
-}
+// 		files, err := git.GitDiff(tt.source, false)
+// 		if err != nil {
+// 			restore(tt.target, noChanges, t)
+// 			t.Error(err)
+// 		}
+
+// 		for f := range files {
+// 			sb := strings.Builder{}
+// 			for _, tf := range f.TextFragments {
+// 				sb.WriteString(tf.Raw(gitdiff.OpAdd))
+// 			}
+// 			if sb.String() != tt.expected {
+// 				restore(tt.target, noChanges, t)
+// 				t.Error("expected: ", tt.expected, "got: ", sb.String())
+// 			}
+// 		}
+// 		restore(tt.target, noChanges, t)
+// 	}
+// }
 
 func restore(path string, data []byte, t *testing.T) {
 	err := os.WriteFile(path, data, 0644)
