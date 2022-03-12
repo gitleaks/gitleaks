@@ -283,6 +283,9 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 				FilePath: p,
 			}
 			for _, finding := range d.Detect(fragment) {
+				// need to add 1 since line counting starts at 1
+				finding.EndLine++
+				finding.StartLine++
 				d.addFinding(finding)
 			}
 

@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 )
 
 const configPath = "../testdata/config/"
+const repoBasePath = "../testdata/repos/"
 
 func TestDetect(t *testing.T) {
 	tests := []struct {
@@ -210,4 +212,213 @@ func TestDetect(t *testing.T) {
 		findings := d.Detect(tt.fragment)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
+}
+
+// TestFromGit tests the FromGit function
+func TestFromGit(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		logOpts          string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "small"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 19,
+					EndColumn:   38,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					File:        "main.go",
+					Date:        "2021-11-02T23:37:53Z",
+					Commit:      "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
+					Author:      "Zachary Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "Accidentally add a secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+				},
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					File:        "foo/foo.go",
+					Date:        "2021-11-02T23:48:06Z",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+				},
+			},
+		},
+		{
+			source:  filepath.Join(repoBasePath, "small"),
+			logOpts: "--all foo...",
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					Date:        "2021-11-02T23:48:06Z",
+					File:        "foo/foo.go",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+				},
+			},
+		},
+	}
+
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer moveDotGit(".git", "dotGit")
+
+	for _, tt := range tests {
+
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err = viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		viper.Unmarshal(&vc)
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		findings, err := detector.DetectGit(tt.source, tt.logOpts)
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, f := range findings {
+			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+		}
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+// TestFromGit tests the FromGit function
+func TestFromFiles(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "nogit"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/repos/nogit/main.go",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+				},
+			},
+		},
+		{
+			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/repos/nogit/main.go",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		viper.Unmarshal(&vc)
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		findings, err := detector.DetectFiles(tt.source)
+		if err != nil {
+			t.Error(err)
+		}
+
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func moveDotGit(from, to string) error {
+	repoDirs, err := os.ReadDir("../testdata/repos")
+	if err != nil {
+		return err
+	}
+	for _, dir := range repoDirs {
+		if to == ".git" {
+			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), "dotGit"))
+			if os.IsNotExist(err) {
+				// dont want to delete the only copy of .git accidentally
+				continue
+			}
+			os.RemoveAll(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), ".git"))
+		}
+		if !dir.IsDir() {
+			continue
+		}
+		_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from))
+		if os.IsNotExist(err) {
+			continue
+		}
+
+		err = os.Rename(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from),
+			fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), to))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
