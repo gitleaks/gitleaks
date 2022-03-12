@@ -1,77 +1,67 @@
 package git_test
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-
-	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/zricethezav/gitleaks/v8/detect/git"
-)
-
-const repoBasePath = "../../testdata/repos/"
-const expectPath = "../../testdata/expected/"
-
-func TestGitLog(t *testing.T) {
-	tests := []struct {
-		source   string
-		logOpts  string
-		expected string
-	}{
-		{
-			source:   filepath.Join(repoBasePath, "small"),
-			expected: filepath.Join(expectPath, "git", "small.txt"),
-		},
-		{
-			source:   filepath.Join(repoBasePath, "small"),
-			expected: filepath.Join(expectPath, "git", "small-branch-foo.txt"),
-			logOpts:  "--all foo...",
-		},
-	}
-
-	err := moveDotGit("dotGit", ".git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err = moveDotGit(".git", "dotGit"); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	for _, tt := range tests {
-		files, err := git.GitLog(tt.source, tt.logOpts)
-		if err != nil {
-			t.Error(err)
-		}
-
-		var diffSb strings.Builder
-		for f := range files {
-			for _, tf := range f.TextFragments {
-				diffSb.WriteString(tf.Raw(gitdiff.OpAdd))
-			}
-		}
-
-		expectedBytes, err := os.ReadFile(tt.expected)
-		if err != nil {
-			t.Error(err)
-		}
-		expected := string(expectedBytes)
-		if expected != diffSb.String() {
-			// write string builder to .got file using os.Create
-			err = os.WriteFile(strings.Replace(tt.expected, ".txt", ".got.txt", 1), []byte(diffSb.String()), 0644)
-			if err != nil {
-				t.Error(err)
-			}
-			t.Error("expected: ", expected, "got: ", diffSb.String())
-		}
-	}
-}
-
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
+
+// const repoBasePath = "../../testdata/repos/"
+
+// const expectPath = "../../testdata/expected/"
+
+// func TestGitLog(t *testing.T) {
+// 	tests := []struct {
+// 		source   string
+// 		logOpts  string
+// 		expected string
+// 	}{
+// 		{
+// 			source:   filepath.Join(repoBasePath, "small"),
+// 			expected: filepath.Join(expectPath, "git", "small.txt"),
+// 		},
+// 		{
+// 			source:   filepath.Join(repoBasePath, "small"),
+// 			expected: filepath.Join(expectPath, "git", "small-branch-foo.txt"),
+// 			logOpts:  "--all foo...",
+// 		},
+// 	}
+
+// 	err := moveDotGit("dotGit", ".git")
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	defer func() {
+// 		if err = moveDotGit(".git", "dotGit"); err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	}()
+
+// 	for _, tt := range tests {
+// 		files, err := git.GitLog(tt.source, tt.logOpts)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+
+// 		var diffSb strings.Builder
+// 		for f := range files {
+// 			for _, tf := range f.TextFragments {
+// 				diffSb.WriteString(tf.Raw(gitdiff.OpAdd))
+// 			}
+// 		}
+
+// 		expectedBytes, err := os.ReadFile(tt.expected)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+// 		expected := string(expectedBytes)
+// 		if expected != diffSb.String() {
+// 			// write string builder to .got file using os.Create
+// 			err = os.WriteFile(strings.Replace(tt.expected, ".txt", ".got.txt", 1), []byte(diffSb.String()), 0644)
+// 			if err != nil {
+// 				t.Error(err)
+// 			}
+// 			t.Error("expected: ", expected, "got: ", diffSb.String())
+// 		}
+// 	}
+// }
 
 // func TestGitDiff(t *testing.T) {
 // 	tests := []struct {
@@ -129,40 +119,40 @@ func TestGitLog(t *testing.T) {
 // 	}
 // }
 
-func restore(path string, data []byte, t *testing.T) {
-	err := os.WriteFile(path, data, 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// func restore(path string, data []byte, t *testing.T) {
+// 	err := os.WriteFile(path, data, 0644)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
-func moveDotGit(from, to string) error {
-	repoDirs, err := os.ReadDir("../../testdata/repos")
-	if err != nil {
-		return err
-	}
-	for _, dir := range repoDirs {
-		if to == ".git" {
-			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), "dotGit"))
-			if os.IsNotExist(err) {
-				// dont want to delete the only copy of .git accidentally
-				continue
-			}
-			os.RemoveAll(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), ".git"))
-		}
-		if !dir.IsDir() {
-			continue
-		}
-		_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from))
-		if os.IsNotExist(err) {
-			continue
-		}
+// func moveDotGit(from, to string) error {
+// 	repoDirs, err := os.ReadDir("../../testdata/repos")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	for _, dir := range repoDirs {
+// 		if to == ".git" {
+// 			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), "dotGit"))
+// 			if os.IsNotExist(err) {
+// 				// dont want to delete the only copy of .git accidentally
+// 				continue
+// 			}
+// 			os.RemoveAll(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), ".git"))
+// 		}
+// 		if !dir.IsDir() {
+// 			continue
+// 		}
+// 		_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from))
+// 		if os.IsNotExist(err) {
+// 			continue
+// 		}
 
-		err = os.Rename(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from),
-			fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), to))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// 		err = os.Rename(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from),
+// 			fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), to))
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
