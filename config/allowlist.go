@@ -22,15 +22,9 @@ func (a *Allowlist) CommitAllowed(c string) bool {
 }
 
 func (a *Allowlist) PathAllowed(path string) bool {
-	if anyRegexMatch(path, a.Paths) {
-		return true
-	}
-	return false
+	return anyRegexMatch(path, a.Paths)
 }
 
 func (a *Allowlist) RegexAllowed(s string) bool {
-	if anyRegexMatch(s, a.Regexes) {
-		return true
-	}
-	return false
+	return anyRegexMatch(s, a.Regexes)
 }

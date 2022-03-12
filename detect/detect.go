@@ -19,6 +19,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+type ScanType int
+
+const (
+	DetectType ScanType = iota
+	ProtectType
+	ProtectStagedType
+)
+
 // Detector is the main detector struct
 type Detector struct {
 	// Config is the configuration for the detector
@@ -75,9 +83,15 @@ func NewDetector(cfg config.Config) *Detector {
 // NewDetectorDefaultConfig creates a new detector with the default config
 func NewDetectorDefaultConfig() (*Detector, error) {
 	viper.SetConfigType("toml")
-	viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+	err := viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+	if err != nil {
+		return nil, err
+	}
 	var vc config.ViperConfig
-	viper.Unmarshal(&vc)
+	err = viper.Unmarshal(&vc)
+	if err != nil {
+		return nil, err
+	}
 	cfg, err := vc.Translate()
 	if err != nil {
 		return nil, err
@@ -172,7 +186,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
-		if rule.EntropySet() {
+		if rule.Entropy != 0.0 {
 			if entropy <= rule.Entropy {
 				// entropy is too low, skip this finding
 				continue
@@ -199,10 +213,27 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 // GitScan accepts a *gitdiff.File channel which contents a git history generated from
 // the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
 // and determine if the patch contains any findings.
-func (d *Detector) DetectGit(source string, logOpts string) ([]report.Finding, error) {
-	history, err := git.GitLog(source, logOpts)
-	if err != nil {
-		return d.findings, err
+func (d *Detector) DetectGit(source string, logOpts string, scanType ScanType) ([]report.Finding, error) {
+	var (
+		history <-chan *gitdiff.File
+		err     error
+	)
+	switch scanType {
+	case DetectType:
+		history, err = git.GitLog(source, logOpts)
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectType:
+		history, err = git.GitDiff(source, false)
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectStagedType:
+		history, err = git.GitDiff(source, true)
+		if err != nil {
+			return d.findings, err
+		}
 	}
 
 	s := semgroup.NewGroup(context.Background(), 4)

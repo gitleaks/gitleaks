@@ -14,10 +14,3 @@ type Rule struct {
 	Tags        []string
 	Allowlist   Allowlist
 }
-
-func (r *Rule) EntropySet() bool {
-	if r.Entropy == 0.0 {
-		return false
-	}
-	return true
-}

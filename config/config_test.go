@@ -103,7 +103,10 @@ func TestTranslate(t *testing.T) {
 		}
 
 		var vc ViperConfig
-		viper.Unmarshal(&vc)
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
 		cfg, err := vc.Translate()
 		if tt.wantError != nil {
 			if err == nil {

@@ -198,7 +198,10 @@ func TestDetect(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		viper.Unmarshal(&vc)
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
 		cfg, err := vc.Translate()
 		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
 		if tt.wantError != nil {
@@ -295,7 +298,11 @@ func TestFromGit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer moveDotGit(".git", "dotGit")
+	defer func() {
+		if err := moveDotGit(".git", "dotGit"); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	for _, tt := range tests {
 
@@ -308,10 +315,16 @@ func TestFromGit(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		viper.Unmarshal(&vc)
-		cfg, _ := vc.Translate()
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, err := vc.Translate()
+		if err != nil {
+			t.Error(err)
+		}
 		detector := NewDetector(cfg)
-		findings, err := detector.DetectGit(tt.source, tt.logOpts)
+		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
 		if err != nil {
 			t.Error(err)
 		}
@@ -380,7 +393,10 @@ func TestFromFiles(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		viper.Unmarshal(&vc)
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		findings, err := detector.DetectFiles(tt.source)
