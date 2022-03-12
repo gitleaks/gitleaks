@@ -2,13 +2,23 @@ package config
 
 import "regexp"
 
+// Allowlist allows a rule to be ignored for specific
+// regexes, paths, and/or commits
 type Allowlist struct {
+	// Short human readable description of the allowlist.
 	Description string
-	Regexes     []*regexp.Regexp
-	Paths       []*regexp.Regexp
-	Commits     []string
+
+	// Regexes is slice of content regular expressions that are allowed to be ignored.
+	Regexes []*regexp.Regexp
+
+	// Paths is a slice of path regular expressions that are allowed to be ignored.
+	Paths []*regexp.Regexp
+
+	// Commits is a slice of commit SHAs that are allowed to be ignored.
+	Commits []string
 }
 
+// CommitAllowed returns true if the commit is allowed to be ignored.
 func (a *Allowlist) CommitAllowed(c string) bool {
 	if c == "" {
 		return false
@@ -21,16 +31,12 @@ func (a *Allowlist) CommitAllowed(c string) bool {
 	return false
 }
 
+// PathAllowed returns true if the path is allowed to be ignored.
 func (a *Allowlist) PathAllowed(path string) bool {
-	if anyRegexMatch(path, a.Paths) {
-		return true
-	}
-	return false
+	return anyRegexMatch(path, a.Paths)
 }
 
+// RegexAllowed returns true if the regex is allowed to be ignored.
 func (a *Allowlist) RegexAllowed(s string) bool {
-	if anyRegexMatch(s, a.Regexes) {
-		return true
-	}
-	return false
+	return anyRegexMatch(s, a.Regexes)
 }

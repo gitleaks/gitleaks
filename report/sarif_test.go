@@ -63,7 +63,11 @@ func TestWriteSarif(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		viper.Unmarshal(&vc)
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+
 		cfg, err := vc.Translate()
 		if err != nil {
 			t.Error(err)

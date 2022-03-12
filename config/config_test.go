@@ -103,7 +103,10 @@ func TestTranslate(t *testing.T) {
 		}
 
 		var vc ViperConfig
-		viper.Unmarshal(&vc)
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
 		cfg, err := vc.Translate()
 		if tt.wantError != nil {
 			if err == nil {
@@ -113,55 +116,5 @@ func TestTranslate(t *testing.T) {
 		}
 
 		assert.Equal(t, cfg.Rules, tt.cfg.Rules)
-	}
-}
-
-func TestIncludeEntropy(t *testing.T) {
-	tests := []struct {
-		rule    Rule
-		secret  string
-		entropy float32
-		include bool
-	}{
-		{
-			rule: Rule{
-				RuleID:      "generic-api-key",
-				SecretGroup: 4,
-				Entropy:     3.5,
-				Regex:       regexp.MustCompile(`(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]`),
-			},
-			secret:  `e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5`,
-			entropy: 3.7906235872459746,
-			include: true,
-		},
-		{
-			rule: Rule{
-				RuleID:      "generic-api-key",
-				SecretGroup: 4,
-				Entropy:     4,
-				Regex:       regexp.MustCompile(`(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]`),
-			},
-			secret:  `e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5`,
-			entropy: 3.7906235872459746,
-			include: false,
-		},
-		{
-			rule: Rule{
-				RuleID:      "generic-api-key",
-				SecretGroup: 4,
-				Entropy:     3.0,
-				Regex:       regexp.MustCompile(`(?i)((key|api|token|secret|password)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]`),
-			},
-			secret:  `ssh-keyboard-interactive`,
-			entropy: 0,
-			include: false,
-		},
-	}
-
-	for _, tt := range tests {
-		include, entropy := tt.rule.IncludeEntropy(tt.secret)
-		assert.Equal(t, true, tt.rule.EntropySet())
-		assert.Equal(t, tt.entropy, float32(entropy))
-		assert.Equal(t, tt.include, include)
 	}
 }

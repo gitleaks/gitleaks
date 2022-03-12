@@ -2,44 +2,37 @@ package config
 
 import (
 	"regexp"
-	"strings"
 )
 
+// Rules contain information that define details on how to detect secrets
 type Rule struct {
+	// Description is the description of the rule.
 	Description string
-	RuleID      string
-	Entropy     float64
+
+	// RuleID is a unique identifier for this rule
+	RuleID string
+
+	// Entropy is a float representing the minimum shannon
+	// entropy a regex group must have to be considered a secret.
+	Entropy float64
+
+	// SecretGroup is an int used to extract secret from regex
+	// match and used as the group that will have its entropy
+	// checked if `entropy` is set.
 	SecretGroup int
-	Regex       *regexp.Regexp
-	Path        *regexp.Regexp
-	Tags        []string
-	Allowlist   Allowlist
-}
 
-func (r *Rule) IncludeEntropy(secret string) (bool, float64) {
-	// NOTE: this is a goofy hack to get around the fact there golang's regex engine
-	// does not support positive lookaheads. Ideally we would want to add a
-	// restriction on generic rules regex that requires the secret match group
-	// contains both numbers and alphabetical characters. What this bit of code does is
-	// check if the ruleid is prepended with "generic" and enforces the
-	// secret contains both digits and alphabetical characters.
-	if strings.HasPrefix(r.RuleID, "generic") {
-		if !containsDigit(secret) {
-			return false, 0.0
-		}
-	}
-	// group = 0 will check the entropy of the whole regex match
-	e := shannonEntropy(secret)
-	if e > r.Entropy {
-		return true, e
-	}
+	// Regex is a golang regular expression used to detect secrets.
+	Regex *regexp.Regexp
 
-	return false, e
-}
+	// Path is a golang regular expression used to
+	// filter secrets by path
+	Path *regexp.Regexp
 
-func (r *Rule) EntropySet() bool {
-	if r.Entropy == 0.0 {
-		return false
-	}
-	return true
+	// Tags is an array of strings used for metadata
+	// and reporting purposes.
+	Tags []string
+
+	// Allowlist allows a rule to be ignored for specific
+	// regexes, paths, and/or commits
+	Allowlist Allowlist
 }

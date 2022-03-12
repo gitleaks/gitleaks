@@ -1,144 +1,372 @@
 package detect
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/rs/zerolog/log"
+	"sync"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
+
+	"github.com/fatih/semgroup"
+	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
-type Options struct {
+// Type used to differentiate between git scan types:
+// $ gitleaks detect
+// $ gitleaks protect
+// $ gitleaks protect staged
+type GitScanType int
+
+const (
+	DetectType GitScanType = iota
+	ProtectType
+	ProtectStagedType
+)
+
+// Detector is the main detector struct
+type Detector struct {
+	// Config is the configuration for the detector
+	Config config.Config
+
+	// Redact is a flag to redact findings. This is exported
+	// so users using gitleaks as a library can set this flag
+	// without calling `detector.Start(cmd *cobra.Command)`
+	Redact bool
+
+	// verbose is a flag to print findings
 	Verbose bool
-	Redact  bool
+
+	// commitMap is used to keep track of commits that have been scanned.
+	// This is only used for logging purposes and git scans.
+	commitMap map[string]bool
+
+	// findingMutex is to prevent concurrent access to the
+	// findings slice when adding findings.
+	findingMutex *sync.Mutex
+
+	// findings is a slice of report.Findings. This is the result
+	// of the detector's scan which can then be used to generate a
+	// report.
+	findings []report.Finding
 }
 
-const MAXGOROUTINES = 4
+// Fragment contains the data to be scanned
+type Fragment struct {
+	// Raw is the raw content of the fragment
+	Raw string
 
-func DetectFindings(cfg config.Config, b []byte, filePath string, commit string) []report.Finding {
+	// FilePath is the path to the file if applicable
+	FilePath string
+
+	// CommitSHA is the SHA of the commit if applicable
+	CommitSHA string
+
+	// newlineIndices is a list of indices of newlines in the raw content.
+	// This is used to calculate the line location of a finding
+	newlineIndices [][]int
+}
+
+// NewDetector creates a new detector with the given config
+func NewDetector(cfg config.Config) *Detector {
+	return &Detector{
+		commitMap:    make(map[string]bool),
+		findingMutex: &sync.Mutex{},
+		findings:     make([]report.Finding, 0),
+		Config:       cfg,
+	}
+}
+
+// NewDetectorDefaultConfig creates a new detector with the default config
+func NewDetectorDefaultConfig() (*Detector, error) {
+	viper.SetConfigType("toml")
+	err := viper.ReadConfig(strings.NewReader(config.DefaultConfig))
+	if err != nil {
+		return nil, err
+	}
+	var vc config.ViperConfig
+	err = viper.Unmarshal(&vc)
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := vc.Translate()
+	if err != nil {
+		return nil, err
+	}
+	return NewDetector(cfg), nil
+}
+
+// DetectBytes scans the given bytes and returns a list of findings
+func (d *Detector) DetectBytes(content []byte) []report.Finding {
+	return d.DetectString(string(content))
+}
+
+// DetectString scans the given string and returns a list of findings
+func (d *Detector) DetectString(content string) []report.Finding {
+	return d.Detect(Fragment{
+		Raw: content,
+	})
+}
+
+// detectRule scans the given fragment for the given rule and returns a list of findings
+func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Finding {
 	var findings []report.Finding
-	linePairs := regexp.MustCompile("\n").FindAllIndex(b, -1)
 
-	// check if we should skip file based on the global allowlist or if the file is the same as the gitleaks config
-	if cfg.Allowlist.PathAllowed(filePath) || filePath == cfg.Path {
+	// check if filepath or commit is allowed for this rule
+	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) ||
+		rule.Allowlist.PathAllowed(fragment.FilePath) {
 		return findings
 	}
 
-	for _, r := range cfg.Rules {
-		pathSkip := false
-		if r.Allowlist.CommitAllowed(commit) {
-			continue
-		}
-		if r.Allowlist.PathAllowed(filePath) {
-			continue
-		}
-
-		// Check if path should be considered
-		if r.Path != nil {
-			if r.Path.Match([]byte(filePath)) {
-				if r.Regex == nil {
-					// This is a path only rule
-					f := report.Finding{
-						Description: r.Description,
-						File:        filePath,
-						RuleID:      r.RuleID,
-						Match:       fmt.Sprintf("file detected: %s", filePath),
-						Tags:        r.Tags,
-					}
-					findings = append(findings, f)
-					pathSkip = true
-				}
-			} else {
-				pathSkip = true
+	if rule.Path != nil && rule.Regex == nil {
+		// Path _only_ rule
+		if rule.Path.Match([]byte(fragment.FilePath)) {
+			finding := report.Finding{
+				Description: rule.Description,
+				File:        fragment.FilePath,
+				RuleID:      rule.RuleID,
+				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
+				Tags:        rule.Tags,
 			}
+			return append(findings, finding)
 		}
-		if pathSkip {
+	} else if rule.Path != nil {
+		// if path is set _and_ a regex is set, then we need to check both
+		// so if the path does not match, then we should return early and not
+		// consider the regex
+		if !rule.Path.Match([]byte(fragment.FilePath)) {
+			return findings
+		}
+	}
+
+	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
+	for _, matchIndex := range matchIndices {
+		// extract secret from match
+		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
+
+		// determine location of match. Note that the location
+		// in the finding will be the line/column numbers of the _match_
+		// not the _secret_, which will be different if the secretGroup
+		// value is set for this rule
+		loc := location(fragment, matchIndex)
+
+		finding := report.Finding{
+			Description: rule.Description,
+			File:        fragment.FilePath,
+			RuleID:      rule.RuleID,
+			StartLine:   loc.startLine,
+			EndLine:     loc.endLine,
+			StartColumn: loc.startColumn,
+			EndColumn:   loc.endColumn,
+			Secret:      secret,
+			Match:       secret,
+			Tags:        rule.Tags,
+		}
+
+		// check if the secret is in the allowlist
+		if rule.Allowlist.RegexAllowed(finding.Secret) ||
+			d.Config.Allowlist.RegexAllowed(finding.Secret) {
 			continue
 		}
 
-		matchIndices := r.Regex.FindAllIndex(b, -1)
-		for _, m := range matchIndices {
-			location := getLocation(linePairs, m[0], m[1])
-			secret := strings.Trim(string(b[m[0]:m[1]]), "\n")
-			f := report.Finding{
-				Description: r.Description,
-				File:        filePath,
-				RuleID:      r.RuleID,
-				StartLine:   location.startLine,
-				EndLine:     location.endLine,
-				StartColumn: location.startColumn,
-				EndColumn:   location.endColumn,
-				Secret:      secret,
-				Match:       secret,
-				Tags:        r.Tags,
-			}
-
-			if r.Allowlist.RegexAllowed(f.Secret) || cfg.Allowlist.RegexAllowed(f.Secret) {
+		// extract secret from secret group if set
+		if rule.SecretGroup != 0 {
+			groups := rule.Regex.FindStringSubmatch(secret)
+			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
+				// Config validation should prevent this
 				continue
 			}
+			secret = groups[rule.SecretGroup]
+			finding.Secret = secret
+		}
 
-			// extract secret from secret group if set
-			if r.SecretGroup != 0 {
-				groups := r.Regex.FindStringSubmatch(secret)
-				if len(groups) <= r.SecretGroup || len(groups) == 0 {
-					// Config validation should prevent this
-					break
-				}
-				secret = groups[r.SecretGroup]
-				f.Secret = secret
+		// check entropy
+		entropy := shannonEntropy(finding.Secret)
+		finding.Entropy = float32(entropy)
+		if rule.Entropy != 0.0 {
+			if entropy <= rule.Entropy {
+				// entropy is too low, skip this finding
+				continue
 			}
+			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
+			// does not support positive lookaheads. Ideally we would want to add a
+			// restriction on generic rules regex that requires the secret match group
+			// contains both numbers and alphabetical characters, not just alphabetical characters.
+			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
+			// secret contains both digits and alphabetical characters.
+			// TODO: this should be replaced with stop words
+			if strings.HasPrefix(rule.RuleID, "generic") {
+				if !containsDigit(secret) {
+					continue
+				}
+			}
+		}
 
-			// extract secret from secret group if set
-			if r.EntropySet() {
-				include, entropy := r.IncludeEntropy(secret)
-				if include {
-					f.Entropy = float32(entropy)
-					findings = append(findings, f)
-				}
-			} else {
-				findings = append(findings, f)
-			}
+		findings = append(findings, finding)
+	}
+	return findings
+}
+
+// GitScan accepts a *gitdiff.File channel which contents a git history generated from
+// the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
+// and determine if the patch contains any findings.
+func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanType) ([]report.Finding, error) {
+	var (
+		gitdiffFiles <-chan *gitdiff.File
+		err          error
+	)
+	switch gitScanType {
+	case DetectType:
+		gitdiffFiles, err = git.GitLog(source, logOpts)
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectType:
+		gitdiffFiles, err = git.GitDiff(source, false)
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectStagedType:
+		gitdiffFiles, err = git.GitDiff(source, true)
+		if err != nil {
+			return d.findings, err
 		}
 	}
 
-	return dedupe(findings)
-}
+	s := semgroup.NewGroup(context.Background(), 4)
 
-func printFinding(f report.Finding) {
-	var b []byte
-	b, _ = json.MarshalIndent(f, "", "	")
-	fmt.Println(string(b))
-}
+	for gitdiffFile := range gitdiffFiles {
+		gitdiffFile := gitdiffFile
 
-func dedupe(findings []report.Finding) []report.Finding {
-	var retFindings []report.Finding
-	for _, f := range findings {
-		include := true
-		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
-			for _, fPrime := range findings {
-				if f.StartLine == fPrime.StartLine &&
-					f.EndLine == fPrime.EndLine &&
-					f.Commit == fPrime.Commit &&
-					f.RuleID != fPrime.RuleID &&
-					strings.Contains(fPrime.Secret, f.Secret) &&
-					!strings.Contains(strings.ToLower(fPrime.RuleID), "generic") {
+		// skip binary files
+		if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
+			continue
+		}
 
-					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
-					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
-					log.Debug().Msgf("skipping %s finding (%s), %s rule takes precendence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
-					include = false
-					break
-				}
+		// Check if commit is allowed
+		commitSHA := ""
+		if gitdiffFile.PatchHeader != nil {
+			commitSHA = gitdiffFile.PatchHeader.SHA
+			if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
+				continue
 			}
 		}
-		if include {
-			retFindings = append(retFindings, f)
-		}
+		d.addCommit(commitSHA)
+
+		s.Go(func() error {
+			for _, textFragment := range gitdiffFile.TextFragments {
+				if textFragment == nil {
+					return nil
+				}
+
+				fragment := Fragment{
+					Raw:       textFragment.Raw(gitdiff.OpAdd),
+					CommitSHA: commitSHA,
+					FilePath:  gitdiffFile.NewName,
+				}
+
+				for _, finding := range d.Detect(fragment) {
+					d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
+				}
+			}
+			return nil
+		})
 	}
 
-	return retFindings
+	if err := s.Wait(); err != nil {
+		return d.findings, err
+	}
+	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	return d.findings, nil
+}
+
+// DetectFiles accepts a path to a source directory or file and begins a scan of the
+// file or directory.
+func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
+	s := semgroup.NewGroup(context.Background(), 4)
+	paths := make(chan string)
+	s.Go(func() error {
+		defer close(paths)
+		return filepath.Walk(source,
+			func(path string, fInfo os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if fInfo.Name() == ".git" {
+					return filepath.SkipDir
+				}
+				if fInfo.Mode().IsRegular() {
+					paths <- path
+				}
+				return nil
+			})
+	})
+	for pa := range paths {
+		p := pa
+		s.Go(func() error {
+			b, err := os.ReadFile(p)
+			if err != nil {
+				return err
+			}
+			fragment := Fragment{
+				Raw:      string(b),
+				FilePath: p,
+			}
+			for _, finding := range d.Detect(fragment) {
+				// need to add 1 since line counting starts at 1
+				finding.EndLine++
+				finding.StartLine++
+				d.addFinding(finding)
+			}
+
+			return nil
+		})
+	}
+
+	if err := s.Wait(); err != nil {
+		return d.findings, err
+	}
+
+	return d.findings, nil
+}
+
+// Detect scans the given fragment and returns a list of findings
+func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	var findings []report.Finding
+
+	// check if filepath is allowed
+	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path {
+		return findings
+	}
+
+	// add newline indices for location calculation in detectRule
+	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
+
+	for _, rule := range d.Config.Rules {
+		findings = append(findings, d.detectRule(fragment, rule)...)
+	}
+	return filter(findings, d.Redact)
+}
+
+// addFinding synchronously adds a finding to the findings slice
+func (d *Detector) addFinding(finding report.Finding) {
+	d.findingMutex.Lock()
+	d.findings = append(d.findings, finding)
+	if d.Verbose {
+		printFinding(finding)
+	}
+	d.findingMutex.Unlock()
+}
+
+// addCommit synchronously adds a commit to the commit slice
+func (d *Detector) addCommit(commit string) {
+	d.commitMap[commit] = true
 }
