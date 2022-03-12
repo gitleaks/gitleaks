@@ -19,10 +19,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ScanType int
+// Type used to differentiate between git scan types:
+// $ gitleaks detect
+// $ gitleaks protect
+// $ gitleaks protect staged
+type GitScanType int
 
 const (
-	DetectType ScanType = iota
+	DetectType GitScanType = iota
 	ProtectType
 	ProtectStagedType
 )
@@ -213,24 +217,24 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 // GitScan accepts a *gitdiff.File channel which contents a git history generated from
 // the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
 // and determine if the patch contains any findings.
-func (d *Detector) DetectGit(source string, logOpts string, scanType ScanType) ([]report.Finding, error) {
+func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanType) ([]report.Finding, error) {
 	var (
-		history <-chan *gitdiff.File
-		err     error
+		gitdiffFiles <-chan *gitdiff.File
+		err          error
 	)
-	switch scanType {
+	switch gitScanType {
 	case DetectType:
-		history, err = git.GitLog(source, logOpts)
+		gitdiffFiles, err = git.GitLog(source, logOpts)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectType:
-		history, err = git.GitDiff(source, false)
+		gitdiffFiles, err = git.GitDiff(source, false)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectStagedType:
-		history, err = git.GitDiff(source, true)
+		gitdiffFiles, err = git.GitDiff(source, true)
 		if err != nil {
 			return d.findings, err
 		}
@@ -238,7 +242,7 @@ func (d *Detector) DetectGit(source string, logOpts string, scanType ScanType) (
 
 	s := semgroup.NewGroup(context.Background(), 4)
 
-	for gitdiffFile := range history {
+	for gitdiffFile := range gitdiffFiles {
 		gitdiffFile := gitdiffFile
 
 		// skip binary files
@@ -283,6 +287,8 @@ func (d *Detector) DetectGit(source string, logOpts string, scanType ScanType) (
 	return d.findings, nil
 }
 
+// DetectFiles accepts a path to a source directory or file and begins a scan of the
+// file or directory.
 func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
 	paths := make(chan string)
