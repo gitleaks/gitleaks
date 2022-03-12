@@ -82,7 +82,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	if noGit {
-		// TODO treat the repo as a directory
 		findings, err = detector.DetectFiles(source)
 		if err != nil {
 			// don't exit on error, just log it
