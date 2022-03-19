@@ -172,16 +172,6 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			Tags:        rule.Tags,
 		}
 
-		// check if the secret is in the allowlist
-		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.Config.Allowlist.RegexAllowed(finding.Secret) {
-			continue
-		}
-
-		// check if "gitleaks:ignore" is in the lines where
-		// the secret was found
-		// fmt.Println("hello: ", fragment.Raw[loc.startLineIndex:loc.endLineIndex])
-
 		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 			gitleaksAllowSignature) {
 			continue
@@ -196,6 +186,12 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			}
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
+		}
+
+		// check if the secret is in the allowlist
+		if rule.Allowlist.RegexAllowed(finding.Secret) ||
+			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+			continue
 		}
 
 		// check entropy
