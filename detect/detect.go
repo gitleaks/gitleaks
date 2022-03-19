@@ -29,6 +29,8 @@ const (
 	DetectType GitScanType = iota
 	ProtectType
 	ProtectStagedType
+
+	gitleaksAllowSignature = "gitleaks:allow"
 )
 
 // Detector is the main detector struct
@@ -168,6 +170,11 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			Secret:      secret,
 			Match:       secret,
 			Tags:        rule.Tags,
+		}
+
+		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			gitleaksAllowSignature) {
+			continue
 		}
 
 		// extract secret from secret group if set
