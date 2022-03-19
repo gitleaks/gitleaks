@@ -170,12 +170,6 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			Tags:        rule.Tags,
 		}
 
-		// check if the secret is in the allowlist
-		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.Config.Allowlist.RegexAllowed(finding.Secret) {
-			continue
-		}
-
 		// extract secret from secret group if set
 		if rule.SecretGroup != 0 {
 			groups := rule.Regex.FindStringSubmatch(secret)
@@ -185,6 +179,12 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			}
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
+		}
+
+		// check if the secret is in the allowlist
+		if rule.Allowlist.RegexAllowed(finding.Secret) ||
+			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+			continue
 		}
 
 		// check entropy

@@ -185,6 +185,14 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName: "generic_with_py_path",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "load2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.py",
+			},
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
