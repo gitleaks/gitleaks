@@ -48,6 +48,20 @@ func location(fragment Fragment, matchIndex []int) Location {
 		location.endColumn = (end - prevNewLine)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
+		location.startLineIndex = start
+
+		// search for new line byte index
+		i := 0
+		for end+i < len(fragment.Raw) {
+			if fragment.Raw[end+i] == '\n' {
+				break
+			}
+			if fragment.Raw[end+i] == '\r' {
+				break
+			}
+			i++
+		}
+		location.endLineIndex = end + i
 	}
 	return location
 }
