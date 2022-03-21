@@ -15,6 +15,7 @@ import (
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/h2non/filetype"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -322,6 +323,15 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 			if err != nil {
 				return err
 			}
+
+			mimetype, err := filetype.Match(b)
+			if err != nil {
+				return err
+			}
+			if mimetype.MIME.Type == "application" {
+				return nil // skip binary files
+			}
+
 			fragment := Fragment{
 				Raw:      string(b),
 				FilePath: p,
