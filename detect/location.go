@@ -22,7 +22,6 @@ func location(fragment Fragment, matchIndex []int) Location {
 	end := matchIndex[1]
 
 	for lineNum, pair := range fragment.newlineIndices {
-		_lineNum = lineNum
 		newLineByteIndex := pair[0]
 		if prevNewLine <= start && start < newLineByteIndex {
 			lineSet = true
@@ -46,8 +45,8 @@ func location(fragment Fragment, matchIndex []int) Location {
 		// a newline
 		location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
 		location.endColumn = (end - prevNewLine)
-		location.startLine = _lineNum
-		location.endLine = _lineNum
+		location.startLine = _lineNum + 1
+		location.endLine = _lineNum + 1
 		location.startLineIndex = start
 
 		// search for new line byte index
