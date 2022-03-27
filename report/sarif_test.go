@@ -64,7 +64,7 @@ func TestWriteSarif(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		err = viper.UnmarshalStrict(&vc)
+		err = viper.UnmarshalExact(&vc)
 		if err != nil {
 			t.Error(err)
 		}

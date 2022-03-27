@@ -135,7 +135,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 		return nil, err
 	}
 	var vc config.ViperConfig
-	err = viper.UnmarshalStrict(&vc)
+	err = viper.UnmarshalExact(&vc)
 	if err != nil {
 		return nil, err
 	}

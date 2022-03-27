@@ -131,7 +131,7 @@ func TestTranslate(t *testing.T) {
 		}
 
 		var vc ViperConfig
-		err = viper.UnmarshalStrict(&vc)
+		err = viper.UnmarshalExact(&vc)
 		if err != nil {
 			t.Error(err)
 		}
