@@ -341,7 +341,7 @@ func TestDetect(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
+		err = viper.UnmarshalStrict(&vc)
 		if err != nil {
 			t.Error(err)
 		}
@@ -465,7 +465,7 @@ func TestFromGit(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
+		err = viper.UnmarshalStrict(&vc)
 		if err != nil {
 			t.Error(err)
 		}
@@ -629,7 +629,7 @@ func TestFromFiles(t *testing.T) {
 		}
 
 		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
+		err = viper.UnmarshalStrict(&vc)
 		if err != nil {
 			t.Error(err)
 		}

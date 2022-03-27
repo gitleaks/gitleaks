@@ -38,7 +38,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	)
 
 	// Load config
-	if err = viper.Unmarshal(&vc); err != nil {
+	if err = viper.UnmarshalStrict(&vc); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 	cfg, err := vc.Translate()
