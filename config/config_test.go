@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,9 +14,10 @@ const configPath = "../testdata/config/"
 
 func TestTranslate(t *testing.T) {
 	tests := []struct {
-		cfgName   string
-		cfg       Config
-		wantError error
+		cfgName            string
+		cfg                Config
+		wantError          error
+		unmarshalWantError error
 	}{
 		{
 			cfgName: "allow_aws_re",
@@ -86,9 +88,28 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
-			cfgName:   "bad_entropy_group",
-			cfg:       Config{},
-			wantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
+			cfgName: "bad_keys_config",
+			cfg: Config{
+				Rules: []*Rule{
+					{
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+						Tags:        []string{"key", "AWS"},
+						RuleID:      "aws-access-key",
+						Allowlist: Allowlist{
+							Regexes: []*regexp.Regexp{
+								regexp.MustCompile("AKIALALEMEL33243OLIA"),
+							},
+						},
+					},
+				},
+			},
+			unmarshalWantError: &mapstructure.Error{Errors: []string{"'Rules[0]' has invalid keys: fake_key"}},
+		},
+		{
+			cfgName:            "bad_entropy_group",
+			cfg:                Config{},
+			unmarshalWantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "base",
@@ -129,11 +150,10 @@ func TestTranslate(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-
 		var vc ViperConfig
 		err = viper.UnmarshalExact(&vc)
 		if err != nil {
-			t.Error(err)
+			assert.Equal(t, tt.unmarshalWantError, err)
 		}
 		cfg, err := vc.Translate()
 		if tt.wantError != nil {
@@ -143,6 +163,6 @@ func TestTranslate(t *testing.T) {
 			assert.Equal(t, tt.wantError, err)
 		}
 
-		assert.Equal(t, cfg.Rules, tt.cfg.Rules)
+		assert.Equal(t, tt.cfg.Rules, cfg.Rules)
 	}
 }
