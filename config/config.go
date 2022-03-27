@@ -45,6 +45,7 @@ type ViperConfig struct {
 		}
 	}
 	Allowlist struct {
+		Description string
 		RegexTarget string
 		Regexes     []string
 		Paths       []string
