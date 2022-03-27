@@ -23,6 +23,7 @@ const maxExtendDepth = 2
 // to parse the config file. This struct does not include regular expressions.
 // It is used as an intermediary to convert the Viper config to the Config struct.
 type ViperConfig struct {
+	Title       string
 	Description string
 	Extend      Extend
 	Rules       []struct {
