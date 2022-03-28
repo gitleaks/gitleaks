@@ -9,5 +9,3 @@
   description: Detect hardcoded secrets using Gitleaks
   entry: zricethezav/gitleaks:v8.5.1 gitleaks protect --verbose --redact --staged
   language: docker_image
-  types: ["dockerfile"]
-  
