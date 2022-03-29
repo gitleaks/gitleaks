@@ -149,6 +149,11 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		}
 	}
 
+	// if path only rule, skip content checks
+	if rule.Regex == nil {
+		return findings
+	}
+
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
