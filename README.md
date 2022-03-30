@@ -62,13 +62,15 @@ make build
 ### Pre-Commit
 1. Install pre-commit from https://pre-commit.com/#install
 2. Create a `.pre-commit-config.yaml` file at the root of your repository with the following content:
-```
-repos:
-  - repo: https://github.com/zricethezav/gitleaks
-    rev: v8.2.0
-    hooks:
-      - id: gitleaks
-```
+   ```
+   repos:
+     - repo: https://github.com/zricethezav/gitleaks
+       rev: v8.2.0
+       hooks:
+         - id: gitleaks
+   ```
+   for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
+   
 3. Install with `pre-commit install`
 4. Now you're all set!
 ```
