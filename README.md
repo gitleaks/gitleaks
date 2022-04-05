@@ -70,7 +70,7 @@ make build
          - id: gitleaks
    ```
    for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
-   
+
 3. Install with `pre-commit install`
 4. Now you're all set!
 ```
@@ -227,6 +227,16 @@ secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret.
 entropy = 3.5
 
+# Keywords are used for pre-regex check filtering. Rules that contain
+# keywords will perform a quick string compare check to make sure the
+# keyword(s) are in the content being scanned. Ideally these values should
+# either be part of the idenitifer or unique strings specific to the rule's regex
+keywords = [
+    "auth",
+    "password",
+    "token",
+]
+
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
 # with known/rotated secrets
 [rules.allowlist]
@@ -252,8 +262,8 @@ paths = [
 	'''(.*?)(jpg|gif|doc)'''
 ]
 regexes = [
-    	'''219-09-9999''', 
-    	'''078-05-1120''', 
+    	'''219-09-9999''',
+    	'''078-05-1120''',
     	'''(9[0-9]{2}|666)-\d{2}-\d{4}''',
 ]
 ```
