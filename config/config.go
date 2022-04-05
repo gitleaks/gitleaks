@@ -20,6 +20,7 @@ type ViperConfig struct {
 		Entropy     float64
 		SecretGroup int
 		Regex       string
+		Keywords    []string
 		Path        string
 		Tags        []string
 
@@ -56,6 +57,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 		}
 
+		if r.Keywords == nil {
+			r.Keywords = []string{}
+		}
+
 		if r.Tags == nil {
 			r.Tags = []string{}
 		}
@@ -80,6 +85,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			SecretGroup: r.SecretGroup,
 			Entropy:     r.Entropy,
 			Tags:        r.Tags,
+			Keywords:    r.Keywords,
 			Allowlist: Allowlist{
 				Regexes: allowlistRegexes,
 				Paths:   allowlistPaths,

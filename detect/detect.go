@@ -154,6 +154,17 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		return findings
 	}
 
+	containsKeyword := false
+	for _, k := range rule.Keywords {
+		if strings.Contains(fragment.Raw, k) {
+			containsKeyword = true
+			break
+		}
+	}
+	if !containsKeyword && len(rule.Keywords) != 0 {
+		return findings
+	}
+
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
