@@ -32,6 +32,8 @@ type Rule struct {
 	// and reporting purposes.
 	Tags []string
 
+	Keywords []string
+
 	// Allowlist allows a rule to be ignored for specific
 	// regexes, paths, and/or commits
 	Allowlist Allowlist
