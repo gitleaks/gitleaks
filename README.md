@@ -231,6 +231,7 @@ entropy = 3.5
 # keywords will perform a quick string compare check to make sure the
 # keyword(s) are in the content being scanned. Ideally these values should
 # either be part of the idenitifer or unique strings specific to the rule's regex
+# (introduced in v8.6.0)
 keywords = [
     "auth",
     "password",
