@@ -156,7 +156,8 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 
 	containsKeyword := false
 	for _, k := range rule.Keywords {
-		if strings.Contains(fragment.Raw, k) {
+		if strings.Contains(strings.ToLower(fragment.Raw),
+			strings.ToLower(k)) {
 			containsKeyword = true
 			break
 		}
