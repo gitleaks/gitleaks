@@ -1,7 +1,6 @@
-package main
+package rules
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -23,11 +22,12 @@ const (
 
 	hex32 = `[a-f0-9]{32}`
 	hex   = `[a-f0-9]`
+
+	sampleHex32Token          = `d0e94828b0549eee7368e53f6cb41d17` // gitleaks:allow
+	sampleAlphaNumeric32Token = ``                                 //gitleaks:allow
 )
 
-// This will create a gitleaks rule that follows similar
-// patterns to generic rules. The default capture group for the secret is 1.
-func NewRule(identifiers []string, secretRegex string) string {
+func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
 	var sb strings.Builder
 	sb.WriteString(caseInsensitive)
 	sb.WriteString(identifierPrefix)
@@ -37,13 +37,5 @@ func NewRule(identifiers []string, secretRegex string) string {
 	sb.WriteString(secretPrefix)
 	sb.WriteString(secretRegex)
 	sb.WriteString(secretSuffix)
-	_ = regexp.MustCompile(sb.String())
-	return sb.String()
-}
-
-func main() {
-	fmt.Println("heroku: ", NewRule([]string{"heroku"}, "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}"))
-	fmt.Println("mailchimp: ", NewRule([]string{"mailchimp"}, hex32+"-us20"))
-	fmt.Println("facebook: ", NewRule([]string{"facebook"}, hex32))
-	fmt.Println("twitter: ", NewRule([]string{"twitter"}, hex+"{35,44}"))
+	return regexp.MustCompile(sb.String())
 }

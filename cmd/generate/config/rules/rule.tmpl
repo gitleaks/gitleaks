@@ -1,0 +1,10 @@
+{{ range $i, $rule := .Rules }}[[rules]]
+description = "{{$rule.Description}}"
+id = "{{$rule.RuleID}}"
+regex = '''{{$rule.Regex}}'''
+keywords = [
+    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
+]
+secretGroup = {{ $rule.SecretGroup }}
+
+{{end}}
