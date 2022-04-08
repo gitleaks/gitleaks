@@ -1,34 +1,33 @@
 package rules
 
 import (
+	"regexp"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
-func Twitter() *config.Rule {
+func Databricks() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter",
-		RuleID:      "twitter",
-		Regex: generateSemiGenericRegex([]string{"twitter"},
-			hex+"{35,44}"),
-		SecretGroup: 1,
-		Keywords:    []string{"twitter"},
+		Description: "Databricks API token",
+		RuleID:      "databricks-api-token",
+		Regex:       regexp.MustCompile(`dapi[a-h0-9]{32}`),
+		Keywords:    []string{"dapi"},
 	}
 
 	// validate
 	tps := []string{
-		"twitterToken := \"" + sampleHex32Token + "aaaa\"",
-		"twitterToken := `" + sampleHex32Token + "aaaa`",
+		generateSampleSecret("databricks", "dapi"+sampleHex32Token),
 	}
 	d := detect.NewDetector(config.Config{
 		Rules: []*config.Rule{&r},
 	})
 	for _, tp := range tps {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate twitter")
+			log.Fatal().Msg("Failed to validate databricks-api-token")
 		}
 	}
 	return &r

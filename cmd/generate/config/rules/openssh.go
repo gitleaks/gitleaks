@@ -1,33 +1,32 @@
 package rules
 
 import (
+	"regexp"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
-func Facebook() *config.Rule {
+func OpenSSH() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "facebook",
-		RuleID:      "facebook",
-		Regex: generateSemiGenericRegex([]string{"facebook"},
-			hex32),
-		SecretGroup: 1,
-		Keywords:    []string{"facebook"},
+		Description: "SSH private key",
+		RuleID:      "OPENSSH-PK",
+		Regex:       regexp.MustCompile("-----BEGIN OPENSSH PRIVATE KEY-----"),
+		Keywords:    []string{"-----BEGIN OPENSSH"},
 	}
 
 	// validate
-	tps := []string{"facebookToken := \"" + sampleHex32Token + "\""}
+	tps := []string{"-----BEGIN OPENSSH PRIVATE KEY-----"}
 	d := detect.NewDetector(config.Config{
 		Rules: []*config.Rule{&r},
 	})
 	for _, tp := range tps {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate facebook")
+			log.Fatal().Msg("Failed to validate OPENSSH")
 		}
 	}
-
 	return &r
 }

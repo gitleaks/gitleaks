@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -17,14 +18,40 @@ const (
 	operator = `(?:=|>|:=|\|\|:|<=|=>|:)`
 
 	// boundaries for the secret
-	secretPrefix = `(?:'|\"|\s|=){0,5}(`
-	secretSuffix = `)['|\"|\n|\r|\s]`
+	// \x60 = `
+	secretPrefix = `(?:'|\"|\s|=|\x60){0,5}(`
+	secretSuffix = `)['|\"|\n|\r|\s|\x60]`
 
-	hex32 = `[a-f0-9]{32}`
-	hex   = `[a-f0-9]`
+	// secret regexes
+	hex32                  = `[a-f0-9]{32}`
+	hex64                  = `[a-f0-9]{64}`
+	hex                    = `[a-f0-9]`
+	alphaNumeric24         = `[a-z0-9]{24}`
+	alphaNumeric30         = `[a-z0-9]{30}`
+	alphaNumeric32         = `[a-z0-9]{32}`
+	numeric16              = `[0-9]{16}`
+	numeric18              = `[0-9]{18}`
+	extendedAlphaNumeric32 = `[a-z0-9=_\-]{32}`
+	extendedAlphaNumeric64 = `[a-z0-9_\-]{64}`
 
-	sampleHex32Token          = `d0e94828b0549eee7368e53f6cb41d17` // gitleaks:allow
-	sampleAlphaNumeric32Token = ``                                 //gitleaks:allow
+	// token examples
+	sampleHex20Token = `d0e94828b0549eee7368`                                             // gitleaks:allow
+	sampleHex32Token = `d0e94828b0549eee7368e53f6cb41d17`                                 // gitleaks:allow
+	sampleHex64Token = `d0e94828b0549eee7368e53f6cb41d17d0e94828b0549eee7368e53f6cb41d17` // gitleaks:allow
+
+	sampleAlphaNumeric20Token = `00000AAAAAbbbbb99999`
+	sampleAlphaNumeric24Token = `00000AAAAAbbbbb99999qqqq`
+	sampleAlphaNumeric30Token = `00000AAAAAbbbbb99999aaaaalllll`
+	sampleAlphaNumeric32Token = `00000AAAAAbbbbb99999aaaaalllllzz`
+	sampleAlphaNumeric36Token = `00000AAAAAbbbbb9999900000AAAAAbbbbb9`
+
+	sampleNumeric16 = `1111222233334444`
+	sampleNumeric18 = `111122223333444422`
+
+	sampleExtendedAlphaNumeric64Token = `00000AAAAAbbbbb99999aaaaalllllzz00000AAAAAbbbbb99999aaaaalllll_-`
+	sampleExtendedAlphaNumeric43Token = `00000AAAAAbbbbb99999aaaaallll_--eq-=aa00000`
+	sampleExtendedAlphaNumeric32Token = `00000AAAAAbbbbb99999aaaaalllll=_`
+	sampleAlphaNumeric60Token         = `00000AAAAAbbbbb99999aaaaalllllzz00000AAAAAbbbbb99999aaaaalll`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
@@ -38,4 +65,8 @@ func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.
 	sb.WriteString(secretRegex)
 	sb.WriteString(secretSuffix)
 	return regexp.MustCompile(sb.String())
+}
+
+func generateSampleSecret(identifier string, secret string) string {
+	return fmt.Sprintf("%s_api_token = \"%s\"", identifier, secret)
 }

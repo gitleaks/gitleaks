@@ -1,33 +1,32 @@
 package rules
 
 import (
+	"regexp"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
-func Facebook() *config.Rule {
+func RSA() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "facebook",
-		RuleID:      "facebook",
-		Regex: generateSemiGenericRegex([]string{"facebook"},
-			hex32),
-		SecretGroup: 1,
-		Keywords:    []string{"facebook"},
+		Description: "RSA private key",
+		RuleID:      "RSA-PK",
+		Regex:       regexp.MustCompile("-----BEGIN RSA PRIVATE KEY-----"),
+		Keywords:    []string{"-----BEGIN RSA"},
 	}
 
 	// validate
-	tps := []string{"facebookToken := \"" + sampleHex32Token + "\""}
+	tps := []string{"-----BEGIN RSA PRIVATE KEY-----"}
 	d := detect.NewDetector(config.Config{
 		Rules: []*config.Rule{&r},
 	})
 	for _, tp := range tps {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate facebook")
+			log.Fatal().Msg("Failed to validate RSA")
 		}
 	}
-
 	return &r
 }

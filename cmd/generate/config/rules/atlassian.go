@@ -7,27 +7,27 @@ import (
 	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
-func Facebook() *config.Rule {
+func Atlassian() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "facebook",
-		RuleID:      "facebook",
-		Regex: generateSemiGenericRegex([]string{"facebook"},
-			hex32),
+		Description: "Atlassian API token",
+		RuleID:      "atlassian-api-token",
+		Regex:       generateSemiGenericRegex([]string{"atlassian"}, alphaNumeric24),
 		SecretGroup: 1,
-		Keywords:    []string{"facebook"},
+		Keywords:    []string{"atlassian"},
 	}
 
 	// validate
-	tps := []string{"facebookToken := \"" + sampleHex32Token + "\""}
+	tps := []string{
+		"atlassian:= \"" + sampleAlphaNumeric24Token + "\"",
+	}
 	d := detect.NewDetector(config.Config{
 		Rules: []*config.Rule{&r},
 	})
 	for _, tp := range tps {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate facebook")
+			log.Fatal().Msg("Failed to validate atlassian-api-token")
 		}
 	}
-
 	return &r
 }
