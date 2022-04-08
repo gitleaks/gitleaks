@@ -247,19 +247,30 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 		gitdiffFiles <-chan *gitdiff.File
 		err          error
 	)
+
+	errChan := make(chan error)
+	go func() {
+		for errIn := range errChan {
+			err = errIn
+		}
+	}()
+
 	switch gitScanType {
 	case DetectType:
-		gitdiffFiles, err = git.GitLog(source, logOpts)
+		var err error
+		gitdiffFiles, err = git.GitLog(source, logOpts, errChan)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectType:
-		gitdiffFiles, err = git.GitDiff(source, false)
+		var err error
+		gitdiffFiles, err = git.GitDiff(source, false, errChan)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectStagedType:
-		gitdiffFiles, err = git.GitDiff(source, true)
+		var err error
+		gitdiffFiles, err = git.GitDiff(source, true, errChan)
 		if err != nil {
 			return d.findings, err
 		}
@@ -309,7 +320,7 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 		return d.findings, err
 	}
 	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
-	return d.findings, nil
+	return d.findings, err
 }
 
 // DetectFiles accepts a path to a source directory or file and begins a scan of the
