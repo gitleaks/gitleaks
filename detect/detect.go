@@ -15,6 +15,7 @@ import (
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/h2non/filetype"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -29,6 +30,8 @@ const (
 	DetectType GitScanType = iota
 	ProtectType
 	ProtectStagedType
+
+	gitleaksAllowSignature = "gitleaks:allow"
 )
 
 // Detector is the main detector struct
@@ -146,6 +149,23 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		}
 	}
 
+	// if path only rule, skip content checks
+	if rule.Regex == nil {
+		return findings
+	}
+
+	containsKeyword := false
+	for _, k := range rule.Keywords {
+		if strings.Contains(strings.ToLower(fragment.Raw),
+			strings.ToLower(k)) {
+			containsKeyword = true
+			break
+		}
+	}
+	if !containsKeyword && len(rule.Keywords) != 0 {
+		return findings
+	}
+
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
@@ -170,9 +190,8 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			Tags:        rule.Tags,
 		}
 
-		// check if the secret is in the allowlist
-		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			gitleaksAllowSignature) {
 			continue
 		}
 
@@ -185,6 +204,12 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			}
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
+		}
+
+		// check if the secret is in the allowlist
+		if rule.Allowlist.RegexAllowed(finding.Secret) ||
+			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+			continue
 		}
 
 		// check entropy
@@ -315,6 +340,15 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 			if err != nil {
 				return err
 			}
+
+			mimetype, err := filetype.Match(b)
+			if err != nil {
+				return err
+			}
+			if mimetype.MIME.Type == "application" {
+				return nil // skip binary files
+			}
+
 			fragment := Fragment{
 				Raw:      string(b),
 				FilePath: p,

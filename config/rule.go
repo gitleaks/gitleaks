@@ -32,6 +32,11 @@ type Rule struct {
 	// and reporting purposes.
 	Tags []string
 
+	// Keywords are used for pre-regex check filtering. Rules that contain
+	// keywords will perform a quick string compare check to make sure the
+	// keyword(s) are in the content being scanned.
+	Keywords []string
+
 	// Allowlist allows a rule to be ignored for specific
 	// regexes, paths, and/or commits
 	Allowlist Allowlist

@@ -79,6 +79,7 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 				}
 			}
 		}
+
 		if redact {
 			f.Redact()
 		}

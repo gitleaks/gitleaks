@@ -24,6 +24,53 @@ func TestDetect(t *testing.T) {
 		wantError        error
 	}{
 		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OKIA\ // gitleaks:allow"`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw: `awsToken := \
+
+                \"AKIALALEMEL33243OKIA\ // gitleaks:allow"
+
+
+                `,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw: `awsToken := \"AKIALALEMEL33243OKIA\"
+
+		                // gitleaks:allow"
+
+		                `,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					Secret:      "AKIALALEMEL33243OKIA",
+					Match:       "AKIALALEMEL33243OKIA",
+					File:        "tmp.go",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 15,
+					EndColumn:   34,
+					Entropy:     3.1464393,
+				},
+			},
+		},
+		{
 			cfgName: "escaped_character_group",
 			fragment: Fragment{
 				Raw:      `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
@@ -182,6 +229,14 @@ func TestDetect(t *testing.T) {
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			cfgName: "generic_with_py_path",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "load2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.py",
 			},
 			expectedFindings: []report.Finding{},
 		},
