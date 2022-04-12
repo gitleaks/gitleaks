@@ -15,7 +15,7 @@ func SlackAccessToken() *config.Rule {
 		Description: "Slack token",
 		RuleID:      "slack-access-token",
 		Regex: regexp.MustCompile(
-			"xox[baprs]-([0-9a-zA-Z]{10,48})?"),
+			"xox[baprs]-([0-9a-zA-Z]{10,48})"),
 		Keywords: []string{
 			"xoxb",
 			"xoxa",
