@@ -1,0 +1,45 @@
+# This is the default gitleaks configuration file.
+# Rules and allowlists are defined within this file.
+# Rules instruct gitleaks on what should be considered a secret.
+# Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
+title = "gitleaks config"
+
+[allowlist]
+description = "global allow lists"
+regexes = [
+    '''219-09-9999''',
+    '''078-05-1120''',
+    '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
+    ]
+paths = [
+    '''gitleaks.toml''',
+    '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
+    '''(go.mod|go.sum)$'''
+]
+
+{{ range $i, $rule := .Rules }}[[rules]]
+{{ if and $rule.SecretGroup $rule.Entropy }}description = "{{$rule.Description}}"
+id = "{{$rule.RuleID}}"
+regex = '''{{$rule.Regex}}'''
+secretGroup = {{ $rule.SecretGroup }}
+entropy = {{ $rule.Entropy}}
+keywords = [
+    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
+]
+
+{{ else if $rule.SecretGroup }}description = "{{$rule.Description}}"
+id = "{{$rule.RuleID}}"
+regex = '''{{$rule.Regex}}'''
+secretGroup = {{ $rule.SecretGroup }}
+keywords = [
+    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
+]
+
+{{ else }}description = "{{$rule.Description}}"
+id = "{{$rule.RuleID}}"
+regex = '''{{$rule.Regex}}'''
+keywords = [
+    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
+]
+
+{{end}}{{end}}

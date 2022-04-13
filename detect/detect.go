@@ -374,10 +374,9 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
-
 	// check if filepath is allowed
-	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path {
+	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path) {
 		return findings
 	}
 
