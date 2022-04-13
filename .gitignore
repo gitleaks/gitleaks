@@ -9,7 +9,10 @@
 *.got
 gitleaks
 build
+
+# configs
 .gitleaks.toml
+cmd/generate/config/gitleaks.toml
 
 # Test binary
 *.out
