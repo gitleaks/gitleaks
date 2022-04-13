@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func AWS() *config.Rule {
@@ -29,15 +26,6 @@ func AWS() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"AWSToken := \"" + "AKIALALEMEL33243OLIB" + "\""}
-	config := config.Config{}
-	config.Rules = append(config.Rules, &r)
-	d := detect.NewDetector(config)
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate AWS")
-		}
-	}
-
-	return &r
+	tps := []string{"AWSToken := \"" + "AKIALALEMEL33243OLIB" + "\""} // gitleaks:allow
+	return validate(r, tps)
 }

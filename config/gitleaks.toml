@@ -1,644 +1,5 @@
 title = "gitleaks config"
 
-[[rules]]
-id = "gitlab-pat"
-description = "GitLab Personal Access Token"
-regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
-keywords = ["glpat"]
-
-[[rules]]
-id = "aws-access-token"
-description = "AWS"
-regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
-keywords = [
-    "AKIA",
-    "AGPA",
-    "AIDA",
-    "AROA",
-    "AIPA",
-    "ANPA",
-    "ANVA",
-    "ASIA",
-]
-
-[[rules]]
-id = "PKCS8-PK"
-description = "PKCS8 private key"
-regex = '''-----BEGIN PRIVATE KEY-----'''
-keywords = ["BEGIN PRIVATE"]
-
-[[rules]]
-id = "RSA-PK"
-description = "RSA private key"
-regex = '''-----BEGIN RSA PRIVATE KEY-----'''
-keywords = ["BEGIN RSA"]
-
-[[rules]]
-id = "OPENSSH-PK"
-description = "SSH private key"
-regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-keywords = ["BEGIN OPENSSH"]
-
-[[rules]]
-id = "PGP-PK"
-description = "PGP private key"
-regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
-keywords = ["BEGIN PGP"]
-
-[[rules]]
-id = "github-pat"
-description = "GitHub Personal Access Token"
-regex = '''ghp_[0-9a-zA-Z]{36}'''
-keywords = ["ghp_"]
-
-[[rules]]
-id = "github-oauth"
-description = "GitHub OAuth Access Token"
-regex = '''gho_[0-9a-zA-Z]{36}'''
-keywords = ["gho_"]
-
-
-[[rules]]
-id = "SSH-DSA-PK"
-description = "SSH (DSA) private key"
-regex = '''-----BEGIN DSA PRIVATE KEY-----'''
-keywords = ["BEGIN DSA"]
-
-[[rules]]
-id = "SSH-EC-PK"
-description = "SSH (EC) private key"
-regex = '''-----BEGIN EC PRIVATE KEY-----'''
-keywords = ["BEGIN EC"]
-
-
-[[rules]]
-id = "github-app-token"
-description = "GitHub App Token"
-regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
-keywords = [
-    "ghu_",
-    "ghs_"
-]
-
-[[rules]]
-id = "github-refresh-token"
-description = "GitHub Refresh Token"
-regex = '''ghr_[0-9a-zA-Z]{76}'''
-keywords = ["ghr_"]
-
-[[rules]]
-id = "shopify-shared-secret"
-description = "Shopify shared secret"
-regex = '''shpss_[a-fA-F0-9]{32}'''
-keywords = ["shpss_"]
-
-[[rules]]
-id = "shopify-access-token"
-description = "Shopify access token"
-regex = '''shpat_[a-fA-F0-9]{32}'''
-keywords = ["shpat_"]
-
-[[rules]]
-id = "shopify-custom-access-token"
-description = "Shopify custom app access token"
-regex = '''shpca_[a-fA-F0-9]{32}'''
-keywords = ["shpca_"]
-
-[[rules]]
-id = "shopify-private-app-access-token"
-description = "Shopify private app access token"
-regex = '''shppa_[a-fA-F0-9]{32}'''
-keywords = ["shppa_"]
-
-[[rules]]
-id = "slack-access-token"
-description = "Slack token"
-regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
-keywords = [
-    "xoxb",
-    "xoxa",
-    "xoxp",
-    "xoxr",
-    "xoxs"
-    ]
-
-[[rules]]
-id = "stripe-access-token"
-description = "Stripe"
-regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
-keywords = [
-    "sk_test",
-    "pk_test",
-    "sk_live",
-    "pk_live"
-]
-
-[[rules]]
-id = "pypi-upload-token"
-description = "PyPI upload token"
-regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''
-keywords = ["pypi-AgEIcHlwaS5vcmc"]
-
-[[rules]]
-id = "gcp-service-account"
-description = "Google (GCP) Service-account"
-regex = '''\"type\": \"service_account\"'''
-keywords = ["\"type\": \"service_account\""]
-
-[[rules]]
-id = "heroku-api-key"
-description = "Heroku API Key"
-regex = ''' (?i)(heroku[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})['\"]'''
-secretGroup = 3
-keywords = ["heroku"]
-
-[[rules]]
-id = "slack-web-hook"
-description = "Slack Webhook"
-regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
-keywords = ["https://hooks.slack.com/services/"]
-
-[[rules]]
-id = "twilio-api-key"
-description = "Twilio API Key"
-regex = '''SK[0-9a-fA-F]{32}'''
-keywords = ["twilio"]
-
-[[rules]]
-id = "age-secret-key"
-description = "Age secret key"
-regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
-keywords = ["AGE-SECRET-KEY-1"]
-
-[[rules]]
-id = "facebook-token"
-description = "Facebook token"
-regex = '''(?i)(facebook[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["facebook"]
-
-[[rules]]
-id = "twitter-token"
-description = "Twitter token"
-regex = '''(?i)(twitter[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{35,44})['\"]'''
-secretGroup = 3
-keywords = ["twitter"]
-
-[[rules]]
-id = "adobe-client-id"
-description = "Adobe Client ID (Oauth Web)"
-regex = '''(?i)(adobe[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["adobe"]
-
-[[rules]]
-id = "adobe-client-secret"
-description = "Adobe Client Secret"
-regex = '''(p8e-)(?i)[a-z0-9]{32}'''
-keywords = ["p8e-"]
-
-[[rules]]
-id = "alibaba-access-key-id"
-description = "Alibaba AccessKey ID"
-regex = '''(LTAI)(?i)[a-z0-9]{20}'''
-keywords = ["LTAI"]
-
-[[rules]]
-id = "alibaba-secret-key"
-description = "Alibaba Secret Key"
-regex = '''(?i)(alibaba[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{30})['\"]'''
-secretGroup = 3
-keywords = ["alibaba"]
-
-[[rules]]
-id = "asana-client-id"
-description = "Asana Client ID"
-regex = '''(?i)(asana[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9]{16})['\"]'''
-secretGroup = 3
-keywords = ["asana"]
-
-[[rules]]
-id = "asana-client-secret"
-description = "Asana Client Secret"
-regex = '''(?i)(asana[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["asana"]
-
-[[rules]]
-id = "atlassian-api-token"
-description = "Atlassian API token"
-regex = '''(?i)(atlassian[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{24})['\"]'''
-secretGroup = 3
-keywords = ["atlassian"]
-
-[[rules]]
-id = "bitbucket-client-id"
-description = "Bitbucket client ID"
-regex = '''(?i)(bitbucket[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["bitbucket"]
-
-[[rules]]
-id = "bitbucket-client-secret"
-description = "Bitbucket client secret"
-regex = '''(?i)(bitbucket[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9_\-]{64})['\"]'''
-secretGroup = 3
-keywords = ["bitbucket"]
-
-[[rules]]
-id = "beamer-api-token"
-description = "Beamer API token"
-regex = '''(?i)(beamer[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](b_[a-z0-9=_\-]{44})['\"]'''
-secretGroup = 3
-keywords = ["beamer"]
-
-[[rules]]
-id = "clojars-api-token"
-description = "Clojars API token"
-regex = '''(CLOJARS_)(?i)[a-z0-9]{60}'''
-keywords = ["clojars"]
-
-[[rules]]
-id = "contentful-delivery-api-token"
-description = "Contentful delivery API token"
-regex = '''(?i)(contentful[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9\-=_]{43})['\"]'''
-secretGroup = 3
-keywords = ["contentful"]
-
-[[rules]]
-id = "databricks-api-token"
-description = "Databricks API token"
-regex = '''dapi[a-h0-9]{32}'''
-keywords = ["dapi"]
-
-[[rules]]
-id = "discord-api-token"
-description = "Discord API key"
-regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]'''
-secretGroup = 3
-keywords = ["discord"]
-
-[[rules]]
-id = "discord-client-id"
-description = "Discord client ID"
-regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9]{18})['\"]'''
-secretGroup = 3
-keywords = ["discord"]
-
-[[rules]]
-id = "discord-client-secret"
-description = "Discord client secret"
-regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_\-]{32})['\"]'''
-secretGroup = 3
-keywords = ["discord"]
-
-[[rules]]
-id = "doppler-api-token"
-description = "Doppler API token"
-regex = '''['\"](dp\.pt\.)(?i)[a-z0-9]{43}['\"]'''
-keywords = ["doppler"]
-
-[[rules]]
-id = "dropbox-api-secret"
-description = "Dropbox API secret/key"
-regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{15})['\"]'''
-keywords = ["dropbox"]
-
-[[rules]]
-id = "dropbox--api-key"
-description = "Dropbox API secret/key"
-regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{15})['\"]'''
-keywords = ["dropbox"]
-
-[[rules]]
-id = "dropbox-short-lived-api-token"
-description = "Dropbox short lived API token"
-regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](sl\.[a-z0-9\-=_]{135})['\"]'''
-keywords = ["dropbox"]
-
-[[rules]]
-id = "dropbox-long-lived-api-token"
-description = "Dropbox long lived API token"
-regex = '''(?i)(dropbox[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"][a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43}['\"]'''
-keywords = ["dropbox"]
-
-[[rules]]
-id = "duffel-api-token"
-description = "Duffel API token"
-regex = '''['\"]duffel_(test|live)_(?i)[a-z0-9_-]{43}['\"]'''
-keywords = ["duffel"]
-
-[[rules]]
-id = "dynatrace-api-token"
-description = "Dynatrace API token"
-regex = '''['\"]dt0c01\.(?i)[a-z0-9]{24}\.[a-z0-9]{64}['\"]'''
-keywords = ["dynatrace"]
-
-[[rules]]
-id = "easypost-api-token"
-description = "EasyPost API token"
-regex = '''['\"]EZAK(?i)[a-z0-9]{54}['\"]'''
-keywords = ["EZAK"]
-
-[[rules]]
-id = "easypost-test-api-token"
-description = "EasyPost test API token"
-regex = '''['\"]EZTK(?i)[a-z0-9]{54}['\"]'''
-keywords = ["EZTK"]
-
-[[rules]]
-id = "fastly-api-token"
-description = "Fastly API token"
-regex = '''(?i)(fastly[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9\-=_]{32})['\"]'''
-secretGroup = 3
-keywords = ["fastly"]
-
-[[rules]]
-id = "finicity-client-secret"
-description = "Finicity client secret"
-regex = '''(?i)(finicity[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{20})['\"]'''
-secretGroup = 3
-keywords = ["finicity"]
-
-[[rules]]
-id = "finicity-api-token"
-description = "Finicity API token"
-regex = '''(?i)(finicity[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["finicity"]
-
-[[rules]]
-id = "flutterwave-public-key"
-description = "Flutterwave public key"
-regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
-keywords = ["FLWPUBK_TEST"]
-
-[[rules]]
-id = "flutterwave-secret-key"
-description = "Flutterwave secret key"
-regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
-keywords = ["FLWSECK_TEST"]
-
-[[rules]]
-id = "flutterwave-enc-key"
-description = "Flutterwave encrypted key"
-regex = '''FLWSECK_TEST[a-h0-9]{12}'''
-keywords = ["FLWSECK_TEST"]
-
-[[rules]]
-id = "frameio-api-token"
-description = "Frame.io API token"
-regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
-keywords = ["fio-u-"]
-
-[[rules]]
-id = "gocardless-api-token"
-description = "GoCardless API token"
-regex = '''['\"]live_(?i)[a-z0-9\-_=]{40}['\"]'''
-keywords = ["live_"]
-
-[[rules]]
-id = "hashicorp-tf-api-token"
-description = "HashiCorp Terraform user/org API token"
-regex = '''['\"](?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}['\"]'''
-keywords = ["atlasv1"]
-
-[[rules]]
-id = "hubspot-api-token"
-description = "HubSpot API token"
-regex = '''(?i)(hubspot[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})['\"]'''
-secretGroup = 3
-keywords = ["hubspot"]
-
-[[rules]]
-id = "intercom-api-token"
-description = "Intercom API token"
-regex = '''(?i)(intercom[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9=_]{60})['\"]'''
-secretGroup = 3
-keywords = ["intercom"]
-
-[[rules]]
-id = "intercom-client-secret"
-description = "Intercom client secret/ID"
-regex = '''(?i)(intercom[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})['\"]'''
-secretGroup = 3
-keywords = ["intercom"]
-
-[[rules]]
-id = "ionic-api-token"
-description = "Ionic API token"
-regex = '''(?i)(ionic[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](ion_[a-z0-9]{42})['\"]'''
-keywords = ["ionic"]
-
-[[rules]]
-id = "linear-api-token"
-description = "Linear API token"
-regex = '''lin_api_(?i)[a-z0-9]{40}'''
-keywords = ["lin_api_"]
-
-[[rules]]
-id = "linear-client-secret"
-description = "Linear client secret/ID"
-regex = '''(?i)(linear[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = ["linear"]
-
-[[rules]]
-id = "lob-api-key"
-description = "Lob API Key"
-regex = '''(?i)(lob[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]((live|test)_[a-f0-9]{35})['\"]'''
-secretGroup = 3
-keywords = ["lob"]
-
-[[rules]]
-id = "lob-pub-api-key"
-description = "Lob Publishable API Key"
-regex = '''(?i)(lob[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]((test|live)_pub_[a-f0-9]{31})['\"]'''
-secretGroup = 3
-keywords = [
-    "test_pub",
-    "live_pub",
-    "_pub"
-]
-
-[[rules]]
-id = "mailchimp-api-key"
-description = "Mailchimp API key"
-regex = '''(?i)(mailchimp[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-f0-9]{32}-us20)['\"]'''
-secretGroup = 3
-keywords = ["mailchimp"]
-
-[[rules]]
-id = "mailgun-private-api-token"
-description = "Mailgun private API token"
-regex = '''(?i)(mailgun[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](key-[a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = [
-    "mailgun",
-    "key-"
-]
-
-[[rules]]
-id = "mailgun-pub-key"
-description = "Mailgun public validation key"
-regex = '''(?i)(mailgun[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"](pubkey-[a-f0-9]{32})['\"]'''
-secretGroup = 3
-keywords = [
-    "mailgun",
-    "pubkey-"
-]
-
-[[rules]]
-id = "mailgun-signing-key"
-description = "Mailgun webhook signing key"
-regex = '''(?i)(mailgun[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})['\"]'''
-secretGroup = 3
-keywords = ["mailgun"]
-
-[[rules]]
-id = "mapbox-api-token"
-description = "Mapbox API token"
-regex = '''(?i)(pk\.[a-z0-9]{60}\.[a-z0-9]{22})'''
-keywords = ["mapbox"]
-
-[[rules]]
-id = "messagebird-api-token"
-description = "MessageBird API token"
-regex = '''(?i)(messagebird[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{25})['\"]'''
-secretGroup = 3
-keywords = [
-    "messagebird",
-    "message_bird",
-    "message-bird"
-]
-
-[[rules]]
-id = "messagebird-client-id"
-description = "MessageBird API client ID"
-regex = '''(?i)(messagebird[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})['\"]'''
-secretGroup = 3
-keywords = [
-    "messagebird",
-    "message_bird",
-    "message-bird"
-]
-
-[[rules]]
-id = "new-relic-user-api-key"
-description = "New Relic user API Key"
-regex = '''['\"](NRAK-[A-Z0-9]{27})['\"]'''
-keywords = ["NRAK-"]
-
-[[rules]]
-id = "new-relic-user-api-id"
-description = "New Relic user API ID"
-regex = '''(?i)(newrelic[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([A-Z0-9]{64})['\"]'''
-secretGroup = 3
-keywords = ["newrelic"]
-
-[[rules]]
-id = "new-relic-browser-api-token"
-description = "New Relic ingest browser API token"
-regex = '''['\"](NRJS-[a-f0-9]{19})['\"]'''
-keywords = ["NRJS-"]
-
-[[rules]]
-id = "npm-access-token"
-description = "npm access token"
-regex = '''['\"](npm_(?i)[a-z0-9]{36})['\"]'''
-keywords = ["npm_"]
-
-[[rules]]
-id = "planetscale-password"
-description = "PlanetScale password"
-regex = '''pscale_pw_(?i)[a-z0-9\-_\.]{43}'''
-keywords = ["pscale_pw_"]
-
-[[rules]]
-id = "planetscale-api-token"
-description = "PlanetScale API token"
-regex = '''pscale_tkn_(?i)[a-z0-9\-_\.]{43}'''
-keywords = ["pscale_tkn_"]
-
-[[rules]]
-id = "postman-api-token"
-description = "Postman API token"
-regex = '''PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34}'''
-keywords = ["PMAK-"]
-
-[[rules]]
-id = "pulumi-api-token"
-description = "Pulumi API token"
-regex = '''pul-[a-f0-9]{40}'''
-keywords = ["pul-"]
-
-[[rules]]
-id = "rubygems-api-token"
-description = "Rubygem API token"
-regex = '''rubygems_[a-f0-9]{48}'''
-keywords = ["rubygems_"]
-
-[[rules]]
-id = "sendgrid-api-token"
-description = "SendGrid API token"
-regex = '''SG\.(?i)[a-z0-9_\-\.]{66}'''
-keywords = ["sendgrid"]
-
-[[rules]]
-id = "sendinblue-api-token"
-description = "Sendinblue API token"
-regex = '''xkeysib-[a-f0-9]{64}\-(?i)[a-z0-9]{16}'''
-keywords = ["xkeysib-"]
-
-[[rules]]
-id = "shippo-api-token"
-description = "Shippo API token"
-regex = '''shippo_(live|test)_[a-f0-9]{40}'''
-keywords = ["shippo_"]
-
-[[rules]]
-id = "linkedin-client-secret"
-description = "LinkedIn Client secret"
-regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z]{16})['\"]'''
-secretGroup = 3
-keywords = ["linkedin"]
-
-[[rules]]
-id = "linkedin-client-id"
-description = "LinkedIn Client ID"
-regex = '''(?i)(linkedin[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{14})['\"]'''
-secretGroup = 3
-keywords = ["linkedin"]
-
-[[rules]]
-id = "twitch-api-token"
-description = "Twitch API token"
-regex = '''(?i)(twitch[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-z0-9]{30})['\"]'''
-secretGroup = 3
-keywords = ["twitch"]
-
-[[rules]]
-id = "typeform-api-token"
-description = "Typeform API token"
-regex = '''(?i)(typeform[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}(tfp_[a-z0-9\-_\.=]{59})'''
-secretGroup = 3
-keywords = ["tpf_"]
-
-[[rules]]
-id = "generic-api-key"
-description = "Generic API Key"
-regex = '''(?i)((key|api[^Version]|token|secret|password|auth)[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([0-9a-zA-Z\-_=]{8,64})['\"]'''
-entropy = 3.7
-secretGroup = 4
-keywords = [
-    "key",
-    "api",
-    "token",
-    "secret",
-    "password",
-    "auth",
-]
-
 [allowlist]
 description = "global allow lists"
 regexes = [
@@ -651,3 +12,713 @@ paths = [
     '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$'''
 ]
+
+[[rules]]
+description = "Age secret key"
+id = "age secret key"
+regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
+keywords = [
+    "AGE-SECRET-KEY-1",
+]
+
+[[rules]]
+description = "Adobe Client ID (Oauth Web)"
+id = "adobe-client-id"
+regex = '''(?i)(?:adobe)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "adobe",
+]
+
+[[rules]]
+description = "Adobe Client Secret"
+id = "adobe-client-secret"
+regex = '''(p8e-)(?i)[a-z0-9]{32}'''
+keywords = [
+    "p8e-",
+]
+
+[[rules]]
+description = "Alibaba AccessKey ID"
+id = "alibaba-access-key-id"
+regex = '''(LTAI)(?i)[a-z0-9]{20}'''
+keywords = [
+    "LTAI",
+]
+
+[[rules]]
+description = "Alibaba Secret Key"
+id = "alibaba-secret-key"
+regex = '''(?i)(?:alibaba)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "alibaba",
+]
+
+[[rules]]
+description = "Asana Client ID"
+id = "asana-client-id"
+regex = '''(?i)(?:asana)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9]{16})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "asana",
+]
+
+[[rules]]
+description = "Asana Client Secret"
+id = "asana-client-secret"
+regex = '''(?i)(?:asana)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "asana",
+]
+
+[[rules]]
+description = "Atlassian API token"
+id = "atlassian-api-token"
+regex = '''(?i)(?:atlassian)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "atlassian",
+]
+
+[[rules]]
+description = "AWS"
+id = "aws-access-token"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+keywords = [
+    "AKIA","AGPA","AIDA","AROA","AIPA","ANPA","ANVA","ASIA",
+]
+
+[[rules]]
+description = "BitBucket Client ID"
+id = "bitbucket-client-id"
+regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "bitbucket",
+]
+
+[[rules]]
+description = "BitBucket Client Secret"
+id = "bitbucket-client-secret"
+regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_\-]{64})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "bitbucket",
+]
+
+[[rules]]
+description = "Beamer API token"
+id = "beamer-api-token"
+regex = '''(?i)(?:beamer)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(b_[a-z0-9=_\-]{44})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "beamer",
+]
+
+[[rules]]
+description = "Clojars API token"
+id = "clojars-api-token"
+regex = '''(CLOJARS_)(?i)[a-z0-9]{60}'''
+keywords = [
+    "clojars",
+]
+
+[[rules]]
+description = "Contentful delivery API token"
+id = "contentful-delivery-api-token"
+regex = '''(?i)(?:contentful)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9\-=_]{43})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "contentful",
+]
+
+[[rules]]
+description = "Databricks API token"
+id = "databricks-api-token"
+regex = '''dapi[a-h0-9]{32}'''
+keywords = [
+    "dapi",
+]
+
+[[rules]]
+description = "Discord API key"
+id = "discord-api-token"
+regex = '''(?i)(?:discord)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "discord",
+]
+
+[[rules]]
+description = "Discord client ID"
+id = "discord-client-id"
+regex = '''(?i)(?:discord)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9]{18})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "discord",
+]
+
+[[rules]]
+description = "Discord client secret"
+id = "discord-client-secret"
+regex = '''(?i)(?:discord)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "discord",
+]
+
+[[rules]]
+description = "Dropbox API secret"
+id = "doppler-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{15})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Dropbox long lived API token"
+id = "dropbox-long-lived-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Dropbox short lived API token"
+id = "dropbox-short-lived-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(sl\.[a-z0-9\-=_]{135})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Doppler API token"
+id = "doppler-api-token"
+regex = '''(dp\.pt\.)(?i)[a-z0-9]{43}'''
+keywords = [
+    "doppler",
+]
+
+[[rules]]
+description = "Duffel API token"
+id = "duffel-api-token"
+regex = '''duffel_(test|live)_(?i)[a-z0-9_\-=]{43}'''
+keywords = [
+    "duffel",
+]
+
+[[rules]]
+description = "Dynatrace API token"
+id = "dynatrace-api-token"
+regex = '''dt0c01\.(?i)[a-z0-9]{24}\.[a-z0-9]{64}'''
+keywords = [
+    "dynatrace",
+]
+
+[[rules]]
+description = "EasyPost API token"
+id = "easypost-api-token"
+regex = '''EZAK(?i)[a-z0-9]{54}'''
+keywords = [
+    "EZAK",
+]
+
+[[rules]]
+description = "EasyPost test API token"
+id = "easypost-test-api-token"
+regex = '''EZTK(?i)[a-z0-9]{54}'''
+keywords = [
+    "EZTK",
+]
+
+[[rules]]
+description = "facebook"
+id = "facebook"
+regex = '''(?i)(?:facebook)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "facebook",
+]
+
+[[rules]]
+description = "Fastly API key"
+id = "fastly-api-token"
+regex = '''(?i)(?:fastly)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "fastly",
+]
+
+[[rules]]
+description = "Finicity Client Secret"
+id = "finicity-client-secret"
+regex = '''(?i)(?:finicity)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{20})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "finicity",
+]
+
+[[rules]]
+description = "Finicity API token"
+id = "finicity-api-token"
+regex = '''(?i)(?:finicity)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "finicity",
+]
+
+[[rules]]
+description = "Finicity Public Key"
+id = "flutterwave-public-key"
+regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "FLWPUBK_TEST",
+]
+
+[[rules]]
+description = "Finicity Secret Key"
+id = "flutterwave-public-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "FLWSECK_TEST",
+]
+
+[[rules]]
+description = "Finicity Secret Key"
+id = "flutterwave-public-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "FLWSECK_TEST",
+]
+
+[[rules]]
+description = "Frame.io API token"
+id = "frameio-api-token"
+regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
+keywords = [
+    "fio-u-",
+]
+
+[[rules]]
+description = "Generic API Key"
+id = "generic-api-key"
+regex = '''(?i)(?:key|api[^Version]|token|pat|secret|client|password|auth)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+entropy = 3.7
+keywords = [
+    "key","api","token","secret","client","pat","password","auth",
+]
+
+[[rules]]
+description = "GoCardless API token"
+id = "gocardless-api-token"
+regex = '''(?i)(?:gocardless)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(live_(?i)[a-z0-9\-_=]{40})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "live_","gocardless",
+]
+
+[[rules]]
+description = "GitHub Personal Access Token"
+id = "github-pat"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghp_",
+]
+
+[[rules]]
+description = "GitHub OAuth Access Token"
+id = "github-oauth"
+regex = '''gho_[0-9a-zA-Z]{36}'''
+keywords = [
+    "gho_",
+]
+
+[[rules]]
+description = "GitHub App Token"
+id = "github-app-token"
+regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghu_","ghs_",
+]
+
+[[rules]]
+description = "GitHub Refresh Token"
+id = "github-refresh-token"
+regex = '''ghr_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghr_",
+]
+
+[[rules]]
+description = "Gitlab Personal Access Token"
+id = "gitlab-pat"
+regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
+keywords = [
+    "glpat-",
+]
+
+[[rules]]
+description = "HashiCorp Terraform user/org API token"
+id = "hashicorp-tf-api-token"
+regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
+keywords = [
+    "atlasv1",
+]
+
+[[rules]]
+description = "Heroku API Key"
+id = "heroku-api-key"
+regex = '''(?i)(?:heroku)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "heroku",
+]
+
+[[rules]]
+description = "HubSpot API Token"
+id = "hubspot-api-key"
+regex = '''(?i)(?:hubspot)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "hubspot",
+]
+
+[[rules]]
+description = "Intercom API Token"
+id = "intercom-api-key"
+regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_\-]{60})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "intercom",
+]
+
+[[rules]]
+description = "Linear API Token"
+id = "linear-api-key"
+regex = '''lin_api_(?i)[a-z0-9]{40}'''
+keywords = [
+    "lin_api_",
+]
+
+[[rules]]
+description = "Linear Client Secret"
+id = "linear-client-secret"
+regex = '''(?i)(?:linear)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "linear",
+]
+
+[[rules]]
+description = "LinkedIn Client ID"
+id = "linkedin-client-id"
+regex = '''(?i)(?:linkedin|linked-in)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{14})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "linkedin","linked-in",
+]
+
+[[rules]]
+description = "LinkedIn Client secret"
+id = "linkedin-client-secret"
+regex = '''(?i)(?:linkedin|linked-in)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{16})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "linkedin","linked-in",
+]
+
+[[rules]]
+description = "Lob API Key"
+id = "lob-api-key"
+regex = '''(?i)(?:lob)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}((live|test)_[a-f0-9]{35})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "test_","live_",
+]
+
+[[rules]]
+description = "Lob Publishable API Key"
+id = "lob-pub-api-key"
+regex = '''(?i)(?:lob)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}((test|live)_pub_[a-f0-9]{31})['|\"|\n|\r|\s|\x60]'''
+keywords = [
+    "test_pub","live_pub","_pub",
+]
+
+[[rules]]
+description = "Mailchimp API key"
+id = "mailchimp-api-key"
+regex = '''(?i)(?:mailchimp)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32}-us20)['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "mailchimp",
+]
+
+[[rules]]
+description = "Mailgun public validation key"
+id = "mailgun-pub-key"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(pubkey-[a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "Mailgun private API token"
+id = "mailgun-private-api-token"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(key-[a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "Mailgun webhook signing key"
+id = "mailgun-signing-key"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "MapBox API token"
+id = "mapbox-api-token"
+regex = '''(?i)(?:mapbox)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "mapbox",
+]
+
+[[rules]]
+description = "MessageBird API token"
+id = "messagebird-api-token"
+regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "messagebird","message-bird","message_bird",
+]
+
+[[rules]]
+description = "MessageBird client ID"
+id = "messagebird-client-id"
+regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "messagebird","message-bird","message_bird",
+]
+
+[[rules]]
+description = "New Relic user API Key"
+id = "new-relic-user-api-key"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRAK-[a-z0-9]{27})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "NRAK",
+]
+
+[[rules]]
+description = "New Relic user API ID"
+id = "new-relic-user-api-id"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "new-relic","newrelic","new_relic",
+]
+
+[[rules]]
+description = "New Relic ingest browser API token"
+id = "new-relic-browser-api-token"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRJS-[a-f0-9]{19})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "NRJS-",
+]
+
+[[rules]]
+description = "npm access token"
+id = "npm-access-token"
+regex = '''(?i)\b(npm_[a-z0-9]{36})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "npm_",
+]
+
+[[rules]]
+description = "PlanetScale password"
+id = "planetscale-password"
+regex = '''(?i)\b(pscale_pw_(?i)[a-z0-9=\-_\.]{43})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "pscale_pw_",
+]
+
+[[rules]]
+description = "PlanetScale API token"
+id = "planetscale-api-token"
+regex = '''(?i)\b(pscale_tkn_(?i)[a-z0-9=\-_\.]{43})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "pscale_tkn_",
+]
+
+[[rules]]
+description = "Postman API token"
+id = "postman-api-token"
+regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "PMAK-",
+]
+
+[[rules]]
+description = "Private Key"
+id = "private-key"
+regex = '''(?i)-----\s*?BEGIN[ A-Z0-9_-]*?PRIVATE KEY\s*?-----[\s\S]*?----\s*?END[ A-Z0-9_-]*? PRIVATE KEY\s*?-----'''
+keywords = [
+    "-----BEGIN PRIVATE",
+]
+
+[[rules]]
+description = "Pulumi API token"
+id = "pulumi-api-token"
+regex = '''(?i)\b(pul-[a-f0-9]{40})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "pul-",
+]
+
+[[rules]]
+description = "PyPI upload token"
+id = "pypi-upload-token"
+regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''
+keywords = [
+    "pypi-AgEIcHlwaS5vcmc",
+]
+
+[[rules]]
+description = "Rubygem API token"
+id = "rubygems-api-token"
+regex = '''(?i)\b(rubygems_[a-f0-9]{48})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "rubygems_",
+]
+
+[[rules]]
+description = "SendGrid API token"
+id = "sendgrid-api-token"
+regex = '''(?i)\b(SG\.(?i)[a-z0-9=_\-\.]{66})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "SG.",
+]
+
+[[rules]]
+description = "Sendinblue API token"
+id = "sendinblue-api-token"
+regex = '''(?i)\b(xkeysib-[a-f0-9]{64}\-(?i)[a-z0-9]{16})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "xkeysib-",
+]
+
+[[rules]]
+description = "Shippo API token"
+id = "shippo-api-token"
+regex = '''(?i)\b(shippo_(live|test)_[a-f0-9]{40})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "shippo_",
+]
+
+[[rules]]
+description = "Shopify access token"
+id = "shopify-access-token"
+regex = '''shpat_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpat_",
+]
+
+[[rules]]
+description = "Shopify custom access token"
+id = "shopify-custom-access-token"
+regex = '''shpca_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpca_",
+]
+
+[[rules]]
+description = "Shopify private app access token"
+id = "shopify-private-app-access-token"
+regex = '''shppa_[a-fA-F0-9]{32}'''
+keywords = [
+    "shppa_",
+]
+
+[[rules]]
+description = "Shopify shared secret"
+id = "shopify-shared-secret"
+regex = '''shpss_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpss_",
+]
+
+[[rules]]
+description = "Slack token"
+id = "slack-access-token"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
+keywords = [
+    "xoxb","xoxa","xoxp","xoxr","xoxs",
+]
+
+[[rules]]
+description = "Slack Webhook"
+id = "slack-web-hook"
+regex = '''https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}'''
+keywords = [
+    "hooks.slack.com",
+]
+
+[[rules]]
+description = "Stripe"
+id = "stripe-access-token"
+regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
+keywords = [
+    "sk_test","pk_test","sk_live","pk_live",
+]
+
+[[rules]]
+description = "Twilio API Key"
+id = "twilio-api-key"
+regex = '''SK[0-9a-fA-F]{32}'''
+keywords = [
+    "twilio",
+]
+
+[[rules]]
+description = "Twitch API token"
+id = "twitch-api-token"
+regex = '''(?i)(?:twitch)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "twitch",
+]
+
+[[rules]]
+description = "twitter"
+id = "twitter"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{35,44})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Typeform API token"
+id = "typeform-api-token"
+regex = '''(?i)(?:typeform)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(tfp_[a-z0-9\-_\.=]{59})['|\"|\n|\r|\s|\x60]'''
+secretGroup = 1
+keywords = [
+    "tfp_",
+]
+

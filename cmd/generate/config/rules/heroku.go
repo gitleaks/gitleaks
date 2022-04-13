@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func Heroku() *config.Rule {
@@ -20,16 +17,7 @@ func Heroku() *config.Rule {
 
 	// validate
 	tps := []string{
-		`const HEROKU_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,
+		`const HEROKU_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
-	config := config.Config{}
-	config.Rules = append(config.Rules, &r)
-	d := detect.NewDetector(config)
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate heroku-api-key")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }

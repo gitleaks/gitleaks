@@ -43,7 +43,7 @@ func SlackWebHook() *config.Rule {
 
 	// validate
 	tps := []string{
-		"https://hooks.slack.com/services/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"https://hooks.slack.com/services/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // gitleaks:allow
 	}
 	return validate(r, tps)
 }

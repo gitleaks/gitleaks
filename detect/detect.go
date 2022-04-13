@@ -118,8 +118,8 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
-// detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Finding {
+// DetectRule scans the given fragment for the given rule and returns a list of findings
+func (d *Detector) DetectRule(fragment Fragment, rule *config.Rule) []report.Finding {
 	var findings []report.Finding
 
 	// check if filepath or commit is allowed for this rule
@@ -374,10 +374,9 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
-
 	// check if filepath is allowed
-	if d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path {
+	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path) {
 		return findings
 	}
 
@@ -385,7 +384,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
 
 	for _, rule := range d.Config.Rules {
-		findings = append(findings, d.detectRule(fragment, rule)...)
+		findings = append(findings, d.DetectRule(fragment, rule)...)
 	}
 	return filter(findings, d.Redact)
 }

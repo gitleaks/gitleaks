@@ -51,7 +51,7 @@ func MessageBirdClientID() *config.Rule {
 
 	// validate
 	tps := []string{
-		`const MessageBirdClientID = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,
+		`const MessageBirdClientID = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
 	return validate(r, tps)
 }
