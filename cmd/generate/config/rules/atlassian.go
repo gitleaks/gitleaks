@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func Atlassian() *config.Rule {
@@ -21,13 +18,5 @@ func Atlassian() *config.Rule {
 	tps := []string{
 		"atlassian:= \"" + sampleAlphaNumeric24Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate atlassian-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

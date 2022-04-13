@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func AlibabaAccessKey() *config.Rule {
@@ -22,15 +19,7 @@ func AlibabaAccessKey() *config.Rule {
 	tps := []string{
 		"alibabaKey := \"LTAI" + sampleHex20Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate alibaba-access-key-id")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 // TODO
@@ -49,13 +38,5 @@ func AlibabaSecretKey() *config.Rule {
 	tps := []string{
 		"alibabaSecret Key:= \"" + sampleAlphaNumeric30Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate alibaba-secret-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

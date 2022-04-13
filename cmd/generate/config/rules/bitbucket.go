@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func BitBucketClientID() *config.Rule {
@@ -21,15 +18,7 @@ func BitBucketClientID() *config.Rule {
 	tps := []string{
 		"bitbucket := \"" + sampleAlphaNumeric32Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate bitbucket-client-id")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func BitBucketClientSecret() *config.Rule {
@@ -46,13 +35,5 @@ func BitBucketClientSecret() *config.Rule {
 	tps := []string{
 		"bitbucket := \"" + sampleExtendedAlphaNumeric64Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate bitbucket-client-secret")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

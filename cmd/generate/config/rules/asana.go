@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func AsanaClientID() *config.Rule {
@@ -21,15 +18,7 @@ func AsanaClientID() *config.Rule {
 	tps := []string{
 		"asanaKey := \"" + sampleNumeric16 + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate asana-client-id")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func AsanaClientSecret() *config.Rule {
@@ -45,13 +34,5 @@ func AsanaClientSecret() *config.Rule {
 	tps := []string{
 		"asanaKey := \"" + sampleAlphaNumeric32Token + "\"",
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate asana-client-secret")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

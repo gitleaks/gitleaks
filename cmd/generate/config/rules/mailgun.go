@@ -77,13 +77,5 @@ func MailGunSigningKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", sampleHex32Token+"-00001111-22223333"),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate mailgun-signing-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

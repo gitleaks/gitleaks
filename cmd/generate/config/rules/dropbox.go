@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func DropBoxAPISecret() *config.Rule {
@@ -21,15 +18,7 @@ func DropBoxAPISecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("dropbox", sampleAlphaNumeric15Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate dropbox-api-secret")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func DropBoxShortLivedAPIToken() *config.Rule {

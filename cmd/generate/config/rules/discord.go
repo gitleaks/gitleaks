@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func DiscordAPIToken() *config.Rule {
@@ -21,15 +18,7 @@ func DiscordAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("discord", sampleHex64Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate discord-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func DiscordClientID() *config.Rule {
@@ -46,15 +35,7 @@ func DiscordClientID() *config.Rule {
 	tps := []string{
 		generateSampleSecret("discord", sampleNumeric18),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate discord-client-id")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func DiscordClientSecret() *config.Rule {
@@ -71,13 +52,5 @@ func DiscordClientSecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("discord", sampleExtendedAlphaNumeric32Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate discord-client-secret")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

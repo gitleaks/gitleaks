@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func LobPubAPIToken() *config.Rule {
@@ -24,16 +21,7 @@ func LobPubAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("lob", "test_pub_"+sampleHex31Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate lob-pub-api-key")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }
 
 func LobAPIToken() *config.Rule {
@@ -52,14 +40,5 @@ func LobAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("lob", "test_"+sampleHex35Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate lob-api-key")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }

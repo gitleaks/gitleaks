@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func EasyPost() *config.Rule {
@@ -22,15 +19,7 @@ func EasyPost() *config.Rule {
 	tps := []string{
 		generateSampleSecret("EZAK", "EZAK"+sampleAlphaNumeric54Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate easypost-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func EasyPostTestAPI() *config.Rule {
@@ -46,13 +35,5 @@ func EasyPostTestAPI() *config.Rule {
 	tps := []string{
 		generateSampleSecret("EZTK", "EZTK"+sampleAlphaNumeric54Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate easypost-test-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

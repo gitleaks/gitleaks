@@ -46,13 +46,5 @@ func FinicityAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("finicity", sampleHex32Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate finicity-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

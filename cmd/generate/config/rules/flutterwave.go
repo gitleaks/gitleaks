@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func FlutterwavePublicKey() *config.Rule {
@@ -22,15 +19,7 @@ func FlutterwavePublicKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+sampleHex32Token+"-X"),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate flutterwave-public-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func FlutterwaveSecretKey() *config.Rule {
@@ -46,15 +35,7 @@ func FlutterwaveSecretKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+sampleHex32Token+"-X"),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate flutterwave-secret-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func FlutterwaveEncKey() *config.Rule {
@@ -70,13 +51,5 @@ func FlutterwaveEncKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+sampleHex12Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate flutterwave-enc-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

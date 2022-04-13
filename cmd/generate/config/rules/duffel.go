@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func Duffel() *config.Rule {
@@ -22,13 +19,5 @@ func Duffel() *config.Rule {
 	tps := []string{
 		generateSampleSecret("duffel", "duffel_test_"+sampleExtendedAlphaNumeric43Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate duffel-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

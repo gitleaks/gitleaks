@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func GitHubPat() *config.Rule {
@@ -20,16 +17,7 @@ func GitHubPat() *config.Rule {
 
 	// validate
 	tps := []string{"gihubPAT := \"ghp_" + sampleAlphaNumeric36Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate github-pat")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }
 
 func GitHubOauth() *config.Rule {
@@ -43,16 +31,7 @@ func GitHubOauth() *config.Rule {
 
 	// validate
 	tps := []string{"gihubAuth := \"gho_" + sampleAlphaNumeric36Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate github-oauth")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }
 
 func GitHubApp() *config.Rule {
@@ -66,16 +45,7 @@ func GitHubApp() *config.Rule {
 
 	// validate
 	tps := []string{"gihubAuth := \"ghs_" + sampleAlphaNumeric36Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate github-app-token")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }
 
 func GitHubRefresh() *config.Rule {
@@ -89,14 +59,5 @@ func GitHubRefresh() *config.Rule {
 
 	// validate
 	tps := []string{"gihubAuth := \"ghr_" + sampleAlphaNumeric36Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate github-refresh-token")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }
