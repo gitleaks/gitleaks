@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	templatePath = "rules/rule.tmpl"
+	templatePath = "rules/config.tmpl"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 	configRules = append(configRules, rules.FrameIO())
 	configRules = append(configRules, rules.GenericCredential())
 	configRules = append(configRules, rules.GoCardless())
-	// TODO fix gcp
+	// TODO figure out what makes sense for GCP
 	// configRules = append(configRules, rules.GCPServiceAccount())
 	configRules = append(configRules, rules.GitHubPat())
 	configRules = append(configRules, rules.GitHubOauth())
@@ -83,12 +83,10 @@ func main() {
 	configRules = append(configRules, rules.PlanetScalePassword())
 	configRules = append(configRules, rules.PlanetScaleToken())
 	configRules = append(configRules, rules.PostManAPI())
-	configRules = append(configRules, rules.PKCS8())
+	configRules = append(configRules, rules.PrivateKey())
 	configRules = append(configRules, rules.PulumiAPIToken())
 	configRules = append(configRules, rules.PyPiUploadToken())
-	configRules = append(configRules, rules.OpenSSH())
 	configRules = append(configRules, rules.RubyGemsAPIToken())
-	configRules = append(configRules, rules.RSA())
 	configRules = append(configRules, rules.SendGridAPIToken())
 	configRules = append(configRules, rules.SendInBlueAPIToken())
 	configRules = append(configRules, rules.ShippoAPIToken())
@@ -97,22 +95,22 @@ func main() {
 	configRules = append(configRules, rules.ShopifyPrivateAppAccessToken())
 	configRules = append(configRules, rules.ShopifySharedSecret())
 	configRules = append(configRules, rules.SlackAccessToken())
-	// TODO figure this one out
-	// configRules = append(configRules, rules.SlackWebHook())
+	configRules = append(configRules, rules.SlackWebHook())
 	configRules = append(configRules, rules.StripeAccessToken())
 	configRules = append(configRules, rules.Twilio())
 	configRules = append(configRules, rules.TwitchAPIToken())
 	configRules = append(configRules, rules.Twitter())
 	configRules = append(configRules, rules.Typeform())
 
-	config := config.Config{}
-	config.Rules = configRules
+	config := config.Config{
+		Rules: configRules,
+	}
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse template")
 	}
 
-	f, err := os.Create("rules.toml")
+	f, err := os.Create("gitleaks.toml")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}

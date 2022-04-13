@@ -571,9 +571,9 @@ keywords = [
 ]
 
 [[rules]]
-description = "PKCS8 private key"
-id = "PKCS8-PK"
-regex = '''-----BEGIN PRIVATE KEY-----'''
+description = "Private Key"
+id = "private-key"
+regex = '''(?i)-----\s*?BEGIN[ A-Z0-9_-]*?PRIVATE KEY\s*?-----[\s\S]*?----\s*?END[ A-Z0-9_-]*? PRIVATE KEY\s*?-----'''
 keywords = [
     "-----BEGIN PRIVATE",
 ]
@@ -596,28 +596,12 @@ keywords = [
 ]
 
 [[rules]]
-description = "SSH private key"
-id = "OPENSSH-PK"
-regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
-keywords = [
-    "-----BEGIN OPENSSH",
-]
-
-[[rules]]
 description = "Rubygem API token"
 id = "rubygems-api-token"
 regex = '''(?i)\b(rubygems_[a-f0-9]{48})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
     "rubygems_",
-]
-
-[[rules]]
-description = "RSA private key"
-id = "RSA-PK"
-regex = '''-----BEGIN RSA PRIVATE KEY-----'''
-keywords = [
-    "-----BEGIN RSA",
 ]
 
 [[rules]]

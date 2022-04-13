@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 // TODO this one could probably use some work
@@ -23,14 +20,5 @@ func GCPServiceAccount() *config.Rule {
 	tps := []string{
 		`"type": "service_account"`,
 	}
-	config := config.Config{}
-	config.Rules = append(config.Rules, &r)
-	d := detect.NewDetector(config)
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate service account")
-		}
-	}
-
-	return &r
+	return validate(r, tps)
 }

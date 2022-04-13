@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func SlackAccessToken() *config.Rule {
@@ -26,17 +23,10 @@ func SlackAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"\"slackToken\": \"xoxb-" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate slack-access-token")
-		}
+	tps := []string{
+		"\"slackToken\": \"xoxb-" + sampleHex32Token + "\"",
 	}
-
-	return &r
+	return validate(r, tps)
 }
 
 func SlackWebHook() *config.Rule {
@@ -45,20 +35,15 @@ func SlackWebHook() *config.Rule {
 		Description: "Slack Webhook",
 		RuleID:      "slack-web-hook",
 		Regex: regexp.MustCompile(
-			""),
-		Keywords: []string{},
+			`https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}`),
+		Keywords: []string{
+			"hooks.slack.com",
+		},
 	}
 
 	// validate
-	tps := []string{""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate slack-web-hook")
-		}
+	tps := []string{
+		"https://hooks.slack.com/services/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	}
-
-	return &r
+	return validate(r, tps)
 }
