@@ -14,9 +14,6 @@ const (
 	templatePath = "rules/rule.tmpl"
 )
 
-// TODO introduce skiplists:
-// https://github.com/danielmiessler/SecLists/blob/master/Miscellaneous/wordlist-skipfish.fuzz.txt
-
 func main() {
 	configRules := []*config.Rule{}
 	configRules = append(configRules, rules.AgeSecretKey())
@@ -86,15 +83,15 @@ func main() {
 	configRules = append(configRules, rules.PlanetScalePassword())
 	configRules = append(configRules, rules.PlanetScaleToken())
 	configRules = append(configRules, rules.PostManAPI())
+	configRules = append(configRules, rules.PKCS8())
 	configRules = append(configRules, rules.PulumiAPIToken())
+	configRules = append(configRules, rules.PyPiUploadToken())
+	configRules = append(configRules, rules.OpenSSH())
 	configRules = append(configRules, rules.RubyGemsAPIToken())
+	configRules = append(configRules, rules.RSA())
 	configRules = append(configRules, rules.SendGridAPIToken())
 	configRules = append(configRules, rules.SendInBlueAPIToken())
 	configRules = append(configRules, rules.ShippoAPIToken())
-	configRules = append(configRules, rules.OpenSSH())
-	configRules = append(configRules, rules.PKCS8())
-	configRules = append(configRules, rules.PyPiUploadToken())
-	configRules = append(configRules, rules.RSA())
 	configRules = append(configRules, rules.ShopifyAccessToken())
 	configRules = append(configRules, rules.ShopifyCustomAccessToken())
 	configRules = append(configRules, rules.ShopifyPrivateAppAccessToken())
@@ -122,3 +119,6 @@ func main() {
 	tmpl.Execute(f, config)
 
 }
+
+// TODO introduce skiplists:
+// https://github.com/danielmiessler/SecLists/blob/master/Miscellaneous/wordlist-skipfish.fuzz.txt

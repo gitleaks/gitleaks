@@ -30,13 +30,12 @@ func GenericCredential() *config.Rule {
 			"password",
 			"auth",
 		},
+		Entropy: 3.7,
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("typeform", "tfp_"+sampleExtendedAlphaNumeric59Token),
-		generateSampleSecret("finicity", sampleHex32Token),
-		generateSampleSecret("fastly", sampleExtendedAlphaNumeric32Token),
+		generateSampleSecret("generic", "8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ"),
 	}
 	return validate(r, tps)
 }
