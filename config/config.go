@@ -43,10 +43,14 @@ type Config struct {
 	Description string
 	Rules       []*Rule
 	Allowlist   Allowlist
+	Keywords    []string
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
-	var rules []*Rule
+	var (
+		rules    []*Rule
+		keywords []string
+	)
 	for _, r := range vc.Rules {
 		var allowlistRegexes []*regexp.Regexp
 		for _, a := range r.Allowlist.Regexes {
@@ -59,6 +63,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 		if r.Keywords == nil {
 			r.Keywords = []string{}
+		} else {
+			keywords = append(keywords, r.Keywords...)
 		}
 
 		if r.Tags == nil {
@@ -96,7 +102,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
 		}
 		rules = append(rules, r)
-
 	}
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {
@@ -114,5 +119,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Paths:   allowlistPaths,
 			Commits: vc.Allowlist.Commits,
 		},
+		Keywords: keywords,
 	}, nil
 }
