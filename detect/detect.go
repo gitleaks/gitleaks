@@ -16,6 +16,7 @@ import (
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/h2non/filetype"
+	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -59,6 +60,10 @@ type Detector struct {
 	// of the detector's scan which can then be used to generate a
 	// report.
 	findings []report.Finding
+
+	// prefilter is a ahocorasick struct used for doing efficient string
+	// matching given a set of words (keywords from the rules in the config)
+	prefilter ahocorasick.AhoCorasick
 }
 
 // Fragment contains the data to be scanned
@@ -75,15 +80,27 @@ type Fragment struct {
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
+
+	// keywords is a map of all the keywords contain within the contents
+	// of this fragment
+	keywords map[string]bool
 }
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
+	builder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{
+		AsciiCaseInsensitive: true,
+		MatchOnlyWholeWords:  false,
+		MatchKind:            ahocorasick.LeftMostLongestMatch,
+		DFA:                  true,
+	})
+
 	return &Detector{
 		commitMap:    make(map[string]bool),
 		findingMutex: &sync.Mutex{},
 		findings:     make([]report.Finding, 0),
 		Config:       cfg,
+		prefilter:    builder.Build(cfg.Keywords),
 	}
 }
 
@@ -154,18 +171,6 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 		return findings
 	}
 
-	containsKeyword := false
-	for _, k := range rule.Keywords {
-		if strings.Contains(strings.ToLower(fragment.Raw),
-			strings.ToLower(k)) {
-			containsKeyword = true
-			break
-		}
-	}
-	if !containsKeyword && len(rule.Keywords) != 0 {
-		return findings
-	}
-
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
@@ -194,13 +199,13 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			gitleaksAllowSignature) {
 			continue
 		}
-		
+
 		// check if the secret is in the allowlist
 		if rule.Allowlist.RegexAllowed(finding.Secret) ||
 			d.Config.Allowlist.RegexAllowed(finding.Secret) {
 			continue
 		}
-		
+
 		// extract secret from secret group if set
 		if rule.SecretGroup != 0 {
 			groups := rule.Regex.FindStringSubmatch(secret)
@@ -374,6 +379,10 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
+
+	// initiate fragment keywords
+	fragment.keywords = make(map[string]bool)
+
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
 		fragment.FilePath == d.Config.Path) {
@@ -383,8 +392,29 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	// add newline indices for location calculation in detectRule
 	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
 
+	// build keyword map for prefiltering rules
+	matches := d.prefilter.FindAll(strings.ToLower(fragment.Raw))
+	for _, m := range matches {
+		fragment.keywords[strings.ToLower(fragment.Raw[m.Start():m.End()])] = true
+	}
+
 	for _, rule := range d.Config.Rules {
-		findings = append(findings, d.detectRule(fragment, rule)...)
+		if len(rule.Keywords) == 0 {
+			// if not keywords are associated with the rule always scan the
+			// fragment using the rule
+			findings = append(findings, d.detectRule(fragment, rule)...)
+			continue
+		}
+		fragmentContainsKeyword := false
+		// check if keywords are in the fragment
+		for _, k := range rule.Keywords {
+			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
+				fragmentContainsKeyword = true
+			}
+		}
+		if fragmentContainsKeyword {
+			findings = append(findings, d.detectRule(fragment, rule)...)
+		}
 	}
 	return filter(findings, d.Redact)
 }
