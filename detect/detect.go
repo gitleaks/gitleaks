@@ -270,7 +270,7 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 		}
 	}
 
-	s := semgroup.NewGroup(context.Background(), 50000)
+	s := semgroup.NewGroup(context.Background(), 4)
 
 	for gitdiffFile := range gitdiffFiles {
 		gitdiffFile := gitdiffFile
