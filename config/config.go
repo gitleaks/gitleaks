@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 //go:embed gitleaks.toml
@@ -64,7 +65,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if r.Keywords == nil {
 			r.Keywords = []string{}
 		} else {
-			keywords = append(keywords, r.Keywords...)
+			for _, k := range r.Keywords {
+				keywords = append(keywords, strings.ToLower(k))
+			}
 		}
 
 		if r.Tags == nil {
