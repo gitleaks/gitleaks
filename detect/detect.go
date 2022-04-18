@@ -393,9 +393,10 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
 
 	// build keyword map for prefiltering rules
-	matches := d.prefilter.FindAll(strings.ToLower(fragment.Raw))
+	normalizedRaw := strings.ToLower(fragment.Raw)
+	matches := d.prefilter.FindAll(normalizedRaw)
 	for _, m := range matches {
-		fragment.keywords[strings.ToLower(fragment.Raw[m.Start():m.End()])] = true
+		fragment.keywords[normalizedRaw[m.Start():m.End()]] = true
 	}
 
 	for _, rule := range d.Config.Rules {
