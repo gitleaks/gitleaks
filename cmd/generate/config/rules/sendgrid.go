@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func SendGridAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("sengridAPIToken", "SG."+sampleExtendedAlphaNumeric66Token),
+		generateSampleSecret("sengridAPIToken", "SG."+secrets.NewSecret(alphaNumericExtended("66"))),
 	}
 	return validate(r, tps)
 }

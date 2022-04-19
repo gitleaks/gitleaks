@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func GoCardless() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("gocardless", "live_"+sampleExtendedAlphaNumeric40Token),
+		generateSampleSecret("gocardless", "live_"+secrets.NewSecret(alphaNumericExtended("40"))),
 	}
 	return validate(r, tps)
 }

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func MailGunPrivateAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", "key-"+sampleHex32Token),
+		generateSampleSecret("mailgun", "key-"+secrets.NewSecret(hex("32"))),
 	}
 	return validate(r, tps)
 }
@@ -37,7 +38,7 @@ func MailGunPubAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", "pubkey-"+sampleHex32Token),
+		generateSampleSecret("mailgun", "pubkey-"+secrets.NewSecret(hex("32"))),
 	}
 	return validate(r, tps)
 }
@@ -56,7 +57,7 @@ func MailGunSigningKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", sampleHex32Token+"-00001111-22223333"),
+		generateSampleSecret("mailgun", secrets.NewSecret(hex("32"))+"-00001111-22223333"),
 	}
 	return validate(r, tps)
 }

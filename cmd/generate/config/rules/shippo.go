@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,8 +19,8 @@ func ShippoAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("shippo", "shippo_live_"+sampleHex40Token),
-		generateSampleSecret("shippo", "shippo_test_"+sampleHex40Token),
+		generateSampleSecret("shippo", "shippo_live_"+secrets.NewSecret(hex("40"))),
+		generateSampleSecret("shippo", "shippo_test_"+secrets.NewSecret(hex("40"))),
 	}
 	return validate(r, tps)
 }

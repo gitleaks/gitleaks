@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -21,6 +22,6 @@ func StripeAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"stripeToken := \"sk_test_" + sampleHex32Token + "\""}
+	tps := []string{"stripeToken := \"sk_test_" + secrets.NewSecret(alphaNumeric("30")) + "\""}
 	return validate(r, tps)
 }

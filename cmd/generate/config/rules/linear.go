@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func LinearAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linear", "lin_api_"+sampleAlphaNumeric40Token),
+		generateSampleSecret("linear", "lin_api_"+secrets.NewSecret(alphaNumeric("40"))),
 	}
 	return validate(r, tps)
 }
@@ -33,7 +34,7 @@ func LinearClientSecret() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linear", sampleHex32Token),
+		generateSampleSecret("linear", secrets.NewSecret(hex("32"))),
 	}
 	return validate(r, tps)
 }

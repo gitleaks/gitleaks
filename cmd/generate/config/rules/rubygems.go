@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func RubyGemsAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("rubygemsAPIToken", "rubygems_"+sampleHex48Token),
+		generateSampleSecret("rubygemsAPIToken", "rubygems_"+secrets.NewSecret(hex("48"))),
 	}
 	return validate(r, tps)
 }

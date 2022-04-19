@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -22,7 +23,7 @@ func NewRelicUserID() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("new-relic", "NRAK-"+sampleAlphaNumeric27Token),
+		generateSampleSecret("new-relic", "NRAK-"+secrets.NewSecret(alphaNumeric("27"))),
 	}
 	return validate(r, tps)
 }
@@ -36,7 +37,7 @@ func NewRelicUserKey() *config.Rule {
 			"new-relic",
 			"newrelic",
 			"new_relic",
-		}, alphaNumeric64),
+		}, alphaNumeric("64")),
 		SecretGroup: 1,
 		Keywords: []string{
 			"new-relic",
@@ -47,7 +48,7 @@ func NewRelicUserKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("new-relic", sampleAlphaNumeric64Token),
+		generateSampleSecret("new-relic", secrets.NewSecret(alphaNumeric("64"))),
 	}
 	return validate(r, tps)
 }
@@ -70,7 +71,7 @@ func NewRelicBrowserAPIKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("new-relic", "NRJS-"+sampleHex19Token),
+		generateSampleSecret("new-relic", "NRJS-"+secrets.NewSecret(hex("19"))),
 	}
 	return validate(r, tps)
 }

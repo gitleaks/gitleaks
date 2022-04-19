@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -19,7 +20,7 @@ func PyPiUploadToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"pypiToken := \"pypi-AgEIcHlwaS5vcmc" + sampleHex32Token +
-		sampleHex32Token + "\""}
+	tps := []string{"pypiToken := \"pypi-AgEIcHlwaS5vcmc" + secrets.NewSecret(hex("32")) +
+		secrets.NewSecret(hex("32")) + "\""}
 	return validate(r, tps)
 }

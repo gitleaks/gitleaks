@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -24,7 +25,7 @@ func SlackAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		"\"slackToken\": \"xoxb-" + sampleHex32Token + "\"",
+		"\"slackToken\": \"xoxb-" + secrets.NewSecret(alphaNumeric("30")) + "\"",
 	}
 	return validate(r, tps)
 }

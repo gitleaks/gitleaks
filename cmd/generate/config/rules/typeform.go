@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -19,7 +20,7 @@ func Typeform() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("typeformAPIToken", "tfp_"+sampleExtendedAlphaNumeric59Token),
+		generateSampleSecret("typeformAPIToken", "tfp_"+secrets.NewSecret(alphaNumericExtended("59"))),
 	}
 	return validate(r, tps)
 }

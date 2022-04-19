@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -16,8 +17,8 @@ func Twitter() *config.Rule {
 
 	// validate
 	tps := []string{
-		"twitterToken := \"" + sampleHex32Token + "aaaa\"",
-		"twitterToken := `" + sampleHex32Token + "aaaa`",
+		"twitterToken := \"" + secrets.NewSecret(hex("36")) + "aaaa\"",
+		"twitterToken := `" + secrets.NewSecret(hex("36")) + "aaaa`",
 	}
 	return validate(r, tps)
 }

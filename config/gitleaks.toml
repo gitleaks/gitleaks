@@ -1,3 +1,7 @@
+# This is the default gitleaks configuration file.
+# Rules and allowlists are defined within this file.
+# Rules instruct gitleaks on what should be considered a secret.
+# Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
 title = "gitleaks config"
 
 [allowlist]
@@ -14,14 +18,6 @@ paths = [
 ]
 
 [[rules]]
-description = "Age secret key"
-id = "age secret key"
-regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
-keywords = [
-    "AGE-SECRET-KEY-1",
-]
-
-[[rules]]
 description = "Adobe Client ID (Oauth Web)"
 id = "adobe-client-id"
 regex = '''(?i)(?:adobe)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})['|\"|\n|\r|\s|\x60]'''
@@ -33,17 +29,25 @@ keywords = [
 [[rules]]
 description = "Adobe Client Secret"
 id = "adobe-client-secret"
-regex = '''(p8e-)(?i)[a-z0-9]{32}'''
+regex = '''(?i)\b((p8e-)(?i)[a-z0-9]{32})['|\"|\n|\r|\s|\x60]'''
 keywords = [
     "p8e-",
 ]
 
 [[rules]]
+description = "Age secret key"
+id = "age secret key"
+regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
+keywords = [
+    "age-secret-key-1",
+]
+
+[[rules]]
 description = "Alibaba AccessKey ID"
 id = "alibaba-access-key-id"
-regex = '''(LTAI)(?i)[a-z0-9]{20}'''
+regex = '''(?i)\b((LTAI)(?i)[a-z0-9]{20})['|\"|\n|\r|\s|\x60]'''
 keywords = [
-    "LTAI",
+    "ltai",
 ]
 
 [[rules]]
@@ -75,10 +79,10 @@ keywords = [
 [[rules]]
 description = "Atlassian API token"
 id = "atlassian-api-token"
-regex = '''(?i)(?:atlassian)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})['|\"|\n|\r|\s|\x60]'''
+regex = '''(?i)(?:atlassian|confluence)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
-    "atlassian",
+    "atlassian","confluence",
 ]
 
 [[rules]]
@@ -86,7 +90,7 @@ description = "AWS"
 id = "aws-access-token"
 regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 keywords = [
-    "AKIA","AGPA","AIDA","AROA","AIPA","ANPA","ANVA","ASIA",
+    "akia","agpa","aida","aroa","aipa","anpa","anva","asia",
 ]
 
 [[rules]]
@@ -101,7 +105,7 @@ keywords = [
 [[rules]]
 description = "BitBucket Client Secret"
 id = "bitbucket-client-secret"
-regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_\-]{64})['|\"|\n|\r|\s|\x60]'''
+regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{64})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
     "bitbucket",
@@ -119,7 +123,7 @@ keywords = [
 [[rules]]
 description = "Clojars API token"
 id = "clojars-api-token"
-regex = '''(CLOJARS_)(?i)[a-z0-9]{60}'''
+regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
 keywords = [
     "clojars",
 ]
@@ -127,7 +131,7 @@ keywords = [
 [[rules]]
 description = "Contentful delivery API token"
 id = "contentful-delivery-api-token"
-regex = '''(?i)(?:contentful)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9\-=_]{43})['|\"|\n|\r|\s|\x60]'''
+regex = '''(?i)(?:contentful)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{43})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
     "contentful",
@@ -136,7 +140,7 @@ keywords = [
 [[rules]]
 description = "Databricks API token"
 id = "databricks-api-token"
-regex = '''dapi[a-h0-9]{32}'''
+regex = '''(?i)\b(dapi[a-h0-9]{32})['|\"|\n|\r|\s|\x60]'''
 keywords = [
     "dapi",
 ]
@@ -222,7 +226,7 @@ description = "EasyPost API token"
 id = "easypost-api-token"
 regex = '''EZAK(?i)[a-z0-9]{54}'''
 keywords = [
-    "EZAK",
+    "ezak",
 ]
 
 [[rules]]
@@ -230,7 +234,7 @@ description = "EasyPost test API token"
 id = "easypost-test-api-token"
 regex = '''EZTK(?i)[a-z0-9]{54}'''
 keywords = [
-    "EZTK",
+    "eztk",
 ]
 
 [[rules]]
@@ -274,7 +278,7 @@ description = "Finicity Public Key"
 id = "flutterwave-public-key"
 regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
-    "FLWPUBK_TEST",
+    "flwpubk_test",
 ]
 
 [[rules]]
@@ -282,7 +286,7 @@ description = "Finicity Secret Key"
 id = "flutterwave-public-key"
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
-    "FLWSECK_TEST",
+    "flwseck_test",
 ]
 
 [[rules]]
@@ -290,7 +294,7 @@ description = "Finicity Secret Key"
 id = "flutterwave-public-key"
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
-    "FLWSECK_TEST",
+    "flwseck_test",
 ]
 
 [[rules]]
@@ -388,7 +392,7 @@ keywords = [
 [[rules]]
 description = "Intercom API Token"
 id = "intercom-api-key"
-regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_\-]{60})['|\"|\n|\r|\s|\x60]'''
+regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{60})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
     "intercom",
@@ -513,7 +517,7 @@ id = "new-relic-user-api-key"
 regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRAK-[a-z0-9]{27})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
-    "NRAK",
+    "nrak",
 ]
 
 [[rules]]
@@ -531,7 +535,7 @@ id = "new-relic-browser-api-token"
 regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRJS-[a-f0-9]{19})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
-    "NRJS-",
+    "nrjs-",
 ]
 
 [[rules]]
@@ -567,15 +571,15 @@ id = "postman-api-token"
 regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
-    "PMAK-",
+    "pmak-",
 ]
 
 [[rules]]
 description = "Private Key"
 id = "private-key"
-regex = '''(?i)-----\s*?BEGIN[ A-Z0-9_-]*?PRIVATE KEY\s*?-----[\s\S]*?----\s*?END[ A-Z0-9_-]*? PRIVATE KEY\s*?-----'''
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
 keywords = [
-    "-----BEGIN PRIVATE",
+    "-----begin private",
 ]
 
 [[rules]]
@@ -592,7 +596,7 @@ description = "PyPI upload token"
 id = "pypi-upload-token"
 regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''
 keywords = [
-    "pypi-AgEIcHlwaS5vcmc",
+    "pypi-ageichlwas5vcmc",
 ]
 
 [[rules]]
@@ -610,7 +614,7 @@ id = "sendgrid-api-token"
 regex = '''(?i)\b(SG\.(?i)[a-z0-9=_\-\.]{66})['|\"|\n|\r|\s|\x60]'''
 secretGroup = 1
 keywords = [
-    "SG.",
+    "sg.",
 ]
 
 [[rules]]

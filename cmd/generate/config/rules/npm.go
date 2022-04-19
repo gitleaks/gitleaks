@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func NPM() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("npmAccessToken", "npm_"+sampleAlphaNumeric36Token),
+		generateSampleSecret("npmAccessToken", "npm_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
 	return validate(r, tps)
 }

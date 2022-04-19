@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -19,7 +20,7 @@ func LobPubAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("lob", "test_pub_"+sampleHex31Token),
+		generateSampleSecret("lob", "test_pub_"+secrets.NewSecret(hex("31"))),
 	}
 	return validate(r, tps)
 }
@@ -38,7 +39,7 @@ func LobAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("lob", "test_"+sampleHex35Token),
+		generateSampleSecret("lob", "test_"+secrets.NewSecret(hex("35"))),
 	}
 	return validate(r, tps)
 }
