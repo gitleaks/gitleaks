@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func Beamer() *config.Rule {
 
 	// validate
 	tps := []string{
-		"beamer := \"b_" + sampleAlphaNumeric32Token + "-_=_xxxxxxxx\"",
+		generateSampleSecret("beamer", "b_"+secrets.NewSecret(alphaNumericExtended("44"))),
 	}
 	return validate(r, tps)
 }

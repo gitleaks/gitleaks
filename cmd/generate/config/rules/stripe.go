@@ -3,10 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func StripeAccessToken() *config.Rule {
@@ -25,13 +22,5 @@ func StripeAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"stripeToken := \"sk_test_" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate stripe-access-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }

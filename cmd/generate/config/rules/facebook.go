@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -9,13 +10,14 @@ func Facebook() *config.Rule {
 	r := config.Rule{
 		Description: "facebook",
 		RuleID:      "facebook",
-		Regex: generateSemiGenericRegex([]string{"facebook"},
-			hex32),
+		Regex:       generateSemiGenericRegex([]string{"facebook"}, hex("32")),
 		SecretGroup: 1,
 		Keywords:    []string{"facebook"},
 	}
 
 	// validate
-	tps := []string{"facebookToken := \"" + sampleHex32Token + "\""}
+	tps := []string{
+		generateSampleSecret("facebook", secrets.NewSecret(hex("32"))),
+	}
 	return validate(r, tps)
 }

@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func Duffel() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("duffel", "duffel_test_"+sampleExtendedAlphaNumeric43Token),
+		generateSampleSecret("duffel", "duffel_test_"+secrets.NewSecret(alphaNumericExtended("43"))),
 	}
 	return validate(r, tps)
 }

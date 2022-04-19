@@ -1,10 +1,7 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func MailGunPrivateAPIToken() *config.Rule {
@@ -23,15 +20,7 @@ func MailGunPrivateAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", "key-"+sampleHex32Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate mailgun-private-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func MailGunPubAPIToken() *config.Rule {
@@ -50,15 +39,7 @@ func MailGunPubAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", "pubkey-"+sampleHex32Token),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate mailgun-pub-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func MailGunSigningKey() *config.Rule {

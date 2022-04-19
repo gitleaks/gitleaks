@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func EasyPost() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("EZAK", "EZAK"+sampleAlphaNumeric54Token),
+		generateSampleSecret("EZAK", "EZAK"+secrets.NewSecret(alphaNumeric("54"))),
 	}
 	return validate(r, tps)
 }
@@ -33,7 +34,7 @@ func EasyPostTestAPI() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("EZTK", "EZTK"+sampleAlphaNumeric54Token),
+		generateSampleSecret("EZTK", "EZTK"+secrets.NewSecret(alphaNumeric("54"))),
 	}
 	return validate(r, tps)
 }

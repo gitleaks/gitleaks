@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func FlutterwavePublicKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+sampleHex32Token+"-X"),
+		generateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
 	return validate(r, tps)
 }
@@ -33,7 +34,7 @@ func FlutterwaveSecretKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+sampleHex32Token+"-X"),
+		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
 	return validate(r, tps)
 }
@@ -49,7 +50,7 @@ func FlutterwaveEncKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+sampleHex12Token),
+		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("12"))),
 	}
 	return validate(r, tps)
 }
