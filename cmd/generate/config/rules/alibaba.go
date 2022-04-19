@@ -1,8 +1,7 @@
 package rules
 
 import (
-	"regexp"
-
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -11,13 +10,13 @@ func AlibabaAccessKey() *config.Rule {
 	r := config.Rule{
 		Description: "Alibaba AccessKey ID",
 		RuleID:      "alibaba-access-key-id",
-		Regex:       regexp.MustCompile(`(LTAI)(?i)[a-z0-9]{20}`),
+		Regex:       generateUniqueTokenRegex(`(LTAI)(?i)[a-z0-9]{20}`),
 		Keywords:    []string{"LTAI"},
 	}
 
 	// validate
 	tps := []string{
-		"alibabaKey := \"LTAI" + sampleHex20Token + "\"",
+		"alibabaKey := \"LTAI" + secrets.NewSecret(hex("20")) + "\"",
 	}
 	return validate(r, tps)
 }
@@ -29,14 +28,14 @@ func AlibabaSecretKey() *config.Rule {
 		Description: "Alibaba Secret Key",
 		RuleID:      "alibaba-secret-key",
 		Regex: generateSemiGenericRegex([]string{"alibaba"},
-			alphaNumeric30),
+			alphaNumeric("30")),
 		SecretGroup: 1,
 		Keywords:    []string{"alibaba"},
 	}
 
 	// validate
 	tps := []string{
-		"alibabaSecret Key:= \"" + sampleAlphaNumeric30Token + "\"",
+		generateSampleSecret("alibaba", secrets.NewSecret(alphaNumeric("30"))),
 	}
 	return validate(r, tps)
 }

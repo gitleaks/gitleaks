@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -9,14 +10,15 @@ func Atlassian() *config.Rule {
 	r := config.Rule{
 		Description: "Atlassian API token",
 		RuleID:      "atlassian-api-token",
-		Regex:       generateSemiGenericRegex([]string{"atlassian"}, alphaNumeric24),
+		Regex:       generateSemiGenericRegex([]string{"atlassian", "confluence"}, alphaNumeric("24")),
 		SecretGroup: 1,
-		Keywords:    []string{"atlassian"},
+		Keywords:    []string{"atlassian", "confluence"},
 	}
 
 	// validate
 	tps := []string{
-		"atlassian:= \"" + sampleAlphaNumeric24Token + "\"",
+		generateSampleSecret("atlassian", secrets.NewSecret(alphaNumeric("24"))),
+		generateSampleSecret("confluence", secrets.NewSecret(alphaNumeric("24"))),
 	}
 	return validate(r, tps)
 }

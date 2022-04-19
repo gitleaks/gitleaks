@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -16,7 +17,7 @@ func MapBox() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mapbox", "pk."+sampleAlphaNumeric60Token+"."+sampleAlphaNumeric22Token),
+		generateSampleSecret("mapbox", "pk."+secrets.NewSecret(alphaNumeric("60"))+"."+secrets.NewSecret(alphaNumeric("22"))),
 	}
 	return validate(r, tps)
 }

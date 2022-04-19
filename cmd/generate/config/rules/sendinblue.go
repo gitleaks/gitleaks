@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func SendInBlueAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("sendinblue", "xkeysib-"+sampleHex64Token+"-"+sampleHex16Token),
+		generateSampleSecret("sendinblue", "xkeysib-"+secrets.NewSecret(hex("64"))+"-"+secrets.NewSecret(alphaNumeric("16"))),
 	}
 	return validate(r, tps)
 }

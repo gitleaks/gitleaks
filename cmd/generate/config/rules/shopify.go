@@ -3,10 +3,8 @@ package rules
 import (
 	"regexp"
 
-	"github.com/rs/zerolog/log"
-
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func ShopifySharedSecret() *config.Rule {
@@ -19,16 +17,8 @@ func ShopifySharedSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifySecret := \"shpss_" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate shopify-shared-secret")
-		}
-	}
-	return &r
+	tps := []string{"shopifySecret := \"shpss_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps)
 }
 
 func ShopifyAccessToken() *config.Rule {
@@ -41,16 +31,8 @@ func ShopifyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shpat_" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate shopify-access-token")
-		}
-	}
-	return &r
+	tps := []string{"shopifyToken := \"shpat_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps)
 }
 
 func ShopifyCustomAccessToken() *config.Rule {
@@ -63,16 +45,8 @@ func ShopifyCustomAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shpca_" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate shopify-custom-access-token")
-		}
-	}
-	return &r
+	tps := []string{"shopifyToken := \"shpca_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps)
 }
 
 func ShopifyPrivateAppAccessToken() *config.Rule {
@@ -85,14 +59,6 @@ func ShopifyPrivateAppAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shppa_" + sampleHex32Token + "\""}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate shopify-private-app-access-token")
-		}
-	}
-	return &r
+	tps := []string{"shopifyToken := \"shppa_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps)
 }

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func MailChimp() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailchimp", sampleHex32Token+"-us20"),
+		generateSampleSecret("mailchimp", secrets.NewSecret(hex("32"))+"-us20"),
 	}
 	return validate(r, tps)
 }

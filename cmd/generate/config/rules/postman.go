@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -18,7 +19,7 @@ func PostManAPI() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("postmanAPItoken", "PMAK-"+sampleHex24Token+"-"+sampleHex34Token),
+		generateSampleSecret("postmanAPItoken", "PMAK-"+secrets.NewSecret(hex("24"))+"-"+secrets.NewSecret(hex("34"))),
 	}
 	return validate(r, tps)
 }

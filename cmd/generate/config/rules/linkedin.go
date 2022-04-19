@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -12,7 +13,7 @@ func LinkedinClientSecret() *config.Rule {
 		Regex: generateSemiGenericRegex([]string{
 			"linkedin",
 			"linked-in",
-		}, alphaNumeric16),
+		}, alphaNumeric("16")),
 		SecretGroup: 1,
 		Keywords: []string{
 			"linkedin",
@@ -22,7 +23,7 @@ func LinkedinClientSecret() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linkedin", sampleAlphaNumeric16Token),
+		generateSampleSecret("linkedin", secrets.NewSecret(alphaNumeric("16"))),
 	}
 	return validate(r, tps)
 }
@@ -35,7 +36,7 @@ func LinkedinClientID() *config.Rule {
 		Regex: generateSemiGenericRegex([]string{
 			"linkedin",
 			"linked-in",
-		}, alphaNumeric14),
+		}, alphaNumeric("14")),
 		SecretGroup: 1,
 		Keywords: []string{
 			"linkedin",
@@ -45,7 +46,7 @@ func LinkedinClientID() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linkedin", sampleAlphaNumeric14Token),
+		generateSampleSecret("linkedin", secrets.NewSecret(alphaNumeric("14"))),
 	}
 	return validate(r, tps)
 }

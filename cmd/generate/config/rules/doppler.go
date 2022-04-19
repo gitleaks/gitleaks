@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func Doppler() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("doppler", "dp.pt."+sampleAlphaNumeric43Token),
+		generateSampleSecret("doppler", "dp.pt."+secrets.NewSecret(alphaNumeric("43"))),
 	}
 	return validate(r, tps)
 }

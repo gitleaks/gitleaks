@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -9,7 +10,7 @@ func TwitchAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "twitch-api-token",
 		Description: "Twitch API token",
-		Regex:       generateSemiGenericRegex([]string{"twitch"}, alphaNumeric30),
+		Regex:       generateSemiGenericRegex([]string{"twitch"}, alphaNumeric("30")),
 		SecretGroup: 1,
 		Keywords: []string{
 			"twitch",
@@ -18,7 +19,7 @@ func TwitchAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("twitch", sampleAlphaNumeric30Token),
+		generateSampleSecret("twitch", secrets.NewSecret(alphaNumeric("30"))),
 	}
 	return validate(r, tps)
 }

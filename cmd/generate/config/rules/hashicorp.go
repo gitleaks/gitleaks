@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,7 +18,7 @@ func Hashicorp() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("hashicorpToken", sampleHex14Token+".atlasv1."+sampleExtendedAlphaNumeric64Token),
+		generateSampleSecret("hashicorpToken", secrets.NewSecret(hex("14"))+".atlasv1."+secrets.NewSecret(alphaNumericExtended("60,70"))),
 	}
 	return validate(r, tps)
 }

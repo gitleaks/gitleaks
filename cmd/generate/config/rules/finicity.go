@@ -1,10 +1,8 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func FinicityClientSecret() *config.Rule {
@@ -12,24 +10,16 @@ func FinicityClientSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Finicity Client Secret",
 		RuleID:      "finicity-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"finicity"}, alphaNumeric20),
+		Regex:       generateSemiGenericRegex([]string{"finicity"}, alphaNumeric("20")),
 		SecretGroup: 1,
 		Keywords:    []string{"finicity"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("finicity", sampleAlphaNumeric20Token),
+		generateSampleSecret("finicity", secrets.NewSecret(alphaNumeric("20"))),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate finicity-client-secret")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func FinicityAPIToken() *config.Rule {
@@ -37,14 +27,14 @@ func FinicityAPIToken() *config.Rule {
 	r := config.Rule{
 		Description: "Finicity API token",
 		RuleID:      "finicity-api-token",
-		Regex:       generateSemiGenericRegex([]string{"finicity"}, hex32),
+		Regex:       generateSemiGenericRegex([]string{"finicity"}, hex("32")),
 		SecretGroup: 1,
 		Keywords:    []string{"finicity"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("finicity", sampleHex32Token),
+		generateSampleSecret("finicity", secrets.NewSecret(hex("32"))),
 	}
 	return validate(r, tps)
 }

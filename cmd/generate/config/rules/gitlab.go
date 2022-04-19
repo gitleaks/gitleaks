@@ -3,6 +3,7 @@ package rules
 import (
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -16,6 +17,8 @@ func Gitlab() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"gitlabPAT := \"glpat-" + sampleAlphaNumeric20Token + "\""}
+	tps := []string{
+		generateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(alphaNumeric("20"))),
+	}
 	return validate(r, tps)
 }

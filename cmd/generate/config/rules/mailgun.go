@@ -1,10 +1,8 @@
 package rules
 
 import (
-	"github.com/rs/zerolog/log"
-
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
 )
 
 func MailGunPrivateAPIToken() *config.Rule {
@@ -21,17 +19,9 @@ func MailGunPrivateAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", "key-"+sampleHex32Token),
+		generateSampleSecret("mailgun", "key-"+secrets.NewSecret(hex("32"))),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate mailgun-private-api-token")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func MailGunPubAPIToken() *config.Rule {
@@ -48,17 +38,9 @@ func MailGunPubAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", "pubkey-"+sampleHex32Token),
+		generateSampleSecret("mailgun", "pubkey-"+secrets.NewSecret(hex("32"))),
 	}
-	d := detect.NewDetector(config.Config{
-		Rules: []*config.Rule{&r},
-	})
-	for _, tp := range tps {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msg("Failed to validate mailgun-pub-key")
-		}
-	}
-	return &r
+	return validate(r, tps)
 }
 
 func MailGunSigningKey() *config.Rule {
@@ -75,7 +57,7 @@ func MailGunSigningKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("mailgun", sampleHex32Token+"-00001111-22223333"),
+		generateSampleSecret("mailgun", secrets.NewSecret(hex("32"))+"-00001111-22223333"),
 	}
 	return validate(r, tps)
 }
