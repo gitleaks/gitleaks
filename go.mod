@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/fatih/semgroup v1.2.0
-	github.com/gitleaks/go-gitdiff v0.7.4
+	github.com/gitleaks/go-gitdiff v0.7.6
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
@@ -14,14 +14,14 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/h2non/filetype v1.1.3 // indirect
+	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
-	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9 // indirect
+	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
