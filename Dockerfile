@@ -17,6 +17,8 @@ USER gitleaks
 # 11:09PM ERR     git config --global --add safe.directory /path
 # This means that when you run gitleaks from docker you must mount to /path
 # in order to avoid this error.
-RUN git config --global --add safe.directory /path
+
+# TODO waiting to push this until I've thought a bit more about it
+# RUN git config --global --add safe.directory /path
 
 ENTRYPOINT ["gitleaks"]
