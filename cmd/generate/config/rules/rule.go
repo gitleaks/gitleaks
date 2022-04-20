@@ -16,7 +16,7 @@ const (
 
 	// identifier prefix (just an ignore group)
 	identifierPrefix = `(?:`
-	identifierSuffix = `)(?:[0-9a-z\-_\s.]{0,20})(?:'|"){0,1}`
+	identifierSuffix = `)(?:[0-9a-z\-_\s.]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
 	operator = `(?:=|>|:=|\|\|:|<=|=>|:)`
@@ -25,7 +25,7 @@ const (
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)['|\"|\n|\r|\s|\x60]`
+	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60]|$)`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
