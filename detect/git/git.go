@@ -32,7 +32,10 @@ func GitLog(source string, logOpts LogOpts, errChan chan error) (<-chan *gitdiff
 			"--full-history", "--all")
 	}
 	if logOpts.DisableSafeDir {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("GIT_DIR=%s", filepath.Join(source, ".git")))
+		absPath, err := filepath.Abs(source)
+		if err == nil {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("GIT_DIR=%s", filepath.Join(absPath, ".git")))
+		}
 	}
 
 	log.Debug().Msgf("executing: %s", cmd.String())
