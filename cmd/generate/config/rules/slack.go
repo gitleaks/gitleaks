@@ -44,7 +44,7 @@ func SlackWebHook() *config.Rule {
 
 	// validate
 	tps := []string{
-		"https://hooks.slack.com/services/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // gitleaks:allow
+		"https://hooks.slack.com/services/" + secrets.NewSecret(alphaNumeric("44")), // gitleaks:allow
 	}
 	return validate(r, tps, nil)
 }

@@ -50,7 +50,6 @@ func main() {
 	configRules = append(configRules, rules.FlutterwaveSecretKey())
 	configRules = append(configRules, rules.FlutterwaveSecretKey())
 	configRules = append(configRules, rules.FrameIO())
-	configRules = append(configRules, rules.GenericCredential())
 	configRules = append(configRules, rules.GoCardless())
 	// TODO figure out what makes sense for GCP
 	// configRules = append(configRules, rules.GCPServiceAccount())
@@ -101,12 +100,10 @@ func main() {
 	configRules = append(configRules, rules.TwitchAPIToken())
 	configRules = append(configRules, rules.Twitter())
 	configRules = append(configRules, rules.Typeform())
+	configRules = append(configRules, rules.GenericCredential())
 
 	config := config.Config{
 		Rules: configRules,
-		Allowlist: config.Allowlist{
-			StopWords: rules.DefaultStopWords,
-		},
 	}
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
@@ -120,6 +117,3 @@ func main() {
 	tmpl.Execute(f, config)
 
 }
-
-// TODO introduce skiplists:
-// https://github.com/danielmiessler/SecLists/blob/master/Miscellaneous/wordlist-skipfish.fuzz.txt

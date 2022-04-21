@@ -30,7 +30,10 @@ func GenericCredential() *config.Rule {
 			"password",
 			"auth",
 		},
-		Entropy: 3.7,
+		Entropy: 3.5,
+		Allowlist: config.Allowlist{
+			StopWords: DefaultStopWords,
+		},
 	}
 
 	// validate
@@ -39,7 +42,6 @@ func GenericCredential() *config.Rule {
 		generateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
 		`"client_id" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
-		// TODO add more
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
