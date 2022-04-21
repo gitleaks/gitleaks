@@ -50,8 +50,9 @@ func (a *Allowlist) RegexAllowed(s string) bool {
 }
 
 func (a *Allowlist) ContainsStopWord(s string) bool {
+	s = strings.ToLower(s)
 	for _, stopWord := range a.StopWords {
-		if strings.Contains(s, stopWord) {
+		if strings.Contains(s, strings.ToLower(stopWord)) {
 			return true
 		}
 	}

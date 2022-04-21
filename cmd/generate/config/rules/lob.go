@@ -11,6 +11,7 @@ func LobPubAPIToken() *config.Rule {
 		Description: "Lob Publishable API Key",
 		RuleID:      "lob-pub-api-key",
 		Regex:       generateSemiGenericRegex([]string{"lob"}, `(test|live)_pub_[a-f0-9]{31}`),
+		SecretGroup: 1,
 		Keywords: []string{
 			"test_pub",
 			"live_pub",
@@ -35,6 +36,7 @@ func LobAPIToken() *config.Rule {
 			"test_",
 			"live_",
 		},
+		SecretGroup: 1,
 	}
 
 	// validate

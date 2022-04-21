@@ -28,14 +28,6 @@ const (
 	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60]|$)`
 )
 
-var DefaultStopWords = []string{
-	"client",
-	"endpoint",
-	"vpn",
-	"_ec2_",
-	"aws_",
-}
-
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
 	var sb strings.Builder
 	sb.WriteString(caseInsensitive)
@@ -73,13 +65,10 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	d := detect.NewDetector(config.Config{
 		Rules:    []*config.Rule{&r},
 		Keywords: keywords,
-		Allowlist: config.Allowlist{
-			StopWords: DefaultStopWords,
-		},
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msgf("Failed to validate (tp) %s", r.RuleID)
+			log.Fatal().Msgf("Failed to validate (tp) %s %s", r.RuleID, tp)
 		}
 	}
 	for _, fp := range falsePositives {

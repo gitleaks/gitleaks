@@ -16,12 +16,21 @@ paths = [
     '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$'''
 ]
-stopwords = [{{ range $i, $stopword := .Allowlist.StopWords }}
-    '''{{ $stopword }}''',{{ end }}
-]
 
 {{ range $i, $rule := .Rules }}[[rules]]
-{{ if and $rule.SecretGroup $rule.Entropy }}description = "{{$rule.Description}}"
+{{ if and $rule.SecretGroup $rule.Entropy $rule.Allowlist.StopWords }}description = "{{$rule.Description}}"
+id = "{{$rule.RuleID}}"
+regex = '''{{$rule.Regex}}'''
+secretGroup = {{ $rule.SecretGroup }}
+entropy = {{ $rule.Entropy}}
+keywords = [
+    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
+]
+[rules.allowlist]
+stopwords= [{{ range $j, $stopword := $rule.Allowlist.StopWords }}
+    "{{$stopword}}",{{end}}
+]
+{{ else if and $rule.SecretGroup $rule.Entropy }}description = "{{$rule.Description}}"
 id = "{{$rule.RuleID}}"
 regex = '''{{$rule.Regex}}'''
 secretGroup = {{ $rule.SecretGroup }}
