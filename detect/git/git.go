@@ -13,18 +13,26 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type LogOpts struct {
+	Args           []string
+	DisableSafeDir bool
+}
+
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
-func GitLog(source string, logOpts string, errChan chan error) (<-chan *gitdiff.File, error) {
+func GitLog(source string, logOpts LogOpts, errChan chan error) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
-	if logOpts != "" {
+	if len(logOpts.Args) > 0 {
 		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
-		args = append(args, strings.Split(logOpts, " ")...)
+		args = append(args, logOpts.Args...)
 		cmd = exec.Command("git", args...)
 	} else {
 		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
 			"--full-history", "--all")
+	}
+	if logOpts.DisableSafeDir {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("GIT_DIR=%s", filepath.Join(source, ".git")))
 	}
 
 	log.Debug().Msgf("executing: %s", cmd.String())
