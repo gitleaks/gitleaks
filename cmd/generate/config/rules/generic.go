@@ -41,5 +41,8 @@ func GenericCredential() *config.Rule {
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
 		// TODO add more
 	}
-	return validate(r, tps)
+	fps := []string{
+		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
+	}
+	return validate(r, tps, fps)
 }

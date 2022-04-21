@@ -20,5 +20,5 @@ func Twitter() *config.Rule {
 		"twitterToken := \"" + secrets.NewSecret(hex("36")) + "aaaa\"",
 		"twitterToken := `" + secrets.NewSecret(hex("36")) + "aaaa`",
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

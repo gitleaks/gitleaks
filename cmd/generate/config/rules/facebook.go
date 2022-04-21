@@ -19,5 +19,5 @@ func Facebook() *config.Rule {
 	tps := []string{
 		generateSampleSecret("facebook", secrets.NewSecret(hex("32"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

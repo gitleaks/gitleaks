@@ -20,5 +20,5 @@ func Duffel() *config.Rule {
 	tps := []string{
 		generateSampleSecret("duffel", "duffel_test_"+secrets.NewSecret(alphaNumericExtended("43"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

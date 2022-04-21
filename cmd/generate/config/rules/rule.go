@@ -28,6 +28,14 @@ const (
 	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60]|$)`
 )
 
+var DefaultStopWords = []string{
+	"client",
+	"endpoint",
+	"vpn",
+	"_ec2_",
+	"aws_",
+}
+
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
 	var sb strings.Builder
 	sb.WriteString(caseInsensitive)
@@ -54,7 +62,7 @@ func generateSampleSecret(identifier string, secret string) string {
 	return fmt.Sprintf("%s_api_token = \"%s\"", identifier, secret)
 }
 
-func validate(r config.Rule, truePositives []string) *config.Rule {
+func validate(r config.Rule, truePositives []string, falsePositives []string) *config.Rule {
 	// normalize keywords like in the config package
 	var keywords []string
 	for _, k := range r.Keywords {
@@ -65,10 +73,18 @@ func validate(r config.Rule, truePositives []string) *config.Rule {
 	d := detect.NewDetector(config.Config{
 		Rules:    []*config.Rule{&r},
 		Keywords: keywords,
+		Allowlist: config.Allowlist{
+			StopWords: DefaultStopWords,
+		},
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msgf("Failed to validate %s", r.RuleID)
+			log.Fatal().Msgf("Failed to validate (tp) %s", r.RuleID)
+		}
+	}
+	for _, fp := range falsePositives {
+		if len(d.DetectString(fp)) != 0 {
+			log.Fatal().Msgf("Failed to validate (fp) %s", r.RuleID)
 		}
 	}
 	return &r

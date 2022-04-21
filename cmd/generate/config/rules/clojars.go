@@ -20,5 +20,5 @@ func Clojars() *config.Rule {
 	tps := []string{
 		generateSampleSecret("clojars", "CLOJARS_"+secrets.NewSecret(alphaNumeric("60"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

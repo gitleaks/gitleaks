@@ -21,5 +21,5 @@ func MailChimp() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailchimp", secrets.NewSecret(hex("32"))+"-us20"),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

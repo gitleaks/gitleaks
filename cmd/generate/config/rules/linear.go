@@ -20,7 +20,7 @@ func LinearAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("linear", "lin_api_"+secrets.NewSecret(alphaNumeric("40"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func LinearClientSecret() *config.Rule {
@@ -36,5 +36,5 @@ func LinearClientSecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("linear", secrets.NewSecret(hex("32"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

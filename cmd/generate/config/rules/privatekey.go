@@ -19,5 +19,5 @@ func PrivateKey() *config.Rule {
 	tps := []string{`-----BEGIN PRIVATE KEY-----
 anything
 -----END PRIVATE KEY-----`} // gitleaks:allow
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

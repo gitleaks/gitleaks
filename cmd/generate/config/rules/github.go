@@ -20,7 +20,7 @@ func GitHubPat() *config.Rule {
 	tps := []string{
 		generateSampleSecret("github", "ghp_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func GitHubOauth() *config.Rule {
@@ -36,7 +36,7 @@ func GitHubOauth() *config.Rule {
 	tps := []string{
 		generateSampleSecret("github", "gho_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func GitHubApp() *config.Rule {
@@ -53,7 +53,7 @@ func GitHubApp() *config.Rule {
 		generateSampleSecret("github", "ghu_"+secrets.NewSecret(alphaNumeric("36"))),
 		generateSampleSecret("github", "ghs_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func GitHubRefresh() *config.Rule {
@@ -69,5 +69,5 @@ func GitHubRefresh() *config.Rule {
 	tps := []string{
 		generateSampleSecret("github", "ghr_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

@@ -20,5 +20,5 @@ func GCPServiceAccount() *config.Rule {
 	tps := []string{
 		`"type": "service_account"`,
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

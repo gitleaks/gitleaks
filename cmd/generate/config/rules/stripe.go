@@ -23,5 +23,5 @@ func StripeAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"stripeToken := \"sk_test_" + secrets.NewSecret(alphaNumeric("30")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

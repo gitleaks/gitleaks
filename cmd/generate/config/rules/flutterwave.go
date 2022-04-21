@@ -20,7 +20,7 @@ func FlutterwavePublicKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func FlutterwaveSecretKey() *config.Rule {
@@ -36,7 +36,7 @@ func FlutterwaveSecretKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func FlutterwaveEncKey() *config.Rule {
@@ -52,5 +52,5 @@ func FlutterwaveEncKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("12"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

@@ -21,5 +21,5 @@ func TwitchAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("twitch", secrets.NewSecret(alphaNumeric("30"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

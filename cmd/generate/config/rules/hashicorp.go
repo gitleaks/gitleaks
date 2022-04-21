@@ -20,5 +20,5 @@ func Hashicorp() *config.Rule {
 	tps := []string{
 		generateSampleSecret("hashicorpToken", secrets.NewSecret(hex("14"))+".atlasv1."+secrets.NewSecret(alphaNumericExtended("60,70"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

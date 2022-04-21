@@ -27,7 +27,7 @@ func SlackAccessToken() *config.Rule {
 	tps := []string{
 		"\"slackToken\": \"xoxb-" + secrets.NewSecret(alphaNumeric("30")) + "\"",
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func SlackWebHook() *config.Rule {
@@ -46,5 +46,5 @@ func SlackWebHook() *config.Rule {
 	tps := []string{
 		"https://hooks.slack.com/services/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // gitleaks:allow
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

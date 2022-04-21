@@ -25,7 +25,7 @@ func LinkedinClientSecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("linkedin", secrets.NewSecret(alphaNumeric("16"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func LinkedinClientID() *config.Rule {
@@ -48,5 +48,5 @@ func LinkedinClientID() *config.Rule {
 	tps := []string{
 		generateSampleSecret("linkedin", secrets.NewSecret(alphaNumeric("14"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

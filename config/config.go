@@ -26,15 +26,17 @@ type ViperConfig struct {
 		Tags        []string
 
 		Allowlist struct {
-			Regexes []string
-			Paths   []string
-			Commits []string
+			Regexes   []string
+			Paths     []string
+			Commits   []string
+			StopWords []string
 		}
 	}
 	Allowlist struct {
-		Regexes []string
-		Paths   []string
-		Commits []string
+		Regexes   []string
+		Paths     []string
+		Commits   []string
+		StopWords []string
 	}
 }
 
@@ -96,9 +98,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Tags:        r.Tags,
 			Keywords:    r.Keywords,
 			Allowlist: Allowlist{
-				Regexes: allowlistRegexes,
-				Paths:   allowlistPaths,
-				Commits: r.Allowlist.Commits,
+				Regexes:   allowlistRegexes,
+				Paths:     allowlistPaths,
+				Commits:   r.Allowlist.Commits,
+				StopWords: r.Allowlist.StopWords,
 			},
 		}
 		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
@@ -118,9 +121,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Description: vc.Description,
 		Rules:       rules,
 		Allowlist: Allowlist{
-			Regexes: allowlistRegexes,
-			Paths:   allowlistPaths,
-			Commits: vc.Allowlist.Commits,
+			Regexes:   allowlistRegexes,
+			Paths:     allowlistPaths,
+			Commits:   vc.Allowlist.Commits,
+			StopWords: vc.Allowlist.StopWords,
 		},
 		Keywords: keywords,
 	}, nil

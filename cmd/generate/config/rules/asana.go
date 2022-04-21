@@ -19,7 +19,7 @@ func AsanaClientID() *config.Rule {
 	tps := []string{
 		generateSampleSecret("asana", secrets.NewSecret(numeric("16"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func AsanaClientSecret() *config.Rule {
@@ -35,5 +35,5 @@ func AsanaClientSecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("asana", secrets.NewSecret(alphaNumeric("32"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

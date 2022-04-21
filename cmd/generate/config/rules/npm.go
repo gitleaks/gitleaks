@@ -21,5 +21,5 @@ func NPM() *config.Rule {
 	tps := []string{
 		generateSampleSecret("npmAccessToken", "npm_"+secrets.NewSecret(alphaNumeric("36"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

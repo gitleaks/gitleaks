@@ -22,5 +22,5 @@ func ShippoAPIToken() *config.Rule {
 		generateSampleSecret("shippo", "shippo_live_"+secrets.NewSecret(hex("40"))),
 		generateSampleSecret("shippo", "shippo_test_"+secrets.NewSecret(hex("40"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
