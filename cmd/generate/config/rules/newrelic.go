@@ -25,7 +25,7 @@ func NewRelicUserID() *config.Rule {
 	tps := []string{
 		generateSampleSecret("new-relic", "NRAK-"+secrets.NewSecret(alphaNumeric("27"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func NewRelicUserKey() *config.Rule {
@@ -50,7 +50,7 @@ func NewRelicUserKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("new-relic", secrets.NewSecret(alphaNumeric("64"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func NewRelicBrowserAPIKey() *config.Rule {
@@ -73,5 +73,5 @@ func NewRelicBrowserAPIKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("new-relic", "NRJS-"+secrets.NewSecret(hex("19"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

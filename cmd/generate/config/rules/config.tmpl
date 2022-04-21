@@ -16,6 +16,9 @@ paths = [
     '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$'''
 ]
+stopwords = [{{ range $i, $stopword := .Allowlist.StopWords }}
+    '''{{ $stopword }}''',{{ end }}
+]
 
 {{ range $i, $rule := .Rules }}[[rules]]
 {{ if and $rule.SecretGroup $rule.Entropy }}description = "{{$rule.Description}}"

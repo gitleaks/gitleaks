@@ -19,5 +19,5 @@ func HubSpot() *config.Rule {
 	tps := []string{
 		`const hubspotKey = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

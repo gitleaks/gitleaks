@@ -21,7 +21,7 @@ func PlanetScalePassword() *config.Rule {
 	tps := []string{
 		generateSampleSecret("planetScalePassword", "pscale_pw_"+secrets.NewSecret(alphaNumericExtended("43"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func PlanetScaleToken() *config.Rule {
@@ -40,5 +40,5 @@ func PlanetScaleToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("planetScalePassword", "pscale_tkn_"+secrets.NewSecret(alphaNumericExtended("43"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

@@ -18,7 +18,7 @@ func AlibabaAccessKey() *config.Rule {
 	tps := []string{
 		"alibabaKey := \"LTAI" + secrets.NewSecret(hex("20")) + "\"",
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 // TODO
@@ -37,5 +37,5 @@ func AlibabaSecretKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("alibaba", secrets.NewSecret(alphaNumeric("30"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

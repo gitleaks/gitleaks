@@ -19,5 +19,5 @@ func AgeSecretKey() *config.Rule {
 	tps := []string{
 		`apiKey := "AGE-SECRET-KEY-1QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ`, // gitleaks:allow
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

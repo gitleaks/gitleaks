@@ -22,5 +22,5 @@ func PyPiUploadToken() *config.Rule {
 	// validate
 	tps := []string{"pypiToken := \"pypi-AgEIcHlwaS5vcmc" + secrets.NewSecret(hex("32")) +
 		secrets.NewSecret(hex("32")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

@@ -20,5 +20,5 @@ func FrameIO() *config.Rule {
 	tps := []string{
 		generateSampleSecret("frameio", "fio-u-"+secrets.NewSecret(alphaNumericExtended("64"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

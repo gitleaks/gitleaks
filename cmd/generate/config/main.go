@@ -104,6 +104,9 @@ func main() {
 
 	config := config.Config{
 		Rules: configRules,
+		Allowlist: config.Allowlist{
+			StopWords: rules.DefaultStopWords,
+		},
 	}
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {

@@ -16,6 +16,13 @@ paths = [
     '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$'''
 ]
+stopwords = [
+    '''client''',
+    '''endpoint''',
+    '''vpn''',
+    '''_ec2_''',
+    '''aws_''',
+]
 
 [[rules]]
 description = "Adobe Client ID (Oauth Web)"

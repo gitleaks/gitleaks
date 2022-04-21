@@ -217,6 +217,12 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 			finding.Secret = secret
 		}
 
+		// check if the secret is in the list of stopwords
+		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
+			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+			continue
+		}
+
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)

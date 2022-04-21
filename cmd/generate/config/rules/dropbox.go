@@ -19,7 +19,7 @@ func DropBoxAPISecret() *config.Rule {
 	tps := []string{
 		generateSampleSecret("dropbox", secrets.NewSecret(alphaNumeric("15"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func DropBoxShortLivedAPIToken() *config.Rule {

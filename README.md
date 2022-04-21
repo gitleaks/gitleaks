@@ -233,9 +233,9 @@ entropy = 3.5
 # either be part of the idenitifer or unique strings specific to the rule's regex
 # (introduced in v8.6.0)
 keywords = [
-    "auth",
-    "password",
-    "token",
+  "auth",
+  "password",
+  "token",
 ]
 
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
@@ -244,13 +244,20 @@ keywords = [
 description = "ignore commit A"
 commits = [ "commit-A", "commit-B"]
 paths = [
-	'''go\.mod''',
-	'''go\.sum'''
+  '''go\.mod''',
+  '''go\.sum'''
 ]
 regexes = [
-   	'''process''',
-	'''getenv''',
+  '''process''',
+  '''getenv''',
 ]
+# note: stopwords targets the extracted secret, not the entire regex match
+# like 'regexes' does. (stopwords introduced in 8.8.0)
+stopwords = [
+  '''client''',
+  '''endpoint''',
+]
+
 
 # This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
@@ -259,13 +266,19 @@ regexes = [
 description = "global allow list"
 commits = [ "commit-A", "commit-B", "commit-C"]
 paths = [
-	'''gitleaks\.toml''',
-	'''(.*?)(jpg|gif|doc)'''
+  '''gitleaks\.toml''',
+  '''(.*?)(jpg|gif|doc)'''
 ]
 regexes = [
-    	'''219-09-9999''',
-    	'''078-05-1120''',
-    	'''(9[0-9]{2}|666)-\d{2}-\d{4}''',
+  '''219-09-9999''',
+  '''078-05-1120''',
+  '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
+]
+# note: stopwords targets the extracted secret, not the entire regex match
+# like 'regexes' does. (stopwords introduced in 8.8.0)
+stopwords = [
+  '''client''',
+  '''endpoint''',
 ]
 ```
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.

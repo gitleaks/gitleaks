@@ -20,5 +20,5 @@ func Twilio() *config.Rule {
 	tps := []string{
 		"twilioAPIKey := \"SK" + secrets.NewSecret(hex("32")) + "\"",
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

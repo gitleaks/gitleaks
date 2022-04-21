@@ -29,7 +29,7 @@ func MessageBirdAPIToken() *config.Rule {
 		generateSampleSecret("message-bird", secrets.NewSecret(alphaNumeric("25"))),
 		generateSampleSecret("message_bird", secrets.NewSecret(alphaNumeric("25"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func MessageBirdClientID() *config.Rule {
@@ -54,5 +54,5 @@ func MessageBirdClientID() *config.Rule {
 	tps := []string{
 		`const MessageBirdClientID = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

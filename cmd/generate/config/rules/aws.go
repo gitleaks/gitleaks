@@ -27,5 +27,5 @@ func AWS() *config.Rule {
 
 	// validate
 	tps := []string{generateSampleSecret("AWS", "AKIALALEMEL33243OLIB")} // gitleaks:allow
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

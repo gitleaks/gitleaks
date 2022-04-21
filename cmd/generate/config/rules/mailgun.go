@@ -21,7 +21,7 @@ func MailGunPrivateAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", "key-"+secrets.NewSecret(hex("32"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func MailGunPubAPIToken() *config.Rule {
@@ -40,7 +40,7 @@ func MailGunPubAPIToken() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", "pubkey-"+secrets.NewSecret(hex("32"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func MailGunSigningKey() *config.Rule {
@@ -59,5 +59,5 @@ func MailGunSigningKey() *config.Rule {
 	tps := []string{
 		generateSampleSecret("mailgun", secrets.NewSecret(hex("32"))+"-00001111-22223333"),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

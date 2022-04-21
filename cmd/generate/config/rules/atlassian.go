@@ -20,5 +20,5 @@ func Atlassian() *config.Rule {
 		generateSampleSecret("atlassian", secrets.NewSecret(alphaNumeric("24"))),
 		generateSampleSecret("confluence", secrets.NewSecret(alphaNumeric("24"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

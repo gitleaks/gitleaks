@@ -20,7 +20,7 @@ func Doppler() *config.Rule {
 	tps := []string{
 		generateSampleSecret("doppler", "dp.pt."+secrets.NewSecret(alphaNumeric("43"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 // TODO add additional doppler formats:

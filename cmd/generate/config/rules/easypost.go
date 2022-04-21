@@ -20,7 +20,7 @@ func EasyPost() *config.Rule {
 	tps := []string{
 		generateSampleSecret("EZAK", "EZAK"+secrets.NewSecret(alphaNumeric("54"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func EasyPostTestAPI() *config.Rule {
@@ -36,5 +36,5 @@ func EasyPostTestAPI() *config.Rule {
 	tps := []string{
 		generateSampleSecret("EZTK", "EZTK"+secrets.NewSecret(alphaNumeric("54"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

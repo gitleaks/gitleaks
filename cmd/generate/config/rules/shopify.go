@@ -18,7 +18,7 @@ func ShopifySharedSecret() *config.Rule {
 
 	// validate
 	tps := []string{"shopifySecret := \"shpss_" + secrets.NewSecret(hex("32")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func ShopifyAccessToken() *config.Rule {
@@ -32,7 +32,7 @@ func ShopifyAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"shopifyToken := \"shpat_" + secrets.NewSecret(hex("32")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func ShopifyCustomAccessToken() *config.Rule {
@@ -46,7 +46,7 @@ func ShopifyCustomAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"shopifyToken := \"shpca_" + secrets.NewSecret(hex("32")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
 
 func ShopifyPrivateAppAccessToken() *config.Rule {
@@ -60,5 +60,5 @@ func ShopifyPrivateAppAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"shopifyToken := \"shppa_" + secrets.NewSecret(hex("32")) + "\""}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }

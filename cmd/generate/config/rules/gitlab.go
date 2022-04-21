@@ -20,5 +20,5 @@ func Gitlab() *config.Rule {
 	tps := []string{
 		generateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(alphaNumeric("20"))),
 	}
-	return validate(r, tps)
+	return validate(r, tps, nil)
 }
