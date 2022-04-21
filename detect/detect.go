@@ -242,7 +242,7 @@ func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Fin
 // GitScan accepts a *gitdiff.File channel which contents a git history generated from
 // the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
 // and determine if the patch contains any findings.
-func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanType) ([]report.Finding, error) {
+func (d *Detector) DetectGit(source string, logArgs string, gitScanType GitScanType) ([]report.Finding, error) {
 	var (
 		gitdiffFiles <-chan *gitdiff.File
 		err          error
@@ -258,6 +258,10 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	switch gitScanType {
 	case DetectType:
 		var err error
+
+		logOpts := git.LogOpts{
+			Args: strings.Split(logArgs, " "),
+		}
 		gitdiffFiles, err = git.GitLog(source, logOpts, errChan)
 		if err != nil {
 			return d.findings, err
