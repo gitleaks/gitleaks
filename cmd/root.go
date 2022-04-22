@@ -45,6 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().Bool("redact", false, "redact secrets from logs and stdout")
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "don't show banner")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -74,7 +75,10 @@ func initLog() {
 }
 
 func initConfig() {
-	fmt.Fprint(os.Stderr, banner)
+	quiet, err := rootCmd.Flags().GetBool("quiet")
+	if !quiet {
+		fmt.Fprint(os.Stderr, banner)
+	}
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {
 		log.Fatal().Msg(err.Error())
