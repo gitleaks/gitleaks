@@ -101,6 +101,7 @@ func TestTranslate(t *testing.T) {
 								regexp.MustCompile("AKIALALEMEL33243OLIA"),
 							},
 						},
+						Keywords: []string{},
 					},
 				},
 			},
