@@ -22,6 +22,7 @@ func location(fragment Fragment, matchIndex []int) Location {
 	end := matchIndex[1]
 
 	for lineNum, pair := range fragment.newlineIndices {
+		_lineNum = lineNum
 		newLineByteIndex := pair[0]
 		if prevNewLine <= start && start < newLineByteIndex {
 			lineSet = true
