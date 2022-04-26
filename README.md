@@ -20,6 +20,8 @@
 		  <img src="https://img.shields.io/twitter/follow/zricethezav?label=Follow%20zricethezav&style=social&color=blue" alt="Follow @zricethezav" />
 	  </a>
 nop
+aws_secret= "AKIAIMNOJVGFDXXXE4OA"
+
   </p>
 </p>
 
