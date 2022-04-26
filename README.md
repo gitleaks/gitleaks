@@ -19,6 +19,7 @@
 	  <a href="https://twitter.com/intent/follow?screen_name=zricethezav">
 		  <img src="https://img.shields.io/twitter/follow/zricethezav?label=Follow%20zricethezav&style=social&color=blue" alt="Follow @zricethezav" />
 	  </a>
+nop
   </p>
 </p>
 
