@@ -574,7 +574,7 @@ description = "Private Key"
 id = "private-key"
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
 keywords = [
-    "-----begin private",
+    "-----begin",
 ]
 
 [[rules]]
