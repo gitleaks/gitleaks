@@ -45,7 +45,7 @@ keywords = [
 [[rules]]
 description = "Algolia API Key"
 id = "algolia-api-key"
-regex = '''[a-zA-Z0-9]{32}'''
+regex = '''\b((?i)[a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 keywords = [
     "algolia",
 ]
