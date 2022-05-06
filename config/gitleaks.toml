@@ -43,6 +43,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Algolia API Key"
+id = "algolia-api-key"
+regex = '''[a-zA-Z0-9]{32}'''
+keywords = [
+    "algolia",
+]
+
+[[rules]]
 description = "Alibaba AccessKey ID"
 id = "alibaba-access-key-id"
 regex = '''(?i)\b((LTAI)(?i)[a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60]|$)'''
