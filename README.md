@@ -16,6 +16,9 @@
 	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
 	  </a>
+	  <a href="https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=badge&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection">
+<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" /> 
+	  </a>
 	  <a href="https://twitter.com/intent/follow?screen_name=zricethezav">
 		  <img src="https://img.shields.io/twitter/follow/zricethezav?label=Follow%20zricethezav&style=social&color=blue" alt="Follow @zricethezav" />
 	  </a>
@@ -283,6 +286,8 @@ stopwords = [
 ```
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.
 
+## Secured by Jit
+We use [Jit](https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=readme&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection) to secure our codebase, to achieve  fully automated, full-stack continuous security using the world's best OSS security tools.
 
 
 ## Sponsorships
