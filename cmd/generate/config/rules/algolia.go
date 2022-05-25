@@ -10,7 +10,7 @@ func AlgoliaApiKey() *config.Rule {
 	r := config.Rule{
 		Description: "Algolia API Key",
 		RuleID:      "algolia-api-key",
-		Regex:       generateUniqueTokenRegex(`[a-z0-9]{32}`),
+		Regex:       generateSemiGenericRegex([]string{"algolia"}, `[a-z0-9]{32}`),
 		Keywords:    []string{"algolia"},
 	}
 
@@ -20,4 +20,3 @@ func AlgoliaApiKey() *config.Rule {
 	}
 	return validate(r, tps, nil)
 }
-

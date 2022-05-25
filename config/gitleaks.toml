@@ -45,7 +45,7 @@ keywords = [
 [[rules]]
 description = "Algolia API Key"
 id = "algolia-api-key"
-regex = '''\b((?i)[a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:algolia)(?:[0-9a-z\-_\s.]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 keywords = [
     "algolia",
 ]
@@ -741,11 +741,11 @@ keywords = [
 [[rules]]
 description = "Generic API Key"
 id = "generic-api-key"
-regex = '''(?i)(?:key|api[^Version]|token|pat|secret|client|password|auth)(?:[0-9a-z\-_\s.]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:key|api[^Version]|token|secret|client|passwd|password|auth)(?:[0-9a-z\-_\s.]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 entropy = 3.5
 keywords = [
-    "key","api","token","secret","client","pat","password","auth",
+    "key","api","token","secret","client","passwd","password","auth",
 ]
 [rules.allowlist]
 stopwords= [
