@@ -2221,4 +2221,5 @@ stopwords= [
     "boot",
     "book",
     "branch",
+    "combination",
 ]
