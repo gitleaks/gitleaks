@@ -65,7 +65,6 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
 			for _, fPrime := range findings {
 				if f.StartLine == fPrime.StartLine &&
-					f.EndLine == fPrime.EndLine &&
 					f.Commit == fPrime.Commit &&
 					f.RuleID != fPrime.RuleID &&
 					strings.Contains(fPrime.Secret, f.Secret) &&
