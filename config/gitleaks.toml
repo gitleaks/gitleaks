@@ -2222,4 +2222,5 @@ stopwords= [
     "book",
     "branch",
     "combination",
+    "combo",
 ]

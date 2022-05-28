@@ -1484,4 +1484,6 @@ var DefaultStopWords = []string{
 	"boot",
 	"book",
 	"branch",
+	"combination",
+	"combo",
 }
