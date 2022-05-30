@@ -11,7 +11,7 @@ func GenericCredential() *config.Rule {
 		Description: "Generic API Key",
 		Regex: generateSemiGenericRegex([]string{
 			"key",
-			"api[^Version]",
+			"api",
 			"token",
 			"secret",
 			"client",
