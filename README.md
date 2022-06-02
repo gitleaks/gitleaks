@@ -1,4 +1,4 @@
-# gitleaks
+# [gitleaks](https://gitleaks.io)
 ```
 ┌─○───┐
 │ │╲  │
