@@ -10,7 +10,6 @@ RUN adduser -D gitleaks && \
 COPY --from=build /go/src/github.com/zricethezav/gitleaks/bin/* /usr/bin/
 USER gitleaks
 
-# TODO waiting to push this until I've thought a bit more about it
 RUN git config --global --add safe.directory '*'
 
 ENTRYPOINT ["gitleaks"]
