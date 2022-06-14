@@ -51,6 +51,7 @@ func GitLog(source string, logOpts LogOpts, errChan chan error) (<-chan *gitdiff
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
+	go cmd.Wait()
 
 	go listenForStdErr(stderr, errChan)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
@@ -82,6 +83,7 @@ func GitDiff(source string, staged bool, errChan chan error) (<-chan *gitdiff.Fi
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
+	go cmd.Wait()
 
 	go listenForStdErr(stderr, errChan)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
