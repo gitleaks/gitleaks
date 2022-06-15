@@ -2,6 +2,8 @@ module github.com/zricethezav/gitleaks/v8
 
 go 1.17
 
+replace github.com/gitleaks/go-gitdiff => github.com/trufflesecurity/go-gitdiff v0.7.6-zombies
+
 require (
 	github.com/fatih/semgroup v1.2.0
 	github.com/gitleaks/go-gitdiff v0.7.4

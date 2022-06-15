@@ -56,12 +56,7 @@ func GitLog(source string, logOpts LogOpts, errChan chan error) (<-chan *gitdiff
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
-	go func() {
-		time.Sleep(time.Second)
-		cmd.Wait()
-	}()
-
-	return gitdiff.Parse(stdout)
+	return gitdiff.Parse(cmd, stdout)
 }
 
 // GitDiff returns a channel of gitdiff.File objects from
@@ -92,12 +87,7 @@ func GitDiff(source string, staged bool, errChan chan error) (<-chan *gitdiff.Fi
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
-	go func() {
-		time.Sleep(time.Second)
-		cmd.Wait()
-	}()
-
-	return gitdiff.Parse(stdout)
+	return gitdiff.Parse(cmd, stdout)
 }
 
 // listenForStdErr listens for stderr output from git and prints it to stdout
