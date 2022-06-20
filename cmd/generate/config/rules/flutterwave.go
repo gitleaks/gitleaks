@@ -27,7 +27,7 @@ func FlutterwaveSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
 		Description: "Finicity Secret Key",
-		RuleID:      "flutterwave-public-key",
+		RuleID:      "flutterwave-secret-key",
 		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{32}-X`),
 		Keywords:    []string{"FLWSECK_TEST"},
 	}
