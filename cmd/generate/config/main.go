@@ -49,7 +49,7 @@ func main() {
 	configRules = append(configRules, rules.FinicityAPIToken())
 	configRules = append(configRules, rules.FlutterwavePublicKey())
 	configRules = append(configRules, rules.FlutterwaveSecretKey())
-	configRules = append(configRules, rules.FlutterwaveSecretKey())
+	configRules = append(configRules, rules.FlutterwaveEncKey())
 	configRules = append(configRules, rules.FrameIO())
 	configRules = append(configRules, rules.GoCardless())
 	// TODO figure out what makes sense for GCP
@@ -104,6 +104,15 @@ func main() {
 	configRules = append(configRules, rules.Typeform())
 	configRules = append(configRules, rules.GenericCredential())
 
+	// ensure rules have unique ids
+	ruleLookUp := make(map[string]bool)
+	for _, rule := range configRules {
+		// check if rule is in ruleLookUp
+		if _, ok := ruleLookUp[rule.RuleID]; ok {
+			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
+		}
+		ruleLookUp[rule.RuleID] = true
+	}
 	config := config.Config{
 		Rules: configRules,
 	}
