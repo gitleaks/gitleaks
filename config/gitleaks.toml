@@ -183,7 +183,7 @@ keywords = [
 
 [[rules]]
 description = "Dropbox API secret"
-id = "doppler-api-token"
+id = "dropbox-api-token"
 regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{15})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
@@ -292,7 +292,7 @@ keywords = [
 
 [[rules]]
 description = "Finicity Secret Key"
-id = "flutterwave-public-key"
+id = "flutterwave-secret-key"
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
     "flwseck_test",
