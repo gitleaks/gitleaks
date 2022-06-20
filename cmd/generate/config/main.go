@@ -112,7 +112,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to parse template")
 	}
 
-	f, err := os.Create("gitleaks.toml")
+	f, err := os.Create("../../../config/gitleaks.toml")
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}

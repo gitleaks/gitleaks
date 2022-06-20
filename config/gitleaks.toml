@@ -299,6 +299,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Finicity Secret Key"
+id = "flutterwave-secret-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "flwseck_test",
+]
+
+[[rules]]
 description = "Frame.io API token"
 id = "frameio-api-token"
 regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
