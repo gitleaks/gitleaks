@@ -291,7 +291,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Finicity Secret Key"
+description = "Flutterwave Secret Key"
 id = "flutterwave-secret-key"
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
@@ -299,9 +299,9 @@ keywords = [
 ]
 
 [[rules]]
-description = "Finicity Secret Key"
-id = "flutterwave-secret-key"
-regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+description = "Flutterwave Encryption Key"
+id = "flutterwave-encryption-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{12}'''
 keywords = [
     "flwseck_test",
 ]
