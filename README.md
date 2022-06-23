@@ -1,4 +1,5 @@
 # gitleaks
+
 ```
 ┌─○───┐
 │ │╲  │
@@ -6,7 +7,6 @@
 │ ○ ░ │
 └─░───┘
 ```
-
 
 <p align="left">
   <p align="left">
@@ -33,6 +33,7 @@ Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets l
 [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)
 
 ## Getting Started
+
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
 
 ### MacOS
@@ -42,31 +43,41 @@ brew install gitleaks
 ```
 
 ### Docker
+
 #### DockerHub
+
 ```bash
 docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 ```
+
 #### ghcr.io
+
 ```bash
 docker pull ghcr.io/zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 ```
 
 ### From Source
+
 1. Download and install Go from https://golang.org/dl/
 2. Clone the repo
+
 ```bash
 git clone https://github.com/zricethezav/gitleaks.git
 ```
+
 3. Build the binary
+
 ```bash
 cd gitleaks
 make build
 ```
 
 ### Github Action
+
 Check out the official [Gitleaks GitHub Action](https://github.com/gitleaks/gitleaks-action)
+
 ```
 name: gitleaks
 on: [pull_request, push, workflow_dispatch]
@@ -85,8 +96,10 @@ jobs:
 ```
 
 ### Pre-Commit
+
 1. Install pre-commit from https://pre-commit.com/#install
 2. Create a `.pre-commit-config.yaml` file at the root of your repository with the following content:
+
    ```
    repos:
      - repo: https://github.com/zricethezav/gitleaks
@@ -94,22 +107,27 @@ jobs:
        hooks:
          - id: gitleaks
    ```
+
    for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
 
 3. Install with `pre-commit install`
 4. Now you're all set!
+
 ```
 ➜ git commit -m "this commit contains a secret"
 Detect hardcoded secrets.................................................Failed
 ```
+
 Note: to disable the gitleaks pre-commit hook you can prepend `SKIP=gitleaks` to the commit command
 and it will skip running gitleaks
+
 ```
 ➜ SKIP=gitleaks git commit -m "skip gitleaks check"
 Detect hardcoded secrets................................................Skipped
 ```
 
 ## Usage
+
 ```
 Usage:
   gitleaks [command]
@@ -141,9 +159,12 @@ Use "gitleaks [command] --help" for more information about a command.
 ```
 
 ### Commands
+
 There are two commands you will use to detect secrets; `detect` and `protect`.
+
 #### Detect
-The `detect` command is used to scan repos, directories, and files.  This command can be used on developer machines and in CI environments.
+
+The `detect` command is used to scan repos, directories, and files. This command can be used on developer machines and in CI environments.
 
 When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)).
@@ -155,6 +176,7 @@ See the `git log` [documentation](https://git-scm.com/docs/git-log) for more inf
 You can scan files and directories by using the `--no-git` option.
 
 #### Protect
+
 The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with
 [shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security).
 When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed
@@ -165,8 +187,10 @@ as a pre-commit.
 **NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
 
 ### Verify Findings
+
 You can verify a finding found by gitleaks using a `git log` command.
 Example output:
+
 ```
 {
         "Description": "AWS",
@@ -188,15 +212,19 @@ Example output:
 }
 
 ```
+
 We can use the following format to verify the leak:
 
 ```
 git log -L {StartLine,EndLine}:{File} {Commit}
 ```
+
 So in this example it would look like:
+
 ```
 git log -L 37,37:checks_test.go ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
 ```
+
 Which gives us:
 
 ```
@@ -215,11 +243,14 @@ diff --git a/checks_test.go b/checks_test.go
 ```
 
 ## Pre-Commit hook
+
 You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into
 your `.git/hooks/` directory.
 
 ## Configuration
+
 Gitleaks offers a configuration format you can follow to write your own secret detection rules:
+
 ```toml
 # Title for the gitleaks configuration file.
 title = "Gitleaks title"
@@ -306,24 +337,25 @@ stopwords = [
   '''endpoint''',
 ]
 ```
-Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples and advice on writing regular expressions for secret detection.
+
+Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/zricethezav/gitleaks/blob/master/README.md).
 
 ## Secured by Jit
-We use [Jit](https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=readme&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection) to secure our codebase, to achieve  fully automated, full-stack continuous security using the world's best OSS security tools.
 
+We use [Jit](https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=readme&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection) to secure our codebase, to achieve fully automated, full-stack continuous security using the world's best OSS security tools.
 
 ## Sponsorships
+
 <p align="left">
 	  <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">
 		  <img alt="Tines Sponsorship" src="https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png" width=200>
 	  </a>
   </p>
 
-
-
-
 ## Exit Codes
+
 You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
+
 ```
 0 - no leaks present
 1 - leaks or error encountered
