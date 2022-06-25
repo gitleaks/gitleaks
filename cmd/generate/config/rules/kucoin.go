@@ -10,7 +10,11 @@ func KucoinAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "kucoin-access-token",
 		Description: "Kucoin Access Token",
+<<<<<<< HEAD
 		Regex:       generateSemiGenericRegex([]string{"kucoin"}, `[0-9a-f]{24}`),
+=======
+		Regex:       generateSemiGenericRegex([]string{"kucoin"}, hex("24")),
+>>>>>>> 73a3cf8afbfba27e46a9efbbe29c7f262569d721
 		SecretGroup: 1,
 		Keywords: []string{
 			"kucoin",
@@ -19,7 +23,11 @@ func KucoinAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
+<<<<<<< HEAD
 		generateSampleSecret("kucoin", secrets.NewSecret(`[0-9a-f]{24}`)),
+=======
+		generateSampleSecret("kucoin", secrets.NewSecret(hex("24"))),
+>>>>>>> 73a3cf8afbfba27e46a9efbbe29c7f262569d721
 	}
 	return validate(r, tps, nil)
 }
