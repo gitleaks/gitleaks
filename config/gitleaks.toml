@@ -19,8 +19,10 @@ regexes = [
     ]
 paths = [
     '''gitleaks.toml''',
-    '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
-    '''(go.mod|go.sum)$'''
+    '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
+    '''(go.mod|go.sum)$''',
+    '''node_modules''',
+    '''vendor''',
 ]
 
 [[rules]]
@@ -136,11 +138,38 @@ keywords = [
 ]
 
 [[rules]]
+description = "Coinbase Access Token"
+id = "coinbase-access-token"
+regex = '''(?i)(?:coinbase)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "coinbase",
+]
+
+[[rules]]
 description = "Clojars API token"
 id = "clojars-api-token"
 regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
 keywords = [
     "clojars",
+]
+
+[[rules]]
+description = "Confluent Access Token"
+id = "confluent-access-token"
+regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-zA-Z-0-9]{16})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "confluent",
+]
+
+[[rules]]
+description = "Confluent Secret Key"
+id = "confluent-secret-key"
+regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-zA-Z-0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "confluent",
 ]
 
 [[rules]]
@@ -158,6 +187,15 @@ id = "databricks-api-token"
 regex = '''(?i)\b(dapi[a-h0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 keywords = [
     "dapi",
+]
+
+[[rules]]
+description = "Datadogtoken Access Token"
+id = "datadogtoken-access-token"
+regex = '''(?i)(?:datadog)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "datadog",
 ]
 
 [[rules]]
@@ -188,6 +226,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Doppler API token"
+id = "doppler-api-token"
+regex = '''(dp\.pt\.)(?i)[a-z0-9]{43}'''
+keywords = [
+    "doppler",
+]
+
+[[rules]]
 description = "Dropbox API secret"
 id = "dropbox-api-token"
 regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{15})(?:['|\"|\n|\r|\s|\x60]|$)'''
@@ -213,11 +259,12 @@ keywords = [
 ]
 
 [[rules]]
-description = "Doppler API token"
-id = "doppler-api-token"
-regex = '''(dp\.pt\.)(?i)[a-z0-9]{43}'''
+description = "Droneci Access Token"
+id = "droneci-access-token"
+regex = '''(?i)(?:droneci)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
 keywords = [
-    "doppler",
+    "droneci",
 ]
 
 [[rules]]
@@ -250,6 +297,15 @@ id = "easypost-test-api-token"
 regex = '''EZTK(?i)[a-z0-9]{54}'''
 keywords = [
     "eztk",
+]
+
+[[rules]]
+description = "Etsy Access Token"
+id = "etsy-access-token"
+regex = '''(?i)(?:etsy)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "etsy",
 ]
 
 [[rules]]
@@ -289,6 +345,24 @@ keywords = [
 ]
 
 [[rules]]
+description = "Flickr Access Token"
+id = "flickr-access-token"
+regex = '''(?i)(?:flickr)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "flickr",
+]
+
+[[rules]]
+description = "Finnhub Access Token"
+id = "finnhub-access-token"
+regex = '''(?i)(?:finnhub)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "finnhub",
+]
+
+[[rules]]
 description = "Finicity Public Key"
 id = "flutterwave-public-key"
 regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
@@ -321,12 +395,30 @@ keywords = [
 ]
 
 [[rules]]
+description = "Freshbooks Access Token"
+id = "freshbooks-access-token"
+regex = '''(?i)(?:freshbooks)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "freshbooks",
+]
+
+[[rules]]
 description = "GoCardless API token"
 id = "gocardless-api-token"
 regex = '''(?i)(?:gocardless)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(live_(?i)[a-z0-9\-_=]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "live_","gocardless",
+]
+
+[[rules]]
+description = "GCP API key"
+id = "gcp-api-key"
+regex = '''(?i)\b(AIza[0-9A-Za-z\\-_]{35})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "aiza",
 ]
 
 [[rules]]
@@ -370,6 +462,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Gitter Access Token"
+id = "gitter-access-token"
+regex = '''(?i)(?:gitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "gitter",
+]
+
+[[rules]]
 description = "HashiCorp Terraform user/org API token"
 id = "hashicorp-tf-api-token"
 regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
@@ -380,7 +481,7 @@ keywords = [
 [[rules]]
 description = "Heroku API Key"
 id = "heroku-api-key"
-regex = '''(?i)(?:heroku)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:heroku)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "heroku",
@@ -402,6 +503,42 @@ regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>
 secretGroup = 1
 keywords = [
     "intercom",
+]
+
+[[rules]]
+description = "Kraken Access Token"
+id = "kraken-access-token"
+regex = '''(?i)(?:kraken)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9\/=_\+\-]{80,90})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kraken",
+]
+
+[[rules]]
+description = "Kucoin Access Token"
+id = "kucoin-access-token"
+regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kucoin",
+]
+
+[[rules]]
+description = "Kucoin Secret Key"
+id = "kucoin-secret-key"
+regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kucoin",
+]
+
+[[rules]]
+description = "Launchdarkly Access Token"
+id = "launchdarkly-access-token"
+regex = '''(?i)(?:launchdarkly)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "launchdarkly",
 ]
 
 [[rules]]
@@ -503,6 +640,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Mattermostpersonaltoken Access Token"
+id = "mattermostpersonaltoken-access-token"
+regex = '''(?i)(?:mattermost)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{26})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mattermost",
+]
+
+[[rules]]
 description = "MessageBird API token"
 id = "messagebird-api-token"
 regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60]|$)'''
@@ -514,10 +660,19 @@ keywords = [
 [[rules]]
 description = "MessageBird client ID"
 id = "messagebird-client-id"
-regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "messagebird","message-bird","message_bird",
+]
+
+[[rules]]
+description = "Netlify Access Token"
+id = "netlify-access-token"
+regex = '''(?i)(?:netlify)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{40,46})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "netlify",
 ]
 
 [[rules]]
@@ -554,6 +709,33 @@ regex = '''(?i)\b(npm_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "npm_",
+]
+
+[[rules]]
+description = "Nytimes Access Token"
+id = "nytimes-access-token"
+regex = '''(?i)(?:nytimes|new-york-times,|newyorktimes)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "nytimes","new-york-times","newyorktimes",
+]
+
+[[rules]]
+description = "Plaidkey Client ID"
+id = "plaid-client-id"
+regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "plaid",
+]
+
+[[rules]]
+description = "Plaid API Secret"
+id = "plaid-api-secret"
+regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "plaid",
 ]
 
 [[rules]]
@@ -627,6 +809,33 @@ keywords = [
 ]
 
 [[rules]]
+description = "RapidAPI Access Token"
+id = "rapidapi-access-token"
+regex = '''(?i)(?:rapidapi)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{50})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "rapidapi",
+]
+
+[[rules]]
+description = "Sendbird Access ID"
+id = "sendbird-access-id"
+regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sendbird",
+]
+
+[[rules]]
+description = "Sendbird Access Token"
+id = "sendbird-access-token"
+regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sendbird",
+]
+
+[[rules]]
 description = "SendGrid API token"
 id = "sendgrid-api-token"
 regex = '''(?i)\b(SG\.(?i)[a-z0-9=_\-\.]{66})(?:['|\"|\n|\r|\s|\x60]|$)'''
@@ -642,6 +851,15 @@ regex = '''(?i)\b(xkeysib-[a-f0-9]{64}\-(?i)[a-z0-9]{16})(?:['|\"|\n|\r|\s|\x60]
 secretGroup = 1
 keywords = [
     "xkeysib-",
+]
+
+[[rules]]
+description = "Sentrytoken Access Token"
+id = "sentrytoken-access-token"
+regex = '''(?i)(?:sentry)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sentry",
 ]
 
 [[rules]]
@@ -710,6 +928,41 @@ keywords = [
 ]
 
 [[rules]]
+description = "Square Access Token"
+id = "square-access-token"
+regex = '''(?i)\b(sq0atp-[0-9A-Za-z\-_]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    
+]
+
+[[rules]]
+description = "Squarespace Access Token"
+id = "squarespace-access-token"
+regex = '''(?i)(?:squarespace)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "squarespace",
+]
+
+[[rules]]
+description = "SumoLogic Access ID"
+id = "sumologic-access-id"
+regex = '''(?i)(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{14})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sumo",
+]
+
+[[rules]]
+description = "SumoLogic Access Token"
+id = "sumologic-access-token"
+regex = '''(?i)(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sumo",
+]
+
+[[rules]]
 description = "Twilio API Key"
 id = "twilio-api-key"
 regex = '''SK[0-9a-fA-F]{32}'''
@@ -727,9 +980,45 @@ keywords = [
 ]
 
 [[rules]]
-description = "twitter"
-id = "twitter"
-regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{35,44})(?:['|\"|\n|\r|\s|\x60]|$)'''
+description = "twitter-api-key"
+id = "Twitter API Key"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "twitter-api-secret"
+id = "Twitter API Secret"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{50})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "twitter-access-token"
+id = "Twitter access token"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "twitter-access-secret"
+id = "Twitter access secret"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{45})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "twitter-bearer-token"
+id = "Twitter Bearer Token"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(A{22}[a-zA-Z0-9%]{80,100})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "twitter",
@@ -742,6 +1031,33 @@ regex = '''(?i)(?:typeform)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>
 secretGroup = 1
 keywords = [
     "tfp_",
+]
+
+[[rules]]
+description = "Yandex API Key"
+id = "yandex-api-key"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(AQVN[A-Za-z0-9_\-]{35,38})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
+]
+
+[[rules]]
+description = "Yandex AWS Access Token"
+id = "yandex-aws-access-token"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(YC[a-zA-Z0-9_\-]{38})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
+]
+
+[[rules]]
+description = "Yandex Access Token"
+id = "yandex-access-token"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
 ]
 
 [[rules]]
