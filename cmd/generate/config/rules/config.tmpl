@@ -19,8 +19,10 @@ regexes = [
     ]
 paths = [
     '''gitleaks.toml''',
-    '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
-    '''(go.mod|go.sum)$'''
+    '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
+    '''(go.mod|go.sum)$''',
+    '''node_modules''',
+    '''vendor''',
 ]
 
 {{ range $i, $rule := .Rules }}[[rules]]

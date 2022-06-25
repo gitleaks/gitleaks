@@ -229,7 +229,7 @@ var DefaultStopWords = []string{
 	"gaia",
 	"display",
 	"universal",
-	"function",
+	"func",
 	"metadata",
 	"hipchat",
 	"under",
