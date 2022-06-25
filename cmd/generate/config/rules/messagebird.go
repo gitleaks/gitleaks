@@ -41,7 +41,7 @@ func MessageBirdClientID() *config.Rule {
 			"messagebird",
 			"message-bird",
 			"message_bird",
-		}, `[a-h0-9]{8}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{4}-[a-h0-9]{12}`),
+		}, hex8_4_4_4_12()),
 		SecretGroup: 1,
 		Keywords: []string{
 			"messagebird",

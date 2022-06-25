@@ -68,6 +68,7 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
+			fmt.Println(r.Regex.String())
 			log.Fatal().Msgf("Failed to validate (tp) %s %s", r.RuleID, tp)
 		}
 	}
@@ -91,6 +92,18 @@ func alphaNumeric(size string) string {
 	return fmt.Sprintf(`[a-z0-9]{%s}`, size)
 }
 
+func alphaNumericExtendedShort(size string) string {
+	return fmt.Sprintf(`[a-z0-9_-]{%s}`, size)
+}
+
 func alphaNumericExtended(size string) string {
 	return fmt.Sprintf(`[a-z0-9=_\-]{%s}`, size)
+}
+
+func alphaNumericExtendedLong(size string) string {
+	return fmt.Sprintf(`[a-z0-9\/=_\+\-]{%s}`, size)
+}
+
+func hex8_4_4_4_12() string {
+	return `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`
 }
