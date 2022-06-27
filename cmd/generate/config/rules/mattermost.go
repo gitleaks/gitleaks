@@ -8,8 +8,8 @@ import (
 func MattermostAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		RuleID:      "mattermostpersonaltoken-access-token",
-		Description: "Mattermostpersonaltoken Access Token",
+		RuleID:      "mattermost-access-token",
+		Description: "Mattermost Access Token",
 		Regex:       generateSemiGenericRegex([]string{"mattermost"}, alphaNumeric("26")),
 		SecretGroup: 1,
 		Keywords: []string{
