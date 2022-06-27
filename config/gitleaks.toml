@@ -124,6 +124,24 @@ keywords = [
 ]
 
 [[rules]]
+description = "Bittrex Access Key"
+id = "bittrex-access-key"
+regex = '''(?i)(?:bittrex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "bittrex",
+]
+
+[[rules]]
+description = "Bittrex Secret Key"
+id = "bittrex-secret-key"
+regex = '''(?i)(?:bittrex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "bittrex",
+]
+
+[[rules]]
 description = "Beamer API token"
 id = "beamer-api-token"
 regex = '''(?i)(?:beamer)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(b_[a-z0-9=_\-]{44})(?:['|\"|\n|\r|\s|\x60]|$)'''

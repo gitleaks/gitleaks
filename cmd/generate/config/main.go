@@ -28,6 +28,8 @@ func main() {
 	configRules = append(configRules, rules.AWS())
 	configRules = append(configRules, rules.BitBucketClientID())
 	configRules = append(configRules, rules.BitBucketClientSecret())
+	configRules = append(configRules, rules.BittrexAccessKey())
+	configRules = append(configRules, rules.BittrexSecretKey())
 	configRules = append(configRules, rules.Beamer())
 	configRules = append(configRules, rules.CoinbaseAccessToken())
 	configRules = append(configRules, rules.Clojars())
