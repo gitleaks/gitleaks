@@ -12,11 +12,6 @@ title = "gitleaks config"
 
 [allowlist]
 description = "global allow lists"
-regexes = [
-    '''219-09-9999''',
-    '''078-05-1120''',
-    '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
-    ]
 paths = [
     '''gitleaks.toml''',
     '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
@@ -157,7 +152,7 @@ keywords = [
 [[rules]]
 description = "Confluent Access Token"
 id = "confluent-access-token"
-regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-zA-Z-0-9]{16})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{16})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "confluent",
@@ -166,7 +161,7 @@ keywords = [
 [[rules]]
 description = "Confluent Secret Key"
 id = "confluent-secret-key"
-regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-zA-Z-0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:confluent)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "confluent",
@@ -517,7 +512,7 @@ keywords = [
 [[rules]]
 description = "Kucoin Access Token"
 id = "kucoin-access-token"
-regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "kucoin",
@@ -829,7 +824,7 @@ keywords = [
 [[rules]]
 description = "Sendbird Access Token"
 id = "sendbird-access-token"
-regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
     "sendbird",
@@ -1291,7 +1286,7 @@ stopwords= [
     "gaia",
     "display",
     "universal",
-    "function",
+    "func",
     "metadata",
     "hipchat",
     "under",
