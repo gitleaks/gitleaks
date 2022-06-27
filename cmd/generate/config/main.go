@@ -16,9 +16,11 @@ const (
 
 func main() {
 	configRules := []*config.Rule{}
+	configRules = append(configRules, rules.AdafruitAPIKey())
 	configRules = append(configRules, rules.AdobeClientID())
 	configRules = append(configRules, rules.AdobeClientSecret())
 	configRules = append(configRules, rules.AgeSecretKey())
+	configRules = append(configRules, rules.Airtable())
 	configRules = append(configRules, rules.AlgoliaApiKey())
 	configRules = append(configRules, rules.AlibabaAccessKey())
 	configRules = append(configRules, rules.AlibabaSecretKey())
