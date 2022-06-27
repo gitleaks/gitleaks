@@ -185,8 +185,8 @@ keywords = [
 ]
 
 [[rules]]
-description = "Datadogtoken Access Token"
-id = "datadogtoken-access-token"
+description = "Datadog Access Token"
+id = "datadog-access-token"
 regex = '''(?i)(?:datadog)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [
@@ -716,7 +716,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Plaidkey Client ID"
+description = "Plaid Client ID"
 id = "plaid-client-id"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -849,8 +849,8 @@ keywords = [
 ]
 
 [[rules]]
-description = "Sentrytoken Access Token"
-id = "sentrytoken-access-token"
+description = "Sentry Access Token"
+id = "sentry-access-token"
 regex = '''(?i)(?:sentry)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
 keywords = [

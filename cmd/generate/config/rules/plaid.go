@@ -9,7 +9,7 @@ func PlaidAccessID() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "plaid-client-id",
-		Description: "Plaidkey Client ID",
+		Description: "Plaid Client ID",
 		Regex:       generateSemiGenericRegex([]string{"plaid"}, alphaNumeric("24")),
 		SecretGroup: 1,
 		Keywords: []string{

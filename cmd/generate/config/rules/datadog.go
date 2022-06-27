@@ -8,8 +8,8 @@ import (
 func DatadogtokenAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		RuleID:      "datadogtoken-access-token",
-		Description: "Datadogtoken Access Token",
+		RuleID:      "datadog-access-token",
+		Description: "Datadog Access Token",
 		Regex: generateSemiGenericRegex([]string{"datadog"},
 			alphaNumeric("40")),
 		SecretGroup: 1,

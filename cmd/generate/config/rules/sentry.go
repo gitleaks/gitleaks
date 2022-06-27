@@ -8,8 +8,8 @@ import (
 func SentryAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		RuleID:      "sentrytoken-access-token",
-		Description: "Sentrytoken Access Token",
+		RuleID:      "sentry-access-token",
+		Description: "Sentry Access Token",
 		Regex:       generateSemiGenericRegex([]string{"sentry"}, hex("64")),
 		SecretGroup: 1,
 		Keywords: []string{

@@ -68,7 +68,6 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
-			fmt.Println(r.Regex.String())
 			log.Fatal().Msgf("Failed to validate (tp) %s %s", r.RuleID, tp)
 		}
 	}
