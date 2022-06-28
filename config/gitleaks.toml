@@ -1119,6 +1119,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Zendesk Secret Key"
+id = "zendesk-secret-key"
+regex = '''(?i)(?:zendesk)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "zendesk",
+]
+
+[[rules]]
 description = "Generic API Key"
 id = "generic-api-key"
 regex = '''(?i)(?:key|api|token|secret|client|passwd|password|auth)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60]|$)'''

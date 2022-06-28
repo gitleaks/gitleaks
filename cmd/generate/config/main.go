@@ -144,6 +144,7 @@ func main() {
 	configRules = append(configRules, rules.YandexAPIKey())
 	configRules = append(configRules, rules.YandexAWSAccessToken())
 	configRules = append(configRules, rules.YandexAccessToken())
+	configRules = append(configRules, rules.ZendeskSecretKey())
 	configRules = append(configRules, rules.GenericCredential())
 
 	// ensure rules have unique ids
