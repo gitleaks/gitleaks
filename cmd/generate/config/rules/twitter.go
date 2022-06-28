@@ -8,8 +8,8 @@ import (
 func TwitterAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter-api-key",
-		RuleID:      "Twitter API Key",
+		Description: "Twitter API Key",
+		RuleID:      "twitter-api-key",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("25")),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
@@ -25,8 +25,8 @@ func TwitterAPIKey() *config.Rule {
 func TwitterAPISecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter-api-secret",
-		RuleID:      "Twitter API Secret",
+		Description: "Twitter API Secret",
+		RuleID:      "twitter-api-secret",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("50")),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
@@ -42,8 +42,8 @@ func TwitterAPISecret() *config.Rule {
 func TwitterBearerToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter-bearer-token",
-		RuleID:      "Twitter Bearer Token",
+		Description: "Twitter Bearer Token",
+		RuleID:      "twitter-bearer-token",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, "A{22}[a-zA-Z0-9%]{80,100}"),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
@@ -59,8 +59,8 @@ func TwitterBearerToken() *config.Rule {
 func TwitterAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter-access-token",
-		RuleID:      "Twitter access token",
+		Description: "Twitter Access Token",
+		RuleID:      "twitter-access-token",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, "[0-9]{15,25}-[a-zA-Z0-9]{20,40}"),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
@@ -76,8 +76,8 @@ func TwitterAccessToken() *config.Rule {
 func TwitterAccessSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "twitter-access-secret",
-		RuleID:      "Twitter access secret",
+		Description: "Twitter Access Secret",
+		RuleID:      "twitter-access-secret",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("45")),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
