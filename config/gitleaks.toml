@@ -1021,6 +1021,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Travis CI Access Token"
+id = "travisci-access-token"
+regex = '''(?i)(?:travis)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "travis",
+]
+
+[[rules]]
 description = "Twilio API Key"
 id = "twilio-api-key"
 regex = '''SK[0-9a-fA-F]{32}'''

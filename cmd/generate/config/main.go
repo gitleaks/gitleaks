@@ -133,6 +133,7 @@ func main() {
 	configRules = append(configRules, rules.SquareSpaceAccessToken())
 	configRules = append(configRules, rules.SumoLogicAccessID())
 	configRules = append(configRules, rules.SumoLogicAccessToken())
+	configRules = append(configRules, rules.TravisCIAccessToken())
 	configRules = append(configRules, rules.Twilio())
 	configRules = append(configRules, rules.TwitchAPIToken())
 	configRules = append(configRules, rules.TwitterAPIKey())
