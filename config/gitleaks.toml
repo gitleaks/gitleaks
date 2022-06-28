@@ -1065,7 +1065,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Twitter access token"
+description = "Twitter Access Token"
 id = "twitter-access-token"
 regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -1074,7 +1074,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Twitter access secret"
+description = "Twitter Access Secret"
 id = "twitter-access-secret"
 regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{45})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
