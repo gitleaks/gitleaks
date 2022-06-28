@@ -33,6 +33,7 @@ func main() {
 	configRules = append(configRules, rules.BittrexAccessKey())
 	configRules = append(configRules, rules.BittrexSecretKey())
 	configRules = append(configRules, rules.Beamer())
+	configRules = append(configRules, rules.CodecovAccessToken())
 	configRules = append(configRules, rules.CoinbaseAccessToken())
 	configRules = append(configRules, rules.Clojars())
 	configRules = append(configRules, rules.ConfluentAccessToken())
@@ -102,6 +103,7 @@ func main() {
 	configRules = append(configRules, rules.NewRelicBrowserAPIKey())
 	configRules = append(configRules, rules.NPM())
 	configRules = append(configRules, rules.NytimesAccessToken())
+	configRules = append(configRules, rules.OktaAccessToken())
 	configRules = append(configRules, rules.PlaidAccessID())
 	configRules = append(configRules, rules.PlaidSecretKey())
 	configRules = append(configRules, rules.PlaidAccessToken())
@@ -142,6 +144,7 @@ func main() {
 	configRules = append(configRules, rules.YandexAPIKey())
 	configRules = append(configRules, rules.YandexAWSAccessToken())
 	configRules = append(configRules, rules.YandexAccessToken())
+	configRules = append(configRules, rules.ZendeskSecretKey())
 	configRules = append(configRules, rules.GenericCredential())
 
 	// ensure rules have unique ids
