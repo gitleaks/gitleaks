@@ -33,6 +33,7 @@ func main() {
 	configRules = append(configRules, rules.BittrexAccessKey())
 	configRules = append(configRules, rules.BittrexSecretKey())
 	configRules = append(configRules, rules.Beamer())
+	configRules = append(configRules, rules.CodecovAccessToken())
 	configRules = append(configRules, rules.CoinbaseAccessToken())
 	configRules = append(configRules, rules.Clojars())
 	configRules = append(configRules, rules.ConfluentAccessToken())
