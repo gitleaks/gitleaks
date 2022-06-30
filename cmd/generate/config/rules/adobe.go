@@ -8,7 +8,7 @@ import (
 func AdobeClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Adobe Client ID (Oauth Web)",
+		Description: "Adobe Client ID (OAuth Web)",
 		RuleID:      "adobe-client-id",
 		Regex:       generateSemiGenericRegex([]string{"adobe"}, hex("32")),
 		SecretGroup: 1,
