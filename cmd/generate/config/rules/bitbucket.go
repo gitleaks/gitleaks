@@ -8,7 +8,7 @@ import (
 func BitBucketClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "BitBucket Client ID",
+		Description: "Bitbucket Client ID",
 		RuleID:      "bitbucket-client-id",
 		Regex:       generateSemiGenericRegex([]string{"bitbucket"}, alphaNumeric("32")),
 		SecretGroup: 1,
@@ -25,7 +25,7 @@ func BitBucketClientID() *config.Rule {
 func BitBucketClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "BitBucket Client Secret",
+		Description: "Bitbucket Client Secret",
 		RuleID:      "bitbucket-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"bitbucket"}, alphaNumericExtended("64")),
 		SecretGroup: 1,

@@ -10,7 +10,7 @@ import (
 func Gitlab() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Gitlab Personal Access Token",
+		Description: "GitLab Personal Access Token",
 		RuleID:      "gitlab-pat",
 		Regex:       regexp.MustCompile(`glpat-[0-9a-zA-Z\-\_]{20}`),
 		Keywords:    []string{"glpat-"},

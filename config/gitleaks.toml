@@ -30,7 +30,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Adobe Client ID (Oauth Web)"
+description = "Adobe Client ID (OAuth Web)"
 id = "adobe-client-id"
 regex = '''(?i)(?:adobe)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -124,7 +124,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "BitBucket Client ID"
+description = "Bitbucket Client ID"
 id = "bitbucket-client-id"
 regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -133,7 +133,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "BitBucket Client Secret"
+description = "Bitbucket Client Secret"
 id = "bitbucket-client-secret"
 regex = '''(?i)(?:bitbucket)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -349,7 +349,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "facebook"
+description = "Facebook"
 id = "facebook"
 regex = '''(?i)(?:facebook)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
 secretGroup = 1
@@ -494,7 +494,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Gitlab Personal Access Token"
+description = "GitLab Personal Access Token"
 id = "gitlab-pat"
 regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
 keywords = [
