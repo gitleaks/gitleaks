@@ -28,9 +28,14 @@
   </p>
 </p>
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
+Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code. 
 
-[![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)
+| demos |
+| ----------- |
+| cli | 
+| [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
+| [Github-Action](https://github.com/gitleaks/gitleaks-action) |
+|![gitleaks-action-demo](https://user-images.githubusercontent.com/15034943/178075970-9d01fa18-f8d1-4197-8f58-16380a12ec55.gif)|
 
 ## Getting Started
 
