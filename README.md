@@ -30,16 +30,14 @@
 
 Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code. 
 
-| demos |
+| Demos |
 | ----------- |
-| cli | 
-| [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
-| [Github-Action](https://github.com/gitleaks/gitleaks-action) |
-|![gitleaks-action-demo](https://user-images.githubusercontent.com/15034943/178075970-9d01fa18-f8d1-4197-8f58-16380a12ec55.gif)|
+| CLI [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
+| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-action-demo](https://user-images.githubusercontent.com/15034943/178075970-9d01fa18-f8d1-4197-8f58-16380a12ec55.gif)|
 
 ## Getting Started
 
-Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo.
+Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action) (see demo above).
 
 ### MacOS
 
