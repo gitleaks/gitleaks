@@ -15,6 +15,7 @@ var DefaultConfig string
 // It is used as an intermediary to convert the Viper config to the Config struct.
 type ViperConfig struct {
 	Description string
+	Extends     Extends
 	Rules       []struct {
 		ID          string
 		Description string
@@ -42,11 +43,20 @@ type ViperConfig struct {
 
 // Config is a configuration struct that contains rules and an allowlist if present.
 type Config struct {
+	Extends     Extends
 	Path        string
 	Description string
 	Rules       []*Rule
 	Allowlist   Allowlist
 	Keywords    []string
+}
+
+// Extends is a struct that allows users to define how they want their
+// configuration extended by other configuration files.
+type Extends struct {
+	Path       string
+	URL        string
+	UseDefault bool
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
@@ -117,8 +127,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	for _, a := range vc.Allowlist.Paths {
 		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 	}
-	return Config{
+	c := Config{
 		Description: vc.Description,
+		Extends:     vc.Extends,
 		Rules:       rules,
 		Allowlist: Allowlist{
 			Regexes:   allowlistRegexes,
@@ -127,5 +138,23 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			StopWords: vc.Allowlist.StopWords,
 		},
 		Keywords: keywords,
-	}, nil
+	}
+
+	if c.Extends.UseDefault {
+
+	}
+
+	return c, nil
+}
+
+func (c *Config) extendDefault() {
+
+}
+
+func (c *Config) extendPath() {
+
+}
+
+func (c *Config) extendURL() {
+
 }
