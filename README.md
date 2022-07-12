@@ -33,7 +33,7 @@ Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets l
 | Demos |
 | ----------- |
 | CLI [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
-| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-action-demo](https://user-images.githubusercontent.com/15034943/178075970-9d01fa18-f8d1-4197-8f58-16380a12ec55.gif)|
+| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-demo-fast-cropped](https://user-images.githubusercontent.com/15034943/178513034-de5a1906-b71d-454a-a792-47b7ac0e21e6.gif)|
 
 ## Getting Started
 
