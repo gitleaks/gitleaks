@@ -1101,6 +1101,22 @@ keywords = [
 ]
 
 [[rules]]
+description = "Vault Batch Token"
+id = "vault-batch-token"
+regex = '''(?i)\b(hvb\.[a-z0-9_-]{138,})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "hvb",
+]
+
+[[rules]]
+description = "Vault Service Token"
+id = "vault-service-token"
+regex = '''(?i)\b(hvs\.[a-z0-9_-]{90,})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "hvs",
+]
+
+[[rules]]
 description = "Yandex API Key"
 id = "yandex-api-key"
 regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(AQVN[A-Za-z0-9_\-]{35,38})(?:['|\"|\n|\r|\s|\x60]|$)'''
