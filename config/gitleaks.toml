@@ -1021,6 +1021,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Microsoft Teams Webhook"
+id = "microsoft-teams-webhook"
+regex = '''https:\/\/[a-z0-9]+\.webhook\.office\.com\/webhookb2\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}\/IncomingWebhook\/[a-z0-9]{32}\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}'''
+keywords = [
+    "webhook.office.com","webhookb2","incomingwebhook",
+]
+
+[[rules]]
 description = "Travis CI Access Token"
 id = "travisci-access-token"
 regex = '''(?i)(?:travis)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
