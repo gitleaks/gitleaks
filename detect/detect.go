@@ -140,7 +140,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-        d.gitleaksIgnore[scanner.Text()] = true
+		d.gitleaksIgnore[scanner.Text()] = true
 	}
 	return nil
 }
@@ -450,6 +450,13 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
+	// check if we should ignore this finding
+	if _, ok := d.gitleaksIgnore[finding.FindingID]; ok {
+		log.Debug().Msgf("ignoring finding with FindingID %s",
+			finding.FindingID)
+		return
+	}
+
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
@@ -462,9 +469,3 @@ func (d *Detector) addFinding(finding report.Finding) {
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
 }
-
-func (d *Detector) shouldIgnore(finding report.Finding) {
-
-
-}
-
