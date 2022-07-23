@@ -83,11 +83,11 @@ func initConfig() {
 	}
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
-		log.Debug().Msgf("Using gitleaks config %s from `--config`", cfgPath)
+		log.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
 	} else if os.Getenv("GITLEAKS_CONFIG") != "" {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
 		viper.SetConfigFile(envPath)
-		log.Debug().Msgf("Using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
 	} else {
 		source, err := rootCmd.Flags().GetString("source")
 		if err != nil {
@@ -99,7 +99,7 @@ func initConfig() {
 		}
 
 		if !fileInfo.IsDir() {
-			log.Debug().Msgf("Unable to load gitleaks config from %s since --source=%s is a file, using default config",
+			log.Debug().Msgf("unable to load gitleaks config from %s since --source=%s is a file, using default config",
 				filepath.Join(source, ".gitleaks.toml"), source)
 			viper.SetConfigType("toml")
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
@@ -109,14 +109,14 @@ func initConfig() {
 		}
 
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
-			log.Debug().Msgf("No gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
+			log.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
 			viper.SetConfigType("toml")
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				log.Fatal().Msgf("err reading default config toml %s", err.Error())
 			}
 			return
 		} else {
-			log.Debug().Msgf("Using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
+			log.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
 		}
 
 		viper.AddConfigPath(source)
@@ -124,7 +124,7 @@ func initConfig() {
 		viper.SetConfigType("toml")
 	}
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal().Msgf("Unable to load gitleaks config, err: %s", err)
+		log.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
 }
 

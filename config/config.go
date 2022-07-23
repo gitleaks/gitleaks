@@ -165,15 +165,18 @@ func (c *Config) extendDefault() {
 	extendDepth++
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
-		log.Fatal().Msgf("err reading toml %s", err.Error())
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	defaultViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config")
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	cfg, err := defaultViperConfig.Translate()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config")
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	log.Debug().Msg("extending config with default config")
 	c.extend(cfg)
@@ -184,15 +187,18 @@ func (c *Config) extendPath() {
 	extendDepth++
 	viper.SetConfigFile(c.Extends.Path)
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal().Msgf("Unable to load gitleaks config, err: %s", err)
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	extensionViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config")
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config")
+		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+        return
 	}
 	log.Debug().Msgf("extending config with %s", c.Extends.Path)
 	c.extend(cfg)
@@ -203,10 +209,9 @@ func (c *Config) extendURL() {
 }
 
 func (c *Config) extend(extensionConfig Config) {
-	// iterate through default rules and add whichever rules
-	// are not in the base config rules but are in the default rules
 	for ruleID, rule := range extensionConfig.Rules {
 		if _, ok := c.Rules[ruleID]; !ok {
+	        log.Trace().Msgf("adding %s to base config", ruleID)
 			c.Rules[ruleID] = rule
 			c.Keywords = append(c.Keywords, rule.Keywords...)
 		}
