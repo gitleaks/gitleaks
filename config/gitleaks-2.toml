@@ -1,0 +1,2367 @@
+
+[[rules]]
+description = "Discord client secret"
+id = "discord-client-secret"
+regex = '''(?i)(?:discord)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "discord",
+]
+
+[[rules]]
+description = "Doppler API token"
+id = "doppler-api-token"
+regex = '''(dp\.pt\.)(?i)[a-z0-9]{43}'''
+keywords = [
+    "doppler",
+]
+
+[[rules]]
+description = "Dropbox API secret"
+id = "dropbox-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{15})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Dropbox long lived API token"
+id = "dropbox-long-lived-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Dropbox short lived API token"
+id = "dropbox-short-lived-api-token"
+regex = '''(?i)(?:dropbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(sl\.[a-z0-9\-=_]{135})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "dropbox",
+]
+
+[[rules]]
+description = "Droneci Access Token"
+id = "droneci-access-token"
+regex = '''(?i)(?:droneci)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "droneci",
+]
+
+[[rules]]
+description = "Duffel API token"
+id = "duffel-api-token"
+regex = '''duffel_(test|live)_(?i)[a-z0-9_\-=]{43}'''
+keywords = [
+    "duffel",
+]
+
+[[rules]]
+description = "Dynatrace API token"
+id = "dynatrace-api-token"
+regex = '''dt0c01\.(?i)[a-z0-9]{24}\.[a-z0-9]{64}'''
+keywords = [
+    "dynatrace",
+]
+
+[[rules]]
+description = "EasyPost API token"
+id = "easypost-api-token"
+regex = '''EZAK(?i)[a-z0-9]{54}'''
+keywords = [
+    "ezak",
+]
+
+[[rules]]
+description = "EasyPost test API token"
+id = "easypost-test-api-token"
+regex = '''EZTK(?i)[a-z0-9]{54}'''
+keywords = [
+    "eztk",
+]
+
+[[rules]]
+description = "Etsy Access Token"
+id = "etsy-access-token"
+regex = '''(?i)(?:etsy)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "etsy",
+]
+
+[[rules]]
+description = "Facebook"
+id = "facebook"
+regex = '''(?i)(?:facebook)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "facebook",
+]
+
+[[rules]]
+description = "Fastly API key"
+id = "fastly-api-token"
+regex = '''(?i)(?:fastly)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "fastly",
+]
+
+[[rules]]
+description = "Finicity Client Secret"
+id = "finicity-client-secret"
+regex = '''(?i)(?:finicity)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "finicity",
+]
+
+[[rules]]
+description = "Finicity API token"
+id = "finicity-api-token"
+regex = '''(?i)(?:finicity)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "finicity",
+]
+
+[[rules]]
+description = "Flickr Access Token"
+id = "flickr-access-token"
+regex = '''(?i)(?:flickr)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "flickr",
+]
+
+[[rules]]
+description = "Finnhub Access Token"
+id = "finnhub-access-token"
+regex = '''(?i)(?:finnhub)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "finnhub",
+]
+
+[[rules]]
+description = "Finicity Public Key"
+id = "flutterwave-public-key"
+regex = '''FLWPUBK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "flwpubk_test",
+]
+
+[[rules]]
+description = "Flutterwave Secret Key"
+id = "flutterwave-secret-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+keywords = [
+    "flwseck_test",
+]
+
+[[rules]]
+description = "Flutterwave Encryption Key"
+id = "flutterwave-encryption-key"
+regex = '''FLWSECK_TEST-(?i)[a-h0-9]{12}'''
+keywords = [
+    "flwseck_test",
+]
+
+[[rules]]
+description = "Frame.io API token"
+id = "frameio-api-token"
+regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
+keywords = [
+    "fio-u-",
+]
+
+[[rules]]
+description = "Freshbooks Access Token"
+id = "freshbooks-access-token"
+regex = '''(?i)(?:freshbooks)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "freshbooks",
+]
+
+[[rules]]
+description = "GoCardless API token"
+id = "gocardless-api-token"
+regex = '''(?i)(?:gocardless)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(live_(?i)[a-z0-9\-_=]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "live_","gocardless",
+]
+
+[[rules]]
+description = "GCP API key"
+id = "gcp-api-key"
+regex = '''(?i)\b(AIza[0-9A-Za-z\\-_]{35})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "aiza",
+]
+
+[[rules]]
+description = "GitHub Personal Access Token"
+id = "github-pat"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghp_",
+]
+
+[[rules]]
+description = "GitHub OAuth Access Token"
+id = "github-oauth"
+regex = '''gho_[0-9a-zA-Z]{36}'''
+keywords = [
+    "gho_",
+]
+
+[[rules]]
+description = "GitHub App Token"
+id = "github-app-token"
+regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghu_","ghs_",
+]
+
+[[rules]]
+description = "GitHub Refresh Token"
+id = "github-refresh-token"
+regex = '''ghr_[0-9a-zA-Z]{36}'''
+keywords = [
+    "ghr_",
+]
+
+[[rules]]
+description = "GitLab Personal Access Token"
+id = "gitlab-pat"
+regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
+keywords = [
+    "glpat-",
+]
+
+[[rules]]
+description = "Gitter Access Token"
+id = "gitter-access-token"
+regex = '''(?i)(?:gitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "gitter",
+]
+
+[[rules]]
+description = "HashiCorp Terraform user/org API token"
+id = "hashicorp-tf-api-token"
+regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
+keywords = [
+    "atlasv1",
+]
+
+[[rules]]
+description = "Heroku API Key"
+id = "heroku-api-key"
+regex = '''(?i)(?:heroku)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "heroku",
+]
+
+[[rules]]
+description = "HubSpot API Token"
+id = "hubspot-api-key"
+regex = '''(?i)(?:hubspot)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "hubspot",
+]
+
+[[rules]]
+description = "Intercom API Token"
+id = "intercom-api-key"
+regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{60})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "intercom",
+]
+
+[[rules]]
+description = "Kraken Access Token"
+id = "kraken-access-token"
+regex = '''(?i)(?:kraken)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9\/=_\+\-]{80,90})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kraken",
+]
+
+[[rules]]
+description = "Kucoin Access Token"
+id = "kucoin-access-token"
+regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kucoin",
+]
+
+[[rules]]
+description = "Kucoin Secret Key"
+id = "kucoin-secret-key"
+regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "kucoin",
+]
+
+[[rules]]
+description = "Launchdarkly Access Token"
+id = "launchdarkly-access-token"
+regex = '''(?i)(?:launchdarkly)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "launchdarkly",
+]
+
+[[rules]]
+description = "Linear API Token"
+id = "linear-api-key"
+regex = '''lin_api_(?i)[a-z0-9]{40}'''
+keywords = [
+    "lin_api_",
+]
+
+[[rules]]
+description = "Linear Client Secret"
+id = "linear-client-secret"
+regex = '''(?i)(?:linear)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "linear",
+]
+
+[[rules]]
+description = "LinkedIn Client ID"
+id = "linkedin-client-id"
+regex = '''(?i)(?:linkedin|linked-in)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{14})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "linkedin","linked-in",
+]
+
+[[rules]]
+description = "LinkedIn Client secret"
+id = "linkedin-client-secret"
+regex = '''(?i)(?:linkedin|linked-in)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{16})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "linkedin","linked-in",
+]
+
+[[rules]]
+description = "Lob API Key"
+id = "lob-api-key"
+regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}((live|test)_[a-f0-9]{35})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "test_","live_",
+]
+
+[[rules]]
+description = "Lob Publishable API Key"
+id = "lob-pub-api-key"
+regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}((test|live)_pub_[a-f0-9]{31})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "test_pub","live_pub","_pub",
+]
+
+[[rules]]
+description = "Mailchimp API key"
+id = "mailchimp-api-key"
+regex = '''(?i)(?:mailchimp)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32}-us20)(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mailchimp",
+]
+
+[[rules]]
+description = "Mailgun public validation key"
+id = "mailgun-pub-key"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(pubkey-[a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "Mailgun private API token"
+id = "mailgun-private-api-token"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(key-[a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "Mailgun webhook signing key"
+id = "mailgun-signing-key"
+regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mailgun",
+]
+
+[[rules]]
+description = "MapBox API token"
+id = "mapbox-api-token"
+regex = '''(?i)(?:mapbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mapbox",
+]
+
+[[rules]]
+description = "Mattermost Access Token"
+id = "mattermost-access-token"
+regex = '''(?i)(?:mattermost)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{26})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "mattermost",
+]
+
+[[rules]]
+description = "MessageBird API token"
+id = "messagebird-api-token"
+regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "messagebird","message-bird","message_bird",
+]
+
+[[rules]]
+description = "MessageBird client ID"
+id = "messagebird-client-id"
+regex = '''(?i)(?:messagebird|message-bird|message_bird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "messagebird","message-bird","message_bird",
+]
+
+[[rules]]
+description = "Netlify Access Token"
+id = "netlify-access-token"
+regex = '''(?i)(?:netlify)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{40,46})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "netlify",
+]
+
+[[rules]]
+description = "New Relic user API Key"
+id = "new-relic-user-api-key"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRAK-[a-z0-9]{27})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "nrak",
+]
+
+[[rules]]
+description = "New Relic user API ID"
+id = "new-relic-user-api-id"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "new-relic","newrelic","new_relic",
+]
+
+[[rules]]
+description = "New Relic ingest browser API token"
+id = "new-relic-browser-api-token"
+regex = '''(?i)(?:new-relic|newrelic|new_relic)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(NRJS-[a-f0-9]{19})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "nrjs-",
+]
+
+[[rules]]
+description = "npm access token"
+id = "npm-access-token"
+regex = '''(?i)\b(npm_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "npm_",
+]
+
+[[rules]]
+description = "Nytimes Access Token"
+id = "nytimes-access-token"
+regex = '''(?i)(?:nytimes|new-york-times,|newyorktimes)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "nytimes","new-york-times","newyorktimes",
+]
+
+[[rules]]
+description = "Okta Access Token"
+id = "okta-access-token"
+regex = '''(?i)(?:okta)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{42})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "okta",
+]
+
+[[rules]]
+description = "Plaid Client ID"
+id = "plaid-client-id"
+regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "plaid",
+]
+
+[[rules]]
+description = "Plaid Secret key"
+id = "plaid-secret-key"
+regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "plaid",
+]
+
+[[rules]]
+description = "Plaid API Token"
+id = "plaid-api-token"
+regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "plaid",
+]
+
+[[rules]]
+description = "PlanetScale password"
+id = "planetscale-password"
+regex = '''(?i)\b(pscale_pw_(?i)[a-z0-9=\-_\.]{32,64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "pscale_pw_",
+]
+
+[[rules]]
+description = "PlanetScale API token"
+id = "planetscale-api-token"
+regex = '''(?i)\b(pscale_tkn_(?i)[a-z0-9=\-_\.]{32,64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "pscale_tkn_",
+]
+
+[[rules]]
+description = "PlanetScale OAuth token"
+id = "planetscale-oauth-token"
+regex = '''(?i)\b(pscale_oauth_(?i)[a-z0-9=\-_\.]{32,64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "pscale_oauth_",
+]
+
+[[rules]]
+description = "Postman API token"
+id = "postman-api-token"
+regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "pmak-",
+]
+
+[[rules]]
+description = "Private Key"
+id = "private-key"
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
+keywords = [
+    "-----begin",
+]
+
+[[rules]]
+description = "Pulumi API token"
+id = "pulumi-api-token"
+regex = '''(?i)\b(pul-[a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "pul-",
+]
+
+[[rules]]
+description = "PyPI upload token"
+id = "pypi-upload-token"
+regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''
+keywords = [
+    "pypi-ageichlwas5vcmc",
+]
+
+[[rules]]
+description = "Rubygem API token"
+id = "rubygems-api-token"
+regex = '''(?i)\b(rubygems_[a-f0-9]{48})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "rubygems_",
+]
+
+[[rules]]
+description = "RapidAPI Access Token"
+id = "rapidapi-access-token"
+regex = '''(?i)(?:rapidapi)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{50})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "rapidapi",
+]
+
+[[rules]]
+description = "Sendbird Access ID"
+id = "sendbird-access-id"
+regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sendbird",
+]
+
+[[rules]]
+description = "Sendbird Access Token"
+id = "sendbird-access-token"
+regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sendbird",
+]
+
+[[rules]]
+description = "SendGrid API token"
+id = "sendgrid-api-token"
+regex = '''(?i)\b(SG\.(?i)[a-z0-9=_\-\.]{66})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sg.",
+]
+
+[[rules]]
+description = "Sendinblue API token"
+id = "sendinblue-api-token"
+regex = '''(?i)\b(xkeysib-[a-f0-9]{64}\-(?i)[a-z0-9]{16})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "xkeysib-",
+]
+
+[[rules]]
+description = "Sentry Access Token"
+id = "sentry-access-token"
+regex = '''(?i)(?:sentry)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sentry",
+]
+
+[[rules]]
+description = "Shippo API token"
+id = "shippo-api-token"
+regex = '''(?i)\b(shippo_(live|test)_[a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "shippo_",
+]
+
+[[rules]]
+description = "Shopify access token"
+id = "shopify-access-token"
+regex = '''shpat_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpat_",
+]
+
+[[rules]]
+description = "Shopify custom access token"
+id = "shopify-custom-access-token"
+regex = '''shpca_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpca_",
+]
+
+[[rules]]
+description = "Shopify private app access token"
+id = "shopify-private-app-access-token"
+regex = '''shppa_[a-fA-F0-9]{32}'''
+keywords = [
+    "shppa_",
+]
+
+[[rules]]
+description = "Shopify shared secret"
+id = "shopify-shared-secret"
+regex = '''shpss_[a-fA-F0-9]{32}'''
+keywords = [
+    "shpss_",
+]
+
+[[rules]]
+description = "Slack token"
+id = "slack-access-token"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
+keywords = [
+    "xoxb","xoxa","xoxp","xoxr","xoxs",
+]
+
+[[rules]]
+description = "Slack Webhook"
+id = "slack-web-hook"
+regex = '''https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}'''
+keywords = [
+    "hooks.slack.com",
+]
+
+[[rules]]
+description = "Stripe"
+id = "stripe-access-token"
+regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
+keywords = [
+    "sk_test","pk_test","sk_live","pk_live",
+]
+
+[[rules]]
+description = "Square Access Token"
+id = "square-access-token"
+regex = '''(?i)\b(sq0atp-[0-9A-Za-z\-_]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+
+]
+
+[[rules]]
+description = "Squarespace Access Token"
+id = "squarespace-access-token"
+regex = '''(?i)(?:squarespace)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "squarespace",
+]
+
+[[rules]]
+description = "SumoLogic Access ID"
+id = "sumologic-access-id"
+regex = '''(?i)(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{14})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sumo",
+]
+
+[[rules]]
+description = "SumoLogic Access Token"
+id = "sumologic-access-token"
+regex = '''(?i)(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "sumo",
+]
+
+[[rules]]
+description = "Travis CI Access Token"
+id = "travisci-access-token"
+regex = '''(?i)(?:travis)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "travis",
+]
+
+[[rules]]
+description = "Twilio API Key"
+id = "twilio-api-key"
+regex = '''SK[0-9a-fA-F]{32}'''
+keywords = [
+    "twilio",
+]
+
+[[rules]]
+description = "Twitch API token"
+id = "twitch-api-token"
+regex = '''(?i)(?:twitch)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitch",
+]
+
+[[rules]]
+description = "Twitter API Key"
+id = "twitter-api-key"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Twitter API Secret"
+id = "twitter-api-secret"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{50})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Twitter Access Token"
+id = "twitter-access-token"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Twitter Access Secret"
+id = "twitter-access-secret"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{45})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Twitter Bearer Token"
+id = "twitter-bearer-token"
+regex = '''(?i)(?:twitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(A{22}[a-zA-Z0-9%]{80,100})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "twitter",
+]
+
+[[rules]]
+description = "Typeform API token"
+id = "typeform-api-token"
+regex = '''(?i)(?:typeform)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(tfp_[a-z0-9\-_\.=]{59})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "tfp_",
+]
+
+[[rules]]
+description = "Yandex API Key"
+id = "yandex-api-key"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(AQVN[A-Za-z0-9_\-]{35,38})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
+]
+
+[[rules]]
+description = "Yandex AWS Access Token"
+id = "yandex-aws-access-token"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(YC[a-zA-Z0-9_\-]{38})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
+]
+
+[[rules]]
+description = "Yandex Access Token"
+id = "yandex-access-token"
+regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "yandex",
+]
+
+[[rules]]
+description = "Zendesk Secret Key"
+id = "zendesk-secret-key"
+regex = '''(?i)(?:zendesk)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{40})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "zendesk",
+]
+
+[[rules]]
+description = "Generic API Key"
+id = "generic-api-key"
+regex = '''(?i)(?:key|api|token|secret|client|passwd|password|auth|access)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+entropy = 3.5
+keywords = [
+    "key","api","token","secret","client","passwd","password","auth","access",
+]
+[rules.allowlist]
+stopwords= [
+    "client",
+    "endpoint",
+    "vpn",
+    "_ec2_",
+    "aws_",
+    "authorize",
+    "author",
+    "define",
+    "config",
+    "credential",
+    "setting",
+    "sample",
+    "xxxxxx",
+    "000000",
+    "buffer",
+    "delete",
+    "aaaaaa",
+    "fewfwef",
+    "getenv",
+    "env_",
+    "system",
+    "example",
+    "ecdsa",
+    "sha256",
+    "sha1",
+    "sha2",
+    "md5",
+    "alert",
+    "wizard",
+    "target",
+    "onboard",
+    "welcome",
+    "page",
+    "exploit",
+    "experiment",
+    "expire",
+    "rabbitmq",
+    "scraper",
+    "widget",
+    "music",
+    "dns_",
+    "dns-",
+    "yahoo",
+    "want",
+    "json",
+    "action",
+    "script",
+    "fix_",
+    "fix-",
+    "develop",
+    "compas",
+    "stripe",
+    "service",
+    "master",
+    "metric",
+    "tech",
+    "gitignore",
+    "rich",
+    "open",
+    "stack",
+    "irc_",
+    "irc-",
+    "sublime",
+    "kohana",
+    "has_",
+    "has-",
+    "fabric",
+    "wordpres",
+    "role",
+    "osx_",
+    "osx-",
+    "boost",
+    "addres",
+    "queue",
+    "working",
+    "sandbox",
+    "internet",
+    "print",
+    "vision",
+    "tracking",
+    "being",
+    "generator",
+    "traffic",
+    "world",
+    "pull",
+    "rust",
+    "watcher",
+    "small",
+    "auth",
+    "full",
+    "hash",
+    "more",
+    "install",
+    "auto",
+    "complete",
+    "learn",
+    "paper",
+    "installer",
+    "research",
+    "acces",
+    "last",
+    "binding",
+    "spine",
+    "into",
+    "chat",
+    "algorithm",
+    "resource",
+    "uploader",
+    "video",
+    "maker",
+    "next",
+    "proc",
+    "lock",
+    "robot",
+    "snake",
+    "patch",
+    "matrix",
+    "drill",
+    "terminal",
+    "term",
+    "stuff",
+    "genetic",
+    "generic",
+    "identity",
+    "audit",
+    "pattern",
+    "audio",
+    "web_",
+    "web-",
+    "crud",
+    "problem",
+    "statu",
+    "cms-",
+    "cms_",
+    "arch",
+    "coffee",
+    "workflow",
+    "changelog",
+    "another",
+    "uiview",
+    "content",
+    "kitchen",
+    "gnu_",
+    "gnu-",
+    "gnu.",
+    "conf",
+    "couchdb",
+    "client",
+    "opencv",
+    "rendering",
+    "update",
+    "concept",
+    "varnish",
+    "gui_",
+    "gui-",
+    "gui.",
+    "version",
+    "shared",
+    "extra",
+    "product",
+    "still",
+    "not_",
+    "not-",
+    "not.",
+    "drop",
+    "ring",
+    "png_",
+    "png-",
+    "png.",
+    "actively",
+    "import",
+    "output",
+    "backup",
+    "start",
+    "embedded",
+    "registry",
+    "pool",
+    "semantic",
+    "instagram",
+    "bash",
+    "system",
+    "ninja",
+    "drupal",
+    "jquery",
+    "polyfill",
+    "physic",
+    "league",
+    "guide",
+    "pack",
+    "synopsi",
+    "sketch",
+    "injection",
+    "svg_",
+    "svg-",
+    "svg.",
+    "friendly",
+    "wave",
+    "convert",
+    "manage",
+    "camera",
+    "link",
+    "slide",
+    "timer",
+    "wrapper",
+    "gallery",
+    "url_",
+    "url-",
+    "url.",
+    "todomvc",
+    "requirej",
+    "party",
+    "http",
+    "payment",
+    "async",
+    "library",
+    "home",
+    "coco",
+    "gaia",
+    "display",
+    "universal",
+    "func",
+    "metadata",
+    "hipchat",
+    "under",
+    "room",
+    "config",
+    "personal",
+    "realtime",
+    "resume",
+    "database",
+    "testing",
+    "tiny",
+    "basic",
+    "forum",
+    "meetup",
+    "yet_",
+    "yet-",
+    "yet.",
+    "cento",
+    "dead",
+    "fluentd",
+    "editor",
+    "utilitie",
+    "run_",
+    "run-",
+    "run.",
+    "box_",
+    "box-",
+    "box.",
+    "bot_",
+    "bot-",
+    "bot.",
+    "making",
+    "sample",
+    "group",
+    "monitor",
+    "ajax",
+    "parallel",
+    "cassandra",
+    "ultimate",
+    "site",
+    "get_",
+    "get-",
+    "get.",
+    "gen_",
+    "gen-",
+    "gen.",
+    "gem_",
+    "gem-",
+    "gem.",
+    "extended",
+    "image",
+    "knife",
+    "asset",
+    "nested",
+    "zero",
+    "plugin",
+    "bracket",
+    "mule",
+    "mozilla",
+    "number",
+    "act_",
+    "act-",
+    "act.",
+    "map_",
+    "map-",
+    "map.",
+    "micro",
+    "debug",
+    "openshift",
+    "chart",
+    "expres",
+    "backend",
+    "task",
+    "source",
+    "translate",
+    "jbos",
+    "composer",
+    "sqlite",
+    "profile",
+    "mustache",
+    "mqtt",
+    "yeoman",
+    "have",
+    "builder",
+    "smart",
+    "like",
+    "oauth",
+    "school",
+    "guideline",
+    "captcha",
+    "filter",
+    "bitcoin",
+    "bridge",
+    "color",
+    "toolbox",
+    "discovery",
+    "new_",
+    "new-",
+    "new.",
+    "dashboard",
+    "when",
+    "setting",
+    "level",
+    "post",
+    "standard",
+    "port",
+    "platform",
+    "yui_",
+    "yui-",
+    "yui.",
+    "grunt",
+    "animation",
+    "haskell",
+    "icon",
+    "latex",
+    "cheat",
+    "lua_",
+    "lua-",
+    "lua.",
+    "gulp",
+    "case",
+    "author",
+    "without",
+    "simulator",
+    "wifi",
+    "directory",
+    "lisp",
+    "list",
+    "flat",
+    "adventure",
+    "story",
+    "storm",
+    "gpu_",
+    "gpu-",
+    "gpu.",
+    "store",
+    "caching",
+    "attention",
+    "solr",
+    "logger",
+    "demo",
+    "shortener",
+    "hadoop",
+    "finder",
+    "phone",
+    "pipeline",
+    "range",
+    "textmate",
+    "showcase",
+    "app_",
+    "app-",
+    "app.",
+    "idiomatic",
+    "edit",
+    "our_",
+    "our-",
+    "our.",
+    "out_",
+    "out-",
+    "out.",
+    "sentiment",
+    "linked",
+    "why_",
+    "why-",
+    "why.",
+    "local",
+    "cube",
+    "gmail",
+    "job_",
+    "job-",
+    "job.",
+    "rpc_",
+    "rpc-",
+    "rpc.",
+    "contest",
+    "tcp_",
+    "tcp-",
+    "tcp.",
+    "usage",
+    "buildout",
+    "weather",
+    "transfer",
+    "automated",
+    "sphinx",
+    "issue",
+    "sas_",
+    "sas-",
+    "sas.",
+    "parallax",
+    "jasmine",
+    "addon",
+    "machine",
+    "solution",
+    "dsl_",
+    "dsl-",
+    "dsl.",
+    "episode",
+    "menu",
+    "theme",
+    "best",
+    "adapter",
+    "debugger",
+    "chrome",
+    "tutorial",
+    "life",
+    "step",
+    "people",
+    "joomla",
+    "paypal",
+    "developer",
+    "solver",
+    "team",
+    "current",
+    "love",
+    "visual",
+    "date",
+    "data",
+    "canva",
+    "container",
+    "future",
+    "xml_",
+    "xml-",
+    "xml.",
+    "twig",
+    "nagio",
+    "spatial",
+    "original",
+    "sync",
+    "archived",
+    "refinery",
+    "science",
+    "mapping",
+    "gitlab",
+    "play",
+    "ext_",
+    "ext-",
+    "ext.",
+    "session",
+    "impact",
+    "set_",
+    "set-",
+    "set.",
+    "see_",
+    "see-",
+    "see.",
+    "migration",
+    "commit",
+    "community",
+    "shopify",
+    "what'",
+    "cucumber",
+    "statamic",
+    "mysql",
+    "location",
+    "tower",
+    "line",
+    "code",
+    "amqp",
+    "hello",
+    "send",
+    "index",
+    "high",
+    "notebook",
+    "alloy",
+    "python",
+    "field",
+    "document",
+    "soap",
+    "edition",
+    "email",
+    "php_",
+    "php-",
+    "php.",
+    "command",
+    "transport",
+    "official",
+    "upload",
+    "study",
+    "secure",
+    "angularj",
+    "akka",
+    "scalable",
+    "package",
+    "request",
+    "con_",
+    "con-",
+    "con.",
+    "flexible",
+    "security",
+    "comment",
+    "module",
+    "flask",
+    "graph",
+    "flash",
+    "apache",
+    "change",
+    "window",
+    "space",
+    "lambda",
+    "sheet",
+    "bookmark",
+    "carousel",
+    "friend",
+    "objective",
+    "jekyll",
+    "bootstrap",
+    "first",
+    "article",
+    "gwt_",
+    "gwt-",
+    "gwt.",
+    "classic",
+    "media",
+    "websocket",
+    "touch",
+    "desktop",
+    "real",
+    "read",
+    "recorder",
+    "moved",
+    "storage",
+    "validator",
+    "add-on",
+    "pusher",
+    "scs_",
+    "scs-",
+    "scs.",
+    "inline",
+    "asp_",
+    "asp-",
+    "asp.",
+    "timeline",
+    "base",
+    "encoding",
+    "ffmpeg",
+    "kindle",
+    "tinymce",
+    "pretty",
+    "jpa_",
+    "jpa-",
+    "jpa.",
+    "used",
+    "user",
+    "required",
+    "webhook",
+    "download",
+    "resque",
+    "espresso",
+    "cloud",
+    "mongo",
+    "benchmark",
+    "pure",
+    "cakephp",
+    "modx",
+    "mode",
+    "reactive",
+    "fuel",
+    "written",
+    "flickr",
+    "mail",
+    "brunch",
+    "meteor",
+    "dynamic",
+    "neo_",
+    "neo-",
+    "neo.",
+    "new_",
+    "new-",
+    "new.",
+    "net_",
+    "net-",
+    "net.",
+    "typo",
+    "type",
+    "keyboard",
+    "erlang",
+    "adobe",
+    "logging",
+    "ckeditor",
+    "message",
+    "iso_",
+    "iso-",
+    "iso.",
+    "hook",
+    "ldap",
+    "folder",
+    "reference",
+    "railscast",
+    "www_",
+    "www-",
+    "www.",
+    "tracker",
+    "azure",
+    "fork",
+    "form",
+    "digital",
+    "exporter",
+    "skin",
+    "string",
+    "template",
+    "designer",
+    "gollum",
+    "fluent",
+    "entity",
+    "language",
+    "alfred",
+    "summary",
+    "wiki",
+    "kernel",
+    "calendar",
+    "plupload",
+    "symfony",
+    "foundry",
+    "remote",
+    "talk",
+    "search",
+    "dev_",
+    "dev-",
+    "dev.",
+    "del_",
+    "del-",
+    "del.",
+    "token",
+    "idea",
+    "sencha",
+    "selector",
+    "interface",
+    "create",
+    "fun_",
+    "fun-",
+    "fun.",
+    "groovy",
+    "query",
+    "grail",
+    "red_",
+    "red-",
+    "red.",
+    "laravel",
+    "monkey",
+    "slack",
+    "supported",
+    "instant",
+    "value",
+    "center",
+    "latest",
+    "work",
+    "but_",
+    "but-",
+    "but.",
+    "bug_",
+    "bug-",
+    "bug.",
+    "virtual",
+    "tweet",
+    "statsd",
+    "studio",
+    "path",
+    "real-time",
+    "frontend",
+    "notifier",
+    "coding",
+    "tool",
+    "firmware",
+    "flow",
+    "random",
+    "mediawiki",
+    "bosh",
+    "been",
+    "beer",
+    "lightbox",
+    "theory",
+    "origin",
+    "redmine",
+    "hub_",
+    "hub-",
+    "hub.",
+    "require",
+    "pro_",
+    "pro-",
+    "pro.",
+    "ant_",
+    "ant-",
+    "ant.",
+    "any_",
+    "any-",
+    "any.",
+    "recipe",
+    "closure",
+    "mapper",
+    "event",
+    "todo",
+    "model",
+    "redi",
+    "provider",
+    "rvm_",
+    "rvm-",
+    "rvm.",
+    "program",
+    "memcached",
+    "rail",
+    "silex",
+    "foreman",
+    "activity",
+    "license",
+    "strategy",
+    "batch",
+    "streaming",
+    "fast",
+    "use_",
+    "use-",
+    "use.",
+    "usb_",
+    "usb-",
+    "usb.",
+    "impres",
+    "academy",
+    "slider",
+    "please",
+    "layer",
+    "cros",
+    "now_",
+    "now-",
+    "now.",
+    "miner",
+    "extension",
+    "own_",
+    "own-",
+    "own.",
+    "app_",
+    "app-",
+    "app.",
+    "debian",
+    "symphony",
+    "example",
+    "feature",
+    "serie",
+    "tree",
+    "project",
+    "runner",
+    "entry",
+    "leetcode",
+    "layout",
+    "webrtc",
+    "logic",
+    "login",
+    "worker",
+    "toolkit",
+    "mocha",
+    "support",
+    "back",
+    "inside",
+    "device",
+    "jenkin",
+    "contact",
+    "fake",
+    "awesome",
+    "ocaml",
+    "bit_",
+    "bit-",
+    "bit.",
+    "drive",
+    "screen",
+    "prototype",
+    "gist",
+    "binary",
+    "nosql",
+    "rest",
+    "overview",
+    "dart",
+    "dark",
+    "emac",
+    "mongoid",
+    "solarized",
+    "homepage",
+    "emulator",
+    "commander",
+    "django",
+    "yandex",
+    "gradle",
+    "xcode",
+    "writer",
+    "crm_",
+    "crm-",
+    "crm.",
+    "jade",
+    "startup",
+    "error",
+    "using",
+    "format",
+    "name",
+    "spring",
+    "parser",
+    "scratch",
+    "magic",
+    "try_",
+    "try-",
+    "try.",
+    "rack",
+    "directive",
+    "challenge",
+    "slim",
+    "counter",
+    "element",
+    "chosen",
+    "doc_",
+    "doc-",
+    "doc.",
+    "meta",
+    "should",
+    "button",
+    "packet",
+    "stream",
+    "hardware",
+    "android",
+    "infinite",
+    "password",
+    "software",
+    "ghost",
+    "xamarin",
+    "spec",
+    "chef",
+    "interview",
+    "hubot",
+    "mvc_",
+    "mvc-",
+    "mvc.",
+    "exercise",
+    "leaflet",
+    "launcher",
+    "air_",
+    "air-",
+    "air.",
+    "photo",
+    "board",
+    "boxen",
+    "way_",
+    "way-",
+    "way.",
+    "computing",
+    "welcome",
+    "notepad",
+    "portfolio",
+    "cat_",
+    "cat-",
+    "cat.",
+    "can_",
+    "can-",
+    "can.",
+    "magento",
+    "yaml",
+    "domain",
+    "card",
+    "yii_",
+    "yii-",
+    "yii.",
+    "checker",
+    "browser",
+    "upgrade",
+    "only",
+    "progres",
+    "aura",
+    "ruby_",
+    "ruby-",
+    "ruby.",
+    "polymer",
+    "util",
+    "lite",
+    "hackathon",
+    "rule",
+    "log_",
+    "log-",
+    "log.",
+    "opengl",
+    "stanford",
+    "skeleton",
+    "history",
+    "inspector",
+    "help",
+    "soon",
+    "selenium",
+    "lab_",
+    "lab-",
+    "lab.",
+    "scheme",
+    "schema",
+    "look",
+    "ready",
+    "leveldb",
+    "docker",
+    "game",
+    "minimal",
+    "logstash",
+    "messaging",
+    "within",
+    "heroku",
+    "mongodb",
+    "kata",
+    "suite",
+    "picker",
+    "win_",
+    "win-",
+    "win.",
+    "wip_",
+    "wip-",
+    "wip.",
+    "panel",
+    "started",
+    "starter",
+    "front-end",
+    "detector",
+    "deploy",
+    "editing",
+    "based",
+    "admin",
+    "capture",
+    "spree",
+    "page",
+    "bundle",
+    "goal",
+    "rpg_",
+    "rpg-",
+    "rpg.",
+    "setup",
+    "side",
+    "mean",
+    "reader",
+    "cookbook",
+    "mini",
+    "modern",
+    "seed",
+    "dom_",
+    "dom-",
+    "dom.",
+    "doc_",
+    "doc-",
+    "doc.",
+    "dot_",
+    "dot-",
+    "dot.",
+    "syntax",
+    "sugar",
+    "loader",
+    "website",
+    "make",
+    "kit_",
+    "kit-",
+    "kit.",
+    "protocol",
+    "human",
+    "daemon",
+    "golang",
+    "manager",
+    "countdown",
+    "connector",
+    "swagger",
+    "map_",
+    "map-",
+    "map.",
+    "mac_",
+    "mac-",
+    "mac.",
+    "man_",
+    "man-",
+    "man.",
+    "orm_",
+    "orm-",
+    "orm.",
+    "org_",
+    "org-",
+    "org.",
+    "little",
+    "zsh_",
+    "zsh-",
+    "zsh.",
+    "shop",
+    "show",
+    "workshop",
+    "money",
+    "grid",
+    "server",
+    "octopres",
+    "svn_",
+    "svn-",
+    "svn.",
+    "ember",
+    "embed",
+    "general",
+    "file",
+    "important",
+    "dropbox",
+    "portable",
+    "public",
+    "docpad",
+    "fish",
+    "sbt_",
+    "sbt-",
+    "sbt.",
+    "done",
+    "para",
+    "network",
+    "common",
+    "readme",
+    "popup",
+    "simple",
+    "purpose",
+    "mirror",
+    "single",
+    "cordova",
+    "exchange",
+    "object",
+    "design",
+    "gateway",
+    "account",
+    "lamp",
+    "intellij",
+    "math",
+    "mit_",
+    "mit-",
+    "mit.",
+    "control",
+    "enhanced",
+    "emitter",
+    "multi",
+    "add_",
+    "add-",
+    "add.",
+    "about",
+    "socket",
+    "preview",
+    "vagrant",
+    "cli_",
+    "cli-",
+    "cli.",
+    "powerful",
+    "top_",
+    "top-",
+    "top.",
+    "radio",
+    "watch",
+    "fluid",
+    "amazon",
+    "report",
+    "couchbase",
+    "automatic",
+    "detection",
+    "sprite",
+    "pyramid",
+    "portal",
+    "advanced",
+    "plu_",
+    "plu-",
+    "plu.",
+    "runtime",
+    "git_",
+    "git-",
+    "git.",
+    "uri_",
+    "uri-",
+    "uri.",
+    "haml",
+    "node",
+    "sql_",
+    "sql-",
+    "sql.",
+    "cool",
+    "core",
+    "obsolete",
+    "handler",
+    "iphone",
+    "extractor",
+    "array",
+    "copy",
+    "nlp_",
+    "nlp-",
+    "nlp.",
+    "reveal",
+    "pop_",
+    "pop-",
+    "pop.",
+    "engine",
+    "parse",
+    "check",
+    "html",
+    "nest",
+    "all_",
+    "all-",
+    "all.",
+    "chinese",
+    "buildpack",
+    "what",
+    "tag_",
+    "tag-",
+    "tag.",
+    "proxy",
+    "style",
+    "cookie",
+    "feed",
+    "restful",
+    "compiler",
+    "creating",
+    "prelude",
+    "context",
+    "java",
+    "rspec",
+    "mock",
+    "backbone",
+    "light",
+    "spotify",
+    "flex",
+    "related",
+    "shell",
+    "which",
+    "clas",
+    "webapp",
+    "swift",
+    "ansible",
+    "unity",
+    "console",
+    "tumblr",
+    "export",
+    "campfire",
+    "conway'",
+    "made",
+    "riak",
+    "hero",
+    "here",
+    "unix",
+    "unit",
+    "glas",
+    "smtp",
+    "how_",
+    "how-",
+    "how.",
+    "hot_",
+    "hot-",
+    "hot.",
+    "debug",
+    "release",
+    "diff",
+    "player",
+    "easy",
+    "right",
+    "old_",
+    "old-",
+    "old.",
+    "animate",
+    "time",
+    "push",
+    "explorer",
+    "course",
+    "training",
+    "nette",
+    "router",
+    "draft",
+    "structure",
+    "note",
+    "salt",
+    "where",
+    "spark",
+    "trello",
+    "power",
+    "method",
+    "social",
+    "via_",
+    "via-",
+    "via.",
+    "vim_",
+    "vim-",
+    "vim.",
+    "select",
+    "webkit",
+    "github",
+    "ftp_",
+    "ftp-",
+    "ftp.",
+    "creator",
+    "mongoose",
+    "led_",
+    "led-",
+    "led.",
+    "movie",
+    "currently",
+    "pdf_",
+    "pdf-",
+    "pdf.",
+    "load",
+    "markdown",
+    "phalcon",
+    "input",
+    "custom",
+    "atom",
+    "oracle",
+    "phonegap",
+    "ubuntu",
+    "great",
+    "rdf_",
+    "rdf-",
+    "rdf.",
+    "popcorn",
+    "firefox",
+    "zip_",
+    "zip-",
+    "zip.",
+    "cuda",
+    "dotfile",
+    "static",
+    "openwrt",
+    "viewer",
+    "powered",
+    "graphic",
+    "les_",
+    "les-",
+    "les.",
+    "doe_",
+    "doe-",
+    "doe.",
+    "maven",
+    "word",
+    "eclipse",
+    "lab_",
+    "lab-",
+    "lab.",
+    "hacking",
+    "steam",
+    "analytic",
+    "option",
+    "abstract",
+    "archive",
+    "reality",
+    "switcher",
+    "club",
+    "write",
+    "kafka",
+    "arduino",
+    "angular",
+    "online",
+    "title",
+    "don't",
+    "contao",
+    "notice",
+    "analyzer",
+    "learning",
+    "zend",
+    "external",
+    "staging",
+    "busines",
+    "tdd_",
+    "tdd-",
+    "tdd.",
+    "scanner",
+    "building",
+    "snippet",
+    "modular",
+    "bower",
+    "stm_",
+    "stm-",
+    "stm.",
+    "lib_",
+    "lib-",
+    "lib.",
+    "alpha",
+    "mobile",
+    "clean",
+    "linux",
+    "nginx",
+    "manifest",
+    "some",
+    "raspberry",
+    "gnome",
+    "ide_",
+    "ide-",
+    "ide.",
+    "block",
+    "statistic",
+    "info",
+    "drag",
+    "youtube",
+    "koan",
+    "facebook",
+    "paperclip",
+    "art_",
+    "art-",
+    "art.",
+    "quality",
+    "tab_",
+    "tab-",
+    "tab.",
+    "need",
+    "dojo",
+    "shield",
+    "computer",
+    "stat",
+    "state",
+    "twitter",
+    "utility",
+    "converter",
+    "hosting",
+    "devise",
+    "liferay",
+    "updated",
+    "force",
+    "tip_",
+    "tip-",
+    "tip.",
+    "behavior",
+    "active",
+    "call",
+    "answer",
+    "deck",
+    "better",
+    "principle",
+    "ches",
+    "bar_",
+    "bar-",
+    "bar.",
+    "reddit",
+    "three",
+    "haxe",
+    "just",
+    "plug-in",
+    "agile",
+    "manual",
+    "tetri",
+    "super",
+    "beta",
+    "parsing",
+    "doctrine",
+    "minecraft",
+    "useful",
+    "perl",
+    "sharing",
+    "agent",
+    "switch",
+    "view",
+    "dash",
+    "channel",
+    "repo",
+    "pebble",
+    "profiler",
+    "warning",
+    "cluster",
+    "running",
+    "markup",
+    "evented",
+    "mod_",
+    "mod-",
+    "mod.",
+    "share",
+    "csv_",
+    "csv-",
+    "csv.",
+    "response",
+    "good",
+    "house",
+    "connect",
+    "built",
+    "build",
+    "find",
+    "ipython",
+    "webgl",
+    "big_",
+    "big-",
+    "big.",
+    "google",
+    "scala",
+    "sdl_",
+    "sdl-",
+    "sdl.",
+    "sdk_",
+    "sdk-",
+    "sdk.",
+    "native",
+    "day_",
+    "day-",
+    "day.",
+    "puppet",
+    "text",
+    "routing",
+    "helper",
+    "linkedin",
+    "crawler",
+    "host",
+    "guard",
+    "merchant",
+    "poker",
+    "over",
+    "writing",
+    "free",
+    "classe",
+    "component",
+    "craft",
+    "nodej",
+    "phoenix",
+    "longer",
+    "quick",
+    "lazy",
+    "memory",
+    "clone",
+    "hacker",
+    "middleman",
+    "factory",
+    "motion",
+    "multiple",
+    "tornado",
+    "hack",
+    "ssh_",
+    "ssh-",
+    "ssh.",
+    "review",
+    "vimrc",
+    "driver",
+    "driven",
+    "blog",
+    "particle",
+    "table",
+    "intro",
+    "importer",
+    "thrift",
+    "xmpp",
+    "framework",
+    "refresh",
+    "react",
+    "font",
+    "librarie",
+    "variou",
+    "formatter",
+    "analysi",
+    "karma",
+    "scroll",
+    "tut_",
+    "tut-",
+    "tut.",
+    "apple",
+    "tag_",
+    "tag-",
+    "tag.",
+    "tab_",
+    "tab-",
+    "tab.",
+    "category",
+    "ionic",
+    "cache",
+    "homebrew",
+    "reverse",
+    "english",
+    "getting",
+    "shipping",
+    "clojure",
+    "boot",
+    "book",
+    "branch",
+    "combination",
+    "combo",
+]
