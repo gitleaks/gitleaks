@@ -1,4 +1,8 @@
 
+[extends]
+# useDefault = true
+path = "config/gitleaks-2.toml"
+
 [[rules]]
 description = "Discord client secret"
 id = "discord-client-secret"

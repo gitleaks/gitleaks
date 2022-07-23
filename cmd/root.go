@@ -19,13 +19,13 @@ const banner = `
     │╲
     │ ○
     ○ ░
-    ░    gitleaks 
+    ░    gitleaks
 
 `
 
 const configDescription = `config file path
-order of precedence: 
-1. --config/-c 
+order of precedence:
+1. --config/-c
 2. env var GITLEAKS_CONFIG
 3. (--source/-s)/.gitleaks.toml
 If none of the three options are used, then gitleaks will use the default config`
@@ -42,7 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source (default: $PWD)")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, sarif)")
-	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (debug, info, warn, error, fatal)")
+	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().Bool("redact", false, "redact secrets from logs and stdout")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
@@ -58,6 +58,8 @@ func initLog() {
 		log.Fatal().Msg(err.Error())
 	}
 	switch strings.ToLower(ll) {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case "info":

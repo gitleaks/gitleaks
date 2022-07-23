@@ -12,6 +12,8 @@ import (
 
 //go:embed gitleaks.toml
 var DefaultConfig string
+
+// lil bit of state never killed nobody
 var extendDepth int
 
 const maxExtendDepth = 2
@@ -160,7 +162,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 }
 
 func (c *Config) extendDefault() {
-    extendDepth++
+	extendDepth++
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		log.Fatal().Msgf("err reading toml %s", err.Error())
@@ -173,54 +175,48 @@ func (c *Config) extendDefault() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
-
-	// iterate through default rules and add whichever rules
-	// are not in the base config rules but are in the default rules
-	for defaultRuleID, defaultRule := range cfg.Rules {
-		if _, ok := c.Rules[defaultRuleID]; !ok {
-			c.Rules[defaultRuleID] = defaultRule
-			c.Keywords = append(c.Keywords, defaultRule.Keywords...)
-		}
-	}
-
-	// append allowlists, not attempting to merge
-	c.Allowlist.Commits = append(c.Allowlist.Commits, cfg.Allowlist.Commits...)
-	c.Allowlist.Paths = append(c.Allowlist.Paths, cfg.Allowlist.Paths...)
-	c.Allowlist.Regexes = append(c.Allowlist.Regexes, cfg.Allowlist.Regexes...)
+	log.Debug().Msg("extending config with default config")
+	c.extend(cfg)
 
 }
 
 func (c *Config) extendPath() {
-    extendDepth++
-    fmt.Println("extending")
+	extendDepth++
 	viper.SetConfigFile(c.Extends.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal().Msgf("Unable to load gitleaks config, err: %s", err)
 	}
-	defaultViperConfig := ViperConfig{}
-	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
+	extensionViperConfig := ViperConfig{}
+	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
-	cfg, err := defaultViperConfig.Translate()
+	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
+	log.Debug().Msgf("extending config with %s", c.Extends.Path)
+	c.extend(cfg)
+}
 
+func (c *Config) extendURL() {
+	// TODO
+}
+
+func (c *Config) extend(extensionConfig Config) {
 	// iterate through default rules and add whichever rules
 	// are not in the base config rules but are in the default rules
-	for defaultRuleID, defaultRule := range cfg.Rules {
-		if _, ok := c.Rules[defaultRuleID]; !ok {
-			c.Rules[defaultRuleID] = defaultRule
-			c.Keywords = append(c.Keywords, defaultRule.Keywords...)
+	for ruleID, rule := range extensionConfig.Rules {
+		if _, ok := c.Rules[ruleID]; !ok {
+			c.Rules[ruleID] = rule
+			c.Keywords = append(c.Keywords, rule.Keywords...)
 		}
 	}
 
 	// append allowlists, not attempting to merge
-	c.Allowlist.Commits = append(c.Allowlist.Commits, cfg.Allowlist.Commits...)
-	c.Allowlist.Paths = append(c.Allowlist.Paths, cfg.Allowlist.Paths...)
-	c.Allowlist.Regexes = append(c.Allowlist.Regexes, cfg.Allowlist.Regexes...)
-}
-
-func (c *Config) extendURL() {
-
+	c.Allowlist.Commits = append(c.Allowlist.Commits,
+		extensionConfig.Allowlist.Commits...)
+	c.Allowlist.Paths = append(c.Allowlist.Paths,
+		extensionConfig.Allowlist.Paths...)
+	c.Allowlist.Regexes = append(c.Allowlist.Regexes,
+		extensionConfig.Allowlist.Regexes...)
 }
