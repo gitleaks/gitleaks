@@ -85,9 +85,13 @@ func listenForStdErr(stderr io.ReadCloser) {
 	scanner := bufio.NewScanner(stderr)
 	errEncountered := false
 	for scanner.Scan() {
-		// if git throws the following error:
+		// if git throws one of the following errors:
 		//
 		//  exhaustive rename detection was skipped due to too many files.
+		//  you may want to set your diff.renameLimit variable to at least
+		//  (some large number) and retry the command.
+		//
+		//	inexact rename detection was skipped due to too many files.
 		//  you may want to set your diff.renameLimit variable to at least
 		//  (some large number) and retry the command.
 		//
@@ -97,6 +101,8 @@ func listenForStdErr(stderr io.ReadCloser) {
 		// encountered
 		if strings.Contains(scanner.Text(),
 			"exhaustive rename detection was skipped") ||
+			strings.Contains(scanner.Text(),
+				"inexact rename detection was skipped") ||
 			strings.Contains(scanner.Text(),
 				"you may want to set your diff.renameLimit") {
 
