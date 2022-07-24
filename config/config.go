@@ -17,7 +17,7 @@ var DefaultConfig string
 // yea I know, globals bad
 var extendDepth int
 
-const maxExtendDepth = 3
+const maxExtendDepth = 2
 
 // ViperConfig is the config struct used by the Viper config package
 // to parse the config file. This struct does not include regular expressions.

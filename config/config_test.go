@@ -94,6 +94,37 @@ func TestTranslate(t *testing.T) {
 			cfg:       Config{},
 			wantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
 		},
+		{
+			cfgName: "base",
+			cfg: Config{
+                Rules: map[string]Rule{
+                    "aws-access-key":
+					{
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+						Tags:        []string{"key", "AWS"},
+						Keywords:    []string{},
+						RuleID:      "aws-access-key",
+					},
+                    "aws-secret-key":
+					{
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:        []string{"key", "AWS"},
+						Keywords:    []string{},
+						RuleID:      "aws-secret-key",
+					},
+                    "aws-secret-key-again":
+					{
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:        []string{"key", "AWS"},
+						Keywords:    []string{},
+						RuleID:      "aws-secret-key-again",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
