@@ -265,10 +265,13 @@ title = "Gitleaks title"
 # Another thing to know with extending configurations is you can chain together
 # multiple configuration files to a depth of 2. Allowlist arrays are appended
 # and can contain duplicates.
+# useDefault and path can NOT be used at the same time. Choose one.
 [extend]
 # useDefault will extend the base configuration with the default gitleaks config
 useDefault = true
-# or you can supply a path to a configuration.
+# or you can supply a path to a configuration. Path is relative to where gitleaks
+# was invoked, not the location of the base config. This is a bit clunky.
+# A better alternative would be to supply an absolute path.
 path = "common_config.toml"
 
 # An array of tables that contain information that define instructions
