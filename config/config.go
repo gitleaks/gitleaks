@@ -24,7 +24,7 @@ const maxExtendDepth = 2
 // It is used as an intermediary to convert the Viper config to the Config struct.
 type ViperConfig struct {
 	Description string
-	Extends     Extends
+	Extend      Extend
 	Rules       []struct {
 		ID          string
 		Description string
@@ -52,7 +52,7 @@ type ViperConfig struct {
 
 // Config is a configuration struct that contains rules and an allowlist if present.
 type Config struct {
-	Extends     Extends
+	Extend      Extend
 	Path        string
 	Description string
 	Rules       map[string]Rule
@@ -63,9 +63,9 @@ type Config struct {
 	orderedRules []string
 }
 
-// Extends is a struct that allows users to define how they want their
+// Extend is a struct that allows users to define how they want their
 // configuration extended by other configuration files.
-type Extends struct {
+type Extend struct {
 	Path       string
 	URL        string
 	UseDefault bool
@@ -145,7 +145,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 	c := Config{
 		Description: vc.Description,
-		Extends:     vc.Extends,
+		Extend:      vc.Extend,
 		Rules:       rulesMap,
 		Allowlist: Allowlist{
 			Regexes:   allowlistRegexes,
@@ -159,9 +159,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	if maxExtendDepth != extendDepth {
 		// if the user supplied
-		if c.Extends.UseDefault {
+		if c.Extend.UseDefault {
 			c.extendDefault()
-		} else if c.Extends.Path != "" {
+		} else if c.Extend.Path != "" {
 			c.extendPath()
 		}
 
@@ -204,7 +204,7 @@ func (c *Config) extendDefault() {
 
 func (c *Config) extendPath() {
 	extendDepth++
-	viper.SetConfigFile(c.Extends.Path)
+	viper.SetConfigFile(c.Extend.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
@@ -219,7 +219,7 @@ func (c *Config) extendPath() {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
-	log.Debug().Msgf("extending config with %s", c.Extends.Path)
+	log.Debug().Msgf("extending config with %s", c.Extend.Path)
 	c.extend(cfg)
 }
 

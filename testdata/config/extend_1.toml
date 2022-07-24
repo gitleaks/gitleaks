@@ -1,6 +1,6 @@
 title = "gitleaks extended 1"
 
-[extends]
+[extend]
 path="../testdata/config/extend_2.toml"
 
 [[rules]]
