@@ -20,72 +20,68 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_aws_re",
 			cfg: Config{
-                Rules: map[string]Rule{"aws-access-key":
-					{
-						Description: "AWS Access Key",
-						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
-						Tags:        []string{"key", "AWS"},
-						Keywords:    []string{},
-						RuleID:      "aws-access-key",
-						Allowlist: Allowlist{
-							Regexes: []*regexp.Regexp{
-								regexp.MustCompile("AKIALALEMEL33243OLIA"),
-							},
+				Rules: map[string]Rule{"aws-access-key": {
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Tags:        []string{"key", "AWS"},
+					Keywords:    []string{},
+					RuleID:      "aws-access-key",
+					Allowlist: Allowlist{
+						Regexes: []*regexp.Regexp{
+							regexp.MustCompile("AKIALALEMEL33243OLIA"),
 						},
 					},
+				},
 				},
 			},
 		},
 		{
 			cfgName: "allow_commit",
 			cfg: Config{
-                Rules: map[string]Rule{"aws-access-key":
-					{
-						Description: "AWS Access Key",
-						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
-						Tags:        []string{"key", "AWS"},
-						Keywords:    []string{},
-						RuleID:      "aws-access-key",
-						Allowlist: Allowlist{
-							Commits: []string{"allowthiscommit"},
-						},
+				Rules: map[string]Rule{"aws-access-key": {
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Tags:        []string{"key", "AWS"},
+					Keywords:    []string{},
+					RuleID:      "aws-access-key",
+					Allowlist: Allowlist{
+						Commits: []string{"allowthiscommit"},
 					},
+				},
 				},
 			},
 		},
 		{
 			cfgName: "allow_path",
 			cfg: Config{
-                Rules: map[string]Rule{"aws-access-key":
-					{
-						Description: "AWS Access Key",
-						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
-						Tags:        []string{"key", "AWS"},
-						Keywords:    []string{},
-						RuleID:      "aws-access-key",
-						Allowlist: Allowlist{
-							Paths: []*regexp.Regexp{
-								regexp.MustCompile(".go"),
-							},
+				Rules: map[string]Rule{"aws-access-key": {
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Tags:        []string{"key", "AWS"},
+					Keywords:    []string{},
+					RuleID:      "aws-access-key",
+					Allowlist: Allowlist{
+						Paths: []*regexp.Regexp{
+							regexp.MustCompile(".go"),
 						},
 					},
+				},
 				},
 			},
 		},
 		{
 			cfgName: "entropy_group",
 			cfg: Config{
-                Rules: map[string]Rule{"discord-api-key":
-					{
-						Description: "Discord API key",
-						Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
-						RuleID:      "discord-api-key",
-						Allowlist:   Allowlist{},
-						Entropy:     3.5,
-						SecretGroup: 3,
-						Tags:        []string{},
-						Keywords:    []string{},
-					},
+				Rules: map[string]Rule{"discord-api-key": {
+					Description: "Discord API key",
+					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
+					RuleID:      "discord-api-key",
+					Allowlist:   Allowlist{},
+					Entropy:     3.5,
+					SecretGroup: 3,
+					Tags:        []string{},
+					Keywords:    []string{},
+				},
 				},
 			},
 		},
@@ -97,25 +93,22 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "base",
 			cfg: Config{
-                Rules: map[string]Rule{
-                    "aws-access-key":
-					{
+				Rules: map[string]Rule{
+					"aws-access-key": {
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
 						RuleID:      "aws-access-key",
 					},
-                    "aws-secret-key":
-					{
+					"aws-secret-key": {
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
 						RuleID:      "aws-secret-key",
 					},
-                    "aws-secret-key-again":
-					{
+					"aws-secret-key-again": {
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Tags:        []string{"key", "AWS"},
