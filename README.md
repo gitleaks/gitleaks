@@ -28,7 +28,7 @@
   </p>
 </p>
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code. 
+Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
 | Demos |
 | ----------- |
@@ -263,7 +263,8 @@ title = "Gitleaks title"
 # duplicate rules in both the base configuration and the extended configuration
 # the base rules will override the extended rules.
 # Another thing to know with extending configurations is you can chain together
-# multiple configuration files to a depth of 2.
+# multiple configuration files to a depth of 2. Allowlist arrays are appended
+# and can contain duplicates.
 [extend]
 # useDefault will extend the base configuration with the default gitleaks config
 useDefault = true
