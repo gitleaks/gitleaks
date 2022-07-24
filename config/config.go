@@ -57,6 +57,9 @@ type Config struct {
 	Rules       map[string]Rule
 	Allowlist   Allowlist
 	Keywords    []string
+
+	// used to keep sarif results consistent
+	orderedRules []string
 }
 
 // Extends is a struct that allows users to define how they want their
@@ -68,7 +71,10 @@ type Extends struct {
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
-	var keywords []string
+	var (
+		keywords     []string
+		orderedRules []string
+	)
 	rulesMap := make(map[string]Rule)
 
 	for _, r := range vc.Rules {
@@ -121,6 +127,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords: r.Allowlist.StopWords,
 			},
 		}
+		orderedRules = append(orderedRules, r.RuleID)
+
 		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
 			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
 		}
@@ -145,7 +153,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Commits:   vc.Allowlist.Commits,
 			StopWords: vc.Allowlist.StopWords,
 		},
-		Keywords: keywords,
+		Keywords:     keywords,
+		orderedRules: orderedRules,
 	}
 
 	if maxExtendDepth != extendDepth {
@@ -161,22 +170,32 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	return c, nil
 }
 
+func (c *Config) OrderedRules() []Rule {
+	var orderedRules []Rule
+	for _, id := range c.orderedRules {
+		if _, ok := c.Rules[id]; ok {
+			orderedRules = append(orderedRules, c.Rules[id])
+		}
+	}
+	return orderedRules
+}
+
 func (c *Config) extendDefault() {
 	extendDepth++
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	defaultViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	cfg, err := defaultViperConfig.Translate()
 	if err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	log.Debug().Msg("extending config with default config")
 	c.extend(cfg)
@@ -188,17 +207,17 @@ func (c *Config) extendPath() {
 	viper.SetConfigFile(c.Extends.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	extensionViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
-        return
+		return
 	}
 	log.Debug().Msgf("extending config with %s", c.Extends.Path)
 	c.extend(cfg)
@@ -211,7 +230,7 @@ func (c *Config) extendURL() {
 func (c *Config) extend(extensionConfig Config) {
 	for ruleID, rule := range extensionConfig.Rules {
 		if _, ok := c.Rules[ruleID]; !ok {
-	        log.Trace().Msgf("adding %s to base config", ruleID)
+			log.Trace().Msgf("adding %s to base config", ruleID)
 			c.Rules[ruleID] = rule
 			c.Keywords = append(c.Keywords, rule.Keywords...)
 		}

@@ -20,7 +20,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_aws_re",
 			cfg: Config{
-				Rules: []*Rule{
+                Rules: map[string]Rule{"aws-access-key":
 					{
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
@@ -39,7 +39,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_commit",
 			cfg: Config{
-				Rules: []*Rule{
+                Rules: map[string]Rule{"aws-access-key":
 					{
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
@@ -56,7 +56,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_path",
 			cfg: Config{
-				Rules: []*Rule{
+                Rules: map[string]Rule{"aws-access-key":
 					{
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
@@ -75,7 +75,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "entropy_group",
 			cfg: Config{
-				Rules: []*Rule{
+                Rules: map[string]Rule{"discord-api-key":
 					{
 						Description: "Discord API key",
 						Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
