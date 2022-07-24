@@ -158,7 +158,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	if maxExtendDepth != extendDepth {
-		// if the user supplied
+		// disallow both usedefault and path from being set
+		if c.Extend.Path != "" && c.Extend.UseDefault {
+			log.Fatal().Msg("unable to load config due to extend.path and extend.useDefault being set")
+		}
 		if c.Extend.UseDefault {
 			c.extendDefault()
 		} else if c.Extend.Path != "" {
