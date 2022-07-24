@@ -13,10 +13,11 @@ import (
 //go:embed gitleaks.toml
 var DefaultConfig string
 
-// lil bit of state never killed nobody
+// use to keep track of how many configs we can extend
+// yea I know, globals bad
 var extendDepth int
 
-const maxExtendDepth = 2
+const maxExtendDepth = 3
 
 // ViperConfig is the config struct used by the Viper config package
 // to parse the config file. This struct does not include regular expressions.
@@ -133,7 +134,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
 		}
 		rulesMap[r.RuleID] = r
-		// rules = append(rules, r)
 	}
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {

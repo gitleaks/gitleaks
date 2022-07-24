@@ -148,8 +148,6 @@ func main() {
 	configRules = append(configRules, rules.ZendeskSecretKey())
 	configRules = append(configRules, rules.GenericCredential())
 
-
-
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule)
 	for _, rule := range configRules {
@@ -157,8 +155,8 @@ func main() {
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
 			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
 		}
-        // TODO: eventually change all the signatures to get ride of this
-        // nasty dereferencing.
+		// TODO: eventually change all the signatures to get ride of this
+		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
 	}
 	config := config.Config{
