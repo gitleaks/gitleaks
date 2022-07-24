@@ -3,7 +3,6 @@ package config
 import (
 	_ "embed"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 
@@ -208,7 +207,7 @@ func (c *Config) extendDefault() {
 
 func (c *Config) extendPath() {
 	extendDepth++
-	viper.SetConfigFile(os.ExpandEnv(c.Extend.Path))
+	viper.SetConfigFile(c.Extend.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
