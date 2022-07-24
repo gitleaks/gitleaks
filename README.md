@@ -17,7 +17,7 @@
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
 	  </a>
 	  <a href="https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=badge&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection">
-<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" /> 
+<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" />
 	  </a>
 	  <a href="https://github.com/zricethezav/gitleaks-action">
         	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
@@ -254,6 +254,18 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 ```toml
 # Title for the gitleaks configuration file.
 title = "Gitleaks title"
+
+# Extend the base (this) configuration. When you extend a configuration
+# the base rules take precendence over the extended rules. I.e, if there are
+# duplicate rules in both the base configuration and the extended configuration
+# the base rules will override the extended rules.
+# Another thing to know with extending configurations is you can chain together
+# multiple configuration files to a depth of 2.
+[extend]
+# useDefault will extend the base configuration with the default gitleaks config
+useDefault = true
+# or you can supply a path to a configuration.
+path = "common_config.toml"
 
 # An array of tables that contain information that define instructions
 # on how to detect secrets
