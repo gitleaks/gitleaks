@@ -962,6 +962,24 @@ keywords = [
 ]
 
 [[rules]]
+description = "Sidekiq Secret"
+id = "sidekiq-secret"
+regex = '''(?i)(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{8}:[a-f0-9]{8}.*)(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "bundle_enterprise__contribsys__com","bundle_gems__contribsys__com",
+]
+
+[[rules]]
+description = "Sidekiq Sensitive URL"
+id = "sidekiq-sensitive-url"
+regex = '''(?i)\b(http(?:s??):\/\/[a-f0-9]{8}:[a-f0-9]{8}@(?:gems.contribsys.com|enterprise.contribsys.com).*)(?:['|\"|\n|\r|\s|\x60]|$)'''
+secretGroup = 1
+keywords = [
+    "gems.contribsys.com","enterprise.contribsys.com",
+]
+
+[[rules]]
 description = "Slack token"
 id = "slack-access-token"
 regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
@@ -990,7 +1008,7 @@ description = "Square Access Token"
 id = "square-access-token"
 regex = '''(?i)\b(sq0atp-[0-9A-Za-z\-_]{22})(?:['|\"|\n|\r|\s|\x60]|$)'''
 keywords = [
-    
+    "sq0atp-",
 ]
 
 [[rules]]
