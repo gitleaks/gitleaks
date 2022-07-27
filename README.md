@@ -271,9 +271,7 @@ title = "Gitleaks title"
 # https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml
 useDefault = true
 # or you can supply a path to a configuration. Path is relative to where gitleaks
-# was invoked, not the location of the base config. This is a bit clunky.
-# A better alternative would be to supply an absolute path (expanded env var
-# not supported at this time)
+# was invoked, not the location of the base config.
 path = "common_config.toml"
 
 # An array of tables that contain information that define instructions
