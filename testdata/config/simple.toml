@@ -124,6 +124,15 @@ title = "gitleaks config"
     ]
 
 [[rules]]
+    description = "Sidekiq Sensitive URL"
+    id = "sidekiq-sensitive-url"
+    regex  = '''(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)'''
+    secretGroup = 2
+    keywords = [
+
+    ]
+
+[[rules]]
     description = "Slack Webhook"
     regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
     tags = ["key", "slack"]

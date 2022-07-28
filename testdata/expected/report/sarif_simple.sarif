@@ -170,6 +170,20 @@
        }
       },
       {
+       "id": "sidekiq-secret",
+       "name": "Sidekiq Secret",
+       "shortDescription": {
+        "text": "(?i)(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[0-9a-z\\-_\\t .]{0,20})(?:[\\s|']|[\\s|\"]){0,3}(?:=|\u003e|:=|\\|\\|:|\u003c=|=\u003e|:)(?:'|\\\"|\\s|=|\\x60){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:['|\\\"|\\n|\\r|\\s|\\x60|;]|$)"
+       }
+      },
+      {
+       "id": "sidekiq-sensitive-url",
+       "name": "Sidekiq Sensitive URL",
+       "shortDescription": {
+        "text": "(?i)\\b(http(?:s??):\\/\\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\\/|\\#|\\?|:]|$)"
+       }
+      },
+      {
        "id": "",
        "name": "Slack Webhook",
        "shortDescription": {
