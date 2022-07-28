@@ -115,6 +115,15 @@ title = "gitleaks config"
     tags = ["key", "SendGrid"]
 
 [[rules]]
+    description = "Sidekiq Secret"
+    id = "sidekiq-secret"
+    regex = '''(?i)(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+    secretGroup = 1
+    keywords = [
+        "bundle_enterprise__contribsys__com","bundle_gems__contribsys__com",
+    ]
+
+[[rules]]
     description = "Slack Webhook"
     regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
     tags = ["key", "slack"]

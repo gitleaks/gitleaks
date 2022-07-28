@@ -162,6 +162,28 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
+				FilePath: "tmp.sh",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Sidekiq Secret",
+					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
+					Secret:      "cafebabe:deadbeef",
+					File:        "tmp.sh",
+					RuleID:      "sidekiq-secret",
+					Tags:        []string{},
+					Entropy:     2.6098502,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 8,
+					EndColumn:   60,
+				},
+			},
+		},
+		{
 			cfgName: "generic_with_py_path",
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
