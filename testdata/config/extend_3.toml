@@ -1,0 +1,9 @@
+title = "gitleaks extended 3"
+
+## This should not be loaded since we can only extend configs to a depth of 3
+
+[[rules]]
+    description = "AWS Secret Key"
+    id = "aws-secret-key-again-again"
+    regex = '''(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}'''
+    tags = ["key", "AWS"]

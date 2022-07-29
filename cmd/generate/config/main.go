@@ -150,16 +150,18 @@ func main() {
 	configRules = append(configRules, rules.GenericCredential())
 
 	// ensure rules have unique ids
-	ruleLookUp := make(map[string]bool)
+	ruleLookUp := make(map[string]config.Rule)
 	for _, rule := range configRules {
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
 			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
 		}
-		ruleLookUp[rule.RuleID] = true
+		// TODO: eventually change all the signatures to get ride of this
+		// nasty dereferencing.
+		ruleLookUp[rule.RuleID] = *rule
 	}
 	config := config.Config{
-		Rules: configRules,
+		Rules: ruleLookUp,
 	}
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
