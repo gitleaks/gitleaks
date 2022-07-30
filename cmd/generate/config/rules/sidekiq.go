@@ -37,8 +37,8 @@ func SidekiqSensitiveUrl() *config.Rule {
 		Description: "Sidekiq Sensitive URL",
 		RuleID:      "sidekiq-sensitive-url",
 		SecretGroup: 2,
-		Regex: regexp.MustCompile(`(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)`),
-		Keywords: []string{"gems.contribsys.com", "enterprise.contribsys.com"},
+		Regex:       regexp.MustCompile(`(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)`),
+		Keywords:    []string{"gems.contribsys.com", "enterprise.contribsys.com"},
 	}
 
 	// validate

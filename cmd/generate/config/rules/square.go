@@ -11,7 +11,7 @@ func SquareAccessToken() *config.Rule {
 		RuleID:      "square-access-token",
 		Description: "Square Access Token",
 		Regex:       generateUniqueTokenRegex(`sq0atp-[0-9A-Za-z\-_]{22}`),
-		Keywords: []string{"sq0atp-"},
+		Keywords:    []string{"sq0atp-"},
 	}
 
 	// validate
@@ -27,7 +27,7 @@ func SquareSecret() *config.Rule {
 		RuleID:      "square-secret",
 		Description: "Square Secret",
 		Regex:       generateUniqueTokenRegex(`sq0csp-[0-9A-Za-z\\-_]{43}`),
-		Keywords: []string{"sq0csp-"},
+		Keywords:    []string{"sq0csp-"},
 	}
 
 	// validate
