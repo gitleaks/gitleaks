@@ -151,7 +151,7 @@ title = "gitleaks config"
     regex  = '''(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)'''
     secretGroup = 2
     keywords = [
-
+        "gems.contribsys.com","enterprise.contribsys.com",
     ]
 
 [[rules]]
