@@ -184,7 +184,6 @@
        }
       },
       {
-       "id": "",
        "id": "slack-webhook",
        "name": "Slack Webhook",
        "shortDescription": {
