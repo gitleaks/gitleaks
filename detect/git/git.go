@@ -29,7 +29,7 @@ func GitLog(source string, logOpts LogOpts, errChan chan error) (<-chan *gitdiff
 		cmd = exec.Command("git", args...)
 	} else {
 		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
-			"--full-history", "--all", "-G.")
+			"--full-history", "--all", "--diff-filter=ACDMRTUXB")
 	}
 	if logOpts.DisableSafeDir {
 		absPath, err := filepath.Abs(source)
