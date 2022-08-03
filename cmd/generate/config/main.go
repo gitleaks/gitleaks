@@ -126,6 +126,8 @@ func main() {
 	configRules = append(configRules, rules.ShopifyCustomAccessToken())
 	configRules = append(configRules, rules.ShopifyPrivateAppAccessToken())
 	configRules = append(configRules, rules.ShopifySharedSecret())
+	configRules = append(configRules, rules.SidekiqSecret())
+	configRules = append(configRules, rules.SidekiqSensitiveUrl())
 	configRules = append(configRules, rules.SlackAccessToken())
 	configRules = append(configRules, rules.SlackWebHook())
 	configRules = append(configRules, rules.StripeAccessToken())
