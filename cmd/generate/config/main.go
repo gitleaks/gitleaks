@@ -144,6 +144,8 @@ func main() {
 	configRules = append(configRules, rules.TwitterAccessSecret())
 	configRules = append(configRules, rules.TwitterBearerToken())
 	configRules = append(configRules, rules.Typeform())
+	configRules = append(configRules, rules.VaultBatchToken())
+	configRules = append(configRules, rules.VaultServiceToken())
 	configRules = append(configRules, rules.YandexAPIKey())
 	configRules = append(configRules, rules.YandexAWSAccessToken())
 	configRules = append(configRules, rules.YandexAccessToken())

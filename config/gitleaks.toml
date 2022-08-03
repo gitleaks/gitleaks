@@ -2605,6 +2605,22 @@ keywords = [
 ]
 
 [[rules]]
+description = "Vault Batch Token"
+id = "vault-batch-token"
+regex = '''(?i)\b(hvb\.[a-z0-9_-]{138,212})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "hvb",
+]
+
+[[rules]]
+description = "Vault Service Token"
+id = "vault-service-token"
+regex = '''(?i)\b(hvs\.[a-z0-9_-]{90,100})(?:['|\"|\n|\r|\s|\x60]|$)'''
+keywords = [
+    "hvs",
+]
+
+[[rules]]
 description = "Yandex Access Token"
 id = "yandex-access-token"
 regex = '''(?i)(?:yandex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
