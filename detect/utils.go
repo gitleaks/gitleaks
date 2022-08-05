@@ -20,7 +20,7 @@ func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragmen
 	// generate finding hash
 	h := sha1.New()
 	h.Write([]byte(fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)))
-    finding.FindingID = fmt.Sprintf("%x", h.Sum(nil))
+	finding.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
 
 	if !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)

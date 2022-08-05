@@ -451,9 +451,9 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
 	// check if we should ignore this finding
-	if _, ok := d.gitleaksIgnore[finding.FindingID]; ok {
+	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 		log.Debug().Msgf("ignoring finding with FindingID %s",
-			finding.FindingID)
+			finding.Fingerprint)
 		return
 	}
 
