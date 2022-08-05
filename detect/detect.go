@@ -129,7 +129,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	fmt.Println("adding gitleaks ignore")
+	log.Debug().Msg("found .gitleaksignore file")
 	file, err := os.Open(gitleaksIgnorePath)
 
 	if err != nil {
@@ -452,7 +452,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 func (d *Detector) addFinding(finding report.Finding) {
 	// check if we should ignore this finding
 	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with FindingID %s",
+		log.Debug().Msgf("ignoring finding with Fingerprint %s",
 			finding.Fingerprint)
 		return
 	}

@@ -17,15 +17,15 @@ import (
 // augmentGitFinding updates the start and end line numbers of a finding to include the
 // delta from the git diff
 func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
-	// generate finding hash
-	h := sha1.New()
-	h.Write([]byte(fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)))
-	finding.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
-
 	if !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)
 		finding.EndLine += int(textFragment.NewPosition)
 	}
+
+	// generate finding hash
+	h := sha1.New()
+	h.Write([]byte(fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)))
+	finding.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
 
 	if f.PatchHeader != nil {
 		finding.Commit = f.PatchHeader.SHA
