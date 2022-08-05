@@ -367,6 +367,7 @@ func TestFromGit(t *testing.T) {
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
+					Fingerprint: "d0ce473c3c9f6934e8d274604cf9ceae63700f03",
 				},
 				{
 					Description: "AWS Access Key",
@@ -385,6 +386,7 @@ func TestFromGit(t *testing.T) {
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
+					Fingerprint: "df8d271fa20b928dfb12353cc16ddf9934225cb7",
 				},
 			},
 		},
@@ -410,6 +412,7 @@ func TestFromGit(t *testing.T) {
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
+					Fingerprint: "df8d271fa20b928dfb12353cc16ddf9934225cb7",
 				},
 			},
 		},
