@@ -25,7 +25,7 @@ const (
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60]|$)`
+	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;]|$)`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
@@ -62,18 +62,20 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	}
 	r.Keywords = keywords
 
+	rules := make(map[string]config.Rule)
+	rules[r.RuleID] = r
 	d := detect.NewDetector(config.Config{
-		Rules:    []*config.Rule{&r},
+		Rules:    rules,
 		Keywords: keywords,
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msgf("Failed to validate (tp) %s %s", r.RuleID, tp)
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], true positive [%s] was not detected by regexp [%s]", r.RuleID, tp, r.Regex)
 		}
 	}
 	for _, fp := range falsePositives {
 		if len(d.DetectString(fp)) != 0 {
-			log.Fatal().Msgf("Failed to validate (fp) %s", r.RuleID)
+			log.Fatal().Msgf("Failed to validate (fp) [%s]", r.RuleID)
 		}
 	}
 	return &r

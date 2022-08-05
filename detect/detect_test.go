@@ -115,6 +115,72 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
+				FilePath: "tmp.sh",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Sidekiq Secret",
+					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
+					Secret:      "cafebabe:deadbeef",
+					File:        "tmp.sh",
+					RuleID:      "sidekiq-secret",
+					Tags:        []string{},
+					Entropy:     2.6098502,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 8,
+					EndColumn:   60,
+				},
+			},
+		},
+		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
+				FilePath: "tmp.sh",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Sidekiq Secret",
+					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=\"cafebabe:deadbeef\"",
+					Secret:      "cafebabe:deadbeef",
+					File:        "tmp.sh",
+					RuleID:      "sidekiq-secret",
+					Tags:        []string{},
+					Entropy:     2.6098502,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 21,
+					EndColumn:   74,
+				},
+			},
+		},
+		{
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
+				FilePath: "tmp.sh",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Sidekiq Sensitive URL",
+					Match:       "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:",
+					Secret:      "cafeb4b3:d3adb33f",
+					File:        "tmp.sh",
+					RuleID:      "sidekiq-sensitive-url",
+					Tags:        []string{},
+					Entropy:     2.984234,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 8,
+					EndColumn:   58,
+				},
+			},
+		},
+		{
 			cfgName: "allow_aws_re",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,

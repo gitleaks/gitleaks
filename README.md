@@ -17,7 +17,7 @@
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
 	  </a>
 	  <a href="https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=badge&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection">
-<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" /> 
+<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" />
 	  </a>
 	  <a href="https://github.com/zricethezav/gitleaks-action">
         	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
@@ -28,12 +28,12 @@
   </p>
 </p>
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code. 
+Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
 | Demos |
 | ----------- |
 | CLI [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
-| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-action-demo](https://user-images.githubusercontent.com/15034943/178075970-9d01fa18-f8d1-4197-8f58-16380a12ec55.gif)|
+| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-demo-fast-cropped](https://user-images.githubusercontent.com/15034943/178513034-de5a1906-b71d-454a-a792-47b7ac0e21e6.gif)|
 
 ## Getting Started
 
@@ -257,6 +257,22 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 ```toml
 # Title for the gitleaks configuration file.
 title = "Gitleaks title"
+
+# Extend the base (this) configuration. When you extend a configuration
+# the base rules take precendence over the extended rules. I.e, if there are
+# duplicate rules in both the base configuration and the extended configuration
+# the base rules will override the extended rules.
+# Another thing to know with extending configurations is you can chain together
+# multiple configuration files to a depth of 2. Allowlist arrays are appended
+# and can contain duplicates.
+# useDefault and path can NOT be used at the same time. Choose one.
+[extend]
+# useDefault will extend the base configuration with the default gitleaks config:
+# https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml
+useDefault = true
+# or you can supply a path to a configuration. Path is relative to where gitleaks
+# was invoked, not the location of the base config.
+path = "common_config.toml"
 
 # An array of tables that contain information that define instructions
 # on how to detect secrets

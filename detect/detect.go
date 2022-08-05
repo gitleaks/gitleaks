@@ -158,7 +158,7 @@ func (d *Detector) DetectString(content string) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, rule *config.Rule) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Finding {
 	var findings []report.Finding
 
 	// check if filepath or commit is allowed for this rule

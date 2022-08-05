@@ -126,6 +126,8 @@ func main() {
 	configRules = append(configRules, rules.ShopifyCustomAccessToken())
 	configRules = append(configRules, rules.ShopifyPrivateAppAccessToken())
 	configRules = append(configRules, rules.ShopifySharedSecret())
+	configRules = append(configRules, rules.SidekiqSecret())
+	configRules = append(configRules, rules.SidekiqSensitiveUrl())
 	configRules = append(configRules, rules.SlackAccessToken())
 	configRules = append(configRules, rules.SlackWebHook())
 	configRules = append(configRules, rules.StripeAccessToken())
@@ -142,6 +144,8 @@ func main() {
 	configRules = append(configRules, rules.TwitterAccessSecret())
 	configRules = append(configRules, rules.TwitterBearerToken())
 	configRules = append(configRules, rules.Typeform())
+	configRules = append(configRules, rules.VaultBatchToken())
+	configRules = append(configRules, rules.VaultServiceToken())
 	configRules = append(configRules, rules.YandexAPIKey())
 	configRules = append(configRules, rules.YandexAWSAccessToken())
 	configRules = append(configRules, rules.YandexAccessToken())
@@ -149,16 +153,18 @@ func main() {
 	configRules = append(configRules, rules.GenericCredential())
 
 	// ensure rules have unique ids
-	ruleLookUp := make(map[string]bool)
+	ruleLookUp := make(map[string]config.Rule)
 	for _, rule := range configRules {
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
 			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
 		}
-		ruleLookUp[rule.RuleID] = true
+		// TODO: eventually change all the signatures to get ride of this
+		// nasty dereferencing.
+		ruleLookUp[rule.RuleID] = *rule
 	}
 	config := config.Config{
-		Rules: configRules,
+		Rules: ruleLookUp,
 	}
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
