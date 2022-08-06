@@ -79,6 +79,7 @@ func main() {
 	configRules = append(configRules, rules.Heroku())
 	configRules = append(configRules, rules.HubSpot())
 	configRules = append(configRules, rules.Intercom())
+	configRules = append(configRules, rules.JWT())
 	configRules = append(configRules, rules.KrakenAccessToken())
 	configRules = append(configRules, rules.KucoinAccessToken())
 	configRules = append(configRules, rules.KucoinSecretKey())
