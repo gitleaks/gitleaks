@@ -2032,6 +2032,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "JSON Web Token"
+id = "jwt"
+regex = '''(?i)\b(ey[0-9a-z]{30,34}\.ey[0-9a-z-\/_]{30,500}\.[0-9a-zA-Z-\/_]{10,200})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "ey",
+]
+
+[[rules]]
 description = "Kraken Access Token"
 id = "kraken-access-token"
 regex = '''(?i)(?:kraken)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9\/=_\+\-]{80,90})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
@@ -2607,7 +2615,7 @@ keywords = [
 [[rules]]
 description = "Vault Batch Token"
 id = "vault-batch-token"
-regex = '''(?i)\b(hvb\.[a-z0-9_-]{138,212})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)\b(hvb\.[a-z0-9_-]{138,212})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "hvb",
 ]
@@ -2615,7 +2623,7 @@ keywords = [
 [[rules]]
 description = "Vault Service Token"
 id = "vault-service-token"
-regex = '''(?i)\b(hvs\.[a-z0-9_-]{90,100})(?:['|\"|\n|\r|\s|\x60]|$)'''
+regex = '''(?i)\b(hvs\.[a-z0-9_-]{90,100})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "hvs",
 ]
