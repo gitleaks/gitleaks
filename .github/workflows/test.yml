@@ -1,27 +1,11 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
     branches:
       - "*"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.17
-
-    - name: Build
-      run: go build -v ./...
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -30,7 +14,13 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.17
+        go-version: 1.18
+
+    - name: Build
+      run: go build -v ./...
 
     - name: Test
       run: make test
+
+    - name: Validate Config
+      run: cd cmd/generate/config && go run main.go
