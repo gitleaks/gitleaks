@@ -35,6 +35,9 @@ type Finding struct {
 
 	// Rule is the name of the rule that was matched
 	RuleID string
+
+	// unique identifer
+	Fingerprint string
 }
 
 // Redact removes sensitive information from a finding.

@@ -71,6 +71,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err)
 	}
 
+	// check for a .gitleaksignore file
+	if info, err := os.Stat(filepath.Join(source, ".gitleaksignore")); !os.IsNotExist(err) && !info.IsDir() {
+		detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore"))
+	}
+
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {

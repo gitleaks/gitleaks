@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -64,6 +65,9 @@ type Detector struct {
 	// prefilter is a ahocorasick struct used for doing efficient string
 	// matching given a set of words (keywords from the rules in the config)
 	prefilter ahocorasick.AhoCorasick
+
+	// gitleaksIgnore
+	gitleaksIgnore map[string]bool
 }
 
 // Fragment contains the data to be scanned
@@ -96,11 +100,12 @@ func NewDetector(cfg config.Config) *Detector {
 	})
 
 	return &Detector{
-		commitMap:    make(map[string]bool),
-		findingMutex: &sync.Mutex{},
-		findings:     make([]report.Finding, 0),
-		Config:       cfg,
-		prefilter:    builder.Build(cfg.Keywords),
+		commitMap:      make(map[string]bool),
+		gitleaksIgnore: make(map[string]bool),
+		findingMutex:   &sync.Mutex{},
+		findings:       make([]report.Finding, 0),
+		Config:         cfg,
+		prefilter:      builder.Build(cfg.Keywords),
 	}
 }
 
@@ -121,6 +126,23 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 		return nil, err
 	}
 	return NewDetector(cfg), nil
+}
+
+func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
+	log.Debug().Msg("found .gitleaksignore file")
+	file, err := os.Open(gitleaksIgnorePath)
+
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		d.gitleaksIgnore[scanner.Text()] = true
+	}
+	return nil
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
@@ -428,6 +450,13 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
+	// check if we should ignore this finding
+	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+		log.Debug().Msgf("ignoring finding with Fingerprint %s",
+			finding.Fingerprint)
+		return
+	}
+
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
