@@ -1,11 +1,13 @@
 package detect
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"math"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 
@@ -90,9 +92,19 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 }
 
 func printFinding(f report.Finding) {
-	var b []byte
-	b, _ = json.MarshalIndent(f, "", "	")
-	fmt.Println(string(b))
+	var style = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Background(lipgloss.Color("#7D56F4")).
+		PaddingTop(2).
+		PaddingLeft(4).
+		Width(22)
+	fmt.Println(style.Render("Hello, kitty."))
+
+	// var b []byte
+	// b, _ = json.MarshalIndent(f, "", "	")
+
+	// fmt.Println(string(b))
 }
 
 func containsDigit(s string) bool {
