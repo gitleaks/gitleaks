@@ -92,19 +92,30 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 }
 
 func printFinding(f report.Finding) {
-	var style = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		PaddingTop(2).
-		PaddingLeft(4).
-		Width(22)
-	fmt.Println(style.Render("Hello, kitty."))
+	matchInLineIDX := strings.Index(f.Line, f.Match)
+	// SecretInLineIDX := strings.Index(f.Line, f.Secret)
 
-	// var b []byte
-	// b, _ = json.MarshalIndent(f, "", "	")
+	// fmt.Println(f.Line[matchInLineIDX : matchInLineIDX+len(f.Match)])
+	// fmt.Println(f.Line[SecretInLineIDX : matchInLineIDX+len(f.Match)])
 
-	// fmt.Println(string(b))
+	secretInMatchIdx := strings.Index(f.Match, f.Secret)
+
+
+	start := f.Line[0:matchInLineIDX]
+
+	// matchBeginning := f.Match[0 : secretInMatchIdx]
+	matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
+	secret := lipgloss.NewStyle().SetString(f.Secret).Bold(true).Foreground(lipgloss.Color("#f05c07"))
+	matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
+	lineEnd := f.Line[matchInLineIDX+len(f.Match):]
+
+    finding := fmt.Sprintf("Finding: %s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
+    fmt.Printf(finding)
+    fmt.Println("File: ",f.File)
+    fmt.Println("RuleID: ",f.RuleID)
+    fmt.Println("Line: ",f.StartLine)
+    fmt.Println("")
+
 }
 
 func containsDigit(s string) bool {
