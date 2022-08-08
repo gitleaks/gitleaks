@@ -1,7 +1,6 @@
 package detect
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -22,11 +21,6 @@ func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragmen
 		finding.EndLine += int(textFragment.NewPosition)
 	}
 
-	// generate finding hash
-	h := sha1.New()
-	h.Write([]byte(fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)))
-	finding.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
-
 	if f.PatchHeader != nil {
 		finding.Commit = f.PatchHeader.SHA
 		finding.Message = f.PatchHeader.Message()
@@ -36,6 +30,7 @@ func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragmen
 		}
 		finding.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
 	}
+    finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
 	return finding
 }
 
