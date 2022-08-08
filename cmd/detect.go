@@ -71,8 +71,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err)
 	}
 
-	// check for a .gitleaksignore file
-	if info, err := os.Stat(filepath.Join(source, ".gitleaksignore")); !os.IsNotExist(err) && !info.IsDir() {
+	if fileExists(filepath.Join(source, ".gitleaksignore")) {
 		detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore"))
 	}
 
@@ -130,4 +129,19 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if len(findings) != 0 {
 		os.Exit(exitCode)
 	}
+}
+
+func fileExists(fileName string) bool {
+	// check for a .gitleaksignore file
+	info, err := os.Stat(fileName)
+	if err != nil && !os.IsNotExist(err) {
+		return false
+	}
+
+	if info != nil && err == nil {
+		if !info.IsDir() {
+			return true
+		}
+	}
+	return false
 }
