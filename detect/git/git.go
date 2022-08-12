@@ -2,8 +2,8 @@ package git
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -15,7 +15,7 @@ import (
 
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
-func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
+func GitLog(source string, logOpts string, errChan chan error) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
@@ -41,7 +41,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 		return nil, err
 	}
 
-	go listenForStdErr(stderr)
+	go listenForStdErr(stderr, errChan)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
@@ -50,7 +50,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 
 // GitDiff returns a channel of gitdiff.File objects from
 // the git diff command for the given source.
-func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
+func GitDiff(source string, staged bool, errChan chan error) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
@@ -72,7 +72,7 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 		return nil, err
 	}
 
-	go listenForStdErr(stderr)
+	go listenForStdErr(stderr, errChan)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
@@ -81,7 +81,7 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 
 // listenForStdErr listens for stderr output from git and prints it to stdout
 // then exits with exit code 1
-func listenForStdErr(stderr io.ReadCloser) {
+func listenForStdErr(stderr io.ReadCloser, errChan chan error) {
 	scanner := bufio.NewScanner(stderr)
 	errEncountered := false
 	for scanner.Scan() {
@@ -113,6 +113,6 @@ func listenForStdErr(stderr io.ReadCloser) {
 		}
 	}
 	if errEncountered {
-		os.Exit(1)
+		errChan <- fmt.Errorf("encountered error running git. See logs for details")
 	}
 }
