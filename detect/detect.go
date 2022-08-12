@@ -450,6 +450,11 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
+	if finding.Commit == "" {
+		finding.Fingerprint = fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+	} else {
+		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
+	}
 	// check if we should ignore this finding
 	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 		log.Debug().Msgf("ignoring finding with Fingerprint %s",

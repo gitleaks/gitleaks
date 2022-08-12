@@ -30,7 +30,6 @@ func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragmen
 		}
 		finding.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
 	}
-	finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
 	return finding
 }
 
