@@ -94,36 +94,50 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings, err = detector.DetectFiles(source)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err)
+			log.Error().Msg(err.Error())
 		}
 
 	} else {
-		logOpts, err := cmd.Flags().GetString("log-opts")
+		var logOpts string
+		logOpts, err = cmd.Flags().GetString("log-opts")
 		if err != nil {
 			log.Fatal().Err(err)
 		}
 		findings, err = detector.DetectGit(source, logOpts, detect.DetectType)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err)
+			log.Error().Msg(err.Error())
 		}
 	}
 
 	// log info about the scan
-	log.Info().Msgf("scan completed in %s", time.Since(start))
-	if len(findings) != 0 {
-		log.Warn().Msgf("leaks found: %d", len(findings))
+	if err == nil {
+		log.Info().Msgf("scan completed in %s", time.Since(start))
+		if len(findings) != 0 {
+			log.Warn().Msgf("leaks found: %d", len(findings))
+		} else {
+			log.Info().Msg("no leaks found")
+		}
 	} else {
-		log.Info().Msg("no leaks found")
+		log.Warn().Msgf("partial scan completed in %s", time.Since(start))
+		if len(findings) != 0 {
+			log.Warn().Msgf("%d leaks found in partial scan", len(findings))
+		} else {
+			log.Warn().Msg("no leaks found in partial scan")
+		}
 	}
 
 	// write report if desired
 	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
-		if err = report.Write(findings, cfg, ext, reportPath); err != nil {
+		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
 			log.Fatal().Err(err)
 		}
+	}
+
+	if err != nil {
+		os.Exit(1)
 	}
 
 	if len(findings) != 0 {
