@@ -40,6 +40,10 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	}
 
 	go listenForStdErr(stderr)
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
@@ -66,7 +70,12 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	go listenForStdErr(stderr)
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
