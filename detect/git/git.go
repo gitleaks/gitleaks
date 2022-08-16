@@ -38,9 +38,6 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
 
 	go listenForStdErr(stderr)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
