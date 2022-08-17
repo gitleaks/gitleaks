@@ -4,7 +4,8 @@ go 1.17
 
 require (
 	github.com/fatih/semgroup v1.2.0
-	github.com/gitleaks/go-gitdiff v0.7.6
+	github.com/gitleaks/go-gitdiff v0.8.0
+	github.com/h2non/filetype v1.1.3
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
@@ -14,7 +15,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb
