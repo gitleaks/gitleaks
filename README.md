@@ -258,10 +258,10 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 # Title for the gitleaks configuration file.
 title = "Gitleaks title"
 
-# Extend the base (this) configuration. When you extend a configuration
-# the base rules take precendence over the extended rules. I.e, if there are
-# duplicate rules in both the base configuration and the extended configuration
-# the base rules will override the extended rules.
+# Extend the base configuration. This is the extended configuration. 
+# When you extend a configuration the extended rules take precendence over the base rules.
+# I.e, if there are duplicate rules in both the base configuration and the extended configuration
+# the extended rules will override the base rules.
 # Another thing to know with extending configurations is you can chain together
 # multiple configuration files to a depth of 2. Allowlist arrays are appended
 # and can contain duplicates.
