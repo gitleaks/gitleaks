@@ -2327,6 +2327,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Prefect API token"
+id = "prefect-api-token"
+regex = '''(?i)\b(pnu_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "pnu_",
+]
+
+[[rules]]
 description = "Private Key"
 id = "private-key"
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
@@ -2358,6 +2367,15 @@ regex = '''(?i)(?:rapidapi)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>
 secretGroup = 1
 keywords = [
     "rapidapi",
+]
+
+[[rules]]
+description = "Readme API token"
+id = "readme-api-token"
+regex = '''(?i)\b(rdme_[a-z0-9]{70})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "rdme_",
 ]
 
 [[rules]]
