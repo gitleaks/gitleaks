@@ -1999,7 +1999,7 @@ keywords = [
 [[rules]]
 description = "Grafana api key (or Grafana cloud api key)"
 id = "grafana-api-key"
-regex = '''(?i)\b(eyJrIjoi[A-Za-z0-9]{70,}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b(eyJrIjoi[A-Za-z0-9]{70,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
 keywords = [
     "eyjrijoi",
@@ -2008,7 +2008,7 @@ keywords = [
 [[rules]]
 description = "Grafana cloud api token"
 id = "grafana-cloud-api-token"
-regex = '''(?i)\b(glc_[A-Za-z0-9+/]{32,}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b(glc_[A-Za-z0-9+/]{32,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
 keywords = [
     "glc_",

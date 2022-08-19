@@ -11,7 +11,7 @@ func GrafanaApiKey() *config.Rule {
 		Description: "Grafana api key (or Grafana cloud api key)",
 		RuleID:      "grafana-api-key",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,}={0,2}`),
+		Regex:       generateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,2}`),
 		Keywords:    []string{"eyJrIjoi"},
 	}
 
@@ -30,7 +30,7 @@ func GrafanaCloudApiToken() *config.Rule {
 		Description: "Grafana cloud api token",
 		RuleID:      "grafana-cloud-api-token",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,}={0,2}`),
+		Regex:       generateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,400}={0,2}`),
 		Keywords:    []string{"glc_"},
 	}
 
