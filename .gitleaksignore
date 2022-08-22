@@ -713,3 +713,4 @@ testdata/expected/git/small-branch-foo.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:44
 testdata/repos/nogit/main.go:aws-access-token:20
+config/config_test.go:aws-access-token:31
