@@ -363,6 +363,9 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 				if fInfo.Name() == ".git" && fInfo.IsDir() {
 					return filepath.SkipDir
 				}
+				if fInfo.Size() == 0 {
+					return nil
+				}
 				if fInfo.Mode().IsRegular() {
 					paths <- path
 				}
