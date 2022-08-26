@@ -69,6 +69,22 @@ func TestReport(t *testing.T) {
 				},
 			},
 		},
+		{
+			ext: ".xml",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "junit",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
 		// {
 		// 	ext: "SARIF",
 		// 	findings: []Finding{

@@ -153,7 +153,7 @@ Flags:
   -h, --help                   help for gitleaks
   -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
       --redact                 redact secrets from logs and stdout
-  -f, --report-format string   output format (json, csv, sarif)
+  -f, --report-format string   output format (json, csv, junit, sarif)
   -r, --report-path string     report file
   -s, --source string          path to source (git repo, directory, file)
   -v, --verbose                show verbose output from scan
