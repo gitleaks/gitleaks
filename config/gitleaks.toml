@@ -20,7 +20,7 @@ paths = [
     '''vendor''',
 ]
 
-[[rules]][[rules]]
+[[rules]]
 id = "sshpass"
 description = "sshpass hardcoded password"
 regex = '''sshpass -p [\'].*[\']'''
