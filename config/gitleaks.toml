@@ -20,6 +20,12 @@ paths = [
     '''vendor''',
 ]
 
+[[rules]][[rules]]
+id = "sshpass"
+description = "sshpass hardcoded password"
+regex = '''sshpass -p [\'].*[\']'''
+
+
 [[rules]]
 description = "Adafruit API Key"
 id = "adafruit-api-key"
