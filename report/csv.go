@@ -26,6 +26,7 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 		"Message",
 		"Date",
 		"Email",
+		"Fingerprint",
 	})
 	if err != nil {
 		return err
@@ -44,6 +45,7 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 			f.Message,
 			f.Date,
 			f.Email,
+			f.Fingerprint,
 		})
 		if err != nil {
 			return err

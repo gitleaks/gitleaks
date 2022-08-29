@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -64,6 +65,9 @@ type Detector struct {
 	// prefilter is a ahocorasick struct used for doing efficient string
 	// matching given a set of words (keywords from the rules in the config)
 	prefilter ahocorasick.AhoCorasick
+
+	// gitleaksIgnore
+	gitleaksIgnore map[string]bool
 }
 
 // Fragment contains the data to be scanned
@@ -96,11 +100,12 @@ func NewDetector(cfg config.Config) *Detector {
 	})
 
 	return &Detector{
-		commitMap:    make(map[string]bool),
-		findingMutex: &sync.Mutex{},
-		findings:     make([]report.Finding, 0),
-		Config:       cfg,
-		prefilter:    builder.Build(cfg.Keywords),
+		commitMap:      make(map[string]bool),
+		gitleaksIgnore: make(map[string]bool),
+		findingMutex:   &sync.Mutex{},
+		findings:       make([]report.Finding, 0),
+		Config:         cfg,
+		prefilter:      builder.Build(cfg.Keywords),
 	}
 }
 
@@ -121,6 +126,23 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 		return nil, err
 	}
 	return NewDetector(cfg), nil
+}
+
+func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
+	log.Debug().Msg("found .gitleaksignore file")
+	file, err := os.Open(gitleaksIgnorePath)
+
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		d.gitleaksIgnore[scanner.Text()] = true
+	}
+	return nil
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
@@ -320,6 +342,9 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 		return d.findings, err
 	}
 	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	if git.ErrEncountered {
+		return d.findings, fmt.Errorf("%s", "git error encountered, see logs")
+	}
 	return d.findings, nil
 }
 
@@ -337,6 +362,9 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 				}
 				if fInfo.Name() == ".git" && fInfo.IsDir() {
 					return filepath.SkipDir
+				}
+				if fInfo.Size() == 0 {
+					return nil
 				}
 				if fInfo.Mode().IsRegular() {
 					paths <- path
@@ -428,6 +456,18 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
+	if finding.Commit == "" {
+		finding.Fingerprint = fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+	} else {
+		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
+	}
+	// check if we should ignore this finding
+	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+		log.Debug().Msgf("ignoring finding with Fingerprint %s",
+			finding.Fingerprint)
+		return
+	}
+
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
