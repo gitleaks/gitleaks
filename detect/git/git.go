@@ -2,7 +2,9 @@ package git
 
 import (
 	"bufio"
+	"bytes"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -13,6 +15,38 @@ import (
 )
 
 var ErrEncountered bool
+
+// FromPipe returns a channel of gitdiff.File objects from Stdin
+func FromPipe() (<-chan *gitdiff.File, error) {
+	var cmd *exec.Cmd
+
+	input := io.ReadCloser(os.Stdin)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(input)
+	inputStr := buf.String()
+
+	cmd = exec.Command("echo", inputStr)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	go listenForStdErr(stderr)
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
+	time.Sleep(50 * time.Millisecond)
+
+	return gitdiff.Parse(cmd, stdout)
+}
 
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.

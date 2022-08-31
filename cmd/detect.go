@@ -18,6 +18,7 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 	detectCmd.Flags().String("log-opts", "", "git log options")
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
+	detectCmd.Flags().Bool("pipe", false, "get input from stdin")
 }
 
 var detectCmd = &cobra.Command{
@@ -84,7 +85,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// determine what type of scan:
 	// - git: scan the history of the repo
 	// - no-git: scan files by treating the repo as a plain directory
+	// - pipe: scan input stdin
 	noGit, err := cmd.Flags().GetBool("no-git")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
+	fromPipe, err := cmd.Flags().GetBool("pipe")
 	if err != nil {
 		log.Fatal().Err(err)
 	}
@@ -96,7 +102,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 			// don't exit on error, just log it
 			log.Error().Msg(err.Error())
 		}
-
+	} else if fromPipe {
+		findings, err = detector.DetectPipe(detect.DetectType)
+		if err != nil {
+			// don't exit on error, just log it
+			log.Error().Msg(err.Error())
+		}
 	} else {
 		var logOpts string
 		logOpts, err = cmd.Flags().GetString("log-opts")

@@ -348,6 +348,82 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	return d.findings, nil
 }
 
+// DetectPipe accepts a *gitdiff.File channel which contents a git history generated from
+// the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
+// and determine if the patch contains any findings.
+func (d *Detector) DetectPipe(gitScanType GitScanType) ([]report.Finding, error) {
+	var (
+		gitdiffFiles <-chan *gitdiff.File
+		err          error
+	)
+	switch gitScanType {
+	case DetectType:
+		gitdiffFiles, err = git.FromPipe()
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectType:
+		gitdiffFiles, err = git.FromPipe()
+		if err != nil {
+			return d.findings, err
+		}
+	case ProtectStagedType:
+		gitdiffFiles, err = git.FromPipe()
+		if err != nil {
+			return d.findings, err
+		}
+	}
+
+	s := semgroup.NewGroup(context.Background(), 4)
+
+	for gitdiffFile := range gitdiffFiles {
+		gitdiffFile := gitdiffFile
+
+		// skip binary files
+		if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
+			continue
+		}
+
+		// Check if commit is allowed
+		commitSHA := ""
+		if gitdiffFile.PatchHeader != nil {
+			commitSHA = gitdiffFile.PatchHeader.SHA
+			if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
+				continue
+			}
+		}
+		d.addCommit(commitSHA)
+
+		s.Go(func() error {
+			for _, textFragment := range gitdiffFile.TextFragments {
+				if textFragment == nil {
+					return nil
+				}
+
+				fragment := Fragment{
+					Raw:       textFragment.Raw(gitdiff.OpAdd),
+					CommitSHA: commitSHA,
+					FilePath:  gitdiffFile.NewName,
+				}
+
+				for _, finding := range d.Detect(fragment) {
+					d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
+				}
+			}
+			return nil
+		})
+	}
+
+	if err := s.Wait(); err != nil {
+		return d.findings, err
+	}
+	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	if git.ErrEncountered {
+		return d.findings, fmt.Errorf("%s", "git error encountered, see logs")
+	}
+	return d.findings, nil
+}
+
 // DetectFiles accepts a path to a source directory or file and begins a scan of the
 // file or directory.
 func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
