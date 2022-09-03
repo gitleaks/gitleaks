@@ -106,7 +106,7 @@ jobs:
    ```
    repos:
      - repo: https://github.com/zricethezav/gitleaks
-       rev: v8.2.0
+       rev: v8.11.2
        hooks:
          - id: gitleaks
    ```
