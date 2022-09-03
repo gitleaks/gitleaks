@@ -1997,6 +1997,33 @@ keywords = [
 ]
 
 [[rules]]
+description = "Grafana api key (or Grafana cloud api key)"
+id = "grafana-api-key"
+regex = '''(?i)\b(eyJrIjoi[A-Za-z0-9]{70,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "eyjrijoi",
+]
+
+[[rules]]
+description = "Grafana cloud api token"
+id = "grafana-cloud-api-token"
+regex = '''(?i)\b(glc_[A-Za-z0-9+/]{32,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "glc_",
+]
+
+[[rules]]
+description = "Grafana service account token"
+id = "grafana-service-account-token"
+regex = '''(?i)\b(glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "glsa_",
+]
+
+[[rules]]
 description = "HashiCorp Terraform user/org API token"
 id = "hashicorp-tf-api-token"
 regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
@@ -2327,6 +2354,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Prefect API token"
+id = "prefect-api-token"
+regex = '''(?i)\b(pnu_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "pnu_",
+]
+
+[[rules]]
 description = "Private Key"
 id = "private-key"
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
@@ -2358,6 +2394,15 @@ regex = '''(?i)(?:rapidapi)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>
 secretGroup = 1
 keywords = [
     "rapidapi",
+]
+
+[[rules]]
+description = "Readme API token"
+id = "readme-api-token"
+regex = '''(?i)\b(rdme_[a-z0-9]{70})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "rdme_",
 ]
 
 [[rules]]
