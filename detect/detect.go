@@ -204,6 +204,13 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		// value is set for this rule
 		loc := location(fragment, matchIndex)
 
+		// fmt.Println("match index: ", matchIndex)
+		// fmt.Println("location startLineIndex: ", loc.startLineIndex)
+		// fmt.Println("location endLineIndex: ", loc.endLineIndex)
+		if matchIndex[1] > loc.endLineIndex {
+			loc.endLineIndex = matchIndex[1]
+		}
+
 		finding := report.Finding{
 			Description: rule.Description,
 			File:        fragment.FilePath,

@@ -130,6 +130,7 @@ func printFinding(f report.Finding) {
 	fmt.Printf("%-8s %s", "Finding:", finding)
 	fmt.Printf("%-8s %s\n", "Secret:", secret)
 	fmt.Printf("%-8s %s\n", "RuleID:", f.RuleID)
+	fmt.Printf("%-8s %f\n", "Entropy:", f.Entropy)
 	fmt.Printf("%-8s %s\n", "File:", f.File)
 	fmt.Printf("%-8s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {
