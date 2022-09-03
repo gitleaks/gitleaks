@@ -92,30 +92,55 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 }
 
 func printFinding(f report.Finding) {
+	// trim all whitespace and tabs from the line
+	f.Line = strings.TrimSpace(f.Line)
+	// trim all whitespace and tabs from the secret
+	f.Secret = strings.TrimSpace(f.Secret)
+	// trim all whitespace and tabs from the match
+	f.Match = strings.TrimSpace(f.Match)
+
 	matchInLineIDX := strings.Index(f.Line, f.Match)
-	// SecretInLineIDX := strings.Index(f.Line, f.Secret)
-
-	// fmt.Println(f.Line[matchInLineIDX : matchInLineIDX+len(f.Match)])
-	// fmt.Println(f.Line[SecretInLineIDX : matchInLineIDX+len(f.Match)])
-
 	secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
-
 	start := f.Line[0:matchInLineIDX]
+	startMatchIdx := 0
+	if matchInLineIDX > 20 {
+		startMatchIdx = matchInLineIDX - 20
+		start = "..." + f.Line[startMatchIdx:matchInLineIDX]
+	}
 
-	// matchBeginning := f.Match[0 : secretInMatchIdx]
 	matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
-	secret := lipgloss.NewStyle().SetString(f.Secret).Bold(true).Foreground(lipgloss.Color("#f05c07"))
+	secret := lipgloss.NewStyle().SetString(f.Secret).
+		Bold(true).
+		Italic(true).
+		Foreground(lipgloss.Color("#f05c07"))
 	matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
 	lineEnd := f.Line[matchInLineIDX+len(f.Match):]
+	if len(f.Secret) > 100 {
+		secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
+			Bold(true).
+			Italic(true).
+			Foreground(lipgloss.Color("#f05c07"))
+	}
+	if len(lineEnd) > 20 {
+		lineEnd = lineEnd[0:20] + "..."
+	}
 
-    finding := fmt.Sprintf("Finding: %s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
-    fmt.Printf(finding)
-    fmt.Println("File: ",f.File)
-    fmt.Println("RuleID: ",f.RuleID)
-    fmt.Println("Line: ",f.StartLine)
-    fmt.Println("")
-
+	finding := fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
+	fmt.Printf("%-8s %s", "Finding:", finding)
+	fmt.Printf("%-8s %s\n", "Secret:", secret)
+	fmt.Printf("%-8s %s\n", "RuleID:", f.RuleID)
+	fmt.Printf("%-8s %s\n", "File:", f.File)
+	fmt.Printf("%-8s %d\n", "Line:", f.StartLine)
+	if f.Commit == "" {
+		fmt.Println("")
+		return
+	}
+	fmt.Printf("%-8s %s\n", "Commit:", f.Commit)
+	fmt.Printf("%-8s %s\n", "Author:", f.Author)
+	fmt.Printf("%-8s %s\n", "Email:", f.Email)
+	fmt.Printf("%-8s %s\n", "Date:", f.Date)
+	fmt.Println("")
 }
 
 func containsDigit(s string) bool {
