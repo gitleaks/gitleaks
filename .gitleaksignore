@@ -713,3 +713,16 @@ testdata/expected/git/small-branch-foo.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:44
 testdata/repos/nogit/main.go:aws-access-token:20
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:513
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:492
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:414
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:388
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:366
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:discord-api-token:255
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:discord-api-token:224
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:sidekiq-sensitive-url:177
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:sidekiq-secret:154
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:sidekiq-secret:130
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:107
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:pypi-upload-token:84
+3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:62
