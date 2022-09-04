@@ -112,14 +112,14 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// log info about the scan
 	if err == nil {
-		log.Info().Msgf("scan completed in %s", time.Since(start))
+		log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("leaks found: %d", len(findings))
 		} else {
 			log.Info().Msg("no leaks found")
 		}
 	} else {
-		log.Warn().Msgf("partial scan completed in %s", time.Since(start))
+		log.Warn().Msgf("partial scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("%d leaks found in partial scan", len(findings))
 		} else {
@@ -158,4 +158,13 @@ func fileExists(fileName string) bool {
 		}
 	}
 	return false
+}
+
+func FormatDuration(d time.Duration) string {
+	scale := 100 * time.Second
+	// look for the max scale that is smaller than d
+	for scale > d {
+		scale = scale / 10
+	}
+	return d.Round(scale / 100).String()
 }
