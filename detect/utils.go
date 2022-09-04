@@ -127,20 +127,22 @@ func printFinding(f report.Finding) {
 	}
 
 	finding := fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
-	fmt.Printf("%-8s %s", "Finding:", finding)
-	fmt.Printf("%-8s %s\n", "Secret:", secret)
-	fmt.Printf("%-8s %s\n", "RuleID:", f.RuleID)
-	fmt.Printf("%-8s %f\n", "Entropy:", f.Entropy)
-	fmt.Printf("%-8s %s\n", "File:", f.File)
-	fmt.Printf("%-8s %d\n", "Line:", f.StartLine)
+	fmt.Printf("%-12s %s", "Finding:", finding)
+	fmt.Printf("%-12s %s\n", "Secret:", secret)
+	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
+	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
+	fmt.Printf("%-12s %s\n", "File:", f.File)
+	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {
+		fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
 		fmt.Println("")
 		return
 	}
-	fmt.Printf("%-8s %s\n", "Commit:", f.Commit)
-	fmt.Printf("%-8s %s\n", "Author:", f.Author)
-	fmt.Printf("%-8s %s\n", "Email:", f.Email)
-	fmt.Printf("%-8s %s\n", "Date:", f.Date)
+	fmt.Printf("%-12s %s\n", "Commit:", f.Commit)
+	fmt.Printf("%-12s %s\n", "Author:", f.Author)
+	fmt.Printf("%-12s %s\n", "Email:", f.Email)
+	fmt.Printf("%-12s %s\n", "Date:", f.Date)
+	fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
 	fmt.Println("")
 }
 
