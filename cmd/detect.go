@@ -103,7 +103,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.Error().Msg(err.Error())
 		}
 	} else if fromPipe {
-		findings, err = detector.DetectPipe(detect.DetectType)
+		findings, err = detector.DetectPipe()
 		if err != nil {
 			// don't exit on error, just log it
 			log.Error().Msg(err.Error())

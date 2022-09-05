@@ -2,8 +2,10 @@ package detect
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -351,27 +353,49 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 // DetectPipe accepts a *gitdiff.File channel which contents a git history generated from
 // the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
 // and determine if the patch contains any findings.
-func (d *Detector) DetectPipe(gitScanType GitScanType) ([]report.Finding, error) {
+func (d *Detector) DetectPipe() ([]report.Finding, error) {
+
+	var (
+		err          error
+		DetectReader string
+	)
+
+	input := io.ReadCloser(os.Stdin)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(input)
+	inputStr := buf.String()
+
+	if strings.Contains(inputStr, "diff --git") {
+		DetectReader = "git"
+	} else {
+		DetectReader = "unknown"
+	}
+
+	switch DetectReader {
+	case "git":
+		d.DetectPipeGit(&inputStr)
+		if err != nil {
+			return d.findings, err
+		}
+	case "unknown":
+		log.Error().Msgf("Can't parse input from pipe. Reader unknown")
+		os.Exit(126)
+	}
+
+	return d.findings, nil
+
+}
+
+func (d *Detector) DetectPipeGit(inputStr *string) ([]report.Finding, error) {
+
 	var (
 		gitdiffFiles <-chan *gitdiff.File
 		err          error
 	)
-	switch gitScanType {
-	case DetectType:
-		gitdiffFiles, err = git.FromPipe()
-		if err != nil {
-			return d.findings, err
-		}
-	case ProtectType:
-		gitdiffFiles, err = git.FromPipe()
-		if err != nil {
-			return d.findings, err
-		}
-	case ProtectStagedType:
-		gitdiffFiles, err = git.FromPipe()
-		if err != nil {
-			return d.findings, err
-		}
+
+	gitdiffFiles, err = git.GitPipe(inputStr)
+	if err != nil {
+		return d.findings, err
 	}
 
 	s := semgroup.NewGroup(context.Background(), 4)

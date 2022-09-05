@@ -2,9 +2,7 @@ package git
 
 import (
 	"bufio"
-	"bytes"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -16,16 +14,10 @@ import (
 
 var ErrEncountered bool
 
-// FromPipe returns a channel of gitdiff.File objects from Stdin
-func FromPipe() (<-chan *gitdiff.File, error) {
+// GitPipe returns a channel of gitdiff.File objects from Stdin
+func GitPipe(inputStr *string) (<-chan *gitdiff.File, error) {
 	var cmd *exec.Cmd
-
-	input := io.ReadCloser(os.Stdin)
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(input)
-	inputStr := buf.String()
-
-	cmd = exec.Command("echo", inputStr)
+	cmd = exec.Command("echo", *inputStr)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
