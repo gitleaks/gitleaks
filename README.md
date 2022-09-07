@@ -106,15 +106,16 @@ jobs:
    ```
    repos:
      - repo: https://github.com/zricethezav/gitleaks
-       rev: v8.11.2
+       rev: v8.12.0
        hooks:
          - id: gitleaks
    ```
 
    for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
 
-3. Install with `pre-commit install`
-4. Now you're all set!
+3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
+4. Install with `pre-commit install`
+5. Now you're all set!
 
 ```
 ➜ git commit -m "this commit contains a secret"
