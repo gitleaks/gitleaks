@@ -149,7 +149,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 }
 
 func (d *Detector) AddBaseline(baselinePath string) error {
-	if baselinePath == "" {
+	if baselinePath != "" {
 		baseline, err := LoadBaseline(baselinePath)
 		if err != nil {
 			return err
