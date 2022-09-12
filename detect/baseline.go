@@ -23,7 +23,7 @@ func IsNew(finding report.Finding, baseline []report.Finding) bool {
 			finding.EndLine == b.EndLine &&
 			finding.Entropy == b.Entropy &&
 			finding.File == b.File &&
-			// Omit checking finding.Fingerprint - if the format of the fingerprint changes later the users will see unexecpted behaviour
+			// Omit checking finding.Fingerprint - if the format of the fingerprint changes, the users will see unexpected behaviour
 			finding.Match == b.Match &&
 			finding.Message == b.Message &&
 			finding.RuleID == b.RuleID &&
