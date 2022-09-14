@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -413,6 +414,43 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	}
 
 	return d.findings, nil
+}
+func (d *Detector) DetectReader(r io.Reader) (chan report.Finding, error) {
+	findings := make(chan report.Finding)
+	reader := bufio.NewReader(r)
+	buf := make([]byte, 0, 10*1024)
+	var wg sync.WaitGroup
+
+	go func() {
+		for {
+			n, err := reader.Read(buf[:cap(buf)])
+			buf = buf[:n]
+			if err != nil {
+				if err != io.EOF {
+					return
+				}
+				wg.Wait()
+				fmt.Println("closing")
+				close(findings)
+				return
+			}
+
+			wg.Add(1)
+			go func(buf []byte) {
+				defer wg.Done()
+				fragment := Fragment{
+					Raw: string(buf),
+				}
+				for _, finding := range d.Detect(fragment) {
+					findings <- finding
+				}
+				return
+			}(buf)
+		}
+
+	}()
+
+	return findings, nil
 }
 
 // Detect scans the given fragment and returns a list of findings
