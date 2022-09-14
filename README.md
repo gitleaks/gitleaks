@@ -156,7 +156,7 @@ Flags:
       --redact                 redact secrets from logs and stdout
   -f, --report-format string   output format (json, csv, sarif)
   -r, --report-path string     report file
-  -b, --baseline-path          path to existing a previously generated report with known issues that gitleaks should ignore
+  -b, --baseline-path          path to a previously generated report with known issues that gitleaks should ignore
   -s, --source string          path to source (git repo, directory, file)
   -v, --verbose                show verbose output from scan
 
