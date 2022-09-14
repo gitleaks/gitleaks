@@ -1,9 +1,7 @@
 package rules
 
 import (
-	"math/rand"
 	"regexp"
-	"strconv"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -26,18 +24,34 @@ func TelegramBotToken() *config.Rule {
 	}
 
 	// validate
-	token := secrets.NewSecret(numeric(strconv.Itoa(rand.Intn(11)+5)) + ":A" + alphaNumericExtendedShort("34"))
+	validToken := secrets.NewSecret(numeric("8") + ":A" + alphaNumericExtendedShort("34"))
+	minToken := secrets.NewSecret(numeric("5") + ":A" + alphaNumericExtendedShort("34"))
+	maxToken := secrets.NewSecret(numeric("16") + ":A" + alphaNumericExtendedShort("34"))
 	tps := []string{
 		// variable assigment
-		generateSampleSecret("telegram", token),
+		generateSampleSecret("telegram", validToken),
 		// URL contaning token
-		generateSampleSecret("url", "https://api.telegram.org/bot"+token+"/sendMessage"),
+		generateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
-		`const bot = new Telegraf("` + token + `")`,
+		`const bot = new Telegraf("` + validToken + `")`,
 		// .env
-		`API_TOKEN = ` + token,
+		`API_TOKEN = ` + validToken,
 		// YAML
-		`bot: ` + token,
+		`bot: ` + validToken,
+		// Token with min bot_id
+		generateSampleSecret("telegram", minToken),
+		// Token with max bot_id
+		generateSampleSecret("telegram", maxToken),
 	}
-	return validate(r, tps, nil)
+
+	tooSmallToken := secrets.NewSecret(numeric("4") + ":A" + alphaNumericExtendedShort("34"))
+	tooBigToken := secrets.NewSecret(numeric("17") + ":A" + alphaNumericExtendedShort("34"))
+	fps := []string{
+		// Token with too small bot_id
+		generateSampleSecret("telegram", tooSmallToken),
+		// Token with too big bot_id
+		generateSampleSecret("telegram", tooBigToken),
+	}
+
+	return validate(r, tps, fps)
 }
