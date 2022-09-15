@@ -69,6 +69,9 @@ type Detector struct {
 	// a list of known findings that should be ignored
 	baseline []report.Finding
 
+	// path to baseline
+	baselinePath string
+
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
 }
@@ -156,6 +159,7 @@ func (d *Detector) AddBaseline(baselinePath string) error {
 		}
 		d.baseline = baseline
 	}
+	d.baselinePath = baselinePath
 	return nil
 }
 
@@ -438,7 +442,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path) {
+		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
 		return findings
 	}
 

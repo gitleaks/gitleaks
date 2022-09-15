@@ -200,12 +200,12 @@ gitleaks will ignore any old findings that are present in the baseline. A baseli
 gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
 ```
 
-***NOTE***: If you decide to commit the baseline file to the repo, you must add it to the .gitleaksignore file. Otherwise, the contents of the baseline file will generate new issues.
-
 Once as baseline is created it can be applied when running the detect command again:
+
 ```
 gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
 ```
+
 After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
 
 ### Verify Findings
