@@ -153,7 +153,7 @@ Flags:
       --exit-code string       exit code when leaks have been encountered (default: 1)
   -h, --help                   help for gitleaks
   -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
-  -q, --quiet                  suppress banner
+  --no-banner                  suppress banner
       --redact                 redact secrets from logs and stdout
   -f, --report-format string   output format (json, csv, sarif)
   -r, --report-path string     report file
