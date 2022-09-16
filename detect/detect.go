@@ -66,6 +66,12 @@ type Detector struct {
 	// matching given a set of words (keywords from the rules in the config)
 	prefilter ahocorasick.AhoCorasick
 
+	// a list of known findings that should be ignored
+	baseline []report.Finding
+
+	// path to baseline
+	baselinePath string
+
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
 }
@@ -142,6 +148,18 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	for scanner.Scan() {
 		d.gitleaksIgnore[scanner.Text()] = true
 	}
+	return nil
+}
+
+func (d *Detector) AddBaseline(baselinePath string) error {
+	if baselinePath != "" {
+		baseline, err := LoadBaseline(baselinePath)
+		if err != nil {
+			return err
+		}
+		d.baseline = baseline
+	}
+	d.baselinePath = baselinePath
 	return nil
 }
 
@@ -424,7 +442,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path) {
+		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
 		return findings
 	}
 
@@ -470,6 +488,11 @@ func (d *Detector) addFinding(finding report.Finding) {
 	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 		log.Debug().Msgf("ignoring finding with Fingerprint %s",
 			finding.Fingerprint)
+		return
+	}
+
+	if d.baseline != nil && !IsNew(finding, d.baseline) {
+		log.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
 		return
 	}
 

@@ -42,6 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source (default: $PWD)")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, sarif)")
+	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().Bool("redact", false, "redact secrets from logs and stdout")

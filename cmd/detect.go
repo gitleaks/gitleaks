@@ -75,6 +75,15 @@ func runDetect(cmd *cobra.Command, args []string) {
 		detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore"))
 	}
 
+	// ignore findings from the baseline (an existing report in json format generated earlier)
+	baselinePath, _ := cmd.Flags().GetString("baseline-path")
+	if baselinePath != "" {
+		err = detector.AddBaseline(baselinePath)
+		if err != nil {
+			log.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
+		}
+	}
+
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
