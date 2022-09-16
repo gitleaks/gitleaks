@@ -11,13 +11,14 @@ func GenericCredential() *config.Rule {
 		Description: "Generic API Key",
 		Regex: generateSemiGenericRegex([]string{
 			"key",
-			"api[^Version]",
+			"api",
 			"token",
-			"pat",
 			"secret",
 			"client",
+			"passwd",
 			"password",
 			"auth",
+			"access",
 		}, `[0-9a-z\-_.=]{10,150}`),
 		SecretGroup: 1,
 		Keywords: []string{
@@ -26,9 +27,10 @@ func GenericCredential() *config.Rule {
 			"token",
 			"secret",
 			"client",
-			"pat",
+			"passwd",
 			"password",
 			"auth",
+			"access",
 		},
 		Entropy: 3.5,
 		Allowlist: config.Allowlist{
@@ -45,6 +47,9 @@ func GenericCredential() *config.Rule {
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
+		`password combination.
+
+R5: Regulatory--21`,
 	}
 	return validate(r, tps, fps)
 }

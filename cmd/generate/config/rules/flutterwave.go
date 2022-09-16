@@ -26,8 +26,8 @@ func FlutterwavePublicKey() *config.Rule {
 func FlutterwaveSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Finicity Secret Key",
-		RuleID:      "flutterwave-public-key",
+		Description: "Flutterwave Secret Key",
+		RuleID:      "flutterwave-secret-key",
 		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{32}-X`),
 		Keywords:    []string{"FLWSECK_TEST"},
 	}
@@ -42,8 +42,8 @@ func FlutterwaveSecretKey() *config.Rule {
 func FlutterwaveEncKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Finicity Secret Key",
-		RuleID:      "flutterwave-public-key",
+		Description: "Flutterwave Encryption Key",
+		RuleID:      "flutterwave-encryption-key",
 		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{12}`),
 		Keywords:    []string{"FLWSECK_TEST"},
 	}

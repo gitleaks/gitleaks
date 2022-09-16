@@ -8,7 +8,7 @@ import (
 func Facebook() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "facebook",
+		Description: "Facebook",
 		RuleID:      "facebook",
 		Regex:       generateSemiGenericRegex([]string{"facebook"}, hex("32")),
 		SecretGroup: 1,

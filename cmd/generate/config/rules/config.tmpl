@@ -1,20 +1,23 @@
+# This file has been auto-generated. Do not edit manually.
+# If you would like to contribute new rules, please use 
+# cmd/generate/config/main.go and follow the contributing guidelines
+# at https://github.com/zricethezav/gitleaks/blob/master/CONTRIBUTING.md
+
 # This is the default gitleaks configuration file.
 # Rules and allowlists are defined within this file.
 # Rules instruct gitleaks on what should be considered a secret.
 # Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
+
 title = "gitleaks config"
 
 [allowlist]
 description = "global allow lists"
-regexes = [
-    '''219-09-9999''',
-    '''078-05-1120''',
-    '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
-    ]
 paths = [
     '''gitleaks.toml''',
-    '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
-    '''(go.mod|go.sum)$'''
+    '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
+    '''(go.mod|go.sum)$''',
+    '''node_modules''',
+    '''vendor''',
 ]
 
 {{ range $i, $rule := .Rules }}[[rules]]

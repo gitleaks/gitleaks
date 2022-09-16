@@ -3,7 +3,6 @@ package git
 import (
 	"bufio"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -12,6 +11,8 @@ import (
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
 )
+
+var ErrEncountered bool
 
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
@@ -37,15 +38,16 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	go listenForStdErr(stderr)
+
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-
-	go listenForStdErr(stderr)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
-	return gitdiff.Parse(stdout)
+	return gitdiff.Parse(cmd, stdout)
 }
 
 // GitDiff returns a channel of gitdiff.File objects from
@@ -68,26 +70,30 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	go listenForStdErr(stderr)
+
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-
-	go listenForStdErr(stderr)
 	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
-	return gitdiff.Parse(stdout)
+	return gitdiff.Parse(cmd, stdout)
 }
 
 // listenForStdErr listens for stderr output from git and prints it to stdout
 // then exits with exit code 1
 func listenForStdErr(stderr io.ReadCloser) {
 	scanner := bufio.NewScanner(stderr)
-	errEncountered := false
 	for scanner.Scan() {
-		// if git throws the following error:
+		// if git throws one of the following errors:
 		//
 		//  exhaustive rename detection was skipped due to too many files.
+		//  you may want to set your diff.renameLimit variable to at least
+		//  (some large number) and retry the command.
+		//
+		//	inexact rename detection was skipped due to too many files.
 		//  you may want to set your diff.renameLimit variable to at least
 		//  (some large number) and retry the command.
 		//
@@ -98,15 +104,18 @@ func listenForStdErr(stderr io.ReadCloser) {
 		if strings.Contains(scanner.Text(),
 			"exhaustive rename detection was skipped") ||
 			strings.Contains(scanner.Text(),
+				"inexact rename detection was skipped") ||
+			strings.Contains(scanner.Text(),
 				"you may want to set your diff.renameLimit") {
-
 			log.Warn().Msg(scanner.Text())
 		} else {
-			log.Error().Msg(scanner.Text())
-			errEncountered = true
+			log.Error().Msgf("[git] %s", scanner.Text())
+
+			// asynchronously set this error flag to true so that we can
+			// capture a log message and exit with a non-zero exit code
+			// This value should get set before the `git` command exits so it's
+			// safe-ish, although I know I know, bad practice.
+			ErrEncountered = true
 		}
-	}
-	if errEncountered {
-		os.Exit(1)
 	}
 }

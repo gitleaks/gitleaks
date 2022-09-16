@@ -13,6 +13,8 @@ type Finding struct {
 	StartColumn int
 	EndColumn   int
 
+	Line string `json:"-"`
+
 	Match string
 
 	// Secret contains the full content of what is matched in
@@ -35,10 +37,14 @@ type Finding struct {
 
 	// Rule is the name of the rule that was matched
 	RuleID string
+
+	// unique identifer
+	Fingerprint string
 }
 
 // Redact removes sensitive information from a finding.
 func (f *Finding) Redact() {
+	f.Line = strings.Replace(f.Line, f.Secret, "REDACTED", -1)
 	f.Match = strings.Replace(f.Match, f.Secret, "REDACTED", -1)
-	f.Secret = "REDACT"
+	f.Secret = "REDACTED"
 }

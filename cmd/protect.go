@@ -85,7 +85,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 
 	// log info about the scan
-	log.Info().Msgf("scan completed in %s", time.Since(start))
+	log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
 	if len(findings) != 0 {
 		log.Warn().Msgf("leaks found: %d", len(findings))
 	} else {

@@ -229,7 +229,7 @@ var DefaultStopWords = []string{
 	"gaia",
 	"display",
 	"universal",
-	"function",
+	"func",
 	"metadata",
 	"hipchat",
 	"under",
@@ -1484,4 +1484,6 @@ var DefaultStopWords = []string{
 	"boot",
 	"book",
 	"branch",
+	"combination",
+	"combo",
 }

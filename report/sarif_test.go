@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ func TestWriteSarif(t *testing.T) {
 			findings: []Finding{
 				{
 
-					Description: "",
+					Description: "A test rule",
 					RuleID:      "test-rule",
 					Match:       "line containing secret",
 					Secret:      "a secret",
@@ -73,6 +74,7 @@ func TestWriteSarif(t *testing.T) {
 			t.Error(err)
 		}
 		err = writeSarif(cfg, test.findings, tmpfile)
+		fmt.Println(cfg)
 		if err != nil {
 			os.Remove(tmpfile.Name())
 			t.Error(err)

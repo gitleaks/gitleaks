@@ -4,7 +4,8 @@ go 1.17
 
 require (
 	github.com/fatih/semgroup v1.2.0
-	github.com/gitleaks/go-gitdiff v0.7.6
+	github.com/gitleaks/go-gitdiff v0.8.0
+	github.com/h2non/filetype v1.1.3
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
@@ -12,9 +13,18 @@ require (
 )
 
 require (
+	github.com/charmbracelet/lipgloss v0.5.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68 // indirect
+	github.com/muesli/termenv v0.11.1-0.20220204035834-5ac8409525e0 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+)
+
+require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb

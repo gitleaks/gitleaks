@@ -16,7 +16,7 @@ const (
 
 	// identifier prefix (just an ignore group)
 	identifierPrefix = `(?:`
-	identifierSuffix = `)(?:[0-9a-z\-_\s.]{0,20})(?:[\s|']|[\s|"]){0,3}`
+	identifierSuffix = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
 	operator = `(?:=|>|:=|\|\|:|<=|=>|:)`
@@ -25,7 +25,7 @@ const (
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60]|$)`
+	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;]|$)`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp {
@@ -62,18 +62,20 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	}
 	r.Keywords = keywords
 
+	rules := make(map[string]config.Rule)
+	rules[r.RuleID] = r
 	d := detect.NewDetector(config.Config{
-		Rules:    []*config.Rule{&r},
+		Rules:    rules,
 		Keywords: keywords,
 	})
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msgf("Failed to validate (tp) %s %s", r.RuleID, tp)
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], true positive [%s] was not detected by regexp [%s]", r.RuleID, tp, r.Regex)
 		}
 	}
 	for _, fp := range falsePositives {
 		if len(d.DetectString(fp)) != 0 {
-			log.Fatal().Msgf("Failed to validate (fp) %s", r.RuleID)
+			log.Fatal().Msgf("Failed to validate (fp) [%s]", r.RuleID)
 		}
 	}
 	return &r
@@ -91,6 +93,18 @@ func alphaNumeric(size string) string {
 	return fmt.Sprintf(`[a-z0-9]{%s}`, size)
 }
 
+func alphaNumericExtendedShort(size string) string {
+	return fmt.Sprintf(`[a-z0-9_-]{%s}`, size)
+}
+
 func alphaNumericExtended(size string) string {
 	return fmt.Sprintf(`[a-z0-9=_\-]{%s}`, size)
+}
+
+func alphaNumericExtendedLong(size string) string {
+	return fmt.Sprintf(`[a-z0-9\/=_\+\-]{%s}`, size)
+}
+
+func hex8_4_4_4_12() string {
+	return `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`
 }

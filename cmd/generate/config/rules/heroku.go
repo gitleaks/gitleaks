@@ -9,8 +9,7 @@ func Heroku() *config.Rule {
 	r := config.Rule{
 		Description: "Heroku API Key",
 		RuleID:      "heroku-api-key",
-		Regex: generateSemiGenericRegex([]string{"heroku"},
-			`[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}`),
+		Regex:       generateSemiGenericRegex([]string{"heroku"}, hex8_4_4_4_12()),
 		SecretGroup: 1,
 		Keywords:    []string{"heroku"},
 	}

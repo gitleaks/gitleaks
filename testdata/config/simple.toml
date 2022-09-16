@@ -9,162 +9,213 @@ title = "gitleaks config"
 
 [[rules]]
     description = "AWS Secret Key"
+    id = "aws-secret-key"
     regex = '''(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}'''
     tags = ["key", "AWS"]
 
 [[rules]]
     description = "AWS MWS key"
+    id = "aws-mws-key"
     regex = '''amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
     tags = ["key", "AWS", "MWS"]
 
 [[rules]]
     description = "Facebook Secret Key"
+    id = "facebook-secret-key"
     regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
     tags = ["key", "Facebook"]
 
 [[rules]]
     description = "Facebook Client ID"
+    id = "facebook-client-id"
     regex = '''(?i)(facebook|fb)(.{0,20})?['\"][0-9]{13,17}['\"]'''
     tags = ["key", "Facebook"]
 
 [[rules]]
     description = "Twitter Secret Key"
+    id = "twitter-secret-key"
     regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{35,44}['\"]'''
     tags = ["key", "Twitter"]
 
 [[rules]]
     description = "Twitter Client ID"
+    id = "twitter-client-id"
     regex = '''(?i)twitter(.{0,20})?['\"][0-9a-z]{18,25}['\"]'''
     tags = ["client", "Twitter"]
 
 [[rules]]
     description = "Github Personal Access Token"
+    id = "github-pat"
     regex = '''ghp_[0-9a-zA-Z]{36}'''
     tags = ["key", "Github"]
 [[rules]]
     description = "Github OAuth Access Token"
+    id = "github-oauth"
     regex = '''gho_[0-9a-zA-Z]{36}'''
     tags = ["key", "Github"]
 [[rules]]
+    id = "github-app"
     description = "Github App Token"
     regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
     tags = ["key", "Github"]
 [[rules]]
+    id = "github-refresh"
     description = "Github Refresh Token"
     regex = '''ghr_[0-9a-zA-Z]{76}'''
     tags = ["key", "Github"]
 
 [[rules]]
+    id = "linkedin-client"
     description = "LinkedIn Client ID"
     regex = '''(?i)linkedin(.{0,20})?(?-i)[0-9a-z]{12}'''
     tags = ["client", "LinkedIn"]
 
 [[rules]]
+    id = "linkedin-secret"
     description = "LinkedIn Secret Key"
     regex = '''(?i)linkedin(.{0,20})?[0-9a-z]{16}'''
     tags = ["secret", "LinkedIn"]
 
 [[rules]]
+    id = "slack"
     description = "Slack"
     regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
     tags = ["key", "Slack"]
 
 [[rules]]
+    id = "apkey"
     description = "Asymmetric Private Key"
     regex = '''-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----'''
     tags = ["key", "AsymmetricPrivateKey"]
 
 [[rules]]
+    id = "google"
     description = "Google API key"
     regex = '''AIza[0-9A-Za-z\-_]{35}'''
     tags = ["key", "Google"]
 
 [[rules]]
+    id = "google"
     description = "Google (GCP) Service Account"
     regex = '''"type": "service_account"'''
     tags = ["key", "Google"]
 
 [[rules]]
+    id = "heroku"
     description = "Heroku API key"
     regex = '''(?i)heroku(.{0,20})?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
     tags = ["key", "Heroku"]
 
 [[rules]]
+    id = "mailchimp"
     description = "MailChimp API key"
     regex = '''(?i)(mailchimp|mc)(.{0,20})?[0-9a-f]{32}-us[0-9]{1,2}'''
     tags = ["key", "Mailchimp"]
 
 [[rules]]
+    id = "mailgun"
     description = "Mailgun API key"
     regex = '''((?i)(mailgun|mg)(.{0,20})?)?key-[0-9a-z]{32}'''
     tags = ["key", "Mailgun"]
 
 [[rules]]
+    id = "paypal"
     description = "PayPal Braintree access token"
     regex = '''access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}'''
     tags = ["key", "Paypal"]
 
 [[rules]]
+    id = "piacatic"
     description = "Picatic API key"
     regex = '''sk_live_[0-9a-z]{32}'''
     tags = ["key", "Picatic"]
 
 [[rules]]
+    id = "sendgrid"
     description = "SendGrid API Key"
     regex = '''SG\.[\w_]{16,32}\.[\w_]{16,64}'''
     tags = ["key", "SendGrid"]
 
 [[rules]]
+    description = "Sidekiq Secret"
+    id = "sidekiq-secret"
+    regex = '''(?i)(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+    secretGroup = 1
+    keywords = [
+        "bundle_enterprise__contribsys__com","bundle_gems__contribsys__com",
+    ]
+
+[[rules]]
+    description = "Sidekiq Sensitive URL"
+    id = "sidekiq-sensitive-url"
+    regex  = '''(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)'''
+    secretGroup = 2
+    keywords = [
+        "gems.contribsys.com","enterprise.contribsys.com",
+    ]
+
+[[rules]]
+    id = "slack-webhook"
     description = "Slack Webhook"
     regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}'''
     tags = ["key", "slack"]
 
 [[rules]]
+    id = "stripe"
     description = "Stripe API key"
     regex = '''(?i)stripe(.{0,20})?[sr]k_live_[0-9a-zA-Z]{24}'''
     tags = ["key", "Stripe"]
 
 [[rules]]
+    id = "square"
     description = "Square access token"
     regex = '''sq0atp-[0-9A-Za-z\-_]{22}'''
     tags = ["key", "square"]
 
 [[rules]]
+    id = "square-oauth"
     description = "Square OAuth secret"
     regex = '''sq0csp-[0-9A-Za-z\-_]{43}'''
     tags = ["key", "square"]
 
 [[rules]]
+    id = "twilio"
     description = "Twilio API key"
     regex = '''(?i)twilio(.{0,20})?SK[0-9a-f]{32}'''
     tags = ["key", "twilio"]
 
 [[rules]]
+    id = "dynatrace"
     description = "Dynatrace ttoken"
     regex = '''dt0[a-zA-Z]{1}[0-9]{2}\.[A-Z0-9]{24}\.[A-Z0-9]{64}'''
     tags = ["key", "Dynatrace"]
 
 [[rules]]
+    id = "shopify"
     description = "Shopify shared secret"
     regex = '''shpss_[a-fA-F0-9]{32}'''
     tags = ["key", "Shopify"]
 
 [[rules]]
+    id = "shopify-access"
     description = "Shopify access token"
     regex = '''shpat_[a-fA-F0-9]{32}'''
     tags = ["key", "Shopify"]
 
 [[rules]]
+    id = "shopify-custom"
     description = "Shopify custom app access token"
     regex = '''shpca_[a-fA-F0-9]{32}'''
     tags = ["key", "Shopify"]
 
 [[rules]]
+    id = "shopify-private"
     description = "Shopify private app access token"
     regex = '''shppa_[a-fA-F0-9]{32}'''
     tags = ["key", "Shopify"]
 
 [[rules]]
+    id = "pypi"
     description = "PyPI upload token"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
