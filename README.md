@@ -156,6 +156,7 @@ Flags:
       --redact                 redact secrets from logs and stdout
   -f, --report-format string   output format (json, csv, sarif)
   -r, --report-path string     report file
+  -b, --baseline-path          path to a previously generated report with known issues that gitleaks should ignore
   -s, --source string          path to source (git repo, directory, file)
   -v, --verbose                show verbose output from scan
 
@@ -189,6 +190,23 @@ When running `protect` on a git repository, gitleaks will parse the output of a 
 as a pre-commit.
 
 **NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
+
+### Creating a baseline
+
+When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline, 
+gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter. 
+
+```
+gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
+```
+
+Once as baseline is created it can be applied when running the detect command again:
+
+```
+gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
+```
+
+After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
 
 ### Verify Findings
 

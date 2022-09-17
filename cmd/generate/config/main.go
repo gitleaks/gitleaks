@@ -141,6 +141,7 @@ func main() {
 	configRules = append(configRules, rules.SquareSpaceAccessToken())
 	configRules = append(configRules, rules.SumoLogicAccessID())
 	configRules = append(configRules, rules.SumoLogicAccessToken())
+	configRules = append(configRules, rules.TeamsWebhook())
 	configRules = append(configRules, rules.TelegramBotToken())
 	configRules = append(configRules, rules.TravisCIAccessToken())
 	configRules = append(configRules, rules.Twilio())
