@@ -33,6 +33,7 @@ a42b32bdf11b6f4ea5c32ec76a1731b4b0c5e52a:cmd/generate/config/rules/generic.go:ge
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:73
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:81
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:89
+33082a996774ba4c8ad4ba26fd219d77497eb960:README.md:sidekiq-secret:43
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:discord-api-token:98
 57d2d345b6b6ea220be9d99792b21a75359555c0:detect/detect_test.go:aws-access-token:235
 57d2d345b6b6ea220be9d99792b21a75359555c0:detect/detect_test.go:aws-access-token:236
