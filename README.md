@@ -1,4 +1,4 @@
-# gitleaks
+# Gitleaks
 
 ```
 ┌─○───┐
@@ -57,40 +57,22 @@ Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/
 
 Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action).
 
-### MacOS
+### Installing
 
 ```bash
+# MacOS
 brew install gitleaks
-```
 
-### Docker
-
-#### DockerHub
-
-```bash
+# Docker (DockerHub)
 docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-```
 
-#### ghcr.io
-
-```bash
+# Docker (ghcr.io)
 docker pull ghcr.io/zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-```
 
-### From Source
-
-1. Download and install Go from https://golang.org/dl/
-2. Clone the repo
-
-```bash
+# From Source
 git clone https://github.com/zricethezav/gitleaks.git
-```
-
-3. Build the binary
-
-```bash
 cd gitleaks
 make build
 ```
