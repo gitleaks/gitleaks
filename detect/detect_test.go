@@ -498,27 +498,6 @@ func TestFromFiles(t *testing.T) {
 				},
 			},
 		},
-		{
-			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
-			cfgName: "simple",
-			expectedFindings: []report.Finding{
-				{
-					Description: "AWS Access Key",
-					StartLine:   20,
-					EndLine:     20,
-					StartColumn: 16,
-					EndColumn:   35,
-					Match:       "AKIALALEMEL33243OLIA",
-					Secret:      "AKIALALEMEL33243OLIA",
-					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
-					File:        "../testdata/repos/nogit/main.go",
-					RuleID:      "aws-access-key",
-					Tags:        []string{"key", "AWS"},
-					Entropy:     3.0841837,
-					Fingerprint: "../testdata/repos/nogit/main.go:aws-access-key:20",
-				},
-			},
-		},
 	}
 
 	for _, tt := range tests {

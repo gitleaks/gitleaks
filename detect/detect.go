@@ -2,6 +2,7 @@ package detect
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/h2non/filetype"
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -381,28 +381,18 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	for pa := range paths {
 		p := pa
 		s.Go(func() error {
-			b, err := os.ReadFile(p)
+			f, err := os.Open(p)
+			defer f.Close()
 			if err != nil {
 				return err
 			}
-
-			mimetype, err := filetype.Match(b)
+			findings, err := d.DetectReader(f)
 			if err != nil {
 				return err
 			}
-			if mimetype.MIME.Type == "application" {
-				return nil // skip binary files
-			}
-
-			fragment := Fragment{
-				Raw:      string(b),
-				FilePath: p,
-			}
-			for _, finding := range d.Detect(fragment) {
-				// need to add 1 since line counting starts at 1
-				finding.EndLine++
-				finding.StartLine++
-				d.addFinding(finding)
+			for _, f := range findings {
+				f.File = p
+				d.addFinding(f)
 			}
 
 			return nil
@@ -415,40 +405,33 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 
 	return d.findings, nil
 }
-func (d *Detector) DetectReader(r io.Reader) (chan report.Finding, error) {
-	findings := make(chan report.Finding)
+func (d *Detector) DetectReader(r io.Reader) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
 	buf := make([]byte, 0, 10*1024)
-	var wg sync.WaitGroup
+	currNewLine := 0
+	findings := []report.Finding{}
 
-	go func() {
-		for {
-			n, err := reader.Read(buf[:cap(buf)])
-			buf = buf[:n]
-			if err != nil {
-				if err != io.EOF {
-					return
-				}
-				wg.Wait()
-				fmt.Println("closing")
-				close(findings)
-				return
+	for {
+		n, err := reader.Read(buf[:cap(buf)])
+		buf = buf[:n]
+		if err != nil {
+			if err != io.EOF {
+				break
 			}
-
-			wg.Add(1)
-			go func(buf []byte) {
-				defer wg.Done()
-				fragment := Fragment{
-					Raw: string(buf),
-				}
-				for _, finding := range d.Detect(fragment) {
-					findings <- finding
-				}
-				return
-			}(buf)
+			break
 		}
 
-	}()
+		fragment := Fragment{
+			Raw: string(buf),
+		}
+		for _, finding := range d.Detect(fragment) {
+			finding.StartLine += (currNewLine + 1)
+			finding.EndLine += (currNewLine + 1)
+			findings = append(findings, finding)
+		}
+		currNewLine += bytes.Count(buf, []byte{'\n'})
+
+	}
 
 	return findings, nil
 }

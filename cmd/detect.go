@@ -102,17 +102,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.Error().Msg(err.Error())
 		}
 	} else if fromPipe {
-		findingsCh := make(chan report.Finding)
-		go func() {
-			for finding := range findingsCh {
-				findings = append(findings, finding)
-			}
-		}()
-
-		f, err := detector.DetectReader(os.Stdin)
-		for finding := range f {
-			findingsCh <- finding
-		}
+		findings, err = detector.DetectReader(os.Stdin)
 		if err != nil {
 			log.Error().Msg(err.Error())
 		}
