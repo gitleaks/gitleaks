@@ -3,7 +3,7 @@ package detect
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -43,7 +43,7 @@ func LoadBaseline(baselinePath string) ([]report.Finding, error) {
 		return nil, fmt.Errorf("could not open %s", baselinePath)
 	}
 
-	bytes, err := ioutil.ReadAll(jsonFile)
+	bytes, err := io.ReadAll(jsonFile)
 	jsonFile.Close()
 	if err != nil {
 		return nil, fmt.Errorf("could not read data from the file %s", baselinePath)
