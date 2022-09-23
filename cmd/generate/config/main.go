@@ -15,7 +15,7 @@ const (
 )
 
 func main() {
-	configRules := []*config.Rule{}
+	var configRules []*config.Rule
 	configRules = append(configRules, rules.AdafruitAPIKey())
 	configRules = append(configRules, rules.AdobeClientID())
 	configRules = append(configRules, rules.AdobeClientSecret())
