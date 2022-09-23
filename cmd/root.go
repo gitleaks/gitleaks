@@ -25,7 +25,7 @@ const banner = `
 
 const configDescription = `config file path
 order of precedence:
-1. --config/-c
+1. --config/-c with optional --config-type/-t
 2. env var GITLEAKS_CONFIG
 3. (--source/-s)/.gitleaks.toml
 If none of the three options are used, then gitleaks will use the default config`
@@ -38,6 +38,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
+	rootCmd.PersistentFlags().StringP("config-type", "t", "", "configuration file format (json, toml, yaml, ...)")
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source (default: $PWD)")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
@@ -89,8 +90,15 @@ func initConfig() {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+	cfgType, err := rootCmd.Flags().GetString("config-type")
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
+		if cfgType != "" {
+			viper.SetConfigType(cfgType)
+		}
 		log.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
 	} else if os.Getenv("GITLEAKS_CONFIG") != "" {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
