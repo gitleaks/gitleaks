@@ -3,8 +3,10 @@ package detect
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -43,8 +45,13 @@ func LoadBaseline(baselinePath string) ([]report.Finding, error) {
 		return nil, fmt.Errorf("could not open %s", baselinePath)
 	}
 
-	bytes, err := ioutil.ReadAll(jsonFile)
-	jsonFile.Close()
+	defer func() {
+		if cerr := jsonFile.Close(); cerr != nil {
+			log.Warn().Err(cerr).Msg("problem closing jsonFile handle")
+		}
+	}()
+
+	bytes, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return nil, fmt.Errorf("could not read data from the file %s", baselinePath)
 	}

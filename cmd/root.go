@@ -79,8 +79,11 @@ func initLog() {
 
 func initConfig() {
 	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
 	if !hideBanner {
-		fmt.Fprint(os.Stderr, banner)
+		_, _ = fmt.Fprint(os.Stderr, banner)
 	}
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {

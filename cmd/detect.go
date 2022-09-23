@@ -51,11 +51,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 	detector := detect.NewDetector(cfg)
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	source, err := cmd.Flags().GetString("source")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
 	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
@@ -64,15 +64,17 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {
-		detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore"))
+		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
 	}
 
 	// ignore findings from the baseline (an existing report in json format generated earlier)
@@ -87,7 +89,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not get exit code")
 	}
 
 	// determine what type of scan:
@@ -95,7 +97,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// - no-git: scan files by treating the repo as a plain directory
 	noGit, err := cmd.Flags().GetBool("no-git")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not call GetBool() for no-git")
 	}
 
 	// start the detector scan
@@ -103,19 +105,19 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings, err = detector.DetectFiles(source)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Msg(err.Error())
+			log.Error().Err(err).Msg("")
 		}
 
 	} else {
 		var logOpts string
 		logOpts, err = cmd.Flags().GetString("log-opts")
 		if err != nil {
-			log.Fatal().Err(err)
+			log.Fatal().Err(err).Msg("")
 		}
 		findings, err = detector.DetectGit(source, logOpts, detect.DetectType)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Msg(err.Error())
+			log.Error().Err(err).Msg("")
 		}
 	}
 
@@ -141,7 +143,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
-			log.Fatal().Err(err)
+			log.Fatal().Err(err).Msg("could not write")
 		}
 	}
 
