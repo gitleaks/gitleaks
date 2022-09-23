@@ -171,9 +171,7 @@ func main() {
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
 	}
-	config := config.Config{
-		Rules: ruleLookUp,
-	}
+
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse template")
@@ -183,6 +181,9 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
-	tmpl.Execute(f, config)
+
+	if err = tmpl.Execute(f, config.Config{Rules: ruleLookUp}); err != nil {
+		log.Fatal().Err(err).Msg("could not execute template")
+	}
 
 }
