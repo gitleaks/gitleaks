@@ -9,18 +9,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.18
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
 
-    - name: Build
-      run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
-    - name: Test
-      run: make test
+      - name: Test
+        run: make test
 
-    - name: Validate Config
-      run: cd cmd/generate/config && go run main.go
+      - name: Validate Config
+        run: cd cmd/generate/config && go run main.go
