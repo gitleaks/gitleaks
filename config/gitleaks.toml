@@ -2537,7 +2537,7 @@ keywords = [
 [[rules]]
 description = "Slack Webhook"
 id = "slack-web-hook"
-regex = '''https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}'''
+regex = '''https:\/\/hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{44,46}'''
 keywords = [
     "hooks.slack.com",
 ]
