@@ -364,7 +364,8 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	if err := s.Wait(); err != nil {
 		return d.findings, err
 	}
-	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	log.Info().Msgf("%d commits scanned.", len(d.commitMap))
+	log.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	if git.ErrEncountered {
 		return d.findings, fmt.Errorf("%s", "git error encountered, see logs")
 	}
