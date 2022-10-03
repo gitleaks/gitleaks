@@ -5,6 +5,7 @@ As the Gitleaks Community grows, we'd like to keep a list of our users.
 Here's a running list of some organizations using Gitleaks[^1]:
 
 1. [Gitleaks](https://gitleaks.io)
+1. [GoReleaser](https://goreleaser.com) 
 
 Feel free to [add yours](https://github.com/zricethezav/gitleaks/edit/master/USERS.md)!
 
