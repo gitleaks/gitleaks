@@ -6,7 +6,7 @@ Here's a running list of some organizations using Gitleaks[^1]:
 
 1. [Gitleaks](https://gitleaks.io)
 
-Feel free to [add yours](https://github.com/zricethezav/gitleaks/edit/main/USERS.md)!
+Feel free to [add yours](https://github.com/zricethezav/gitleaks/edit/master/USERS.md)!
 
 <!--
 Hey! Thanks for looking into this file!
