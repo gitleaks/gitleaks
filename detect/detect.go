@@ -49,6 +49,9 @@ type Detector struct {
 	// verbose is a flag to print findings
 	Verbose bool
 
+	// maximum size for a file/blob to be scanned
+	MaxTargetMegaBytes int
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -209,6 +212,15 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	// if path only rule, skip content checks
 	if rule.Regex == nil {
 		return findings
+	}
+
+	// If flag configure and raw data size bigger then the flag
+	if d.MaxTargetMegaBytes > 0 {
+		rawLength := len(fragment.Raw) / 1000000
+		if rawLength >= 1 {
+			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			return findings
+		}
 	}
 
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
