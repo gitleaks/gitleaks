@@ -239,6 +239,33 @@ keywords = [
 ]
 
 [[rules]]
+description = "DigitalOcean OAuth Access Token"
+id = "digitalocean-access-token"
+regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "doo_v1_",
+]
+
+[[rules]]
+description = "DigitalOcean Personal Access Token"
+id = "digitalocean-pat"
+regex = '''(?i)\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dop_v1_",
+]
+
+[[rules]]
+description = "DigitalOcean OAuth Refresh Token"
+id = "digitalocean-refresh-token"
+regex = '''(?i)\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dor_v1_",
+]
+
+[[rules]]
 description = "Discord API key"
 id = "discord-api-token"
 regex = '''(?i)(?:discord)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
