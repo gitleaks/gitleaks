@@ -49,7 +49,7 @@ type Detector struct {
 	// verbose is a flag to print findings
 	Verbose bool
 
-	// maximum size for a file/blob to be scanned
+	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 
 	// commitMap is used to keep track of commits that have been scanned.
