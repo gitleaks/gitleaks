@@ -160,6 +160,7 @@ Flags:
   -b, --baseline-path          path to a previously generated report with known issues that gitleaks should ignore
   -s, --source string          path to source (git repo, directory, file)
   -v, --verbose                show verbose output from scan
+  --max-target-megabytes       files larger than this will be skipped
 
 Use "gitleaks [command] --help" for more information about a command.
 ```
@@ -194,8 +195,8 @@ as a pre-commit.
 
 ### Creating a baseline
 
-When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline, 
-gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter. 
+When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline,
+gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
 
 ```
 gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
@@ -368,12 +369,16 @@ stopwords = [
   '''endpoint''',
 ]
 ```
+
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/zricethezav/gitleaks/blob/master/README.md).
 
 ### Additional Configuration
+
 #### gitleaks:allow
+
 If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
 to ignore that secret. Ex:
+
 ```
 class CustomClass:
     discord_client_secret = '8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ'  #gitleaks:allow
@@ -381,8 +386,8 @@ class CustomClass:
 ```
 
 #### .gitleaksignore
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is expirmental and is subject to change in the future.
 
+You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is expirmental and is subject to change in the future.
 
 ## Secured by Jit
 

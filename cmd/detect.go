@@ -70,6 +70,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {
 		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
