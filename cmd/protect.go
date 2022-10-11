@@ -16,6 +16,7 @@ import (
 
 func init() {
 	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
+	protectCmd.Flags().String("log-opts", "", "git log options")
 	rootCmd.AddCommand(protectCmd)
 }
 
@@ -63,6 +64,10 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+
+	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 
