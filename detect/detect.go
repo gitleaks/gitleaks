@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -52,6 +53,9 @@ type Detector struct {
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 
+	// followSymlinks is a flag to enable scanning symlink files
+	FollowSymlinks bool
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -85,7 +89,8 @@ type Fragment struct {
 	Raw string
 
 	// FilePath is the path to the file if applicable
-	FilePath string
+	FilePath    string
+	SymlinkFile string
 
 	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
@@ -194,6 +199,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			finding := report.Finding{
 				Description: rule.Description,
 				File:        fragment.FilePath,
+				SymlinkFile: fragment.SymlinkFile,
 				RuleID:      rule.RuleID,
 				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
 				Tags:        rule.Tags,
@@ -241,6 +247,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		finding := report.Finding{
 			Description: rule.Description,
 			File:        fragment.FilePath,
+			SymlinkFile: fragment.SymlinkFile,
 			RuleID:      rule.RuleID,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
@@ -384,11 +391,16 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	return d.findings, nil
 }
 
+type scanTarget struct {
+	Path    string
+	Symlink string
+}
+
 // DetectFiles accepts a path to a source directory or file and begins a scan of the
 // file or directory.
 func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
-	paths := make(chan string)
+	paths := make(chan scanTarget)
 	s.Go(func() error {
 		defer close(paths)
 		return filepath.Walk(source,
@@ -403,7 +415,25 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 					return nil
 				}
 				if fInfo.Mode().IsRegular() {
-					paths <- path
+					paths <- scanTarget{
+						Path:    path,
+						Symlink: "",
+					}
+				}
+				if fInfo.Mode().Type() == fs.ModeSymlink && d.FollowSymlinks {
+					realPath, err := filepath.EvalSymlinks(path)
+					if err != nil {
+						return err
+					}
+					realPathFileInfo, _ := os.Stat(realPath)
+					if realPathFileInfo.IsDir() {
+						fmt.Printf("Found symlinked directory: %s -> %s [skipping]\n", path, realPath)
+						return nil
+					}
+					paths <- scanTarget{
+						Path:    realPath,
+						Symlink: path,
+					}
 				}
 				return nil
 			})
@@ -411,7 +441,7 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	for pa := range paths {
 		p := pa
 		s.Go(func() error {
-			b, err := os.ReadFile(p)
+			b, err := os.ReadFile(p.Path)
 			if err != nil {
 				return err
 			}
@@ -426,7 +456,10 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 
 			fragment := Fragment{
 				Raw:      string(b),
-				FilePath: p,
+				FilePath: p.Path,
+			}
+			if p.Symlink != "" {
+				fragment.SymlinkFile = p.Symlink
 			}
 			for _, finding := range d.Detect(fragment) {
 				// need to add 1 since line counting starts at 1

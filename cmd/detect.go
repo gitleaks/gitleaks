@@ -18,6 +18,8 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 	detectCmd.Flags().String("log-opts", "", "git log options")
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
+	detectCmd.Flags().Bool("follow-symlinks", false, "Scan files that are symlinks to other files")
+
 }
 
 var detectCmd = &cobra.Command{
@@ -87,6 +89,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
 		}
+	}
+
+	// set follow symlinks flag
+	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
+		log.Fatal().Err(err)
 	}
 
 	// set exit code

@@ -491,6 +491,7 @@ func TestFromFiles(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OLIA",
 					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
+					SymlinkFile: "",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
@@ -537,11 +538,67 @@ func TestFromFiles(t *testing.T) {
 		}
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
+		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
 		if err != nil {
 			t.Error(err)
 		}
 
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestDetectWithSymlinks(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "symlinks/file_symlink"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Asymmetric Private Key",
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   35,
+					Match:       "-----BEGIN OPENSSH PRIVATE KEY-----",
+					Secret:      "-----BEGIN OPENSSH PRIVATE KEY-----",
+					Line:        "-----BEGIN OPENSSH PRIVATE KEY-----",
+					File:        "../testdata/repos/symlinks/source_file/id_ed25519",
+					SymlinkFile: "../testdata/repos/symlinks/file_symlink/symlinked_id_ed25519",
+					RuleID:      "apkey",
+					Tags:        []string{"key", "AsymmetricPrivateKey"},
+					Entropy:     3.587164,
+					Fingerprint: "../testdata/repos/symlinks/source_file/id_ed25519:apkey:1",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		detector.FollowSymlinks = true
+		findings, err := detector.DetectFiles(tt.source)
+		if err != nil {
+			t.Error(err)
+		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
