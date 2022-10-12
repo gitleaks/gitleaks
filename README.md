@@ -160,7 +160,7 @@ Flags:
   -b, --baseline-path          path to a previously generated report with known issues that gitleaks should ignore
   -s, --source string          path to source (git repo, directory, file)
   -v, --verbose                show verbose output from scan
-  --max-target-megabytes       files larger than this will be skipped
+  --max-target-megabytes int   files larger than this will be skipped
 
 Use "gitleaks [command] --help" for more information about a command.
 ```
