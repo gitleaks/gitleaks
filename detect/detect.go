@@ -427,7 +427,7 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 					}
 					realPathFileInfo, _ := os.Stat(realPath)
 					if realPathFileInfo.IsDir() {
-						fmt.Printf("Found symlinked directory: %s -> %s [skipping]\n", path, realPath)
+						log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
 						return nil
 					}
 					paths <- scanTarget{
