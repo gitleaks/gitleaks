@@ -2,7 +2,6 @@ package detect
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -489,7 +488,6 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
 	buf := make([]byte, 0, 1000*bufSize)
-	currNewLine := 0
 	findings := []report.Finding{}
 
 	for {
@@ -511,8 +509,6 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 				printFinding(finding)
 			}
 		}
-		currNewLine += bytes.Count(buf, []byte{'\n'})
-
 	}
 
 	return findings, nil
