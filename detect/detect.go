@@ -82,6 +82,10 @@ type Fragment struct {
 	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
 
+	// typ is the type of fragment. This is used to skip adding a finding
+	// to the detector struct
+	typ string
+
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
@@ -405,9 +409,11 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 
 	return d.findings, nil
 }
-func (d *Detector) DetectReader(r io.Reader) ([]report.Finding, error) {
+
+// DetectReader accepts an io.Reader and a buffer size for the reader in KB
+func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
-	buf := make([]byte, 0, 10*1024)
+	buf := make([]byte, 0, 1000*bufSize)
 	currNewLine := 0
 	findings := []report.Finding{}
 
