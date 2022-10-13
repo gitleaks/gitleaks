@@ -495,7 +495,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 		buf = buf[:n]
 		if err != nil {
 			if err != io.EOF {
-				break
+				return findings, err
 			}
 			break
 		}
