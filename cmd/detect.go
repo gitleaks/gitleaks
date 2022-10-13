@@ -93,7 +93,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	// set exit code
