@@ -125,7 +125,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 	} else if fromPipe {
 		findings, err = detector.DetectReader(os.Stdin, 10)
 		if err != nil {
-			log.Error().Msg(err.Error())
+			// log fatal to exit, no need to continue since a report
+			// will not be generated when scanning from a pipe...for now
+			log.Fatal().Err(err).Msg("")
 		}
 	} else {
 		var logOpts string
