@@ -109,11 +109,15 @@ func getResults(findings []Finding) []Results {
 }
 
 func getLocation(f Finding) []Locations {
+	uri := f.File
+	if f.SymlinkFile != "" {
+		uri = f.SymlinkFile
+	}
 	return []Locations{
 		{
 			PhysicalLocation: PhysicalLocation{
 				ArtifactLocation: ArtifactLocation{
-					URI: f.File,
+					URI: uri,
 				},
 				Region: Region{
 					StartLine:   f.StartLine,

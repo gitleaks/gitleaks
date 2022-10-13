@@ -33,6 +33,7 @@ a42b32bdf11b6f4ea5c32ec76a1731b4b0c5e52a:cmd/generate/config/rules/generic.go:ge
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:73
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:81
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:aws-access-token:89
+33082a996774ba4c8ad4ba26fd219d77497eb960:README.md:sidekiq-secret:43
 6e72472b6019d29eaa4b76b39700cd2418741f0c:detect/detect_test.go:discord-api-token:98
 57d2d345b6b6ea220be9d99792b21a75359555c0:detect/detect_test.go:aws-access-token:235
 57d2d345b6b6ea220be9d99792b21a75359555c0:detect/detect_test.go:aws-access-token:236
@@ -651,7 +652,9 @@ bc26e979c5911cf647c1bede0b3700ebaaa454c8:checks_test.go:aws-access-token:36
 8f352bd840f028b481dc725b77d2f4904b77913b:checks_test.go:aws-access-token:34
 ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29:checks_test.go:aws-access-token:37
 06c9e824d5985c8e8789321ae70de7ace3b093dc:main.go:aws-access-token:15
-
+6d801ed61cf4d75d176cbf9062ec6ad706c9d1eb:detect/detect_test.go:private-key:567
+6d801ed61cf4d75d176cbf9062ec6ad706c9d1eb:testdata/repos/symlinks/source_file/id_ed25519:private-key:1
+acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:218
 README.md:aws-access-token:204
 README.md:aws-access-token:205
 README.md:aws-access-token:244
@@ -741,3 +744,4 @@ testdata/repos/nogit/main.go:aws-access-token:20
 96eed6aa0f507fe0c21bb46bec32637dc4cb1a9f:detect/detect_test.go:aws-access-token:513
 bfbc39eb185a217ead81a7174026f1c55f963660:cmd/generate/config/rules/jwt.go:jwt:17
 bfbc39eb185a217ead81a7174026f1c55f963660:cmd/generate/config/rules/jwt.go:jwt:19
+acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220

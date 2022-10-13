@@ -22,9 +22,9 @@ type Finding struct {
 	Secret string
 
 	// File is the name of the file containing the finding
-	File string
-
-	Commit string
+	File        string
+	SymlinkFile string
+	Commit      string
 
 	// Entropy is the shannon entropy of Value
 	Entropy float32

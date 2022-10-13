@@ -6,12 +6,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 
+	"github.com/h2non/filetype"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -50,6 +52,12 @@ type Detector struct {
 	// verbose is a flag to print findings
 	Verbose bool
 
+	// files larger than this will be skipped
+	MaxTargetMegaBytes int
+
+	// followSymlinks is a flag to enable scanning symlink files
+	FollowSymlinks bool
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -67,6 +75,12 @@ type Detector struct {
 	// matching given a set of words (keywords from the rules in the config)
 	prefilter ahocorasick.AhoCorasick
 
+	// a list of known findings that should be ignored
+	baseline []report.Finding
+
+	// path to baseline
+	baselinePath string
+
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
 }
@@ -77,7 +91,8 @@ type Fragment struct {
 	Raw string
 
 	// FilePath is the path to the file if applicable
-	FilePath string
+	FilePath    string
+	SymlinkFile string
 
 	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
@@ -150,6 +165,18 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	return nil
 }
 
+func (d *Detector) AddBaseline(baselinePath string) error {
+	if baselinePath != "" {
+		baseline, err := LoadBaseline(baselinePath)
+		if err != nil {
+			return err
+		}
+		d.baseline = baseline
+	}
+	d.baselinePath = baselinePath
+	return nil
+}
+
 // DetectBytes scans the given bytes and returns a list of findings
 func (d *Detector) DetectBytes(content []byte) []report.Finding {
 	return d.DetectString(string(content))
@@ -178,6 +205,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			finding := report.Finding{
 				Description: rule.Description,
 				File:        fragment.FilePath,
+				SymlinkFile: fragment.SymlinkFile,
 				RuleID:      rule.RuleID,
 				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
 				Tags:        rule.Tags,
@@ -198,6 +226,15 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		return findings
 	}
 
+	// If flag configure and raw data size bigger then the flag
+	if d.MaxTargetMegaBytes > 0 {
+		rawLength := len(fragment.Raw) / 1000000
+		if rawLength > d.MaxTargetMegaBytes {
+			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			return findings
+		}
+	}
+
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
@@ -216,6 +253,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		finding := report.Finding{
 			Description: rule.Description,
 			File:        fragment.FilePath,
+			SymlinkFile: fragment.SymlinkFile,
 			RuleID:      rule.RuleID,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
@@ -351,18 +389,24 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	if err := s.Wait(); err != nil {
 		return d.findings, err
 	}
-	log.Debug().Msgf("%d commits scanned. Note: this number might be smaller than expected due to commits with no additions", len(d.commitMap))
+	log.Info().Msgf("%d commits scanned.", len(d.commitMap))
+	log.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	if git.ErrEncountered {
 		return d.findings, fmt.Errorf("%s", "git error encountered, see logs")
 	}
 	return d.findings, nil
 }
 
+type scanTarget struct {
+	Path    string
+	Symlink string
+}
+
 // DetectFiles accepts a path to a source directory or file and begins a scan of the
 // file or directory.
 func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
-	paths := make(chan string)
+	paths := make(chan scanTarget)
 	s.Go(func() error {
 		defer close(paths)
 		return filepath.Walk(source,
@@ -377,7 +421,25 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 					return nil
 				}
 				if fInfo.Mode().IsRegular() {
-					paths <- path
+					paths <- scanTarget{
+						Path:    path,
+						Symlink: "",
+					}
+				}
+				if fInfo.Mode().Type() == fs.ModeSymlink && d.FollowSymlinks {
+					realPath, err := filepath.EvalSymlinks(path)
+					if err != nil {
+						return err
+					}
+					realPathFileInfo, _ := os.Stat(realPath)
+					if realPathFileInfo.IsDir() {
+						log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
+						return nil
+					}
+					paths <- scanTarget{
+						Path:    realPath,
+						Symlink: path,
+					}
 				}
 				return nil
 			})
@@ -385,18 +447,31 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	for pa := range paths {
 		p := pa
 		s.Go(func() error {
-			f, err := os.Open(p)
-			defer f.Close()
+			b, err := os.ReadFile(p.Path)
 			if err != nil {
 				return err
 			}
-			findings, err := d.DetectReader(f)
+
+			mimetype, err := filetype.Match(b)
 			if err != nil {
 				return err
 			}
-			for _, f := range findings {
-				f.File = p
-				d.addFinding(f)
+			if mimetype.MIME.Type == "application" {
+				return nil // skip binary files
+			}
+
+			fragment := Fragment{
+				Raw:      string(b),
+				FilePath: p.Path,
+			}
+			if p.Symlink != "" {
+				fragment.SymlinkFile = p.Symlink
+			}
+			for _, finding := range d.Detect(fragment) {
+				// need to add 1 since line counting starts at 1
+				finding.EndLine++
+				finding.StartLine++
+				d.addFinding(finding)
 			}
 
 			return nil
@@ -431,9 +506,10 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 			Raw: string(buf),
 		}
 		for _, finding := range d.Detect(fragment) {
-			finding.StartLine += (currNewLine + 1)
-			finding.EndLine += (currNewLine + 1)
 			findings = append(findings, finding)
+			if d.Verbose {
+				printFinding(finding)
+			}
 		}
 		currNewLine += bytes.Count(buf, []byte{'\n'})
 
@@ -451,7 +527,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path) {
+		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
 		return findings
 	}
 
@@ -497,6 +573,11 @@ func (d *Detector) addFinding(finding report.Finding) {
 	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 		log.Debug().Msgf("ignoring finding with Fingerprint %s",
 			finding.Fingerprint)
+		return
+	}
+
+	if d.baseline != nil && !IsNew(finding, d.baseline) {
+		log.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
 		return
 	}
 
