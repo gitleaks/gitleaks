@@ -652,7 +652,9 @@ bc26e979c5911cf647c1bede0b3700ebaaa454c8:checks_test.go:aws-access-token:36
 8f352bd840f028b481dc725b77d2f4904b77913b:checks_test.go:aws-access-token:34
 ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29:checks_test.go:aws-access-token:37
 06c9e824d5985c8e8789321ae70de7ace3b093dc:main.go:aws-access-token:15
-
+6d801ed61cf4d75d176cbf9062ec6ad706c9d1eb:detect/detect_test.go:private-key:567
+6d801ed61cf4d75d176cbf9062ec6ad706c9d1eb:testdata/repos/symlinks/source_file/id_ed25519:private-key:1
+acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:218
 README.md:aws-access-token:204
 README.md:aws-access-token:205
 README.md:aws-access-token:244
