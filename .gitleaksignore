@@ -745,3 +745,8 @@ testdata/repos/nogit/main.go:aws-access-token:20
 bfbc39eb185a217ead81a7174026f1c55f963660:cmd/generate/config/rules/jwt.go:jwt:17
 bfbc39eb185a217ead81a7174026f1c55f963660:cmd/generate/config/rules/jwt.go:jwt:19
 acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220
+99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:514
+111c8b47b65627db117bd20be85ff0aee8961eb9:detect/detect_test.go:private-key:567
+99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:512
+99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:513
+

@@ -470,7 +470,7 @@ func TestFromGit(t *testing.T) {
 	}
 }
 
-// TestFromGit tests the FromGit function
+// TestFromFiles tests the FromFiles function
 func TestFromFiles(t *testing.T) {
 	tests := []struct {
 		cfgName          string

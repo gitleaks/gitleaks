@@ -18,7 +18,8 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 	detectCmd.Flags().String("log-opts", "", "git log options")
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
-	detectCmd.Flags().Bool("follow-symlinks", false, "Scan files that are symlinks to other files")
+	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
+	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 
 }
 
@@ -109,6 +110,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not call GetBool() for no-git")
 	}
+	fromPipe, err := cmd.Flags().GetBool("pipe")
+	if err != nil {
+		log.Fatal().Err(err)
+	}
 
 	// start the detector scan
 	if noGit {
@@ -117,7 +122,13 @@ func runDetect(cmd *cobra.Command, args []string) {
 			// don't exit on error, just log it
 			log.Error().Err(err).Msg("")
 		}
-
+	} else if fromPipe {
+		findings, err = detector.DetectReader(os.Stdin, 10)
+		if err != nil {
+			// log fatal to exit, no need to continue since a report
+			// will not be generated when scanning from a pipe...for now
+			log.Fatal().Err(err).Msg("")
+		}
 	} else {
 		var logOpts string
 		logOpts, err = cmd.Flags().GetString("log-opts")

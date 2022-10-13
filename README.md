@@ -138,29 +138,29 @@ Usage:
 
 Available Commands:
   completion  generate the autocompletion script for the specified shell
-  detect      Detect secrets in code
+  detect      detect secrets in code
   help        Help about any command
-  protect     Protect secrets in code
-  version     Display gitleaks version
+  protect     protect secrets in code
+  version     display gitleaks version
 
 Flags:
-  -c, --config string          config file path
-                               order of precedence:
-                               1. --config/-c
-                               2. env var GITLEAKS_CONFIG
-                               3. (--source/-s)/.gitleaks.toml
-                               If none of the three options are used, then gitleaks will use the default config
-      --exit-code string       exit code when leaks have been encountered (default: 1)
-  -h, --help                   help for gitleaks
-  -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
-      --no-banner              suppress banner
-      --redact                 redact secrets from logs and stdout
-  -f, --report-format string   output format (json, csv, sarif)
-  -r, --report-path string     report file
-  -b, --baseline-path          path to a previously generated report with known issues that gitleaks should ignore
-  -s, --source string          path to source (git repo, directory, file)
-  -v, --verbose                show verbose output from scan
-  --max-target-megabytes int   files larger than this will be skipped
+  -b, --baseline-path string       path to baseline with issues that can be ignored
+  -c, --config string              config file path
+                                   order of precedence:
+                                   1. --config/-c
+                                   2. env var GITLEAKS_CONFIG
+                                   3. (--source/-s)/.gitleaks.toml
+                                   If none of the three options are used, then gitleaks will use the default config
+      --exit-code int              exit code when leaks have been encountered (default 1)
+  -h, --help                       help for gitleaks
+  -l, --log-level string           log level (trace, debug, info, warn, error, fatal) (default "info")
+      --max-target-megabytes int   files larger than this will be skipped
+      --no-banner                  suppress banner
+      --redact                     redact secrets from logs and stdout
+  -f, --report-format string       output format (json, csv, sarif) (default "json")
+  -r, --report-path string         report file
+  -s, --source string              path to source (default: $PWD) (default ".")
+  -v, --verbose                    show verbose output from scan
 
 Use "gitleaks [command] --help" for more information about a command.
 ```

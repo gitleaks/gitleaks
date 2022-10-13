@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -11,13 +12,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/h2non/filetype"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/h2non/filetype"
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -477,6 +478,36 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	}
 
 	return d.findings, nil
+}
+
+// DetectReader accepts an io.Reader and a buffer size for the reader in KB
+func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
+	reader := bufio.NewReader(r)
+	buf := make([]byte, 0, 1000*bufSize)
+	findings := []report.Finding{}
+
+	for {
+		n, err := reader.Read(buf[:cap(buf)])
+		buf = buf[:n]
+		if err != nil {
+			if err != io.EOF {
+				return findings, err
+			}
+			break
+		}
+
+		fragment := Fragment{
+			Raw: string(buf),
+		}
+		for _, finding := range d.Detect(fragment) {
+			findings = append(findings, finding)
+			if d.Verbose {
+				printFinding(finding)
+			}
+		}
+	}
+
+	return findings, nil
 }
 
 // Detect scans the given fragment and returns a list of findings
