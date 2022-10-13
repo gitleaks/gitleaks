@@ -96,10 +96,6 @@ type Fragment struct {
 	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
 
-	// typ is the type of fragment. This is used to skip adding a finding
-	// to the detector struct
-	typ string
-
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
