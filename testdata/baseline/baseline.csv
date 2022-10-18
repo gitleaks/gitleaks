@@ -1,0 +1,2 @@
+RuleID,Commit,File,Secret,Match,StartLine,EndLine,StartColumn,EndColumn,Author,Message,Date,Email,Fingerprint
+1,b,c,f,s,m,s,e,s,e,a,m,f,r,f

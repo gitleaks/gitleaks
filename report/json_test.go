@@ -30,6 +30,7 @@ func TestWriteJSON(t *testing.T) {
 					EndColumn:   2,
 					Message:     "opps",
 					File:        "auth.py",
+					SymlinkFile: "",
 					Commit:      "0000000000000000",
 					Author:      "John Doe",
 					Email:       "johndoe@gmail.com",

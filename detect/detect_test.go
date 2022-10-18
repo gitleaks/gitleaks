@@ -36,10 +36,9 @@ func TestDetect(t *testing.T) {
 			fragment: Fragment{
 				Raw: `awsToken := \
 
-                \"AKIALALEMEL33243OKIA\ // gitleaks:allow"
+		        \"AKIALALEMEL33243OKIA\ // gitleaks:allow"
 
-
-                `,
+		        `,
 				FilePath: "tmp.go",
 			},
 			expectedFindings: []report.Finding{},
@@ -60,6 +59,7 @@ func TestDetect(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OKIA",
 					Match:       "AKIALALEMEL33243OKIA",
 					File:        "tmp.go",
+					Line:        `awsToken := \"AKIALALEMEL33243OKIA\"`,
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					StartLine:   0,
@@ -81,6 +81,7 @@ func TestDetect(t *testing.T) {
 					Description: "PyPI upload token",
 					Secret:      "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
 					Match:       "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
+					Line:        `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
 					File:        "tmp.go",
 					RuleID:      "pypi-upload-token",
 					Tags:        []string{"key", "pypi"},
@@ -103,6 +104,7 @@ func TestDetect(t *testing.T) {
 					Description: "AWS Access Key",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
+					Line:        `awsToken := \"AKIALALEMEL33243OLIA\"`,
 					File:        "tmp.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -125,6 +127,7 @@ func TestDetect(t *testing.T) {
 					Description: "Sidekiq Secret",
 					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
 					Secret:      "cafebabe:deadbeef",
+					Line:        `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
 					File:        "tmp.sh",
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
@@ -148,6 +151,7 @@ func TestDetect(t *testing.T) {
 					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=\"cafebabe:deadbeef\"",
 					Secret:      "cafebabe:deadbeef",
 					File:        "tmp.sh",
+					Line:        `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
 					Entropy:     2.6098502,
@@ -170,6 +174,7 @@ func TestDetect(t *testing.T) {
 					Match:       "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:",
 					Secret:      "cafeb4b3:d3adb33f",
 					File:        "tmp.sh",
+					Line:        `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
 					RuleID:      "sidekiq-sensitive-url",
 					Tags:        []string{},
 					Entropy:     2.984234,
@@ -216,6 +221,7 @@ func TestDetect(t *testing.T) {
 					Description: "Discord API key",
 					Match:       "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
 					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
+					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 					File:        "tmp.go",
 					RuleID:      "discord-api-key",
 					Tags:        []string{},
@@ -246,6 +252,7 @@ func TestDetect(t *testing.T) {
 					Description: "Generic API Key",
 					Match:       "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
 					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
+					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 					File:        "tmp.py",
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
@@ -356,6 +363,7 @@ func TestFromGit(t *testing.T) {
 					EndLine:     20,
 					StartColumn: 19,
 					EndColumn:   38,
+					Line:        "\n    awsToken := \"AKIALALEMEL33243OLIA\"",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
 					File:        "main.go",
@@ -377,6 +385,7 @@ func TestFromGit(t *testing.T) {
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
 					File:        "foo/foo.go",
 					Date:        "2021-11-02T23:48:06Z",
 					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
@@ -402,6 +411,7 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 17,
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
 					Match:       "AKIALALEMEL33243OLIA",
 					Date:        "2021-11-02T23:48:06Z",
 					File:        "foo/foo.go",
@@ -460,7 +470,7 @@ func TestFromGit(t *testing.T) {
 	}
 }
 
-// TestFromGit tests the FromGit function
+// TestFromFiles tests the FromFiles function
 func TestFromFiles(t *testing.T) {
 	tests := []struct {
 		cfgName          string
@@ -479,7 +489,9 @@ func TestFromFiles(t *testing.T) {
 					EndColumn:   35,
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
+					SymlinkFile: "",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
@@ -499,6 +511,7 @@ func TestFromFiles(t *testing.T) {
 					EndColumn:   35,
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -525,11 +538,67 @@ func TestFromFiles(t *testing.T) {
 		}
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
+		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
 		if err != nil {
 			t.Error(err)
 		}
 
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestDetectWithSymlinks(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "symlinks/file_symlink"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Asymmetric Private Key",
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   35,
+					Match:       "-----BEGIN OPENSSH PRIVATE KEY-----",
+					Secret:      "-----BEGIN OPENSSH PRIVATE KEY-----",
+					Line:        "-----BEGIN OPENSSH PRIVATE KEY-----",
+					File:        "../testdata/repos/symlinks/source_file/id_ed25519",
+					SymlinkFile: "../testdata/repos/symlinks/file_symlink/symlinked_id_ed25519",
+					RuleID:      "apkey",
+					Tags:        []string{"key", "AsymmetricPrivateKey"},
+					Entropy:     3.587164,
+					Fingerprint: "../testdata/repos/symlinks/source_file/id_ed25519:apkey:1",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		detector.FollowSymlinks = true
+		findings, err := detector.DetectFiles(tt.source)
+		if err != nil {
+			t.Error(err)
+		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }

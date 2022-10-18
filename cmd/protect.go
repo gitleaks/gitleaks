@@ -16,6 +16,7 @@ import (
 
 func init() {
 	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
+	protectCmd.Flags().String("log-opts", "", "git log options")
 	rootCmd.AddCommand(protectCmd)
 }
 
@@ -46,11 +47,11 @@ func runProtect(cmd *cobra.Command, args []string) {
 	detector := detect.NewDetector(cfg)
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	source, err := cmd.Flags().GetString("source")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
 	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
@@ -59,17 +60,21 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
+	}
+
+	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
+		log.Fatal().Err(err).Msg("")
 	}
 
 	// get log options for git scan
 	logOpts, err := cmd.Flags().GetString("log-opts")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("")
 	}
 
 	// start git scan
@@ -81,11 +86,11 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 	if err != nil {
 		// don't exit on error, just log it
-		log.Error().Err(err)
+		log.Error().Err(err).Msg("")
 	}
 
 	// log info about the scan
-	log.Info().Msgf("scan completed in %s", time.Since(start))
+	log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
 	if len(findings) != 0 {
 		log.Warn().Msgf("leaks found: %d", len(findings))
 	} else {
@@ -96,7 +101,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		if err = report.Write(findings, cfg, ext, reportPath); err != nil {
-			log.Fatal().Err(err)
+			log.Fatal().Err(err).Msg("")
 		}
 	}
 	if len(findings) != 0 {

@@ -239,6 +239,33 @@ keywords = [
 ]
 
 [[rules]]
+description = "DigitalOcean OAuth Access Token"
+id = "digitalocean-access-token"
+regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "doo_v1_",
+]
+
+[[rules]]
+description = "DigitalOcean Personal Access Token"
+id = "digitalocean-pat"
+regex = '''(?i)\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dop_v1_",
+]
+
+[[rules]]
+description = "DigitalOcean OAuth Refresh Token"
+id = "digitalocean-refresh-token"
+regex = '''(?i)\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dor_v1_",
+]
+
+[[rules]]
 description = "Discord API key"
 id = "discord-api-token"
 regex = '''(?i)(?:discord)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
@@ -462,6 +489,9 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
+paths = [
+  '''Database.refactorlog'''
+]
 stopwords= [
     "client",
     "endpoint",
@@ -2228,6 +2258,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Microsoft Teams Webhook"
+id = "microsoft-teams-webhook"
+regex = '''https:\/\/[a-z0-9]+\.webhook\.office\.com\/webhookb2\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}\/IncomingWebhook\/[a-z0-9]{32}\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}'''
+keywords = [
+    "webhook.office.com","webhookb2","incomingwebhook",
+]
+
+[[rules]]
 description = "Netlify Access Token"
 id = "netlify-access-token"
 regex = '''(?i)(?:netlify)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{40,46})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
@@ -2365,7 +2403,7 @@ keywords = [
 [[rules]]
 description = "Private Key"
 id = "private-key"
-regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[\s\S-]*KEY----'''
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----'''
 keywords = [
     "-----begin",
 ]
@@ -2529,7 +2567,7 @@ keywords = [
 [[rules]]
 description = "Slack Webhook"
 id = "slack-web-hook"
-regex = '''https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}'''
+regex = '''https:\/\/hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{44,46}'''
 keywords = [
     "hooks.slack.com",
 ]
@@ -2575,6 +2613,15 @@ regex = '''(?i)(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|
 secretGroup = 1
 keywords = [
     "sumo",
+]
+
+[[rules]]
+description = "Telegram Bot API Token"
+id = "telegram-bot-api-token"
+regex = '''(?i)(?:^|[^0-9])([0-9]{5,16}:A[a-zA-Z0-9_\-]{34})(?:$|[^a-zA-Z0-9_\-])'''
+secretGroup = 1
+keywords = [
+    "telegram","api","bot","token","url",
 ]
 
 [[rules]]

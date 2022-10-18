@@ -1,4 +1,4 @@
-# gitleaks
+# Gitleaks
 
 ```
 ┌─○───┐
@@ -30,49 +30,49 @@
 
 Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
-| Demos |
-| ----------- |
-| CLI [![asciicast](https://asciinema.org/a/455683.svg)](https://asciinema.org/a/455683)|
-| [Github-Action](https://github.com/gitleaks/gitleaks-action) ![gitleaks-demo-fast-cropped](https://user-images.githubusercontent.com/15034943/178513034-de5a1906-b71d-454a-a792-47b7ac0e21e6.gif)|
+```
+➜  ~/code(master) gitleaks detect --source . -v
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+
+Finding:     "export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef",
+Secret:      cafebabe:deadbeef
+RuleID:      sidekiq-secret
+Entropy:     2.609850
+File:        cmd/generate/config/rules/sidekiq.go
+Line:        23
+Commit:      cd5226711335c68be1e720b318b7bc3135a30eb2
+Author:      John
+Email:       john@users.noreply.github.com
+Date:        2022-08-03T12:31:40Z
+Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23
+```
 
 ## Getting Started
 
-Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action) (see demo above).
+Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action).
 
-### MacOS
+### Installing
 
 ```bash
+# MacOS
 brew install gitleaks
-```
 
-### Docker
-
-#### DockerHub
-
-```bash
+# Docker (DockerHub)
 docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-```
 
-#### ghcr.io
-
-```bash
+# Docker (ghcr.io)
 docker pull ghcr.io/zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-```
 
-### From Source
-
-1. Download and install Go from https://golang.org/dl/
-2. Clone the repo
-
-```bash
+# From Source
 git clone https://github.com/zricethezav/gitleaks.git
-```
-
-3. Build the binary
-
-```bash
 cd gitleaks
 make build
 ```
@@ -106,15 +106,16 @@ jobs:
    ```
    repos:
      - repo: https://github.com/zricethezav/gitleaks
-       rev: v8.2.0
+       rev: v8.12.0
        hooks:
          - id: gitleaks
    ```
 
    for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
 
-3. Install with `pre-commit install`
-4. Now you're all set!
+3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
+4. Install with `pre-commit install`
+5. Now you're all set!
 
 ```
 ➜ git commit -m "this commit contains a secret"
@@ -137,26 +138,29 @@ Usage:
 
 Available Commands:
   completion  generate the autocompletion script for the specified shell
-  detect      Detect secrets in code
+  detect      detect secrets in code
   help        Help about any command
-  protect     Protect secrets in code
-  version     Display gitleaks version
+  protect     protect secrets in code
+  version     display gitleaks version
 
 Flags:
-  -c, --config string          config file path
-                               order of precedence:
-                               1. --config/-c
-                               2. env var GITLEAKS_CONFIG
-                               3. (--source/-s)/.gitleaks.toml
-                               If none of the three options are used, then gitleaks will use the default config
-      --exit-code string       exit code when leaks have been encountered (default: 1)
-  -h, --help                   help for gitleaks
-  -l, --log-level string       log level (debug, info, warn, error, fatal) (default "info")
-      --redact                 redact secrets from logs and stdout
-  -f, --report-format string   output format (json, csv, sarif)
-  -r, --report-path string     report file
-  -s, --source string          path to source (git repo, directory, file)
-  -v, --verbose                show verbose output from scan
+  -b, --baseline-path string       path to baseline with issues that can be ignored
+  -c, --config string              config file path
+                                   order of precedence:
+                                   1. --config/-c
+                                   2. env var GITLEAKS_CONFIG
+                                   3. (--source/-s)/.gitleaks.toml
+                                   If none of the three options are used, then gitleaks will use the default config
+      --exit-code int              exit code when leaks have been encountered (default 1)
+  -h, --help                       help for gitleaks
+  -l, --log-level string           log level (trace, debug, info, warn, error, fatal) (default "info")
+      --max-target-megabytes int   files larger than this will be skipped
+      --no-banner                  suppress banner
+      --redact                     redact secrets from logs and stdout
+  -f, --report-format string       output format (json, csv, sarif) (default "json")
+  -r, --report-path string         report file
+  -s, --source string              path to source (default: $PWD) (default ".")
+  -v, --verbose                    show verbose output from scan
 
 Use "gitleaks [command] --help" for more information about a command.
 ```
@@ -189,31 +193,40 @@ as a pre-commit.
 
 **NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
 
+### Creating a baseline
+
+When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline,
+gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
+
+```
+gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
+```
+
+Once as baseline is created it can be applied when running the detect command again:
+
+```
+gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
+```
+
+After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
+
 ### Verify Findings
 
 You can verify a finding found by gitleaks using a `git log` command.
 Example output:
 
 ```
-{
-        "Description": "AWS",
-        "StartLine": 37,
-        "EndLine": 37,
-        "StartColumn": 19,
-        "EndColumn": 38,
-        "Match": "\t\t\"aws_secret= \\\"AKIAIMNOJVGFDXXXE4OA\\\"\":          true,",
-        "Secret": "AKIAIMNOJVGFDXXXE4OA",
-        "File": "checks_test.go",
-        "Commit": "ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29",
-        "Entropy": 0,
-        "Author": "zricethezav",
-        "Email": "thisispublicanyways@gmail.com",
-        "Date": "2018-01-28 17:39:00 -0500 -0500",
-        "Message": "[update] entropy check",
-        "Tags": [],
-        "RuleID": "aws-access-token"
-}
-
+Finding:     aws_secret="AKIAIMNOJVGFDXXXE4OA"
+RuleID:      aws-access-token
+Secret       AKIAIMNOJVGFDXXXE4OA
+Entropy:     3.65
+File:        checks_test.go
+Line:        37
+Commit:      ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
+Author:      Zachary Rice
+Email:       z@email.com
+Date:        2018-01-28T17:39:00Z
+Fingerprint: ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29:checks_test.go:aws-access-token:37
 ```
 
 We can use the following format to verify the leak:
@@ -356,12 +369,16 @@ stopwords = [
   '''endpoint''',
 ]
 ```
+
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/zricethezav/gitleaks/blob/master/README.md).
 
 ### Additional Configuration
+
 #### gitleaks:allow
+
 If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
 to ignore that secret. Ex:
+
 ```
 class CustomClass:
     discord_client_secret = '8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ'  #gitleaks:allow
@@ -369,8 +386,8 @@ class CustomClass:
 ```
 
 #### .gitleaksignore
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is expirmental and is subject to change in the future.
 
+You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is expirmental and is subject to change in the future.
 
 ## Secured by Jit
 
