@@ -489,9 +489,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2450,6 +2447,15 @@ regex = '''(?i)\b(rubygems_[a-f0-9]{48})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
 keywords = [
     "rubygems_",
+]
+
+[[rules]]
+description = "Segment Public API Token"
+id = "segment-public-api-token"
+regex = '''(?i)\b(sgp_[a-zA-Z0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "sgp_",
 ]
 
 [[rules]]
