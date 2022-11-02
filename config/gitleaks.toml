@@ -489,9 +489,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2406,6 +2403,14 @@ id = "private-key"
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----'''
 keywords = [
     "-----begin",
+]
+
+[[rules]]
+description = "Private Key Non PEM Format"
+id = "private-key-non-pem-format"
+regex = '''(?i)MII[BCEJ]'''
+keywords = [
+    "mii",
 ]
 
 [[rules]]
