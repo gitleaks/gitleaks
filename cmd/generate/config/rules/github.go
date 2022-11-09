@@ -23,6 +23,22 @@ func GitHubPat() *config.Rule {
 	return validate(r, tps, nil)
 }
 
+func GitHubFineGrainedPat() *config.Rule {
+	// define rule
+	r := config.Rule{
+		Description: "GitHub Fine-Grained Personal Access Token",
+		RuleID:      "github-fine-grained-pat",
+		Regex:       regexp.MustCompile(`github_pat_[0-9a-zA-Z_]{82}`),
+		Keywords:    []string{"github_pat_"},
+	}
+
+	// validate
+	tps := []string{
+		generateSampleSecret("github", "github_pat_"+secrets.NewSecret(alphaNumeric("82"))),
+	}
+	return validate(r, tps, nil)
+}
+
 func GitHubOauth() *config.Rule {
 	// define rule
 	r := config.Rule{
