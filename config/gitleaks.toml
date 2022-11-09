@@ -1977,6 +1977,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "GitHub Fine-Grained Personal Access Token"
+id = "github-fine-grained-pat"
+regex = '''github_pat_[0-9a-zA-Z_]{82}'''
+keywords = [
+    "github_pat_",
+]
+
+[[rules]]
 description = "GitHub OAuth Access Token"
 id = "github-oauth"
 regex = '''gho_[0-9a-zA-Z]{36}'''
