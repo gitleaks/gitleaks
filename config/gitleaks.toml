@@ -489,6 +489,9 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
+paths = [
+  '''Database.refactorlog'''
+]
 stopwords= [
     "client",
     "endpoint",
@@ -1974,6 +1977,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "GitHub Fine-Grained Personal Access Token"
+id = "github-fine-grained-pat"
+regex = '''github_pat_[0-9a-zA-Z_]{82}'''
+keywords = [
+    "github_pat_",
+]
+
+[[rules]]
 description = "GitHub OAuth Access Token"
 id = "github-oauth"
 regex = '''gho_[0-9a-zA-Z]{36}'''
@@ -2403,14 +2414,6 @@ id = "private-key"
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----'''
 keywords = [
     "-----begin",
-]
-
-[[rules]]
-description = "Private Key Non PEM Format"
-id = "private-key-non-pem-format"
-regex = '''(?i)MII[BCEJ]'''
-keywords = [
-    "mii",
 ]
 
 [[rules]]
