@@ -2416,6 +2416,14 @@ keywords = [
     "-----begin",
 ]
 
+[[rules]]	
+description = "Private Key Non PEM Format"	
+id = "private-key-non-pem-format"	
+regex = '''(?i)MII[BCEJ]'''	
+keywords = [	
+    "mii",	
+]
+
 [[rules]]
 description = "Pulumi API token"
 id = "pulumi-api-token"
