@@ -73,6 +73,7 @@ func main() {
 	// configRules = append(configRules, rules.GCPServiceAccount())
 	configRules = append(configRules, rules.GCPAPIKey())
 	configRules = append(configRules, rules.GitHubPat())
+	configRules = append(configRules, rules.GitHubFineGrainedPat())
 	configRules = append(configRules, rules.GitHubOauth())
 	configRules = append(configRules, rules.GitHubApp())
 	configRules = append(configRules, rules.GitHubRefresh())
