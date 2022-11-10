@@ -2416,6 +2416,7 @@ keywords = [
     "-----begin",
 ]
 
+<<<<<<< HEAD
 [[rules]]	
 description = "Private Key Non PEM Format"	
 id = "private-key-non-pem-format"	
@@ -2424,6 +2425,8 @@ keywords = [
     "mii",	
 ]
 
+=======
+>>>>>>> 28b7754 (due to Database.refactorlog got accidentally removed, updated gitleaks.toml to match latest master (commit d0733f9))
 [[rules]]
 description = "Pulumi API token"
 id = "pulumi-api-token"
