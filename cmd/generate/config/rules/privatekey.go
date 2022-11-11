@@ -33,7 +33,7 @@ func PrivateRSAKeyNonPEMFormat() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key Non PEM Format",
 		RuleID:      "private-key-non-pem-format",
-		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9A-Z+\/]{60,508}`),
+		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9a-zA-Z+\/]{60,508}`),
 		Keywords:    []string{"MII"},
 	}
 
