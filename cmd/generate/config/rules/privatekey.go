@@ -9,7 +9,7 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key",
 		RuleID:      "private-key",
-		Regex:       generateUniqueTokenRegex(`-----BEGIN[ 0-9A-Z+\/=-]*PRIVATE KEY-----`),
+		Regex:       generateUniqueTokenRegex(`(-----BEGIN).*(PRIVATE KEY-----)([0-9a-zA-Z\+\/=\n\r]*)(-----END).*(PRIVATE KEY-----)`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 
@@ -31,7 +31,7 @@ func PrivateRSAKeyNonPEMFormat() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key Non PEM Format",
 		RuleID:      "private-key-non-pem-format",
-		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9A-Z+\/]{64,1024}={0,2}`),
+		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9A-Z+\/\r\n]{64,1024}={0,2}`),
 		Keywords:    []string{"MII"},
 	}
 
