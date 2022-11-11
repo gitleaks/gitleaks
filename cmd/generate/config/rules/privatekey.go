@@ -9,7 +9,7 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key",
 		RuleID:      "private-key",
-		Regex:       generateUniqueTokenRegex(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----(?i)[0-9a-zA-Z+\/]{64,512}`),
+		Regex:       generateUniqueTokenRegex(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----(?i)\n[0-9a-zA-Z+\/]{64,512}`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 
