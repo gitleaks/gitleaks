@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -11,7 +9,7 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key",
 		RuleID:      "private-key",
-		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----\n[0-9a-zA-Z+\/]{64,512}[\s\S-]*KEY----`),
+		Regex:       generateUniqueTokenRegex(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----[0-9a-zA-Z+\/]{64,512}={0,2}[\s\S-]*KEY----(?i)`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 
@@ -33,11 +31,11 @@ func PrivateRSAKeyNonPEMFormat() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key Non PEM Format",
 		RuleID:      "private-key-non-pem-format",
-		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9a-zA-Z+\/=]{60,508}`),
+		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9A-Z+\/]{60,508}={0,2}`),
 		Keywords:    []string{"MII"},
 	}
 
 	// validate
-	tps := []string{`MIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEmo3qGy0t6z09AIJtH+5OeRV1be+N4cDYJKffGzDa88vQENZiRm0GRq6a+HPGQMd2kTQIhAKMSvzIBnni7ot/OSie2TmJLY4SwTQAevXysE2RbFDYdAiEBCUEaRQnMnbp79mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUCIG2Es59z8ugGrDY+pxLQnwfotadxd+Uyv/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97Ya==`} // gitleaks:allow
+	tps := []string{`MIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEmo3qGy0t6z09AIJtH+5OeRV1be+N4cDYJKffGzDa88vQENZiRm0GRq6a+HPGQMd2kTQIhAKMSvzIBnni7ot/OSie2TmJLY4SwTQAevXysE2RbFDYdAiEBCUEaRQnMnbp79mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUCIG2Es59z8ugGrDY+pxLQnwfotadxd+Uyv/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97Y==`} // gitleaks:allow
 	return validate(r, tps, nil)
 }
