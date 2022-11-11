@@ -88,10 +88,27 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
+			// Same with entropy_group but with keys missing
+			cfgName: "many_missing_keys",
+			cfg: Config{
+				Rules: map[string]Rule{"discord-api-key": {
+					Description: "Discord API key",
+					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
+					RuleID:      "discord-api-key",
+					Allowlist:   Allowlist{},
+					Entropy:     0,
+					SecretGroup: 0,
+					Tags:        []string{},
+					Keywords:    []string{},
+				},
+				},
+			},
+		},
+		{
 			cfgName: "bad_keys_config",
 			cfg: Config{
-				Rules: []*Rule{
-					{
+				Rules: map[string]Rule{
+					"aws-access-key": {
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
@@ -154,16 +171,16 @@ func TestTranslate(t *testing.T) {
 		var vc ViperConfig
 		err = viper.UnmarshalExact(&vc)
 		if err != nil {
-			assert.Equal(t, tt.unmarshalWantError, err)
+			assert.Equal(t, tt.unmarshalWantError, err, tt.cfgName)
 		}
 		cfg, err := vc.Translate()
 		if tt.wantError != nil {
 			if err == nil {
 				t.Errorf("expected error")
 			}
-			assert.Equal(t, tt.wantError, err)
+			assert.Equal(t, tt.wantError, err, tt.cfgName)
 		}
 
-		assert.Equal(t, tt.cfg.Rules, cfg.Rules)
+		assert.Equal(t, tt.cfg.Rules, cfg.Rules, tt.cfgName)
 	}
 }
