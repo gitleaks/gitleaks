@@ -9,12 +9,13 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key",
 		RuleID:      "private-key",
-		Regex:       generateUniqueTokenRegex(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY----(?i)\n[0-9a-zA-Z+\/]{64,512}`),
+		Regex:       generateUniqueTokenRegex(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY-----\n[0-9a-zA-Z+\/]{64,512}[\s\S-]*KEY----(?i)`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 
 	// validate
-	tps := []string{`-----BEGIN PRIVATE KEY-----
+	tps := []string{
+		`-----BEGIN PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAVwAAAAdzc2gtcnNhAAAAAwEAAQAAAEEAqPfgaTEWEP3S9w0tgsicURfo+nLW09/0KfOPinhYZ4ouzU+3xC4plEp8Ut9FgL0AgqNslNaK34Kq+NZjO9DAQAAATB+9/CSfvfwkgAAAAdzc2gtcnNhAAAAQQCo9+BpMRYQ/dL3DS2CyJxRF+j6ctbT3/Qp84+KeFhnii7NT7fELilKUSnxS30WAvQCCo2yU1orfgqr41mM70MBAAAAAwEAAQAAAEAgkuLEHLaqkWhLgNKagSajeobLS3rPT0Agm0f7k55FXVt743hwNgkp98bMNrzy9AQ1mJGbQZGrpr4c8ZAx3aRNAAAAIBOs/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97YE00AAAAIQCjEr8yAZ54u6Lfzkontk5iS2OEsE0AHr18rBNkWxQ2HQAAACEBCUEaRQnMnbp79mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUAAAAXcGhwc2VjbGliLWdlbmVyYXRlZC1rZXkBAgME
 -----END PRIVATE KEY-----`,
 		`-----BEGIN RSA PRIVATE KEY-----
@@ -30,7 +31,7 @@ func PrivateRSAKeyNonPEMFormat() *config.Rule {
 	r := config.Rule{
 		Description: "Private Key Non PEM Format",
 		RuleID:      "private-key-non-pem-format",
-		Regex:       generateUniqueTokenRegex(`(?i)MII[BCEJ]{1}[0-9a-zA-Z+\/]{60,508}`),
+		Regex:       generateUniqueTokenRegex(`MII[BCEJ]{1}[0-9A-Z+\/]{60,508}`),
 		Keywords:    []string{"MII"},
 	}
 
