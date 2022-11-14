@@ -27,7 +27,7 @@ const (
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;]|$)`
+	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;|\<]|$)`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
