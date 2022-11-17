@@ -9,6 +9,7 @@
 # Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
 
 title = "gitleaks config"
+DisableInlineIgnore = false
 
 [allowlist]
 description = "global allow lists"

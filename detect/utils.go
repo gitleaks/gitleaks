@@ -93,20 +93,20 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 
 func printFinding(f report.Finding) {
 	// trim all whitespace and tabs from the line
-	f.Line = strings.TrimSpace(f.Line)
+	f.Lines = strings.TrimSpace(f.Lines)
 	// trim all whitespace and tabs from the secret
 	f.Secret = strings.TrimSpace(f.Secret)
 	// trim all whitespace and tabs from the match
 	f.Match = strings.TrimSpace(f.Match)
 
-	matchInLineIDX := strings.Index(f.Line, f.Match)
+	matchInLineIDX := strings.Index(f.Lines, f.Match)
 	secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
-	start := f.Line[0:matchInLineIDX]
+	start := f.Lines[0:matchInLineIDX]
 	startMatchIdx := 0
 	if matchInLineIDX > 20 {
 		startMatchIdx = matchInLineIDX - 20
-		start = "..." + f.Line[startMatchIdx:matchInLineIDX]
+		start = "..." + f.Lines[startMatchIdx:matchInLineIDX]
 	}
 
 	matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
@@ -115,7 +115,7 @@ func printFinding(f report.Finding) {
 		Italic(true).
 		Foreground(lipgloss.Color("#f05c07"))
 	matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
-	lineEnd := f.Line[matchInLineIDX+len(f.Match):]
+	lineEnd := f.Lines[matchInLineIDX+len(f.Match):]
 	if len(f.Secret) > 100 {
 		secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
 			Bold(true).
@@ -136,7 +136,7 @@ func printFinding(f report.Finding) {
 		return
 	}
 	fmt.Printf("%-12s %s\n", "File:", f.File)
-	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
+	fmt.Printf("%-12s %d\n", "Lines:", f.StartLine)
 	if f.Commit == "" {
 		fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
 		fmt.Println("")

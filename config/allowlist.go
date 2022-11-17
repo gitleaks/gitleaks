@@ -14,6 +14,10 @@ type Allowlist struct {
 	// Regexes is slice of content regular expressions that are allowed to be ignored.
 	Regexes []*regexp.Regexp
 
+	// EnclosingLineRegexes is a slice of content regular expressions taht are allowed to be ignored.
+	// These Regex patterns match on all text in the lines that enclose a regex match
+	EnclosingLinesRegexes []*regexp.Regexp
+
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
 	Paths []*regexp.Regexp
 
@@ -47,6 +51,11 @@ func (a *Allowlist) PathAllowed(path string) bool {
 // RegexAllowed returns true if the regex is allowed to be ignored.
 func (a *Allowlist) RegexAllowed(s string) bool {
 	return anyRegexMatch(s, a.Regexes)
+}
+
+// EnclosingLinesRegexAllowed returns true if the regex matching on the enclosing lines is allowed to be ignored.
+func (a *Allowlist) EnclosingLinesRegexAllowed(s string) bool {
+	return anyRegexMatch(s, a.EnclosingLinesRegexes)
 }
 
 func (a *Allowlist) ContainsStopWord(s string) bool {

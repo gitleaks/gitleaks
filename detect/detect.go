@@ -34,8 +34,6 @@ const (
 	DetectType GitScanType = iota
 	ProtectType
 	ProtectStagedType
-
-	gitleaksAllowSignature = "gitleaks:allow"
 )
 
 // Detector is the main detector struct
@@ -231,6 +229,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	}
 
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
+
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
 		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
@@ -257,13 +256,24 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			Secret:      secret,
 			Match:       secret,
 			Tags:        rule.Tags,
-			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Lines:       fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
-		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			gitleaksAllowSignature) {
+		log.Debug().Msgf("LINE: %s", finding.Lines)
+
+		log.Debug().Msgf("FINDING.SECRET: %s", finding.Secret)
+		log.Debug().Msgf("FINDING.MATCH: %s", finding.Match)
+		log.Debug().Msgf("SECRET: %s", secret)
+
+		// check if the enclosing lines contain any matches listed in the enclosing lines allowlist.
+		if rule.Allowlist.EnclosingLinesRegexAllowed(finding.Lines) || d.Config.Allowlist.RegexAllowed(finding.Lines) {
 			continue
 		}
+
+		//if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+		//	gitleaksAllowSignature) {
+		//	continue
+		//}å
 
 		// check if the secret is in the allowlist
 		if rule.Allowlist.RegexAllowed(finding.Secret) ||
@@ -281,6 +291,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
 		}
+
+		log.Debug().Msgf("FINDING.SECRET: %s", finding.Secret)
+		log.Debug().Msgf("FINDING.MATCH: %s", finding.Match)
+		log.Debug().Msgf("SECRET: %s", secret)
 
 		// check if the secret is in the list of stopwords
 		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
