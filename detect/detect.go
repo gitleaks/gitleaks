@@ -259,12 +259,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			Lines:       fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
-		log.Debug().Msgf("LINE: %s", finding.Lines)
-
-		log.Debug().Msgf("FINDING.SECRET: %s", finding.Secret)
-		log.Debug().Msgf("FINDING.MATCH: %s", finding.Match)
-		log.Debug().Msgf("SECRET: %s", secret)
-
 		// check if the enclosing lines contain any matches listed in the enclosing lines allowlist.
 		if rule.Allowlist.EnclosingLinesRegexAllowed(finding.Lines) || d.Config.Allowlist.RegexAllowed(finding.Lines) {
 			continue
@@ -291,10 +285,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
 		}
-
-		log.Debug().Msgf("FINDING.SECRET: %s", finding.Secret)
-		log.Debug().Msgf("FINDING.MATCH: %s", finding.Match)
-		log.Debug().Msgf("SECRET: %s", secret)
 
 		// check if the secret is in the list of stopwords
 		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
