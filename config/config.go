@@ -24,10 +24,9 @@ const gitleaksAllowSignature = "gitleaks:allow"
 // to parse the config file. This struct does not include regular expressions.
 // It is used as an intermediary to convert the Viper config to the Config struct.
 type ViperConfig struct {
-	Description         string
-	Extend              Extend
-	DisableInlineIgnore bool
-	Rules               []struct {
+	Description string
+	Extend      Extend
+	Rules       []struct {
 		ID          string
 		Description string
 		Entropy     float64
@@ -136,21 +135,13 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		}
 		rulesMap[r.RuleID] = r
 	}
+
 	var allowlistRegexes = compileRegexPatterns(vc.Allowlist.Regexes)
-
-	var enclosingLinesPatterns []string
-
-	// Check if gitleaks:allow is disabled or not.
-	if vc.DisableInlineIgnore {
-		log.Debug().Msg("Inline ignore is disabled!")
-		enclosingLinesPatterns = vc.Allowlist.EnclosingLinesRegexes
-	} else {
-		enclosingLinesPatterns = append(vc.Allowlist.EnclosingLinesRegexes, gitleaksAllowSignature)
-	}
-
-	var allowlistEnclosingLinesRegexes = compileRegexPatterns(enclosingLinesPatterns)
 	var allowlistPaths = compileRegexPatterns(vc.Allowlist.Paths)
 
+	var enclosingLinesPatterns = append(vc.Allowlist.EnclosingLinesRegexes, gitleaksAllowSignature)
+	var allowlistEnclosingLinesRegexes = compileRegexPatterns(enclosingLinesPatterns)
+	
 	c := Config{
 		Description: vc.Description,
 		Extend:      vc.Extend,
