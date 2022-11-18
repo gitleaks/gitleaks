@@ -66,6 +66,33 @@ func TestRegexAllowed(t *testing.T) {
 	}
 }
 
+func TestEnclosingLinesRegexAllowed(t *testing.T) {
+	tests := []struct {
+		allowlist       Allowlist
+		enclosedSecret  string
+		encRegexAllowed bool
+	}{
+		{
+			allowlist: Allowlist{
+				EnclosingLinesRegexes: []*regexp.Regexp{regexp.MustCompile("a.*done")},
+			},
+			enclosedSecret:  "a secret: notrealsecret, done",
+			encRegexAllowed: true,
+		},
+		{
+			allowlist: Allowlist{
+				EnclosingLinesRegexes: []*regexp.Regexp{regexp.MustCompile("a.*done")},
+			},
+			enclosedSecret:  "a secret",
+			encRegexAllowed: false,
+		},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.encRegexAllowed, tt.allowlist.EnclosingLinesRegexAllowed(tt.enclosedSecret))
+	}
+
+}
+
 func TestPathAllowed(t *testing.T) {
 	tests := []struct {
 		allowlist   Allowlist
