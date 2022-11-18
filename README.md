@@ -339,6 +339,14 @@ regexes = [
   '''process''',
   '''getenv''',
 ]
+# note: Enclosing lines regex patterns targets all of the lines enclosing a given secret. These patterns allow you
+# to match on all the lines that the secret is found on.
+enclosinglinesregexes = [
+   "NON_SENSITIVE_PREFIX_",
+   "_NON_SENSITIVE_INFIX_",
+   "_NON_SENSITIVE_SUFFIX",
+   "CIRCUMFIX_START_.*_CIRCUMFIX_END"]
+
 # note: stopwords targets the extracted secret, not the entire regex match
 # like 'regexes' does. (stopwords introduced in 8.8.0)
 stopwords = [
@@ -362,6 +370,13 @@ regexes = [
   '''078-05-1120''',
   '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
 ]
+# note: Enclosing lines regex patterns targets all of the lines enclosing a given secret. These patterns allow you
+# to match on all the lines that the secret is found on.
+enclosinglinesregexes = [
+   "NON_SENSITIVE_PREFIX_",
+   "_NON_SENSITIVE_INFIX_",
+   "_NON_SENSITIVE_SUFFIX",
+   "CIRCUMFIX_START_.*_CIRCUMFIX_END"]
 # note: stopwords targets the extracted secret, not the entire regex match
 # like 'regexes' does. (stopwords introduced in 8.8.0)
 stopwords = [
