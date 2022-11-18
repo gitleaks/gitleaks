@@ -141,7 +141,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	var enclosingLinesPatterns = append(vc.Allowlist.EnclosingLinesRegexes, gitleaksAllowSignature)
 	var allowlistEnclosingLinesRegexes = compileRegexPatterns(enclosingLinesPatterns)
-	
+
 	c := Config{
 		Description: vc.Description,
 		Extend:      vc.Extend,
