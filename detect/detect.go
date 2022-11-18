@@ -259,11 +259,11 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			Lines:       fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
-		// check if the enclosing lines contain any matches listed in the enclosing lines allowlist.
+		// check if the lines enclosing a finding contain any matches in the enclosing lines allowlist.
 		if rule.Allowlist.EnclosingLinesRegexAllowed(finding.Lines) || d.Config.Allowlist.EnclosingLinesRegexAllowed(finding.Lines) {
 			continue
 		}
-		
+
 		// check if the secret is in the allowlist
 		if rule.Allowlist.RegexAllowed(finding.Secret) ||
 			d.Config.Allowlist.RegexAllowed(finding.Secret) {

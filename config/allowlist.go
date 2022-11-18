@@ -14,8 +14,8 @@ type Allowlist struct {
 	// Regexes is slice of content regular expressions that are allowed to be ignored.
 	Regexes []*regexp.Regexp
 
-	// EnclosingLineRegexes is a slice of content regular expressions taht are allowed to be ignored.
-	// These Regex patterns match on all text in the lines that enclose a regex match
+	// EnclosingLinesRegexes is a slice of regular expressions used to ignore findings.
+	// These Regex patterns filter out findings based on the lines that enclose a particular match.
 	EnclosingLinesRegexes []*regexp.Regexp
 
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
