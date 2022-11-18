@@ -318,6 +318,16 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName: "allow_enclosing_lines_rule",
+			fragment: Fragment{
+				Raw: "NON_SENSITIVE_awsToken = \"AKIALALEMEL33243OAAA\"\n" +
+					"AWSkey := \"AKIALALEMEL33243OBBB\" SUFFIX_MAKES_ME_IRRELEVANT\n" +
+					"SENSITIVE_KEY_AWSTOKEN = \"AKIALALEMEL34243OCCC\"",
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
