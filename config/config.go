@@ -255,4 +255,6 @@ func (c *Config) extend(extensionConfig Config) {
 		extensionConfig.Allowlist.Paths...)
 	c.Allowlist.Regexes = append(c.Allowlist.Regexes,
 		extensionConfig.Allowlist.Regexes...)
+	c.Allowlist.EnclosingLinesRegexes = append(c.Allowlist.EnclosingLinesRegexes,
+		extensionConfig.Allowlist.EnclosingLinesRegexes...)
 }
