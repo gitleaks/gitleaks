@@ -349,7 +349,7 @@ func TestDetect(t *testing.T) {
 			// Tests that an CIRCUMFIX pattern on an enclosing line rule works
 			cfgName: "allow_enclosing_lines_rule",
 			fragment: Fragment{
-				Raw:      `CIRCUMFIX_START_awsToken = "AKIALALEMEL33243OAAA" _CIRCUMFIX_END`,
+				Raw:      `CIRCUMFIX_START_awsToken = "AKIALALEMEL33243OAAA" + _CIRCUMFIX_END`,
 				FilePath: "tmp.go",
 			},
 			expectedFindings: []report.Finding{},
