@@ -6,4 +6,4 @@ id = "aws-access-key"
 regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 tags = ["key", "AWS"]
 [rules.allowlist]
-enclosinglinesregexes = ["SUFFIX_MAKES_ME_IRRELEVANT"]
+enclosinglinesregexes = ["NON_SENSITIVE_PREFIX_", "_NON_SENSITIVE_INFIX_", "_NON_SENSITIVE_SUFFIX", "CIRCUMFIX_START_.*_CIRCUMFIX_END"]

@@ -319,11 +319,37 @@ func TestDetect(t *testing.T) {
 			expectedFindings: []report.Finding{},
 		},
 		{
+			// Tests that a prefix pattern on an enclosing line rule works
 			cfgName: "allow_enclosing_lines_rule",
 			fragment: Fragment{
-				Raw: "NON_SENSITIVE_awsToken = \"AKIALALEMEL33243OAAA\"\n" +
-					"AWSkey := \"AKIALALEMEL33243OBBB\" SUFFIX_MAKES_ME_IRRELEVANT\n" +
-					"SENSITIVE_KEY_AWSTOKEN = \"AKIALALEMEL34243OCCC\"",
+				Raw:      `NON_SENSITIVE_PREFIX_awsToken = "AKIALALEMEL33243OAAA"`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			// Tests that a suffix pattern on an enclosing line rule works
+			cfgName: "allow_enclosing_lines_rule",
+			fragment: Fragment{
+				Raw:      `awsToken = "AKIALALEMEL33243OAAA" + _NON_SENSITIVE_SUFFIX"`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			// Tests that an infix pattern on an enclosing line rule works
+			cfgName: "allow_enclosing_lines_rule",
+			fragment: Fragment{
+				Raw:      `awsToken = "AKIALALEMEL33243OAAA" + _NON_SENSITIVE_INFIX_ + "AKIALALEMEL33243OBBB"`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			// Tests that an CIRCUMFIX pattern on an enclosing line rule works
+			cfgName: "allow_enclosing_lines_rule",
+			fragment: Fragment{
+				Raw:      `CIRCUMFIX_START_awsToken = "AKIALALEMEL33243OAAA" _CIRCUMFIX_END`,
 				FilePath: "tmp.go",
 			},
 			expectedFindings: []report.Finding{},
