@@ -18,8 +18,13 @@ const repoBasePath = "../testdata/repos/"
 
 func TestDetect(t *testing.T) {
 	tests := []struct {
-		cfgName          string
-		fragment         Fragment
+		cfgName  string
+		fragment Fragment
+		// NOTE: for expected findings, all line numbers will be 0
+		// because line deltas are added _after_ the finding is created.
+		// I.e, if the finding is from a --no-git file, the line number will be
+		// increase by 1 in DetectFromFiles(). If the finding is from git,
+		// the line number will be increased by the patch delta.
 		expectedFindings []report.Finding
 		wantError        error
 	}{
@@ -85,8 +90,8 @@ func TestDetect(t *testing.T) {
 					File:        "tmp.go",
 					RuleID:      "pypi-upload-token",
 					Tags:        []string{"key", "pypi"},
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 1,
 					EndColumn:   86,
 					Entropy:     1.9606875,
@@ -108,8 +113,8 @@ func TestDetect(t *testing.T) {
 					File:        "tmp.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 15,
 					EndColumn:   34,
 					Entropy:     3.0841837,
@@ -132,8 +137,8 @@ func TestDetect(t *testing.T) {
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
 					Entropy:     2.6098502,
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 8,
 					EndColumn:   60,
 				},
@@ -155,8 +160,8 @@ func TestDetect(t *testing.T) {
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
 					Entropy:     2.6098502,
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 21,
 					EndColumn:   74,
 				},
@@ -178,8 +183,8 @@ func TestDetect(t *testing.T) {
 					RuleID:      "sidekiq-sensitive-url",
 					Tags:        []string{},
 					Entropy:     2.984234,
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 8,
 					EndColumn:   58,
 				},
@@ -226,8 +231,8 @@ func TestDetect(t *testing.T) {
 					RuleID:      "discord-api-key",
 					Tags:        []string{},
 					Entropy:     3.7906237,
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 7,
 					EndColumn:   93,
 				},
@@ -257,8 +262,8 @@ func TestDetect(t *testing.T) {
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
 					Entropy:     3.7906237,
-					StartLine:   1,
-					EndLine:     1,
+					StartLine:   0,
+					EndLine:     0,
 					StartColumn: 22,
 					EndColumn:   93,
 				},
