@@ -199,6 +199,14 @@ func TestDetect(t *testing.T) {
 			expectedFindings: []report.Finding{},
 		},
 		{
+			cfgName: "allow_identifier_re",
+			fragment: Fragment{
+				Raw:      `awsAccessKey := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
 			cfgName: "allow_path",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,

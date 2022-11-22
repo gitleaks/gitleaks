@@ -36,6 +36,24 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
+			cfgName: "allow_identifier_re",
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Tags:        []string{"key", "AWS"},
+					Keywords:    []string{},
+					RuleID:      "aws-access-key",
+					Allowlist: Allowlist{
+						Regexes: []*regexp.Regexp{
+							regexp.MustCompile("awsAccessKey"),
+						},
+					},
+				},
+				},
+			},
+		},
+		{
 			cfgName: "allow_commit",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {

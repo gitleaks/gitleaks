@@ -43,26 +43,33 @@ func TestCommitAllowed(t *testing.T) {
 func TestRegexAllowed(t *testing.T) {
 	tests := []struct {
 		allowlist    Allowlist
-		secret       string
+		line         string
 		regexAllowed bool
 	}{
 		{
 			allowlist: Allowlist{
 				Regexes: []*regexp.Regexp{regexp.MustCompile("matchthis")},
 			},
-			secret:       "a secret: matchthis, done",
+			line:         "a secret: matchthis, done",
+			regexAllowed: true,
+		},
+		{
+			allowlist: Allowlist{
+				Regexes: []*regexp.Regexp{regexp.MustCompile("identifier")},
+			},
+			line:         "identifier='secret!@#'",
 			regexAllowed: true,
 		},
 		{
 			allowlist: Allowlist{
 				Regexes: []*regexp.Regexp{regexp.MustCompile("matchthis")},
 			},
-			secret:       "a secret",
+			line:         "a secret",
 			regexAllowed: false,
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.regexAllowed, tt.allowlist.RegexAllowed(tt.secret))
+		assert.Equal(t, tt.regexAllowed, tt.allowlist.RegexAllowed(tt.line))
 	}
 }
 

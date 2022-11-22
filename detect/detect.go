@@ -266,8 +266,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 
 		// check if the secret is in the allowlist
-		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+		if rule.Allowlist.RegexAllowed(finding.Line) ||
+			d.Config.Allowlist.RegexAllowed(finding.Line) {
 			continue
 		}
 
