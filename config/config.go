@@ -83,9 +83,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	for _, r := range vc.Rules {
 
-		var allowlistRegexes = compileRegexPatterns(r.Allowlist.Regexes)
-		var allowlistEnclosingLinesRegexes = compileRegexPatterns(r.Allowlist.EnclosingLinesRegexes)
-		var allowlistPaths = compileRegexPatterns(r.Allowlist.Paths)
+		allowlistRegexes := compileRegexPatterns(r.Allowlist.Regexes)
+		allowlistEnclosingLinesRegexes := compileRegexPatterns(r.Allowlist.EnclosingLinesRegexes)
+		allowlistPaths := compileRegexPatterns(r.Allowlist.Paths)
 
 		if r.Keywords == nil {
 			r.Keywords = []string{}
@@ -136,11 +136,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		rulesMap[r.RuleID] = r
 	}
 
-	var allowlistRegexes = compileRegexPatterns(vc.Allowlist.Regexes)
-	var allowlistPaths = compileRegexPatterns(vc.Allowlist.Paths)
+	allowlistRegexes := compileRegexPatterns(vc.Allowlist.Regexes)
+	allowlistPaths := compileRegexPatterns(vc.Allowlist.Paths)
 
-	var enclosingLinesPatterns = append(vc.Allowlist.EnclosingLinesRegexes, gitleaksAllowSignature)
-	var allowlistEnclosingLinesRegexes = compileRegexPatterns(enclosingLinesPatterns)
+	enclosingLinesPatterns := append(vc.Allowlist.EnclosingLinesRegexes, gitleaksAllowSignature)
+	allowlistEnclosingLinesRegexes := compileRegexPatterns(enclosingLinesPatterns)
 
 	c := Config{
 		Description: vc.Description,
