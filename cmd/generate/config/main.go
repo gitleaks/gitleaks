@@ -121,6 +121,7 @@ func main() {
 	configRules = append(configRules, rules.PostManAPI())
 	configRules = append(configRules, rules.Prefect())
 	configRules = append(configRules, rules.PrivateKey())
+	configRules = append(configRules, rules.PrivateRSAKeyNonPEMFormat())
 	configRules = append(configRules, rules.PulumiAPIToken())
 	configRules = append(configRules, rules.PyPiUploadToken())
 	configRules = append(configRules, rules.RapidAPIAccessToken())
