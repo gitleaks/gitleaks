@@ -21,6 +21,19 @@ func location(fragment Fragment, matchIndex []int) Location {
 	start := matchIndex[0]
 	end := matchIndex[1]
 
+	// default startLineIndex to 0
+	location.startLineIndex = 0
+
+	// Fixes: https://github.com/zricethezav/gitleaks/issues/1037
+	// When a fragment does NOT have any newlines, a default "newline"
+	// will be counted to make the subsequent location calculation logic work
+	// for fragments will no newlines.
+	if len(fragment.newlineIndices) == 0 {
+		fragment.newlineIndices = [][]int{
+			{len(fragment.Raw), len(fragment.Raw) + 1},
+		}
+	}
+
 	for lineNum, pair := range fragment.newlineIndices {
 		_lineNum = lineNum
 		newLineByteIndex := pair[0]
@@ -48,7 +61,6 @@ func location(fragment Fragment, matchIndex []int) Location {
 		location.endColumn = (end - prevNewLine)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
-		location.startLineIndex = start
 
 		// search for new line byte index
 		i := 0

@@ -36,7 +36,7 @@ func SlackWebHook() *config.Rule {
 		Description: "Slack Webhook",
 		RuleID:      "slack-web-hook",
 		Regex: regexp.MustCompile(
-			`https:\/\/hooks.slack.com\/services\/[A-Za-z0-9+\/]{44,46}`),
+			`https:\/\/hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{44,46}`),
 		Keywords: []string{
 			"hooks.slack.com",
 		},
@@ -44,7 +44,8 @@ func SlackWebHook() *config.Rule {
 
 	// validate
 	tps := []string{
-		"https://hooks.slack.com/services/" + secrets.NewSecret(alphaNumeric("44")), // gitleaks:allow
+		"https://hooks.slack.com/services/" + secrets.NewSecret(alphaNumeric("44")),  // gitleaks:allow
+		"https://hooks.slack.com/workflows/" + secrets.NewSecret(alphaNumeric("44")), // gitleaks:allow
 	}
 	return validate(r, tps, nil)
 }

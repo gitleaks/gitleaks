@@ -15,7 +15,7 @@ const (
 )
 
 func main() {
-	configRules := []*config.Rule{}
+	var configRules []*config.Rule
 	configRules = append(configRules, rules.AdafruitAPIKey())
 	configRules = append(configRules, rules.AdobeClientID())
 	configRules = append(configRules, rules.AdobeClientSecret())
@@ -41,6 +41,9 @@ func main() {
 	configRules = append(configRules, rules.Contentful())
 	configRules = append(configRules, rules.Databricks())
 	configRules = append(configRules, rules.DatadogtokenAccessToken())
+	configRules = append(configRules, rules.DigitalOceanPAT())
+	configRules = append(configRules, rules.DigitalOceanOAuthToken())
+	configRules = append(configRules, rules.DigitalOceanRefreshToken())
 	configRules = append(configRules, rules.DiscordAPIToken())
 	configRules = append(configRules, rules.DiscordClientID())
 	configRules = append(configRules, rules.DiscordClientSecret())
@@ -70,6 +73,7 @@ func main() {
 	// configRules = append(configRules, rules.GCPServiceAccount())
 	configRules = append(configRules, rules.GCPAPIKey())
 	configRules = append(configRules, rules.GitHubPat())
+	configRules = append(configRules, rules.GitHubFineGrainedPat())
 	configRules = append(configRules, rules.GitHubOauth())
 	configRules = append(configRules, rules.GitHubApp())
 	configRules = append(configRules, rules.GitHubRefresh())
@@ -141,6 +145,8 @@ func main() {
 	configRules = append(configRules, rules.SquareSpaceAccessToken())
 	configRules = append(configRules, rules.SumoLogicAccessID())
 	configRules = append(configRules, rules.SumoLogicAccessToken())
+	configRules = append(configRules, rules.TeamsWebhook())
+	configRules = append(configRules, rules.TelegramBotToken())
 	configRules = append(configRules, rules.TravisCIAccessToken())
 	configRules = append(configRules, rules.Twilio())
 	configRules = append(configRules, rules.TwitchAPIToken())
@@ -169,9 +175,7 @@ func main() {
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
 	}
-	config := config.Config{
-		Rules: ruleLookUp,
-	}
+
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse template")
@@ -181,6 +185,9 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
-	tmpl.Execute(f, config)
+
+	if err = tmpl.Execute(f, config.Config{Rules: ruleLookUp}); err != nil {
+		log.Fatal().Err(err).Msg("could not execute template")
+	}
 
 }

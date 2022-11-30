@@ -19,7 +19,7 @@ func TestRedact(t *testing.T) {
 	for _, test := range tests {
 		for _, f := range test.findings {
 			f.Redact()
-			if f.Secret != "REDACT" {
+			if f.Secret != "REDACTED" {
 				t.Error("redact not redacting: ", f.Secret)
 			}
 		}
