@@ -102,6 +102,13 @@ func printFinding(f report.Finding) {
 	matchInLineIDX := strings.Index(f.Line, f.Match)
 	secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
+	skipColor := false
+
+	if matchInLineIDX == -1 {
+		skipColor = true
+		matchInLineIDX = 0
+	}
+
 	start := f.Line[0:matchInLineIDX]
 	startMatchIdx := 0
 	if matchInLineIDX > 20 {
@@ -127,7 +134,13 @@ func printFinding(f report.Finding) {
 	}
 
 	finding := fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
-	fmt.Printf("%-12s %s", "Finding:", finding)
+
+	if skipColor {
+		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
+	} else {
+		fmt.Printf("%-12s %s", "Finding:", finding)
+	}
+
 	fmt.Printf("%-12s %s\n", "Secret:", secret)
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
