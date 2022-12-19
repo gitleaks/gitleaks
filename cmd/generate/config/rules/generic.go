@@ -19,7 +19,7 @@ func GenericCredential() *config.Rule {
 			"password",
 			"auth",
 			"access",
-		}, `[0-9a-z\-_.=]{10,150}`),
+		}, `[0-9a-z\-_.=!#$%&()*+,/:;<>?@[\\\]^{|}~]{10,150}`),
 		SecretGroup: 1,
 		Keywords: []string{
 			"key",
@@ -44,6 +44,7 @@ func GenericCredential() *config.Rule {
 		generateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
 		`"client_id" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
+		generateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznC-_.=!#$%&()*+,/:;<>?@[\\]^{|}~"),
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
