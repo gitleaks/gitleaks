@@ -41,6 +41,12 @@ func runProtect(cmd *cobra.Command, args []string) {
 	cfg.Path, _ = cmd.Flags().GetString("config")
 	exitCode, _ := cmd.Flags().GetInt("exit-code")
 	staged, _ := cmd.Flags().GetBool("staged")
+
+	//Validate config
+	reportPath, _ := cmd.Flags().GetString("report-path")
+	if reportPath != "" {
+		config.ValidateReportPath(reportPath)
+	}
 	start := time.Now()
 
 	// Setup detector
@@ -97,7 +103,6 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Info().Msg("no leaks found")
 	}
 
-	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		if err = report.Write(findings, cfg, ext, reportPath); err != nil {

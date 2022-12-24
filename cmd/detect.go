@@ -47,6 +47,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 	cfg.Path, _ = cmd.Flags().GetString("config")
 
+	//Validate config
+	reportPath, _ := cmd.Flags().GetString("report-path")
+	if reportPath != "" {
+		config.ValidateReportPath(reportPath)
+	}
+
 	// start timer
 	start := time.Now()
 
@@ -160,7 +166,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	// write report if desired
-	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
 		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
