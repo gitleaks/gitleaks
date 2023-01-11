@@ -489,9 +489,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2316,6 +2313,15 @@ regex = '''(?i)\b(npm_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
 keywords = [
     "npm_",
+]
+
+[[rules]]
+description = "Nuget Password"
+id = "nuget-config-password"
+regex = '''(?i)(<add key=\"(ClearTextPassword)|(Password)\"\s*)(value=\"[A-Za-z0-9]+\"\s*/>)'''
+secretGroup = 2
+keywords = [
+    "cleartextpassword","password",
 ]
 
 [[rules]]

@@ -110,6 +110,7 @@ func main() {
 	configRules = append(configRules, rules.NewRelicUserKey())
 	configRules = append(configRules, rules.NewRelicBrowserAPIKey())
 	configRules = append(configRules, rules.NPM())
+	configRules = append(configRules, rules.Nuget())
 	configRules = append(configRules, rules.NytimesAccessToken())
 	configRules = append(configRules, rules.OktaAccessToken())
 	configRules = append(configRules, rules.PlaidAccessID())
