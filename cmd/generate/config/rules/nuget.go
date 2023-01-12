@@ -20,5 +20,8 @@ func Nuget() *config.Rule {
 	tps := []string{
 		`<add key="ClearTextPassword" value="nvnmsklavkoneroijvoks894789532ifjklwnfi28ur" />`,
 	}
-	return validate(r, tps, nil)
+	fps := []string{
+		`<add key="ClearTextPassword" value="%Password%" />`,
+	}
+	return validate(r, tps, fps)
 }
