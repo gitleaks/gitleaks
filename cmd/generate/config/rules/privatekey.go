@@ -25,7 +25,7 @@ abcdefghijklmnopqrstuvwxyz
 `,
 		`-----BEGIN PRIVATE KEY BLOCK-----
 anything
------END PRIVATE KEY BLOCK-----`
+-----END PRIVATE KEY BLOCK-----`,
 	} // gitleaks:allow
 	return validate(r, tps, nil)
 }
