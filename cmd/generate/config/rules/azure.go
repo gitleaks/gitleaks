@@ -199,6 +199,24 @@ func AzureStorageCredential9() *config.Rule {
 	return validate(r, tps, nil)
 }
 
+func AzureStorageCredential10() *config.Rule {
+	// define rule
+	r := config.Rule{
+		Description: "CSCAN0130 - Found Azure storage credential in MonitoringAgent config file. Validate file contains secrets, remove, roll credential, and use approved store.",
+		RuleID:      "azure-storage-credential-10",
+		SecretGroup: 1,
+		Regex: generateUniqueTokenRegex(`Account moniker\s?=.*key\s?=.*`),
+	}
+
+	// validate
+	tps := []string{
+		generateSampleSecret("azure-storage-credential-10",
+			"decryptionKey='" + secrets.NewSecret(alphaNumeric("200") + "'")),
+	}
+	return validate(r, tps, nil)
+}
+
+
 // CSCAN0050, CSCAN0060, CSCAN0070 - covered in PrivateKey.go
 
 // CSCAN0080 looks for 'Password' in XML file
@@ -209,7 +227,7 @@ func AzurePassword1() *config.Rule {
 		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file. Validate file contains secrets, remove, roll credential, and use approved store.",
 		RuleID:      "azure-password-1",
 		SecretGroup: 1,
-		Regex: generateUniqueTokenRegex(`AccountKey\s*=\s*MII[a-zA-Z0-9/+]{43,}?={0,2}`),
+		Regex: generateUniqueTokenRegex(`&lt;machineKey[^&gt;]+(decryptionKey\s*\=\s*&quot;[a-fA-F0-9]{48,}|validationKey\s*\=\s*&quot;[a-fA-F0-9]{48,})[^&gt;]+&gt;`),
 	}
 
 	// validate
@@ -220,6 +238,22 @@ func AzurePassword1() *config.Rule {
 	return validate(r, tps, nil)
 }
 
+func AzurePassword2() *config.Rule {
+	// define rule
+	r := config.Rule{
+		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file. Validate file contains secrets, remove, roll credential, and use approved store.",
+		RuleID:      "azure-password-2",
+		SecretGroup: 1,
+		Regex: generateUniqueTokenRegex(`(decryptionKey|validationKey)=['][a-zA-Z0-9][']`),
+	}
+
+	// validate
+	tps := []string{
+		generateSampleSecret("azure-password-2",
+			"decryptionKey='" + secrets.NewSecret(alphaNumeric("200") + "'")),
+	}
+	return validate(r, tps, nil)
+}
 
 //   <ContentSearcher>
 //     <Name>ConfigFile</Name>
@@ -227,7 +261,7 @@ func AzurePassword1() *config.Rule {
 //     <ResourceMatchPattern>\.(config|cscfg|conf|json|jsx?|txt|cpp|sql|dtsx|md|java|FF|template|settings|ini|BF|ste|isml|test|tsx?|resx|Azure|sample|backup|rd|hpp|psm1|cshtml|htm|bat|waz|yml|Beta|sh|m|php|py|xaml|keys|cmd|rds|loadtest|properties|vbs|ccf|user)$|(hubot|project.params)</ResourceMatchPattern>
 //     <ContentSearchPatterns>
 //       <string></string>
-//       <string>(decryptionKey|validationKey)=&quot;[a-zA-Z0-9]+&quot;</string>
+//       <string></string>
 //       <string>&lt;add\skey=&quot;[^&quot;]*([kK][eE][yY]([sS]|[0-9])?|([cC]redential|CREDENTIAL)[sS]?|([sS]ecret|SECRET)(s|S|[0-9])?|[pP]ass[wW]ord|PASSWORD|[tT]oken|TOKEN|([kK]ey|KEY)([pP]rimary|PRIMARY|[sS]econdary|SECONDARY|[oO]r[sS]as|SAS|[eE]ncrypted|ENCRYPTED))&quot;\s*value\s*=&quot;[^&quot;]+&quot;</string>
 //       <string>&lt;add\skey=&quot;[^&quot;]+&quot;\s*value=&quot;[^&quot;]*([eE]ncrypted|ENCRYPTED).?([sS]ecret|SECRET)[^&quot;]+&quot;\s*/&gt;</string>
 //       <string>([cC]onnection[sS]tring|[cC]onn[sS]tring)[^=]*?=["'][^"']*?([pP]ass[wW]ord|PASSWORD)=[^\$\s;][^"'\s]*?(;|")</string>
@@ -264,99 +298,10 @@ func AzurePassword1() *config.Rule {
 //   </ContentSearcher>
 
 
+// CSCAN0110, CSCAN0111, CSCAN0140, CSCAN0220 searches for generic passwords - covered elsewhere
 
+// CSCAN0120 searches for Twilio keys - covered in twilio.go
 
-//     <Name>ScriptPassword</Name>
-//     <RuleId>CSCAN0110</RuleId>
-//     <ResourceMatchPattern>(\.cmd|\.ps|\.ps1|\.psm1)$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>\s-([pP]ass[wW]ord|PASSWORD)\s+(&quot;[^&quot;\r\n]*&quot;|&apos;[^&apos;\r\n]*&apos;)</string>
-//       <string>\s-([pP]ass[wW]ord|PASSWORD)\s+[^$\(\)\[\{&lt;\-\r\n]+\s*(\r\n|\-)</string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found potential password in script file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>GeneralPassword</Name>
-//     <RuleId>CSCAN0111</RuleId>
-//     <ResourceMatchPattern>\.(asax|ascx|aspx|bak|c|cmd|conf|cpp|cs|dart|dsql|hpp|html|idl|iis|ini|ja|java|jsx?|md|mef|omi|php|pl|pm|ps1|psm1|py|rb|resx|sh|shf|sql|svc|test|trx|tsx?|txt|vbs|xml)$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>[a-zA-Z_\s](([pP]ass[wW]ord)PASSWORD|([cC]lient|CLIENT|[aA]pp|APP)_?([sS]ecret|SECRET))\s{0,3}=\s{0,3}['"][^\s"']{2,200}?['"][;\s]</string>
-//     </ContentSearchPatterns>
-//     <ContentSearchFilters>
-//       <ContentFilter>
-//         <Name>FalsePositiveCases</Name>
-//         <Filters>
-//           <string>['"](yes|no|true|false)['"]</string>
-//           <string>placeholder</string>
-//           <string>['"](?&lt;c>.)\k&lt;c>{3,}</string>
-//           <string>\s\+\s</string>
-//           <string>['"][%\$#@].*[%\$#@]?['"]</string>
-//           <string>['"]\$?[\{\(\[\&lt;].*[\}\)\]\>]['"]</string>
-//           <string>['"]\$\d['"]</string>
-//           <string>['"]\s?([^\s'"]+?\s)+([^\s'"]+?)?['"]</string>
-//           <string>['"]\s+['"]</string>
-//           <string>['"]\\0['"]</string>
-//           <string>\{\d\}</string>
-//           <string>-1</string>
-//           <string>vault|param|attribute|any|['"]\"['"]|foo|bar|fake|example|here|invalid|\*\*\*</string>
-//         </Filters>
-//       </ContentFilter>
-//     </ContentSearchFilters>
-//     <MatchDetails>Found potential password in script file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>ExternalApiSecret</Name>
-//     <RuleId>CSCAN0120</RuleId>
-//     <ResourceMatchPattern>\.cs$|\.cpp$|\.c$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>private\sconst\sstring\s[aA]ccessTokenSecret\s=\s".*";</string>
-//       <string>private\sconst\sstring\s[aA]ccessToken\s=\s".*";</string>
-//       <string>private\sconst\sstring\s[cC]onsumerSecret\s=\s".*";</string>
-//       <string>private\sconst\sstring\s[cC]onsumerKey\s=\s".*";</string>
-//       <string>FacebookClient\([pP]ageAccessToken\);</string>
-//       <string>[pP]ageAccessToken\s=\s".*";</string>
-//       <string>private\sstring\s[tT]wilioAccountSid\s=\s".*";</string>
-//       <string>private\sstring\s[tT]wilioAuthToken\s=\s".*";</string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found potential external API secret in source file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>MonitoringAgent</Name>
-//     <RuleId>CSCAN0130</RuleId>
-//     <ResourceMatchPattern>AgentConfig\.xml$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>Account moniker\s?=.*key\s?=.*</string>
-//     </ContentSearchPatterns>
-//     <ContentSearchFilters>
-//       <ContentFilter>
-//         <Name>Auto Key Patterns ContentFilters</Name>
-//         <Filters>
-//           <string>autoKey</string>
-//           <string>%s</string>
-//         </Filters>
-//       </ContentFilter>
-//     </ContentSearchFilters>
-//     <MatchDetails>Found storage credential in MonitoringAgent config file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>DefaultPassword</Name>
-//     <RuleId>CSCAN0140</RuleId>
-//     <ResourceMatchPattern>\.(cs|xml|config|json|tsx?|cfg|txt|ps1|bat|cscfg|rdg|linq|publishsettings|cmd|psm1|aspx|asmx|vbs|added_cluster|clean|pubxml|ccf|ini|svd|sql|c|xslt|csv|FF|ExtendedTests|settings|cshtml|template|trd|argfile|scala|pbix)$|(config|certificate|publish|UT)\.js$|(commands|user|tests)\.cpp$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>T!T@n1130|[pP]0rsche911|[cC]o[mM][mM]ac\!12|[pP][aA]ss@[wW]or[dD]1|[rR]dP[aA]\$\$[wW]0r[dD]|iis6\!dfu|[pP]@ss[wW]or[dD]1|[pP][aA]\$\$[wW]or[dD]1|\!\!123ab|[aA]dmin123|[pP]@ss[wW]0r[dD]1|[uU]ser@123|[aA]bc@123|[pP][aA]ss[wW]or[dD]@123|[rR]dP@\$\$[wW]0r[dD]|homerrocks|[pP][aA]\$\$[wW]0r[dD]1?|\![pP][aA]sswor[dD]1|[pP][aA]55[wW]or[dD]1|[pP]@\$\$[wW]0r[dD]1|[pP][aA]ss[wW]0r[dD]1|[jJ]\$p1ter|[rR]dP[aA]ss[wW]0r[dD]|Y29NbWFjITEy|[pP][aA]ss4Sales|[rR]dPa\$\$[wW]or[dD]|\![pP]@ss[wW]0r[dD]1|WS2012R2R0cks\!|DSFS0319Test|March2010M2\!|[pP][aA]ss[wW]ord~1|UL0brlXlp_r8vG6iiRvCcsFDfu6bJ6KK|7\-Tdh3Klrec4dJbOyONDOkCQ84BWN1JN|\$mCertPwd|[pP][aA]\$\$[wW]or[dD]!|2012\$erver!|2008\$erver!|#Bugsfor\$|ITG2Install!|[rR]dP[aA]\$\$[wW]0r[dD]|T!T@n113000|T!T@n1130T!T@n1130|TitanP[wW][dD]%|ChocoCheese!|n1130@T!T|[mM]icr0s0ft|test1test!|123@tieorg|IWantYouToTripLikeIDo!\?|homerocks|[eE]lvis1|S_MSLocal~!@#|([uU]ser|USER)@123</string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found known password in source file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
 //   <ContentSearcher>
 //     <Name>AzureSecret</Name>
 //     <RuleId>CSCAN0150</RuleId>
@@ -368,21 +313,13 @@ func AzurePassword1() *config.Rule {
 //       <string>\n[^\r\n]{0,800}(([tT]oken|TOKEN|[sS]ecret|SECRET|sig|SIG|sas|SAS|([pP]ass[wW]ord|PASSWORD))=|>)[a-zA-Z0-9%]{43,53}%3[dD][^{a-zA-Z0-9%]</string>
 //       <string>\n.*(([uU]ser|USER) ?([iI]d|ID|[nN]ame|NAME)|[uU]id|UID)=.{2,128}?\s*?;\s*?(([pP]ass[wW]ord|PASSWORD)|([pP]wd|PWD))=[^'$%&gt;@'";\[\{][^;"']{2,350}?(;|"|')</string>
 //     </ContentSearchPatterns>
-//     <ContentSearchFilters>
-//       <ContentFilter>
-//         <Name>Key Patterns ContentFilters</Name>
-//         <Filters>
-//           <string>AccountKey\s*=\s*MII[a-zA-Z0-9/+]{43,}={0,2}</string>
-//           <string>=(?&lt;c>.)\k&lt;c>{3,}</string>
-//           <string>(password|pwd)=&lt;[a-z0-9]+></string>
-//         </Filters>
-//       </ContentFilter>
-//     </ContentSearchFilters>
 //     <MatchDetails>Found symmetric key or storage credential in source file.</MatchDetails>
 //     <Recommendation>Validate file contains secrets, remove, roll credential, use an approved secret store.</Recommendation>
 //     <Severity>3</Severity>
 //     <SearchValidatorClassName>Microsoft.Art.ContentSearch.SymmetricKeyValidator, Microsoft.Art.ContentSearch</SearchValidatorClassName>
 //   </ContentSearcher>
+
+
 //   <ContentSearcher>
 //     <Name>DomainPassword</Name>
 //     <RuleId>CSCAN0160</RuleId>
@@ -407,6 +344,8 @@ func AzurePassword1() *config.Rule {
 //     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
 //     <Severity>3</Severity>
 //   </ContentSearcher>
+
+
 //   <ContentSearcher>
 //     <Name>EncryptedPassword</Name>
 //     <RuleId>CSCAN0200</RuleId>
@@ -419,56 +358,11 @@ func AzurePassword1() *config.Rule {
 //     <Severity>2</Severity>
 //     <GroupsExtractorClassName>Microsoft.Art.ContentSearch.EncodedUserNameExtractor, Microsoft.Art.ContentSearch</GroupsExtractorClassName>
 //   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>GitCredential</Name>
-//     <RuleId>CSCAN0210</RuleId>
-//     <ResourceMatchPattern>\.gitCredentials$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>[hH][tT][tT][pP][sS]?://.+:.+@\[^/].[cC][oO][mM]</string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found Git repo credentials.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>2</Severity>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>DefaultPasswordContexts</Name>
-//     <RuleId>CSCAN0220</RuleId>
-//     <ResourceMatchPattern>\.(cs|xml|config|json|tsx?|cfg|txt|ps1|bat|cscfg|publishsettings|cmd|psm1|aspx|asmx|vbs|added_cluster|clean|pubxml|ccf|ini|svd|sql|c|xslt|csv|FF|ExtendedTests|settings|cshtml|template|trd|argfile|scala|rdg|linq|hql|go|rs|pl|java|php|py|vb)$|(config|certificate|publish|UT)\.js$|(commands|user|tests)\.cpp$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>[cC]onvert[tT]o-[sS]ecure[sS]tring(\s*-[sS]tring)?\s*"(?&lt;scoringvalue&gt;[^"\r\n]+)"</string>
-//       <string>new\sX509Certificate2\([^()]*,\s*"(?&lt;scoringvalue&gt;[^"\r\n]+)"[^)]*\)</string>
-//       <string>&lt;[pP]ass[wW]ord&gt;(&lt;[vV]alue&gt;)?(?&lt;scoringvalue&gt;.+)(&lt;/[vV]alue&gt;)?&lt;/[pP]ass[wW]ord&gt;</string>
-//       <string>([cC]lear[tT]ext[pP]ass[wW]ord|CLEARTEXTPASSWORD)(")?\s*[:=]\s*"(?&lt;scoringvalue&gt;[^"\r\n]+)"</string>
-//       <string>[cC]ert[uU]til(.exe)?\s+(\-[a-zA-Z]+\s+)*\-[pP]\s+(?&lt;quote&gt;["'])(?&lt;scoringvalue&gt;[^"'%]+)\k&lt;quote&gt;</string>
-//       <string>[cC]ert[uU]til(.exe)?\s+(\-[a-zA-Z]+\s+)*\-[pP]\s+(?&lt;scoringvalue&gt;[^"']\S*)\s</string>
-//       <string>([pP]ass[wW]ord|PASSWORD)\s*=\s*[nN]?(?&lt;quote&gt;["'])(?&lt;scoringvalue&gt;[^"'\r\n]{4,})\k&lt;quote&gt;</string>
-//     </ContentSearchPatterns>
-//     <ContentSearchFilters>
-//       <ContentFilter>
-//         <Name>DefaultPasswordContexts Content Filter</Name>
-//         <Filters>
-//           <string>&lt;value&gt;&lt;/value&gt;</string>
-//           <string>['"]\$?[\{\(\[\&lt;].*[\}\)\]\>]['"]</string>
-//         </Filters>
-//       </ContentFilter>
-//     </ContentSearchFilters>
-//     <MatchDetails>Found known password context with password in source file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//     <SearchValidatorClassName>Microsoft.Art.ContentSearch.PasswordContextValidator, Microsoft.Art.ContentSearch</SearchValidatorClassName>
-//   </ContentSearcher>
-//   <ContentSearcher>
-//     <Name>SlackToken</Name>
-//     <RuleId>CSCAN0230</RuleId>
-//     <ResourceMatchPattern>\.(ps1|psm1|jsx?|tsx?|json|coffee|xml|md|html|py|php|java|ipynb|rb|scala)$|hubot</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string>xoxp-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+-[a-zA-Z0-9]+</string>
-//       <string>xoxb-[a-zA-Z0-9]+-[a-zA-Z0-9]+</string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found slack token in source file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
+
+// CSCAN0210 checks for Git repo credentials - covered elsewhere
+
+// CSCAN0230 checks for Slack tokens - covered in slack.go
+
 //   <ContentSearcher>
 //     <Name>VstsPersonalAccessToken</Name>
 //     <RuleId>CSCAN0240</RuleId>
