@@ -43,13 +43,13 @@ func AzureStorageCredential1() *config.Rule {
 		Description: "CSCAN0030 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-1",
 		SecretGroup: 1,
-		Regex: generateUniqueTokenRegex(`\n[ \t]{0,50}(//|/\*)[ \t]{0,10}[a-zA-Z0-9/+]{86}==`),
+		Regex: generateUniqueTokenRegex(`$(//|/\*)[ \t]{0,10}[a-zA-Z0-9/+]{86}==`),
 	}
 
 	// validate
 	tps := []string{
 		generateSampleSecret("azure-storage-credential-1",
-			"\n\t\t//\t\t" + secrets.NewSecret(alphaNumeric("86") + "==")),
+			"/n" + "//" + secrets.NewSecret(alphaNumeric("86") + "==")),
 	}
 	return validate(r, tps, nil)
 }
@@ -114,7 +114,7 @@ func AzureStorageCredential5() *config.Rule {
 		Description: "CSCAN0030 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-5",
 		SecretGroup: 1,
-		Regex: generateUniqueTokenRegex(`\n[^\r\n]{0,800}((sig|SIG|sas|SAS|([pP]ass[wW]ord|PASSWORD))=|>)[a-zA-Z0-9%]{43,53}%3[dD][^{a-zA-Z0-9%]`),
+		Regex: generateUniqueTokenRegex(`(?i)\n[^\r\n]{0,800}((sig|sas|password)=|>)[a-zA-Z0-9%]{43,53}%3[dD][^{a-zA-Z0-9%]`),
 	}
 
 	// validate
@@ -132,7 +132,7 @@ func AzureStorageCredential6() *config.Rule {
 		Description: "CSCAN0030 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-6",
 		SecretGroup: 1,
-		Regex: generateUniqueTokenRegex(`\n.*(([uU]ser|USER) ?([iI]d|ID|[nN]ame|NAME)|[uU]id|UID)=.{2,128}?\s*?;\s*?(([pP]ass[wW]ord|PASSWORD)|([pP]wd|PWD))=[^'$%&gt;@'";\[\{][^;"']{2,350}?(;|"|')`),
+		Regex: generateUniqueTokenRegex(`(?i)\n.*((user) ?(id|name)|uid)=.{2,128}?\s*?;\s*?((password)|(pwd))=[^'$%&gt;@'";\[\{][^;"']{2,350}?(;|"|')`),
 	}
 
 	// validate
