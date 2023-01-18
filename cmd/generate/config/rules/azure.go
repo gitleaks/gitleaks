@@ -8,6 +8,17 @@ import (
 // Rules come from https://www.powershellgallery.com/packages/AzSK.AzureDevOps/0.9.8/Content/Framework%5CConfigurations%5CSVT%5CAzureDevOps%5CCredentialPatterns.xml
 // Only rules with 'ContentSearchPatterns' have been used.
 
+// CSCAN0110, CSCAN0111, CSCAN0140, CSCAN0220 searches for generic passwords - covered elsewhere
+
+// CSCAN0120 searches for Twilio keys - covered in twilio.go
+
+// CSCAN0210 checks for Git repo credentials - covered elsewhere
+
+// CSCAN0230 checks for Slack tokens - covered in slack.go
+
+// CSCAN0250 - covered in jwt.go
+
+
 func AzureAppServiceDeploymentSecrets() *config.Rule {
 	// define rule
 	r := config.Rule{
@@ -55,7 +66,7 @@ func AzureStorageCredential2() *config.Rule {
 	// validate
 	tps := []string{
 		generateSampleSecret("azure-storage-credential-2",
-		"\n\t\t//\t\t" + secrets.NewSecret(alphaNumeric("86") + "=a")),
+		"\n\t\t//\t\t" + secrets.NewSecret(alphaNumeric("43") + "=a")),
 	}
 	return validate(r, tps, nil)
 }
@@ -628,26 +639,3 @@ func AzurePowershellTokenCache() *config.Rule {
 	}
 	return validate(r, tps, nil)
 }
-
-// CSCAN0110, CSCAN0111, CSCAN0140, CSCAN0220 searches for generic passwords - covered elsewhere
-
-// CSCAN0120 searches for Twilio keys - covered in twilio.go
-
-// CSCAN0210 checks for Git repo credentials - covered elsewhere
-
-// CSCAN0230 checks for Slack tokens - covered in slack.go
-
-// CSCAN0250 - covered in jwt.go
-
-//   <ContentSearcher>
-//     <Name>AnsibleVault</Name>
-//     <RuleId>CSCAN0260</RuleId>
-//     <ResourceMatchPattern>\.yml$</ResourceMatchPattern>
-//     <ContentSearchPatterns>
-//       <string></string>
-//     </ContentSearchPatterns>
-//     <MatchDetails>Found ansible vault in source file.</MatchDetails>
-//     <Recommendation>Validate file contains secrets, remove, roll credential, and use approved store. For additional information on secret remediation see https://aka.ms/credscan </Recommendation>
-//     <Severity>3</Severity>
-//   </ContentSearcher>
-
