@@ -2017,6 +2017,22 @@ keywords = [
 ]
 
 [[rules]]
+description = "GitLab Pipeline Trigger Token"
+id = "gitlab-ptt"
+regex = '''glptt-[0-9a-f]{40}'''
+keywords = [
+    "glptt-",
+]
+
+[[rules]]
+description = "GitLab Runner Registration Token"
+id = "gitlab-rrt"
+regex = '''GR1348941[0-9a-zA-Z\-\_]{20}'''
+keywords = [
+    "gr1348941",
+]
+
+[[rules]]
 description = "Gitter Access Token"
 id = "gitter-access-token"
 regex = '''(?i)(?:gitter)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
