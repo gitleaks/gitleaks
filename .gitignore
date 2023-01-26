@@ -18,12 +18,3 @@ cmd/generate/config/gitleaks.toml
 *.out
 
 dist/
-
-# Hugo build files (created automatically by VSCode Go extension)
-.hugo_build.lock
-
-# Hugo Sitemap.xml files (created automatically by VSCode Go extension)
-public/index.xml
-public/sitemap.xml
-public/categories/index.xml
-public/tags/index.xml
