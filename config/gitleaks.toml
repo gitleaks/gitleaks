@@ -489,9 +489,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2261,6 +2258,14 @@ regex = '''(?i)(?:mattermost)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=
 secretGroup = 1
 keywords = [
     "mattermost",
+]
+
+[[rules]]
+description = "Mercury API Token"
+id = "mercury-api-token"
+regex = '''(secret-token:)?mercury_[A-Za-z0-9_-]+_yrucrem'''
+keywords = [
+    "mercury",
 ]
 
 [[rules]]

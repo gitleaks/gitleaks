@@ -105,6 +105,7 @@ func main() {
 	configRules = append(configRules, rules.MailGunSigningKey())
 	configRules = append(configRules, rules.MapBox())
 	configRules = append(configRules, rules.MattermostAccessToken())
+	configRules = append(configRules, rules.MercuryAPIToken())
 	configRules = append(configRules, rules.MessageBirdAPIToken())
 	configRules = append(configRules, rules.MessageBirdClientID())
 	configRules = append(configRules, rules.NetlifyAccessToken())
