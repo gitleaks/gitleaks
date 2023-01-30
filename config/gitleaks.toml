@@ -2407,6 +2407,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Plivo Auth ID"
+id = "plivo-auth-id"
+regex = '''[SM]{1}A[0-9A-Za-z]{18}'''
+keywords = [
+    "plivo",
+]
+
+[[rules]]
 description = "Postman API token"
 id = "postman-api-token"
 regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''

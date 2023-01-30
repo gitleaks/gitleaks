@@ -131,6 +131,12 @@ title = "gitleaks config"
     tags = ["key", "Picatic"]
 
 [[rules]]
+    id = "plivo"
+    description = "Plivo Auth ID"
+    regex = '''(?i)plivo(.{0,20})?[SM]{1}A[0-9A-Za-z]{18}'''
+    tags = ["key", "plivo"]
+
+[[rules]]
     id = "sendgrid"
     description = "SendGrid API Key"
     regex = '''SG\.[\w_]{16,32}\.[\w_]{16,64}'''
