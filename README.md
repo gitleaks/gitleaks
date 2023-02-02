@@ -77,7 +77,7 @@ cd gitleaks
 make build
 ```
 
-### Github Action
+### GitHub Action
 
 Check out the official [Gitleaks GitHub Action](https://github.com/gitleaks/gitleaks-action)
 
@@ -106,7 +106,7 @@ jobs:
    ```
    repos:
      - repo: https://github.com/zricethezav/gitleaks
-       rev: v8.12.0
+       rev: v8.15.3
        hooks:
          - id: gitleaks
    ```
