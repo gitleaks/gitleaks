@@ -243,6 +243,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Defined Networking API token"
+id = "defined-networking-api-token"
+regex = '''(?i)(?:dnkey)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dnkey",
+]
+
+[[rules]]
 description = "DigitalOcean OAuth Access Token"
 id = "digitalocean-access-token"
 regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
