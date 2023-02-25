@@ -17,6 +17,7 @@ paths = [
     '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$''',
     '''node_modules''',
+    '''package-lock.json''',
     '''vendor''',
 ]
 
