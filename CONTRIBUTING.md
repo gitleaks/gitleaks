@@ -28,7 +28,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    func Beamer() *config.Rule {
        // Define Rule
        r := config.Rule{
-           // Human redable description of the rule
+           // Human readable description of the rule
            Description: "Beamer API token",
 
            // Unique ID for the rule

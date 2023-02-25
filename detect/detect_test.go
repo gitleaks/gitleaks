@@ -18,8 +18,9 @@ const repoBasePath = "../testdata/repos/"
 
 func TestDetect(t *testing.T) {
 	tests := []struct {
-		cfgName  string
-		fragment Fragment
+		cfgName      string
+		baselinePath string
+		fragment     Fragment
 		// NOTE: for expected findings, all line numbers will be 0
 		// because line deltas are added _after_ the finding is created.
 		// I.e, if the finding is from a --no-git file, the line number will be
@@ -318,6 +319,15 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName:      "path_only",
+			baselinePath: ".baseline.json",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: ".baseline.json",
+			},
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -344,6 +354,7 @@ func TestDetect(t *testing.T) {
 			assert.Equal(t, tt.wantError, err)
 		}
 		d := NewDetector(cfg)
+		d.baselinePath = tt.baselinePath
 
 		findings := d.Detect(tt.fragment)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)

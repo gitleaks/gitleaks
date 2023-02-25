@@ -749,4 +749,4 @@ acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220
 111c8b47b65627db117bd20be85ff0aee8961eb9:detect/detect_test.go:private-key:567
 99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:512
 99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:513
-
+69f161c0a0cc0f7858f7d0609d656f4edcedd84c:detect/detect_test.go:discord-api-token:326
