@@ -14,6 +14,9 @@ type Allowlist struct {
 	// Regexes is slice of content regular expressions that are allowed to be ignored.
 	Regexes []*regexp.Regexp
 
+	// RegexTarget
+	RegexTarget string
+
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
 	Paths []*regexp.Regexp
 

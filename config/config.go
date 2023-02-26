@@ -36,17 +36,19 @@ type ViperConfig struct {
 		Tags        []string
 
 		Allowlist struct {
-			Regexes   []string
-			Paths     []string
-			Commits   []string
-			StopWords []string
+			RegexTarget string
+			Regexes     []string
+			Paths       []string
+			Commits     []string
+			StopWords   []string
 		}
 	}
 	Allowlist struct {
-		Regexes   []string
-		Paths     []string
-		Commits   []string
-		StopWords []string
+		RegexTarget string
+		Regexes     []string
+		Paths       []string
+		Commits     []string
+		StopWords   []string
 	}
 }
 
@@ -122,10 +124,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Tags:        r.Tags,
 			Keywords:    r.Keywords,
 			Allowlist: Allowlist{
-				Regexes:   allowlistRegexes,
-				Paths:     allowlistPaths,
-				Commits:   r.Allowlist.Commits,
-				StopWords: r.Allowlist.StopWords,
+				RegexTarget: r.Allowlist.RegexTarget,
+				Regexes:     allowlistRegexes,
+				Paths:       allowlistPaths,
+				Commits:     r.Allowlist.Commits,
+				StopWords:   r.Allowlist.StopWords,
 			},
 		}
 		orderedRules = append(orderedRules, r.RuleID)
@@ -148,10 +151,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Extend:      vc.Extend,
 		Rules:       rulesMap,
 		Allowlist: Allowlist{
-			Regexes:   allowlistRegexes,
-			Paths:     allowlistPaths,
-			Commits:   vc.Allowlist.Commits,
-			StopWords: vc.Allowlist.StopWords,
+			RegexTarget: vc.Allowlist.RegexTarget,
+			Regexes:     allowlistRegexes,
+			Paths:       allowlistPaths,
+			Commits:     vc.Allowlist.Commits,
+			StopWords:   vc.Allowlist.StopWords,
 		},
 		Keywords:     keywords,
 		orderedRules: orderedRules,

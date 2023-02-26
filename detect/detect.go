@@ -284,9 +284,24 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
-		// check if the secret is in the allowlist
-		if rule.Allowlist.RegexAllowed(finding.Secret) ||
-			d.Config.Allowlist.RegexAllowed(finding.Secret) {
+		// check if the regexTarget is defined in the allowlist "regexes" entry
+		allowlistTarget := finding.Secret
+		switch rule.Allowlist.RegexTarget {
+		case "match":
+			allowlistTarget = finding.Match
+		case "line":
+			allowlistTarget = finding.Line
+		}
+
+		globalAllowlistTarget := finding.Secret
+		switch d.Config.Allowlist.RegexTarget {
+		case "match":
+			globalAllowlistTarget = finding.Match
+		case "line":
+			globalAllowlistTarget = finding.Line
+		}
+		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
+			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
 			continue
 		}
 
