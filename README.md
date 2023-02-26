@@ -335,6 +335,10 @@ paths = [
   '''go\.mod''',
   '''go\.sum'''
 ]
+# note: (rule) regexTarget defaults to check the _Secret_ in the finding.
+# if regexTarget is not specified then _Secret_ will be used.
+# Acceptable values for regexTarget are "match" and "line"
+regexTarget = "match"
 regexes = [
   '''process''',
   '''getenv''',
@@ -358,7 +362,7 @@ paths = [
   '''(.*?)(jpg|gif|doc)'''
 ]
 
-# note: regexTarget defaults to check the _Secret_ in the finding.
+# note: (global) regexTarget defaults to check the _Secret_ in the finding.
 # if regexTarget is not specified then _Secret_ will be used.
 # Acceptable values for regexTarget are "match" and "line"
 regexTarget = "match"
