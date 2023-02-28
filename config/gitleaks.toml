@@ -18,6 +18,8 @@ paths = [
     '''(go.mod|go.sum)$''',
     '''node_modules''',
     '''package-lock.json''',
+    '''pnpm-lock.yaml''',
+    '''Database.refactorlog''',
     '''vendor''',
 ]
 
@@ -490,9 +492,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2780,4 +2779,5 @@ secretGroup = 1
 keywords = [
     "zendesk",
 ]
+
 
