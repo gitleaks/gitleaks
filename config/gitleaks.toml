@@ -16,6 +16,7 @@ paths = [
     '''gitleaks.toml''',
     '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$''',
+    '''gradle.lockfile''',
     '''node_modules''',
     '''package-lock.json''',
     '''pnpm-lock.yaml''',
