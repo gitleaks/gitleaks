@@ -12,7 +12,7 @@ func EasyPost() *config.Rule {
 	r := config.Rule{
 		Description: "EasyPost API token",
 		RuleID:      "easypost-api-token",
-		Regex:       regexp.MustCompile(`EZAK(?i)[a-z0-9]{54}`),
+		Regex:       regexp.MustCompile(`\bEZAK(?i)[a-z0-9]{54}`),
 		Keywords:    []string{"EZAK"},
 	}
 
@@ -28,7 +28,7 @@ func EasyPostTestAPI() *config.Rule {
 	r := config.Rule{
 		Description: "EasyPost test API token",
 		RuleID:      "easypost-test-api-token",
-		Regex:       regexp.MustCompile(`EZTK(?i)[a-z0-9]{54}`),
+		Regex:       regexp.MustCompile(`\bEZTK(?i)[a-z0-9]{54}`),
 		Keywords:    []string{"EZTK"},
 	}
 

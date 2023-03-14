@@ -357,7 +357,7 @@ keywords = [
 [[rules]]
 description = "EasyPost API token"
 id = "easypost-api-token"
-regex = '''EZAK(?i)[a-z0-9]{54}'''
+regex = '''\bEZAK(?i)[a-z0-9]{54}'''
 keywords = [
     "ezak",
 ]
@@ -365,7 +365,7 @@ keywords = [
 [[rules]]
 description = "EasyPost test API token"
 id = "easypost-test-api-token"
-regex = '''EZTK(?i)[a-z0-9]{54}'''
+regex = '''\bEZTK(?i)[a-z0-9]{54}'''
 keywords = [
     "eztk",
 ]
