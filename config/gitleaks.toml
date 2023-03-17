@@ -389,7 +389,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Facebook"
+description = "Facebook Access Token"
 id = "facebook"
 regex = '''(?i)(?:facebook)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
@@ -2624,7 +2624,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Stripe"
+description = "Stripe Access Token"
 id = "stripe-access-token"
 regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
 keywords = [

@@ -10,7 +10,7 @@ import (
 func StripeAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Stripe",
+		Description: "Stripe Access Token",
 		RuleID:      "stripe-access-token",
 		Regex:       regexp.MustCompile(`(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}`),
 		Keywords: []string{
