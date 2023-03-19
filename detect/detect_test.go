@@ -485,6 +485,87 @@ func TestFromGit(t *testing.T) {
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
+func TestFromGitStaged(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		logOpts          string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "staged"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   7,
+					EndLine:     7,
+					StartColumn: 18,
+					EndColumn:   37,
+					Line:        "\n\taws_token2 := \"AKIALALEMEL33243OLIA\" // this one is not",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "api/api.go",
+					SymlinkFile: "",
+					Commit:      "",
+					Entropy:     3.0841837,
+					Author:      "",
+					Email:       "",
+					Date:        "0001-01-01T00:00:00Z",
+					Message:     "",
+					Tags: []string{
+						"key",
+						"AWS",
+					},
+					RuleID:      "aws-access-key",
+					Fingerprint: "api/api.go:aws-access-key:7",
+				},
+			},
+		},
+	}
+
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := moveDotGit(".git", "dotGit"); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	for _, tt := range tests {
+
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err = viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, err := vc.Translate()
+		if err != nil {
+			t.Error(err)
+		}
+		detector := NewDetector(cfg)
+		detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
+		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
+		if err != nil {
+			t.Error(err)
+		}
+
+		for _, f := range findings {
+			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+		}
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
 
 // TestFromFiles tests the FromFiles function
 func TestFromFiles(t *testing.T) {
