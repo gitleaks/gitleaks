@@ -11,3 +11,4 @@ a122b33c6bad3ee54724f52f2caad385ab1982ab 1b6da43b82b22e4eaa10bcf8ee591e91abbfc58
 f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897009 -0500	checkout: moving from foo to main
 2e1db472eeba53f06c4026ae4566ea022e36598e f1b58b97808f8e744f6a23c693859df5b5968901 Zach Rice <zricer@protonmail.com> 1635897062 -0500	checkout: moving from main to foo
 f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897508 -0500	checkout: moving from foo to main
+2e1db472eeba53f06c4026ae4566ea022e36598e bf3f24164d7256b4021575cbdb2f97b98e6f057e Rafael Figueiredo <rfigueiredo@garoa.cloud> 1679239434 -0300	commit: add .gitleaksignore file
