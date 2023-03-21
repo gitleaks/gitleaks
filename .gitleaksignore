@@ -750,3 +750,11 @@ acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220
 99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:512
 99d620c719020fa24baa831299f0c964da79875e:detect/detect_test.go:aws-access-token:513
 69f161c0a0cc0f7858f7d0609d656f4edcedd84c:detect/detect_test.go:discord-api-token:326
+9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:7
+9701bf1724d822c0d5bbb7627535dd639a37bf56:detect/detect_test.go:aws-access-token:505
+9701bf1724d822c0d5bbb7627535dd639a37bf56:detect/detect_test.go:aws-access-token:506
+9701bf1724d822c0d5bbb7627535dd639a37bf56:detect/detect_test.go:aws-access-token:507
+9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:6
+9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:7
+
+
