@@ -159,7 +159,7 @@ Flags:
       --redact                     redact secrets from logs and stdout
   -f, --report-format string       output format (json, csv, sarif) (default "json")
   -r, --report-path string         report file
-  -s, --source string              path to source (default: $PWD) (default ".")
+  -s, --source string              path to source (default ".")
   -v, --verbose                    show verbose output from scan
 
 Use "gitleaks [command] --help" for more information about a command.
