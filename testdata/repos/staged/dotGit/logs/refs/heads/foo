@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635896716 -0500	branch: Created from HEAD
+2e1db472eeba53f06c4026ae4566ea022e36598e 491504d5a31946ce75e22554cc34203d8e5ff3ca Zach Rice <zricer@protonmail.com> 1635896886 -0500	commit: adding foo package with secret
+491504d5a31946ce75e22554cc34203d8e5ff3ca f1b58b97808f8e744f6a23c693859df5b5968901 Zach Rice <zricer@protonmail.com> 1635896931 -0500	commit: removing secret from foo package
