@@ -8,6 +8,7 @@
 └─░───┘
 ```
 
+
 <p align="left">
   <p align="left">
 	  <a href="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml">
