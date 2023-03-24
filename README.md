@@ -16,9 +16,6 @@
 	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
 	  </a>
-	  <a href="https://www.jit.io/jit-open-source-gitleaks?utm_source=github&utm_medium=badge&utm_campaign=GitleaksReadme&utm_id=oss&items=item-secret-detection">
-<img src="https://img.shields.io/badge/Secured%20by-Jit-B8287F?style=?style=plastic" />
-	  </a>
 	  <a href="https://github.com/zricethezav/gitleaks-action">
         	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
     	 </a>
@@ -68,11 +65,11 @@ docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 
 # Docker (ghcr.io)
-docker pull ghcr.io/zricethezav/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker pull ghcr.io/gitleaks/gitleaks:latest
+docker run -v ${path_to_host_folder_to_scan}:/path gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 
 # From Source
-git clone https://github.com/zricethezav/gitleaks.git
+git clone https://github.com/gitleaks/gitleaks.git
 cd gitleaks
 make build
 ```
@@ -105,8 +102,8 @@ jobs:
 
    ```
    repos:
-     - repo: https://github.com/zricethezav/gitleaks
-       rev: v8.16.0
+     - repo: https://github.com/gitleaks/gitleaks
+       rev: v8.16.1
        hooks:
          - id: gitleaks
    ```
@@ -159,7 +156,7 @@ Flags:
       --redact                     redact secrets from logs and stdout
   -f, --report-format string       output format (json, csv, sarif) (default "json")
   -r, --report-path string         report file
-  -s, --source string              path to source (default: $PWD) (default ".")
+  -s, --source string              path to source (default ".")
   -v, --verbose                    show verbose output from scan
 
 Use "gitleaks [command] --help" for more information about a command.

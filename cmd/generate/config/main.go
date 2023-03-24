@@ -41,6 +41,7 @@ func main() {
 	configRules = append(configRules, rules.Contentful())
 	configRules = append(configRules, rules.Databricks())
 	configRules = append(configRules, rules.DatadogtokenAccessToken())
+	configRules = append(configRules, rules.DefinedNetworkingAPIToken())
 	configRules = append(configRules, rules.DigitalOceanPAT())
 	configRules = append(configRules, rules.DigitalOceanOAuthToken())
 	configRules = append(configRules, rules.DigitalOceanRefreshToken())

@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 Zach Rice <zricer@protonmail.com> 1635896329 -0500	clone: from github.com:gitleaks/test.git
+1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635896648 -0500	pull origin main: Fast-forward
+2e1db472eeba53f06c4026ae4566ea022e36598e bf3f24164d7256b4021575cbdb2f97b98e6f057e Rafael Figueiredo <rfigueiredo@garoa.cloud> 1679239434 -0300	commit: add .gitleaksignore file

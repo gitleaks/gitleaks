@@ -1,0 +1,14 @@
+0000000000000000000000000000000000000000 1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 Zach Rice <zricer@protonmail.com> 1635896329 -0500	clone: from github.com:gitleaks/test.git
+1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 Zach Rice <zricer@protonmail.com> 1635896362 -0500	checkout: moving from main to remove-secrets
+1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 906335481df9a4b48906c90318b4fac76b67fe73 Zach Rice <zricer@protonmail.com> 1635896426 -0500	commit: load token via env var
+906335481df9a4b48906c90318b4fac76b67fe73 a122b33c6bad3ee54724f52f2caad385ab1982ab Zach Rice <zricer@protonmail.com> 1635896518 -0500	commit: add api package
+a122b33c6bad3ee54724f52f2caad385ab1982ab a122b33c6bad3ee54724f52f2caad385ab1982ab Zach Rice <zricer@protonmail.com> 1635896543 -0500	checkout: moving from remove-secrets to api-pkg
+a122b33c6bad3ee54724f52f2caad385ab1982ab 1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 Zach Rice <zricer@protonmail.com> 1635896644 -0500	checkout: moving from api-pkg to main
+1b6da43b82b22e4eaa10bcf8ee591e91abbfc587 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635896648 -0500	pull origin main: Fast-forward
+2e1db472eeba53f06c4026ae4566ea022e36598e 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635896716 -0500	checkout: moving from main to foo
+2e1db472eeba53f06c4026ae4566ea022e36598e 491504d5a31946ce75e22554cc34203d8e5ff3ca Zach Rice <zricer@protonmail.com> 1635896886 -0500	commit: adding foo package with secret
+491504d5a31946ce75e22554cc34203d8e5ff3ca f1b58b97808f8e744f6a23c693859df5b5968901 Zach Rice <zricer@protonmail.com> 1635896931 -0500	commit: removing secret from foo package
+f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897009 -0500	checkout: moving from foo to main
+2e1db472eeba53f06c4026ae4566ea022e36598e f1b58b97808f8e744f6a23c693859df5b5968901 Zach Rice <zricer@protonmail.com> 1635897062 -0500	checkout: moving from main to foo
+f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897508 -0500	checkout: moving from foo to main
+2e1db472eeba53f06c4026ae4566ea022e36598e bf3f24164d7256b4021575cbdb2f97b98e6f057e Rafael Figueiredo <rfigueiredo@garoa.cloud> 1679239434 -0300	commit: add .gitleaksignore file

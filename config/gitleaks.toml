@@ -243,6 +243,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Defined Networking API token"
+id = "defined-networking-api-token"
+regex = '''(?i)(?:dnkey)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "dnkey",
+]
+
+[[rules]]
 description = "DigitalOcean OAuth Access Token"
 id = "digitalocean-access-token"
 regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
@@ -357,7 +366,7 @@ keywords = [
 [[rules]]
 description = "EasyPost API token"
 id = "easypost-api-token"
-regex = '''EZAK(?i)[a-z0-9]{54}'''
+regex = '''\bEZAK(?i)[a-z0-9]{54}'''
 keywords = [
     "ezak",
 ]
@@ -365,7 +374,7 @@ keywords = [
 [[rules]]
 description = "EasyPost test API token"
 id = "easypost-test-api-token"
-regex = '''EZTK(?i)[a-z0-9]{54}'''
+regex = '''\bEZTK(?i)[a-z0-9]{54}'''
 keywords = [
     "eztk",
 ]
@@ -380,7 +389,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Facebook"
+description = "Facebook Access Token"
 id = "facebook"
 regex = '''(?i)(?:facebook)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
@@ -2615,7 +2624,7 @@ keywords = [
 ]
 
 [[rules]]
-description = "Stripe"
+description = "Stripe Access Token"
 id = "stripe-access-token"
 regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
 keywords = [
