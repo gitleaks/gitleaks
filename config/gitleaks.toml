@@ -120,6 +120,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Authress Service Client Access Key"
+id = "authress-service-client-access-key"
+regex = '''(?i)\b((?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc_[a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "sc_","ext_","scauth_","authress_",
+]
+
+[[rules]]
 description = "AWS"
 id = "aws-access-token"
 regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
