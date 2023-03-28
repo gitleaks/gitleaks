@@ -27,6 +27,7 @@ func main() {
 	configRules = append(configRules, rules.AsanaClientID())
 	configRules = append(configRules, rules.AsanaClientSecret())
 	configRules = append(configRules, rules.Atlassian())
+	configRules = append(configRules, rules.Authress())
 	configRules = append(configRules, rules.AWS())
 	configRules = append(configRules, rules.BitBucketClientID())
 	configRules = append(configRules, rules.BitBucketClientSecret())
