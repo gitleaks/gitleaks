@@ -122,7 +122,14 @@ func printFinding(f report.Finding) {
 		Italic(true).
 		Foreground(lipgloss.Color("#f05c07"))
 	matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
+
+	lineEndIdx := matchInLineIDX + len(f.Match)
+	if len(f.Line)-1 <= lineEndIdx {
+		lineEndIdx = len(f.Line) - 1
+	}
+
 	lineEnd := f.Line[matchInLineIDX+len(f.Match):]
+
 	if len(f.Secret) > 100 {
 		secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
 			Bold(true).
