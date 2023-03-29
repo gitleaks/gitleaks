@@ -91,7 +91,7 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 	return retFindings
 }
 
-func printFinding(f report.Finding) {
+func printFinding(f report.Finding, noColor bool) {
 	// trim all whitespace and tabs from the line
 	f.Line = strings.TrimSpace(f.Line)
 	// trim all whitespace and tabs from the secret
@@ -104,7 +104,7 @@ func printFinding(f report.Finding) {
 
 	skipColor := false
 
-	if matchInLineIDX == -1 {
+	if matchInLineIDX == -1 || noColor {
 		skipColor = true
 		matchInLineIDX = 0
 	}
@@ -144,11 +144,12 @@ func printFinding(f report.Finding) {
 
 	if skipColor {
 		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
+		fmt.Printf("%-12s %s\n", "Secret:", f.Secret)
 	} else {
 		fmt.Printf("%-12s %s", "Finding:", finding)
+		fmt.Printf("%-12s %s\n", "Secret:", secret)
 	}
 
-	fmt.Printf("%-12s %s\n", "Secret:", secret)
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
 	if f.File == "" {
