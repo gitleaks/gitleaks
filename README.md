@@ -152,6 +152,7 @@ Flags:
   -h, --help                       help for gitleaks
   -l, --log-level string           log level (trace, debug, info, warn, error, fatal) (default "info")
       --max-target-megabytes int   files larger than this will be skipped
+      --no-color                   turn off color for verbose output
       --no-banner                  suppress banner
       --redact                     redact secrets from logs and stdout
   -f, --report-format string       output format (json, csv, sarif) (default "json")
