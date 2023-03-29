@@ -45,6 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
+	rootCmd.PersistentFlags().BoolP("no-color", "", false, "turn off color in verbose output")
 	rootCmd.PersistentFlags().Int("max-target-megabytes", 0, "files larger than this will be skipped")
 	rootCmd.PersistentFlags().Bool("redact", false, "redact secrets from logs and stdout")
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")

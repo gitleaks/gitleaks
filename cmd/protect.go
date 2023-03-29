@@ -69,6 +69,10 @@ func runProtect(cmd *cobra.Command, args []string) {
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+	// set color flag
+	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {
 		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {

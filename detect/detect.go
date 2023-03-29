@@ -57,6 +57,9 @@ type Detector struct {
 	// followSymlinks is a flag to enable scanning symlink files
 	FollowSymlinks bool
 
+	// NoColor is a flag to disable color output
+	NoColor bool
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -536,7 +539,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 		for _, finding := range d.Detect(fragment) {
 			findings = append(findings, finding)
 			if d.Verbose {
-				printFinding(finding)
+				printFinding(finding, d.NoColor)
 			}
 		}
 	}
@@ -610,7 +613,7 @@ func (d *Detector) addFinding(finding report.Finding) {
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
 	if d.Verbose {
-		printFinding(finding)
+		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
 }
