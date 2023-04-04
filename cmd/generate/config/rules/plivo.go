@@ -1,24 +1,27 @@
 package rules
 
 import (
-	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func Plivo() *config.Rule {
+func PlivoAuthID() *config.Rule {
 	// define rule
 	r := config.Rule{
 		Description: "Plivo Auth ID",
 		RuleID:      "plivo-auth-id",
-		Regex:       regexp.MustCompile(`[SM]{1}A[0-9A-Za-z]{18}`),
-		Keywords:    []string{"plivo"},
+		Regex:       generateSemiGenericRegex([]string{"plivo", "plivo_auth_id"}, "[SM]{1}A[0-9A-Za-z]{18}"),
+		SecretGroup: 1,
+		Keywords:    []string{"plivo", "plivo_auth_id"},
 	}
 
 	// validate
 	tps := []string{
-		"plivoAuthID := \"MA" + secrets.NewSecret(hex("18")) + "\"",
+		generateSampleSecret("PLIVO_AUTH_ID", "MAWHJMELDNYIHEMCIWLD"),
+		generateSampleSecret("PLIVO_AUTH_ID", "SAWHJMELDNYIHEMCIWLD"),
+		generateSampleSecret("plivo_auth_id", "MAWHJMELDNYIHEMCIWLD"),
+		generateSampleSecret("plivo_auth_id", "SAWHJMELDNYIHEMCIWLD"),
+		generateSampleSecret("plivo", "MAWHJMELDNYIHEMCIWLD"),
+		generateSampleSecret("plivo", "SAWHJMELDNYIHEMCIWLD"),
 	}
 	return validate(r, tps, nil)
 }

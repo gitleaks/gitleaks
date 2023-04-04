@@ -489,9 +489,6 @@ keywords = [
     "key","api","token","secret","client","passwd","password","auth","access",
 ]
 [rules.allowlist]
-paths = [
-  '''Database.refactorlog'''
-]
 stopwords= [
     "client",
     "endpoint",
@@ -2409,9 +2406,10 @@ keywords = [
 [[rules]]
 description = "Plivo Auth ID"
 id = "plivo-auth-id"
-regex = '''[SM]{1}A[0-9A-Za-z]{18}'''
+regex = '''(?i)(?:plivo|plivo_auth_id)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([SM]{1}A[0-9A-Za-z]{18})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
 keywords = [
-    "plivo",
+    "plivo","plivo_auth_id",
 ]
 
 [[rules]]
