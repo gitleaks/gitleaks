@@ -182,7 +182,7 @@ You can scan files and directories by using the `--no-git` option.
 
 #### Protect
 
-The `protect` command is used to uncommitted changes in a git repo. This command should be used on developer machines in accordance with
+The `protect` command is used to scan uncommitted changes in a git repo. This command should be used on developer machines in accordance with
 [shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security).
 When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed
 [here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the
