@@ -107,7 +107,7 @@ func printFinding(f report.Finding, noColor bool) {
 		matchInLineIDX := strings.Index(f.Line, f.Match)
 		secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
-		skipColor := false
+		skipColor = false
 
 		if matchInLineIDX == -1 || noColor {
 			skipColor = true
@@ -145,7 +145,7 @@ func printFinding(f report.Finding, noColor bool) {
 			lineEnd = lineEnd[0:20] + "..."
 		}
 
-		finding := fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
+		finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
 	}
 
 	if skipColor || isFileMatch {
