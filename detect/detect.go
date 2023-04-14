@@ -287,6 +287,17 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
+		// extract secret from secret group if set
+		if rule.SecretGroup != 0 {
+			groups := rule.Regex.FindStringSubmatch(secret)
+			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
+				// Config validation should prevent this
+				continue
+			}
+			secret = groups[rule.SecretGroup]
+			finding.Secret = secret
+		}
+
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		allowlistTarget := finding.Secret
 		switch rule.Allowlist.RegexTarget {
@@ -306,17 +317,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
 			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
 			continue
-		}
-
-		// extract secret from secret group if set
-		if rule.SecretGroup != 0 {
-			groups := rule.Regex.FindStringSubmatch(secret)
-			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
-				// Config validation should prevent this
-				continue
-			}
-			secret = groups[rule.SecretGroup]
-			finding.Secret = secret
 		}
 
 		// check if the secret is in the list of stopwords
