@@ -98,9 +98,9 @@ func printFinding(f report.Finding, noColor bool) {
 	f.Match = strings.TrimSpace(f.Match)
 
 	isFileMatch := strings.HasPrefix(f.Match, "file detected:")
-	skipColor := !noColor
+	skipColor := noColor
 	finding := ""
-	secret := ""
+	var secret lipgloss.Style
 	
 	// Matches from filenames do not have a |line| or |secret|
 	if !isFileMatch {
@@ -122,7 +122,7 @@ func printFinding(f report.Finding, noColor bool) {
 		}
 
 		matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
-		secret := lipgloss.NewStyle().SetString(f.Secret).
+		secret = lipgloss.NewStyle().SetString(f.Secret).
 			Bold(true).
 			Italic(true).
 			Foreground(lipgloss.Color("#f05c07"))
