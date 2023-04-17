@@ -133,7 +133,7 @@ func printFinding(f report.Finding, noColor bool) {
 			lineEndIdx = len(f.Line) - 1
 		}
 
-		lineEnd := f.Line[matchInLineIDX+len(f.Match):]
+		lineEnd := f.Line[lineEndIdx:]
 
 		if len(f.Secret) > 100 {
 			secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
