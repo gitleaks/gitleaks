@@ -157,7 +157,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	// https://github.com/securego/gosec/issues/512
 	defer func() {
 		if err := file.Close(); err != nil { 
-			logger.Printf("Error closing .gitleaksignore file: %s\n", err)
+			log.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
 		}
     }()
 	scanner := bufio.NewScanner(file)
