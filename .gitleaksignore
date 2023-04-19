@@ -716,6 +716,9 @@ testdata/expected/git/small-branch-foo.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:44
 testdata/repos/nogit/main.go:aws-access-token:20
+testdata/repos/nogit/api.go:aws-access-token:20
+testdata/repos/small/api/ignoreCommit.go:aws-access-token:20
+testdata/repos/small/api/ignoreGlobal.go:aws-access-token:20
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:513
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:492
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:414

@@ -147,7 +147,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	log.Debug().Msg("found .gitleaksignore file")
+	log.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
 	file, err := os.Open(gitleaksIgnorePath)
 
 	if err != nil {
@@ -593,16 +593,25 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
-	if finding.Commit == "" {
-		finding.Fingerprint = fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
-	} else {
+	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+	if finding.Commit != "" {
 		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
+	} else {
+		finding.Fingerprint = globalFingerprint
 	}
+
 	// check if we should ignore this finding
-	if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with Fingerprint %s",
+	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+		log.Debug().Msgf("ignoring finding with global Fingerprint %s",
 			finding.Fingerprint)
 		return
+	} else if finding.Commit != "" {
+		// Awkward nested if because I'm not sure how to chain these two conditions.
+		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+			log.Debug().Msgf("ignoring finding with Fingerprint %s",
+				finding.Fingerprint)
+			return
+		}
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.baseline) {
