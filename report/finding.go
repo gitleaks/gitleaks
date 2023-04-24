@@ -21,6 +21,9 @@ type Finding struct {
 	// the tree-sitter query.
 	Secret string
 
+	// Unique non sensitive to share hash of secret
+	SecretSHA string
+
 	// File is the name of the file containing the finding
 	File        string
 	SymlinkFile string
