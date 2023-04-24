@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,12 +17,27 @@ var ErrEncountered bool
 
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
+var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
 		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
-		args = append(args, strings.Split(logOpts, " ")...)
+
+		// Ensure that the user-provided |logOpts| aren't wrapped in quotes.
+		// https://github.com/gitleaks/gitleaks/issues/1153
+		userArgs := strings.Split(logOpts, " ")
+		var quotedOpts []string
+		for _, element := range userArgs {
+			if quotedOptPattern.MatchString(element) {
+				quotedOpts = append(quotedOpts, element)
+			}
+		}
+		if len(quotedOpts) > 0 {
+			log.Warn().Msgf("the following `--log-opts` values may not work as expected: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
+		}
+
+		args = append(args, userArgs...)
 		cmd = exec.Command("git", args...)
 	} else {
 		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
