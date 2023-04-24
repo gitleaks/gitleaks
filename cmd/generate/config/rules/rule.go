@@ -75,7 +75,7 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	}
 	for _, fp := range falsePositives {
 		if len(d.DetectString(fp)) != 0 {
-			log.Fatal().Msgf("Failed to validate (fp) [%s]", r.RuleID)
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], false positive [%s] was detected by regexp [%s]", r.RuleID, fp, r.Regex)
 		}
 	}
 	return &r
