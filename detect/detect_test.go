@@ -240,6 +240,14 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
+			cfgName: "generic",
+			fragment: Fragment{
+				Raw:      `env(JWT_PASSPHRASE): 'MyAw$s0m3P4ssphr4s3'`,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{},
+		},
+		{
 			cfgName: "generic_with_py_path",
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
