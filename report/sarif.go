@@ -10,7 +10,7 @@ import (
 
 func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
 	sarif := Sarif{
-		Schema:  "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+		Schema:  "https://json.schemastore.org/sarif-2.1.0.json",
 		Version: "2.1.0",
 		Runs:    getRuns(cfg, findings),
 	}
@@ -34,6 +34,7 @@ func getTool(cfg config.Config) Tool {
 		Driver: Driver{
 			Name:            driver,
 			SemanticVersion: version,
+			InformationUri:  "https://github.com/gitleaks/gitleaks",
 			Rules:           getRules(cfg),
 		},
 	}
@@ -164,6 +165,7 @@ type Rules struct {
 type Driver struct {
 	Name            string  `json:"name"`
 	SemanticVersion string  `json:"semanticVersion"`
+	InformationUri  string  `json:"informationUri"`
 	Rules           []Rules `json:"rules"`
 }
 
