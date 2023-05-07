@@ -4,7 +4,7 @@ import (
   "github.com/zricethezav/gitleaks/v8/config"
 )
 
-func Beamer() *config.Rule {
+func OpenAI() *config.Rule {
     // Define Rule
     r := config.Rule{
         Description: "Open AI token",
