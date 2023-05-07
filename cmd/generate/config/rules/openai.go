@@ -17,7 +17,7 @@ func OpenAI() *config.Rule {
 
     // validate
     tps := []string{
-        generateSampleSecret("OpenAI", "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")),
+        generateSampleSecret("OpenAI", "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"),
     }
     return validate(r, tps, nil)
 }
