@@ -116,6 +116,7 @@ func main() {
 	configRules = append(configRules, rules.NPM())
 	configRules = append(configRules, rules.NytimesAccessToken())
 	configRules = append(configRules, rules.OktaAccessToken())
+	configRules = append(configRules, rules.OpenAI())
 	configRules = append(configRules, rules.PlaidAccessID())
 	configRules = append(configRules, rules.PlaidSecretKey())
 	configRules = append(configRules, rules.PlaidAccessToken())
@@ -166,7 +167,7 @@ func main() {
 	configRules = append(configRules, rules.YandexAWSAccessToken())
 	configRules = append(configRules, rules.YandexAccessToken())
 	configRules = append(configRules, rules.ZendeskSecretKey())
-	configRules = append(configRules, rules.GenericCredential())
+	configRules = append(configRules, rules.GenericCredential()
 
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule)
