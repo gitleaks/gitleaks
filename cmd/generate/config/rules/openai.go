@@ -1,3 +1,5 @@
+package rules
+
 import (
   "regexp"
   
