@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"strconv"
+	"strings"
 )
 
 // writeCsv writes the list of findings to a writeCloser.
@@ -28,6 +29,7 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 		"Date",
 		"Email",
 		"Fingerprint",
+		"Tags",
 	})
 	if err != nil {
 		return err
@@ -48,6 +50,7 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 			f.Date,
 			f.Email,
 			f.Fingerprint,
+			strings.Join(f.Tags, " "),
 		})
 		if err != nil {
 			return err

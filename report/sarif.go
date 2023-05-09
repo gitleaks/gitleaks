@@ -103,6 +103,9 @@ func getResults(findings []Finding) []Results {
 				Date:          f.Date,
 				Author:        f.Author,
 			},
+			Properties: Properties{
+				Tags: f.Tags,
+			},
 		}
 		results = append(results, r)
 	}
@@ -202,11 +205,16 @@ type Locations struct {
 	PhysicalLocation PhysicalLocation `json:"physicalLocation"`
 }
 
+type Properties struct {
+	Tags []string `json:"tags"`
+}
+
 type Results struct {
 	Message             Message     `json:"message"`
 	RuleId              string      `json:"ruleId"`
 	Locations           []Locations `json:"locations"`
 	PartialFingerPrints `json:"partialFingerprints"`
+	Properties          Properties `json:"properties"`
 }
 
 type Runs struct {
