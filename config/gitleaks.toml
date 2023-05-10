@@ -2372,6 +2372,14 @@ keywords = [
 ]
 
 [[rules]]
+description = "Open AI token"
+id = "open-ai-token"
+regex = '''(sk-)[a-zA-Z0-9]{48}'''
+keywords = [
+    "sk-",
+]
+
+[[rules]]
 description = "Plaid API Token"
 id = "plaid-api-token"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
