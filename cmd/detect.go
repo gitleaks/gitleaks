@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -20,6 +21,7 @@ func init() {
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
 	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
 	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
+	detectCmd.Flags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
 
 }
 
@@ -94,6 +96,21 @@ func runDetect(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
 		}
+	}
+
+	// If set, only apply rules that are defined in the flag
+	rules, _ := cmd.Flags().GetStringSlice("enable-rule")
+	if len(rules) > 0 {
+		log.Info().Msg("Overriding enabled rules: " + strings.Join(rules, ", "))
+		ruleOverride := make(map[string]config.Rule)
+		for _, ruleName := range rules {
+			if rule, ok := cfg.Rules[ruleName]; ok {
+				ruleOverride[ruleName] = rule
+			} else {
+				log.Fatal().Msgf("Requested rule %s not found in rules", ruleName)
+			}
+		}
+		detector.Config.Rules = ruleOverride
 	}
 
 	// set follow symlinks flag
