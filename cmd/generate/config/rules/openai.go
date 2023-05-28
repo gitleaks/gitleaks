@@ -13,7 +13,6 @@ func OpenAI() *config.Rule {
 		Regex:       generateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`),
 		SecretGroup: 1,
 		Keywords: []string{
-			"sk-",
 			"T3BlbkFJ",
 		},
 	}
