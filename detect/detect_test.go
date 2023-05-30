@@ -23,7 +23,7 @@ func TestDetect(t *testing.T) {
 		fragment     Fragment
 		// NOTE: for expected findings, all line numbers will be 0
 		// because line deltas are added _after_ the finding is created.
-		// I.e, if the finding is from a --no-git file, the line number will be
+		// I.e., if the finding is from a --no-git file, the line number will be
 		// increase by 1 in DetectFromFiles(). If the finding is from git,
 		// the line number will be increased by the patch delta.
 		expectedFindings []report.Finding

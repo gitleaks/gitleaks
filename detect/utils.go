@@ -74,7 +74,7 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 
 					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
 					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
-					log.Trace().Msgf("skipping %s finding (%s), %s rule takes precendence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
+					log.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
 					include = false
 					break
 				}
