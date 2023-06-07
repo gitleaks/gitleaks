@@ -1986,6 +1986,7 @@ stopwords= [
     "branch",
     "combination",
     "combo",
+    "REDACTED",
 ]
 [[rules]]
 description = "GitHub App Token"
