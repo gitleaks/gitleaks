@@ -10,13 +10,15 @@ func Snyk() *config.Rule {
 		Description: "Snyk API token",
 		RuleID:      "snyk-api-token",
 		SecretGroup: 1,
-		Regex:       generateSemiGenericRegex([]string{"snyk_token"}, hex8_4_4_4_12()),
-		Keywords:    []string{"snyk_token"},
+		Regex:       generateSemiGenericRegex([]string{"snyk"}, hex8_4_4_4_12()),
+		Keywords:    []string{"snyk"},
 	}
 
 	// validate
 	tps := []string{
 		`const SNYK_TOKEN = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
+		`const SNYK_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,   // gitleaks:allow
+		`const SNYK = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,       // gitleaks:allow
 	}
 	return validate(r, tps, nil)
 }
