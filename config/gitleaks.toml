@@ -1986,7 +1986,6 @@ stopwords= [
     "branch",
     "combination",
     "combo",
-    "REDACTED",
 ]
 [[rules]]
 description = "GitHub App Token"
@@ -2614,6 +2613,15 @@ id = "slack-web-hook"
 regex = '''https:\/\/hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{44,46}'''
 keywords = [
     "hooks.slack.com",
+]
+
+[[rules]]
+description = "Snyk API token"
+id = "snyk-api-token"
+regex = '''(?i)(?:snyk)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "snyk",
 ]
 
 [[rules]]
