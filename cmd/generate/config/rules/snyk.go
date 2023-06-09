@@ -19,6 +19,11 @@ func Snyk() *config.Rule {
 		`const SNYK_TOKEN = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 		`const SNYK_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,   // gitleaks:allow
 		`const SNYK = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,       // gitleaks:allow
+		`SNYK = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,             // gitleaks:allow
+		`SNYK_TOKEN := "12345678-ABCD-ABCD-ABCD-1234567890AB"`,      // gitleaks:allow
+		`SNYK_TOKEN ::= "12345678-ABCD-ABCD-ABCD-1234567890AB"`,     // gitleaks:allow
+		`SNYK_TOKEN :::= "12345678-ABCD-ABCD-ABCD-1234567890AB"`,    // gitleaks:allow
+		`SNYK_TOKEN ?= "12345678-ABCD-ABCD-ABCD-1234567890AB"`,      // gitleaks:allow
 	}
 	return validate(r, tps, nil)
 }
