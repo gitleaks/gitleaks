@@ -19,7 +19,7 @@ const (
 	identifierSuffix = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
-	operator = `(?:=|>|:=|\|\|:|<=|=>|:)`
+	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
 
 	// boundaries for the secret
 	// \x60 = `
