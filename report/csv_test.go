@@ -1,6 +1,7 @@
 package report
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,42 +46,35 @@ func TestWriteCSV(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".csv"))
+		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".csv"))
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		err = writeCsv(test.findings, tmpfile)
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		got, err := os.ReadFile(tmpfile.Name())
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		if test.wantEmpty {
 			if len(got) > 0 {
 				t.Errorf("Expected empty file, got %s", got)
 			}
-			os.Remove(tmpfile.Name())
 			continue
 		}
 		want, err := os.ReadFile(test.expected)
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 
-		if string(got) != string(want) {
+		if !bytes.Equal(got, want) {
 			err = os.WriteFile(strings.Replace(test.expected, ".csv", ".got.csv", 1), got, 0644)
 			if err != nil {
 				t.Error(err)
 			}
 			t.Errorf("got %s, want %s", string(got), string(want))
 		}
-
-		os.Remove(tmpfile.Name())
 	}
 }

@@ -272,7 +272,7 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 title = "Gitleaks title"
 
 # Extend the base (this) configuration. When you extend a configuration
-# the base rules take precendence over the extended rules. I.e, if there are
+# the base rules take precedence over the extended rules. I.e., if there are
 # duplicate rules in both the base configuration and the extended configuration
 # the base rules will override the extended rules.
 # Another thing to know with extending configurations is you can chain together

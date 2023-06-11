@@ -145,6 +145,7 @@ func main() {
 	configRules = append(configRules, rules.SidekiqSensitiveUrl())
 	configRules = append(configRules, rules.SlackAccessToken())
 	configRules = append(configRules, rules.SlackWebHook())
+	configRules = append(configRules, rules.Snyk())
 	configRules = append(configRules, rules.StripeAccessToken())
 	configRules = append(configRules, rules.SquareAccessToken())
 	configRules = append(configRules, rules.SquareSpaceAccessToken())

@@ -14,6 +14,7 @@ func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
 		Version: "2.1.0",
 		Runs:    getRuns(cfg, findings),
 	}
+	defer w.Close()
 
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")

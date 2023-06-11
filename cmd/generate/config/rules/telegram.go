@@ -28,9 +28,9 @@ func TelegramBotToken() *config.Rule {
 	minToken := secrets.NewSecret(numeric("5") + ":A" + alphaNumericExtendedShort("34"))
 	maxToken := secrets.NewSecret(numeric("16") + ":A" + alphaNumericExtendedShort("34"))
 	tps := []string{
-		// variable assigment
+		// variable assignment
 		generateSampleSecret("telegram", validToken),
-		// URL contaning token
+		// URL containing token
 		generateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
 		`const bot = new Telegraf("` + validToken + `")`,
