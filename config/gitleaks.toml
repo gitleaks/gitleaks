@@ -2374,7 +2374,8 @@ keywords = [
 [[rules]]
 description = "Open AI token"
 id = "open-ai-token"
-regex = '''(sk-)[a-zA-Z0-9]{48}'''
+regex = '''(sk-)[a-zA-Z0-9]{20}(T3BlbkFJ)[a-zA-Z0-9]{20}'''
+secretGroup = 1
 keywords = [
     "sk-",
 ]
