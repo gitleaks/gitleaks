@@ -716,6 +716,9 @@ testdata/expected/git/small-branch-foo.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:15
 testdata/expected/git/small.txt:aws-access-token:44
 testdata/repos/nogit/main.go:aws-access-token:20
+testdata/repos/nogit/api.go:aws-access-token:20
+testdata/repos/small/api/ignoreCommit.go:aws-access-token:20
+testdata/repos/small/api/ignoreGlobal.go:aws-access-token:20
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:513
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:492
 3df8c3deb7bc1e34210bdbce114f1c6165bc6ac8:detect/detect_test.go:aws-access-token:414
@@ -756,5 +759,7 @@ acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220
 9701bf1724d822c0d5bbb7627535dd639a37bf56:detect/detect_test.go:aws-access-token:507
 9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:6
 9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:7
-
+adf617b3b4628e1160fa3d135b4c3dfd45c05e15:testdata/repos/nogit/api.go:aws-access-token:20
+adf617b3b4628e1160fa3d135b4c3dfd45c05e15:testdata/repos/small/api/ignoreGlobal.go:aws-access-token:20
+adf617b3b4628e1160fa3d135b4c3dfd45c05e15:testdata/repos/small/api/ignoreCommit.go:aws-access-token:20
 

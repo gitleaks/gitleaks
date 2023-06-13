@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -474,6 +475,22 @@ func TestFromGit(t *testing.T) {
 			t.Error(err)
 		}
 		detector := NewDetector(cfg)
+
+		var ignorePath string
+		info, err := os.Stat(tt.source)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+
+		if info.IsDir() {
+			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+		} else {
+			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+		}
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
 		if err != nil {
 			t.Error(err)
@@ -554,7 +571,9 @@ func TestFromGitStaged(t *testing.T) {
 			t.Error(err)
 		}
 		detector := NewDetector(cfg)
-		detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
+		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore")); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
 		if err != nil {
 			t.Error(err)
@@ -617,6 +636,11 @@ func TestFromFiles(t *testing.T) {
 				},
 			},
 		},
+		{
+			source:           filepath.Join(repoBasePath, "nogit", "api.go"),
+			cfgName:          "simple",
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -635,6 +659,21 @@ func TestFromFiles(t *testing.T) {
 		}
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
+
+		var ignorePath string
+		info, err := os.Stat(tt.source)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+
+		if info.IsDir() {
+			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+		} else {
+			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+		}
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
 		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
 		if err != nil {
