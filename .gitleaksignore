@@ -756,5 +756,12 @@ acce01f2338434a78f6a4a06a097b0fd23280484:README.md:aws-access-token:220
 9701bf1724d822c0d5bbb7627535dd639a37bf56:detect/detect_test.go:aws-access-token:507
 9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:6
 9701bf1724d822c0d5bbb7627535dd639a37bf56:testdata/repos/staged/api/api.go:aws-access-token:7
+91ff8f9b7020a16dac9b8b9ef98560ea1cb464f8:testdata/repos/small/api/ignoreCommit.go:aws-access-token:20
+91ff8f9b7020a16dac9b8b9ef98560ea1cb464f8:testdata/repos/small/api/ignoreGlobal.go:aws-access-token:20
+91ff8f9b7020a16dac9b8b9ef98560ea1cb464f8:testdata/repos/nogit/api.go:aws-access-token:20
+
+
+
+
 
 
