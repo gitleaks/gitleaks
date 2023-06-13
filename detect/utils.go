@@ -101,7 +101,7 @@ func printFinding(f report.Finding, noColor bool) {
 	skipColor := noColor
 	finding := ""
 	var secret lipgloss.Style
-	
+
 	// Matches from filenames do not have a |line| or |secret|
 	if !isFileMatch {
 		matchInLineIDX := strings.Index(f.Line, f.Match)

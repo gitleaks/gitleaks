@@ -65,7 +65,7 @@ func TestWriteJunit(t *testing.T) {
 
 	for _, test := range tests {
 		// create tmp file using os.TempDir()
-		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".xml"))
+		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".xml"))
 		if err != nil {
 			os.Remove(tmpfile.Name())
 			t.Error(err)

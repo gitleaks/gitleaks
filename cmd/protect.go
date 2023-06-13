@@ -17,7 +17,7 @@ import (
 func init() {
 	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
 	protectCmd.Flags().String("log-opts", "", "git log options")
-	protectCmd.Flags().StringP("gitleaks-ignore-path","i",".","path to .gitleaksignore file or folder containing one")
+	protectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.AddCommand(protectCmd)
 }
 
@@ -75,7 +75,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("")
 	}
 
-	gitleaksIgnorePath, err:= cmd.Flags().GetString("gitleaks-ignore-path")
+	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not get .gitleaksignore path")
 	}
