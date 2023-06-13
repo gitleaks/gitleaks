@@ -157,7 +157,7 @@ Flags:
       --no-color                   turn off color for verbose output
       --no-banner                  suppress banner
       --redact                     redact secrets from logs and stdout
-  -f, --report-format string       output format (json, csv, sarif) (default "json")
+  -f, --report-format string       output format (json, csv, junit, sarif) (default "json")
   -r, --report-path string         report file
   -s, --source string              path to source (default ".")
   -v, --verbose                    show verbose output from scan
