@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+	<testsuite failures="2" name="gitleaks" tests="2" time="">
+		<testcase classname="Test Rule" file="auth.py" name="test-rule has detected a secret in file auth.py, line 1, at commit 0000000000000000." time="">
+			<failure message="test-rule has detected a secret in file auth.py, line 1, at commit 0000000000000000." type="Test Rule">{&#xA;&#x9;&#34;Description&#34;: &#34;Test Rule&#34;,&#xA;&#x9;&#34;StartLine&#34;: 1,&#xA;&#x9;&#34;EndLine&#34;: 2,&#xA;&#x9;&#34;StartColumn&#34;: 1,&#xA;&#x9;&#34;EndColumn&#34;: 2,&#xA;&#x9;&#34;Match&#34;: &#34;line containing secret&#34;,&#xA;&#x9;&#34;Secret&#34;: &#34;a secret&#34;,&#xA;&#x9;&#34;File&#34;: &#34;auth.py&#34;,&#xA;&#x9;&#34;SymlinkFile&#34;: &#34;&#34;,&#xA;&#x9;&#34;Commit&#34;: &#34;0000000000000000&#34;,&#xA;&#x9;&#34;Entropy&#34;: 0,&#xA;&#x9;&#34;Author&#34;: &#34;John Doe&#34;,&#xA;&#x9;&#34;Email&#34;: &#34;johndoe@gmail.com&#34;,&#xA;&#x9;&#34;Date&#34;: &#34;10-19-2003&#34;,&#xA;&#x9;&#34;Message&#34;: &#34;opps&#34;,&#xA;&#x9;&#34;Tags&#34;: [],&#xA;&#x9;&#34;RuleID&#34;: &#34;test-rule&#34;,&#xA;&#x9;&#34;Fingerprint&#34;: &#34;&#34;&#xA;}</failure>
+		</testcase>
+		<testcase classname="Test Rule" file="auth.py" name="test-rule has detected a secret in file auth.py, line 2." time="">
+			<failure message="test-rule has detected a secret in file auth.py, line 2." type="Test Rule">{&#xA;&#x9;&#34;Description&#34;: &#34;Test Rule&#34;,&#xA;&#x9;&#34;StartLine&#34;: 2,&#xA;&#x9;&#34;EndLine&#34;: 3,&#xA;&#x9;&#34;StartColumn&#34;: 1,&#xA;&#x9;&#34;EndColumn&#34;: 2,&#xA;&#x9;&#34;Match&#34;: &#34;line containing secret&#34;,&#xA;&#x9;&#34;Secret&#34;: &#34;a secret&#34;,&#xA;&#x9;&#34;File&#34;: &#34;auth.py&#34;,&#xA;&#x9;&#34;SymlinkFile&#34;: &#34;&#34;,&#xA;&#x9;&#34;Commit&#34;: &#34;&#34;,&#xA;&#x9;&#34;Entropy&#34;: 0,&#xA;&#x9;&#34;Author&#34;: &#34;&#34;,&#xA;&#x9;&#34;Email&#34;: &#34;&#34;,&#xA;&#x9;&#34;Date&#34;: &#34;&#34;,&#xA;&#x9;&#34;Message&#34;: &#34;&#34;,&#xA;&#x9;&#34;Tags&#34;: [],&#xA;&#x9;&#34;RuleID&#34;: &#34;test-rule&#34;,&#xA;&#x9;&#34;Fingerprint&#34;: &#34;&#34;&#xA;}</failure>
+		</testcase>
+	</testsuite>
+</testsuites>
