@@ -3,6 +3,7 @@ package detect
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/fs"
@@ -272,6 +273,9 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			loc.endLineIndex = matchIndex[1]
 		}
 
+		// Calculate the SHA256 hash sum of secret
+		secretSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(secret)))
+
 		finding := report.Finding{
 			Description: rule.Description,
 			File:        fragment.FilePath,
@@ -282,6 +286,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Secret:      secret,
+			SecretSHA:   secretSHA,
 			Match:       secret,
 			Tags:        rule.Tags,
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
@@ -301,6 +306,9 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			}
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
+			// Calculate the SHA256 hash sum of secret
+			secretSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(secret)))
+			finding.SecretSHA = secretSHA
 		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry

@@ -156,6 +156,7 @@ func printFinding(f report.Finding, noColor bool) {
 		fmt.Printf("%-12s %s\n", "Secret:", secret)
 	}
 
+	fmt.Printf("%-12s %s\n", "SecretSHA:", f.SecretSHA)
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
 	if f.File == "" {

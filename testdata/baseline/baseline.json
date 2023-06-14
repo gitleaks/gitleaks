@@ -7,6 +7,7 @@
   "EndColumn": 106,
   "Match": "************************",
   "Secret": "************************",
+  "SecretSHA": "************************",
   "File": "detect/detect_test.go",
   "Commit": "9326f35380636bcbe61e94b0584d1618c4b5c2c2",
   "Entropy": 1.9606875,

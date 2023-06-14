@@ -23,6 +23,7 @@ func TestWriteCSV(t *testing.T) {
 					RuleID:      "test-rule",
 					Match:       "line containing secret",
 					Secret:      "a secret",
+					SecretSHA:   "984ca5162200734c592148f1820b71057f098573d138666b48663e4e30cd8d3a",
 					StartLine:   1,
 					EndLine:     2,
 					StartColumn: 1,
