@@ -35,6 +35,7 @@ func TestWriteCSV(t *testing.T) {
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
 					Fingerprint: "fingerprint",
+					Tags:        []string{"tag1", "tag2", "tag3"},
 				},
 			}},
 		{

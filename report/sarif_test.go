@@ -43,7 +43,7 @@ func TestWriteSarif(t *testing.T) {
 					Author:      "John Doe",
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
-					Tags:        []string{},
+					Tags:        []string{"tag1", "tag2", "tag3"},
 				},
 			}},
 	}
