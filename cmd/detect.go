@@ -22,7 +22,7 @@ func init() {
 	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
 	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	detectCmd.Flags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
-
+	detectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 }
 
 var detectCmd = &cobra.Command{
@@ -81,6 +81,23 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// set color flag
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
 		log.Fatal().Err(err).Msg("")
+	}
+
+	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get .gitleaksignore path")
+	}
+
+	if fileExists(gitleaksIgnorePath) {
+		if err = detector.AddGitleaksIgnore(gitleaksIgnorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+	}
+
+	if fileExists(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")) {
+		if err = detector.AddGitleaksIgnore(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
 	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {

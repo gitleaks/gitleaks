@@ -17,6 +17,7 @@ import (
 func init() {
 	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
 	protectCmd.Flags().String("log-opts", "", "git log options")
+	protectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.AddCommand(protectCmd)
 }
 
@@ -72,6 +73,23 @@ func runProtect(cmd *cobra.Command, args []string) {
 	// set color flag
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
 		log.Fatal().Err(err).Msg("")
+	}
+
+	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get .gitleaksignore path")
+	}
+
+	if fileExists(gitleaksIgnorePath) {
+		if err = detector.AddGitleaksIgnore(gitleaksIgnorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+	}
+
+	if fileExists(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")) {
+		if err = detector.AddGitleaksIgnore(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
 	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {

@@ -68,7 +68,7 @@ docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [
 
 # Docker (ghcr.io)
 docker pull ghcr.io/gitleaks/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
 
 # From Source
 git clone https://github.com/gitleaks/gitleaks.git
@@ -157,7 +157,7 @@ Flags:
       --no-color                   turn off color for verbose output
       --no-banner                  suppress banner
       --redact                     redact secrets from logs and stdout
-  -f, --report-format string       output format (json, csv, sarif) (default "json")
+  -f, --report-format string       output format (json, csv, junit, sarif) (default "json")
   -r, --report-path string         report file
   -s, --source string              path to source (default ".")
   -v, --verbose                    show verbose output from scan
@@ -272,7 +272,7 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 title = "Gitleaks title"
 
 # Extend the base (this) configuration. When you extend a configuration
-# the base rules take precendence over the extended rules. I.e, if there are
+# the base rules take precedence over the extended rules. I.e., if there are
 # duplicate rules in both the base configuration and the extended configuration
 # the base rules will override the extended rules.
 # Another thing to know with extending configurations is you can chain together

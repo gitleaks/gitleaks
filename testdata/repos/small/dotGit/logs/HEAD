@@ -11,3 +11,7 @@ a122b33c6bad3ee54724f52f2caad385ab1982ab 1b6da43b82b22e4eaa10bcf8ee591e91abbfc58
 f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897009 -0500	checkout: moving from foo to main
 2e1db472eeba53f06c4026ae4566ea022e36598e f1b58b97808f8e744f6a23c693859df5b5968901 Zach Rice <zricer@protonmail.com> 1635897062 -0500	checkout: moving from main to foo
 f1b58b97808f8e744f6a23c693859df5b5968901 2e1db472eeba53f06c4026ae4566ea022e36598e Zach Rice <zricer@protonmail.com> 1635897508 -0500	checkout: moving from foo to main
+2e1db472eeba53f06c4026ae4566ea022e36598e 4f77f1b3cc39d4b17e4cf4ba0a38f5daed9875b4 Richard Gomez <rmgomez368@gmail.com> 1681920523 -0400	commit: add .gitleaksignore test
+4f77f1b3cc39d4b17e4cf4ba0a38f5daed9875b4 cada78a9bf157ec05573f19e682d211f811c2e2d Richard Gomez <rmgomez368@gmail.com> 1681920658 -0400	commit (amend): add .gitleaksignore test
+cada78a9bf157ec05573f19e682d211f811c2e2d 2e1db472eeba53f06c4026ae4566ea022e36598e Richard Gomez <rmgomez368@gmail.com> 1681920730 -0400	reset: moving to HEAD~
+2e1db472eeba53f06c4026ae4566ea022e36598e 53cd7a3c6eb4937f413e3c25e4a9f39289afa69e Richard Gomez <rmgomez368@gmail.com> 1681920759 -0400	commit: add .gitleaksignore test files

@@ -13,7 +13,7 @@ import (
 
 func IsNew(finding report.Finding, baseline []report.Finding) bool {
 	// Explicitly testing each property as it gives significantly better performance in comparison to cmp.Equal(). Drawback is that
-	// the code requires maintanance if/when the Finding struct changes
+	// the code requires maintenance if/when the Finding struct changes
 	for _, b := range baseline {
 
 		if finding.Author == b.Author &&

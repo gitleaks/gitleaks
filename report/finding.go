@@ -38,7 +38,7 @@ type Finding struct {
 	// Rule is the name of the rule that was matched
 	RuleID string
 
-	// unique identifer
+	// unique identifier
 	Fingerprint string
 }
 

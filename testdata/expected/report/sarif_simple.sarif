@@ -294,6 +294,13 @@
       "author": "John Doe",
       "date": "10-19-2003",
       "commitMessage": "opps"
+     },
+     "properties": {
+      "tags": [
+       "tag1",
+       "tag2",
+       "tag3"
+      ]
      }
     }
    ]

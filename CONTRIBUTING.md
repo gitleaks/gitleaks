@@ -78,7 +78,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    token that is unique enough not to require an identifier then you can use
    this function. For example, Pulumi's API Token has the prefix `pul-` which is
    unique enough to use `generateUniqueToken`. But something like Beamer's API
-   token that has a `b_` prefix is not unqiue enough to use `generateUniqueToken`,
+   token that has a `b_` prefix is not unique enough to use `generateUniqueToken`,
    so instead we use `generateSemiGenericRegex` and require a `beamer`
    identifier is part of the rule.
    If a token's prefix has more than `3` characters then you could

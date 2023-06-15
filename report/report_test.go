@@ -11,7 +11,6 @@ import (
 
 const (
 	expectPath = "../testdata/expected/"
-	tmpPath    = "../testdata/tmp"
 )
 
 func TestReport(t *testing.T) {
@@ -69,6 +68,22 @@ func TestReport(t *testing.T) {
 				},
 			},
 		},
+		{
+			ext: ".xml",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "junit",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
 		// {
 		// 	ext: "SARIF",
 		// 	findings: []Finding{
@@ -80,22 +95,18 @@ func TestReport(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		tmpfile, err := os.Create(filepath.Join(tmpPath, strconv.Itoa(i)+test.ext))
+		tmpfile, err := os.Create(filepath.Join(t.TempDir(), strconv.Itoa(i)+test.ext))
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		err = Write(test.findings, config.Config{}, test.ext, tmpfile.Name())
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
 		got, err := os.ReadFile(tmpfile.Name())
 		if err != nil {
-			os.Remove(tmpfile.Name())
 			t.Error(err)
 		}
-		os.Remove(tmpfile.Name())
 
 		if len(got) == 0 && !test.wantEmpty {
 			t.Errorf("got empty file with extension " + test.ext)
