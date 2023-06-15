@@ -2609,17 +2609,73 @@ keywords = [
 ]
 
 [[rules]]
-description = "Slack token"
-id = "slack-access-token"
-regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})'''
+description = "Slack App-level token"
+id = "slack-app-token"
+regex = '''(?i)(xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+)'''
 keywords = [
-    "xoxb","xoxa","xoxp","xoxr","xoxs",
+    "xapp",
+]
+
+[[rules]]
+description = "Slack Bot token"
+id = "slack-bot-token"
+regex = '''(xoxb-[0-9]{10,13}\-[0-9]{10,13}[a-zA-Z0-9-]*)'''
+keywords = [
+    "xoxb",
+]
+
+[[rules]]
+description = "Slack Configuration access token"
+id = "slack-config-access-token"
+regex = '''(?i)(xoxe.xox[bp]-\d-[A-Z0-9]{163,166})'''
+keywords = [
+    "xoxe.xoxb-","xoxe.xoxp-",
+]
+
+[[rules]]
+description = "Slack Configuration refresh token"
+id = "slack-config-refresh-token"
+regex = '''(?i)(xoxe-\d-[A-Z0-9]{146})'''
+keywords = [
+    "xoxe-",
+]
+
+[[rules]]
+description = "Slack Legacy bot token"
+id = "slack-legacy-bot-token"
+regex = '''(xoxb-[0-9]{8,14}\-[a-zA-Z0-9]{18,26})'''
+keywords = [
+    "xoxb",
+]
+
+[[rules]]
+description = "Slack Legacy token"
+id = "slack-legacy-token"
+regex = '''(xox[os]-\d+-\d+-\d+-[a-fA-F\d]+)'''
+keywords = [
+    "xoxo","xoxs",
+]
+
+[[rules]]
+description = "Slack Legacy Workspace token"
+id = "slack-legacy-workspace-token"
+regex = '''(xox[ar]-(?:\d-)?[0-9a-zA-Z]{8,48})'''
+keywords = [
+    "xoxa","xoxr",
+]
+
+[[rules]]
+description = "Slack User"
+id = "slack-user-token"
+regex = '''(xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34})'''
+keywords = [
+    "xoxp-","xoxe-",
 ]
 
 [[rules]]
 description = "Slack Webhook"
-id = "slack-web-hook"
-regex = '''https:\/\/hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{44,46}'''
+id = "slack-webhook-url"
+regex = '''(https?:\/\/)?hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{43,46}'''
 keywords = [
     "hooks.slack.com",
 ]
