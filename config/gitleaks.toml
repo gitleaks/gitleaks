@@ -2377,7 +2377,7 @@ id = "openai-api-key"
 regex = '''(?i)\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
 keywords = [
-    "sk-","t3blbkfj",
+    "t3blbkfj",
 ]
 
 [[rules]]
