@@ -27,3 +27,6 @@ jobs:
 
       - name: Validate Config
         run: cd cmd/generate/config && go run main.go
+
+      - name: Config Diff
+        run: git diff --exit-code -- config/gitleaks.toml
