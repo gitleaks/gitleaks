@@ -29,9 +29,9 @@ func regexMatched(f string, re *regexp.Regexp) bool {
 func ValidateReportPath(path string) {
 	fsInfo, err := os.Stat(path)
 	if err != nil {
-		log.Fatal().Err(err).Msg("bad report path")
+		log.Fatal().Err(err).Msg("Report path does not exist")
 	}
 	if fsInfo.IsDir() {
-		log.Fatal().Err(err).Msg("report path make must be a file")
+		log.Fatal().Err(err).Msg("Report path must be a file")
 	}
 }
