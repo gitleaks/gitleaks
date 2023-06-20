@@ -2125,6 +2125,26 @@ keywords = [
 ]
 
 [[rules]]
+id = "huggingface-access-token"
+description = "Hugging Face Access token"
+regex = '''(?:^|[\\'"` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` <])'''
+secretGroup = 1
+entropy = 1
+keywords = [
+    "hf_",
+]
+
+[[rules]]
+id = "huggingface-organization-api-token"
+description = "Hugging Face Organization API token"
+regex = '''(?:^|[\\'"` >=:\(,)])(api_org_[a-zA-Z]{34})(?:$|[\\'"` <\),])'''
+secretGroup = 1
+entropy = 2
+keywords = [
+    "api_org_",
+]
+
+[[rules]]
 id = "intercom-api-key"
 description = "Intercom API Token"
 regex = '''(?i)(?:intercom)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{60})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
@@ -2414,6 +2434,7 @@ id = "plaid-client-id"
 description = "Plaid Client ID"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
+entropy = 3.5
 keywords = [
     "plaid",
 ]
@@ -2423,6 +2444,7 @@ id = "plaid-secret-key"
 description = "Plaid Secret key"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
+entropy = 3.5
 keywords = [
     "plaid",
 ]

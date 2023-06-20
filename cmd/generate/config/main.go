@@ -89,6 +89,8 @@ func main() {
 	configRules = append(configRules, rules.Hashicorp())
 	configRules = append(configRules, rules.Heroku())
 	configRules = append(configRules, rules.HubSpot())
+	configRules = append(configRules, rules.HuggingFaceAccessToken())
+	configRules = append(configRules, rules.HuggingFaceOrganizationApiToken())
 	configRules = append(configRules, rules.Intercom())
 	configRules = append(configRules, rules.JFrogAPIKey())
 	configRules = append(configRules, rules.JFrogIdentityToken())
