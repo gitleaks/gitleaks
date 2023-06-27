@@ -9,7 +9,7 @@ Here's a running list of some organizations using Gitleaks[^1]:
 1. [GoReleaser](https://goreleaser.com) 
 2. [Trendyol](https://trendyol.com)
 
-Feel free to [add yours](https://github.com/zricethezav/gitleaks/edit/master/USERS.md)!
+Feel free to [add yours](https://github.com/gitleaks/gitleaks/edit/master/USERS.md)!
 
 <!--
 Hey! Thanks for looking into this file!

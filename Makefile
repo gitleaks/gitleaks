@@ -1,8 +1,8 @@
 .PHONY: test test-cover
 
-PKG=github.com/zricethezav/gitleaks
+PKG=github.com/gitleaks/gitleaks
 VERSION := `git fetch --tags && git tag | sort -V | tail -1`
-LDFLAGS=-ldflags "-X=github.com/zricethezav/gitleaks/v8/cmd.Version=$(VERSION)"
+LDFLAGS=-ldflags "-X=github.com/gitleaks/gitleaks/v8/cmd.Version=$(VERSION)"
 COVER=--cover --coverprofile=cover.out
 
 test-cover:

@@ -3,7 +3,7 @@ package rules
 import (
 	"regexp"
 
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/config"
 )
 
 func AgeSecretKey() *config.Rule {

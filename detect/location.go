@@ -24,7 +24,7 @@ func location(fragment Fragment, matchIndex []int) Location {
 	// default startLineIndex to 0
 	location.startLineIndex = 0
 
-	// Fixes: https://github.com/zricethezav/gitleaks/issues/1037
+	// Fixes: https://github.com/gitleaks/gitleaks/issues/1037
 	// When a fragment does NOT have any newlines, a default "newline"
 	// will be counted to make the subsequent location calculation logic work
 	// for fragments will no newlines.

@@ -13,9 +13,9 @@ import (
 	"sync"
 
 	"github.com/h2non/filetype"
-	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect/git"
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/gitleaks/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/detect/git"
+	"github.com/gitleaks/gitleaks/v8/report"
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"

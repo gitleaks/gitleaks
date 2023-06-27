@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/gitleaks/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/report"
 )
 
 const configPath = "../testdata/config/"

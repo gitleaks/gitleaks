@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/cmd/generate/config/rules"
+	"github.com/gitleaks/gitleaks/v8/config"
 )
 
 const (

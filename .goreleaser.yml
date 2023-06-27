@@ -16,7 +16,7 @@ builds:
       - "6"
       - "7"
     ldflags:
-      - -s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version={{.Version}}
+      - -s -w -X=github.com/gitleaks/gitleaks/v8/cmd.Version={{.Version}}
 archives:
   - builds: [gitleaks]
     format_overrides:

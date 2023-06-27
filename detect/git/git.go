@@ -60,7 +60,7 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
+	// HACK: to avoid https://github.com/gitleaks/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
 	return gitdiff.Parse(cmd, stdout)
@@ -92,7 +92,7 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
+	// HACK: to avoid https://github.com/gitleaks/gitleaks/issues/722
 	time.Sleep(50 * time.Millisecond)
 
 	return gitdiff.Parse(cmd, stdout)

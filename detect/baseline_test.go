@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/gitleaks/gitleaks/v8/report"
 )
 
 func TestIsNew(t *testing.T) {

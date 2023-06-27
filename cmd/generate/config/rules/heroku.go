@@ -1,7 +1,7 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/config"
 )
 
 func Heroku() *config.Rule {

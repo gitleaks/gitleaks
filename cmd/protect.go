@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect"
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/gitleaks/gitleaks/v8/config"
+	"github.com/gitleaks/gitleaks/v8/detect"
+	"github.com/gitleaks/gitleaks/v8/report"
 )
 
 func init() {

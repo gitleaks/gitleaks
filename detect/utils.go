@@ -9,7 +9,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/gitleaks/gitleaks/v8/report"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
