@@ -2174,7 +2174,7 @@ keywords = [
 [[rules]]
 id = "jwt"
 description = "JSON Web Token"
-regex = '''(?i)\b(ey[0-9a-z]{30,34}\.ey[0-9a-z-\/_]{30,500}\.[0-9a-zA-Z-\/_]{10,200}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(ey[a-zA-Z0-9]{17,}\.ey[a-zA-Z0-9\/\\_-]{17,}\.(?:[a-zA-Z0-9\/\\_-]{10,}={0,2})?)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "ey",
 ]
@@ -2765,7 +2765,9 @@ entropy = 3
 keywords = [
     "sumo",
 ]
+
 [rules.allowlist]
+
 regexTarget = "line"
 regexes = [
     "sumOf",
