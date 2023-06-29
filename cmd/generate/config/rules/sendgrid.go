@@ -10,7 +10,7 @@ func SendGridAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sendgrid-api-token",
 		Description: "SendGrid API token",
-		Regex:       generateUniqueTokenRegex(`SG\.(?i)[a-z0-9=_\-\.]{66}`),
+		Regex:       generateUniqueTokenRegex(`SG\.(?i)[a-z0-9=_\-\.]{66}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"SG.",

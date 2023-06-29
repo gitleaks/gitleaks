@@ -10,7 +10,7 @@ func Databricks() *config.Rule {
 	r := config.Rule{
 		Description: "Databricks API token",
 		RuleID:      "databricks-api-token",
-		Regex:       generateUniqueTokenRegex(`dapi[a-h0-9]{32}`),
+		Regex:       generateUniqueTokenRegex(`dapi[a-h0-9]{32}`, true),
 		Keywords:    []string{"dapi"},
 	}
 

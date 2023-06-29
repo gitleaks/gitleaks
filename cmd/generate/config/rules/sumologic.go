@@ -14,7 +14,7 @@ func SumoLogicAccessID() *config.Rule {
 		Description: "SumoLogic Access ID",
 		// TODO: Make 'su' case-sensitive.
 		Regex: generateSemiGenericRegex([]string{"sumo"},
-			"su[a-zA-Z0-9]{12}"),
+			"su[a-zA-Z0-9]{12}", false),
 		SecretGroup: 1,
 		Entropy:     3,
 		Keywords: []string{
@@ -56,7 +56,7 @@ func SumoLogicAccessToken() *config.Rule {
 		RuleID:      "sumologic-access-token",
 		Description: "SumoLogic Access Token",
 		Regex: generateSemiGenericRegex([]string{"sumo"},
-			alphaNumeric("64")),
+			alphaNumeric("64"), true),
 		SecretGroup: 1,
 		Entropy:     3,
 		Keywords: []string{

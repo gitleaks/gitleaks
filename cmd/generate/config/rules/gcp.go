@@ -29,7 +29,7 @@ func GCPAPIKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gcp-api-key",
 		Description: "GCP API key",
-		Regex:       generateUniqueTokenRegex(`AIza[0-9A-Za-z\\-_]{35}`),
+		Regex:       generateUniqueTokenRegex(`AIza[0-9A-Za-z\\-_]{35}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"AIza",

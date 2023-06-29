@@ -10,7 +10,7 @@ func EtsyAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "etsy-access-token",
 		Description: "Etsy Access Token",
-		Regex:       generateSemiGenericRegex([]string{"etsy"}, alphaNumeric("24")),
+		Regex:       generateSemiGenericRegex([]string{"etsy"}, alphaNumeric("24"), true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"etsy",

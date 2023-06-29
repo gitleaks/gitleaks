@@ -10,7 +10,7 @@ func TravisCIAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "travisci-access-token",
 		Description: "Travis CI Access Token",
-		Regex:       generateSemiGenericRegex([]string{"travis"}, alphaNumeric("22")),
+		Regex:       generateSemiGenericRegex([]string{"travis"}, alphaNumeric("22"), true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"travis",

@@ -9,7 +9,7 @@ func JWT() *config.Rule {
 	r := config.Rule{
 		Description: "JSON Web Token",
 		RuleID:      "jwt",
-		Regex:       generateUniqueTokenRegex(`ey[0-9a-z]{30,34}\.ey[0-9a-z-\/_]{30,500}\.[0-9a-zA-Z-\/_]{10,200}={0,2}`),
+		Regex:       generateUniqueTokenRegex(`ey[0-9a-z]{30,34}\.ey[0-9a-z-\/_]{30,500}\.[0-9a-zA-Z-\/_]{10,200}={0,2}`, true),
 		Keywords:    []string{"ey"},
 	}
 
