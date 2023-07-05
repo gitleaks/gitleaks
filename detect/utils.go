@@ -130,7 +130,7 @@ func printFinding(f report.Finding, noColor bool) {
 
 		lineEndIdx := matchInLineIDX + len(f.Match)
 		if len(f.Line)-1 <= lineEndIdx {
-			lineEndIdx = len(f.Line) - 1
+			lineEndIdx = len(f.Line)
 		}
 
 		lineEnd := f.Line[lineEndIdx:]
