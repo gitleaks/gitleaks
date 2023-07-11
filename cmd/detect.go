@@ -21,6 +21,7 @@ func init() {
 	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
 	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	detectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	detectCmd.Flags().StringSlice("include-files", []string{}, "list of files that need to be scanned. Path should be relative to the source. Takes effect when --no-git is set")
 }
 
 var detectCmd = &cobra.Command{
@@ -138,7 +139,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// start the detector scan
 	if noGit {
-		findings, err = detector.DetectFiles(source)
+		fileList, err := cmd.Flags().GetStringSlice("include-files")
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not call GetStringSlice for include-files")
+		}
+		findings, err = detector.DetectFiles(source, fileList)
 		if err != nil {
 			// don't exit on error, just log it
 			log.Error().Err(err).Msg("")

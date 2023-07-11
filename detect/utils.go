@@ -187,3 +187,12 @@ func containsDigit(s string) bool {
 	}
 	return false
 }
+
+func containsString(t []string, s string) bool {
+	for _, val := range t {
+		if val == s {
+			return true
+		}
+	}
+	return false
+}

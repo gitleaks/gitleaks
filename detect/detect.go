@@ -441,7 +441,7 @@ type scanTarget struct {
 
 // DetectFiles accepts a path to a source directory or file and begins a scan of the
 // file or directory.
-func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
+func (d *Detector) DetectFiles(source string, files []string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
 	paths := make(chan scanTarget)
 	s.Go(func() error {
@@ -457,25 +457,32 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 				if fInfo.Size() == 0 {
 					return nil
 				}
-				if fInfo.Mode().IsRegular() {
-					paths <- scanTarget{
-						Path:    path,
-						Symlink: "",
-					}
+				// The path in include files is relative to the source
+				relPath, err_rel := filepath.Rel(source, path)
+				if err_rel != nil {
+					log.Debug().Msgf("%s cannot be given a relative path from source - %s ", path, source)
 				}
-				if fInfo.Mode().Type() == fs.ModeSymlink && d.FollowSymlinks {
-					realPath, err := filepath.EvalSymlinks(path)
-					if err != nil {
-						return err
+				if len(files) == 0 || containsString(files, relPath) {
+					if fInfo.Mode().IsRegular() {
+						paths <- scanTarget{
+							Path:    path,
+							Symlink: "",
+						}
 					}
-					realPathFileInfo, _ := os.Stat(realPath)
-					if realPathFileInfo.IsDir() {
-						log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
-						return nil
-					}
-					paths <- scanTarget{
-						Path:    realPath,
-						Symlink: path,
+					if fInfo.Mode().Type() == fs.ModeSymlink && d.FollowSymlinks {
+						realPath, err := filepath.EvalSymlinks(path)
+						if err != nil {
+							return err
+						}
+						realPathFileInfo, _ := os.Stat(realPath)
+						if realPathFileInfo.IsDir() {
+							log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
+							return nil
+						}
+						paths <- scanTarget{
+							Path:    realPath,
+							Symlink: path,
+						}
 					}
 				}
 				return nil

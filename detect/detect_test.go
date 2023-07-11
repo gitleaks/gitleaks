@@ -675,11 +675,88 @@ func TestFromFiles(t *testing.T) {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
+		includefiles := []string{}
+		findings, err := detector.DetectFiles(tt.source, includefiles)
 		if err != nil {
 			t.Error(err)
 		}
 
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestDetectWithIncludeFiles(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		includeFiles     []string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:           filepath.Join(repoBasePath, "nogit"),
+			cfgName:          "simple",
+			includeFiles:     []string{"api.go"},
+			expectedFindings: []report.Finding{},
+		},
+		{
+			source:       filepath.Join(repoBasePath, "nogit"),
+			cfgName:      "simple",
+			includeFiles: []string{"api.go", "main.go"},
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					File:        "../testdata/repos/nogit/main.go",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/repos/nogit/main.go:aws-access-key:20",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		var ignorePath string
+		info, err := os.Stat(tt.source)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+
+		if info.IsDir() {
+			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+		} else {
+			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+		}
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+
+		detector.FollowSymlinks = true
+		findings, err := detector.DetectFiles(tt.source, tt.includeFiles)
+		if err != nil {
+			t.Error(err)
+		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
@@ -731,7 +808,8 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
+		includefiles := []string{}
+		findings, err := detector.DetectFiles(tt.source, includefiles)
 		if err != nil {
 			t.Error(err)
 		}
