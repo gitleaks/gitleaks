@@ -46,7 +46,7 @@ type Detector struct {
 	// Redact is a flag to redact findings. This is exported
 	// so users using gitleaks as a library can set this flag
 	// without calling `detector.Start(cmd *cobra.Command)`
-	Redact bool
+	Redact uint
 
 	// verbose is a flag to print findings
 	Verbose bool

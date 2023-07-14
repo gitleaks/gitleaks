@@ -70,7 +70,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("")
 	}
 	// set redact flag
-	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
+	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
