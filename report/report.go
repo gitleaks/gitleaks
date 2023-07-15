@@ -1,10 +1,9 @@
 package report
 
 import (
+	"github.com/zricethezav/gitleaks/v8/config"
 	"os"
 	"strings"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 const (
@@ -14,17 +13,22 @@ const (
 )
 
 func Write(findings []Finding, cfg config.Config, ext string, reportPath string) error {
+	ext = strings.ToLower(ext)
+	if ext == "" {
+		ext = "json"
+	}
+
 	file, err := os.Create(reportPath)
 	if err != nil {
 		return err
 	}
-	ext = strings.ToLower(ext)
+
 	switch ext {
 	case ".json", "json":
 		err = writeJson(findings, file)
 	case ".csv", "csv":
 		err = writeCsv(findings, file)
-	case ".xml", "junit":
+	case ".xml", "xml", ".junit", "junit":
 		err = writeJunit(findings, file)
 	case ".sarif", "sarif":
 		err = writeSarif(cfg, findings, file)

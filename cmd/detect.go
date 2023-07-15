@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -109,7 +110,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if baselinePath != "" {
 		err = detector.AddBaseline(baselinePath, source)
 		if err != nil {
-			log.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
+			log.Error().Msgf("could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
 		}
 	}
 
@@ -181,10 +182,18 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	// write report if desired
-	reportPath, _ := cmd.Flags().GetString("report-path")
-	ext, _ := cmd.Flags().GetString("report-format")
-	if reportPath != "" {
-		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
+	reportPaths, _ := cmd.Flags().GetStringArray("report-path")     // Multiple paths can be specified
+	reportFormats, _ := cmd.Flags().GetStringArray("report-format") // Multiple formats can be specified
+
+	// for each path, the format at the same index is the associated format. If the format is not defined then JSON will be used.
+	for i, path := range reportPaths {
+		format := ""
+		if len(reportFormats) > i {
+			format = strings.ToLower(reportFormats[i])
+		}
+
+		log.Trace().Msgf("writing report into %s with format %s", path, format)
+		if err := report.Write(findings, cfg, format, path); err != nil {
 			log.Fatal().Err(err).Msg("could not write")
 		}
 	}
