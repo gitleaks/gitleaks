@@ -90,6 +90,8 @@ func main() {
 	configRules = append(configRules, rules.Heroku())
 	configRules = append(configRules, rules.HubSpot())
 	configRules = append(configRules, rules.Intercom())
+	configRules = append(configRules, rules.JFrogAPIKey())
+	configRules = append(configRules, rules.JFrogIdentityToken())
 	configRules = append(configRules, rules.JWT())
 	configRules = append(configRules, rules.KrakenAccessToken())
 	configRules = append(configRules, rules.KucoinAccessToken())
