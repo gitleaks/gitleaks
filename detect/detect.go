@@ -439,8 +439,8 @@ type scanTarget struct {
 	Symlink string
 }
 
-// DetectFiles accepts a path to a source directory or file and begins a scan of the
-// file or directory.
+// DetectFiles accepts a path to a source directory or file and a list of files to scan
+// and begins a scan of the specified files.
 func (d *Detector) DetectFiles(source string, files []string) ([]report.Finding, error) {
 	s := semgroup.NewGroup(context.Background(), 4)
 	paths := make(chan scanTarget)
