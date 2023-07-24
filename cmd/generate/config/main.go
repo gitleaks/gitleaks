@@ -87,6 +87,7 @@ func main() {
 	configRules = append(configRules, rules.GrafanaCloudApiToken())
 	configRules = append(configRules, rules.GrafanaServiceAccountToken())
 	configRules = append(configRules, rules.Hashicorp())
+	configRules = append(configRules, rules.HashicorpField())
 	configRules = append(configRules, rules.Heroku())
 	configRules = append(configRules, rules.HubSpot())
 	configRules = append(configRules, rules.Intercom())

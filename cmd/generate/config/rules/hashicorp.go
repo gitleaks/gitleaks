@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -21,4 +22,27 @@ func Hashicorp() *config.Rule {
 		generateSampleSecret("hashicorpToken", secrets.NewSecret(hex("14"))+".atlasv1."+secrets.NewSecret(alphaNumericExtended("60,70"))),
 	}
 	return validate(r, tps, nil)
+}
+
+func HashicorpField() *config.Rule {
+	keywords := []string{"administrator_login_password", "password"}
+	// define rule
+	r := config.Rule{
+		Description: "HashiCorp Terraform password field",
+		RuleID:      "hashicorp-tf-password",
+		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20"))),
+		Keywords:    keywords,
+	}
+
+	tps := []string{
+		// Example from: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/sql_server.html
+		"administrator_login_password = " + `"thisIsDog11"`,
+		// https://registry.terraform.io/providers/petoju/mysql/latest/docs
+		"password       = " + `"rootpasswd"`,
+	}
+	fps := []string{
+		"administrator_login_password = var.db_password",
+		`password = "${aws_db_instance.default.password}"`,
+	}
+	return validate(r, tps, fps)
 }
