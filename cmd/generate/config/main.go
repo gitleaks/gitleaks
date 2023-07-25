@@ -125,6 +125,7 @@ func main() {
 	configRules = append(configRules, rules.PlanetScalePassword())
 	configRules = append(configRules, rules.PlanetScaleAPIToken())
 	configRules = append(configRules, rules.PlanetScaleOAuthToken())
+	configRules = append(configRules, rules.PlivoAuthID())
 	configRules = append(configRules, rules.PostManAPI())
 	configRules = append(configRules, rules.Prefect())
 	configRules = append(configRules, rules.PrivateKey())

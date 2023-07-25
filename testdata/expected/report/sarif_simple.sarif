@@ -164,6 +164,13 @@
        }
       },
       {
+       "id": "plivo",
+       "name": "Plivo Auth ID",
+       "shortDescription": {
+        "text": "(?i)plivo(.{0,20})?[SM]{1}A[0-9A-Za-z]{18}"
+       }
+      },
+      {
        "id": "sendgrid",
        "name": "SendGrid API Key",
        "shortDescription": {

@@ -2453,6 +2453,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Plivo Auth ID"
+id = "plivo-auth-id"
+regex = '''(?i)(?:plivo|plivo_auth_id)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:=|\|\|:|<=|=>|:)(?:'|\"|\s|=|\x60){0,5}([SM]{1}A[0-9A-Za-z]{18})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "plivo","plivo_auth_id",
+]
+
+[[rules]]
 description = "Postman API token"
 id = "postman-api-token"
 regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
