@@ -2372,6 +2372,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Nuget Password"
+id = "nuget-config-password"
+regex = '''(?i)(<add key=\"(ClearTextPassword)|(Password)\"\s*)(value=\"[A-Za-z0-9]+\"\s*/>)'''
+secretGroup = 2
+keywords = [
+    "cleartextpassword","password",
+]
+
+[[rules]]
 description = "Nytimes Access Token"
 id = "nytimes-access-token"
 regex = '''(?i)(?:nytimes|new-york-times,|newyorktimes)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
