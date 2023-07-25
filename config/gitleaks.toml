@@ -2523,6 +2523,15 @@ keywords = [
 ]
 
 [[rules]]
+description = "Segment Public API Token"
+id = "segment-public-api-token"
+regex = '''(?i)\b(sgp_[a-zA-Z0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "sgp_",
+]
+
+[[rules]]
 description = "Sendbird Access ID"
 id = "sendbird-access-id"
 regex = '''(?i)(?:sendbird)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
