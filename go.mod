@@ -2,6 +2,10 @@ module github.com/zricethezav/gitleaks/v8
 
 go 1.19
 
+replace (
+	github.com/gitleaks/go-gitdiff => ../go-gitdiff
+)
+
 require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/fatih/semgroup v1.2.0
