@@ -125,6 +125,7 @@ func GitFileExists(gitPath string) (bool, error) {
 	if err := cmd.Start(); err != nil {
 		return false, err
 	}
+	defer cmd.Wait()
 
 	scanner := bufio.NewScanner(stdout)
 
@@ -155,6 +156,7 @@ func GitShowFile(gitPath string) (io.ReadCloser, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
+	defer cmd.Wait()
 
 	return stdout, nil
 }
