@@ -146,9 +146,15 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 	return NewDetector(cfg), nil
 }
 
-func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
+func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string, foundInRepo bool) (err error) {
 	log.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
-	file, err := os.Open(gitleaksIgnorePath)
+
+	var readCloser io.ReadCloser
+	if !foundInRepo {
+		readCloser, err = os.Open(gitleaksIgnorePath)
+	} else {
+		readCloser, err = git.GitShowFile(gitleaksIgnorePath)
+	}
 
 	if err != nil {
 		return err
@@ -156,11 +162,11 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 
 	// https://github.com/securego/gosec/issues/512
 	defer func() {
-		if err := file.Close(); err != nil {
+		if err := readCloser.Close(); err != nil {
 			log.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
 		}
 	}()
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(readCloser)
 
 	for scanner.Scan() {
 		d.gitleaksIgnore[scanner.Text()] = true

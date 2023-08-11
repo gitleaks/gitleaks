@@ -2,6 +2,7 @@ package git
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +19,7 @@ var ErrEncountered bool
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
+
 func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
@@ -98,6 +100,65 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	return gitdiff.Parse(cmd, stdout)
 }
 
+func GitFileExists(gitPath string) (bool, error) {
+	parts := strings.Split(gitPath, ":")
+	if len(parts) != 2 {
+		return false, errors.New("invalid git path")
+	}
+	object := parts[0]
+	path := parts[1]
+
+	cmd := exec.Command("git", "ls-tree", "-r", object, "--name-only")
+	log.Debug().Msgf("executing: %s", cmd.String())
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return false, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return false, err
+	}
+
+	go listenForStdErr(stderr)
+
+	if err := cmd.Start(); err != nil {
+		return false, err
+	}
+
+	scanner := bufio.NewScanner(stdout)
+
+	for scanner.Scan() {
+		if scanner.Text() == path {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func GitShowFile(gitPath string) (io.ReadCloser, error) {
+	cmd := exec.Command("git", "show", gitPath)
+	log.Debug().Msgf("executing: %s", cmd.String())
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	go listenForStdErr(stderr)
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	return stdout, nil
+}
+
 // listenForStdErr listens for stderr output from git and prints it to stdout
 // then exits with exit code 1
 func listenForStdErr(stderr io.ReadCloser) {
@@ -122,7 +183,10 @@ func listenForStdErr(stderr io.ReadCloser) {
 			strings.Contains(scanner.Text(),
 				"inexact rename detection was skipped") ||
 			strings.Contains(scanner.Text(),
-				"you may want to set your diff.renameLimit") {
+				"you may want to set your diff.renameLimit") ||
+			// if git ls-tree check fails
+			strings.Contains(scanner.Text(),
+				"exists on disk, but not in") {
 			log.Warn().Msg(scanner.Text())
 		} else {
 			log.Error().Msgf("[git] %s", scanner.Text())
