@@ -18,10 +18,9 @@ import (
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
 type DiffFilesCmd struct {
-	cmd *exec.Cmd
-
-	DiffFiles <-chan *gitdiff.File
-	ErrCh     <-chan error
+	cmd         *exec.Cmd
+	diffFilesCh <-chan *gitdiff.File
+	errCh       <-chan error
 }
 
 func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
@@ -73,9 +72,9 @@ func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 	}
 
 	return &DiffFilesCmd{
-		cmd:       cmd,
-		DiffFiles: gitdiffFiles,
-		ErrCh:     errCh,
+		cmd:         cmd,
+		diffFilesCh: gitdiffFiles,
+		errCh:       errCh,
 	}, nil
 }
 
@@ -110,10 +109,20 @@ func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 	}
 
 	return &DiffFilesCmd{
-		cmd:       cmd,
-		DiffFiles: gitdiffFiles,
-		ErrCh:     errCh,
+		cmd:         cmd,
+		diffFilesCh: gitdiffFiles,
+		errCh:       errCh,
 	}, nil
+}
+
+// DiffFilesCh returns a channel with *gitdiff.File.
+func (c *DiffFilesCmd) DiffFilesCh() <-chan *gitdiff.File {
+	return c.diffFilesCh
+}
+
+// ErrCh returns a channel that could produce an error if there is something in stderr.
+func (c *DiffFilesCmd) ErrCh() <-chan error {
+	return c.errCh
 }
 
 // Wait waits for the command to exit and waits for any copying to

@@ -381,22 +381,17 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 		}
 	}
 	defer diffFilesCmd.Wait()
+	diffFilesCh := diffFilesCmd.DiffFilesCh()
+	errCh := diffFilesCmd.ErrCh()
 
 	s := semgroup.NewGroup(context.Background(), 4)
 
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
-	for diffFilesCmd.ErrCh != nil || diffFilesCmd.DiffFiles != nil {
+	for diffFilesCh != nil || errCh != nil {
 		select {
-		case err, open := <-diffFilesCmd.ErrCh:
+		case gitdiffFile, open := <-diffFilesCh:
 			if !open {
-				diffFilesCmd.ErrCh = nil
-				break
-			}
-
-			return d.findings, err
-		case gitdiffFile, open := <-diffFilesCmd.DiffFiles:
-			if !open {
-				diffFilesCmd.DiffFiles = nil
+				diffFilesCh = nil
 				break
 			}
 
@@ -433,6 +428,13 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 				}
 				return nil
 			})
+		case err, open := <-errCh:
+			if !open {
+				errCh = nil
+				break
+			}
+
+			return d.findings, err
 		}
 	}
 
