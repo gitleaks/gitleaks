@@ -2,22 +2,29 @@ package git
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
-	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/rs/zerolog/log"
 	"io"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/rs/zerolog/log"
 )
 
 // GitLog returns a channel of gitdiff.File objects from the
 // git log -p command for the given source.
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
-func GitLog(source string, logOpts string) (gitdiffFiles <-chan *gitdiff.File, err error) {
+type DiffFilesCmd struct {
+	cmd *exec.Cmd
+
+	DiffFiles <-chan *gitdiff.File
+	ErrCh     <-chan error
+}
+
+func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
@@ -49,49 +56,30 @@ func GitLog(source string, logOpts string) (gitdiffFiles <-chan *gitdiff.File, e
 	if err != nil {
 		return nil, err
 	}
-	defer stdout.Close()
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, err
 	}
-	defer stderr.Close()
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
 
 	errCh := make(chan error)
 	go listenForStdErr(stderr, errCh)
-	defer func() {
-		stderrErr := <-errCh
-		if err != nil {
-			if stderrErr != nil {
-				log.Error().Err(err).Msgf("stderr not empty")
-			}
-			return
-		}
-		err = stderrErr
-	}()
 
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-	defer cmd.Wait()
-
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, stdout)
+	gitdiffFiles, err := gitdiff.Parse(stdout)
 	if err != nil {
 		return nil, err
 	}
 
-	gitdiffFiles, err = gitdiff.Parse(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	return gitdiffFiles, nil
+	return &DiffFilesCmd{
+		cmd:       cmd,
+		DiffFiles: gitdiffFiles,
+		ErrCh:     errCh,
+	}, nil
 }
 
-// GitDiff returns a channel of gitdiff.File objects from
-// the git diff command for the given source.
-func GitDiff(source string, staged bool) (gitdiffFiles <-chan *gitdiff.File, err error) {
+func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
@@ -105,49 +93,42 @@ func GitDiff(source string, staged bool) (gitdiffFiles <-chan *gitdiff.File, err
 	if err != nil {
 		return nil, err
 	}
-	defer stdout.Close()
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, err
 	}
-	defer stderr.Close()
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
 
 	errCh := make(chan error)
 	go listenForStdErr(stderr, errCh)
-	defer func() {
-		stderrErr := <-errCh
-		if err != nil {
-			if stderrErr != nil {
-				log.Error().Err(err).Msgf("stderr not empty")
-			}
-			return
-		}
-		err = stderrErr
-	}()
 
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-	defer cmd.Wait()
-
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, stdout)
+	gitdiffFiles, err := gitdiff.Parse(stdout)
 	if err != nil {
 		return nil, err
 	}
 
-	gitdiffFiles, err = gitdiff.Parse(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	return gitdiffFiles, nil
+	return &DiffFilesCmd{
+		cmd:       cmd,
+		DiffFiles: gitdiffFiles,
+		ErrCh:     errCh,
+	}, nil
 }
 
-// listenForStdErr listens for stderr output from git and prints it to stdout
-// then exits with exit code 1
-func listenForStdErr(stderr io.ReadCloser, errCh chan error) {
+// Wait waits for the command to exit and waits for any copying to
+// stdin or copying from stdout or stderr to complete.
+//
+// Wait also closes underlying stdout and stderr.
+func (c *DiffFilesCmd) Wait() (err error) {
+	return c.cmd.Wait()
+}
+
+// listenForStdErr listens for stderr output from git, prints it to stdout,
+// sends to errCh and closes it.
+func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
+	defer close(errCh)
+
 	var errEncountered bool
 
 	scanner := bufio.NewScanner(stderr)
@@ -183,6 +164,4 @@ func listenForStdErr(stderr io.ReadCloser, errCh chan error) {
 		errCh <- errors.New("stderr is not empty")
 		return
 	}
-
-	errCh <- nil
 }
