@@ -13,16 +13,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// GitLog returns a channel of gitdiff.File objects from the
-// git log -p command for the given source.
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
+// DiffFilesCmd helps to work with Git's output.
 type DiffFilesCmd struct {
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
 }
 
+// NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
+// Caller should read everything from channels until receiving a signal about their closure and call
+// the `func (*DiffFilesCmd) Wait()` error in order to release resources.
 func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
@@ -78,6 +80,9 @@ func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 	}, nil
 }
 
+// NewGitDiffCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
+// Caller should read everything from channels until receiving a signal about their closure and call
+// the `func (*DiffFilesCmd) Wait()` error in order to release resources.
 func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
