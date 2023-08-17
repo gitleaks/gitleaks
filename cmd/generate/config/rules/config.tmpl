@@ -25,40 +25,39 @@ paths = [
 ]
 
 {{ range $i, $rule := .Rules }}[[rules]]
-{{ if and $rule.SecretGroup $rule.Entropy $rule.Allowlist.StopWords }}description = "{{$rule.Description}}"
 id = "{{$rule.RuleID}}"
+description = "{{$rule.Description}}"
 regex = '''{{$rule.Regex}}'''
-secretGroup = {{ $rule.SecretGroup }}
-entropy = {{ $rule.Entropy}}
+{{- with $rule.Path }}
+path = '''{{ . }}'''{{ end -}}
+{{- with $rule.SecretGroup }}
+secretGroup = {{ . }}{{ end -}}
+{{- with $rule.Entropy }}
+entropy = {{ . }}{{ end -}}
+{{- with $rule.Keywords }}
 keywords = [
-    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
-]
+    {{ range $j, $keyword := . }}"{{ $keyword }}",{{ end }}
+]{{ end }}
+{{- with $rule.Tags }}
+tags = [
+    {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
+]{{ end }}
+{{ if or $rule.Allowlist.Regexes $rule.Allowlist.Paths $rule.Allowlist.Commits $rule.Allowlist.StopWords }}
 [rules.allowlist]
-stopwords= [{{ range $j, $stopword := $rule.Allowlist.StopWords }}
-    "{{$stopword}}",{{end}}
-]
-{{ else if and $rule.SecretGroup $rule.Entropy }}description = "{{$rule.Description}}"
-id = "{{$rule.RuleID}}"
-regex = '''{{$rule.Regex}}'''
-secretGroup = {{ $rule.SecretGroup }}
-entropy = {{ $rule.Entropy}}
-keywords = [
-    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
-]
-
-{{ else if $rule.SecretGroup }}description = "{{$rule.Description}}"
-id = "{{$rule.RuleID}}"
-regex = '''{{$rule.Regex}}'''
-secretGroup = {{ $rule.SecretGroup }}
-keywords = [
-    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
-]
-
-{{ else }}description = "{{$rule.Description}}"
-id = "{{$rule.RuleID}}"
-regex = '''{{$rule.Regex}}'''
-keywords = [
-    {{ range $j, $keyword := $rule.Keywords }}"{{$keyword}}",{{end}}
-]
-
-{{end}}{{end}}
+{{ with $rule.Allowlist.RegexTarget }}
+regexTarget = "{{ . }}"{{ end -}}
+{{- with $rule.Allowlist.Regexes }}
+regexes = [
+    {{ range $j, $regex := . }}"{{ $regex }}",{{ end }}
+]{{ end }}
+{{- with $rule.Allowlist.Paths }}paths = [
+    {{ range $j, $path := . }}"{{ $path }}",{{ end }}
+]{{ end }}
+{{- with $rule.Allowlist.Commits }}commits = [
+    {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
+]{{ end }}
+{{- with $rule.Allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
+    "{{ $stopword }}",{{ end }}
+]{{ end }}
+{{ end }}
+{{ end }}
