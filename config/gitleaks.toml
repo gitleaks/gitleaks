@@ -2412,6 +2412,7 @@ description = "Plaid Client ID"
 id = "plaid-client-id"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
+entropy = 3.5
 keywords = [
     "plaid",
 ]
@@ -2421,6 +2422,7 @@ description = "Plaid Secret key"
 id = "plaid-secret-key"
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{30})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 secretGroup = 1
+entropy = 3.5
 keywords = [
     "plaid",
 ]
