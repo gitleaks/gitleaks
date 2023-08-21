@@ -14,6 +14,7 @@ func PlaidAccessID() *config.Rule {
 		Description: "Plaid Client ID",
 		Regex:       generateSemiGenericRegex([]string{"plaid"}, alphaNumeric("24")),
 		SecretGroup: 1,
+		Entropy:     3.5,
 		Keywords: []string{
 			"plaid",
 		},
@@ -33,6 +34,7 @@ func PlaidSecretKey() *config.Rule {
 		Description: "Plaid Secret key",
 		Regex:       generateSemiGenericRegex([]string{"plaid"}, alphaNumeric("30")),
 		SecretGroup: 1,
+		Entropy:     3.5,
 		Keywords: []string{
 			"plaid",
 		},
