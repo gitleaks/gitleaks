@@ -2,23 +2,30 @@ package git
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 	"github.com/rs/zerolog/log"
 )
 
-var ErrEncountered bool
-
-// GitLog returns a channel of gitdiff.File objects from the
-// git log -p command for the given source.
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
-func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
+
+// DiffFilesCmd helps to work with Git's output.
+type DiffFilesCmd struct {
+	cmd         *exec.Cmd
+	diffFilesCh <-chan *gitdiff.File
+	errCh       <-chan error
+}
+
+// NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
+// Caller should read everything from channels until receiving a signal about their closure and call
+// the `func (*DiffFilesCmd) Wait()` error in order to release resources.
+func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
@@ -54,21 +61,29 @@ func GitLog(source string, logOpts string) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	go listenForStdErr(stderr)
-
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
-	time.Sleep(50 * time.Millisecond)
 
-	return gitdiff.Parse(cmd, stdout)
+	errCh := make(chan error)
+	go listenForStdErr(stderr, errCh)
+
+	gitdiffFiles, err := gitdiff.Parse(stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DiffFilesCmd{
+		cmd:         cmd,
+		diffFilesCh: gitdiffFiles,
+		errCh:       errCh,
+	}, nil
 }
 
-// GitDiff returns a channel of gitdiff.File objects from
-// the git diff command for the given source.
-func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
+// NewGitDiffCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
+// Caller should read everything from channels until receiving a signal about their closure and call
+// the `func (*DiffFilesCmd) Wait()` error in order to release resources.
+func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
@@ -86,21 +101,50 @@ func GitDiff(source string, staged bool) (<-chan *gitdiff.File, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	go listenForStdErr(stderr)
-
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	// HACK: to avoid https://github.com/zricethezav/gitleaks/issues/722
-	time.Sleep(50 * time.Millisecond)
 
-	return gitdiff.Parse(cmd, stdout)
+	errCh := make(chan error)
+	go listenForStdErr(stderr, errCh)
+
+	gitdiffFiles, err := gitdiff.Parse(stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DiffFilesCmd{
+		cmd:         cmd,
+		diffFilesCh: gitdiffFiles,
+		errCh:       errCh,
+	}, nil
 }
 
-// listenForStdErr listens for stderr output from git and prints it to stdout
-// then exits with exit code 1
-func listenForStdErr(stderr io.ReadCloser) {
+// DiffFilesCh returns a channel with *gitdiff.File.
+func (c *DiffFilesCmd) DiffFilesCh() <-chan *gitdiff.File {
+	return c.diffFilesCh
+}
+
+// ErrCh returns a channel that could produce an error if there is something in stderr.
+func (c *DiffFilesCmd) ErrCh() <-chan error {
+	return c.errCh
+}
+
+// Wait waits for the command to exit and waits for any copying to
+// stdin or copying from stdout or stderr to complete.
+//
+// Wait also closes underlying stdout and stderr.
+func (c *DiffFilesCmd) Wait() (err error) {
+	return c.cmd.Wait()
+}
+
+// listenForStdErr listens for stderr output from git, prints it to stdout,
+// sends to errCh and closes it.
+func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
+	defer close(errCh)
+
+	var errEncountered bool
+
 	scanner := bufio.NewScanner(stderr)
 	for scanner.Scan() {
 		// if git throws one of the following errors:
@@ -126,12 +170,12 @@ func listenForStdErr(stderr io.ReadCloser) {
 			log.Warn().Msg(scanner.Text())
 		} else {
 			log.Error().Msgf("[git] %s", scanner.Text())
-
-			// asynchronously set this error flag to true so that we can
-			// capture a log message and exit with a non-zero exit code
-			// This value should get set before the `git` command exits so it's
-			// safe-ish, although I know I know, bad practice.
-			ErrEncountered = true
+			errEncountered = true
 		}
+	}
+
+	if errEncountered {
+		errCh <- errors.New("stderr is not empty")
+		return
 	}
 }
