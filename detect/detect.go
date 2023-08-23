@@ -363,70 +363,85 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	return findings
 }
 
-// GitScan accepts a *gitdiff.File channel which contents a git history generated from
-// the output of `git log -p ...`. startGitScan will look at each file (patch) in the history
-// and determine if the patch contains any findings.
+// DetectGit accepts source directory, log opts and GitScanType and returns a slice of report.Finding.
 func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanType) ([]report.Finding, error) {
 	var (
-		gitdiffFiles <-chan *gitdiff.File
+		diffFilesCmd *git.DiffFilesCmd
 		err          error
 	)
 	switch gitScanType {
 	case DetectType:
-		gitdiffFiles, err = git.GitLog(source, logOpts)
+		diffFilesCmd, err = git.NewGitLogCmd(source, logOpts)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectType:
-		gitdiffFiles, err = git.GitDiff(source, false)
+		diffFilesCmd, err = git.NewGitDiffCmd(source, false)
 		if err != nil {
 			return d.findings, err
 		}
 	case ProtectStagedType:
-		gitdiffFiles, err = git.GitDiff(source, true)
+		diffFilesCmd, err = git.NewGitDiffCmd(source, true)
 		if err != nil {
 			return d.findings, err
 		}
 	}
+	defer diffFilesCmd.Wait()
+	diffFilesCh := diffFilesCmd.DiffFilesCh()
+	errCh := diffFilesCmd.ErrCh()
 
 	s := semgroup.NewGroup(context.Background(), 4)
 
-	for gitdiffFile := range gitdiffFiles {
-		gitdiffFile := gitdiffFile
+	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
+	for diffFilesCh != nil || errCh != nil {
+		select {
+		case gitdiffFile, open := <-diffFilesCh:
+			if !open {
+				diffFilesCh = nil
+				break
+			}
 
-		// skip binary files
-		if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
-			continue
-		}
-
-		// Check if commit is allowed
-		commitSHA := ""
-		if gitdiffFile.PatchHeader != nil {
-			commitSHA = gitdiffFile.PatchHeader.SHA
-			if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
+			// skip binary files
+			if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
 				continue
 			}
-		}
-		d.addCommit(commitSHA)
 
-		s.Go(func() error {
-			for _, textFragment := range gitdiffFile.TextFragments {
-				if textFragment == nil {
-					return nil
-				}
-
-				fragment := Fragment{
-					Raw:       textFragment.Raw(gitdiff.OpAdd),
-					CommitSHA: commitSHA,
-					FilePath:  gitdiffFile.NewName,
-				}
-
-				for _, finding := range d.Detect(fragment) {
-					d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
+			// Check if commit is allowed
+			commitSHA := ""
+			if gitdiffFile.PatchHeader != nil {
+				commitSHA = gitdiffFile.PatchHeader.SHA
+				if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
+					continue
 				}
 			}
-			return nil
-		})
+			d.addCommit(commitSHA)
+
+			s.Go(func() error {
+				for _, textFragment := range gitdiffFile.TextFragments {
+					if textFragment == nil {
+						return nil
+					}
+
+					fragment := Fragment{
+						Raw:       textFragment.Raw(gitdiff.OpAdd),
+						CommitSHA: commitSHA,
+						FilePath:  gitdiffFile.NewName,
+					}
+
+					for _, finding := range d.Detect(fragment) {
+						d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
+					}
+				}
+				return nil
+			})
+		case err, open := <-errCh:
+			if !open {
+				errCh = nil
+				break
+			}
+
+			return d.findings, err
+		}
 	}
 
 	if err := s.Wait(); err != nil {
@@ -434,9 +449,6 @@ func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanT
 	}
 	log.Info().Msgf("%d commits scanned.", len(d.commitMap))
 	log.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
-	if git.ErrEncountered {
-		return d.findings, fmt.Errorf("%s", "git error encountered, see logs")
-	}
 	return d.findings, nil
 }
 
