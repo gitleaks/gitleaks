@@ -3,10 +3,7 @@ package detect
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -39,23 +36,12 @@ func IsNew(finding report.Finding, baseline []report.Finding) bool {
 }
 
 func LoadBaseline(baselinePath string) ([]report.Finding, error) {
-	var previousFindings []report.Finding
-	jsonFile, err := os.Open(baselinePath)
+	bytes, err := os.ReadFile(baselinePath)
 	if err != nil {
 		return nil, fmt.Errorf("could not open %s", baselinePath)
 	}
 
-	defer func() {
-		if cerr := jsonFile.Close(); cerr != nil {
-			log.Warn().Err(cerr).Msg("problem closing jsonFile handle")
-		}
-	}()
-
-	bytes, err := io.ReadAll(jsonFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not read data from the file %s", baselinePath)
-	}
-
+	var previousFindings []report.Finding
 	err = json.Unmarshal(bytes, &previousFindings)
 	if err != nil {
 		return nil, fmt.Errorf("the format of the file %s is not supported", baselinePath)
