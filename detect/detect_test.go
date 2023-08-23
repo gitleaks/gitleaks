@@ -487,7 +487,7 @@ func TestFromGit(t *testing.T) {
 		} else {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
-		if err = detector.AddGitleaksIgnore(ignorePath, false); err != nil {
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 
@@ -571,7 +571,7 @@ func TestFromGitStaged(t *testing.T) {
 			t.Error(err)
 		}
 		detector := NewDetector(cfg)
-		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"), false); err != nil {
+		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore")); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
@@ -671,7 +671,7 @@ func TestFromFiles(t *testing.T) {
 		} else {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
-		if err = detector.AddGitleaksIgnore(ignorePath, false); err != nil {
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 		detector.FollowSymlinks = true

@@ -81,19 +81,19 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 
 	if fileExists(gitleaksIgnorePath) {
-		if err = detector.AddGitleaksIgnore(gitleaksIgnorePath, false); err != nil {
+		if err = detector.AddGitleaksIgnore(gitleaksIgnorePath); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 	}
 
 	if fileExists(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(gitleaksIgnorePath, ".gitleaksignore"), false); err != nil {
+		if err = detector.AddGitleaksIgnore(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 	}
 
 	if fileExists(filepath.Join(source, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore"), false); err != nil {
+		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 	}
