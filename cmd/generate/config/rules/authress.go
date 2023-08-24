@@ -8,12 +8,13 @@ import (
 )
 
 func Authress() *config.Rule {
-	// define rule
+	// Rule Definition
+	// (Note: When changes are made to this, rerun `cd cmd/generate/config && go run main.go` and commit the config/gitleaks.toml file
 	r := config.Rule{
 		Description: "Authress Service Client Access Key",
 		RuleID:      "authress-service-client-access-key",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc_[a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`),
+		Regex:       generateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`),
 		Keywords:    []string{"sc_", "ext_", "scauth_", "authress_"},
 	}
 
