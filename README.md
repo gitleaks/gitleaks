@@ -182,6 +182,8 @@ See the `git log` [documentation](https://git-scm.com/docs/git-log) for more inf
 
 You can scan files and directories by using the `--no-git` option.
 
+If you want to run only specific rules you can do so by using the `--enable-rule` option (with a rule ID as a parameter), this flag can be used multiple times. For example: `--enable-rule=atlassian-api-token` will only apply that rule. You can find a list of rules [here](config/gitleaks.toml).
+
 #### Protect
 
 The `protect` command is used to scan uncommitted changes in a git repo. This command should be used on developer machines in accordance with
