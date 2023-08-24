@@ -10,7 +10,7 @@ func Snyk() *config.Rule {
 		Description: "Snyk API token",
 		RuleID:      "snyk-api-token",
 		SecretGroup: 1,
-		Regex:       generateSemiGenericRegex([]string{"snyk"}, hex8_4_4_4_12()),
+		Regex:       generateSemiGenericRegex([]string{"snyk"}, hex8_4_4_4_12(), true),
 		Keywords:    []string{"snyk"},
 	}
 

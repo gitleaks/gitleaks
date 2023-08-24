@@ -11,7 +11,7 @@ func OktaAccessToken() *config.Rule {
 		RuleID:      "okta-access-token",
 		Description: "Okta Access Token",
 		Regex: generateSemiGenericRegex([]string{"okta"},
-			alphaNumericExtended("42")),
+			alphaNumericExtended("42"), true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"okta",

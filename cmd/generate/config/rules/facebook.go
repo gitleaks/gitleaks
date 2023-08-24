@@ -10,7 +10,7 @@ func Facebook() *config.Rule {
 	r := config.Rule{
 		Description: "Facebook Access Token",
 		RuleID:      "facebook",
-		Regex:       generateSemiGenericRegex([]string{"facebook"}, hex("32")),
+		Regex:       generateSemiGenericRegex([]string{"facebook"}, hex("32"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"facebook"},
 	}
