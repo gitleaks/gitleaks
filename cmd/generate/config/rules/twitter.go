@@ -10,7 +10,7 @@ func TwitterAPIKey() *config.Rule {
 	r := config.Rule{
 		Description: "Twitter API Key",
 		RuleID:      "twitter-api-key",
-		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("25")),
+		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("25"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
@@ -27,7 +27,7 @@ func TwitterAPISecret() *config.Rule {
 	r := config.Rule{
 		Description: "Twitter API Secret",
 		RuleID:      "twitter-api-secret",
-		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("50")),
+		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("50"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
@@ -44,7 +44,7 @@ func TwitterBearerToken() *config.Rule {
 	r := config.Rule{
 		Description: "Twitter Bearer Token",
 		RuleID:      "twitter-bearer-token",
-		Regex:       generateSemiGenericRegex([]string{"twitter"}, "A{22}[a-zA-Z0-9%]{80,100}"),
+		Regex:       generateSemiGenericRegex([]string{"twitter"}, "A{22}[a-zA-Z0-9%]{80,100}", true),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
@@ -61,7 +61,7 @@ func TwitterAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Twitter Access Token",
 		RuleID:      "twitter-access-token",
-		Regex:       generateSemiGenericRegex([]string{"twitter"}, "[0-9]{15,25}-[a-zA-Z0-9]{20,40}"),
+		Regex:       generateSemiGenericRegex([]string{"twitter"}, "[0-9]{15,25}-[a-zA-Z0-9]{20,40}", true),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
@@ -78,7 +78,7 @@ func TwitterAccessSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Twitter Access Secret",
 		RuleID:      "twitter-access-secret",
-		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("45")),
+		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("45"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}

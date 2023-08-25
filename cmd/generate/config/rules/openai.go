@@ -10,7 +10,7 @@ func OpenAI() *config.Rule {
 	r := config.Rule{
 		RuleID:      "openai-api-key",
 		Description: "OpenAI API Key",
-		Regex:       generateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`),
+		Regex:       generateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"T3BlbkFJ",

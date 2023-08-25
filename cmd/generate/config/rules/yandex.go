@@ -11,7 +11,7 @@ func YandexAWSAccessToken() *config.Rule {
 		RuleID:      "yandex-aws-access-token",
 		Description: "Yandex AWS Access Token",
 		Regex: generateSemiGenericRegex([]string{"yandex"},
-			`YC[a-zA-Z0-9_\-]{38}`),
+			`YC[a-zA-Z0-9_\-]{38}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"yandex",
@@ -32,7 +32,7 @@ func YandexAPIKey() *config.Rule {
 		RuleID:      "yandex-api-key",
 		Description: "Yandex API Key",
 		Regex: generateSemiGenericRegex([]string{"yandex"},
-			`AQVN[A-Za-z0-9_\-]{35,38}`),
+			`AQVN[A-Za-z0-9_\-]{35,38}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"yandex",
@@ -53,7 +53,7 @@ func YandexAccessToken() *config.Rule {
 		RuleID:      "yandex-access-token",
 		Description: "Yandex Access Token",
 		Regex: generateSemiGenericRegex([]string{"yandex"},
-			`t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2}`),
+			`t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2}`, true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"yandex",

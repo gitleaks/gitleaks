@@ -39,7 +39,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
 
 
            // Regex used for detecting secrets. See regex section below for more details
-           Regex: generateSemiGenericRegex([]string{"beamer"}, `b_[a-z0-9=_\-]{44}`),
+           Regex: generateSemiGenericRegex([]string{"beamer"}, `b_[a-z0-9=_\-]{44}`, true)
 
            // Keywords used for string matching on fragments (think of this as a prefilter)
            Keywords: []string{"beamer"},
@@ -63,18 +63,18 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    The function signatures look like this:
 
    ```golang
-   func generateSemiGenericRegex(identifiers []string, secretRegex string) *regexp.Regexp
+   func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp
 
-   func generateUniqueTokenRegex(secretRegex string) *regexp.Regexp
+   func generateUniqueTokenRegex(secretRegex string, isCaseInsensitive bool) *regexp.Regexp
    ```
 
-   `generateSemiGenericRegex` accepts a list of identifiers and a regex.
+   `generateSemiGenericRegex` accepts a list of identifiers, a regex, and a boolean indicating whether the pattern should be case-insensitive.
    The list of identifiers _should_ match the list of `Keywords` in the rule
    definition above. Both `identifiers` in the `generateSemiGenericRegex`
    function _and_ `Keywords` act as filters for Gitleaks telling the program
    "_at least one of these strings must be present to be considered a leak_"
 
-   `generateUniqueToken` just accepts a regex. If you are writing a rule for a
+   `generateUniqueToken` just accepts a regex and a boolean indicating whether the pattern should be case-insensitive. If you are writing a rule for a
    token that is unique enough not to require an identifier then you can use
    this function. For example, Pulumi's API Token has the prefix `pul-` which is
    unique enough to use `generateUniqueToken`. But something like Beamer's API

@@ -10,7 +10,7 @@ func DigitalOceanPAT() *config.Rule {
 		Description: "DigitalOcean Personal Access Token",
 		RuleID:      "digitalocean-pat",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`dop_v1_[a-f0-9]{64}`),
+		Regex:       generateUniqueTokenRegex(`dop_v1_[a-f0-9]{64}`, true),
 		Keywords:    []string{"dop_v1_"},
 	}
 
@@ -25,7 +25,7 @@ func DigitalOceanOAuthToken() *config.Rule {
 		Description: "DigitalOcean OAuth Access Token",
 		RuleID:      "digitalocean-access-token",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`),
+		Regex:       generateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`, true),
 		Keywords:    []string{"doo_v1_"},
 	}
 
@@ -40,7 +40,7 @@ func DigitalOceanRefreshToken() *config.Rule {
 		Description: "DigitalOcean OAuth Refresh Token",
 		RuleID:      "digitalocean-refresh-token",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`),
+		Regex:       generateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`, true),
 		Keywords:    []string{"dor_v1_"},
 	}
 

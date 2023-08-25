@@ -10,7 +10,7 @@ func AsanaClientID() *config.Rule {
 	r := config.Rule{
 		Description: "Asana Client ID",
 		RuleID:      "asana-client-id",
-		Regex:       generateSemiGenericRegex([]string{"asana"}, numeric("16")),
+		Regex:       generateSemiGenericRegex([]string{"asana"}, numeric("16"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"asana"},
 	}
@@ -27,7 +27,7 @@ func AsanaClientSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Asana Client Secret",
 		RuleID:      "asana-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"asana"}, alphaNumeric("32")),
+		Regex:       generateSemiGenericRegex([]string{"asana"}, alphaNumeric("32"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"asana"},
 	}
