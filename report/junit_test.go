@@ -67,41 +67,33 @@ func TestWriteJunit(t *testing.T) {
 		// create tmp file using os.TempDir()
 		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".xml"))
 		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
+			t.Fatal(err)
 		}
 		err = writeJunit(test.findings, tmpfile)
 		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
+			t.Fatal(err)
 		}
 		got, err := os.ReadFile(tmpfile.Name())
 		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
+			t.Fatal(err)
 		}
 		if test.wantEmpty {
 			if len(got) > 0 {
-				os.Remove(tmpfile.Name())
 				t.Errorf("Expected empty file, got %s", got)
 			}
-			os.Remove(tmpfile.Name())
 			continue
 		}
 		want, err := os.ReadFile(test.expected)
 		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		if string(got) != string(want) {
 			err = os.WriteFile(strings.Replace(test.expected, ".xml", ".got.xml", 1), got, 0644)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			t.Errorf("got %s, want %s", string(got), string(want))
 		}
-
-		os.Remove(tmpfile.Name())
 	}
 }

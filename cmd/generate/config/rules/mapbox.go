@@ -10,7 +10,7 @@ func MapBox() *config.Rule {
 	r := config.Rule{
 		Description: "MapBox API token",
 		RuleID:      "mapbox-api-token",
-		Regex:       generateSemiGenericRegex([]string{"mapbox"}, `pk\.[a-z0-9]{60}\.[a-z0-9]{22}`),
+		Regex:       generateSemiGenericRegex([]string{"mapbox"}, `pk\.[a-z0-9]{60}\.[a-z0-9]{22}`, true),
 		SecretGroup: 1,
 		Keywords:    []string{"mapbox"},
 	}

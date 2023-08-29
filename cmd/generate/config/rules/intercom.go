@@ -10,7 +10,7 @@ func Intercom() *config.Rule {
 	r := config.Rule{
 		Description: "Intercom API Token",
 		RuleID:      "intercom-api-key",
-		Regex:       generateSemiGenericRegex([]string{"intercom"}, alphaNumericExtended("60")),
+		Regex:       generateSemiGenericRegex([]string{"intercom"}, alphaNumericExtended("60"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"intercom"},
 	}

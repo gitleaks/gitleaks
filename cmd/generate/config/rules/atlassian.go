@@ -11,7 +11,7 @@ func Atlassian() *config.Rule {
 		Description: "Atlassian API token",
 		RuleID:      "atlassian-api-token",
 		Regex: generateSemiGenericRegex([]string{
-			"atlassian", "confluence", "jira"}, alphaNumeric("24")),
+			"atlassian", "confluence", "jira"}, alphaNumeric("24"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"atlassian", "confluence", "jira"},
 	}

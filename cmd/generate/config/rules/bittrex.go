@@ -10,7 +10,7 @@ func BittrexAccessKey() *config.Rule {
 	r := config.Rule{
 		Description: "Bittrex Access Key",
 		RuleID:      "bittrex-access-key",
-		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32")),
+		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"bittrex"},
 	}
@@ -27,7 +27,7 @@ func BittrexSecretKey() *config.Rule {
 	r := config.Rule{
 		Description: "Bittrex Secret Key",
 		RuleID:      "bittrex-secret-key",
-		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32")),
+		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"bittrex"},
 	}

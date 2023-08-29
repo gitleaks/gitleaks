@@ -11,7 +11,7 @@ func GitterAccessToken() *config.Rule {
 		RuleID:      "gitter-access-token",
 		Description: "Gitter Access Token",
 		Regex: generateSemiGenericRegex([]string{"gitter"},
-			alphaNumericExtendedShort("40")),
+			alphaNumericExtendedShort("40"), true),
 		SecretGroup: 1,
 		Keywords: []string{
 			"gitter",

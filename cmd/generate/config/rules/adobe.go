@@ -10,7 +10,7 @@ func AdobeClientID() *config.Rule {
 	r := config.Rule{
 		Description: "Adobe Client ID (OAuth Web)",
 		RuleID:      "adobe-client-id",
-		Regex:       generateSemiGenericRegex([]string{"adobe"}, hex("32")),
+		Regex:       generateSemiGenericRegex([]string{"adobe"}, hex("32"), true),
 		SecretGroup: 1,
 		Keywords:    []string{"adobe"},
 	}
@@ -27,7 +27,7 @@ func AdobeClientSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Adobe Client Secret",
 		RuleID:      "adobe-client-secret",
-		Regex:       generateUniqueTokenRegex(`(p8e-)(?i)[a-z0-9]{32}`),
+		Regex:       generateUniqueTokenRegex(`(p8e-)(?i)[a-z0-9]{32}`, true),
 		Keywords:    []string{"p8e-"},
 	}
 
