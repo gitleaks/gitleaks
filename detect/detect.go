@@ -17,9 +17,10 @@ import (
 	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
 
+	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -75,7 +76,7 @@ type Detector struct {
 
 	// prefilter is a ahocorasick struct used for doing efficient string
 	// matching given a set of words (keywords from the rules in the config)
-	prefilter ahocorasick.AhoCorasick
+	prefilter ahocorasick.Trie
 
 	// a list of known findings that should be ignored
 	baseline []report.Finding
@@ -110,20 +111,13 @@ type Fragment struct {
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
-	builder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{
-		AsciiCaseInsensitive: true,
-		MatchOnlyWholeWords:  false,
-		MatchKind:            ahocorasick.LeftMostLongestMatch,
-		DFA:                  true,
-	})
-
 	return &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]bool),
 		findingMutex:   &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
-		prefilter:      builder.Build(cfg.Keywords),
+		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
 	}
 }
 
@@ -582,9 +576,9 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// build keyword map for prefiltering rules
 	normalizedRaw := strings.ToLower(fragment.Raw)
-	matches := d.prefilter.FindAll(normalizedRaw)
+	matches := d.prefilter.MatchString(normalizedRaw)
 	for _, m := range matches {
-		fragment.keywords[normalizedRaw[m.Start():m.End()]] = true
+		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 	}
 
 	for _, rule := range d.Config.Rules {
