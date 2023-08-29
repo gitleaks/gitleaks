@@ -19,6 +19,7 @@ paths = [
     '''gradle.lockfile''',
     '''node_modules''',
     '''package-lock.json''',
+    '''yarn.lock''',
     '''pnpm-lock.yaml''',
     '''Database.refactorlog''',
     '''vendor''',
@@ -2765,7 +2766,9 @@ entropy = 3
 keywords = [
     "sumo",
 ]
+
 [rules.allowlist]
+
 regexTarget = "line"
 regexes = [
     "sumOf",
