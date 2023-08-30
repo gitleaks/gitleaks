@@ -95,6 +95,7 @@ func main() {
 	configRules = append(configRules, rules.JFrogAPIKey())
 	configRules = append(configRules, rules.JFrogIdentityToken())
 	configRules = append(configRules, rules.JWT())
+	configRules = append(configRules, rules.JWTBase64())
 	configRules = append(configRules, rules.KrakenAccessToken())
 	configRules = append(configRules, rules.KucoinAccessToken())
 	configRules = append(configRules, rules.KucoinSecretKey())
