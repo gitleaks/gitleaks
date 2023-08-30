@@ -83,7 +83,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("")
 	}
 	// set ignore gitleaks:allow flag
-	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow-comments"); err != nil {
+	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 
