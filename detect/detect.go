@@ -61,6 +61,9 @@ type Detector struct {
 	// NoColor is a flag to disable color output
 	NoColor bool
 
+	// IgnoreGitleaksAllow is a flag to ignore gitleaks:allow comments.
+	IgnoreGitleaksAllow bool
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -282,7 +285,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 
 		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			gitleaksAllowSignature) {
+			gitleaksAllowSignature) && !d.IgnoreGitleaksAllow {
 			continue
 		}
 
