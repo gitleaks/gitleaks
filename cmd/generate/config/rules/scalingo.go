@@ -12,7 +12,7 @@ func ScalingoAPIToken() *config.Rule {
 	r := config.Rule{
 		Description: "Scalingo API token",
 		RuleID:      "scalingo-api-token",
-		Regex:       regexp.MustCompile(`tk-us-[a-zA-Z0-9-_]{48}`),
+		Regex:       regexp.MustCompile(`\btk-us-[a-zA-Z0-9-_]{48}\b`),
 		Keywords:    []string{"tk-us-"},
 	}
 

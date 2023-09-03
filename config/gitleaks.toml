@@ -2558,7 +2558,7 @@ keywords = [
 [[rules]]
 id = "scalingo-api-token"
 description = "Scalingo API token"
-regex = '''tk-us-[a-zA-Z0-9-_]{48}'''
+regex = '''\btk-us-[a-zA-Z0-9-_]{48}\b'''
 keywords = [
     "tk-us-",
 ]
