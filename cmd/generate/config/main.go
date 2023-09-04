@@ -136,6 +136,7 @@ func main() {
 	configRules = append(configRules, rules.RapidAPIAccessToken())
 	configRules = append(configRules, rules.ReadMe())
 	configRules = append(configRules, rules.RubyGemsAPIToken())
+	configRules = append(configRules, rules.ScalingoAPIToken())
 	configRules = append(configRules, rules.SendbirdAccessID())
 	configRules = append(configRules, rules.SendbirdAccessToken())
 	configRules = append(configRules, rules.SendGridAPIToken())
