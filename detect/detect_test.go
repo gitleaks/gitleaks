@@ -366,13 +366,13 @@ func TestDetect(t *testing.T) {
 func TestFromGit(t *testing.T) {
 	tests := []struct {
 		cfgName          string
-		source           string
+		sourceList       []string
 		logOpts          string
 		expectedFindings []report.Finding
 	}{
 		{
-			source:  filepath.Join(repoBasePath, "small"),
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "small")},
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -417,9 +417,9 @@ func TestFromGit(t *testing.T) {
 			},
 		},
 		{
-			source:  filepath.Join(repoBasePath, "small"),
-			logOpts: "--all foo...",
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "small")},
+			logOpts:    "--all foo...",
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -477,25 +477,32 @@ func TestFromGit(t *testing.T) {
 		detector := NewDetector(cfg)
 
 		var ignorePath string
-		info, err := os.Stat(tt.source)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
-		}
+		var multipleSources = len(tt.sourceList) > 1
+		if !multipleSources {
+			source := tt.sourceList[0]
+			info, err := os.Stat(source)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 
-		if info.IsDir() {
-			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
-		} else {
-			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+			if info.IsDir() {
+				ignorePath = filepath.Join(source, ".gitleaksignore")
+			} else {
+				ignorePath = filepath.Join(filepath.Dir(source), ".gitleaksignore")
+			}
+			if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 		}
-		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			newFindings, err := detector.DetectGit(source, tt.logOpts, DetectType)
+			if err != nil {
+				t.Error(err)
+			} else {
+				findings = append(findings, newFindings...)
+			}
 		}
-
-		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
-		if err != nil {
-			t.Error(err)
-		}
-
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
 		}
@@ -505,13 +512,13 @@ func TestFromGit(t *testing.T) {
 func TestFromGitStaged(t *testing.T) {
 	tests := []struct {
 		cfgName          string
-		source           string
+		sourceList       []string
 		logOpts          string
 		expectedFindings []report.Finding
 	}{
 		{
-			source:  filepath.Join(repoBasePath, "staged"),
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "staged")},
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -571,14 +578,21 @@ func TestFromGitStaged(t *testing.T) {
 			t.Error(err)
 		}
 		detector := NewDetector(cfg)
-		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore")); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		var multipleSources = len(tt.sourceList) > 1
+		if !multipleSources {
+			if err = detector.AddGitleaksIgnore(filepath.Join(tt.sourceList[0], ".gitleaksignore")); err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 		}
-		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
-		if err != nil {
-			t.Error(err)
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			newFindings, err := detector.DetectGit(source, tt.logOpts, ProtectStagedType)
+			if err != nil {
+				t.Error(err)
+			} else {
+				findings = append(findings, newFindings...)
+			}
 		}
-
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
 		}
@@ -590,12 +604,12 @@ func TestFromGitStaged(t *testing.T) {
 func TestFromFiles(t *testing.T) {
 	tests := []struct {
 		cfgName          string
-		source           string
+		sourceList       []string
 		expectedFindings []report.Finding
 	}{
 		{
-			source:  filepath.Join(repoBasePath, "nogit"),
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "nogit")},
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -616,8 +630,8 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
-			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "nogit", "main.go")},
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -637,7 +651,7 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
-			source:           filepath.Join(repoBasePath, "nogit", "api.go"),
+			sourceList:       []string{filepath.Join(repoBasePath, "nogit", "api.go")},
 			cfgName:          "simple",
 			expectedFindings: []report.Finding{},
 		},
@@ -661,25 +675,104 @@ func TestFromFiles(t *testing.T) {
 		detector := NewDetector(cfg)
 
 		var ignorePath string
-		info, err := os.Stat(tt.source)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
-		}
+		var multipleSources = len(tt.sourceList) > 1
+		if !multipleSources {
+			source := tt.sourceList[0]
+			info, err := os.Stat(source)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 
-		if info.IsDir() {
-			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
-		} else {
-			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
-		}
-		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			if info.IsDir() {
+				ignorePath = filepath.Join(source, ".gitleaksignore")
+			} else {
+				ignorePath = filepath.Join(filepath.Dir(source), ".gitleaksignore")
+			}
+			if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 		}
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			findings, err = detector.DetectFiles(source)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestFromFilesMultipleSource(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		sourceList       []string
+		expectedFindings []report.Finding
+	}{
+		{
+			sourceList: []string{filepath.Join(repoBasePath, "nogit", "main.go"), filepath.Join(repoBasePath, "nogit", "api.go")},
+			cfgName:    "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					File:        "../testdata/repos/nogit/main.go",
+					SymlinkFile: "",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/repos/nogit/main.go:aws-access-key:20",
+				}, {
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					File:        "../testdata/repos/nogit/api.go",
+					SymlinkFile: "",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/repos/nogit/api.go:aws-access-key:20",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
 		if err != nil {
 			t.Error(err)
 		}
 
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		detector.FollowSymlinks = true
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			findings, err = detector.DetectFiles(source)
+			if err != nil {
+				t.Error(err)
+			}
+		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
@@ -687,12 +780,12 @@ func TestFromFiles(t *testing.T) {
 func TestDetectWithSymlinks(t *testing.T) {
 	tests := []struct {
 		cfgName          string
-		source           string
+		sourceList       []string
 		expectedFindings []report.Finding
 	}{
 		{
-			source:  filepath.Join(repoBasePath, "symlinks/file_symlink"),
-			cfgName: "simple",
+			sourceList: []string{filepath.Join(repoBasePath, "symlinks/file_symlink")},
+			cfgName:    "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "Asymmetric Private Key",
@@ -731,9 +824,12 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
-		if err != nil {
-			t.Error(err)
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			findings, err = detector.DetectFiles(source)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
