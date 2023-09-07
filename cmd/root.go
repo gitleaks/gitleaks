@@ -39,7 +39,7 @@ func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
-	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source")
+	rootCmd.PersistentFlags().StringSliceP("source", "s", []string{"."}, "comma separated list of path to source")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, junit, sarif)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
@@ -101,42 +101,52 @@ func initConfig() {
 		viper.SetConfigFile(envPath)
 		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
 	} else {
-		source, err := rootCmd.Flags().GetString("source")
+		sourceList, err := rootCmd.Flags().GetStringSlice("source")
 		if err != nil {
 			log.Fatal().Msg(err.Error())
 		}
-		fileInfo, err := os.Stat(source)
-		if err != nil {
-			log.Fatal().Msg(err.Error())
-		}
-
-		if !fileInfo.IsDir() {
-			log.Debug().Msgf("unable to load gitleaks config from %s since --source=%s is a file, using default config",
-				filepath.Join(source, ".gitleaks.toml"), source)
+		//When multiple source are specified, then use the default gitleaks config
+		if len(sourceList) > 1 {
 			viper.SetConfigType("toml")
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				log.Fatal().Msgf("err reading toml %s", err.Error())
 			}
 			return
-		}
-
-		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
-			log.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
-			viper.SetConfigType("toml")
-			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
-				log.Fatal().Msgf("err reading default config toml %s", err.Error())
-			}
-			return
 		} else {
-			log.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
-		}
+			source := sourceList[0]
+			fileInfo, err := os.Stat(source)
+			if err != nil {
+				log.Fatal().Msg(err.Error())
+			}
 
-		viper.AddConfigPath(source)
-		viper.SetConfigName(".gitleaks")
-		viper.SetConfigType("toml")
-	}
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+			if !fileInfo.IsDir() {
+				log.Debug().Msgf("unable to load gitleaks config from %s since --source=%s is a file, using default config",
+					filepath.Join(source, ".gitleaks.toml"), source)
+				viper.SetConfigType("toml")
+				if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
+					log.Fatal().Msgf("err reading toml %s", err.Error())
+				}
+				return
+			}
+
+			if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
+				log.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
+				viper.SetConfigType("toml")
+				if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
+					log.Fatal().Msgf("err reading default config toml %s", err.Error())
+				}
+				return
+			} else {
+				log.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
+			}
+
+			viper.AddConfigPath(source)
+			viper.SetConfigName(".gitleaks")
+			viper.SetConfigType("toml")
+		}
+		if err := viper.ReadInConfig(); err != nil {
+			log.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+		}
 	}
 }
 

@@ -165,7 +165,19 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	return nil
 }
 
-func (d *Detector) AddBaseline(baselinePath string, source string) error {
+func (d *Detector) AddBaseline(baselinePath string) error {
+	if baselinePath != "" {
+		baseline, err := LoadBaseline(baselinePath)
+		if err != nil {
+			return err
+		}
+		d.baseline = baseline
+	}
+	d.baselinePath = baselinePath
+	return nil
+}
+
+func (d *Detector) AddBaselineRelativeSource(baselinePath string, source string) error {
 	if baselinePath != "" {
 		absoluteSource, err := filepath.Abs(source)
 		if err != nil {

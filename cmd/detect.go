@@ -70,14 +70,19 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
-	source, err := cmd.Flags().GetString("source")
+	sourceList, err := cmd.Flags().GetStringSlice("source")
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+	multipleSources := len(sourceList) > 1
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
 	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
-	if detector.Config.Path == "" {
-		detector.Config.Path = filepath.Join(source, ".gitleaks.toml")
+	// This only takes effect if a single source is set
+	if !multipleSources {
+		source := sourceList[0]
+		if detector.Config.Path == "" {
+			detector.Config.Path = filepath.Join(source, ".gitleaks.toml")
+		}
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
@@ -112,16 +117,27 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if fileExists(filepath.Join(source, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+	//Check for .gitleaksignore in source, only if single source is specified
+	if !multipleSources {
+		source := sourceList[0]
+		if fileExists(filepath.Join(source, ".gitleaksignore")) {
+			if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
+				log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			}
 		}
 	}
 
 	// ignore findings from the baseline (an existing report in json format generated earlier)
+	// If multiple sources are specified, then the path to baseline should be absolute
+	// For single source, the baseline path is relative to the source folder
 	baselinePath, _ := cmd.Flags().GetString("baseline-path")
 	if baselinePath != "" {
-		err = detector.AddBaseline(baselinePath, source)
+		if multipleSources {
+			err = detector.AddBaseline(baselinePath)
+		} else {
+			source := sourceList[0]
+			err = detector.AddBaselineRelativeSource(baselinePath, source)
+		}
 		if err != nil {
 			log.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
 		}
@@ -167,10 +183,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// start the detector scan
 	if noGit {
-		findings, err = detector.DetectFiles(source)
-		if err != nil {
-			// don't exit on error, just log it
-			log.Error().Err(err).Msg("")
+		for _, source := range sourceList {
+			findings, err = detector.DetectFiles(source)
+			if err != nil {
+				// don't exit on error, just log it
+				log.Error().Err(err).Msg("")
+			}
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectReader(os.Stdin, 10)
@@ -185,10 +203,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatal().Err(err).Msg("")
 		}
-		findings, err = detector.DetectGit(source, logOpts, detect.DetectType)
-		if err != nil {
-			// don't exit on error, just log it
-			log.Error().Err(err).Msg("")
+		for _, source := range sourceList {
+			findings, err = detector.DetectGit(source, logOpts, detect.DetectType)
+			if err != nil {
+				// don't exit on error, just log it
+				log.Error().Err(err).Msg("")
+			}
 		}
 	}
 
