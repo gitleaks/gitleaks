@@ -496,11 +496,9 @@ func TestFromGit(t *testing.T) {
 		}
 		var findings []report.Finding
 		for _, source := range tt.sourceList {
-			newFindings, err := detector.DetectGit(source, tt.logOpts, DetectType)
+			findings, err = detector.DetectGit(source, tt.logOpts, DetectType)
 			if err != nil {
 				t.Error(err)
-			} else {
-				findings = append(findings, newFindings...)
 			}
 		}
 		for _, f := range findings {
@@ -509,6 +507,199 @@ func TestFromGit(t *testing.T) {
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
+
+func TestFromGitMultipleSource(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		sourceList       []string
+		logOpts          string
+		expectedFindings []report.Finding
+	}{
+		{
+			sourceList: []string{filepath.Join(repoBasePath, "small"), filepath.Join(repoBasePath, "staged")},
+			cfgName:    "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 19,
+					EndColumn:   38,
+					Line:        "\n    awsToken := \"AKIALALEMEL33243OLIA\"",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					File:        "main.go",
+					Date:        "2021-11-02T23:37:53Z",
+					Commit:      "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
+					Author:      "Zachary Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "Accidentally add a secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587:main.go:aws-access-key:20",
+				},
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					File:        "foo/foo.go",
+					Date:        "2021-11-02T23:48:06Z",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+				},
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 19,
+					EndColumn:   38,
+					Line:        "\n    awsToken := \"AKIALALEMEL33243OLIA\"",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					File:        "main.go",
+					Date:        "2021-11-02T23:37:53Z",
+					Commit:      "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587",
+					Author:      "Zachary Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "Accidentally add a secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587:main.go:aws-access-key:20",
+				},
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					File:        "foo/foo.go",
+					Date:        "2021-11-02T23:48:06Z",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+				},
+			},
+		},
+		{
+			sourceList: []string{filepath.Join(repoBasePath, "small"), filepath.Join(repoBasePath, "staged")},
+			logOpts:    "--all foo...",
+			cfgName:    "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Date:        "2021-11-02T23:48:06Z",
+					File:        "foo/foo.go",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+				},
+				{
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Date:        "2021-11-02T23:48:06Z",
+					File:        "foo/foo.go",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+				},
+			},
+		},
+	}
+
+	err := moveDotGit("dotGit", ".git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := moveDotGit(".git", "dotGit"); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	for _, tt := range tests {
+
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err = viper.ReadInConfig()
+		if err != nil {
+			t.Error(err)
+		}
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		if err != nil {
+			t.Error(err)
+		}
+		cfg, err := vc.Translate()
+		if err != nil {
+			t.Error(err)
+		}
+		detector := NewDetector(cfg)
+
+		//Add gitleaksignorefile of small repo
+		var ignorePath = filepath.Join(repoBasePath, "small", ".gitleaksignore")
+		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+		var findings []report.Finding
+		for _, source := range tt.sourceList {
+			findings, err = detector.DetectGit(source, tt.logOpts, DetectType)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+		for _, f := range findings {
+			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+		}
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
 func TestFromGitStaged(t *testing.T) {
 	tests := []struct {
 		cfgName          string
@@ -586,11 +777,9 @@ func TestFromGitStaged(t *testing.T) {
 		}
 		var findings []report.Finding
 		for _, source := range tt.sourceList {
-			newFindings, err := detector.DetectGit(source, tt.logOpts, ProtectStagedType)
+			findings, err = detector.DetectGit(source, tt.logOpts, ProtectStagedType)
 			if err != nil {
 				t.Error(err)
-			} else {
-				findings = append(findings, newFindings...)
 			}
 		}
 		for _, f := range findings {
