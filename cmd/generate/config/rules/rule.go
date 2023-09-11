@@ -18,7 +18,7 @@ const (
 	identifierCaseInsensitivePrefix = `(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `(?:`
-	identifierSuffix                = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s']|[\s"]){0,3}`
+	identifierSuffix                = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"]){0,3}`
 
 	// commonly used assignment operators or function call
 	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
@@ -26,7 +26,7 @@ const (
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
-	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
+	secretPrefix       = `(?:['\"\s=\x60]){0,5}(`
 	secretSuffix       = `)(?:['\"\n\r\s\x60;]|$)`
 )
 
