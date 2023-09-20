@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -479,7 +478,7 @@ func TestFromGit(t *testing.T) {
 		var ignorePath string
 		info, err := os.Stat(tt.source)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			t.Fatalf("could not os.Stat: %v", err)
 		}
 
 		if info.IsDir() {
@@ -488,7 +487,7 @@ func TestFromGit(t *testing.T) {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
 		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
 		}
 
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
@@ -572,7 +571,7 @@ func TestFromGitStaged(t *testing.T) {
 		}
 		detector := NewDetector(cfg)
 		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore")); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
 		}
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
 		if err != nil {
@@ -663,7 +662,7 @@ func TestFromFiles(t *testing.T) {
 		var ignorePath string
 		info, err := os.Stat(tt.source)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			t.Fatalf("could not call os.Stat: %v", err)
 		}
 
 		if info.IsDir() {
@@ -672,7 +671,7 @@ func TestFromFiles(t *testing.T) {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
 		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
 		}
 		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
