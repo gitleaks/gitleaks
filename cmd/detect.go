@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,6 +55,17 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// Setup detector
 	detector := detect.NewDetector(cfg)
+	// set color flag at first
+	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+	// also init logger again without color
+	if detector.NoColor {
+		log.Logger = log.Output(zerolog.ConsoleWriter{
+			Out:     os.Stderr,
+			NoColor: detector.NoColor,
+		})
+	}
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
 		log.Fatal().Err(err).Msg("")
@@ -72,14 +84,14 @@ func runDetect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("")
 	}
 	// set redact flag
-	if detector.Redact, err = cmd.Flags().GetBool("redact"); err != nil {
+	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
-	// set color flag
-	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
+	// set ignore gitleaks:allow flag
+	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 
