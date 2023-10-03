@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
@@ -82,7 +83,7 @@ func TestFileLoadBaseline(t *testing.T) {
 
 	for _, test := range tests {
 		_, err := LoadBaseline(test.Filename)
-		assert.Equal(t, test.ExpectedError.Error(), err.Error())
+		assert.Equal(t, test.ExpectedError, err)
 	}
 }
 
@@ -132,6 +133,6 @@ func TestIgnoreIssuesInBaseline(t *testing.T) {
 		for _, finding := range test.findings {
 			d.addFinding(finding)
 		}
-		assert.Equal(t, test.expectCount, len(d.findings))
+		assert.Len(t, d.findings, test.expectCount)
 	}
 }
