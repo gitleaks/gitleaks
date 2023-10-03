@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const configPath = "../testdata/config/"
@@ -126,23 +127,13 @@ func TestTranslate(t *testing.T) {
 		viper.SetConfigName(tt.cfgName)
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		var vc ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, err := vc.Translate()
-		if tt.wantError != nil {
-			if err == nil {
-				t.Errorf("expected error")
-			}
-			assert.Equal(t, tt.wantError, err)
-		}
-
+		assert.Equal(t, tt.wantError, err)
 		assert.Equal(t, cfg.Rules, tt.cfg.Rules)
 	}
 }

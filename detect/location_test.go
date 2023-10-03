@@ -2,6 +2,8 @@ package detect
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestGetLocation tests the getLocation function.
@@ -50,11 +52,6 @@ func TestGetLocation(t *testing.T) {
 
 	for _, test := range tests {
 		loc := location(Fragment{newlineIndices: test.linePairs}, []int{test.start, test.end})
-		if loc != test.wantLocation {
-			t.Errorf("\nstartLine %d\nstartColumn: %d\nendLine: %d\nendColumn: %d\nstartLineIndex: %d\nendlineIndex %d",
-				loc.startLine, loc.startColumn, loc.endLine, loc.endColumn, loc.startLineIndex, loc.endLineIndex)
-
-			t.Error("got", loc, "want", test.wantLocation)
-		}
+		assert.Equal(t, test.wantLocation, loc)
 	}
 }

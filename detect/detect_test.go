@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -336,23 +337,14 @@ func TestDetect(t *testing.T) {
 		viper.SetConfigName(tt.cfgName)
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		var vc config.ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, err := vc.Translate()
 		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
-		if tt.wantError != nil {
-			if err == nil {
-				t.Errorf("expected error")
-			}
-			assert.Equal(t, tt.wantError, err)
-		}
+		assert.Equal(t, tt.wantError, err)
 		d := NewDetector(cfg)
 		d.baselinePath = tt.baselinePath
 
@@ -444,56 +436,38 @@ func TestFromGit(t *testing.T) {
 		},
 	}
 
-	err := moveDotGit("dotGit", ".git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := moveDotGit(".git", "dotGit"); err != nil {
-			t.Error(err)
-		}
-	}()
+	moveDotGit(t, "dotGit", ".git")
+	defer moveDotGit(t, ".git", "dotGit")
 
 	for _, tt := range tests {
 
 		viper.AddConfigPath(configPath)
 		viper.SetConfigName("simple")
 		viper.SetConfigType("toml")
-		err = viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		err := viper.ReadInConfig()
+		require.NoError(t, err)
 
 		var vc config.ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, err := vc.Translate()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		detector := NewDetector(cfg)
 
 		var ignorePath string
 		info, err := os.Stat(tt.source)
-		if err != nil {
-			t.Fatalf("could not os.Stat: %v", err)
-		}
+		require.NoError(t, err)
 
 		if info.IsDir() {
 			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
 		} else {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
-		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
-		}
+		err = detector.AddGitleaksIgnore(ignorePath)
+		require.NoError(t, err)
 
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
@@ -540,43 +514,27 @@ func TestFromGitStaged(t *testing.T) {
 		},
 	}
 
-	err := moveDotGit("dotGit", ".git")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := moveDotGit(".git", "dotGit"); err != nil {
-			t.Error(err)
-		}
-	}()
+	moveDotGit(t, "dotGit", ".git")
+	defer moveDotGit(t, ".git", "dotGit")
 
 	for _, tt := range tests {
 
 		viper.AddConfigPath(configPath)
 		viper.SetConfigName("simple")
 		viper.SetConfigType("toml")
-		err = viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		err := viper.ReadInConfig()
+		require.NoError(t, err)
 
 		var vc config.ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, err := vc.Translate()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		detector := NewDetector(cfg)
-		if err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore")); err != nil {
-			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
-		}
+		err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
+		require.NoError(t, err)
 		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
@@ -647,38 +605,28 @@ func TestFromFiles(t *testing.T) {
 		viper.SetConfigName("simple")
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		var vc config.ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 
 		var ignorePath string
 		info, err := os.Stat(tt.source)
-		if err != nil {
-			t.Fatalf("could not call os.Stat: %v", err)
-		}
+		require.NoError(t, err)
 
 		if info.IsDir() {
 			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
 		} else {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
 		}
-		if err = detector.AddGitleaksIgnore(ignorePath); err != nil {
-			t.Fatalf("could not call AddGitleaksIgnore: %v", err)
-		}
+		err = detector.AddGitleaksIgnore(ignorePath)
+		require.NoError(t, err)
 		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
-		if err != nil {
-			t.Error(err)
-		}
-
+		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
@@ -718,31 +666,25 @@ func TestDetectWithSymlinks(t *testing.T) {
 		viper.SetConfigName("simple")
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		var vc config.ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
 		findings, err := detector.DetectFiles(tt.source)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
 
-func moveDotGit(from, to string) error {
+func moveDotGit(t *testing.T, from, to string) {
+	t.Helper()
+
 	repoDirs, err := os.ReadDir("../testdata/repos")
-	if err != nil {
-		return err
-	}
+	require.NoError(t, err)
 	for _, dir := range repoDirs {
 		if to == ".git" {
 			_, err := os.Stat(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), "dotGit"))
@@ -762,9 +704,6 @@ func moveDotGit(from, to string) error {
 
 		err = os.Rename(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), from),
 			fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), to))
-		if err != nil {
-			return err
-		}
+		require.NoError(t, err)
 	}
-	return nil
 }
