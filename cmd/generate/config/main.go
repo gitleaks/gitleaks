@@ -182,6 +182,7 @@ func main() {
 	configRules = append(configRules, rules.YandexAccessToken())
 	configRules = append(configRules, rules.ZendeskSecretKey())
 	configRules = append(configRules, rules.GenericCredential())
+	configRules = append(configRules, rules.InfracostAPIToken())
 
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule)
