@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -12,7 +10,7 @@ func StripeAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Stripe Access Token",
 		RuleID:      "stripe-access-token",
-		Regex:       regexp.MustCompile(`(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}`),
+		Regex:       generateUniqueTokenRegex(`(sk|pk)_(test|live)_[0-9a-z]{10,32}`, true),
 		Keywords: []string{
 			"sk_test",
 			"pk_test",
@@ -23,5 +21,6 @@ func StripeAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{"stripeToken := \"sk_test_" + secrets.NewSecret(alphaNumeric("30")) + "\""}
-	return validate(r, tps, nil)
+	fps := []string{"nonMatchingToken := \"task_test_" + secrets.NewSecret(alphaNumeric("30")) + "\""}
+	return validate(r, tps, fps)
 }

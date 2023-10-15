@@ -2777,7 +2777,7 @@ keywords = [
 [[rules]]
 id = "stripe-access-token"
 description = "Stripe Access Token"
-regex = '''(?i)(sk|pk)_(test|live)_[0-9a-z]{10,32}'''
+regex = '''(?i)\b((sk|pk)_(test|live)_[0-9a-z]{10,32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "sk_test","pk_test","sk_live","pk_live",
 ]
