@@ -19,6 +19,7 @@ paths = [
     '''gradle.lockfile''',
     '''node_modules''',
     '''package-lock.json''',
+    '''(.*?)ruleset''',
     '''yarn.lock''',
     '''pnpm-lock.yaml''',
     '''Database.refactorlog''',
@@ -57,7 +58,8 @@ regexes = [
 {{- with $rule.Allowlist.Commits }}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
+{{- with $rule.Allowlist.StopWords }}
+stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
 ]{{ end }}
 {{ end }}
