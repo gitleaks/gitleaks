@@ -220,7 +220,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 
 	if rule.Path != nil && rule.Regex == nil {
 		// Path _only_ rule
-		if rule.Path.Match([]byte(fragment.FilePath)) {
+		if rule.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
 				Description: rule.Description,
 				File:        fragment.FilePath,
@@ -235,7 +235,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		// if path is set _and_ a regex is set, then we need to check both
 		// so if the path does not match, then we should return early and not
 		// consider the regex
-		if !rule.Path.Match([]byte(fragment.FilePath)) {
+		if !rule.Path.MatchString(fragment.FilePath) {
 			return findings
 		}
 	}
