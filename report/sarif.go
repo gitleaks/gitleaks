@@ -59,11 +59,11 @@ func getRules(cfg config.Config) []Rules {
 		shortDescription := ShortDescription{
 			Text: rule.Description,
 		}
-		if rule.Regex != nil {
+		if rule.Description == "" && rule.Regex != nil {
 			shortDescription = ShortDescription{
 				Text: rule.Regex.String(),
 			}
-		} else if rule.Path != nil {
+		} else if rule.Description == "" && rule.Path != nil {
 			shortDescription = ShortDescription{
 				Text: rule.Path.String(),
 			}
