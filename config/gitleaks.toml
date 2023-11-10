@@ -124,7 +124,7 @@ keywords = [
 [[rules]]
 id = "aws-access-token"
 description = "AWS"
-regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+regex = '''(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
 keywords = [
     "akia","agpa","aida","aroa","aipa","anpa","anva","asia",
 ]

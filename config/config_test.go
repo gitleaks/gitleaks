@@ -23,7 +23,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -41,7 +41,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -57,7 +57,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -97,7 +97,7 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{
 					"aws-access-key": {
 						Description: "AWS Access Key",
-						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
 						RuleID:      "aws-access-key",
