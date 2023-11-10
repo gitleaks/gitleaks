@@ -289,7 +289,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
-		// NOTE: next breaking change, we should remove the secretGroup
 		// by default if secret group is not set, we will check to see if there
 		// are any capture groups. If there are, we will use the first capture to start
 		groups := rule.Regex.FindStringSubmatch(secret)
