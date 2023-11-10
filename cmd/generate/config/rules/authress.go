@@ -13,7 +13,6 @@ func Authress() *config.Rule {
 	r := config.Rule{
 		Description: "Authress Service Client Access Key",
 		RuleID:      "authress-service-client-access-key",
-		SecretGroup: 1,
 		Regex:       generateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`, true),
 		Keywords:    []string{"sc_", "ext_", "scauth_", "authress_"},
 	}

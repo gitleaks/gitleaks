@@ -13,7 +13,7 @@
        "id": "aws-access-key",
        "name": "AWS Access Key",
        "shortDescription": {
-        "text": "(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
+        "text": "(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"
        }
       },
       {

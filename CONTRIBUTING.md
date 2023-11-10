@@ -35,7 +35,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
            RuleID:      "beamer-api-token",
 
            // Regex capture group for the actual secret
-           SecretGroup: 1,
+           
 
 
            // Regex used for detecting secrets. See regex section below for more details

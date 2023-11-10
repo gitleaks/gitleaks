@@ -11,7 +11,7 @@ func GoCardless() *config.Rule {
 		RuleID:      "gocardless-api-token",
 		Description: "GoCardless API token",
 		Regex:       generateSemiGenericRegex([]string{"gocardless"}, `live_(?i)[a-z0-9\-_=]{40}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"live_",
 			"gocardless",

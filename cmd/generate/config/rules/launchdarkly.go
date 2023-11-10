@@ -11,7 +11,7 @@ func LaunchDarklyAccessToken() *config.Rule {
 		RuleID:      "launchdarkly-access-token",
 		Description: "Launchdarkly Access Token",
 		Regex:       generateSemiGenericRegex([]string{"launchdarkly"}, alphaNumericExtended("40"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"launchdarkly",
 		},

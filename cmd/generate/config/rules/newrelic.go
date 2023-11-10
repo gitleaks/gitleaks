@@ -15,7 +15,7 @@ func NewRelicUserID() *config.Rule {
 			"newrelic",
 			"new_relic",
 		}, `NRAK-[a-z0-9]{27}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"NRAK",
 		},
@@ -38,7 +38,7 @@ func NewRelicUserKey() *config.Rule {
 			"newrelic",
 			"new_relic",
 		}, alphaNumeric("64"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"new-relic",
 			"newrelic",
@@ -63,7 +63,7 @@ func NewRelicBrowserAPIKey() *config.Rule {
 			"newrelic",
 			"new_relic",
 		}, `NRJS-[a-f0-9]{19}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"NRJS-",
 		},

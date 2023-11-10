@@ -15,7 +15,6 @@ func InfracostAPIToken() *config.Rule {
 		RuleID: "infracost-api-token",
 
 		// Regex capture group for the actual secret
-		SecretGroup: 1,
 
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateUniqueTokenRegex(`ico-[a-zA-Z0-9]{32}`, true),

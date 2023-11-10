@@ -11,7 +11,6 @@ func ZendeskSecretKey() *config.Rule {
 		RuleID:      "zendesk-secret-key",
 		Description: "Zendesk Secret Key",
 		Regex:       generateSemiGenericRegex([]string{"zendesk"}, alphaNumeric("40"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"zendesk",
 		},

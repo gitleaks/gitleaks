@@ -11,7 +11,7 @@ func NPM() *config.Rule {
 		RuleID:      "npm-access-token",
 		Description: "npm access token",
 		Regex:       generateUniqueTokenRegex(`npm_[a-z0-9]{36}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"npm_",
 		},

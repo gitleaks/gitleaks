@@ -11,7 +11,7 @@ func DroneciAccessToken() *config.Rule {
 		RuleID:      "droneci-access-token",
 		Description: "Droneci Access Token",
 		Regex:       generateSemiGenericRegex([]string{"droneci"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"droneci",
 		},

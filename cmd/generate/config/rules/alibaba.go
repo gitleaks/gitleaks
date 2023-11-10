@@ -29,8 +29,8 @@ func AlibabaSecretKey() *config.Rule {
 		RuleID:      "alibaba-secret-key",
 		Regex: generateSemiGenericRegex([]string{"alibaba"},
 			alphaNumeric("30"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"alibaba"},
+
+		Keywords: []string{"alibaba"},
 	}
 
 	// validate

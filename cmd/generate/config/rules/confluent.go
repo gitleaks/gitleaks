@@ -11,7 +11,6 @@ func ConfluentSecretKey() *config.Rule {
 		RuleID:      "confluent-secret-key",
 		Description: "Confluent Secret Key",
 		Regex:       generateSemiGenericRegex([]string{"confluent"}, alphaNumeric("64"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"confluent",
 		},
@@ -30,7 +29,7 @@ func ConfluentAccessToken() *config.Rule {
 		RuleID:      "confluent-access-token",
 		Description: "Confluent Access Token",
 		Regex:       generateSemiGenericRegex([]string{"confluent"}, alphaNumeric("16"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"confluent",
 		},

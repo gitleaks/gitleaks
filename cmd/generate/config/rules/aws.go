@@ -12,7 +12,7 @@ func AWS() *config.Rule {
 		Description: "AWS",
 		RuleID:      "aws-access-token",
 		Regex: regexp.MustCompile(
-			"(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+			"(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
 		Keywords: []string{
 			"AKIA",
 			"AGPA",

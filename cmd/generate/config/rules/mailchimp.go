@@ -11,7 +11,7 @@ func MailChimp() *config.Rule {
 		RuleID:      "mailchimp-api-key",
 		Description: "Mailchimp API key",
 		Regex:       generateSemiGenericRegex([]string{"mailchimp"}, `[a-f0-9]{32}-us20`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"mailchimp",
 		},

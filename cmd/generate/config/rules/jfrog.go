@@ -19,7 +19,6 @@ func JFrogAPIKey() *config.Rule {
 		RuleID: "jfrog-api-key",
 
 		// Regex capture group for the actual secret
-		SecretGroup: 1,
 
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateSemiGenericRegex(keywords, alphaNumeric("73"), true),
@@ -46,7 +45,6 @@ func JFrogIdentityToken() *config.Rule {
 		RuleID: "jfrog-identity-token",
 
 		// Regex capture group for the actual secret
-		SecretGroup: 1,
 
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateSemiGenericRegex(keywords, alphaNumeric("64"), true),

@@ -30,7 +30,6 @@ func LinearClientSecret() *config.Rule {
 		RuleID:      "linear-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"linear"}, hex("32"), true),
 		Keywords:    []string{"linear"},
-		SecretGroup: 1,
 	}
 
 	// validate

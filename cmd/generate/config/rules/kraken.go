@@ -12,7 +12,7 @@ func KrakenAccessToken() *config.Rule {
 		Description: "Kraken Access Token",
 		Regex: generateSemiGenericRegex([]string{"kraken"},
 			alphaNumericExtendedLong("80,90"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"kraken",
 		},

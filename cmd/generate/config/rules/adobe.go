@@ -11,7 +11,6 @@ func AdobeClientID() *config.Rule {
 		Description: "Adobe Client ID (OAuth Web)",
 		RuleID:      "adobe-client-id",
 		Regex:       generateSemiGenericRegex([]string{"adobe"}, hex("32"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"adobe"},
 	}
 

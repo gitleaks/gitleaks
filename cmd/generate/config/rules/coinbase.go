@@ -12,7 +12,6 @@ func CoinbaseAccessToken() *config.Rule {
 		Description: "Coinbase Access Token",
 		Regex: generateSemiGenericRegex([]string{"coinbase"},
 			alphaNumericExtendedShort("64"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"coinbase",
 		},

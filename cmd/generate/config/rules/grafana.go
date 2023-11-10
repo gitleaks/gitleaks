@@ -10,9 +10,9 @@ func GrafanaApiKey() *config.Rule {
 	r := config.Rule{
 		Description: "Grafana api key (or Grafana cloud api key)",
 		RuleID:      "grafana-api-key",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,2}`, true),
-		Keywords:    []string{"eyJrIjoi"},
+
+		Regex:    generateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,2}`, true),
+		Keywords: []string{"eyJrIjoi"},
 	}
 
 	// validate
@@ -29,9 +29,9 @@ func GrafanaCloudApiToken() *config.Rule {
 	r := config.Rule{
 		Description: "Grafana cloud api token",
 		RuleID:      "grafana-cloud-api-token",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,400}={0,2}`, true),
-		Keywords:    []string{"glc_"},
+
+		Regex:    generateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,400}={0,2}`, true),
+		Keywords: []string{"glc_"},
 	}
 
 	// validate
@@ -48,9 +48,9 @@ func GrafanaServiceAccountToken() *config.Rule {
 	r := config.Rule{
 		Description: "Grafana service account token",
 		RuleID:      "grafana-service-account-token",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}`, true),
-		Keywords:    []string{"glsa_"},
+
+		Regex:    generateUniqueTokenRegex(`glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}`, true),
+		Keywords: []string{"glsa_"},
 	}
 
 	// validate

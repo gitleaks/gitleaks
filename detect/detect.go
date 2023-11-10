@@ -289,9 +289,18 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
-		// extract secret from secret group if set
-		if rule.SecretGroup != 0 {
-			groups := rule.Regex.FindStringSubmatch(secret)
+		// by default if secret group is not set, we will check to see if there
+		// are any capture groups. If there are, we will use the first capture to start
+		groups := rule.Regex.FindStringSubmatch(secret)
+		if rule.SecretGroup == 0 {
+			// if len(groups) == 2 that means there is only one capture group
+			// the first element in groups is the full match, the second is the
+			// first capture group
+			if len(groups) == 2 {
+				secret = groups[1]
+				finding.Secret = secret
+			}
+		} else {
 			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
 				// Config validation should prevent this
 				continue

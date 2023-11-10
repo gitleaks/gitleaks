@@ -18,9 +18,9 @@ func Snyk() *config.Rule {
 	r := config.Rule{
 		Description: "Snyk API token",
 		RuleID:      "snyk-api-token",
-		SecretGroup: 1,
-		Regex:       generateSemiGenericRegex(keywords, hex8_4_4_4_12(), true),
-		Keywords:    keywords,
+
+		Regex:    generateSemiGenericRegex(keywords, hex8_4_4_4_12(), true),
+		Keywords: keywords,
 	}
 
 	// validate

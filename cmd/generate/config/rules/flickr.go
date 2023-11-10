@@ -11,7 +11,7 @@ func FlickrAccessToken() *config.Rule {
 		RuleID:      "flickr-access-token",
 		Description: "Flickr Access Token",
 		Regex:       generateSemiGenericRegex([]string{"flickr"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"flickr",
 		},

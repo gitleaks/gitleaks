@@ -14,9 +14,6 @@ func DefinedNetworkingAPIToken() *config.Rule {
 		// Unique ID for the rule
 		RuleID: "defined-networking-api-token",
 
-		// Regex capture group for the actual secret
-		SecretGroup: 1,
-
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateSemiGenericRegex([]string{"dnkey"}, `dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52}`, true),
 
