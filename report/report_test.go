@@ -23,6 +23,14 @@ func TestReport(t *testing.T) {
 		wantEmpty bool
 	}{
 		{
+			ext: ".json",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
 			ext: "json",
 			findings: []Finding{
 				{
@@ -31,7 +39,7 @@ func TestReport(t *testing.T) {
 			},
 		},
 		{
-			ext: ".json",
+			ext: "JSON",
 			findings: []Finding{
 				{
 					RuleID: "test-rule",
@@ -80,6 +88,30 @@ func TestReport(t *testing.T) {
 			},
 		},
 		{
+			ext: "xml",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "XML",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: ".junit",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
 			ext: "junit",
 			findings: []Finding{
 				{
@@ -87,14 +119,38 @@ func TestReport(t *testing.T) {
 				},
 			},
 		},
-		// {
-		// 	ext: "SARIF",
-		// 	findings: []Finding{
-		// 		{
-		// 			RuleID: "test-rule",
-		// 		},
-		// 	},
-		// },
+		{
+			ext: "JUNIT",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: ".sarif",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "sarif",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "SARIF",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
 	}
 
 	for i, test := range tests {
