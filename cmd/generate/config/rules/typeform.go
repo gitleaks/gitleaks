@@ -12,7 +12,6 @@ func Typeform() *config.Rule {
 		Description: "Typeform API token",
 		Regex: generateSemiGenericRegex([]string{"typeform"},
 			`tfp_[a-z0-9\-_\.=]{59}`, true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"tfp_",
 		},

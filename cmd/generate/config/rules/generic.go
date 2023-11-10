@@ -20,7 +20,6 @@ func GenericCredential() *config.Rule {
 			"auth",
 			"access",
 		}, `[0-9a-z\-_.=]{10,150}`, true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"key",
 			"api",

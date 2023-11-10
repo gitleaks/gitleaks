@@ -11,7 +11,7 @@ func SidekiqSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Sidekiq Secret",
 		RuleID:      "sidekiq-secret",
-		SecretGroup: 1,
+
 		Regex: generateSemiGenericRegex([]string{"BUNDLE_ENTERPRISE__CONTRIBSYS__COM", "BUNDLE_GEMS__CONTRIBSYS__COM"},
 			`[a-f0-9]{8}:[a-f0-9]{8}`, true),
 		Keywords: []string{"BUNDLE_ENTERPRISE__CONTRIBSYS__COM", "BUNDLE_GEMS__CONTRIBSYS__COM"},

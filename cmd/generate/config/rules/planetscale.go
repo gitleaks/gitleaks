@@ -11,7 +11,7 @@ func PlanetScalePassword() *config.Rule {
 		RuleID:      "planetscale-password",
 		Description: "PlanetScale password",
 		Regex:       generateUniqueTokenRegex(`pscale_pw_(?i)[a-z0-9=\-_\.]{32,64}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"pscale_pw_",
 		},
@@ -32,7 +32,7 @@ func PlanetScaleAPIToken() *config.Rule {
 		RuleID:      "planetscale-api-token",
 		Description: "PlanetScale API token",
 		Regex:       generateUniqueTokenRegex(`pscale_tkn_(?i)[a-z0-9=\-_\.]{32,64}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"pscale_tkn_",
 		},
@@ -53,7 +53,7 @@ func PlanetScaleOAuthToken() *config.Rule {
 		RuleID:      "planetscale-oauth-token",
 		Description: "PlanetScale OAuth token",
 		Regex:       generateUniqueTokenRegex(`pscale_oauth_(?i)[a-z0-9=\-_\.]{32,64}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"pscale_oauth_",
 		},

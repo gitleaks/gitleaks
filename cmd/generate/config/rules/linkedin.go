@@ -14,7 +14,7 @@ func LinkedinClientSecret() *config.Rule {
 			"linkedin",
 			"linked-in",
 		}, alphaNumeric("16"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"linkedin",
 			"linked-in",
@@ -37,7 +37,7 @@ func LinkedinClientID() *config.Rule {
 			"linkedin",
 			"linked-in",
 		}, alphaNumeric("14"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"linkedin",
 			"linked-in",

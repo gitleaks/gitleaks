@@ -10,7 +10,6 @@ func Beamer() *config.Rule {
 	r := config.Rule{
 		Description: "Beamer API token",
 		RuleID:      "beamer-api-token",
-		SecretGroup: 1,
 		Regex: generateSemiGenericRegex([]string{"beamer"},
 			`b_[a-z0-9=_\-]{44}`, true),
 		Keywords: []string{"beamer"},

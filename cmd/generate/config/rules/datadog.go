@@ -12,7 +12,6 @@ func DatadogtokenAccessToken() *config.Rule {
 		Description: "Datadog Access Token",
 		Regex: generateSemiGenericRegex([]string{"datadog"},
 			alphaNumeric("40"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"datadog",
 		},

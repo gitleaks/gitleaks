@@ -11,7 +11,6 @@ func AdafruitAPIKey() *config.Rule {
 		Description: "Adafruit API Key",
 		RuleID:      "adafruit-api-key",
 		Regex:       generateSemiGenericRegex([]string{"adafruit"}, alphaNumericExtendedShort("32"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"adafruit"},
 	}
 

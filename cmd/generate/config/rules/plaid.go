@@ -13,8 +13,8 @@ func PlaidAccessID() *config.Rule {
 		RuleID:      "plaid-client-id",
 		Description: "Plaid Client ID",
 		Regex:       generateSemiGenericRegex([]string{"plaid"}, alphaNumeric("24"), true),
-		SecretGroup: 1,
-		Entropy:     3.5,
+
+		Entropy: 3.5,
 		Keywords: []string{
 			"plaid",
 		},
@@ -33,8 +33,8 @@ func PlaidSecretKey() *config.Rule {
 		RuleID:      "plaid-secret-key",
 		Description: "Plaid Secret key",
 		Regex:       generateSemiGenericRegex([]string{"plaid"}, alphaNumeric("30"), true),
-		SecretGroup: 1,
-		Entropy:     3.5,
+
+		Entropy: 3.5,
 		Keywords: []string{
 			"plaid",
 		},
@@ -54,7 +54,7 @@ func PlaidAccessToken() *config.Rule {
 		Description: "Plaid API Token",
 		Regex: generateSemiGenericRegex([]string{"plaid"},
 			fmt.Sprintf("access-(?:sandbox|development|production)-%s", hex8_4_4_4_12()), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"plaid",
 		},

@@ -13,7 +13,7 @@ func NytimesAccessToken() *config.Rule {
 		Regex: generateSemiGenericRegex([]string{
 			"nytimes", "new-york-times,", "newyorktimes"},
 			alphaNumericExtended("32"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"nytimes",
 			"new-york-times",

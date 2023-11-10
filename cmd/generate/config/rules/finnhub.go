@@ -11,7 +11,7 @@ func FinnhubAccessToken() *config.Rule {
 		RuleID:      "finnhub-access-token",
 		Description: "Finnhub Access Token",
 		Regex:       generateSemiGenericRegex([]string{"finnhub"}, alphaNumeric("20"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"finnhub",
 		},

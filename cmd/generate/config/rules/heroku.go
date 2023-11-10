@@ -10,8 +10,8 @@ func Heroku() *config.Rule {
 		Description: "Heroku API Key",
 		RuleID:      "heroku-api-key",
 		Regex:       generateSemiGenericRegex([]string{"heroku"}, hex8_4_4_4_12(), true),
-		SecretGroup: 1,
-		Keywords:    []string{"heroku"},
+
+		Keywords: []string{"heroku"},
 	}
 
 	// validate

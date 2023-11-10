@@ -12,8 +12,7 @@ func Contentful() *config.Rule {
 		RuleID:      "contentful-delivery-api-token",
 		Regex: generateSemiGenericRegex([]string{"contentful"},
 			alphaNumericExtended("43"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"contentful"},
+		Keywords: []string{"contentful"},
 	}
 
 	// validate

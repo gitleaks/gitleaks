@@ -11,7 +11,6 @@ func DiscordAPIToken() *config.Rule {
 		Description: "Discord API key",
 		RuleID:      "discord-api-token",
 		Regex:       generateSemiGenericRegex([]string{"discord"}, hex("64"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"discord"},
 	}
 
@@ -28,7 +27,6 @@ func DiscordClientID() *config.Rule {
 		Description: "Discord client ID",
 		RuleID:      "discord-client-id",
 		Regex:       generateSemiGenericRegex([]string{"discord"}, numeric("18"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"discord"},
 	}
 
@@ -45,7 +43,6 @@ func DiscordClientSecret() *config.Rule {
 		Description: "Discord client secret",
 		RuleID:      "discord-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"discord"}, alphaNumericExtended("32"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"discord"},
 	}
 

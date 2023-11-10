@@ -11,7 +11,7 @@ func FreshbooksAccessToken() *config.Rule {
 		RuleID:      "freshbooks-access-token",
 		Description: "Freshbooks Access Token",
 		Regex:       generateSemiGenericRegex([]string{"freshbooks"}, alphaNumeric("64"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"freshbooks",
 		},

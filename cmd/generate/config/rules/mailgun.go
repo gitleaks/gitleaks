@@ -11,7 +11,7 @@ func MailGunPrivateAPIToken() *config.Rule {
 		RuleID:      "mailgun-private-api-token",
 		Description: "Mailgun private API token",
 		Regex:       generateSemiGenericRegex([]string{"mailgun"}, `key-[a-f0-9]{32}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"mailgun",
 		},
@@ -30,7 +30,7 @@ func MailGunPubAPIToken() *config.Rule {
 		RuleID:      "mailgun-pub-key",
 		Description: "Mailgun public validation key",
 		Regex:       generateSemiGenericRegex([]string{"mailgun"}, `pubkey-[a-f0-9]{32}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"mailgun",
 		},
@@ -49,7 +49,7 @@ func MailGunSigningKey() *config.Rule {
 		RuleID:      "mailgun-signing-key",
 		Description: "Mailgun webhook signing key",
 		Regex:       generateSemiGenericRegex([]string{"mailgun"}, `[a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"mailgun",
 		},

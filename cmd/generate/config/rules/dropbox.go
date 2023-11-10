@@ -11,8 +11,8 @@ func DropBoxAPISecret() *config.Rule {
 		Description: "Dropbox API secret",
 		RuleID:      "dropbox-api-token",
 		Regex:       generateSemiGenericRegex([]string{"dropbox"}, alphaNumeric("15"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"dropbox"},
+
+		Keywords: []string{"dropbox"},
 	}
 
 	// validate
