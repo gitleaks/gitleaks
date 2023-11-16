@@ -139,7 +139,7 @@ func AzureStorageCredentialXStore() *config.Rule {
 	// validate
 	tps := []string{
 		generateSampleSecret("azure-storage-credential-xstore",
-			"<XstoreAccountInfo accountName = 'John Doe' accountSharedKey='"+secrets.NewSecret(alphaNumeric("43"))+"' />"),
+			"<XstoreAccountInfo accountSharedKey='"+secrets.NewSecret(alphaNumeric("43"))+"' />"),
 	}
 	return validate(r, tps, nil)
 }
