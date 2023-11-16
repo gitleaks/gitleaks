@@ -24,7 +24,7 @@ func AzureAppServiceDeploymentSecrets() *config.Rule {
 		Description: "CSCAN0020, CSCAN0030 - Found Azure app service deployment secrets in publish settings file.",
 		RuleID:      "azure-app-service-deployment-secrets",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`MII[a-z0-9=_\-]{200}`),
+		Regex:       generateUniqueTokenRegex(`MII[a-z0-9=_\-]{200}`, true),
 		Keywords:    []string{"MII"},
 	}
 
@@ -42,7 +42,7 @@ func AzureStorageCredential86char() *config.Rule {
 		Description: "CSCAN0030, CSCAN0090, CSCAN0150 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-86char",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`[ \t]{0,10}[a-zA-Z0-9/+]{86}==`),
+		Regex:       generateUniqueTokenRegex(`[ \t]{0,10}[a-zA-Z0-9/+]{86}==`, true),
 		Keywords:    []string{"=="},
 	}
 
@@ -60,7 +60,7 @@ func AzureStorageCredential43char() *config.Rule {
 		Description: "CSCAN0030, CSCAN0090, CSCAN0150 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-43char",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`[a-zA-Z0-9/+]{43}=[^{@\d%]`),
+		Regex:       generateUniqueTokenRegex(`[a-zA-Z0-9/+]{43}=[^{@\d%]`, true),
 		Keywords:    []string{"="},
 	}
 
@@ -78,7 +78,7 @@ func AzureStorageCredentialSig53() *config.Rule {
 		Description: "CSCAN0030, CSCAN0090, CSCAN0150 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-sig53",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`((sig|sas|password)=|>)[a-zA-Z0-9%]{43,53}%3d[^{a-zA-Z0-9%]`),
+		Regex:       generateUniqueTokenRegex(`((sig|sas|password)=|>)[a-zA-Z0-9%]{43,53}%3d[^{a-zA-Z0-9%]`, true),
 		Keywords:    []string{"sig", "sas", "password"},
 	}
 
@@ -96,7 +96,7 @@ func AzureStorageCredentialUserIDPW() *config.Rule {
 		Description: "CSCAN0030 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-useridpw",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`((user) ?(id|name)|uid)=.{2,128}?\s*?;\s*?((password)|(pwd))=[^'$%>@'";\[\{][^;"']{2,350}?(;|"|')`),
+		Regex:       generateUniqueTokenRegex(`((user) ?(id|name)|uid)=.{2,128}?\s*?;\s*?((password)|(pwd))=[^'$%>@'";\[\{][^;"']{2,350}?(;|"|')`, true),
 		Keywords:    []string{"userid=", ";password="},
 	}
 
@@ -114,7 +114,7 @@ func AzureStorageCredentialAccountKey() *config.Rule {
 		Description: "CSCAN0030 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-accountkey",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`AccountKey\s*=\s*MII[a-zA-Z0-9/+]{43,}?={0,2}`),
+		Regex:       generateUniqueTokenRegex(`AccountKey\s*=\s*MII[a-zA-Z0-9/+]{43,}?={0,2}`, true),
 		Keywords:    []string{"AccountKey = MII"},
 	}
 
@@ -132,7 +132,7 @@ func AzureStorageCredentialXStore() *config.Rule {
 		Description: "CSCAN0100 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-xstore",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*"[^"]{30}[ -~"\s\S\n\r\t]+/>`),
+		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*"[^"]{30}[ -~"\s\S\n\r\t]+/>`, true),
 		Keywords:    []string{"XstoreAccountInfo", "accountSharedKey"},
 	}
 
@@ -150,7 +150,7 @@ func AzureStorageCredentialServiceBus() *config.Rule {
 		Description: "CSCAN0100 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-servicebus",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`[<ServiceBusAccountInfo].*SharedAccessKey\s*=\s*[a-zA-Z0-9/+]{10,}['"]`),
+		Regex:       generateUniqueTokenRegex(`[<ServiceBusAccountInfo].*SharedAccessKey\s*=\s*[a-zA-Z0-9/+]{10,}['"]`, true),
 		Keywords:    []string{"ServiceBusAccountInfo", "SharedAccessKey"},
 	}
 
@@ -168,7 +168,7 @@ func AzureStorageCredentialMonikerKey() *config.Rule {
 		Description: "CSCAN0130 - Found Azure storage credential in MonitoringAgent config file.",
 		RuleID:      "azure-storage-credential-monikerkey",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`Account Moniker\s?=.*key\s?=.*`),
+		Regex:       generateUniqueTokenRegex(`Account Moniker\s?=.*key\s?=.*`, true),
 		Keywords:    []string{"Account Moniker"},
 	}
 
@@ -186,7 +186,7 @@ func AzureStorageCredentialBlobURL() *config.Rule {
 		Description: "CSCAN0110 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-bloburl",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`(?i)https://[a-zA-Z0-9-]+.(blob|file|queue|table|dfs|z8.web).core.windows.net/.*?sig=[a-zA-Z0-9%]{30,}`),
+		Regex:       generateUniqueTokenRegex(`(?i)https://[a-zA-Z0-9-]+.(blob|file|queue|table|dfs|z8.web).core.windows.net/.*?sig=[a-zA-Z0-9%]{30,}`, true),
 		Keywords:    []string{"sig="},
 	}
 
@@ -208,7 +208,7 @@ func AzurePasswordDecryptionkey() *config.Rule {
 		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file.",
 		RuleID:      "azure-password-machinekey",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`(decryptionKey\s*\=\s*['"].*['"]|validationKey\s*\=\s*['"].*['"])`),
+		Regex:       generateUniqueTokenRegex(`(decryptionKey\s*\=\s*['"].*['"]|validationKey\s*\=\s*['"].*['"])`, true),
 		Keywords:    []string{"decryptionKey", "validationKey"},
 	}
 
@@ -226,7 +226,7 @@ func AzurePasswordAddKey() *config.Rule {
 		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file.",
 		RuleID:      "azure-password-addkey",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`[<add].*([key](s|[0-9])?|(credential)s?|(secret)(s|S|[0-9])?|[password|token|key](primary|secondary|orsas|sas|encrypted))['"]\s*value\s*=['"].*['"]`),
+		Regex:       generateUniqueTokenRegex(`[<add].*([key](s|[0-9])?|(credential)s?|(secret)(s|S|[0-9])?|[password|token|key](primary|secondary|orsas|sas|encrypted))['"]\s*value\s*=['"].*['"]`, true),
 		Keywords:    []string{"add"},
 	}
 
@@ -244,7 +244,7 @@ func AzurePasswordConnString() *config.Rule {
 		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file.",
 		RuleID:      "azure-password-connstring",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`(connectionstring|connstring)[^=]*?=["'][^"']*?(password)=[^\$\s;][^"'\s]*?(;|['"])`),
+		Regex:       generateUniqueTokenRegex(`(connectionstring|connstring)[^=]*?=["'][^"']*?(password)=[^\$\s;][^"'\s]*?(;|['"])`, true),
 		Keywords:    []string{"connectionstring", "connstring", "password"},
 	}
 
@@ -263,7 +263,7 @@ func AzurePasswordValueString() *config.Rule {
 		Description: "CSCAN0090 - Found Azure password, symmetric key or storage credential in source file.",
 		RuleID:      "azure-password-value-string",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`value\s?=\s?['"]((([A-Za-z0-9+/]){4}){1,200})==['"]`),
+		Regex:       generateUniqueTokenRegex(`value\s?=\s?['"]((([A-Za-z0-9+/]){4}){1,200})==['"]`, true),
 		Keywords:    []string{"value"},
 	}
 
@@ -281,7 +281,7 @@ func AzurePassworduidpw() *config.Rule {
 		Description: "CSCAN0090, CSCAN0150 - Found Azure password, symmetric key or storage credential in source file.",
 		RuleID:      "azure-password-uidpw",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`((user) ?(id|name)|uid)=.{2,128}?\s*?;\s*?((password|(pwd))=[^'$%@'";\[\{][^;"']{2,350}?(;|"|'))`),
+		Regex:       generateUniqueTokenRegex(`((user) ?(id|name)|uid)=.{2,128}?\s*?;\s*?((password|(pwd))=[^'$%@'";\[\{][^;"']{2,350}?(;|"|'))`, true),
 		Keywords:    []string{"uid", "user", "password", "pwd"},
 	}
 
@@ -354,7 +354,7 @@ func AzureNetworkCredential() *config.Rule {
 		Description: "CSCAN0160 - Found Azure domain credential in source file.",
 		RuleID:      "azure-network-credential",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`NetworkCredential\((\s*).*,(\s*).*,(\s*)(corp|europe|middleeast|northamerica|southpacific|southamerica|fareast|africa|redmond|exchange|extranet|partners|extranettest|parttest|noe|ntdev|ntwksta|sys-wingroup|windeploy|wingroup|winse|segroup|xcorp|xrep|phx|gme|usme|cdocidm|mslpa)\)`),
+		Regex:       generateUniqueTokenRegex(`NetworkCredential\((\s*).*,(\s*).*,(\s*)(corp|europe|middleeast|northamerica|southpacific|southamerica|fareast|africa|redmond|exchange|extranet|partners|extranettest|parttest|noe|ntdev|ntwksta|sys-wingroup|windeploy|wingroup|winse|segroup|xcorp|xrep|phx|gme|usme|cdocidm|mslpa)\)`, true),
 		Keywords:    []string{"NetworkCredential"},
 	}
 
@@ -372,7 +372,7 @@ func AzureNetworkCredentialSchtasks() *config.Rule {
 		Description: "CSCAN0160 - Found Azure domain credential in source file.",
 		RuleID:      "azure-network-credential-schtasks",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`schtasks.*/ru\s(corp|europe|middleeast|northamerica|southpacific|southamerica|fareast|africa|redmond|exchange|extranet|partners|extranettest|parttest|noe|ntdev|ntwksta|sys\-wingroup|windeploy|wingroup|winse|segroup|xcorp|xrep|phx|gme|usme|cdocidm|mslpa).*/rp.*`),
+		Regex:       generateUniqueTokenRegex(`schtasks.*/ru\s(corp|europe|middleeast|northamerica|southpacific|southamerica|fareast|africa|redmond|exchange|extranet|partners|extranettest|parttest|noe|ntdev|ntwksta|sys\-wingroup|windeploy|wingroup|winse|segroup|xcorp|xrep|phx|gme|usme|cdocidm|mslpa).*/rp.*`, true),
 		Keywords:    []string{"schtasks"},
 	}
 
@@ -390,7 +390,7 @@ func AzureNetworkCredentialDotNet() *config.Rule {
 		Description: "CSCAN0160 - Found Azure domain credential in source file.",
 		RuleID:      "azure-network-credential-dotnet",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`new-object\s*System.Net.NetworkCredential\(.*?,\s*['"][^"]+['"]`),
+		Regex:       generateUniqueTokenRegex(`new-object\s*System.Net.NetworkCredential\(.*?,\s*['"][^"]+['"]`, true),
 		Keywords:    []string{"NetworkCredential"},
 	}
 
@@ -408,7 +408,7 @@ func AzureDevTFVCSecrets() *config.Rule {
 		Description: "CSCAN0200 - Found Azure DevDiv TFVC repo secrets.",
 		RuleID:      "azure-devtfvc-secrets",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`enc_username=.+[\n\r\s]+enc_password=.{3,}`),
+		Regex:       generateUniqueTokenRegex(`enc_username=.+[\n\r\s]+enc_password=.{3,}`, true),
 		Keywords:    []string{"enc_username", "enc_password"},
 	}
 
@@ -426,7 +426,7 @@ func AzureDevopsPAT() *config.Rule {
 		Description: "CSCAN0240 - Found Azure Devops personal access token in source file.",
 		RuleID:      "azure-devops-pat",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`(access_token).*?['="][a-zA-Z0-9/+]{10,99}['"]`),
+		Regex:       generateUniqueTokenRegex(`(access_token).*?['="][a-zA-Z0-9/+]{10,99}['"]`, true),
 		Keywords:    []string{"access_token"},
 	}
 

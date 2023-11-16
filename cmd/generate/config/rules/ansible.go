@@ -11,7 +11,7 @@ func AnsibleVaultToken() *config.Rule {
 		Description: "CSCAN0270 - Found Azure Subscription Token Cache.",
 		RuleID:      "ansible-vault-token",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`ANSIBLE_VAULT;[0-9]\.[0-9];AES256;[\r\n]+[0-9]+`),
+		Regex:       generateUniqueTokenRegex(`ANSIBLE_VAULT;[0-9]\.[0-9];AES256;[\r\n]+[0-9]+`, true),
 		Keywords:    []string{"ANSIBLE_VAULT;", "AES256;"},
 	}
 
