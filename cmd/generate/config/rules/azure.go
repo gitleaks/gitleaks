@@ -126,23 +126,24 @@ func AzureStorageCredentialAccountKey() *config.Rule {
 	return validate(r, tps, nil)
 }
 
-func AzureStorageCredentialXStore() *config.Rule {
-	// define rule
-	r := config.Rule{
-		Description: "CSCAN0100 - Found Azure storage credential in source code file.",
-		RuleID:      "azure-storage-credential-xstore",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*'[^"]{30}[ -~"\s\S\n\r\t]+/>`, true),
-		Keywords:    []string{"XstoreAccountInfo", "accountSharedKey"},
-	}
+// TODO: find out why this regex causes problems during the config check but seems fine on regexpal.com
+// func AzureStorageCredentialXStore() *config.Rule {
+// 	// define rule
+// 	r := config.Rule{
+// 		Description: "CSCAN0100 - Found Azure storage credential in source code file.",
+// 		RuleID:      "azure-storage-credential-xstore",
+// 		SecretGroup: 1,
+// 		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*'[^"]{30}[ -~"\s\S\n\r\t]+/>`, true),
+// 		Keywords:    []string{"XstoreAccountInfo", "accountSharedKey"},
+// 	}
 
-	// validate
-	tps := []string{
-		generateSampleSecret("azure-storage-credential-xstore",
-			"<XstoreAccountInfo accountSharedKey='"+secrets.NewSecret(alphaNumeric("43"))+"' />"),
-	}
-	return validate(r, tps, nil)
-}
+// 	// validate
+// 	tps := []string{
+// 		generateSampleSecret("azure-storage-credential-xstore",
+// 			"<XstoreAccountInfo accountSharedKey='"+secrets.NewSecret(alphaNumeric("43"))+"' />"),
+// 	}
+// 	return validate(r, tps, nil)
+// }
 
 func AzureStorageCredentialServiceBus() *config.Rule {
 	// define rule

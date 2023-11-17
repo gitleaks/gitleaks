@@ -49,9 +49,9 @@ func main() {
 	configRules = append(configRules, rules.AzureStorageCredentialServiceBus())
 	configRules = append(configRules, rules.AzureStorageCredentialSig53())
 	configRules = append(configRules, rules.AzureStorageCredentialUserIDPW())
-	configRules = append(configRules, rules.AzureStorageCredentialXStore())
-
+	
 	// TODO: Below work on Regex.com but something about the internal conversion to generateUniqueTokenRegex is breaking them
+	//configRules = append(configRules, rules.AzureStorageCredentialXStore())
 	//configRules = append(configRules, rules.AzurePowershellTokenCache())
 	//configRules = append(configRules, rules.AzurePasswordXMLCredential())
 	//configRules = append(configRules, rules.AzurePasswordXMLValue())

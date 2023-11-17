@@ -302,15 +302,6 @@ keywords = [
 ]
 
 [[rules]]
-description = "CSCAN0100 - Found Azure storage credential in source code file."
-id = "azure-storage-credential-xstore"
-regex = '''(?i)\b([<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*'[^"]{30}[ -~"\s\S\n\r\t]+/>]|$)'''
-secretGroup = 1
-keywords = [
-    "XstoreAccountInfo","accountSharedKey",
-]
-
-[[rules]]
 id = "aws-access-token"
 description = "AWS"
 regex = '''(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
