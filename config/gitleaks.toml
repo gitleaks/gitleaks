@@ -304,7 +304,7 @@ keywords = [
 [[rules]]
 description = "CSCAN0100 - Found Azure storage credential in source code file."
 id = "azure-storage-credential-xstore"
-regex = '''(?i)\b([<XstoreAccountInfo].*accountSharedKey\s*=\s*['"].*['"])(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b([<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*'[^"]{30}[ -~"\s\S\n\r\t]+/>]|$)'''
 secretGroup = 1
 keywords = [
     "XstoreAccountInfo","accountSharedKey",
