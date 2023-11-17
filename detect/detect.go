@@ -37,6 +37,7 @@ const (
 	ProtectStagedType
 
 	gitleaksAllowSignature = "gitleaks:allow"
+	chunkSize              = 10 * 1_000 // 10kb
 )
 
 // Detector is the main detector struct
@@ -502,31 +503,49 @@ func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
 	for pa := range paths {
 		p := pa
 		s.Go(func() error {
-			b, err := os.ReadFile(p.Path)
+			f, err := os.Open(p.Path)
 			if err != nil {
 				return err
 			}
+			defer f.Close()
 
-			mimetype, err := filetype.Match(b)
-			if err != nil {
-				return err
-			}
-			if mimetype.MIME.Type == "application" {
-				return nil // skip binary files
-			}
+			// Buffer to hold file chunks
+			buf := make([]byte, chunkSize)
+			totalLines := 0
+			for {
+				n, err := f.Read(buf)
+				if err != nil && err != io.EOF {
+					return err
+				}
+				if n == 0 {
+					break
+				}
 
-			fragment := Fragment{
-				Raw:      string(b),
-				FilePath: p.Path,
-			}
-			if p.Symlink != "" {
-				fragment.SymlinkFile = p.Symlink
-			}
-			for _, finding := range d.Detect(fragment) {
-				// need to add 1 since line counting starts at 1
-				finding.EndLine++
-				finding.StartLine++
-				d.addFinding(finding)
+				// TODO: optimization could be introduced here
+				mimetype, err := filetype.Match(buf[:n])
+				if err != nil {
+					return err
+				}
+				if mimetype.MIME.Type == "application" {
+					return nil // skip binary files
+				}
+
+				// Count the number of newlines in this chunk
+				linesInChunk := strings.Count(string(buf[:n]), "\n")
+				totalLines += linesInChunk
+				fragment := Fragment{
+					Raw:      string(buf[:n]),
+					FilePath: p.Path,
+				}
+				if p.Symlink != "" {
+					fragment.SymlinkFile = p.Symlink
+				}
+				for _, finding := range d.Detect(fragment) {
+					// need to add 1 since line counting starts at 1
+					finding.StartLine += (totalLines - linesInChunk) + 1
+					finding.EndLine += (totalLines - linesInChunk) + 1
+					d.addFinding(finding)
+				}
 			}
 
 			return nil
