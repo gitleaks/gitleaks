@@ -132,7 +132,7 @@ func AzureStorageCredentialXStore() *config.Rule {
 		Description: "CSCAN0100 - Found Azure storage credential in source code file.",
 		RuleID:      "azure-storage-credential-xstore",
 		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*"[^"]{30}[ -~"\s\S\n\r\t]+/>`, true),
+		Regex:       generateUniqueTokenRegex(`<XstoreAccountInfo[ -~"\s\S\n\r\t]+accountSharedKey\s*=\s*'[^"]{30}[ -~"\s\S\n\r\t]+/>`, true),
 		Keywords:    []string{"XstoreAccountInfo", "accountSharedKey"},
 	}
 
