@@ -13,6 +13,7 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
+	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
@@ -24,6 +25,7 @@ func init() {
 	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	detectCmd.Flags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
 	detectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	detectCmd.Flags().String("gitleaks-ignore-rev", "HEAD", "git revision where .gitleaksignore can be found (useful in bare repositories without working tree)")
 }
 
 var detectCmd = &cobra.Command{
@@ -99,22 +101,38 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not get .gitleaksignore path")
 	}
+	gitleaksIgnoreRev, err := cmd.Flags().GetString("gitleaks-ignore-rev")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get revision")
+	}
 
 	if fileExists(gitleaksIgnorePath) {
 		if err = detector.AddGitleaksIgnore(gitleaksIgnorePath); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
-	}
-
-	if fileExists(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(gitleaksIgnorePath, ".gitleaksignore")); err != nil {
-			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+	} else if gitPath := gitleaksIgnoreRev + ":" + gitleaksIgnorePath; fileExistsInGit(gitPath) {
+		if err = detector.AddGitleaksIgnoreFromGit(gitPath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnoreFromGit")
 		}
 	}
 
-	if fileExists(filepath.Join(source, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
+	if path := filepath.Join(gitleaksIgnorePath, ".gitleaksignore"); fileExists(path) {
+		if err = detector.AddGitleaksIgnore(path); err != nil {
 			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+	} else if gitPath := gitleaksIgnoreRev + ":" + path; fileExistsInGit(gitPath) {
+		if err = detector.AddGitleaksIgnoreFromGit(gitPath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnoreFromGit")
+		}
+	}
+
+	if path := filepath.Join(source, ".gitleaksignore"); fileExists(path) {
+		if err = detector.AddGitleaksIgnore(path); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
+		}
+	} else if gitPath := gitleaksIgnoreRev + ":" + path; fileExistsInGit(gitPath) {
+		if err = detector.AddGitleaksIgnoreFromGit(gitPath); err != nil {
+			log.Fatal().Err(err).Msg("could not call AddGitleaksIgnoreFromGit")
 		}
 	}
 
@@ -240,6 +258,15 @@ func fileExists(fileName string) bool {
 		}
 	}
 	return false
+}
+
+func fileExistsInGit(filename string) bool {
+	exists, err := git.FileExists(filename)
+	if err != nil {
+		return false
+	}
+
+	return exists
 }
 
 func FormatDuration(d time.Duration) string {

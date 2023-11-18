@@ -2,6 +2,7 @@ package git
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"os/exec"
@@ -138,6 +139,84 @@ func (c *DiffFilesCmd) Wait() (err error) {
 	return c.cmd.Wait()
 }
 
+// FileExists allows to check if file exists in git tree.
+func FileExists(gitPath string) (bool, error) {
+	parts := strings.Split(gitPath, ":")
+	if len(parts) != 2 {
+		return false, errors.New("invalid git path")
+	}
+	object := parts[0]
+	path := parts[1]
+
+	cmd := exec.Command("git", "ls-tree", "-r", object, "--name-only")
+	log.Debug().Msgf("executing: %s", cmd.String())
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return false, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return false, err
+	}
+	if err := cmd.Start(); err != nil {
+		return false, err
+	}
+	defer cmd.Wait()
+
+	errCh := make(chan error)
+	go listenForStdErr(stderr, errCh)
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		if scanner.Text() == path {
+			return true, nil
+		}
+	}
+
+	if err, open := <-errCh; open {
+		return false, err
+	}
+
+	return false, nil
+}
+
+// ShowFile uses git show to show file. Useful to read .gitleaksignore without working tree
+// (e.g. while using gitleaks in git server hooks with bare repositories).
+func ShowFile(gitPath string) (io.Reader, error) {
+	cmd := exec.Command("git", "show", gitPath)
+	log.Debug().Msgf("executing: %s", cmd.String())
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	defer cmd.Wait()
+
+	errCh := make(chan error)
+	go listenForStdErr(stderr, errCh)
+
+	// Func is designed to read mostly .gitleaksignore file which should not be big.
+	// Using buffer and io.Copy() should be okay.
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, stdout); err != nil {
+		return nil, err
+	}
+
+	if err, open := <-errCh; open {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
 // listenForStdErr listens for stderr output from git, prints it to stdout,
 // sends to errCh and closes it.
 func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
@@ -166,7 +245,10 @@ func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
 			strings.Contains(scanner.Text(),
 				"inexact rename detection was skipped") ||
 			strings.Contains(scanner.Text(),
-				"you may want to set your diff.renameLimit") {
+				"you may want to set your diff.renameLimit") ||
+			// if git ls-tree check fails
+			strings.Contains(scanner.Text(),
+				"exists on disk, but not in") {
 			log.Warn().Msg(scanner.Text())
 		} else {
 			log.Error().Msgf("[git] %s", scanner.Text())
