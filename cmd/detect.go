@@ -13,12 +13,8 @@ import (
 
 func init() {
 	rootCmd.AddCommand(detectCmd)
-	detectCmd.Flags().String("log-opts", "", "git log options")
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
 	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
-	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
-	detectCmd.Flags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
-	detectCmd.Flags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 }
 
 var detectCmd = &cobra.Command{
@@ -94,4 +90,3 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
 }
-

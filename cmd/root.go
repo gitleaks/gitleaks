@@ -57,6 +57,7 @@ func init() {
 	rootCmd.PersistentFlags().String("log-opts", "", "git log options")
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	rootCmd.PersistentFlags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
