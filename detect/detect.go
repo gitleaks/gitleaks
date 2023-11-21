@@ -254,7 +254,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 	}
 
-	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
+	matchIndices := rule.Regex.FindAllStringIndex(strings.Trim(fragment.Raw, "\n"), -1)
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
 		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
