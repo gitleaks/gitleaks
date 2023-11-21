@@ -4,38 +4,22 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 
-	"github.com/h2non/filetype"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/detect/git"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
-	"github.com/gitleaks/go-gitdiff/gitdiff"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
-// Type used to differentiate between git scan types:
-// $ gitleaks detect
-// $ gitleaks protect
-// $ gitleaks protect staged
-type GitScanType int
-
 const (
-	DetectType GitScanType = iota
-	ProtectType
-	ProtectStagedType
-
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
 )
@@ -90,6 +74,8 @@ type Detector struct {
 
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
+
+	Sema *semgroup.Group
 }
 
 // Fragment contains the data to be scanned
@@ -122,6 +108,7 @@ func NewDetector(cfg config.Config) *Detector {
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
+		Sema:           semgroup.NewGroup(context.Background(), 40),
 	}
 }
 
@@ -166,37 +153,6 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	return nil
 }
 
-func (d *Detector) AddBaseline(baselinePath string, source string) error {
-	if baselinePath != "" {
-		absoluteSource, err := filepath.Abs(source)
-		if err != nil {
-			return err
-		}
-
-		absoluteBaseline, err := filepath.Abs(baselinePath)
-		if err != nil {
-			return err
-		}
-
-		relativeBaseline, err := filepath.Rel(absoluteSource, absoluteBaseline)
-		if err != nil {
-			return err
-		}
-
-		baseline, err := LoadBaseline(baselinePath)
-		if err != nil {
-			return err
-		}
-
-		d.baseline = baseline
-		baselinePath = relativeBaseline
-
-	}
-
-	d.baselinePath = baselinePath
-	return nil
-}
-
 // DetectBytes scans the given bytes and returns a list of findings
 func (d *Detector) DetectBytes(content []byte) []report.Finding {
 	return d.DetectString(string(content))
@@ -207,6 +163,50 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	return d.Detect(Fragment{
 		Raw: content,
 	})
+}
+
+// Detect scans the given fragment and returns a list of findings
+func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	var findings []report.Finding
+
+	// initiate fragment keywords
+	fragment.keywords = make(map[string]bool)
+
+	// check if filepath is allowed
+	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
+		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
+		return findings
+	}
+
+	// add newline indices for location calculation in detectRule
+	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
+
+	// build keyword map for prefiltering rules
+	normalizedRaw := strings.ToLower(fragment.Raw)
+	matches := d.prefilter.MatchString(normalizedRaw)
+	for _, m := range matches {
+		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
+	}
+
+	for _, rule := range d.Config.Rules {
+		if len(rule.Keywords) == 0 {
+			// if not keywords are associated with the rule always scan the
+			// fragment using the rule
+			findings = append(findings, d.detectRule(fragment, rule)...)
+			continue
+		}
+		fragmentContainsKeyword := false
+		// check if keywords are in the fragment
+		for _, k := range rule.Keywords {
+			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
+				fragmentContainsKeyword = true
+			}
+		}
+		if fragmentContainsKeyword {
+			findings = append(findings, d.detectRule(fragment, rule)...)
+		}
+	}
+	return filter(findings, d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -362,275 +362,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		findings = append(findings, finding)
 	}
 	return findings
-}
-
-// DetectGit accepts source directory, log opts and GitScanType and returns a slice of report.Finding.
-func (d *Detector) DetectGit(source string, logOpts string, gitScanType GitScanType) ([]report.Finding, error) {
-	var (
-		diffFilesCmd *git.DiffFilesCmd
-		err          error
-	)
-	switch gitScanType {
-	case DetectType:
-		diffFilesCmd, err = git.NewGitLogCmd(source, logOpts)
-		if err != nil {
-			return d.findings, err
-		}
-	case ProtectType:
-		diffFilesCmd, err = git.NewGitDiffCmd(source, false)
-		if err != nil {
-			return d.findings, err
-		}
-	case ProtectStagedType:
-		diffFilesCmd, err = git.NewGitDiffCmd(source, true)
-		if err != nil {
-			return d.findings, err
-		}
-	}
-	defer diffFilesCmd.Wait()
-	diffFilesCh := diffFilesCmd.DiffFilesCh()
-	errCh := diffFilesCmd.ErrCh()
-
-	s := semgroup.NewGroup(context.Background(), 4)
-
-	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
-	for diffFilesCh != nil || errCh != nil {
-		select {
-		case gitdiffFile, open := <-diffFilesCh:
-			if !open {
-				diffFilesCh = nil
-				break
-			}
-
-			// skip binary files
-			if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
-				continue
-			}
-
-			// Check if commit is allowed
-			commitSHA := ""
-			if gitdiffFile.PatchHeader != nil {
-				commitSHA = gitdiffFile.PatchHeader.SHA
-				if d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA) {
-					continue
-				}
-			}
-			d.addCommit(commitSHA)
-
-			s.Go(func() error {
-				for _, textFragment := range gitdiffFile.TextFragments {
-					if textFragment == nil {
-						return nil
-					}
-
-					fragment := Fragment{
-						Raw:       textFragment.Raw(gitdiff.OpAdd),
-						CommitSHA: commitSHA,
-						FilePath:  gitdiffFile.NewName,
-					}
-
-					for _, finding := range d.Detect(fragment) {
-						d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
-					}
-				}
-				return nil
-			})
-		case err, open := <-errCh:
-			if !open {
-				errCh = nil
-				break
-			}
-
-			return d.findings, err
-		}
-	}
-
-	if err := s.Wait(); err != nil {
-		return d.findings, err
-	}
-	log.Info().Msgf("%d commits scanned.", len(d.commitMap))
-	log.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
-	return d.findings, nil
-}
-
-type scanTarget struct {
-	Path    string
-	Symlink string
-}
-
-// DetectFiles accepts a path to a source directory or file and begins a scan of the
-// file or directory.
-func (d *Detector) DetectFiles(source string) ([]report.Finding, error) {
-	s := semgroup.NewGroup(context.Background(), 4)
-	paths := make(chan scanTarget)
-	s.Go(func() error {
-		defer close(paths)
-		return filepath.Walk(source,
-			func(path string, fInfo os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if fInfo.Name() == ".git" && fInfo.IsDir() {
-					return filepath.SkipDir
-				}
-				if fInfo.Size() == 0 {
-					return nil
-				}
-				if fInfo.Mode().IsRegular() {
-					paths <- scanTarget{
-						Path:    path,
-						Symlink: "",
-					}
-				}
-				if fInfo.Mode().Type() == fs.ModeSymlink && d.FollowSymlinks {
-					realPath, err := filepath.EvalSymlinks(path)
-					if err != nil {
-						return err
-					}
-					realPathFileInfo, _ := os.Stat(realPath)
-					if realPathFileInfo.IsDir() {
-						log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
-						return nil
-					}
-					paths <- scanTarget{
-						Path:    realPath,
-						Symlink: path,
-					}
-				}
-				return nil
-			})
-	})
-	for pa := range paths {
-		p := pa
-		s.Go(func() error {
-			f, err := os.Open(p.Path)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			// Buffer to hold file chunks
-			buf := make([]byte, chunkSize)
-			totalLines := 0
-			for {
-				n, err := f.Read(buf)
-				if err != nil && err != io.EOF {
-					return err
-				}
-				if n == 0 {
-					break
-				}
-
-				// TODO: optimization could be introduced here
-				mimetype, err := filetype.Match(buf[:n])
-				if err != nil {
-					return err
-				}
-				if mimetype.MIME.Type == "application" {
-					return nil // skip binary files
-				}
-
-				// Count the number of newlines in this chunk
-				linesInChunk := strings.Count(string(buf[:n]), "\n")
-				totalLines += linesInChunk
-				fragment := Fragment{
-					Raw:      string(buf[:n]),
-					FilePath: p.Path,
-				}
-				if p.Symlink != "" {
-					fragment.SymlinkFile = p.Symlink
-				}
-				for _, finding := range d.Detect(fragment) {
-					// need to add 1 since line counting starts at 1
-					finding.StartLine += (totalLines - linesInChunk) + 1
-					finding.EndLine += (totalLines - linesInChunk) + 1
-					d.addFinding(finding)
-				}
-			}
-
-			return nil
-		})
-	}
-
-	if err := s.Wait(); err != nil {
-		return d.findings, err
-	}
-
-	return d.findings, nil
-}
-
-// DetectReader accepts an io.Reader and a buffer size for the reader in KB
-func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
-	reader := bufio.NewReader(r)
-	buf := make([]byte, 0, 1000*bufSize)
-	findings := []report.Finding{}
-
-	for {
-		n, err := reader.Read(buf[:cap(buf)])
-		buf = buf[:n]
-		if err != nil {
-			if err != io.EOF {
-				return findings, err
-			}
-			break
-		}
-
-		fragment := Fragment{
-			Raw: string(buf),
-		}
-		for _, finding := range d.Detect(fragment) {
-			findings = append(findings, finding)
-			if d.Verbose {
-				printFinding(finding, d.NoColor)
-			}
-		}
-	}
-
-	return findings, nil
-}
-
-// Detect scans the given fragment and returns a list of findings
-func (d *Detector) Detect(fragment Fragment) []report.Finding {
-	var findings []report.Finding
-
-	// initiate fragment keywords
-	fragment.keywords = make(map[string]bool)
-
-	// check if filepath is allowed
-	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
-		return findings
-	}
-
-	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
-
-	// build keyword map for prefiltering rules
-	normalizedRaw := strings.ToLower(fragment.Raw)
-	matches := d.prefilter.MatchString(normalizedRaw)
-	for _, m := range matches {
-		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
-	}
-
-	for _, rule := range d.Config.Rules {
-		if len(rule.Keywords) == 0 {
-			// if not keywords are associated with the rule always scan the
-			// fragment using the rule
-			findings = append(findings, d.detectRule(fragment, rule)...)
-			continue
-		}
-		fragmentContainsKeyword := false
-		// check if keywords are in the fragment
-		for _, k := range rule.Keywords {
-			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
-				fragmentContainsKeyword = true
-			}
-		}
-		if fragmentContainsKeyword {
-			findings = append(findings, d.detectRule(fragment, rule)...)
-		}
-	}
-	return filter(findings, d.Redact)
 }
 
 // addFinding synchronously adds a finding to the findings slice

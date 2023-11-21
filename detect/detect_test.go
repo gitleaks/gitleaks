@@ -12,6 +12,7 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 const configPath = "../testdata/config/"
@@ -466,7 +467,9 @@ func TestFromGit(t *testing.T) {
 		err = detector.AddGitleaksIgnore(ignorePath)
 		require.NoError(t, err)
 
-		findings, err := detector.DetectGit(tt.source, tt.logOpts, DetectType)
+		gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
+		require.NoError(t, err)
+		findings, err := detector.DetectGit(gitCmd)
 		require.NoError(t, err)
 
 		for _, f := range findings {
@@ -533,7 +536,9 @@ func TestFromGitStaged(t *testing.T) {
 		detector := NewDetector(cfg)
 		err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
 		require.NoError(t, err)
-		findings, err := detector.DetectGit(tt.source, tt.logOpts, ProtectStagedType)
+		gitCmd, err := sources.NewGitDiffCmd(tt.source, true)
+		require.NoError(t, err)
+		findings, err := detector.DetectGit(gitCmd)
 		require.NoError(t, err)
 
 		for _, f := range findings {
@@ -625,7 +630,9 @@ func TestFromFiles(t *testing.T) {
 		err = detector.AddGitleaksIgnore(ignorePath)
 		require.NoError(t, err)
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
+		paths, err := sources.FilesystemTargets(tt.source, detector.Sema, true)
+		require.NoError(t, err)
+		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
@@ -674,7 +681,9 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		findings, err := detector.DetectFiles(tt.source)
+		paths, err := sources.FilesystemTargets(tt.source, detector.Sema, true)
+		require.NoError(t, err)
+		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
