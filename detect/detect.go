@@ -75,7 +75,7 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
 
-    // Sema (https://github.com/fatih/semgroup) controls the concurrency
+	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 }
 
