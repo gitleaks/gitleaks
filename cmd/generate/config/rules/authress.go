@@ -9,7 +9,7 @@ import (
 
 func Authress() *config.Rule {
 	// Rule Definition
-	// (Note: When changes are made to this, rerun `cd cmd/generate/config && go run main.go` and commit the config/gitleaks.toml file
+	// (Note: When changes are made to this, rerun `go generate ./...` and commit the config/gitleaks.toml file
 	r := config.Rule{
 		Description: "Authress Service Client Access Key",
 		RuleID:      "authress-service-client-access-key",
