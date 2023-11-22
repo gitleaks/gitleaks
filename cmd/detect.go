@@ -7,8 +7,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 func init() {
@@ -63,7 +63,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// start the detector scan
 	if noGit {
-		findings, err = detector.DetectFiles(source)
+		paths, err := sources.FilesystemTargets(source, detector.Sema, detector.FollowSymlinks)
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+		findings, err = detector.DetectFiles(paths)
 		if err != nil {
 			// don't exit on error, just log it
 			log.Error().Err(err).Msg("")
@@ -81,7 +85,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatal().Err(err).Msg("")
 		}
-		findings, err = detector.DetectGit(source, logOpts, detect.DetectType)
+		gitCmd, err := sources.NewGitLogCmd(source, logOpts)
+		if err != nil {
+			log.Fatal().Err(err).Msg("")
+		}
+		findings, err = detector.DetectGit(gitCmd)
 		if err != nil {
 			// don't exit on error, just log it
 			log.Error().Err(err).Msg("")

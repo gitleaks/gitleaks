@@ -6,8 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 func init() {
@@ -35,22 +35,15 @@ func runProtect(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("")
 	}
 	start := time.Now()
-
 	detector := Detector(cmd, cfg, source)
-
-	// get log options for git scan
-	logOpts, err := cmd.Flags().GetString("log-opts")
-	if err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
 
 	// start git scan
 	var findings []report.Finding
-	if staged {
-		findings, err = detector.DetectGit(source, logOpts, detect.ProtectStagedType)
-	} else {
-		findings, err = detector.DetectGit(source, logOpts, detect.ProtectType)
+	gitCmd, err := sources.NewGitDiffCmd(source, staged)
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
 	}
+	findings, err = detector.DetectGit(gitCmd)
 
 	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
 }

@@ -1,4 +1,4 @@
-package git_test
+package sources
 
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
