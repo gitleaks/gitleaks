@@ -8,7 +8,7 @@ import (
 func Beamer() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Beamer API token",
+		Description: "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates.",
 		RuleID:      "beamer-api-token",
 		Regex: generateSemiGenericRegex([]string{"beamer"},
 			`b_[a-z0-9=_\-]{44}`, true),

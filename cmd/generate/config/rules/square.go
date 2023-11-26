@@ -9,7 +9,7 @@ func SquareAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "square-access-token",
-		Description: "Square Access Token",
+		Description: "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure.",
 		Regex:       generateUniqueTokenRegex(`sq0atp-[0-9A-Za-z\-_]{22}`, true),
 		Keywords:    []string{"sq0atp-"},
 	}

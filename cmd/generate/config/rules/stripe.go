@@ -8,7 +8,7 @@ import (
 func StripeAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Stripe Access Token",
+		Description: "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data.",
 		RuleID:      "stripe-access-token",
 		Regex:       generateUniqueTokenRegex(`(sk|pk)_(test|live)_[0-9a-z]{10,32}`, true),
 		Keywords: []string{

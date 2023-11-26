@@ -9,7 +9,7 @@ func PulumiAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "pulumi-api-token",
-		Description: "Pulumi API token",
+		Description: "Found a Pulumi API token, posing a risk to infrastructure as code services and cloud resource management.",
 		Regex:       generateUniqueTokenRegex(`pul-[a-f0-9]{40}`, true),
 
 		Keywords: []string{

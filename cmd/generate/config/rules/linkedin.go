@@ -9,7 +9,7 @@ func LinkedinClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "linkedin-client-secret",
-		Description: "LinkedIn Client secret",
+		Description: "Discovered a LinkedIn Client secret, potentially compromising LinkedIn application integrations and user data.",
 		Regex: generateSemiGenericRegex([]string{
 			"linkedin",
 			"linked-in",
@@ -32,7 +32,7 @@ func LinkedinClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "linkedin-client-id",
-		Description: "LinkedIn Client ID",
+		Description: "Found a LinkedIn Client ID, risking unauthorized access to LinkedIn integrations and professional data exposure.",
 		Regex: generateSemiGenericRegex([]string{
 			"linkedin",
 			"linked-in",

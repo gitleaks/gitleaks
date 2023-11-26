@@ -8,7 +8,7 @@ import (
 func GrafanaApiKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Grafana api key (or Grafana cloud api key)",
+		Description: "Identified a Grafana API key, which could compromise monitoring dashboards and sensitive data analytics.",
 		RuleID:      "grafana-api-key",
 
 		Regex:    generateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,2}`, true),
@@ -27,7 +27,7 @@ func GrafanaApiKey() *config.Rule {
 func GrafanaCloudApiToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Grafana cloud api token",
+		Description: "Found a Grafana cloud API token, risking unauthorized access to cloud-based monitoring services and data exposure.",
 		RuleID:      "grafana-cloud-api-token",
 
 		Regex:    generateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,400}={0,2}`, true),
@@ -46,7 +46,7 @@ func GrafanaCloudApiToken() *config.Rule {
 func GrafanaServiceAccountToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Grafana service account token",
+		Description: "Discovered a Grafana service account token, posing a risk of compromised monitoring services and data integrity.",
 		RuleID:      "grafana-service-account-token",
 
 		Regex:    generateUniqueTokenRegex(`glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}`, true),

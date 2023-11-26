@@ -10,7 +10,7 @@ import (
 func FrameIO() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Frame.io API token",
+		Description: "Found a Frame.io API token, potentially compromising video collaboration and project management.",
 		RuleID:      "frameio-api-token",
 		Regex:       regexp.MustCompile(`fio-u-(?i)[a-z0-9\-_=]{64}`),
 		Keywords:    []string{"fio-u-"},

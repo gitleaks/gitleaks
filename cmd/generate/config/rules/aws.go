@@ -9,7 +9,7 @@ import (
 func AWS() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "AWS",
+		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		RuleID:      "aws-access-token",
 		Regex: regexp.MustCompile(
 			"(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),

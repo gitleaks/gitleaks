@@ -9,7 +9,7 @@ func NPM() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "npm-access-token",
-		Description: "npm access token",
+		Description: "Uncovered an npm access token, potentially compromising package management and code repository access.",
 		Regex:       generateUniqueTokenRegex(`npm_[a-z0-9]{36}`, true),
 
 		Keywords: []string{

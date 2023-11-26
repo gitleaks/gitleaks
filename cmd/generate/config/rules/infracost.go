@@ -9,7 +9,7 @@ func InfracostAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		// Human readable description of the rule
-		Description: "Infracost API Token",
+		Description: "Detected an Infracost API Token, risking unauthorized access to cloud cost estimation tools and financial data.",
 
 		// Unique ID for the rule
 		RuleID: "infracost-api-token",
