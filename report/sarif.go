@@ -55,7 +55,7 @@ func hasEmptyRules(tool Tool) bool {
 func getRules(cfg config.Config) []Rules {
 	// TODO	for _, rule := range cfg.Rules {
 	var rules []Rules
-	for _, rule := range cfg.OrderedRules() {
+	for _, rule := range cfg.GetOrderedRules() {
 		shortDescription := ShortDescription{
 			Text: rule.Description,
 		}
