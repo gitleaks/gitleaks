@@ -8,7 +8,7 @@ import (
 func MapBox() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "MapBox API token",
+		Description: "Detected a MapBox API token, posing a risk to geospatial services and sensitive location data exposure.",
 		RuleID:      "mapbox-api-token",
 		Regex:       generateSemiGenericRegex([]string{"mapbox"}, `pk\.[a-z0-9]{60}\.[a-z0-9]{22}`, true),
 

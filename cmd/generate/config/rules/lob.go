@@ -8,7 +8,7 @@ import (
 func LobPubAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Lob Publishable API Key",
+		Description: "Detected a Lob Publishable API Key, posing a risk of exposing mail and print service integrations.",
 		RuleID:      "lob-pub-api-key",
 		Regex:       generateSemiGenericRegex([]string{"lob"}, `(test|live)_pub_[a-f0-9]{31}`, true),
 
@@ -29,7 +29,7 @@ func LobPubAPIToken() *config.Rule {
 func LobAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Lob API Key",
+		Description: "Uncovered a Lob API Key, which could lead to unauthorized access to mailing and address verification services.",
 		RuleID:      "lob-api-key",
 		Regex:       generateSemiGenericRegex([]string{"lob"}, `(live|test)_[a-f0-9]{35}`, true),
 		Keywords: []string{

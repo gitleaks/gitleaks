@@ -8,7 +8,7 @@ import (
 func VaultServiceToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Vault Service Token",
+		Description: "Identified a Vault Service Token, potentially compromising infrastructure security and access to sensitive credentials.",
 		RuleID:      "vault-service-token",
 		Regex:       generateUniqueTokenRegex(`hvs\.[a-z0-9_-]{90,100}`, true),
 		Keywords:    []string{"hvs"},
@@ -24,7 +24,7 @@ func VaultServiceToken() *config.Rule {
 func VaultBatchToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Vault Batch Token",
+		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
 		RuleID:      "vault-batch-token",
 		Regex:       generateUniqueTokenRegex(`hvb\.[a-z0-9_-]{138,212}`, true),
 		Keywords:    []string{"hvb"},

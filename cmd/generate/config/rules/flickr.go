@@ -9,7 +9,7 @@ func FlickrAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "flickr-access-token",
-		Description: "Flickr Access Token",
+		Description: "Discovered a Flickr Access Token, posing a risk of unauthorized photo management and potential data leakage.",
 		Regex:       generateSemiGenericRegex([]string{"flickr"}, alphaNumeric("32"), true),
 
 		Keywords: []string{
