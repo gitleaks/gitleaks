@@ -63,7 +63,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// start the detector scan
 	if noGit {
-		paths, err := sources.FilesystemTargets(source, detector.Sema, detector.FollowSymlinks)
+		paths, err := sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
 		if err != nil {
 			log.Fatal().Err(err)
 		}

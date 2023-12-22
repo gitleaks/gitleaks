@@ -14,7 +14,7 @@ type ScanTarget struct {
 	Symlink string
 }
 
-func FilesystemTargets(source string, s *semgroup.Group, followSymlinks bool) (<-chan ScanTarget, error) {
+func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool) (<-chan ScanTarget, error) {
 	paths := make(chan ScanTarget)
 	s.Go(func() error {
 		defer close(paths)

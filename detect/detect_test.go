@@ -630,7 +630,7 @@ func TestFromFiles(t *testing.T) {
 		err = detector.AddGitleaksIgnore(ignorePath)
 		require.NoError(t, err)
 		detector.FollowSymlinks = true
-		paths, err := sources.FilesystemTargets(tt.source, detector.Sema, true)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
 		require.NoError(t, err)
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
@@ -681,7 +681,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		paths, err := sources.FilesystemTargets(tt.source, detector.Sema, true)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
 		require.NoError(t, err)
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
