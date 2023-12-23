@@ -86,9 +86,9 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
-	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
+	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
 	if staged {
-		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0",
+		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
 	}
 	log.Debug().Msgf("executing: %s", cmd.String())
