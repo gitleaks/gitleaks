@@ -1,9 +1,7 @@
 project_name: gitleaks
 
 builds:
-  - env:
-    - CGO_ENABLED=0
-  - main: main.go
+  - main: ./main.go
     binary: gitleaks
     goos:
       - darwin
@@ -19,6 +17,8 @@ builds:
       - "7"
     ldflags:
       - -s -w -X=github.com/AikidoSec/gitleaks/cmd.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
 archives:
   - builds: [gitleaks]
     format_overrides:
