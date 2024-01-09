@@ -15,7 +15,7 @@ type Finding struct {
 	EndColumn   int
 
 	Line     string `json:"-"`
-	FullLine string `json:"-"`
+	FullLine string
 
 	Match string
 
