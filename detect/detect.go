@@ -283,7 +283,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			Secret:      secret,
 			Match:       secret,
 			Tags:        rule.Tags,
-			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Line:        fragment.Raw[0:],
 		}
 
 		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
