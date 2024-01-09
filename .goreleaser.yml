@@ -1,6 +1,8 @@
 project_name: gitleaks
 
 builds:
+  - env:
+    - CGO_ENABLED=0
   - main: main.go
     binary: gitleaks
     goos:
