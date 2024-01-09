@@ -16,7 +16,7 @@ builds:
       - "6"
       - "7"
     ldflags:
-      - -s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version={{.Version}}
+      - -s -w -X=github.com/AikidoSec/gitleaks/cmd.Version={{.Version}}
 archives:
   - builds: [gitleaks]
     format_overrides:
@@ -27,3 +27,7 @@ archives:
       386: x32
 release:
   prerelease: true
+
+custom_builds:
+  - id: "custom"
+    cmd: make build
