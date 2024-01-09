@@ -22,12 +22,3 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-    replacements:
-      amd64: x64
-      386: x32
-release:
-  prerelease: true
-
-custom_builds:
-  - id: "custom"
-    cmd: make build
