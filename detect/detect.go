@@ -270,6 +270,14 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
+		
+		var full_fragment;
+		if( len(fragment.Raw)  > 250 )
+		{
+			full_fragment = strings.TrimSpace(fragment.Raw[0:250])
+		}else{
+			full_fragment = strings.TrimSpace(fragment.Raw[0:])
+		}
 
 		finding := report.Finding{
 			Description: rule.Description,
@@ -284,7 +292,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			Match:       secret,
 			Tags:        rule.Tags,
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			FullLine:    strings.TrimSpace(fragment.Raw[0:]),
+			FullLine:    full_fragment,
 		}
 
 		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
