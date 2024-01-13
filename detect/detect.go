@@ -271,9 +271,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			loc.endLineIndex = matchIndex[1]
 		}
 		
-		var full_fragment;
-		if( len(fragment.Raw)  > 250 )
-		{
+		var full_fragment
+		if( len(fragment.Raw)  > 250 ){
 			full_fragment = strings.TrimSpace(fragment.Raw[0:250])
 		}else{
 			full_fragment = strings.TrimSpace(fragment.Raw[0:])
