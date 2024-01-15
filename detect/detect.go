@@ -135,7 +135,6 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	log.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
 	file, err := os.Open(gitleaksIgnorePath)
-
 	if err != nil {
 		return err
 	}
@@ -327,8 +326,13 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		case "line":
 			globalAllowlistTarget = finding.Line
 		}
-		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
-			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+
+		regexMatchText := finding.Secret
+		if d.Config.Allowlist.RegexFull {
+			regexMatchText = fragment.Raw[loc.startLineIndex:loc.endLineIndex]
+		}
+		if rule.Allowlist.RegexAllowed(regexMatchText) ||
+			d.Config.Allowlist.RegexAllowed(regexMatchText) {
 			continue
 		}
 
