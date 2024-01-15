@@ -475,20 +475,7 @@ keywords = [
 ]
 
 [rules.allowlist]
-stopwords= [
-    "client",
-    "endpoint",
-    "vpn",
-    "_ec2_",
-    "aws_",
-    "authorize",
-    "author",
-    "define",
-    "config",
-    "credential",
-    "setting",
-    "sample",
-    "xxxxxx",
+stopwords = [
     "000000",
     "aaaaaa",
     "about",
