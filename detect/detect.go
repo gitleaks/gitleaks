@@ -327,12 +327,16 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			globalAllowlistTarget = finding.Line
 		}
 
-		regexMatchText := finding.Secret
 		if d.Config.Allowlist.RegexFull {
-			regexMatchText = fragment.Raw[loc.startLineIndex:loc.endLineIndex]
+			regexMatchText := fragment.Raw[loc.startLineIndex:loc.endLineIndex]
+			if rule.Allowlist.RegexAllowed(regexMatchText) ||
+				d.Config.Allowlist.RegexAllowed(regexMatchText) {
+				continue
+			}
 		}
-		if rule.Allowlist.RegexAllowed(regexMatchText) ||
-			d.Config.Allowlist.RegexAllowed(regexMatchText) {
+
+		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
+			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
 			continue
 		}
 
