@@ -2061,7 +2061,7 @@ id = "hashicorp-tf-api-token"
 description = "Uncovered a HashiCorp Terraform user/org API token, which may lead to unauthorized infrastructure management and security breaches."
 regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
 keywords = [
-    "atlasv1",
+    "atlasv1","HashiCorp",
 ]
 
 [[rules]]
@@ -2069,7 +2069,7 @@ id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
 regex = '''(?i)(?:administrator_login_password|password)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}("[a-z0-9=_\-]{8,20}")(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
-    "administrator_login_password","password",
+    "administrator_login_password","password","HashiCorp",
 ]
 
 [[rules]]
@@ -2846,4 +2846,16 @@ keywords = [
     "zendesk",
 ]
 
-
+[[rules]]
+description = "HashiCorp Vault API-token"
+id = "hashicorp-vault-token"
+regex = '''X-Vault-Token['\":\]\[= ]{1,6}[ ]{0,3}[a-z0-9]{8,8}-[a-z0-9]{4,4}-[a-z0-9]{4,4}-[a-z0-9]{4,4}-[a-z0-9]{12,12}''' # X-Vault-Token: '9e64c3b8-01f7-7a64-1575-30a91f7d1ae4
+entropy = 3.0
+[rules.allowlist]
+regexes = [
+    '''9e64c3b8-01f7-7a64-1575-30a91f7d1ae4''', # test key from PHPdependency "csharpru/vault-php"
+    '''db02de05-fa39-4855-059b-67221c5c2f63''', # test key from PHP dependency "csharpru/vault-php"
+    ]
+keywords = [
+    "HashiCorp",
+]
