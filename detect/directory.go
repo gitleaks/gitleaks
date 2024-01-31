@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -14,11 +15,26 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 	for pa := range paths {
 		p := pa
 		d.Sema.Go(func() error {
+
 			f, err := os.Open(p.Path)
 			if err != nil {
 				return err
 			}
 			defer f.Close()
+
+			// Get file size
+			fileInfo, err := f.Stat()
+			if err != nil {
+				return err
+			}
+			fileSize := fileInfo.Size()
+			if d.MaxTargetMegaBytes > 0 {
+				rawLength := fileSize / 1000000
+				if rawLength > int64(d.MaxTargetMegaBytes) {
+					log.Debug().Msgf("skipping file: %s scan due to size: %d", p.Path, rawLength)
+					return nil
+				}
+			}
 
 			// Buffer to hold file chunks
 			buf := make([]byte, chunkSize)
