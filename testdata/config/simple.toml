@@ -20,6 +20,12 @@ title = "gitleaks config"
     tags = ["key", "AWS", "MWS"]
 
 [[rules]]
+    id = "chargebee"
+    description = "Chargebee API key"
+    regex = '''live_[0-9a-zA-Z]{33}'''
+    tags = ["key", "Chargebee"]
+
+[[rules]]
     description = "Facebook Secret Key"
     id = "facebook-secret-key"
     regex = '''(?i)(facebook|fb)(.{0,20})?(?-i)['\"][0-9a-f]{32}['\"]'''
