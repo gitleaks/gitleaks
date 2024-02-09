@@ -124,7 +124,7 @@ keywords = [
 [[rules]]
 id = "aws-access-token"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
-regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+regex = '''\b(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}\b'''
 keywords = [
     "akia","asia","abia","acca",
 ]
