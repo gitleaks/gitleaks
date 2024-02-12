@@ -375,11 +375,11 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
-
 	relativePath, err := filepath.Rel(d.basePath, finding.File)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
+
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", relativePath, finding.RuleID, finding.StartLine)
 
 	if finding.Commit != "" {
