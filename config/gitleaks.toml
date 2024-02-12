@@ -238,7 +238,7 @@ id = "datafactory-shir-token"
 description = "Uncovered a Data Factory Self-Hosted Integration Runtime Key, which may compromise big data analytics platforms and sensitive data processing."
 regex = '''\b(IR@[0-9a-zA-Z-]{36}@(.*?)@[0-9a-zA-Z\-=]*@[A-Za-z0-9+\/=]{44})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
-    "ir",
+    "ir@",
 ]
 
 [[rules]]

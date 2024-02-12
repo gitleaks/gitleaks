@@ -9,9 +9,9 @@ func AzureDataFactory() *config.Rule {
 	r := config.Rule{
 		Description: "Uncovered a Data Factory Self-Hosted Integration Runtime Key, which may compromise big data analytics platforms and sensitive data processing.",
 		RuleID:      "datafactory-shir-token",
-		// SHIR Key format: IR@{GUID}@{string_azure _resource_name}@{string_azure_resource_location}@{string_base64}
+		// SHIR Key format: IR@{GUID}@{string_azure_resource_name}@{string_azure_resource_location}@{string_base64}
 		Regex:    generateUniqueTokenRegex(`IR@[0-9a-zA-Z-]{36}@(.*?)@[0-9a-zA-Z\-=]*@[A-Za-z0-9+\/=]{44}`, false),
-		Keywords: []string{"IR"},
+		Keywords: []string{"IR@"},
 	}
 
 	// validate
