@@ -638,7 +638,7 @@ func TestFromFiles(t *testing.T) {
 	}
 }
 
-func TestRelativePathNoGit(t *testing.T) {
+func TestFromFilesRelativePath(t *testing.T) {
 	tests := []struct {
 		cfgName          string
 		source           string
