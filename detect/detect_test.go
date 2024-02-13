@@ -625,10 +625,8 @@ func TestFromFiles(t *testing.T) {
 
 		if info.IsDir() {
 			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
-			//detector.SetBasePath(tt.source)
 		} else {
 			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
-			//detector.SetBasePath(filepath.Dir(tt.source))
 		}
 		err = detector.AddGitleaksIgnore(ignorePath)
 		require.NoError(t, err)
