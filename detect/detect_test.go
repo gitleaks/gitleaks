@@ -568,6 +568,98 @@ func TestFromFiles(t *testing.T) {
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					File:        "../testdata/repos/nogit/main.go",
+					SymlinkFile: "",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/repos/nogit/main.go:aws-access-key:20",
+				},
+			},
+		},
+		{
+			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					File:        "../testdata/repos/nogit/main.go",
+					RuleID:      "aws-access-key",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/repos/nogit/main.go:aws-access-key:20",
+				},
+			},
+		},
+		{
+			source:           filepath.Join(repoBasePath, "nogit", "api.go"),
+			cfgName:          "simple",
+			expectedFindings: []report.Finding{},
+		},
+	}
+
+	for _, tt := range tests {
+		viper.AddConfigPath(configPath)
+		viper.SetConfigName("simple")
+		viper.SetConfigType("toml")
+		err := viper.ReadInConfig()
+		require.NoError(t, err)
+
+		var vc config.ViperConfig
+		err = viper.Unmarshal(&vc)
+		require.NoError(t, err)
+		cfg, _ := vc.Translate()
+		detector := NewDetector(cfg)
+		detector.SetBasePath(".")
+
+		var ignorePath string
+		info, err := os.Stat(tt.source)
+		require.NoError(t, err)
+
+		if info.IsDir() {
+			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+			//detector.SetBasePath(tt.source)
+		} else {
+			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+			//detector.SetBasePath(filepath.Dir(tt.source))
+		}
+		err = detector.AddGitleaksIgnore(ignorePath)
+		require.NoError(t, err)
+		detector.FollowSymlinks = true
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
+		require.NoError(t, err)
+		findings, err := detector.DetectFiles(paths)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestFromFilesWithRelativePath(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(repoBasePath, "nogit_relative_path"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "main.go",
 					SymlinkFile: "",
 					RuleID:      "aws-access-key",
@@ -578,7 +670,7 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
-			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
+			source:  filepath.Join(repoBasePath, "nogit_relative_path", "main.go"),
 			cfgName: "simple",
 			expectedFindings: []report.Finding{
 				{
@@ -599,7 +691,7 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
-			source:           filepath.Join(repoBasePath, "nogit", "api.go"),
+			source:           filepath.Join(repoBasePath, "nogit_relative_path", "api.go"),
 			cfgName:          "simple",
 			expectedFindings: []report.Finding{},
 		},
