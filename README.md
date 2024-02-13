@@ -158,7 +158,7 @@ Flags:
       --no-banner                  suppress banner
       --redact                     redact secrets from logs and stdout
   -f, --report-format string       output format (json, csv, junit, sarif) (default "json")
-  -r, --report-path string         report file
+  -r, --report-path string         report file ("-" to write to stdout)
   -s, --source string              path to source (default ".")
   -v, --verbose                    show verbose output from scan
 

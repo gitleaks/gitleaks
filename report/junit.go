@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func writeJunit(findings []Finding, w io.WriteCloser) error {
+func writeJunit(findings []Finding, w io.Writer) error {
 	testSuites := TestSuites{
 		TestSuites: getTestSuites(findings),
 	}

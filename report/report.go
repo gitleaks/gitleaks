@@ -14,10 +14,18 @@ const (
 )
 
 func Write(findings []Finding, cfg config.Config, ext string, reportPath string) error {
-	file, err := os.Create(reportPath)
-	if err != nil {
-		return err
+	var file *os.File
+	var err error
+	if reportPath == "-" {
+		file = os.Stdout
+	} else {
+		file, err = os.Create(reportPath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 	}
+
 	ext = strings.ToLower(ext)
 	switch ext {
 	case ".json", "json":

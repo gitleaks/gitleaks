@@ -8,13 +8,12 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
+func writeSarif(cfg config.Config, findings []Finding, w io.Writer) error {
 	sarif := Sarif{
 		Schema:  "https://json.schemastore.org/sarif-2.1.0.json",
 		Version: "2.1.0",
 		Runs:    getRuns(cfg, findings),
 	}
-	defer w.Close()
 
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
