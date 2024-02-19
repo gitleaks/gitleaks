@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"regexp"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -33,6 +34,11 @@ func GenericCredential() *config.Rule {
 		},
 		Entropy: 3.5,
 		Allowlist: config.Allowlist{
+			RegexTarget: "line",
+			Regexes: []*regexp.Regexp{
+				regexp.MustCompile("PublicKeyToken"),
+				regexp.MustCompile("InstrumentationKey"),
+			},
 			StopWords: DefaultStopWords,
 		},
 	}
