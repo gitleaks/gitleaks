@@ -51,7 +51,7 @@ keywords = [
 ]
 
 [[rules]]
-id = "age secret key"
+id = "age-secret-key"
 description = "Discovered a potential Age encryption tool secret key, risking data decryption and unauthorized access to sensitive information."
 regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
 keywords = [
