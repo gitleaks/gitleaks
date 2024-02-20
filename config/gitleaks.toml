@@ -1,5 +1,5 @@
 # This file has been auto-generated. Do not edit manually.
-# If you would like to contribute new rules, please use 
+# If you would like to contribute new rules, please use
 # cmd/generate/config/main.go and follow the contributing guidelines
 # at https://github.com/zricethezav/gitleaks/blob/master/CONTRIBUTING.md
 
@@ -2439,7 +2439,7 @@ keywords = [
 [[rules]]
 id = "private-key"
 description = "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
-regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY( BLOCK)?----'''
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY( BLOCK)?-----'''
 keywords = [
     "-----begin",
 ]
