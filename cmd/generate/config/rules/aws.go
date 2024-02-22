@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -16,8 +14,7 @@ func AWS() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		RuleID:      "aws-access-token",
-		Regex: regexp.MustCompile(
-			"(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16}"),
+		Regex:       generateUniqueTokenRegex("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16}", false),
 		Keywords: []string{
 			"AKIA",
 			"ASIA",
