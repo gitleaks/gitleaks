@@ -5,6 +5,8 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
+// https://summitroute.com/blog/2018/06/20/aws_security_credential_formats/
+
 var credFileAccessKey = "aws_access_key_id=AKIALALEMEL33243OLIB" // gitleaks:allow
 var credFileSecretKey = "aws_secret_access_key=" + secrets.NewSecret(hex("40"))
 var credFileSessionToken = "aws_session_token=" + secrets.NewSecret(hex("928"))
@@ -32,6 +34,25 @@ func AWSAccessKey() *config.Rule {
 		generateSampleSecret("AWS", "AKIALALEMEL33243O000"), // includes 0 which can't be result of base32 encoding
 		`"RoleId": "AROAWORVRXQ5NC76T7223"`,
 		credFileSecretKey,
+		credFileSessionToken,
+	}
+	return validate(r, tps, fps)
+}
+
+func AWSSecretKey() *config.Rule {
+	// define rule
+	r := config.Rule{
+		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
+		RuleID:      "aws-secret-key",
+		Regex:       generateUniqueTokenRegex("[0-9A-Z+\\/]{40}", true),
+	}
+
+	// validate
+	tps := []string{
+		credFileSecretKey,
+	}
+	fps := []string{
+		credFileAccessKey,
 		credFileSessionToken,
 	}
 	return validate(r, tps, fps)

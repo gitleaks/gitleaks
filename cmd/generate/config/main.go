@@ -37,6 +37,7 @@ func main() {
 		rules.Atlassian(),
 		rules.Authress(),
 		rules.AWSAccessKey(),
+		rules.AWSSecretKey(),
 		rules.BitBucketClientID(),
 		rules.BitBucketClientSecret(),
 		rules.BittrexAccessKey(),
