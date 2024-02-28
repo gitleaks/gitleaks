@@ -36,7 +36,7 @@ func main() {
 		rules.AsanaClientSecret(),
 		rules.Atlassian(),
 		rules.Authress(),
-		rules.AWS(),
+		rules.AWSAccessKey(),
 		rules.BitBucketClientID(),
 		rules.BitBucketClientSecret(),
 		rules.BittrexAccessKey(),
