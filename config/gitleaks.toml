@@ -475,7 +475,9 @@ keywords = [
 ]
 
 [rules.allowlist]
-stopwords = [
+paths = [
+    "go\.sum$",
+]stopwords = [
     "000000",
     "aaaaaa",
     "about",
