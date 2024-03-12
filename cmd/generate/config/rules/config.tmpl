@@ -52,8 +52,9 @@ regexes = [
     {{ range $j, $regex := . }}"{{ $regex }}",{{ end }}
 ]{{ end }}
 {{- with $rule.Allowlist.Paths }}paths = [
-    {{ range $j, $path := . }}"{{ $path }}",{{ end }}
-]{{ end }}
+    {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
+]
+{{ end }}
 {{- with $rule.Allowlist.Commits }}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}

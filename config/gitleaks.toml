@@ -476,8 +476,9 @@ keywords = [
 
 [rules.allowlist]
 paths = [
-    "go\.sum$",
-]stopwords = [
+    '''(go.mod|go.sum)$''',
+]
+stopwords = [
     "000000",
     "aaaaaa",
     "about",

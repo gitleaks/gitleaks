@@ -36,7 +36,7 @@ func GenericCredential() *config.Rule {
 		Entropy: 3.5,
 		Allowlist: config.Allowlist{
 			StopWords: DefaultStopWords,
-			Paths:     []*regexp.Regexp{regexp.MustCompile(`go\.sum$`)},
+			Paths:     []*regexp.Regexp{regexp.MustCompile("(go.mod|go.sum)$")},
 		},
 	}
 
