@@ -201,6 +201,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		for _, k := range rule.Keywords {
 			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
 				fragmentContainsKeyword = true
+				break
 			}
 		}
 		if fragmentContainsKeyword {
@@ -344,6 +345,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if rule.Entropy != 0.0 {
 			if entropy <= rule.Entropy {
 				// entropy is too low, skip this finding
+				log.Debug().Msgf("skipping secret: %s with low entropy: %f", finding.Secret, entropy)
 				continue
 			}
 			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
