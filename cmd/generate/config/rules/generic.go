@@ -19,7 +19,7 @@ func GenericCredential() *config.Rule {
 			"password",
 			"auth",
 			"access",
-		}, `[0-9a-z\-_.=@\[\]%]{10,150}`, true),
+		}, `[0-9a-z\-_.=@\[\]%!]{10,150}`, true),
 		Keywords: []string{
 			"key",
 			"api",
@@ -53,6 +53,7 @@ func GenericCredential() *config.Rule {
 		`password combination.
 
 R5: Regulatory--21`,
+		`"password": "abcdefg"`, // short password
 	}
 	return validate(r, tps, fps)
 }
