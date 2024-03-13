@@ -5,6 +5,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
+// This rule includes both App Secret and Client Access Token
 // https://developers.facebook.com/docs/facebook-login/guides/access-tokens/
 func FacebookSecret() *config.Rule {
 	// define rule
