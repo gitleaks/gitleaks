@@ -54,7 +54,9 @@ func GenericCredential() *config.Rule {
 		`password combination.
 
 R5: Regulatory--21`,
-		`"password": "abcdefg"`, // short password
+		`"password": "abcdefg"`,                                   // short password
+		`api_key = "C71AAAAE-1D1D-1D1D-1D1D-1D1D1D1D1D1D"`,        // low entropy
+		`secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"`, // end with "Example Key" stop words
 	}
 	return validate(r, tps, fps)
 }
