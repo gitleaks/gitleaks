@@ -19,7 +19,7 @@ func GenericCredential() *config.Rule {
 			"password",
 			"auth",
 			"access",
-		}, `[0-9a-z\-_.=@\[\]%!]{10,150}`, true),
+		}, `\S{10,150}`, true),
 		Keywords: []string{
 			"key",
 			"api",
@@ -47,6 +47,7 @@ func GenericCredential() *config.Rule {
 		`TokenKey: b@d0@u7H50K3nx`,
 		`token_key: "gF[wSKyJmBhAFASD%3D"`,
 		`token = "weq32C232g37g2h3gdh3K2hT72hXuL2h3ghS34hD"`,
+		`client_secret = "F-oS9Su%}<>[];#"`,
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
