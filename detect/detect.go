@@ -318,6 +318,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			allowlistTarget = finding.Match
 		case "line":
 			allowlistTarget = finding.Line
+		case "raw":
+			allowlistTarget = fragment.Raw
 		}
 
 		globalAllowlistTarget := finding.Secret
@@ -326,6 +328,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			globalAllowlistTarget = finding.Match
 		case "line":
 			globalAllowlistTarget = finding.Line
+		case "raw":
+			globalAllowlistTarget = fragment.Raw
 		}
 		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
 			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {

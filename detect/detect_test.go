@@ -551,13 +551,15 @@ func TestFromGitStaged(t *testing.T) {
 // TestFromFiles tests the FromFiles function
 func TestFromFiles(t *testing.T) {
 	tests := []struct {
+		testName         string
 		cfgName          string
 		source           string
 		expectedFindings []report.Finding
 	}{
 		{
-			source:  filepath.Join(repoBasePath, "nogit"),
-			cfgName: "simple",
+			testName: "aws on folder",
+			source:   filepath.Join(repoBasePath, "nogit"),
+			cfgName:  "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -578,8 +580,9 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
-			source:  filepath.Join(repoBasePath, "nogit", "main.go"),
-			cfgName: "simple",
+			testName: "aws on file",
+			source:   filepath.Join(repoBasePath, "nogit", "main.go"),
+			cfgName:  "simple",
 			expectedFindings: []report.Finding{
 				{
 					Description: "AWS Access Key",
@@ -599,42 +602,74 @@ func TestFromFiles(t *testing.T) {
 			},
 		},
 		{
+			testName:         "ignored by .gitleaksignore",
 			source:           filepath.Join(repoBasePath, "nogit", "api.go"),
 			cfgName:          "simple",
 			expectedFindings: []report.Finding{},
 		},
+		{
+			testName: "putty secret with raw regex match",
+			source:   filepath.Join(repoBasePath, "nogit", "putty.ppk"),
+			cfgName:  "putty",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Identified a Putty Private Key, which may compromise cryptographic security and sensitive data encryption.",
+					StartLine:   11,
+					EndLine:     26,
+					StartColumn: 2,
+					EndColumn:   78,
+					Line:        "\nPrivate-Lines: 14\nAAABACJPG4lbsxxqgF4f/4EBcjBzOT5OdXuKo7bC8Lt4uyaKTDf0I6lrkFDzzikw\nLDblPAB3ECD6ixSrE3+0xeVXAh2Ahhft4DA5psy7TVCUU1m+8nsFPVD5mbKovJ34\nQwzhDrteVD3fgTFCjfU/HXQieKGvC8bUJqCVD2wyNU/w1YOPTgyazXF6oqV7vRTM\nGAoXkrM9OwA7gD21e+ZXpoou3nne7zX9QUIZNV68LcDrxS6exC27IqMougruTH+t\nADwZuKjxbe6arj21+eEFoZNDNuO+YWXTiTisaKpt8blMoVBLnmXkDb8aP4sntMd+\nuJnzgLO/YbnenApC86vsN2NmkiEAAACBAN52GNPMnEbj2LBqbNiVbi65Wpf4OOeQ\n4QRn97YcfNaKTli0x3AMo1RCGBAM/sRWdRr42IaoIRftsJsLD29TnYs7PEagmbht\nMWtbJ94XriL0KjQSHkvclARYBTmaH/GIbJe2NEarKcHBYMRe9OGDfymbCQqaXazR\nNNApH0HgCO2tAAAAgQCr4ZV6ZFBs8CkLzEVJYLgPVo2xWK2NT0Wp/1S8iQcUIHja\nYGompPJWKerMeOn0eTPy2W1gKRiG7XJKTvUr0Q1jAOpyHSB26wp91PdnFEy01ZVc\n9r3ji1ljsha1b2dyy1/OV4UtPL75yt7oSRZwBK5rIq+aslG99GwXMF43+NyqVQAA\nAIEAwsuoZkAqq09RG/DP0nEzsPaf16heb3WxvnrczM7pDqAxgD+1VM3L9WZUCdiO\nDjUM2ZgaRS/cwWKfhTsTdBNhlC3tku+6fHNlitmmnsrj0T8HT3fbLLQ7b7D2I9t2\nMTQElrixH/aJ20UcePIVR22I/RmEaS1uJL2SmKvm4uLutIE=\nPrivate-MAC: 04dc4dfdfb21a070395413c6ba9e246ccdd830d2561983f9eeab5e72f299d8f7",
+					Match:       "Private-Lines: 14\nAAABACJPG4lbsxxqgF4f/4EBcjBzOT5OdXuKo7bC8Lt4uyaKTDf0I6lrkFDzzikw\nLDblPAB3ECD6ixSrE3+0xeVXAh2Ahhft4DA5psy7TVCUU1m+8nsFPVD5mbKovJ34\nQwzhDrteVD3fgTFCjfU/HXQieKGvC8bUJqCVD2wyNU/w1YOPTgyazXF6oqV7vRTM\nGAoXkrM9OwA7gD21e+ZXpoou3nne7zX9QUIZNV68LcDrxS6exC27IqMougruTH+t\nADwZuKjxbe6arj21+eEFoZNDNuO+YWXTiTisaKpt8blMoVBLnmXkDb8aP4sntMd+\nuJnzgLO/YbnenApC86vsN2NmkiEAAACBAN52GNPMnEbj2LBqbNiVbi65Wpf4OOeQ\n4QRn97YcfNaKTli0x3AMo1RCGBAM/sRWdRr42IaoIRftsJsLD29TnYs7PEagmbht\nMWtbJ94XriL0KjQSHkvclARYBTmaH/GIbJe2NEarKcHBYMRe9OGDfymbCQqaXazR\nNNApH0HgCO2tAAAAgQCr4ZV6ZFBs8CkLzEVJYLgPVo2xWK2NT0Wp/1S8iQcUIHja\nYGompPJWKerMeOn0eTPy2W1gKRiG7XJKTvUr0Q1jAOpyHSB26wp91PdnFEy01ZVc\n9r3ji1ljsha1b2dyy1/OV4UtPL75yt7oSRZwBK5rIq+aslG99GwXMF43+NyqVQAA\nAIEAwsuoZkAqq09RG/DP0nEzsPaf16heb3WxvnrczM7pDqAxgD+1VM3L9WZUCdiO\nDjUM2ZgaRS/cwWKfhTsTdBNhlC3tku+6fHNlitmmnsrj0T8HT3fbLLQ7b7D2I9t2\nMTQElrixH/aJ20UcePIVR22I/RmEaS1uJL2SmKvm4uLutIE=\nPrivate-MAC: 04dc4dfdfb21a070395413c6ba9e246ccdd830d2561983f9eeab5e72f299d8f7",
+					Secret:      "AAABACJPG4lbsxxqgF4f/4EBcjBzOT5OdXuKo7bC8Lt4uyaKTDf0I6lrkFDzzikw\nLDblPAB3ECD6ixSrE3+0xeVXAh2Ahhft4DA5psy7TVCUU1m+8nsFPVD5mbKovJ34\nQwzhDrteVD3fgTFCjfU/HXQieKGvC8bUJqCVD2wyNU/w1YOPTgyazXF6oqV7vRTM\nGAoXkrM9OwA7gD21e+ZXpoou3nne7zX9QUIZNV68LcDrxS6exC27IqMougruTH+t\nADwZuKjxbe6arj21+eEFoZNDNuO+YWXTiTisaKpt8blMoVBLnmXkDb8aP4sntMd+\nuJnzgLO/YbnenApC86vsN2NmkiEAAACBAN52GNPMnEbj2LBqbNiVbi65Wpf4OOeQ\n4QRn97YcfNaKTli0x3AMo1RCGBAM/sRWdRr42IaoIRftsJsLD29TnYs7PEagmbht\nMWtbJ94XriL0KjQSHkvclARYBTmaH/GIbJe2NEarKcHBYMRe9OGDfymbCQqaXazR\nNNApH0HgCO2tAAAAgQCr4ZV6ZFBs8CkLzEVJYLgPVo2xWK2NT0Wp/1S8iQcUIHja\nYGompPJWKerMeOn0eTPy2W1gKRiG7XJKTvUr0Q1jAOpyHSB26wp91PdnFEy01ZVc\n9r3ji1ljsha1b2dyy1/OV4UtPL75yt7oSRZwBK5rIq+aslG99GwXMF43+NyqVQAA\nAIEAwsuoZkAqq09RG/DP0nEzsPaf16heb3WxvnrczM7pDqAxgD+1VM3L9WZUCdiO\nDjUM2ZgaRS/cwWKfhTsTdBNhlC3tku+6fHNlitmmnsrj0T8HT3fbLLQ7b7D2I9t2\nMTQElrixH/aJ20UcePIVR22I/RmEaS1uJL2SmKvm4uLutIE=\nPrivate-MAC:",
+					File:        "../testdata/repos/nogit/putty.ppk",
+					SymlinkFile: "",
+					Commit:      "",
+					Entropy:     5.980694,
+					Author:      "",
+					Email:       "",
+					Date:        "",
+					Message:     "",
+					Tags:        []string{},
+					RuleID:      "putty-private-key",
+					Fingerprint: "../testdata/repos/nogit/putty.ppk:putty-private-key:11",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
-		viper.AddConfigPath(configPath)
-		viper.SetConfigName("simple")
-		viper.SetConfigType("toml")
-		err := viper.ReadInConfig()
-		require.NoError(t, err)
+		tt := tt
+		t.Run(tt.testName, func(t *testing.T) {
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
 
-		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
-		require.NoError(t, err)
-		cfg, _ := vc.Translate()
-		detector := NewDetector(cfg)
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, _ := vc.Translate()
+			detector := NewDetector(cfg)
 
-		var ignorePath string
-		info, err := os.Stat(tt.source)
-		require.NoError(t, err)
+			var ignorePath string
+			info, err := os.Stat(tt.source)
+			require.NoError(t, err)
 
-		if info.IsDir() {
-			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
-		} else {
-			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
-		}
-		err = detector.AddGitleaksIgnore(ignorePath)
-		require.NoError(t, err)
-		detector.FollowSymlinks = true
-		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
-		require.NoError(t, err)
-		findings, err := detector.DetectFiles(paths)
-		require.NoError(t, err)
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+			if info.IsDir() {
+				ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+			} else {
+				ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+			}
+			err = detector.AddGitleaksIgnore(ignorePath)
+			require.NoError(t, err)
+			detector.FollowSymlinks = true
+			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
+			require.NoError(t, err)
+			findings, err := detector.DetectFiles(paths)
+			require.NoError(t, err)
+			assert.ElementsMatch(t, tt.expectedFindings, findings)
+		})
 	}
 }
 
