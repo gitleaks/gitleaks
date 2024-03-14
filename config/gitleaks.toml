@@ -2688,9 +2688,9 @@ keywords = [
 [[rules]]
 id = "stripe-access-token"
 description = "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data."
-regex = '''(?i)\b((sk)_(test|live)_[0-9a-z]{10,32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b((sk|rk)_(test|live|prod)_[0-9a-z]{10,99})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
-    "sk_test","sk_live",
+    "sk_test","sk_live","sk_prod","rk_test","rk_live","rk_prod",
 ]
 
 [[rules]]
