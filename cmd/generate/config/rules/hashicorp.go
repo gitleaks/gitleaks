@@ -49,6 +49,7 @@ func HashicorpField() *config.Rule {
 		`password       = "rootpasswd"`,                // entropy too low
 		"administrator_login_password = var.db_password",
 		`password = "${aws_db_instance.default.password}"`,
+		`update_password: "on_create"`,
 		// `const TagPassword = "dgu6ju90k71r"`, indeed it is a password, but it is not a terraform password field
 	}
 	return validate(r, tps, fps)
