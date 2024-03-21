@@ -170,6 +170,30 @@ keywords = [
 ]
 
 [[rules]]
+id = "chieftools-access-token"
+description = "Discovered a Chief Tools Access Token, posing a risk of compromised Chief Tools account integrations and data leaks."
+regex = '''cto_[a-zA-Z0-9]{30,248}'''
+keywords = [
+    "cto_",
+]
+
+[[rules]]
+id = "chieftools-pat"
+description = "Uncovered a Chief Tools Personal Access Token, potentially leading to unauthorized access and sensitive content exposure."
+regex = '''ctp_[a-zA-Z0-9]{30,248}'''
+keywords = [
+    "ctp_",
+]
+
+[[rules]]
+id = "chieftools-refresh-token"
+description = "Detected a Chief Tools Refresh Token, which could allow prolonged unauthorized access to Chief Tools services."
+regex = '''ctr_[a-zA-Z0-9]{30,248}'''
+keywords = [
+    "ctr_",
+]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
