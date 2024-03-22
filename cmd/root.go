@@ -176,6 +176,8 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 
 	// Setup common detector
 	detector := detect.NewDetector(cfg)
+	detector.SetBasePath(source)
+
 	// set color flag at first
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
 		log.Fatal().Err(err).Msg("")
