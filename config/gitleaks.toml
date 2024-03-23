@@ -2452,7 +2452,7 @@ keywords = [
 [[rules]]
 id = "private-key"
 description = "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
-regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY( BLOCK)?----'''
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY( BLOCK)?-----'''
 keywords = [
     "-----begin",
 ]
