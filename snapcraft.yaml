@@ -1,0 +1,21 @@
+name: gitleaks
+version: '1.0'
+summary: Audit git repos for secrets
+description: |
+  Audit git repos for secrets. 
+grade: stable
+confinement: strict
+base: core18
+parts:
+  gitleaks:
+    plugin: go
+    source: https://github.com/zricethezav/gitleaks.git
+    go-importpath: github.com/zricethezav/gitleaks
+    build-packages:
+      - build-essential
+apps:
+  gitleaks:
+    command: bin/gitleaks
+    plugs:
+      - home
+      - network
