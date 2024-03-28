@@ -15,6 +15,7 @@ func ShippoAPIToken() *config.Rule {
 		Keywords: []string{
 			"shippo_",
 		},
+		SecretGroup: 1,
 	}
 
 	// validate

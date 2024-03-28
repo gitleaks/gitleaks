@@ -1,0 +1,11 @@
+title = "gitleaks config"
+
+[[rules]]
+id = "alibaba-access-key-id"
+description = "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise."
+regex = '''(?i)\b((LTAI)(?i)[a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+secretGroup = 1
+keywords = [
+    "ltai",
+]
+

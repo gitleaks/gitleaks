@@ -201,6 +201,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		for _, k := range rule.Keywords {
 			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
 				fragmentContainsKeyword = true
+				break
 			}
 		}
 		if fragmentContainsKeyword {
@@ -310,6 +311,13 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
 		}
+		if strings.HasSuffix(finding.Secret, `"`) {
+			log.Debug().
+				Str("rule", rule.RuleID).
+				Strs("groups", groups).
+				Int("group", rule.SecretGroup).
+				Msg("secret ends with quote")
+		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		allowlistTarget := finding.Secret
@@ -318,6 +326,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			allowlistTarget = finding.Match
 		case "line":
 			allowlistTarget = finding.Line
+		case "raw":
+			allowlistTarget = fragment.Raw
 		}
 
 		globalAllowlistTarget := finding.Secret
@@ -326,6 +336,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			globalAllowlistTarget = finding.Match
 		case "line":
 			globalAllowlistTarget = finding.Line
+		case "raw":
+			globalAllowlistTarget = fragment.Raw
 		}
 		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
 			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
@@ -344,6 +356,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if rule.Entropy != 0.0 {
 			if entropy <= rule.Entropy {
 				// entropy is too low, skip this finding
+				log.Debug().Msgf("skipping secret: %s with low entropy: %f", finding.Secret, entropy)
 				continue
 			}
 			// NOTE: this is a goofy hack to get around the fact there golang's regex engine

@@ -12,6 +12,7 @@ func SquareAccessToken() *config.Rule {
 		Description: "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure.",
 		Regex:       generateUniqueTokenRegex(`(EAAA|sq0atp-)[0-9A-Za-z\-_]{22,60}`, true),
 		Keywords:    []string{"sq0atp-", "EAAA"},
+		SecretGroup: 1,
 	}
 
 	// validate
