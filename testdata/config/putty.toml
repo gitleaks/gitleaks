@@ -1,0 +1,17 @@
+title = "allow regex on raw"
+
+[[rules]]
+id = "putty-private-key"
+description = "Identified a Putty Private Key, which may compromise cryptographic security and sensitive data encryption."
+regex = '''Private-Lines: \d+\s+([\n\S-]+)\s+[A-Za-z0-9-:]+'''
+path = '''(?i)\.ppk$'''
+keywords = [
+    "putty-user-key-file-",
+]
+
+[rules.allowlist]
+
+regexTarget = "raw"
+regexes = [
+    "Encryption: [^n][^o][^n][^e]",
+]
