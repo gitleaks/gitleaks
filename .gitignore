@@ -21,3 +21,6 @@ testdata/expected/report/*.got.*
 *.out
 
 dist/
+
+#IDE
+.vscode/settings.json
