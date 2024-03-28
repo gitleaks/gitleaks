@@ -26,4 +26,4 @@ jobs:
         run: make test
 
       - name: Validate Config
-        run: cd cmd/generate/config && go run main.go
+        run: go generate ./... && git diff --exit-code

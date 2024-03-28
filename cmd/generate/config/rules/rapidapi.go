@@ -9,10 +9,10 @@ func RapidAPIAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "rapidapi-access-token",
-		Description: "RapidAPI Access Token",
+		Description: "Uncovered a RapidAPI Access Token, which could lead to unauthorized access to various APIs and data services.",
 		Regex: generateSemiGenericRegex([]string{"rapidapi"},
 			alphaNumericExtendedShort("50"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"rapidapi",
 		},

@@ -9,11 +9,10 @@ import (
 
 func Authress() *config.Rule {
 	// Rule Definition
-	// (Note: When changes are made to this, rerun `cd cmd/generate/config && go run main.go` and commit the config/gitleaks.toml file
+	// (Note: When changes are made to this, rerun `go generate ./...` and commit the config/gitleaks.toml file
 	r := config.Rule{
-		Description: "Authress Service Client Access Key",
+		Description: "Uncovered a possible Authress Service Client Access Key, which may compromise access control services and sensitive data.",
 		RuleID:      "authress-service-client-access-key",
-		SecretGroup: 1,
 		Regex:       generateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`, true),
 		Keywords:    []string{"sc_", "ext_", "scauth_", "authress_"},
 	}

@@ -16,10 +16,10 @@ func HuggingFaceAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "huggingface-access-token",
-		Description: "Hugging Face Access token",
+		Description: "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data.",
 		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <])`),
-		SecretGroup: 1,
-		Entropy:     1,
+
+		Entropy: 1,
 		Keywords: []string{
 			"hf_",
 		},
@@ -71,10 +71,10 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "huggingface-organization-api-token",
-		Description: "Hugging Face Organization API token",
+		Description: "Uncovered a Hugging Face Organization API token, potentially compromising AI organization accounts and associated data.",
 		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:\(,)])(api_org_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <\),])`),
-		SecretGroup: 1,
-		Entropy:     2,
+
+		Entropy: 2,
 		Keywords: []string{
 			"api_org_",
 		},

@@ -8,11 +8,11 @@ import (
 func FinicityClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Finicity Client Secret",
+		Description: "Identified a Finicity Client Secret, which could lead to compromised financial service integrations and data breaches.",
 		RuleID:      "finicity-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"finicity"}, alphaNumeric("20"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"finicity"},
+
+		Keywords: []string{"finicity"},
 	}
 
 	// validate
@@ -25,11 +25,11 @@ func FinicityClientSecret() *config.Rule {
 func FinicityAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Finicity API token",
+		Description: "Detected a Finicity API token, potentially risking financial data access and unauthorized financial operations.",
 		RuleID:      "finicity-api-token",
 		Regex:       generateSemiGenericRegex([]string{"finicity"}, hex("32"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"finicity"},
+
+		Keywords: []string{"finicity"},
 	}
 
 	// validate

@@ -1,6 +1,10 @@
 package report
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestRedact(t *testing.T) {
 	tests := []struct {
@@ -19,12 +23,8 @@ func TestRedact(t *testing.T) {
 	for _, test := range tests {
 		for _, f := range test.findings {
 			f.Redact(100)
-			if f.Secret != "REDACTED" {
-				t.Error("redact not redacting: ", f.Secret)
-			}
-			if f.Match != "line containing REDACTED" {
-				t.Error("redact not redacting: ", f.Secret)
-			}
+			assert.Equal(t, "REDACTED", f.Secret)
+			assert.Equal(t, "line containing REDACTED", f.Match)
 		}
 	}
 }
@@ -57,12 +57,8 @@ func TestMask(t *testing.T) {
 			f := test.finding
 			e := test.expect
 			f.Redact(test.percent)
-			if f.Secret != e.Secret {
-				t.Error("redact not redacting: ", f.Secret)
-			}
-			if f.Match != e.Match {
-				t.Error("redact not redacting: ", f.Match)
-			}
+			assert.Equal(t, e.Secret, f.Secret)
+			assert.Equal(t, e.Match, f.Match)
 		})
 	}
 }
@@ -82,9 +78,7 @@ func TestMaskSecret(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := maskSecret(test.secret, test.percent)
-			if got != test.expect {
-				t.Error("redact not redacting: ", got)
-			}
+			assert.Equal(t, test.expect, got)
 		})
 	}
 }

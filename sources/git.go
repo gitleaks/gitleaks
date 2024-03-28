@@ -1,4 +1,4 @@
-package git
+package sources
 
 import (
 	"bufio"
@@ -15,8 +15,8 @@ import (
 
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
-// DiffFilesCmd helps to work with Git's output.
-type DiffFilesCmd struct {
+// GitCmd helps to work with Git's output.
+type GitCmd struct {
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
@@ -25,7 +25,7 @@ type DiffFilesCmd struct {
 // NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
-func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
+func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
@@ -73,7 +73,7 @@ func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 		return nil, err
 	}
 
-	return &DiffFilesCmd{
+	return &GitCmd{
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
@@ -83,12 +83,12 @@ func NewGitLogCmd(source string, logOpts string) (*DiffFilesCmd, error) {
 // NewGitDiffCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
-func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
+func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
-	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", ".")
+	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
 	if staged {
-		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0",
+		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
 	}
 	log.Debug().Msgf("executing: %s", cmd.String())
@@ -113,7 +113,7 @@ func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 		return nil, err
 	}
 
-	return &DiffFilesCmd{
+	return &GitCmd{
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
@@ -121,12 +121,12 @@ func NewGitDiffCmd(source string, staged bool) (*DiffFilesCmd, error) {
 }
 
 // DiffFilesCh returns a channel with *gitdiff.File.
-func (c *DiffFilesCmd) DiffFilesCh() <-chan *gitdiff.File {
+func (c *GitCmd) DiffFilesCh() <-chan *gitdiff.File {
 	return c.diffFilesCh
 }
 
 // ErrCh returns a channel that could produce an error if there is something in stderr.
-func (c *DiffFilesCmd) ErrCh() <-chan error {
+func (c *GitCmd) ErrCh() <-chan error {
 	return c.errCh
 }
 
@@ -134,7 +134,7 @@ func (c *DiffFilesCmd) ErrCh() <-chan error {
 // stdin or copying from stdout or stderr to complete.
 //
 // Wait also closes underlying stdout and stderr.
-func (c *DiffFilesCmd) Wait() (err error) {
+func (c *GitCmd) Wait() (err error) {
 	return c.cmd.Wait()
 }
 

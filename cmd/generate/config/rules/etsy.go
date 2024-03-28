@@ -9,9 +9,9 @@ func EtsyAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "etsy-access-token",
-		Description: "Etsy Access Token",
+		Description: "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data.",
 		Regex:       generateSemiGenericRegex([]string{"etsy"}, alphaNumeric("24"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"etsy",
 		},

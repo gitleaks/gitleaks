@@ -8,10 +8,9 @@ import (
 func TwitterAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Twitter API Key",
+		Description: "Identified a Twitter API Key, which may compromise Twitter application integrations and user data security.",
 		RuleID:      "twitter-api-key",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("25"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
 
@@ -25,10 +24,9 @@ func TwitterAPIKey() *config.Rule {
 func TwitterAPISecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Twitter API Secret",
+		Description: "Found a Twitter API Secret, risking the security of Twitter app integrations and sensitive data access.",
 		RuleID:      "twitter-api-secret",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("50"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
 
@@ -42,11 +40,11 @@ func TwitterAPISecret() *config.Rule {
 func TwitterBearerToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Twitter Bearer Token",
+		Description: "Discovered a Twitter Bearer Token, potentially compromising API access and data retrieval from Twitter.",
 		RuleID:      "twitter-bearer-token",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, "A{22}[a-zA-Z0-9%]{80,100}", true),
-		SecretGroup: 1,
-		Keywords:    []string{"twitter"},
+
+		Keywords: []string{"twitter"},
 	}
 
 	// validate
@@ -59,10 +57,9 @@ func TwitterBearerToken() *config.Rule {
 func TwitterAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Twitter Access Token",
+		Description: "Detected a Twitter Access Token, posing a risk of unauthorized account operations and social media data exposure.",
 		RuleID:      "twitter-access-token",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, "[0-9]{15,25}-[a-zA-Z0-9]{20,40}", true),
-		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
 
@@ -76,10 +73,9 @@ func TwitterAccessToken() *config.Rule {
 func TwitterAccessSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Twitter Access Secret",
+		Description: "Uncovered a Twitter Access Secret, potentially risking unauthorized Twitter integrations and data breaches.",
 		RuleID:      "twitter-access-secret",
 		Regex:       generateSemiGenericRegex([]string{"twitter"}, alphaNumeric("45"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"twitter"},
 	}
 

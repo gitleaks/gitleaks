@@ -9,9 +9,9 @@ func DroneciAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "droneci-access-token",
-		Description: "Droneci Access Token",
+		Description: "Detected a Droneci Access Token, potentially compromising continuous integration and deployment workflows.",
 		Regex:       generateSemiGenericRegex([]string{"droneci"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"droneci",
 		},

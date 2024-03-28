@@ -8,11 +8,11 @@ import (
 func Intercom() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Intercom API Token",
+		Description: "Identified an Intercom API Token, which could compromise customer communication channels and data privacy.",
 		RuleID:      "intercom-api-key",
 		Regex:       generateSemiGenericRegex([]string{"intercom"}, alphaNumericExtended("60"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"intercom"},
+
+		Keywords: []string{"intercom"},
 	}
 
 	// validate

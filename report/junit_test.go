@@ -3,8 +3,10 @@ package report
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteJunit(t *testing.T) {
@@ -64,36 +66,19 @@ func TestWriteJunit(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// create tmp file using os.TempDir()
 		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".xml"))
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		err = writeJunit(test.findings, tmpfile)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+		assert.FileExists(t, tmpfile.Name())
 		got, err := os.ReadFile(tmpfile.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if test.wantEmpty {
-			if len(got) > 0 {
-				t.Errorf("Expected empty file, got %s", got)
-			}
-			continue
+			assert.Empty(t, got)
+			return
 		}
 		want, err := os.ReadFile(test.expected)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if string(got) != string(want) {
-			err = os.WriteFile(strings.Replace(test.expected, ".xml", ".got.xml", 1), got, 0644)
-			if err != nil {
-				t.Fatal(err)
-			}
-			t.Errorf("got %s, want %s", string(got), string(want))
-		}
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
 	}
 }

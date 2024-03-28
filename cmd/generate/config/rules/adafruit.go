@@ -8,10 +8,9 @@ import (
 func AdafruitAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Adafruit API Key",
+		Description: "Identified a potential Adafruit API Key, which could lead to unauthorized access to Adafruit services and sensitive data exposure.",
 		RuleID:      "adafruit-api-key",
 		Regex:       generateSemiGenericRegex([]string{"adafruit"}, alphaNumericExtendedShort("32"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"adafruit"},
 	}
 
