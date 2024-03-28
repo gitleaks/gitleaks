@@ -17,6 +17,7 @@ func Heroku() *config.Rule {
 	// validate
 	tps := []string{
 		`const HEROKU_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
+		`heroku_api_key = "832d2129-a846-4e27-99f4-7004b6ad53ef"`,   // gitleaks:allow
 	}
 	return validate(r, tps, nil)
 }

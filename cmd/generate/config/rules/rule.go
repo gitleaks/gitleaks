@@ -18,7 +18,7 @@ const (
 	identifierCaseInsensitivePrefix = `(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `(?:`
-	identifierSuffix                = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}`
+	identifierSuffix                = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"\\]){0,3}`
 
 	// commonly used assignment operators or function call
 	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
@@ -26,8 +26,8 @@ const (
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
-	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;]|$)`
+	secretPrefix       = `(?:['\"\\\s=\x60]){0,5}(`
+	secretSuffix       = `)(?:['\"\\\n\r\s\x60;<]|$)`
 )
 
 func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
@@ -71,6 +71,22 @@ func generateSampleSecret(identifier string, secret string) string {
 }
 
 func validate(r config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+	tps := make([]detect.Fragment, len(truePositives))
+	fps := make([]detect.Fragment, len(falsePositives))
+	for i, tp := range truePositives {
+		tps[i] = detect.Fragment{
+			Raw: tp,
+		}
+	}
+	for i, fp := range falsePositives {
+		fps[i] = detect.Fragment{
+			Raw: fp,
+		}
+	}
+	return validateFragments(r, tps, fps)
+}
+
+func validateFragments(r config.Rule, truePositives []detect.Fragment, falsePositives []detect.Fragment) *config.Rule {
 	// normalize keywords like in the config package
 	var keywords []string
 	for _, k := range r.Keywords {
@@ -85,13 +101,13 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 		Keywords: keywords,
 	})
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().Msgf("Failed to validate. For rule ID [%s], true positive [%s] was not detected by regexp [%s]", r.RuleID, tp, r.Regex)
+		if len(d.Detect(tp)) != 1 {
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], true positive [%s] was not detected by regexp [%s]", r.RuleID, tp.Raw, r.Regex)
 		}
 	}
 	for _, fp := range falsePositives {
-		if len(d.DetectString(fp)) != 0 {
-			log.Fatal().Msgf("Failed to validate. For rule ID [%s], false positive [%s] was detected by regexp [%s]", r.RuleID, fp, r.Regex)
+		if len(d.Detect(fp)) != 0 {
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], false positive [%s] was detected by regexp [%s]", r.RuleID, fp.Raw, r.Regex)
 		}
 	}
 	return &r
@@ -118,7 +134,7 @@ func alphaNumericExtended(size string) string {
 }
 
 func alphaNumericExtendedLong(size string) string {
-	return fmt.Sprintf(`[a-z0-9\/=_\+\-]{%s}`, size)
+	return fmt.Sprintf(`[a-z0-9\/=_\+\-\\]{%s}`, size)
 }
 
 func hex8_4_4_4_12() string {
