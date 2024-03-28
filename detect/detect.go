@@ -311,6 +311,13 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			secret = groups[rule.SecretGroup]
 			finding.Secret = secret
 		}
+		if strings.HasSuffix(finding.Secret, `"`) {
+			log.Debug().
+				Str("rule", rule.RuleID).
+				Strs("groups", groups).
+				Int("group", rule.SecretGroup).
+				Msg("secret ends with quote")
+		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		allowlistTarget := finding.Secret

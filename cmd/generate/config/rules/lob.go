@@ -17,6 +17,7 @@ func LobPubAPIToken() *config.Rule {
 			"live_pub",
 			"_pub",
 		},
+		SecretGroup: 1,
 	}
 
 	// validate
@@ -36,6 +37,7 @@ func LobAPIToken() *config.Rule {
 			"test_",
 			"live_",
 		},
+		SecretGroup: 1,
 	}
 
 	// validate

@@ -330,6 +330,29 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName: "with_quotas",
+			fragment: Fragment{
+				Raw:      `alibabaKey := "LTAIe7322523fb86ed64c836"`,
+				FilePath: "tmp.py",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
+					Match:       `LTAIe7322523fb86ed64c836"`,
+					Secret:      `LTAIe7322523fb86ed64c836`,
+					Line:        `alibabaKey := "LTAIe7322523fb86ed64c836"`,
+					File:        "tmp.py",
+					RuleID:      "alibaba-access-key-id",
+					Tags:        []string{},
+					Entropy:     3.8239348,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 16,
+					EndColumn:   40,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
