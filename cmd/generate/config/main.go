@@ -144,6 +144,7 @@ func main() {
 		rules.Prefect(),
 		rules.PrivateKey(),
 		rules.PulumiAPIToken(),
+		rules.PuttyPrivateKey(),
 		rules.PyPiUploadToken(),
 		rules.RapidAPIAccessToken(),
 		rules.ReadMe(),
