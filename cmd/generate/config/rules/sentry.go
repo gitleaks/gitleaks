@@ -9,9 +9,9 @@ func SentryAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "sentry-access-token",
-		Description: "Sentry Access Token",
+		Description: "Found a Sentry Access Token, risking unauthorized access to error tracking services and sensitive application data.",
 		Regex:       generateSemiGenericRegex([]string{"sentry"}, hex("64"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"sentry",
 		},

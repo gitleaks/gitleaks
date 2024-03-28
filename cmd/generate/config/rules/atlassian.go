@@ -8,12 +8,11 @@ import (
 func Atlassian() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Atlassian API token",
+		Description: "Detected an Atlassian API token, posing a threat to project management and collaboration tool security and data confidentiality.",
 		RuleID:      "atlassian-api-token",
 		Regex: generateSemiGenericRegex([]string{
 			"atlassian", "confluence", "jira"}, alphaNumeric("24"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"atlassian", "confluence", "jira"},
+		Keywords: []string{"atlassian", "confluence", "jira"},
 	}
 
 	// validate

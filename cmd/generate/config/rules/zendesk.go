@@ -9,9 +9,8 @@ func ZendeskSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "zendesk-secret-key",
-		Description: "Zendesk Secret Key",
+		Description: "Detected a Zendesk Secret Key, risking unauthorized access to customer support services and sensitive ticketing data.",
 		Regex:       generateSemiGenericRegex([]string{"zendesk"}, alphaNumeric("40"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"zendesk",
 		},

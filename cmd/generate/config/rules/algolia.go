@@ -8,7 +8,7 @@ import (
 func AlgoliaApiKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Algolia API Key",
+		Description: "Identified an Algolia API Key, which could result in unauthorized search operations and data exposure on Algolia-managed platforms.",
 		RuleID:      "algolia-api-key",
 		Regex:       generateSemiGenericRegex([]string{"algolia"}, `[a-z0-9]{32}`, true),
 		Keywords:    []string{"algolia"},

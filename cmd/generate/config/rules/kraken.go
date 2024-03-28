@@ -9,10 +9,10 @@ func KrakenAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "kraken-access-token",
-		Description: "Kraken Access Token",
+		Description: "Identified a Kraken Access Token, potentially compromising cryptocurrency trading accounts and financial security.",
 		Regex: generateSemiGenericRegex([]string{"kraken"},
 			alphaNumericExtendedLong("80,90"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"kraken",
 		},

@@ -13,13 +13,12 @@ func JFrogAPIKey() *config.Rule {
 	// Define Rule
 	r := config.Rule{
 		// Human readable description of the rule
-		Description: "JFrog API Key",
+		Description: "Found a JFrog API Key, posing a risk of unauthorized access to software artifact repositories and build pipelines.",
 
 		// Unique ID for the rule
 		RuleID: "jfrog-api-key",
 
 		// Regex capture group for the actual secret
-		SecretGroup: 1,
 
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateSemiGenericRegex(keywords, alphaNumeric("73"), true),
@@ -40,13 +39,12 @@ func JFrogIdentityToken() *config.Rule {
 	// Define Rule
 	r := config.Rule{
 		// Human readable description of the rule
-		Description: "JFrog Identity Token",
+		Description: "Discovered a JFrog Identity Token, potentially compromising access to JFrog services and sensitive software artifacts.",
 
 		// Unique ID for the rule
 		RuleID: "jfrog-identity-token",
 
 		// Regex capture group for the actual secret
-		SecretGroup: 1,
 
 		// Regex used for detecting secrets. See regex section below for more details
 		Regex: generateSemiGenericRegex(keywords, alphaNumeric("64"), true),

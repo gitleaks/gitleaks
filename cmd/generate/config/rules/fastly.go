@@ -8,11 +8,11 @@ import (
 func FastlyAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Fastly API key",
+		Description: "Uncovered a Fastly API key, which may compromise CDN and edge cloud services, leading to content delivery and security issues.",
 		RuleID:      "fastly-api-token",
 		Regex:       generateSemiGenericRegex([]string{"fastly"}, alphaNumericExtended("32"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"fastly"},
+
+		Keywords: []string{"fastly"},
 	}
 
 	// validate

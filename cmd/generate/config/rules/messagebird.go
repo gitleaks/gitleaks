@@ -8,14 +8,14 @@ import (
 func MessageBirdAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "MessageBird API token",
+		Description: "Found a MessageBird API token, risking unauthorized access to communication platforms and message data.",
 		RuleID:      "messagebird-api-token",
 		Regex: generateSemiGenericRegex([]string{
 			"messagebird",
 			"message-bird",
 			"message_bird",
 		}, alphaNumeric("25"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"messagebird",
 			"message-bird",
@@ -35,14 +35,14 @@ func MessageBirdAPIToken() *config.Rule {
 func MessageBirdClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "MessageBird client ID",
+		Description: "Discovered a MessageBird client ID, potentially compromising API integrations and sensitive communication data.",
 		RuleID:      "messagebird-client-id",
 		Regex: generateSemiGenericRegex([]string{
 			"messagebird",
 			"message-bird",
 			"message_bird",
 		}, hex8_4_4_4_12(), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"messagebird",
 			"message-bird",

@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -62,7 +63,7 @@ type Config struct {
 	Keywords    []string
 
 	// used to keep sarif results consistent
-	orderedRules []string
+	OrderedRules []string
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -158,7 +159,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			StopWords:   vc.Allowlist.StopWords,
 		},
 		Keywords:     keywords,
-		orderedRules: orderedRules,
+		OrderedRules: orderedRules,
 	}
 
 	if maxExtendDepth != extendDepth {
@@ -177,9 +178,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	return c, nil
 }
 
-func (c *Config) OrderedRules() []Rule {
+func (c *Config) GetOrderedRules() []Rule {
 	var orderedRules []Rule
-	for _, id := range c.orderedRules {
+	for _, id := range c.OrderedRules {
 		if _, ok := c.Rules[id]; ok {
 			orderedRules = append(orderedRules, c.Rules[id])
 		}
@@ -240,6 +241,7 @@ func (c *Config) extend(extensionConfig Config) {
 			log.Trace().Msgf("adding %s to base config", ruleID)
 			c.Rules[ruleID] = rule
 			c.Keywords = append(c.Keywords, rule.Keywords...)
+			c.OrderedRules = append(c.OrderedRules, ruleID)
 		}
 	}
 
@@ -250,4 +252,7 @@ func (c *Config) extend(extensionConfig Config) {
 		extensionConfig.Allowlist.Paths...)
 	c.Allowlist.Regexes = append(c.Allowlist.Regexes,
 		extensionConfig.Allowlist.Regexes...)
+
+	// sort to keep extended rules in order
+	sort.Strings(c.OrderedRules)
 }

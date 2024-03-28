@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const configPath = "../testdata/config/"
@@ -22,7 +23,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -40,7 +41,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -56,7 +57,7 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
@@ -96,7 +97,7 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{
 					"aws-access-key": {
 						Description: "AWS Access Key",
-						Regex:       regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}"),
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
 						RuleID:      "aws-access-key",
@@ -126,23 +127,13 @@ func TestTranslate(t *testing.T) {
 		viper.SetConfigName(tt.cfgName)
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		var vc ViperConfig
 		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		cfg, err := vc.Translate()
-		if tt.wantError != nil {
-			if err == nil {
-				t.Errorf("expected error")
-			}
-			assert.Equal(t, tt.wantError, err)
-		}
-
+		assert.Equal(t, tt.wantError, err)
 		assert.Equal(t, cfg.Rules, tt.cfg.Rules)
 	}
 }
