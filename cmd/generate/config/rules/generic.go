@@ -47,6 +47,8 @@ func GenericCredential() *config.Rule {
 		"<password>edf8f16608465858a6c9e3cccb97d3c2</password>",
 		`<element password="edf8f16608465858a6c9e3cccb97d3c2" />`,
 		"M_DB_PASSWORD= edf8f16608465858a6c9e3cccb97d3c2",
+		`{ "access-key": "6da89121079f83b2eb6acccf8219ea982c3d79bccc", }`,
+		`"{ \"access-key\": \"6da89121079f83b2eb6acccf8219ea982c3d79bccc\", }"`,
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
