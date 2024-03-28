@@ -45,6 +45,7 @@ keywords = [
 id = "adobe-client-secret"
 description = "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation."
 regex = '''(?i)\b((p8e-)(?i)[a-z0-9]{32})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "p8e-",
 ]
@@ -77,6 +78,7 @@ keywords = [
 id = "alibaba-access-key-id"
 description = "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise."
 regex = '''(?i)\b((LTAI)(?i)[a-z0-9]{20})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "ltai",
 ]
@@ -2080,7 +2082,8 @@ keywords = [
 [[rules]]
 id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
-regex = '''(?i)(?:administrator_login_password|password)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"\\]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:['\"\\\s=\x60]){0,5}("[a-z0-9=_\-]{8,20}")(?:['\"\\\n\r\s\x60;<]|$)'''
+regex = '''(?i)(?:administrator_login_password|password)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"\\]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:['\"\\\s=\x60]){0,5}("([a-z0-9=_\-]{8,20})")(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 2
 keywords = [
     "administrator_login_password","password",
 ]
@@ -2235,6 +2238,7 @@ keywords = [
 id = "lob-api-key"
 description = "Uncovered a Lob API Key, which could lead to unauthorized access to mailing and address verification services."
 regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"\\]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:['\"\\\s=\x60]){0,5}((live|test)_[a-f0-9]{35})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "test_","live_",
 ]
@@ -2243,6 +2247,7 @@ keywords = [
 id = "lob-pub-api-key"
 description = "Detected a Lob Publishable API Key, posing a risk of exposing mail and print service integrations."
 regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s'"\\]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:['\"\\\s=\x60]){0,5}((test|live)_pub_[a-f0-9]{31})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "test_pub","live_pub","_pub",
 ]
@@ -2549,6 +2554,7 @@ keywords = [
 id = "shippo-api-token"
 description = "Discovered a Shippo API token, potentially compromising shipping services and customer order data."
 regex = '''(?i)\b(shippo_(live|test)_[a-f0-9]{40})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "shippo_",
 ]
@@ -2686,6 +2692,7 @@ keywords = [
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
 regex = '''(?i)\b((EAAA|sq0atp-)[0-9A-Za-z\-_]{22,60})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "sq0atp-","eaaa",
 ]
@@ -2702,6 +2709,7 @@ keywords = [
 id = "stripe-access-token"
 description = "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data."
 regex = '''(?i)\b((sk)_(test|live)_[0-9a-z]{10,32})(?:['\"\\\n\r\s\x60;<]|$)'''
+secretGroup = 1
 keywords = [
     "sk_test","sk_live",
 ]
