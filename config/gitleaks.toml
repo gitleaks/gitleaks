@@ -124,12 +124,17 @@ keywords = [
 ]
 
 [[rules]]
-id = "aws-access-token"
+id = "aws-access-key"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
-regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+regex = '''\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16})(?:['\"\\\n\r\s\x60;<]|$)'''
 keywords = [
     "akia","asia","abia","acca",
 ]
+
+[[rules]]
+id = "aws-secret-key"
+description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
+regex = '''(?i)\b([0-9A-Z+\/]{40})(?:['\"\\\n\r\s\x60;<]|$)'''
 
 [[rules]]
 id = "beamer-api-token"
