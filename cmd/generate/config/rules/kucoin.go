@@ -9,9 +9,9 @@ func KucoinAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "kucoin-access-token",
-		Description: "Kucoin Access Token",
+		Description: "Found a Kucoin Access Token, risking unauthorized access to cryptocurrency exchange services and transactions.",
 		Regex:       generateSemiGenericRegex([]string{"kucoin"}, hex("24"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"kucoin",
 		},
@@ -28,9 +28,9 @@ func KucoinSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "kucoin-secret-key",
-		Description: "Kucoin Secret Key",
+		Description: "Discovered a Kucoin Secret Key, which could lead to compromised cryptocurrency operations and financial data breaches.",
 		Regex:       generateSemiGenericRegex([]string{"kucoin"}, hex8_4_4_4_12(), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"kucoin",
 		},

@@ -8,10 +8,9 @@ import (
 func BittrexAccessKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Bittrex Access Key",
+		Description: "Identified a Bittrex Access Key, which could lead to unauthorized access to cryptocurrency trading accounts and financial loss.",
 		RuleID:      "bittrex-access-key",
 		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"bittrex"},
 	}
 
@@ -25,11 +24,11 @@ func BittrexAccessKey() *config.Rule {
 func BittrexSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Bittrex Secret Key",
+		Description: "Detected a Bittrex Secret Key, potentially compromising cryptocurrency transactions and financial security.",
 		RuleID:      "bittrex-secret-key",
 		Regex:       generateSemiGenericRegex([]string{"bittrex"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"bittrex"},
+
+		Keywords: []string{"bittrex"},
 	}
 
 	// validate

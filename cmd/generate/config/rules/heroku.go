@@ -7,11 +7,11 @@ import (
 func Heroku() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Heroku API Key",
+		Description: "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "heroku-api-key",
 		Regex:       generateSemiGenericRegex([]string{"heroku"}, hex8_4_4_4_12(), true),
-		SecretGroup: 1,
-		Keywords:    []string{"heroku"},
+
+		Keywords: []string{"heroku"},
 	}
 
 	// validate

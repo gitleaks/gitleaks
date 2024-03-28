@@ -8,10 +8,9 @@ import (
 func AsanaClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Asana Client ID",
+		Description: "Discovered a potential Asana Client ID, risking unauthorized access to Asana projects and sensitive task information.",
 		RuleID:      "asana-client-id",
 		Regex:       generateSemiGenericRegex([]string{"asana"}, numeric("16"), true),
-		SecretGroup: 1,
 		Keywords:    []string{"asana"},
 	}
 
@@ -25,11 +24,11 @@ func AsanaClientID() *config.Rule {
 func AsanaClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Asana Client Secret",
+		Description: "Identified an Asana Client Secret, which could lead to compromised project management integrity and unauthorized access.",
 		RuleID:      "asana-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"asana"}, alphaNumeric("32"), true),
-		SecretGroup: 1,
-		Keywords:    []string{"asana"},
+
+		Keywords: []string{"asana"},
 	}
 
 	// validate

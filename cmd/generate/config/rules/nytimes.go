@@ -9,11 +9,11 @@ func NytimesAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "nytimes-access-token",
-		Description: "Nytimes Access Token",
+		Description: "Detected a Nytimes Access Token, risking unauthorized access to New York Times APIs and content services.",
 		Regex: generateSemiGenericRegex([]string{
 			"nytimes", "new-york-times,", "newyorktimes"},
 			alphaNumericExtended("32"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"nytimes",
 			"new-york-times",

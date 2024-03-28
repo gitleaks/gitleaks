@@ -9,13 +9,13 @@ func NewRelicUserID() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "new-relic-user-api-key",
-		Description: "New Relic user API Key",
+		Description: "Discovered a New Relic user API Key, which could lead to compromised application insights and performance monitoring.",
 		Regex: generateSemiGenericRegex([]string{
 			"new-relic",
 			"newrelic",
 			"new_relic",
 		}, `NRAK-[a-z0-9]{27}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"NRAK",
 		},
@@ -32,13 +32,13 @@ func NewRelicUserKey() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "new-relic-user-api-id",
-		Description: "New Relic user API ID",
+		Description: "Found a New Relic user API ID, posing a risk to application monitoring services and data integrity.",
 		Regex: generateSemiGenericRegex([]string{
 			"new-relic",
 			"newrelic",
 			"new_relic",
 		}, alphaNumeric("64"), true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"new-relic",
 			"newrelic",
@@ -57,13 +57,13 @@ func NewRelicBrowserAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "new-relic-browser-api-token",
-		Description: "New Relic ingest browser API token",
+		Description: "Identified a New Relic ingest browser API token, risking unauthorized access to application performance data and analytics.",
 		Regex: generateSemiGenericRegex([]string{
 			"new-relic",
 			"newrelic",
 			"new_relic",
 		}, `NRJS-[a-f0-9]{19}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"NRJS-",
 		},

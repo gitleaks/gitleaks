@@ -7,9 +7,8 @@ import (
 
 func DigitalOceanPAT() *config.Rule {
 	r := config.Rule{
-		Description: "DigitalOcean Personal Access Token",
+		Description: "Discovered a DigitalOcean Personal Access Token, posing a threat to cloud infrastructure security and data privacy.",
 		RuleID:      "digitalocean-pat",
-		SecretGroup: 1,
 		Regex:       generateUniqueTokenRegex(`dop_v1_[a-f0-9]{64}`, true),
 		Keywords:    []string{"dop_v1_"},
 	}
@@ -22,11 +21,11 @@ func DigitalOceanPAT() *config.Rule {
 
 func DigitalOceanOAuthToken() *config.Rule {
 	r := config.Rule{
-		Description: "DigitalOcean OAuth Access Token",
+		Description: "Found a DigitalOcean OAuth Access Token, risking unauthorized cloud resource access and data compromise.",
 		RuleID:      "digitalocean-access-token",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`, true),
-		Keywords:    []string{"doo_v1_"},
+
+		Regex:    generateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`, true),
+		Keywords: []string{"doo_v1_"},
 	}
 
 	tps := []string{
@@ -37,11 +36,11 @@ func DigitalOceanOAuthToken() *config.Rule {
 
 func DigitalOceanRefreshToken() *config.Rule {
 	r := config.Rule{
-		Description: "DigitalOcean OAuth Refresh Token",
+		Description: "Uncovered a DigitalOcean OAuth Refresh Token, which could allow prolonged unauthorized access and resource manipulation.",
 		RuleID:      "digitalocean-refresh-token",
-		SecretGroup: 1,
-		Regex:       generateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`, true),
-		Keywords:    []string{"dor_v1_"},
+
+		Regex:    generateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`, true),
+		Keywords: []string{"dor_v1_"},
 	}
 
 	tps := []string{

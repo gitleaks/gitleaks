@@ -9,9 +9,9 @@ func ShippoAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "shippo-api-token",
-		Description: "Shippo API token",
+		Description: "Discovered a Shippo API token, potentially compromising shipping services and customer order data.",
 		Regex:       generateUniqueTokenRegex(`shippo_(live|test)_[a-f0-9]{40}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"shippo_",
 		},

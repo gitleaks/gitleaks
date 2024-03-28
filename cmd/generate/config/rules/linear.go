@@ -10,7 +10,7 @@ import (
 func LinearAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Linear API Token",
+		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		RuleID:      "linear-api-key",
 		Regex:       regexp.MustCompile(`lin_api_(?i)[a-z0-9]{40}`),
 		Keywords:    []string{"lin_api_"},
@@ -26,11 +26,10 @@ func LinearAPIToken() *config.Rule {
 func LinearClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Linear Client Secret",
+		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		RuleID:      "linear-client-secret",
 		Regex:       generateSemiGenericRegex([]string{"linear"}, hex("32"), true),
 		Keywords:    []string{"linear"},
-		SecretGroup: 1,
 	}
 
 	// validate

@@ -9,10 +9,9 @@ func DatadogtokenAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "datadog-access-token",
-		Description: "Datadog Access Token",
+		Description: "Detected a Datadog Access Token, potentially risking monitoring and analytics data exposure and manipulation.",
 		Regex: generateSemiGenericRegex([]string{"datadog"},
 			alphaNumeric("40"), true),
-		SecretGroup: 1,
 		Keywords: []string{
 			"datadog",
 		},

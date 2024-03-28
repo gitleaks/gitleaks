@@ -35,7 +35,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
            RuleID:      "beamer-api-token",
 
            // Regex capture group for the actual secret
-           SecretGroup: 1,
+           
 
 
            // Regex used for detecting secrets. See regex section below for more details
@@ -88,15 +88,11 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    validation part. You can use `generateSampleSecret` to create a secret for the
    true positives (`tps` in the example above) used in `validate`.
 
-1. Update `cmd/generate/config/main.go`. Add a line like
-   `configRules = append(configRules, rules.Beamer())` in `main()`. Try and keep
+1. Update `cmd/generate/config/main.go`. Extend `configRules` slice with
+   the `rules.Beamer(),` in `main()`. Try and keep
    this alphabetically pretty please.
 
-1. Change directories into `cmd/generate/config` and run `go run main.go`
-
-   ```
-   cd cmd/generate/config && go run main.go
-   ```
+1. Run `go generate ./...`
 
 1. Check out your new rules in `config/gitleaks.toml` and see if everything looks good.
 

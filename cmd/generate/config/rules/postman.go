@@ -9,9 +9,9 @@ func PostManAPI() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "postman-api-token",
-		Description: "Postman API token",
+		Description: "Uncovered a Postman API token, potentially compromising API testing and development workflows.",
 		Regex:       generateUniqueTokenRegex(`PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34}`, true),
-		SecretGroup: 1,
+
 		Keywords: []string{
 			"PMAK-",
 		},
