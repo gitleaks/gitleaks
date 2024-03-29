@@ -19,6 +19,7 @@ paths = [
     '''gradle.lockfile''',
     '''node_modules''',
     '''package-lock.json''',
+    '''(.*?)ruleset''',
     '''yarn.lock''',
     '''pnpm-lock.yaml''',
     '''Database.refactorlog''',
@@ -488,6 +489,11 @@ keywords = [
 ]
 
 [rules.allowlist]
+
+regexTarget = "line"
+regexes = [
+    "PublicKeyToken","InstrumentationKey",
+]
 stopwords = [
     "000000",
     "aaaaaa",
