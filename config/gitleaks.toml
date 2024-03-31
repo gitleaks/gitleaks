@@ -133,6 +133,9 @@ keywords = [
 id = "aws-secret-key"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
 regex = '''(?i)\b([0-9A-Z+\/]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "aws_secret_access_key","aws_secret","awssecret",
+]
 
 [[rules]]
 id = "beamer-api-token"

@@ -45,6 +45,7 @@ func AWSSecretKey() *config.Rule {
 		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		RuleID:      "aws-secret-key",
 		Regex:       generateUniqueTokenRegex("[0-9A-Z+\\/]{40}", true),
+		Keywords:    []string{"aws_secret_access_key", "aws_secret", "AwsSecret"},
 	}
 
 	// validate
@@ -54,6 +55,7 @@ func AWSSecretKey() *config.Rule {
 	fps := []string{
 		credFileAccessKey,
 		credFileSessionToken,
+		"  - 4f1d13e1bbebef31175ffe9a8d752609b9edc174",
 	}
 	return validate(r, tps, fps)
 }
