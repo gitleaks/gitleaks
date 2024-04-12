@@ -8,7 +8,7 @@ import (
 func DefinedNetworkingAPIToken() *config.Rule {
 	// Define Rule
 	r := config.Rule{
-		// Human redable description of the rule
+		// Human readable description of the rule
 		Description: "Identified a Defined Networking API token, which could lead to unauthorized network operations and data breaches.",
 
 		// Unique ID for the rule
