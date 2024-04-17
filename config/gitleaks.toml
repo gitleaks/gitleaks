@@ -170,6 +170,22 @@ keywords = [
 ]
 
 [[rules]]
+id = "cae-svc-pattern"
+description = "Identified a potential pattern match to an CAE SVC account, which could lead to unauthorized access to Service Account and sensitive data exposure."
+regex = '''[^\s]*~~!!~~[^\s]*'''
+keywords = [
+    "cae", "svc"
+]
+
+[[rules]]
+id = "cae-svc-pattern2"
+description = "Identified a potential pattern match to an CAE SVC account, which could lead to unauthorized access to Service Account and sensitive data exposure."
+regex = '''(?i)(?:~~!!~~)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{38})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "~~!!~~",
+]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
