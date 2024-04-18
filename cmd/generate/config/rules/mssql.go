@@ -1,7 +1,10 @@
-// Package config provides configuration and rule generation functionality.
-package config
+package rules
 
-import "github.com/zricethezav/gitleaks/v8/config"
+import (
+    "regexp"
+
+    "github.com/zricethezav/gitleaks/v8/config"
+)
 
 // MSSQLDatabaseCredentials generates a rule for detecting exposure of MSSQL database credentials.
 func MSSQLDatabaseCredentials() *config.Rule {
@@ -14,7 +17,8 @@ func MSSQLDatabaseCredentials() *config.Rule {
         RuleID:      "mssql-database-credentials",
 
         // Regex used for detecting secrets
-        Regex:       `Password=[^;]+`,
+        Regex: regexp.MustCompile(
+            `Password=[^;]+`),
 
         // Keywords used for string matching on fragments (pre-filter)
         Keywords:    []string{"MSSQL", "credentials"},
