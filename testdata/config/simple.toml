@@ -220,8 +220,8 @@ title = "gitleaks config"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
 
-[[rules:]]
-    id: mssql_database_credentials
-    description: Detects exposure of MSSQL database credentials.
-    regex: "Password=[^;]+"
-    tags: ["database", "MSSQL", "credentials"]
+[[rules]]
+id = "mssql_database_credentials"
+description = "Detects exposure of MSSQL database credentials."
+regex = 'Password=[^;]+'
+tags = ["database", "MSSQL", "credentials"]
