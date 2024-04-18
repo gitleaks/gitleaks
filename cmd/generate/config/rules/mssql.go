@@ -1,3 +1,8 @@
+// Package config provides configuration and rule generation functionality.
+package config
+
+import "github.com/zricethezav/gitleaks/v8/config"
+
 // MSSQLDatabaseCredentials generates a rule for detecting exposure of MSSQL database credentials.
 func MSSQLDatabaseCredentials() *config.Rule {
     // Define Rule
