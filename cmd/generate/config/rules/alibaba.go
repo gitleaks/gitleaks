@@ -12,6 +12,7 @@ func AlibabaAccessKey() *config.Rule {
 		RuleID:      "alibaba-access-key-id",
 		Regex:       generateUniqueTokenRegex(`(LTAI)(?i)[a-z0-9]{20}`, true),
 		Keywords:    []string{"LTAI"},
+		SecretGroup: 1,
 	}
 
 	// validate

@@ -15,6 +15,7 @@ func StripeAccessToken() *config.Rule {
 			"sk_test",
 			"sk_live",
 		},
+		SecretGroup: 1,
 	}
 
 	// validate

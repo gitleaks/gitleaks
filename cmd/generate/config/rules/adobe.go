@@ -28,6 +28,7 @@ func AdobeClientSecret() *config.Rule {
 		RuleID:      "adobe-client-secret",
 		Regex:       generateUniqueTokenRegex(`(p8e-)(?i)[a-z0-9]{32}`, true),
 		Keywords:    []string{"p8e-"},
+		SecretGroup: 1,
 	}
 
 	// validate

@@ -30,8 +30,9 @@ func HashicorpField() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches.",
 		RuleID:      "hashicorp-tf-password",
-		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20")), true),
+		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"(%s)"`, alphaNumericExtended("8,20")), true),
 		Keywords:    keywords,
+		SecretGroup: 2,
 	}
 
 	tps := []string{
