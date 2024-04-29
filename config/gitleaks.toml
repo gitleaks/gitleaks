@@ -178,6 +178,30 @@ keywords = [
 ]
 
 [[rules]]
+id = "cloudflare-api-key"
+description = "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security."
+regex = '''(?i)(?:cloudflare)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "cloudflare",
+]
+
+[[rules]]
+id = "cloudflare-global-api-key"
+description = "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security."
+regex = '''(?i)(?:cloudflare)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{37})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "cloudflare",
+]
+
+[[rules]]
+id = "cloudflare-origin-ca-key"
+description = "Detected a Cloudflare Origin CA Key, potentially compromising cloud application deployments and operational security."
+regex = '''\b(v1\.0-[a-f0-9]{24}-[a-f0-9]{146})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "cloudflare","v1.0-",
+]
+
+[[rules]]
 id = "codecov-access-token"
 description = "Found a pattern resembling a Codecov Access Token, posing a risk of unauthorized access to code coverage reports and sensitive data."
 regex = '''(?i)(?:codecov)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
