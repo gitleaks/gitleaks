@@ -124,9 +124,9 @@ keywords = [
 [[rules]]
 id = "aws-access-token"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
-regex = '''(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
 keywords = [
-    "akia","agpa","aida","aroa","aipa","anpa","anva","asia",
+    "akia","asia","abia","acca",
 ]
 
 [[rules]]
@@ -167,6 +167,14 @@ description = "Detected a Bittrex Secret Key, potentially compromising cryptocur
 regex = '''(?i)(?:bittrex)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "bittrex",
+]
+
+[[rules]]
+id = "chargebee-access-token"
+description = "Found a Chargebee Access Token, posing a risk to subscription management, payment processing services and sensitive financial data."
+regex = '''(?i)\b((test|live)_[0-9a-zA-Z]{32,34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "test_","live_",
 ]
 
 [[rules]]
@@ -667,6 +675,7 @@ stopwords = [
     "changelog",
     "channel",
     "chart",
+    "chargebee",
     "chat",
     "cheat",
     "check",
@@ -2688,9 +2697,9 @@ keywords = [
 [[rules]]
 id = "stripe-access-token"
 description = "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data."
-regex = '''(?i)\b((sk|pk)_(test|live)_[0-9a-z]{10,32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b((sk)_(test|live)_[0-9a-z]{10,32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
-    "sk_test","pk_test","sk_live","pk_live",
+    "sk_test","sk_live",
 ]
 
 [[rules]]
