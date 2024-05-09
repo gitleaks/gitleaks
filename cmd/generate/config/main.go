@@ -99,6 +99,7 @@ func main() {
 		rules.GrafanaApiKey(),
 		rules.GrafanaCloudApiToken(),
 		rules.GrafanaServiceAccountToken(),
+		rules.HarnessPAT(),
 		rules.Hashicorp(),
 		rules.HashicorpField(),
 		rules.Heroku(),

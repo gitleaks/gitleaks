@@ -2094,6 +2094,14 @@ keywords = [
 ]
 
 [[rules]]
+id = "harness-pat"
+description = "Identified a Harness Personal Access Token (PAT), risking unauthorized access to a Harness account."
+regex = '''pat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}'''
+keywords = [
+    "harness_",
+]
+
+[[rules]]
 id = "hashicorp-tf-api-token"
 description = "Uncovered a HashiCorp Terraform user/org API token, which may lead to unauthorized infrastructure management and security breaches."
 regex = '''(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}'''
