@@ -26,7 +26,7 @@ func HarnessPAT() *config.Rule {
 }
 
 func HarnessSAT() *config.Rule {
-	// Define rule for Harness Personal Access Token (PAT)
+	// Define rule for Harness Service Account Token (SAT)
 	r := config.Rule{
 		Description: "Identified a Harness Service Account Token (SAT), risking unauthorized access to a Harness account.",
 		RuleID:      "harness-sat",
