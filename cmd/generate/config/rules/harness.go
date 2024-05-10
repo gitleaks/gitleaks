@@ -24,3 +24,21 @@ func HarnessPAT() *config.Rule {
 	// Validate the rule
 	return validate(r, tps, nil)
 }
+
+func HarnessSAT() *config.Rule {
+	// Define rule for Harness Personal Access Token (PAT)
+	r := config.Rule{
+		Description: "Identified a Harness Service Account Token (SAT), risking unauthorized access to a Harness account.",
+		RuleID:      "harness-sat",
+		Regex:       regexp.MustCompile(`sat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}`),
+		Keywords:    []string{"sat."},
+	}
+
+	// Generate a sample secret for validation
+	tps := []string{
+		generateSampleSecret("harness", "sat."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))),
+	}
+
+	// Validate the rule
+	return validate(r, tps, nil)
+}

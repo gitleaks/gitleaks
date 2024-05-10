@@ -2098,7 +2098,15 @@ id = "harness-pat"
 description = "Identified a Harness Personal Access Token (PAT), risking unauthorized access to a Harness account."
 regex = '''pat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}'''
 keywords = [
-    "harness_",
+    "pat.",
+]
+
+[[rules]]
+id = "harness-sat"
+description = "Identified a Harness Service Account Token (SAT), risking unauthorized access to a Harness account."
+regex = '''sat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}'''
+keywords = [
+    "sat.",
 ]
 
 [[rules]]
