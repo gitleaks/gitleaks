@@ -32,7 +32,7 @@ func FacebookAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		RuleID:      "facebook-access-token",
-		Regex:       generateUniqueTokenRegex(`\d{15,16}\|[0-9a-z\-_]{27}`, true),
+		Regex:       generateUniqueTokenRegex(`\d{15,16}(\||%)[0-9a-z\-_]{27,}`, true),
 	}
 
 	// validate
