@@ -7,36 +7,19 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func HarnessPAT() *config.Rule {
-	// Define rule for Harness Personal Access Token (PAT)
+func HarnessApiKey() *config.Rule {
+	// Define rule for Harness Personal Access Token (PAT) and Service Account Token (SAT)
 	r := config.Rule{
-		Description: "Identified a Harness Personal Access Token (PAT), risking unauthorized access to a Harness account.",
-		RuleID:      "harness-pat",
-		Regex:       regexp.MustCompile(`pat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}`),
-		Keywords:    []string{"pat."},
+		Description: "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account.",
+		RuleID:      "harness-api-key",
+		Regex:       regexp.MustCompile(`(pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}`),
+		Keywords:    []string{"pat.", "sat."},
 	}
 
 	// Generate a sample secret for validation
 	tps := []string{
-		generateSampleSecret("harness", "pat."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))),
-	}
-
-	// Validate the rule
-	return validate(r, tps, nil)
-}
-
-func HarnessSAT() *config.Rule {
-	// Define rule for Harness Service Account Token (SAT)
-	r := config.Rule{
-		Description: "Identified a Harness Service Account Token (SAT), risking unauthorized access to a Harness account.",
-		RuleID:      "harness-sat",
-		Regex:       regexp.MustCompile(`sat\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{24}`),
-		Keywords:    []string{"sat."},
-	}
-
-	// Generate a sample secret for validation
-	tps := []string{
-		generateSampleSecret("harness", "sat."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("24"))),
+		generateSampleSecret("harness", "pat."+secrets.NewSecret(alphaNumeric("22"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("20"))),
+		generateSampleSecret("harness", "sat."+secrets.NewSecret(alphaNumeric("22"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("20"))),
 	}
 
 	// Validate the rule
