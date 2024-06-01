@@ -106,6 +106,7 @@ func main() {
 		rules.HuggingFaceAccessToken(),
 		rules.HuggingFaceOrganizationApiToken(),
 		rules.Intercom(),
+		rules.Intra42ClientSecret(),
 		rules.JFrogAPIKey(),
 		rules.JFrogIdentityToken(),
 		rules.JWT(),
