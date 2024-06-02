@@ -75,3 +75,26 @@ func NewRelicBrowserAPIKey() *config.Rule {
 	}
 	return validate(r, tps, nil)
 }
+
+func NewRelicInsertKey() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "new-relic-insert-key",
+		Description: "Discovered a New Relic insight insert key, compromising data injection into the platform.",
+		Regex: generateSemiGenericRegex([]string{
+			"new-relic",
+			"newrelic",
+			"new_relic",
+		}, `NRII-[a-z0-9-]{32}`, true),
+
+		Keywords: []string{
+			"NRII-",
+		},
+	}
+
+	// validate
+	tps := []string{
+		generateSampleSecret("new-relic", "NRII-"+secrets.NewSecret(hex("32"))),
+	}
+	return validate(r, tps, nil)
+}

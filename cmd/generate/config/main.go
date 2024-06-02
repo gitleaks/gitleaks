@@ -133,6 +133,7 @@ func main() {
 		rules.NewRelicUserID(),
 		rules.NewRelicUserKey(),
 		rules.NewRelicBrowserAPIKey(),
+		rules.NewRelicInsertKey(),
 		rules.NPM(),
 		rules.NytimesAccessToken(),
 		rules.OktaAccessToken(),
