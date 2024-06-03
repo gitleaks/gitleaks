@@ -118,7 +118,7 @@ func alphaNumericExtended(size string) string {
 }
 
 func alphaNumericExtendedLong(size string) string {
-	return fmt.Sprintf(`[a-z0-9\/=_\+\-]{%s}`, size)
+	return fmt.Sprintf(`[a-z0-9\/=_\+\-\\]{%s}`, size)
 }
 
 func hex8_4_4_4_12() string {
