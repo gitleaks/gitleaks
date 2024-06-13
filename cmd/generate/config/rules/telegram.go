@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"fmt"
-
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -20,9 +18,7 @@ func TelegramBotToken() *config.Rule {
 			"telegr",
 		},
 	}
-	fmt.Println("r: ", r.Regex.String())
 
-	// https://regex101.com/r/7fFAhS/1
 	// validate
 	var (
 		validToken = secrets.NewSecret(numeric("8") + ":A" + alphaNumericExtendedShort("34"))
