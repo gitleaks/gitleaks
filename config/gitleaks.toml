@@ -2105,6 +2105,7 @@ keywords = [
 id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
 regex = '''(?i)(?:administrator_login_password|password)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}("[a-z0-9=_\-]{8,20}")(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+path = '''\.(tf|hcl)$'''
 keywords = [
     "administrator_login_password","password",
 ]
