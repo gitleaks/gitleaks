@@ -97,6 +97,34 @@ func validate(r config.Rule, truePositives []string, falsePositives []string) *c
 	return &r
 }
 
+func validateWithPaths(r config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
+	var keywords []string
+	for _, k := range r.Keywords {
+		keywords = append(keywords, strings.ToLower(k))
+	}
+	r.Keywords = keywords
+
+	rules := make(map[string]config.Rule)
+	rules[r.RuleID] = r
+	d := detect.NewDetector(config.Config{
+		Rules:    rules,
+		Keywords: keywords,
+	})
+	for path, tp := range truePositives {
+		f := detect.Fragment{Raw: tp, FilePath: path}
+		if len(d.Detect(f)) != 1 {
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], true positive [%s] in %s was not detected by regexp [%s] path [%s]", r.RuleID, tp, path, r.Regex, r.Path)
+		}
+	}
+	for path, fp := range falsePositives {
+		f := detect.Fragment{Raw: fp, FilePath: path}
+		if len(d.Detect(f)) != 0 {
+			log.Fatal().Msgf("Failed to validate. For rule ID [%s], false positive [%s] in %s was detected by regexp [%s] path [%s]", r.RuleID, fp, path, r.Regex, r.Path)
+		}
+	}
+	return &r
+}
+
 func numeric(size string) string {
 	return fmt.Sprintf(`[0-9]{%s}`, size)
 }

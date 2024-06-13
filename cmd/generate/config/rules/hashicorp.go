@@ -32,17 +32,20 @@ func HashicorpField() *config.Rule {
 		RuleID:      "hashicorp-tf-password",
 		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20")), true),
 		Keywords:    keywords,
+		Path:        regexp.MustCompile(`\.(tf|hcl)$`),
 	}
 
-	tps := []string{
+	tps := map[string]string{
 		// Example from: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/sql_server.html
-		"administrator_login_password = " + `"thisIsDog11"`,
+		"file.tf": "administrator_login_password = " + `"thisIsDog11"`,
 		// https://registry.terraform.io/providers/petoju/mysql/latest/docs
-		"password       = " + `"rootpasswd"`,
+		"file.hcl": "password       = " + `"rootpasswd"`,
 	}
-	fps := []string{
-		"administrator_login_password = var.db_password",
-		`password = "${aws_db_instance.default.password}"`,
+	fps := map[string]string{
+		"file.tf":      "administrator_login_password = var.db_password",
+		"file.hcl":     `password = "${aws_db_instance.default.password}"`,
+		"unrelated.js": "password       = " + `"rootpasswd"`,
 	}
-	return validate(r, tps, fps)
+
+	return validateWithPaths(r, tps, fps)
 }
