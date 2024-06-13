@@ -2774,9 +2774,9 @@ keywords = [
 [[rules]]
 id = "telegram-bot-api-token"
 description = "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram."
-regex = '''(?i)(?:^|\b|bot)([0-9]{5,16}:A[a-z0-9_\-]{34})(?:$|\b[^_\-])'''
+regex = '''(?i:(?:telegr)(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)'''
 keywords = [
-    "telegram","api","bot","token","url",
+    "telegr",
 ]
 
 [[rules]]
