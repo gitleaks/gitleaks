@@ -34,8 +34,9 @@ order of precedence:
 If none of the three options are used, then gitleaks will use the default config`
 
 var rootCmd = &cobra.Command{
-	Use:   "gitleaks",
-	Short: "Gitleaks scans code, past or present, for secrets",
+	Use:     "gitleaks",
+	Short:   "Gitleaks scans code, past or present, for secrets",
+	Version: Version,
 }
 
 func init() {
