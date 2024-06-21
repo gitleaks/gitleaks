@@ -170,6 +170,14 @@ keywords = [
 ]
 
 [[rules]]
+id = "chargebee-access-token"
+description = "Found a Chargebee Access Token, posing a risk to subscription management, payment processing services and sensitive financial data."
+regex = '''(?i)\b((test|live)_[0-9a-zA-Z]{32,34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "test_","live_",
+]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
@@ -704,6 +712,7 @@ stopwords = [
     "changelog",
     "channel",
     "chart",
+    "chargebee",
     "chat",
     "cheat",
     "check",
