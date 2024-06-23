@@ -23,6 +23,9 @@ type Allowlist struct {
 	// If RegexTarget is empty, it will be tested against the found secret.
 	RegexTarget string
 
+	// RegexFull "Regexes" to be run against the full match
+	RegexFull bool
+
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
 	Paths []*regexp.Regexp
 
