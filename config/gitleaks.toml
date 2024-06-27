@@ -2512,6 +2512,21 @@ expectedStatus = [
 ]
 
 [[rules]]
+id = "openai-project-api-key"
+description = "Found an OpenAI API Project Key, posing a risk of unauthorized access to AI services and data manipulation."
+regex = '''(?i)\b(sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "t3blbkfj",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.openai.com/v1/me"
+headers = {Authorization = "Bearer ${openai-project-api-key}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
+]
+
+[[rules]]
 id = "openshift-user-token"
 description = "Found an OpenShift user token, potentially compromising an OpenShift/Kubernetes cluster."
 regex = '''\b(sha256~[\w-]{43})(?:[^\w-]|\z)'''
