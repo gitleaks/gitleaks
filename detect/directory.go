@@ -38,6 +38,9 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 
 			// Buffer to hold file chunks
 			buf := make([]byte, chunkSize)
+			// Buffer to hold last few bytes from the previous chunk
+			lastFewBytesBuffer := make([]byte, lastNBytes)
+
 			totalLines := 0
 			for {
 				n, err := f.Read(buf)
@@ -57,11 +60,14 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					return nil // skip binary files
 				}
 
+				// append last few characters from the previous chunk
+				buf = append(lastFewBytesBuffer, buf...)
+				newBufSize := n + lastNBytes
 				// Count the number of newlines in this chunk
-				linesInChunk := strings.Count(string(buf[:n]), "\n")
+				linesInChunk := strings.Count(string(buf[:newBufSize]), "\n")
 				totalLines += linesInChunk
 				fragment := Fragment{
-					Raw:      string(buf[:n]),
+					Raw:      string(buf[:newBufSize]),
 					FilePath: p.Path,
 				}
 				if p.Symlink != "" {
@@ -73,6 +79,13 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					finding.EndLine += (totalLines - linesInChunk) + 1
 					d.addFinding(finding)
 				}
+
+				// it is possible that the current chunk has some portion of the keyword
+				// and the subsequent buffer has the remaining portion of it
+				// eg. current buffer ends with "pass" and next buffer starts with "word"
+				// to handle such cases add last few bytes from the current buffer
+				// and append it at the beginning of the next buffer
+				lastFewBytesBuffer = buf[len(buf)-lastNBytes:]
 			}
 
 			return nil

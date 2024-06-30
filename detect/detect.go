@@ -22,6 +22,7 @@ import (
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
+	lastNBytes             = 100        // 100 bytes
 )
 
 // Detector is the main detector struct
