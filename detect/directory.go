@@ -64,7 +64,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				// append last few characters from the previous chunk
 				if lastFewBytesBuffer != nil {
 					buf = append(lastFewBytesBuffer, buf...)
-					newBufSize = n + lastNBytes
+					newBufSize = n + len(lastFewBytesBuffer)
 					lastFewBytesBuffer = nil
 				}
 
