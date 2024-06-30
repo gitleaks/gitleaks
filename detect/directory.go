@@ -39,7 +39,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 			// Buffer to hold file chunks
 			buf := make([]byte, chunkSize)
 			// Buffer to hold last few bytes from the previous chunk
-			lastFewBytesBuffer := make([]byte, lastNBytes)
+			var lastFewBytesBuffer []byte
 
 			totalLines := 0
 			for {
@@ -60,9 +60,14 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					return nil // skip binary files
 				}
 
+				newBufSize := n
 				// append last few characters from the previous chunk
-				buf = append(lastFewBytesBuffer, buf...)
-				newBufSize := n + lastNBytes
+				if lastFewBytesBuffer != nil {
+					buf = append(lastFewBytesBuffer, buf...)
+					newBufSize = n + lastNBytes
+					lastFewBytesBuffer = nil
+				}
+
 				// Count the number of newlines in this chunk
 				linesInChunk := strings.Count(string(buf[:newBufSize]), "\n")
 				totalLines += linesInChunk
