@@ -11,7 +11,6 @@ func OpenAI() *config.Rule {
 		RuleID:      "openai-api-key",
 		Description: "Found an OpenAI API Key, posing a risk of unauthorized access to AI services and data manipulation.",
 		Regex:       generateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, true),
-
 		Keywords: []string{
 			"T3BlbkFJ",
 		},
@@ -21,5 +20,29 @@ func OpenAI() *config.Rule {
 	tps := []string{
 		generateSampleSecret("openaiApiKey", "sk-"+secrets.NewSecret(alphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(alphaNumeric("20"))),
 	}
-	return validate(r, tps, nil)
+	fps := []string{
+		generateSampleSecret("openaiApiKey", "sk-proj-"+secrets.NewSecret(alphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(alphaNumeric("20"))),
+	}
+	return validate(r, tps, fps)
+}
+
+func OpenAIProject() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "openai-project-api-key",
+		Description: "Found an OpenAI API Project Key, posing a risk of unauthorized access to AI services and data manipulation.",
+		Regex:       generateUniqueTokenRegex(`sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, true),
+		Keywords: []string{
+			"T3BlbkFJ",
+		},
+	}
+
+	// validate
+	tps := []string{
+		generateSampleSecret("openaiApiKey", "sk-proj-"+secrets.NewSecret(alphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(alphaNumeric("20"))),
+	}
+	fps := []string{
+		generateSampleSecret("openaiApiKey", "sk-"+secrets.NewSecret(alphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(alphaNumeric("20"))),
+	}
+	return validate(r, tps, fps)
 }
