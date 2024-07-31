@@ -15,6 +15,7 @@ func KubernetesSecret() *config.Rule {
 		Regex: generateUniqueTokenRegex(`kind:\s*Secret`, true),
 
 		Keywords: []string{
+			"Secret",
 			"kind: Secret",
 		},
 		// Kubernetes secrets are always yaml files, we limit to common yaml-endings to make this rule more safe!
@@ -22,9 +23,10 @@ func KubernetesSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := map[string]string{
 		// Sample Kubernetes Secret from https://kubernetes.io/docs/concepts/configuration/secret/
-		"apiVersion: v1 kind: Secret metadata: name: secret-sa-sample annotations: kubernetes.io/service-account.name: 'sa-name' type: kubernetes.io/service-account-token data: extra: YmFyCg==", // gitleaks:allow
+		"kubernetes.yaml": "apiVersion: v1 kind: Secret metadata: name: secret-sa-sample annotations: kubernetes.io/service-account.name: 'sa-name' type: kubernetes.io/service-account-token data: extra: YmFyCg==",                                                                      // gitleaks:allow
+		"kubernetes.yml":  "apiVersion: v1 data: password: UyFCXCpkJHpEc2I9 username: YWRtaW4= kind: Secret metadata: creationTimestamp: '2022-06-28T17:44:13Z' name: db-user-pass namespace: default resourceVersion: '12708504' uid: 91becd59-78fa-4c85-823f-6d44436242ac type: Opaque", // gitleaks:allow
 	}
-	return validate(r, tps, nil)
+	return validateWithPaths(r, tps, nil)
 }
