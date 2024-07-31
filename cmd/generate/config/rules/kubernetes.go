@@ -19,7 +19,7 @@ func KubernetesSecret() *config.Rule {
 			"kind: Secret",
 		},
 		// Kubernetes secrets are always yaml files, we limit to common yaml-endings to make this rule more safe!
-		Path: regexp.MustCompile(`\.(yaml|yml)$`),
+		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
 	}
 
 	// validate
