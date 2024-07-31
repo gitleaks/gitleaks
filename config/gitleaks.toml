@@ -2220,8 +2220,9 @@ keywords = [
 id = "kubernetes-secret"
 description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
 regex = '''(?i)\b(kind:\s*Secret)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+path = '''(?i)\.ya?ml$'''
 keywords = [
-    "kind: secret",
+    "secret",
 ]
 
 [[rules]]

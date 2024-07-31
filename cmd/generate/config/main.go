@@ -113,6 +113,7 @@ func main() {
 		rules.JWT(),
 		rules.JWTBase64(),
 		rules.KrakenAccessToken(),
+		rules.KubernetesSecret(),
 		rules.KucoinAccessToken(),
 		rules.KucoinSecretKey(),
 		rules.LaunchDarklyAccessToken(),
@@ -200,7 +201,6 @@ func main() {
 		rules.ZendeskSecretKey(),
 		rules.GenericCredential(),
 		rules.InfracostAPIToken(),
-		rules.KubernetesSecret(),
 	}
 
 	// ensure rules have unique ids
