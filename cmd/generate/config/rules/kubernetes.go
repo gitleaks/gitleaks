@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"regexp"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -15,6 +17,8 @@ func KubernetesSecret() *config.Rule {
 		Keywords: []string{
 			"kind: Secret",
 		},
+		// Kubernetes secrets are always yaml files, we limit to common yaml-endings to make this rule more safe!
+		Path: regexp.MustCompile(`\.(yaml|yml)$`),
 	}
 
 	// validate
