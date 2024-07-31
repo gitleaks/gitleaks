@@ -2217,6 +2217,14 @@ keywords = [
 ]
 
 [[rules]]
+id = "kubernetes-secret"
+description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
+regex = '''(?i)\b(kind:\s*Secret)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "kind: secret",
+]
+
+[[rules]]
 id = "kucoin-access-token"
 description = "Found a Kucoin Access Token, risking unauthorized access to cryptocurrency exchange services and transactions."
 regex = '''(?i)(?:kucoin)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{24})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
