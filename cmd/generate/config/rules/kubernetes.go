@@ -15,7 +15,7 @@ func KubernetesSecretWithDataBefore() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-before",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\b(data)\b)\W+(?:\w+\W+){0,200}?\bkind:\s*Secret\b.*`, true),
+		Regex: generateUniqueTokenRegex(`(?i)(?:\b(data:))(\W+(?:\w+\W+){0,200}?)\bkind:\s*Secret\b`, true),
 
 		Keywords: []string{
 			"Secret",
@@ -28,8 +28,11 @@ func KubernetesSecretWithDataBefore() *config.Rule {
 	tps := map[string]string{
 		// Sample Kubernetes Secret from https://kubernetes.io/docs/concepts/configuration/secret/
 		// These secrets contain the "data"-key before the actual identifier "kind: Secret"
-		"kubernetes.yaml": "apiVersion: v1 data: extra: YmFyCg== kind: Secret metadata: name: secret-sa-sample annotations: kubernetes.io/service-account.name: 'sa-name'",                                                                                                                // gitleaks:allow
-		"kubernetes.yml":  "apiVersion: v1 data: password: UyFCXCpkJHpEc2I9 username: YWRtaW4= kind: Secret metadata: creationTimestamp: '2022-06-28T17:44:13Z' name: db-user-pass namespace: default resourceVersion: '12708504' uid: 91becd59-78fa-4c85-823f-6d44436242ac type: Opaque", // gitleaks:allow
+		"kubernetes.yaml": "apiVersion: v1'\n' data:'\n' extra: YmFyCg=='\n' kind: secret'\n' metadata:'\n' name: secret-sa-sample'\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'",                                                  // gitleaks:allow
+		"kubernetes.yml":  "apiVersion: v1'\n' data:'\n' password: UyFCXCpkJHpEc2I9'\n' username: YWRtaW4='\n' kind: Secret'\n' metadata:'\n' creationTimestamp: '2022-06-28T17:44:13Z''\n' name: db-user-pass'\n' namespace: default'\n' type: Opaque", // gitleaks:allow
+		// Quoted Test Cases
+		"kubernetes-quoted-1.yaml": "apiVersion: v1'\n' data:'\n' extra: YmFyCg=='\n' kind: 'Secret''\n' metadata:'\n' name: 'secret-sa-sample''\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'", // gitleaks:allow
+		"kubernetes-quoted-2.yaml": "apiVersion: v1'\n' data:'\n' extra: YmFyCg=='\n' kind: 'secret''\n' metadata:'\n' name: 'secret-sa-sample''\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'", // gitleaks:allow
 	}
 	return validateWithPaths(r, tps, nil)
 }
@@ -41,7 +44,7 @@ func KubernetesSecretWithDataAfter() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-after",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\bkind:\s*Secret\b)\W+(?:\w+\W+){0,200}?\b(data)\b.*`, true),
+		Regex: generateUniqueTokenRegex(`(?i)(?:\bkind:\s*Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+)`, true),
 
 		Keywords: []string{
 			"Secret",
@@ -54,8 +57,11 @@ func KubernetesSecretWithDataAfter() *config.Rule {
 	tps := map[string]string{
 		// Sample Kubernetes Secret from https://kubernetes.io/docs/concepts/configuration/secret/
 		// These secrets contain the data after the  actual identifier "kind: Secret"
-		"kubernetes.yaml": "apiVersion: v1 kind: Secret data: extra: YmFyCg== metadata: name: secret-sa-sample annotations: kubernetes.io/service-account.name: 'sa-name'",                                                                                                                // gitleaks:allow
-		"kubernetes.yml":  "apiVersion: v1 kind: Secret data: password: UyFCXCpkJHpEc2I9 username: YWRtaW4= metadata: creationTimestamp: '2022-06-28T17:44:13Z' name: db-user-pass namespace: default resourceVersion: '12708504' uid: 91becd59-78fa-4c85-823f-6d44436242ac type: Opaque", // gitleaks:allow
+		"kubernetes.yaml": "apiVersion: v1'\n' kind: secret'\n' data:'\n' extra: YmFyCg=='\n' metadata:'\n' name: secret-sa-sample'\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'",                                                  // gitleaks:allow
+		"kubernetes.yml":  "apiVersion: v1'\n' kind: Secret'\n' data:'\n' password: UyFCXCpkJHpEc2I9'\n' username: YWRtaW4='\n' metadata:'\n' creationTimestamp: '2022-06-28T17:44:13Z''\n' name: db-user-pass'\n' namespace: default'\n' type: Opaque", // gitleaks:allow
+		// Quoted Test Cases
+		"kubernetes-quoted-1.yaml": "apiVersion: v1'\n' kind: 'Secret''\n' data:'\n' password: UyFCXCpkJHpEc2I9'\n' username: YWRtaW4='\n' metadata:'\n' name: db-user-pass'\n' namespace: default'\n' type: Opaque", // gitleaks:allow
+		"kubernetes-quoted-2.yaml": "apiVersion: v1'\n' kind: 'secret''\n' data:'\n' password: UyFCXCpkJHpEc2I9'\n' username: YWRtaW4='\n' metadata:'\n' name: db-user-pass'\n' namespace: default'\n' type: Opaque", // gitleaks:allow
 	}
 
 	return validateWithPaths(r, tps, nil)
