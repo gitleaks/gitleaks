@@ -141,6 +141,7 @@ func main() {
 		rules.NytimesAccessToken(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
+		rules.OpenshiftUserToken(),
 		rules.PlaidAccessID(),
 		rules.PlaidSecretKey(),
 		rules.PlaidAccessToken(),

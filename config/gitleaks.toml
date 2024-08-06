@@ -2451,6 +2451,15 @@ keywords = [
 ]
 
 [[rules]]
+id = "openshift-user-token"
+description = "Found an OpenShift user token, potentially compromising an OpenShift/Kubernetes cluster."
+regex = '''\b(sha256~[\w-]{43})(?:[^\w-]|\z)'''
+entropy = 3.5
+keywords = [
+    "sha256~",
+]
+
+[[rules]]
 id = "plaid-api-token"
 description = "Discovered a Plaid API Token, potentially compromising financial data aggregation and banking services."
 regex = '''(?i)(?:plaid)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
