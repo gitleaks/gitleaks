@@ -37,6 +37,12 @@ type Detector struct {
 	// verbose is a flag to print findings
 	Verbose bool
 
+	// Verification
+	Verification bool
+
+	// Verification
+	NoVerification bool
+
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 
@@ -77,6 +83,8 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	VerifyCache RequestCache
 }
 
 // Fragment contains the data to be scanned

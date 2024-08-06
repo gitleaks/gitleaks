@@ -2021,6 +2021,13 @@ regex = '''ghp_[0-9a-zA-Z]{36}'''
 keywords = [
     "ghp_",
 ]
+[rules.Verify]
+url = "https://api.github.com/user"
+httpVerb = "GET"
+expectedStatus = [
+    "200",
+]
+headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-pat}", X-GitHub-Api-Version = "2022-11-28"}
 
 [[rules]]
 id = "github-refresh-token"
@@ -2935,5 +2942,4 @@ regex = '''(?i)(?:zendesk)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|
 keywords = [
     "zendesk",
 ]
-
 

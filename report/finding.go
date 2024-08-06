@@ -41,6 +41,8 @@ type Finding struct {
 
 	// unique identifier
 	Fingerprint string
+
+	Verified bool
 }
 
 // Redact removes sensitive information from a finding.

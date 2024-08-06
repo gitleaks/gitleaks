@@ -35,6 +35,7 @@ type ViperConfig struct {
 		Keywords    []string
 		Path        string
 		Tags        []string
+		Verify      Verify
 
 		Allowlist struct {
 			RegexTarget string
@@ -72,6 +73,16 @@ type Extend struct {
 	Path       string
 	URL        string
 	UseDefault bool
+}
+
+type Verify struct {
+	URL                  string
+	Headers              map[string]string
+	Description          string
+	ExpectedStatus       []string
+	ExpectedBodyContains []string
+	UseDefault           bool
+	HTTPVerb             string
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
@@ -124,6 +135,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Entropy:     r.Entropy,
 			Tags:        r.Tags,
 			Keywords:    r.Keywords,
+			Verify:      r.Verify,
 			Allowlist: Allowlist{
 				RegexTarget: r.Allowlist.RegexTarget,
 				Regexes:     allowlistRegexes,
