@@ -53,6 +53,8 @@ func init() {
 	rootCmd.PersistentFlags().Int("max-target-megabytes", 0, "files larger than this will be skipped")
 	rootCmd.PersistentFlags().BoolP("ignore-gitleaks-allow", "", false, "ignore gitleaks:allow comments")
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
+	rootCmd.PersistentFlags().BoolP("only-verification", "", false, "check rules with verification only")
+	rootCmd.PersistentFlags().BoolP("no-verification", "", false, "disable verification")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
 	rootCmd.PersistentFlags().String("log-opts", "", "git log options")
@@ -211,6 +213,16 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+
+	// set verification flag
+	if detector.Verification, err = cmd.Flags().GetBool("only-verification"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+
+	// set no verification flag
+	if detector.NoVerification, err = cmd.Flags().GetBool("no-verification"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
 

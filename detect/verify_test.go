@@ -15,9 +15,9 @@ import (
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
-		cfgName  string
-		fragment Fragment
-		findings []report.Finding
+		cfgName          string
+		fragment         Fragment
+		findings         []report.Finding
 		expectedFindings []report.Finding
 		wantError        error
 	}{
@@ -109,7 +109,7 @@ func TestValidate(t *testing.T) {
 		assert.Equal(t, tt.wantError, err)
 		d := NewDetector(cfg)
 
-		d.Validate(tt.findings)
+		d.Verify(tt.findings)
 		// assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }

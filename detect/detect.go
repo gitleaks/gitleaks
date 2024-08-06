@@ -118,6 +118,7 @@ func NewDetector(cfg config.Config) *Detector {
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
+		VerifyCache:    *NewRequestCache(),
 	}
 }
 
@@ -215,7 +216,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			findings = append(findings, d.detectRule(fragment, rule)...)
 		}
 	}
-	return filter(findings, d.Redact)
+	return filter(d.Verify(findings), d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings

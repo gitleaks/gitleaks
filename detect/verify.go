@@ -105,8 +105,6 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 
 				// this is to prevent double counting of findings due to substitutions
 				if !secretInHeaderCombinationOrURL {
-					fmt.Println("skipping since secret is not in headerCombination or url")
-					fmt.Println(f)
 					continue
 				}
 
