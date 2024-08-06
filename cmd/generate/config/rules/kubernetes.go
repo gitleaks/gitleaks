@@ -15,7 +15,7 @@ func KubernetesSecretWithDataBefore() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-before",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\b(data:))(\W+(?:\w+\W+){0,200}?)\bkind:.*Secret\b`, true),
+		Regex: generateUniqueTokenRegex(`(?i)(?:\b(?:data:))(\W+(?:\w+\W+){0,200}?)\bkind:.{0,10}Secret\b`, true),
 
 		Keywords: []string{
 			"Secret",
@@ -44,7 +44,7 @@ func KubernetesSecretWithDataAfter() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-after",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\bkind:.*Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+)`, true),
+		Regex: generateUniqueTokenRegex(`(?i)(?:\bkind:.{0,10}Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+)`, true),
 
 		Keywords: []string{
 			"Secret",
