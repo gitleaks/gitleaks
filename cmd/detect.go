@@ -63,10 +63,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// start the detector scan
 	if noGit {
-		paths, err := sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
+		var paths <-chan sources.ScanTarget
+		paths, err = sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
 		if err != nil {
 			log.Fatal().Err(err)
 		}
+
 		findings, err = detector.DetectFiles(paths)
 		if err != nil {
 			// don't exit on error, just log it
@@ -80,12 +82,15 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.Fatal().Err(err).Msg("")
 		}
 	} else {
-		var logOpts string
+		var (
+			gitCmd  *sources.GitCmd
+			logOpts string
+		)
 		logOpts, err = cmd.Flags().GetString("log-opts")
 		if err != nil {
 			log.Fatal().Err(err).Msg("")
 		}
-		gitCmd, err := sources.NewGitLogCmd(source, logOpts)
+		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
 		if err != nil {
 			log.Fatal().Err(err).Msg("")
 		}
