@@ -173,7 +173,7 @@ keywords = [
 [[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
-regex = '''(?i)(CLOJARS_)[a-z0-9]{60}'''
+regex = '''(?i)CLOJARS_[a-z0-9]{60}'''
 keywords = [
     "clojars",
 ]
@@ -317,7 +317,7 @@ keywords = [
 [[rules]]
 id = "doppler-api-token"
 description = "Discovered a Doppler API token, posing a risk to environment and secrets management security."
-regex = '''(dp\.pt\.)(?i)[a-z0-9]{43}'''
+regex = '''dp\.pt\.(?i)[a-z0-9]{43}'''
 keywords = [
     "doppler",
 ]
@@ -357,7 +357,7 @@ keywords = [
 [[rules]]
 id = "duffel-api-token"
 description = "Uncovered a Duffel API token, which may compromise travel platform integrations and sensitive customer data."
-regex = '''duffel_(test|live)_(?i)[a-z0-9_\-=]{43}'''
+regex = '''duffel_(?:test|live)_(?i)[a-z0-9_\-=]{43}'''
 keywords = [
     "duffel",
 ]
@@ -1993,7 +1993,7 @@ stopwords = [
 [[rules]]
 id = "github-app-token"
 description = "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security."
-regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
+regex = '''(?:ghu|ghs)_[0-9a-zA-Z]{36}'''
 keywords = [
     "ghu_","ghs_",
 ]
@@ -2097,7 +2097,7 @@ keywords = [
 [[rules]]
 id = "harness-api-key"
 description = "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account."
-regex = '''((?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20})'''
+regex = '''(?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}'''
 keywords = [
     "pat.","sat.",
 ]
@@ -2114,7 +2114,7 @@ keywords = [
 id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
 regex = '''(?i)(?:administrator_login_password|password)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}("[a-z0-9=_\-]{8,20}")(?:['|\"|\n|\r|\s|\x60|;]|$)'''
-path = '''\.(tf|hcl)$'''
+path = '''(?i)\.(?:tf|hcl)$'''
 keywords = [
     "administrator_login_password","password",
 ]
@@ -2529,7 +2529,7 @@ keywords = [
 [[rules]]
 id = "private-key"
 description = "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
-regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY( BLOCK)?-----[\s\S-]*KEY( BLOCK)?----'''
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*KEY(?: BLOCK)?----'''
 keywords = [
     "-----begin",
 ]
@@ -2673,8 +2673,7 @@ keywords = [
 [[rules]]
 id = "sidekiq-sensitive-url"
 description = "Uncovered a Sidekiq Sensitive URL, potentially exposing internal job queues and sensitive operation details."
-regex = '''(?i)\b(http(?:s??):\/\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)'''
-secretGroup = 2
+regex = '''(?i)\bhttps?://([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)'''
 keywords = [
     "gems.contribsys.com","enterprise.contribsys.com",
 ]
@@ -2682,7 +2681,7 @@ keywords = [
 [[rules]]
 id = "slack-app-token"
 description = "Detected a Slack App-level token, risking unauthorized access to Slack applications and workspace data."
-regex = '''(?i)(xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+)'''
+regex = '''(?i)xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+'''
 keywords = [
     "xapp",
 ]
@@ -2698,7 +2697,7 @@ keywords = [
 [[rules]]
 id = "slack-config-access-token"
 description = "Found a Slack Configuration access token, posing a risk to workspace configuration and sensitive data access."
-regex = '''(?i)(xoxe.xox[bp]-\d-[A-Z0-9]{163,166})'''
+regex = '''(?i)xoxe.xox[bp]-\d-[A-Z0-9]{163,166}'''
 keywords = [
     "xoxe.xoxb-","xoxe.xoxp-",
 ]
@@ -2706,7 +2705,7 @@ keywords = [
 [[rules]]
 id = "slack-config-refresh-token"
 description = "Discovered a Slack Configuration refresh token, potentially allowing prolonged unauthorized access to configuration settings."
-regex = '''(?i)(xoxe-\d-[A-Z0-9]{146})'''
+regex = '''(?i)xoxe-\d-[A-Z0-9]{146}'''
 keywords = [
     "xoxe-",
 ]
@@ -2722,7 +2721,7 @@ keywords = [
 [[rules]]
 id = "slack-legacy-token"
 description = "Detected a Slack Legacy token, risking unauthorized access to older Slack integrations and user data."
-regex = '''(xox[os]-\d+-\d+-\d+-[a-fA-F\d]+)'''
+regex = '''xox[os]-\d+-\d+-\d+-[a-fA-F\d]+'''
 keywords = [
     "xoxo","xoxs",
 ]
@@ -2738,7 +2737,7 @@ keywords = [
 [[rules]]
 id = "slack-user-token"
 description = "Found a Slack User token, posing a risk of unauthorized user impersonation and data access within Slack workspaces."
-regex = '''(xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34})'''
+regex = '''xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}'''
 keywords = [
     "xoxp-","xoxe-",
 ]
@@ -2811,7 +2810,7 @@ keywords = [
 [[rules]]
 id = "telegram-bot-api-token"
 description = "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram."
-regex = '''(?i:(?:telegr)(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)'''
+regex = '''(?i:telegr(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)'''
 keywords = [
     "telegr",
 ]

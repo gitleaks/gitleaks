@@ -12,7 +12,7 @@ func Doppler() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a Doppler API token, posing a risk to environment and secrets management security.",
 		RuleID:      "doppler-api-token",
-		Regex:       regexp.MustCompile(`(dp\.pt\.)(?i)[a-z0-9]{43}`),
+		Regex:       regexp.MustCompile(`dp\.pt\.(?i)[a-z0-9]{43}`),
 		Keywords:    []string{"doppler"},
 	}
 

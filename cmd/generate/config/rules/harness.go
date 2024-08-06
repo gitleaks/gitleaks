@@ -12,7 +12,7 @@ func HarnessApiKey() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account.",
 		RuleID:      "harness-api-key",
-		Regex:       regexp.MustCompile(`((?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20})`),
+		Regex:       regexp.MustCompile(`(?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}`),
 		Keywords:    []string{"pat.", "sat."},
 	}
 
