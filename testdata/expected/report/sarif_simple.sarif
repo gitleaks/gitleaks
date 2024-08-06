@@ -104,14 +104,14 @@
        "id": "slack",
        "name": "Slack",
        "shortDescription": {
-        "text": "xox[baprs]-([0-9a-zA-Z]{10,48})?"
+        "text": "xox[baprs]-(?:[0-9a-zA-Z]{10,48})?"
        }
       },
       {
        "id": "apkey",
        "name": "Asymmetric Private Key",
        "shortDescription": {
-        "text": "-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----"
+        "text": "-----BEGIN (?:(?:EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY(?: BLOCK)?-----"
        }
       },
       {

@@ -79,13 +79,13 @@ title = "gitleaks config"
 [[rules]]
     id = "slack"
     description = "Slack"
-    regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
+    regex = '''xox[baprs]-(?:[0-9a-zA-Z]{10,48})?'''
     tags = ["key", "Slack"]
 
 [[rules]]
     id = "apkey"
     description = "Asymmetric Private Key"
-    regex = '''-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----'''
+    regex = '''-----BEGIN (?:(?:EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY(?: BLOCK)?-----'''
     tags = ["key", "AsymmetricPrivateKey"]
 
 [[rules]]

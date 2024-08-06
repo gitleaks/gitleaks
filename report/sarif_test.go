@@ -76,7 +76,7 @@ func TestWriteSarif(t *testing.T) {
 			}
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, want, got)
+			assert.Equal(t, string(want), string(got))
 		})
 	}
 }
