@@ -113,6 +113,8 @@ func main() {
 		rules.JWT(),
 		rules.JWTBase64(),
 		rules.KrakenAccessToken(),
+		rules.KubernetesSecretWithDataAfter(),
+		rules.KubernetesSecretWithDataBefore(),
 		rules.KucoinAccessToken(),
 		rules.KucoinSecretKey(),
 		rules.LaunchDarklyAccessToken(),
