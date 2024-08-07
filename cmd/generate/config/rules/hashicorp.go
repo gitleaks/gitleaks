@@ -32,7 +32,7 @@ func HashicorpField() *config.Rule {
 		RuleID:      "hashicorp-tf-password",
 		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20")), true),
 		Keywords:    keywords,
-		Path:        regexp.MustCompile(`\.(tf|hcl)$`),
+		Path:        regexp.MustCompile(`(?i)\.(?:tf|hcl)$`),
 	}
 
 	tps := map[string]string{

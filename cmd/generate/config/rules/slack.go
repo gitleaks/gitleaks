@@ -46,7 +46,7 @@ func SlackUserToken() *config.Rule {
 		Description: "Found a Slack User token, posing a risk of unauthorized user impersonation and data access within Slack workspaces.",
 		RuleID:      "slack-user-token",
 		// The last segment seems to be consistently 32 characters. I've made it 28-34 just in case.
-		Regex:    regexp.MustCompile(`(xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34})`),
+		Regex:    regexp.MustCompile(`xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}`),
 		Keywords: []string{"xoxp-", "xoxe-"},
 	}
 
@@ -84,7 +84,7 @@ func SlackAppLevelToken() *config.Rule {
 		Description: "Detected a Slack App-level token, risking unauthorized access to Slack applications and workspace data.",
 		RuleID:      "slack-app-token",
 		// This regex is based on a limited number of examples and may not be 100% accurate.
-		Regex:    regexp.MustCompile(`(?i)(xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+)`),
+		Regex:    regexp.MustCompile(`(?i)xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+`),
 		Keywords: []string{"xapp"},
 	}
 
@@ -104,7 +104,7 @@ func SlackConfigurationToken() *config.Rule {
 	r := config.Rule{
 		Description: "Found a Slack Configuration access token, posing a risk to workspace configuration and sensitive data access.",
 		RuleID:      "slack-config-access-token",
-		Regex:       regexp.MustCompile(`(?i)(xoxe.xox[bp]-\d-[A-Z0-9]{163,166})`),
+		Regex:       regexp.MustCompile(`(?i)xoxe.xox[bp]-\d-[A-Z0-9]{163,166}`),
 		Keywords:    []string{"xoxe.xoxb-", "xoxe.xoxp-"},
 	}
 
@@ -129,7 +129,7 @@ func SlackConfigurationRefreshToken() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a Slack Configuration refresh token, potentially allowing prolonged unauthorized access to configuration settings.",
 		RuleID:      "slack-config-refresh-token",
-		Regex:       regexp.MustCompile(`(?i)(xoxe-\d-[A-Z0-9]{146})`),
+		Regex:       regexp.MustCompile(`(?i)xoxe-\d-[A-Z0-9]{146}`),
 		Keywords:    []string{"xoxe-"},
 	}
 
@@ -225,7 +225,7 @@ func SlackLegacyToken() *config.Rule {
 	r := config.Rule{
 		Description: "Detected a Slack Legacy token, risking unauthorized access to older Slack integrations and user data.",
 		RuleID:      "slack-legacy-token",
-		Regex:       regexp.MustCompile(`(xox[os]-\d+-\d+-\d+-[a-fA-F\d]+)`),
+		Regex:       regexp.MustCompile(`xox[os]-\d+-\d+-\d+-[a-fA-F\d]+`),
 		Keywords:    []string{"xoxo", "xoxs"},
 	}
 
