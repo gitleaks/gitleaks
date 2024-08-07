@@ -39,7 +39,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// grab source
 	source, err := cmd.Flags().GetString("source")
 	if err != nil {
-		log.Fatal().Err(err).Msg("")
+		log.Fatal().Err(err).Msg("could not get source")
 	}
 	detector := Detector(cmd, cfg, source)
 
@@ -58,41 +58,46 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 	fromPipe, err := cmd.Flags().GetBool("pipe")
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not call GetBool() for pipe")
 	}
 
 	// start the detector scan
 	if noGit {
-		paths, err := sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
+		var paths <-chan sources.ScanTarget
+		paths, err = sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
 		if err != nil {
 			log.Fatal().Err(err)
 		}
+
 		findings, err = detector.DetectFiles(paths)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err).Msg("")
+			log.Error().Err(err).Msg("failed scan directory")
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectReader(os.Stdin, 10)
 		if err != nil {
 			// log fatal to exit, no need to continue since a report
 			// will not be generated when scanning from a pipe...for now
-			log.Fatal().Err(err).Msg("")
+			log.Fatal().Err(err).Msg("failed scan input from stdin")
 		}
 	} else {
-		var logOpts string
+		var (
+			gitCmd  *sources.GitCmd
+			logOpts string
+		)
 		logOpts, err = cmd.Flags().GetString("log-opts")
 		if err != nil {
-			log.Fatal().Err(err).Msg("")
+			log.Fatal().Err(err).Msg("could not call GetString() for log-opts")
 		}
-		gitCmd, err := sources.NewGitLogCmd(source, logOpts)
+		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
 		if err != nil {
-			log.Fatal().Err(err).Msg("")
+			log.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		findings, err = detector.DetectGit(gitCmd)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err).Msg("")
+			log.Error().Err(err).Msg("failed to scan Git repository")
 		}
 	}
 
