@@ -82,6 +82,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	rulesMap := make(map[string]Rule)
 
 	for _, r := range vc.Rules {
+		if strings.TrimSpace(r.ID) == "" {
+			return Config{}, fmt.Errorf("rule ID is missing or empty, regex: %s", r.Regex)
+		}
+
 		var allowlistRegexes []*regexp.Regexp
 		for _, a := range r.Allowlist.Regexes {
 			allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
@@ -135,7 +139,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		orderedRules = append(orderedRules, r.RuleID)
 
 		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
-			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+			return Config{}, fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
 		}
 		rulesMap[r.RuleID] = r
 	}
