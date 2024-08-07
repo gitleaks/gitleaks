@@ -13,7 +13,7 @@ func TelegramBotToken() *config.Rule {
 		Description: "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram.",
 		RuleID:      "telegram-bot-api-token",
 
-		Regex: regexp.MustCompile(`(?i:(?:telegr)(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)`),
+		Regex: regexp.MustCompile(`(?i:telegr(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)`),
 		Keywords: []string{
 			"telegr",
 		},

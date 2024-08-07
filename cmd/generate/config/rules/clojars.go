@@ -12,7 +12,7 @@ func Clojars() *config.Rule {
 	r := config.Rule{
 		Description: "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation.",
 		RuleID:      "clojars-api-token",
-		Regex:       regexp.MustCompile(`(?i)(CLOJARS_)[a-z0-9]{60}`),
+		Regex:       regexp.MustCompile(`(?i)CLOJARS_[a-z0-9]{60}`),
 		Keywords:    []string{"clojars"},
 	}
 
