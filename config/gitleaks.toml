@@ -2220,21 +2220,18 @@ keywords = [
 ]
 
 [[rules]]
-id = "kubernetes-secret-with-data-after"
+id = "kubernetes-secret-yaml"
 description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
-regex = '''(?i)\b((?i)(?:\bkind:.{0,10}Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)(?:\bkind:[ \t]*["']?secret["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9]{10,}={0,3}["']?|\{\{[ \t\w.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9]{10,}={0,3}["']?|\{\{[ \t\w.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?secret["']?)'''
 path = '''(?i)\.ya?ml$'''
 keywords = [
     "secret",
 ]
 
-[[rules]]
-id = "kubernetes-secret-with-data-before"
-description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
-regex = '''(?i)\b((?i)(?:\b(?:data:))(\W+(?:\w+\W+){0,200}?)\bkind:.{0,10}Secret\b)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
-path = '''(?i)\.ya?ml$'''
-keywords = [
-    "secret",
+[rules.allowlist]
+
+regexes = [
+    '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w.-]+}}|""|'')''',
 ]
 
 [[rules]]
@@ -2797,7 +2794,7 @@ keywords = [
 
 regexTarget = "line"
 regexes = [
-    "sumOf",
+    '''sumOf''',
 ]
 
 [[rules]]
