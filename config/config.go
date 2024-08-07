@@ -135,7 +135,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		orderedRules = append(orderedRules, r.RuleID)
 
 		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
-			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
+			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
 		}
 		rulesMap[r.RuleID] = r
 	}
