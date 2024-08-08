@@ -87,9 +87,14 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
+			cfgName:   "missing_id",
+			cfg:       Config{},
+			wantError: fmt.Errorf("rule ID is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+		},
+		{
 			cfgName:   "bad_entropy_group",
 			cfg:       Config{},
-			wantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
+			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "base",
