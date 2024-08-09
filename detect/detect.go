@@ -23,7 +23,10 @@ import (
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
+	maxDetectPasses        = 3          // remove the chance of a decode infinite loop
 )
+
+var newLineRegexp = regexp.MustCompile("\n")
 
 // Detector is the main detector struct
 type Detector struct {
@@ -175,48 +178,69 @@ func (d *Detector) DetectString(content string) []report.Finding {
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
 
-	// initiate fragment keywords
-	fragment.keywords = make(map[string]bool)
-
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
 		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
 		return findings
 	}
 
+	// initiate fragment keywords
+	fragment.keywords = make(map[string]bool)
+
 	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
+	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
-	// build keyword map for prefiltering rules
-	normalizedRaw := strings.ToLower(fragment.Raw)
-	matches := d.prefilter.MatchString(normalizedRaw)
-	for _, m := range matches {
-		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
-	}
+	// setup variables to handle different decoding passes
+	currentRaw := fragment.Raw
+	currentKeywords := fragment.keywords
+	encodedSegments := []EncodedSegment{}
 
-	for _, rule := range d.Config.Rules {
-		if len(rule.Keywords) == 0 {
-			// if not keywords are associated with the rule always scan the
-			// fragment using the rule
-			findings = append(findings, d.detectRule(fragment, rule)...)
-			continue
+	for i := 0; i < maxDetectPasses; i++ {
+		// build keyword map for prefiltering rules
+		normalizedRaw := strings.ToLower(currentRaw)
+		matches := d.prefilter.MatchString(normalizedRaw)
+		for _, m := range matches {
+			currentKeywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 		}
-		fragmentContainsKeyword := false
-		// check if keywords are in the fragment
-		for _, k := range rule.Keywords {
-			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
-				fragmentContainsKeyword = true
+
+		for _, rule := range d.Config.Rules {
+			if len(rule.Keywords) == 0 {
+				// if not keywords are associated with the rule always scan the
+				// fragment using the rule
+				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				continue
+			}
+
+			// check if keywords are in the fragment
+			for _, k := range rule.Keywords {
+				if _, ok := currentKeywords[strings.ToLower(k)]; ok {
+					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					break
+				}
 			}
 		}
-		if fragmentContainsKeyword {
-			findings = append(findings, d.detectRule(fragment, rule)...)
+
+		// TODO: Use a cli flag to optionally enable this:
+		// https://github.com/gitleaks/gitleaks/issues/807#issuecomment-2357951242
+		// else break here
+
+		// decode the currentRaw for the next pass
+		currentRaw, encodedSegments = decode(currentRaw, encodedSegments)
+
+		// stop the loop when there's nothing else to decode
+		if len(encodedSegments) == 0 {
+			break
 		}
+
+		// reset the keywords for the next pass
+		currentKeywords = make(map[string]bool)
 	}
+
 	return filter(findings, d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.Rule, encodedSegments []EncodedSegment) []report.Finding {
 	var findings []report.Finding
 
 	// check if filepath or commit is allowed for this rule
@@ -225,7 +249,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		return findings
 	}
 
-	if rule.Path != nil && rule.Regex == nil {
+	if rule.Path != nil && rule.Regex == nil && len(encodedSegments) == 0 {
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
@@ -252,19 +276,32 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		return findings
 	}
 
-	// If flag configure and raw data size bigger then the flag
+	// if flag configure and raw data size bigger then the flag
 	if d.MaxTargetMegaBytes > 0 {
-		rawLength := len(fragment.Raw) / 1000000
+		rawLength := len(currentRaw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
 			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
 			return findings
 		}
 	}
 
-	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
-	for _, matchIndex := range matchIndices {
-		// extract secret from match
-		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
+	// use currentRaw instead of fragment.Raw since this represents the current
+	// decoding pass on the text
+	for _, matchIndex := range rule.Regex.FindAllStringIndex(currentRaw, -1) {
+		// Extract secret from match
+		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
+
+		// Check if the decoded portions of the segment overlap with the match
+		// to see if its potentially a new match
+		if len(encodedSegments) > 0 {
+			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
+				matchIndex[0] = segment.absoluteStart
+				matchIndex[1] = segment.absoluteEnd
+			} else {
+				// This item has already been added to a finding
+				continue
+			}
+		}
 
 		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
 		// removes the incorrectly following line that was detected by regex expression '\n'
@@ -327,6 +364,12 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			}
 		}
 
+		// check if the secret is in the list of stopwords
+		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
+			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+			continue
+		}
+
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		allowlistTarget := finding.Secret
 		switch rule.Allowlist.RegexTarget {
@@ -345,12 +388,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
 			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
-			continue
-		}
-
-		// check if the secret is in the list of stopwords
-		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
-			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
 			continue
 		}
 

@@ -13,7 +13,7 @@ format:
 	go fmt ./...
 
 test: format
-	go test -v ./... --race $(PKG) 
+	go test -v ./... --race $(PKG)
 
 build: format
 	go mod tidy
