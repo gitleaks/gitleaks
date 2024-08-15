@@ -19,7 +19,7 @@ func init() {
 
 var gitCmd = &cobra.Command{
 	Use:   "git [flags] [repo]",
-	Short: "detect secrets in git repositories",
+	Short: "scan git repositories for secrets",
     Args:  cobra.MaximumNArgs(1), // Allows for at most one positional argument (the repo path)
 	Run:   runGit,
 }

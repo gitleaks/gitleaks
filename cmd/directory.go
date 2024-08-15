@@ -16,9 +16,9 @@ func init() {
 }
 
 var directoryCmd = &cobra.Command{
-	Use:     "directory",
-	Aliases: []string{"file", "dir"},
-	Short:   "detect secrets in directories or files",
+	Use:   "dir [flags] [path]",
+	Aliases: []string{"file", "directory"},
+	Short:   "scan directories or files for secrets",
 	Run:     runDirectory,
 }
 
