@@ -12,13 +12,15 @@ import (
 
 func init() {
 	protectCmd.Flags().Bool("staged", false, "detect secrets in a --staged state")
+	protectCmd.Flags().String("log-opts", "", "git log options")
 	rootCmd.AddCommand(protectCmd)
 }
 
 var protectCmd = &cobra.Command{
-	Use:   "protect",
-	Short: "protect secrets in code",
-	Run:   runProtect,
+	Use:    "protect",
+	Short:  "protect secrets in code",
+	Run:    runProtect,
+	Hidden: true,
 }
 
 func runProtect(cmd *cobra.Command, args []string) {

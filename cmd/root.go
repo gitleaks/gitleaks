@@ -55,10 +55,8 @@ func init() {
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
-	rootCmd.PersistentFlags().String("log-opts", "", "git log options")
-	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
+	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
-	rootCmd.PersistentFlags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -261,10 +259,6 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Config.Rules = ruleOverride
 	}
 
-	// set follow symlinks flag
-	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
 	return detector
 }
 
