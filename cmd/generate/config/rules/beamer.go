@@ -18,5 +18,8 @@ func Beamer() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("beamer", "b_"+secrets.NewSecret(utils.AlphaNumericExtended("44")))
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`│   ├── R21A-A-V010SP13RC181024R16900-CN-B_250K-Release-OTA-97B6C6C59241976086FABDC41472150C.bfu`,
+	}
+	return utils.Validate(r, tps, fps)
 }
