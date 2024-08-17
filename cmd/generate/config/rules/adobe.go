@@ -27,7 +27,7 @@ func AdobeClientSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation.",
 		RuleID:      "adobe-client-secret",
-		Regex:       utils.GenerateUniqueTokenRegex(`(p8e-)(?i)[a-z0-9]{32}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`p8e-[a-zA-Z0-9]{32}`, false),
 		Keywords:    []string{"p8e-"},
 	}
 
@@ -35,5 +35,8 @@ func AdobeClientSecret() *config.Rule {
 	tps := []string{
 		"adobeClient := \"p8e-" + secrets.NewSecret(utils.Hex("32")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`P8E-` + secrets.NewSecret(utils.Hex("32")),
+	}
+	return utils.Validate(r, tps, fps)
 }
