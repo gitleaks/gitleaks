@@ -2763,7 +2763,7 @@ keywords = [
 [[rules]]
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
-regex = '''(?i)\b((EAAA|sq0atp-)[0-9A-Za-z\-_]{22,60})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b((?:EAAA|sq0atp-)[\w-]{22,60})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "sq0atp-","eaaa",
 ]
