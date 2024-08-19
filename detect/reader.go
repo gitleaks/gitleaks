@@ -15,22 +15,27 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 
 	for {
 		n, err := reader.Read(buf[:cap(buf)])
-		buf = buf[:n]
+
+		// "Callers should always process the n > 0 bytes returned before considering the error err."
+		// https://pkg.go.dev/io#Reader
+		if n > 0 {
+			buf = buf[:n]
+			fragment := Fragment{
+				Raw: string(buf),
+			}
+			for _, finding := range d.Detect(fragment) {
+				findings = append(findings, finding)
+				if d.Verbose {
+					printFinding(finding, d.NoColor)
+				}
+			}
+		}
+
 		if err != nil {
 			if err != io.EOF {
 				return findings, err
 			}
 			break
-		}
-
-		fragment := Fragment{
-			Raw: string(buf),
-		}
-		for _, finding := range d.Detect(fragment) {
-			findings = append(findings, finding)
-			if d.Verbose {
-				printFinding(finding, d.NoColor)
-			}
 		}
 	}
 
