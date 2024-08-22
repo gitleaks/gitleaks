@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
+
+var validatorReplaceRegex = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
 
 // Verify will iterate through findings and Verify them against validation
 // fields defined in the rule
@@ -18,30 +21,27 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	}
 
 	client := &http.Client{}
-	validatorReplaceRegex := regexp.MustCompile(`(?i)\${([a-z0-9\-]{0,})}`)
-	onlyVerifiedFindings := []report.Finding{}
-
-	// build lookup of findings by ruleID
+	// build lookups.
 	findingsByRuleID := map[string][]report.Finding{}
-	findingsToVerify := []report.Finding{}
-
+	verifiableFindings := []*report.Finding{} // Requires pointer for in-place updates.
+	unverifiableFindings := []report.Finding{}
 	for _, f := range findings {
 		// add finding to lookup
 		findingsByRuleID[f.RuleID] = append(findingsByRuleID[f.RuleID], f)
 
 		// this should always return a valid rule
 		rule := d.Config.Rules[f.RuleID]
-
 		// if rule.Verify is empty, continue
 		if rule.Verify.URL == "" {
+			unverifiableFindings = append(unverifiableFindings, f)
 			continue
 		}
 
-		findingsToVerify = append(findingsToVerify, f)
+		verifiableFindings = append(verifiableFindings, &f)
 	}
 
 	// iterate through the findings to Verify
-	for _, f := range findingsToVerify {
+	for _, f := range verifiableFindings {
 		rule := d.Config.Rules[f.RuleID]
 		setsOfHeaders := make(map[string][]string)
 		staticHeaders := make(map[string]string)
@@ -70,12 +70,10 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 				staticHeaders[k] = v
 			}
 
+			// Interpolate placeholders like `${github-pat}`.
 			for _, match := range headerMatches {
-				ruleIDToReplace := match[1]
-				potentialFindingsUsedForHeaders := findingsByRuleID[ruleIDToReplace]
-				for _, pf := range potentialFindingsUsedForHeaders {
-					setsOfHeaders[k] = append(setsOfHeaders[k], strings.Replace(v, match[0], pf.Secret, -1))
-				}
+				placeholder := match[0]
+				setsOfHeaders[k] = append(setsOfHeaders[k], strings.Replace(v, placeholder, f.Secret, -1))
 			}
 		}
 
@@ -128,22 +126,33 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 					d.VerifyCache.Set(url, headerCombination, resp)
 				}
 
-				if !isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
-					continue
-				} else {
+				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
 					f.Verified = true
-					onlyVerifiedFindings = append(onlyVerifiedFindings, f)
+				} else if !exists {
+					log.Debug().
+						Str("rule", f.RuleID).
+						Str("secret", f.Secret). // TODO: properly redact this?
+						Msgf("Secret is not valid: received status code '%d'", resp.StatusCode)
 				}
 			}
 		}
 	}
 
 	if d.Verification {
-		return onlyVerifiedFindings
+		verifiedFindings := make([]report.Finding, 0)
+		for _, f := range verifiableFindings {
+			if f.Verified {
+				verifiedFindings = append(verifiedFindings, *f)
+			}
+		}
+		return verifiedFindings
 	}
 
 	// append verified findings to findings. Filter will remove duplicates
-	return append(onlyVerifiedFindings, findings...)
+	for _, f := range verifiableFindings {
+		unverifiableFindings = append(unverifiableFindings, *f)
+	}
+	return unverifiableFindings
 }
 
 // This function generates all combinations of header values

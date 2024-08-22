@@ -216,7 +216,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			findings = append(findings, d.detectRule(fragment, rule)...)
 		}
 	}
-	return filter(d.Verify(findings), d.Redact)
+	return d.Verify(filter(findings, d.Redact))
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -233,10 +233,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
+				RuleID:      rule.RuleID,
 				Description: rule.Description,
 				File:        fragment.FilePath,
 				SymlinkFile: fragment.SymlinkFile,
-				RuleID:      rule.RuleID,
 				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
 				Tags:        rule.Tags,
 			}
@@ -281,10 +281,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 
 		finding := report.Finding{
+			RuleID:      rule.RuleID,
 			Description: rule.Description,
 			File:        fragment.FilePath,
 			SymlinkFile: fragment.SymlinkFile,
-			RuleID:      rule.RuleID,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
 			StartColumn: loc.startColumn,
