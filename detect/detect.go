@@ -37,11 +37,11 @@ type Detector struct {
 	// verbose is a flag to print findings
 	Verbose bool
 
-	// Verification
-	Verification bool
+	// EnableExperimentalVerification enables a preview of the verification feature.
+	EnableExperimentalVerification bool
 
 	// Verification
-	NoVerification bool
+	Verification bool
 
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int

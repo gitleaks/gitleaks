@@ -13,7 +13,7 @@ import (
 // Verify will iterate through findings and Verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-	if d.NoVerification {
+	if !d.EnableExperimentalVerification {
 		return findings
 	}
 
