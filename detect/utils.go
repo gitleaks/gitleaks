@@ -151,17 +151,24 @@ func printFinding(f report.Finding, noColor bool) {
 	if skipColor || isFileMatch {
 		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
 		fmt.Printf("%-12s %s\n", "Secret:", f.Secret)
-		fmt.Printf("%-12s %v\n", "Verified:", f.Verified)
+		fmt.Printf("%-12s %v\n", "Verified:", f.Status.String())
 	} else {
 		fmt.Printf("%-12s %s", "Finding:", finding)
 		fmt.Printf("%-12s %s\n", "Secret:", secret)
-		if f.Verified {
+
+		var statusMsg any
+		switch f.Status {
+		case report.NotSupported:
+			statusMsg = "N/A"
+		case report.Unknown:
+			statusMsg = "An error occurred"
+		case report.ConfirmedInvalid:
+			statusMsg = "False"
+		case report.ConfirmedValid:
 			// set verified to green
-			verified := lipgloss.NewStyle().SetString("True ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
-			fmt.Printf("%-12s %s\n", "Verified:", verified)
-		} else {
-			fmt.Printf("%-12s %v\n", "Verified:", f.Verified)
+			statusMsg = lipgloss.NewStyle().SetString("True ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
 		}
+		fmt.Printf("%-12s %v\n", "Verified:", statusMsg)
 	}
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)

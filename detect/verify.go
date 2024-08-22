@@ -1,7 +1,6 @@
 package detect
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"regexp"
@@ -110,7 +109,13 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 				if !exists {
 					req, err := http.NewRequest(rule.Verify.HTTPVerb, url, nil)
 					if err != nil {
-						fmt.Println(err)
+						log.Error().
+							Str("rule", f.RuleID).
+							Str("secret", f.Secret). // TODO: properly redact this?
+							Err(err).
+							Msgf("Failed to construct verification request")
+						f.Status = report.Unknown
+						continue
 					}
 					for key, val := range headerCombination {
 						req.Header.Add(key, val)
@@ -119,7 +124,13 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 					// TODO implement a retry if set with a polite backoff
 					resp, err = client.Do(req)
 					if err != nil {
-						fmt.Println(err)
+						log.Error().
+							Str("rule", f.RuleID).
+							Str("secret", f.Secret). // TODO: properly redact this?
+							Err(err).
+							Msgf("Failed send verification request")
+						f.Status = report.Unknown
+						continue
 					}
 
 					// set cache
@@ -127,12 +138,16 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 				}
 
 				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
-					f.Verified = true
-				} else if !exists {
-					log.Debug().
-						Str("rule", f.RuleID).
-						Str("secret", f.Secret). // TODO: properly redact this?
-						Msgf("Secret is not valid: received status code '%d'", resp.StatusCode)
+					f.Status = report.ConfirmedValid
+				} else {
+					f.Status = report.ConfirmedInvalid
+
+					if !exists {
+						log.Debug().
+							Str("rule", f.RuleID).
+							Str("secret", f.Secret). // TODO: properly redact this?
+							Msgf("Secret is not valid: received status code '%d'", resp.StatusCode)
+					}
 				}
 			}
 		}
@@ -141,7 +156,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	if d.Verification {
 		verifiedFindings := make([]report.Finding, 0)
 		for _, f := range verifiableFindings {
-			if f.Verified {
+			if f.Status == report.ConfirmedValid {
 				verifiedFindings = append(verifiedFindings, *f)
 			}
 		}
