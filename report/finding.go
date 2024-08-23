@@ -68,7 +68,8 @@ type Finding struct {
 	// unique identifier
 	Fingerprint string
 
-	Status VerificationStatus
+	Status       VerificationStatus
+	StatusReason string
 }
 
 // Redact removes sensitive information from a finding.

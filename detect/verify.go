@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"regexp"
@@ -115,6 +116,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Err(err).
 							Msgf("Failed to construct verification request")
 						f.Status = report.Unknown
+						f.StatusReason = err.Error()
 						continue
 					}
 					for key, val := range headerCombination {
@@ -130,6 +132,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Err(err).
 							Msgf("Failed send verification request")
 						f.Status = report.Unknown
+						f.StatusReason = err.Error()
 						continue
 					}
 
@@ -141,7 +144,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 					f.Status = report.ConfirmedValid
 				} else {
 					f.Status = report.ConfirmedInvalid
-
+					f.StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
 					if !exists {
 						log.Debug().
 							Str("rule", f.RuleID).

@@ -161,14 +161,19 @@ func printFinding(f report.Finding, noColor bool) {
 		case report.NotSupported:
 			statusMsg = "N/A"
 		case report.Unknown:
-			statusMsg = "An error occurred"
+			statusMsg = "Verification failed"
 		case report.ConfirmedInvalid:
-			statusMsg = "False"
+			statusMsg = "Invalid"
 		case report.ConfirmedValid:
 			// set verified to green
-			statusMsg = lipgloss.NewStyle().SetString("True ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
+			statusMsg = lipgloss.NewStyle().SetString("Valid ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
 		}
-		fmt.Printf("%-12s %v\n", "Verified:", statusMsg)
+		fmt.Printf("%-12s %v", "Status:", statusMsg)
+		if f.StatusReason != "" {
+			fmt.Printf(" (%s)\n", f.StatusReason)
+		} else {
+			fmt.Println()
+		}
 	}
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
