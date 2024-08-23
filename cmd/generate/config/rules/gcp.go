@@ -30,8 +30,8 @@ func GCPAPIKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gcp-api-key",
 		Description: "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
-		Regex:       utils.GenerateUniqueTokenRegex(`AIza[0-9A-Za-z\\-_]{35}`, true),
-
+		Regex:       utils.GenerateUniqueTokenRegex(`AIza[\w-]{35}`, false),
+		Entropy:     3.0,
 		Keywords: []string{
 			"AIza",
 		},
@@ -39,7 +39,15 @@ func GCPAPIKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("gcp", secrets.NewSecret(`AIza[0-9A-Za-z\\-_]{35}`)),
+		utils.GenerateSampleSecret("gcp", secrets.NewSecret(`AIza[\w-]{35}`)),
+		// non-word character at end
+		`AIzaSyNHxIf32IQ1a1yjl3ZJIqKZqzLAK1XhDk-`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`GWw4hjABFzZCGiRpmlDyDdo87Jn9BN9THUA47muVRNunLxsa82tMAdvmrhOqNkRKiYMEAFbTJAIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDq`, // text boundary start
+		`AIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDqabcd123`,                                                                   // text boundary end
+		`apiKey: "AIzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"`,                                                                // not enough entropy
+		`AIZASYCO2CXRMC9ELSKLHLHRMBSWDEVEDZTLO2O`,                                                                          // incorrect case
+	}
+	return utils.Validate(r, tps, fps)
 }
