@@ -68,6 +68,7 @@ type Finding struct {
 	// unique identifier
 	Fingerprint string
 
+	// TODO: Ensure this serializes properly
 	Status       VerificationStatus
 	StatusReason string
 }
