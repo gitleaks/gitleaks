@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
+	"time"
 )
 
 func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
@@ -48,8 +49,20 @@ func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
 						FilePath:  gitdiffFile.NewName,
 					}
 
+					var timer *time.Timer
+					timer = time.AfterFunc(SlowWarningThreshold, func() {
+						log.Debug().
+							Str("commit", commitSHA[:7]).
+							Str("file", fragment.FilePath).
+							Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+					})
+
 					for _, finding := range d.Detect(fragment) {
 						d.addFinding(augmentGitFinding(finding, textFragment, gitdiffFile))
+					}
+					if timer != nil {
+						timer.Stop()
+						timer = nil
 					}
 				}
 				return nil

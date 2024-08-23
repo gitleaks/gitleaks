@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/h2non/filetype"
 	"github.com/rs/zerolog/log"
@@ -69,11 +70,22 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				if pa.Symlink != "" {
 					fragment.SymlinkFile = pa.Symlink
 				}
+
+				var timer *time.Timer
+				timer = time.AfterFunc(SlowWarningThreshold, func() {
+					log.Debug().
+						Str("file", fragment.FilePath).
+						Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+				})
 				for _, finding := range d.Detect(fragment) {
 					// need to add 1 since line counting starts at 1
 					finding.StartLine += (totalLines - linesInChunk) + 1
 					finding.EndLine += (totalLines - linesInChunk) + 1
 					d.addFinding(finding)
+				}
+				if timer != nil {
+					timer.Stop()
+					timer = nil
 				}
 			}
 
