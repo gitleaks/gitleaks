@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 
@@ -61,8 +62,18 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 						FilePath:  gitdiffFile.NewName,
 					}
 
+					timer := time.AfterFunc(SlowWarningThreshold, func() {
+						logging.Debug().
+							Str("commit", commitSHA[:7]).
+							Str("path", fragment.FilePath).
+							Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+					})
 					for _, finding := range d.Detect(fragment) {
 						d.AddFinding(augmentGitFinding(remote, finding, textFragment, gitdiffFile))
+					}
+					if timer != nil {
+						timer.Stop()
+						timer = nil
 					}
 				}
 				return nil
