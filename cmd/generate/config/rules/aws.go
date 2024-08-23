@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -22,6 +23,6 @@ func AWS() *config.Rule {
 	}
 
 	// validate
-	tps := []string{generateSampleSecret("AWS", "AKIALALEMEL33243OLIB")} // gitleaks:allow
-	return validate(r, tps, nil)
+	tps := []string{utils.GenerateSampleSecret("AWS", "AKIALALEMEL33243OLIB")} // gitleaks:allow
+	return utils.Validate(r, tps, nil)
 }

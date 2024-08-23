@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -21,16 +22,16 @@ func JFrogAPIKey() *config.Rule {
 		// Regex capture group for the actual secret
 
 		// Regex used for detecting secrets. See regex section below for more details
-		Regex: generateSemiGenericRegex(keywords, alphaNumeric("73"), true),
+		Regex: utils.GenerateSemiGenericRegex(keywords, utils.AlphaNumeric("73"), true),
 
 		// Keywords used for string matching on fragments (think of this as a prefilter)
 		Keywords: keywords,
 	}
 	// validate
 	tps := []string{
-		fmt.Sprintf("--set imagePullSecretJfrog.password=%s", secrets.NewSecret(alphaNumeric("73"))),
+		fmt.Sprintf("--set imagePullSecretJfrog.password=%s", secrets.NewSecret(utils.AlphaNumeric("73"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func JFrogIdentityToken() *config.Rule {
@@ -47,7 +48,7 @@ func JFrogIdentityToken() *config.Rule {
 		// Regex capture group for the actual secret
 
 		// Regex used for detecting secrets. See regex section below for more details
-		Regex: generateSemiGenericRegex(keywords, alphaNumeric("64"), true),
+		Regex: utils.GenerateSemiGenericRegex(keywords, utils.AlphaNumeric("64"), true),
 
 		// Keywords used for string matching on fragments (think of this as a prefilter)
 		Keywords: keywords,
@@ -55,10 +56,10 @@ func JFrogIdentityToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("jfrog", secrets.NewSecret(alphaNumeric("64"))),
-		generateSampleSecret("artifactory", secrets.NewSecret(alphaNumeric("64"))),
-		generateSampleSecret("bintray", secrets.NewSecret(alphaNumeric("64"))),
-		generateSampleSecret("xray", secrets.NewSecret(alphaNumeric("64"))),
+		utils.GenerateSampleSecret("jfrog", secrets.NewSecret(utils.AlphaNumeric("64"))),
+		utils.GenerateSampleSecret("artifactory", secrets.NewSecret(utils.AlphaNumeric("64"))),
+		utils.GenerateSampleSecret("bintray", secrets.NewSecret(utils.AlphaNumeric("64"))),
+		utils.GenerateSampleSecret("xray", secrets.NewSecret(utils.AlphaNumeric("64"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

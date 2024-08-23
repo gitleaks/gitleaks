@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,9 +19,9 @@ func Doppler() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("doppler", "dp.pt."+secrets.NewSecret(alphaNumeric("43"))),
+		utils.GenerateSampleSecret("doppler", "dp.pt."+secrets.NewSecret(utils.AlphaNumeric("43"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 // TODO add additional doppler formats:
