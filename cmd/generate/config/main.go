@@ -100,7 +100,7 @@ func main() {
 		rules.GrafanaCloudApiToken(),
 		rules.GrafanaServiceAccountToken(),
 		rules.HarnessApiKey(),
-		rules.Hashicorp(),
+		rules.HashiCorpTerraform(),
 		rules.HashicorpField(),
 		rules.Heroku(),
 		rules.HubSpot(),
