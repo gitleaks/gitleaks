@@ -17,8 +17,6 @@ func Intercom() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("intercom", secrets.NewSecret(utils.AlphaNumericExtended("60"))),
-	}
+	tps := utils.GenerateSampleSecrets("intercom", secrets.NewSecret(utils.AlphaNumericExtended("60")))
 	return utils.Validate(r, tps, nil)
 }

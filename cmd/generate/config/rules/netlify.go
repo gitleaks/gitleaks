@@ -20,8 +20,6 @@ func NetlifyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("netlify", secrets.NewSecret(utils.AlphaNumericExtended("40,46"))),
-	}
+	tps := utils.GenerateSampleSecrets("netlify", secrets.NewSecret(utils.AlphaNumericExtended("40,46")))
 	return utils.Validate(r, tps, nil)
 }

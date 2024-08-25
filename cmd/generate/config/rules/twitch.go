@@ -18,8 +18,6 @@ func TwitchAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitch", secrets.NewSecret(utils.AlphaNumeric("30"))),
-	}
+	tps := utils.GenerateSampleSecrets("twitch", secrets.NewSecret(utils.AlphaNumeric("30")))
 	return utils.Validate(r, tps, nil)
 }

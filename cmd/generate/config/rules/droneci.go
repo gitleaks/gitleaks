@@ -19,8 +19,6 @@ func DroneciAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("droneci", secrets.NewSecret(utils.AlphaNumeric("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("droneci", secrets.NewSecret(utils.AlphaNumeric("32")))
 	return utils.Validate(r, tps, nil)
 }

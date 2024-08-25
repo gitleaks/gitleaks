@@ -27,24 +27,24 @@ func TelegramBotToken() *config.Rule {
 		maxToken   = secrets.NewSecret(utils.Numeric("16") + ":A" + utils.AlphaNumericExtendedShort("34"))
 		// xsdWithToken = secrets.NewSecret(`<xsd:element name="AgencyIdentificationCode" type="` + Numeric("5") + `:A` + AlphaNumericExtendedShort("34") + `"/>`)
 	)
-	tps := []string{
-		// variable assignment
-		utils.GenerateSampleSecret("telegram", validToken),
+	// variable assignment
+	tps := utils.GenerateSampleSecrets("telegram", validToken)
+	// Token with min bot_id
+	tps = append(tps, utils.GenerateSampleSecrets("telegram", minToken)...)
+	// Token with max bot_id
+	tps = append(tps, utils.GenerateSampleSecrets("telegram", maxToken)...)
+	tps = append(tps,
 		// URL containing token TODO add another url based rule
 		// GenerateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
-		`const bot = new Telegraf("` + validToken + `")`,
+		`const bot = new Telegraf("`+validToken+`")`,
 		// .env
-		`TELEGRAM_API_TOKEN = ` + validToken,
+		`TELEGRAM_API_TOKEN = `+validToken,
 		// YAML
-		`telegram bot: ` + validToken,
-		// Token with min bot_id
-		utils.GenerateSampleSecret("telegram", minToken),
-		// Token with max bot_id
-		utils.GenerateSampleSecret("telegram", maxToken),
+		`telegram bot: `+validToken,
 		// Valid token in XSD document TODO separate rule for this
-		// GenerateSampleSecret("telegram", xsdWithToken),
-	}
+		// generateSampleSecret("telegram", xsdWithToken),
+	)
 
 	var (
 		tooSmallToken                = secrets.NewSecret(utils.Numeric("4") + ":A" + utils.AlphaNumericExtendedShort("34"))
