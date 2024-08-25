@@ -26,7 +26,8 @@ func HuggingFaceAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("huggingface", "hf_"+secrets.NewSecret("[a-zA-Z]{34}"))
+	tps = append(tps,
 		`huggingface-cli login --token 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`,
 		`huggingface-cli login --token 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`,
 		`huggingface-cli login --token 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`,
@@ -44,7 +45,7 @@ func HuggingFaceAccessToken() *config.Rule {
 		`# Not critical, only usable on the sandboxed CI instance.
 		TOKEN = "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"`,
 		`    parser.add_argument("--hf_token", type=str, default='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', help="Hugging Face Access Token to access PyAnnote gated models")`,
-	}
+	)
 	fps := []string{
 		`- (id)hf_requiredCharacteristicTypesForDisplayMetadata;`,
 		`amazon.de#@#div[data-cel-widget="desktop-rhf_SponsoredProductsRemoteRHFSearchEXPSubsK2ClickPagination"]`,
@@ -81,7 +82,8 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("huggingface", "api_org_"+secrets.NewSecret("[a-zA-Z]{34}"))
+	tps = append(tps,
 		`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`,
 		"`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`",
 		`\'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'\`,
@@ -96,7 +98,7 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 		`"news_train_dataset = datasets.load_dataset('nlpHakdang/aihub-news30k',  data_files = \"train_news_text.csv\", use_auth_token='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')\n",`,
 		`os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'`,
 		fmt.Sprintf("api_org_%s", secrets.NewSecret(`[a-zA-Z]{34}`)),
-	}
+	)
 	fps := []string{
 		`public static final String API_ORG_EXIST = "APIOrganizationExist";`,
 		`const api_org_controller = require('../../controllers/api/index').organizations;`,

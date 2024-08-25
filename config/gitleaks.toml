@@ -2449,7 +2449,7 @@ keywords = ["mattermost"]
 [[rules]]
 id = "messagebird-api-token"
 description = "Found a MessageBird API token, risking unauthorized access to communication platforms and message data."
-regex = '''(?i)[\w.-]{0,50}?(?:messagebird|message-bird|message_bird)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{25})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "messagebird",
     "message-bird",
@@ -2459,7 +2459,7 @@ keywords = [
 [[rules]]
 id = "messagebird-client-id"
 description = "Discovered a MessageBird client ID, potentially compromising API integrations and sensitive communication data."
-regex = '''(?i)[\w.-]{0,50}?(?:messagebird|message-bird|message_bird)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "messagebird",
     "message-bird",
@@ -2845,14 +2845,8 @@ keywords = ["hooks.slack.com"]
 [[rules]]
 id = "snyk-api-token"
 description = "Uncovered a Snyk API token, potentially compromising software vulnerability scanning and code security."
-regex = '''(?i)[\w.-]{0,50}?(?:snyk_token|snyk_key|snyk_api_token|snyk_api_key|snyk_oauth_token)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
-keywords = [
-    "snyk_token",
-    "snyk_key",
-    "snyk_api_token",
-    "snyk_api_key",
-    "snyk_oauth_token",
-]
+regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["snyk"]
 
 [[rules]]
 id = "square-access-token"

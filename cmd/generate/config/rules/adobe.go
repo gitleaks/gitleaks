@@ -17,9 +17,7 @@ func AdobeClientID() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("adobe", secrets.NewSecret(utils.Hex("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("adobe", secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }
 

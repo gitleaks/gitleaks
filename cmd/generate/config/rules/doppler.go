@@ -19,9 +19,7 @@ func Doppler() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("doppler", "dp.pt."+secrets.NewSecret(utils.AlphaNumeric("43"))),
-	}
+	tps := utils.GenerateSampleSecrets("doppler", "dp.pt."+secrets.NewSecret(utils.AlphaNumeric("43")))
 	return utils.Validate(r, tps, nil)
 }
 

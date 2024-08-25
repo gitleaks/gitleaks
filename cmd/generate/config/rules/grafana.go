@@ -17,9 +17,7 @@ func GrafanaApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70"))),
-	}
+	tps := utils.GenerateSampleSecrets("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -34,7 +32,8 @@ func GrafanaCloudApiToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("grafana-cloud-api-token", "glc_"+secrets.NewSecret(utils.AlphaNumeric("32")))
+	tps = append(tps,
 		utils.GenerateSampleSecret("grafana-cloud-api-token",
 			"glc_"+
 				secrets.NewSecret(utils.AlphaNumeric("32"))),
@@ -42,7 +41,7 @@ func GrafanaCloudApiToken() *config.Rule {
 		// TODO:
 		//`  loki:
 		//endpoint: https://322137:glc_eyJvIjoiNzQ0NTg3IiwibiI7InN0YWlrLTQ3NTgzMC1obC13cml0ZS1oYW5kc29uJG9raSIsImsiOiI4M2w3cmdYUlBoMTUyMW1lMU023nl5UDUiLCJtIjp7IOIiOiJ1cyJ9fQ==@logs-prod4.grafana.net/loki/api/v1/push`,
-	}
+	)
 	fps := []string{
 		// Low entropy.
 		`glc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
@@ -70,14 +69,10 @@ func GrafanaServiceAccountToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("grafana-service-account-token",
-			"glsa_"+
-				secrets.NewSecret(utils.AlphaNumeric("32"))+
-				"_"+
-				secrets.NewSecret((utils.Hex("8")))),
+	tps := utils.GenerateSampleSecrets("grafana-service-account-token", "glsa_"+secrets.NewSecret(utils.AlphaNumeric("32"))+"_"+secrets.NewSecret(utils.Hex("8")))
+	tps = append(tps,
 		`'Authorization': 'Bearer glsa_pITqMOBIfNH2KL4PkXJqmTyQl0D9QGxF_486f63e1'`,
-	}
+	)
 	fps := []string{
 		"glsa_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX_AAAAAAAA",
 	}

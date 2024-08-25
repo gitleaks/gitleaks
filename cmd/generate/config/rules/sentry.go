@@ -19,8 +19,6 @@ func SentryAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("sentry", secrets.NewSecret(utils.Hex("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("sentry", secrets.NewSecret(utils.Hex("64")))
 	return utils.Validate(r, tps, nil)
 }

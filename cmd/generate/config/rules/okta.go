@@ -19,11 +19,11 @@ func OktaAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("okta", secrets.NewSecret(`00[\w=\-]{40}`)),
+	tps := utils.GenerateSampleSecrets("okta", secrets.NewSecret(`00[\w=\-]{40}`))
+	tps = append(tps,
 		`"oktaApiToken": "00ebObu4zSNkyc6dimLvUwq4KpTEop-PCEnnfSTpD3",`,       // gitleaks:allow
 		`			var OktaApiToken = "00fWkOjwwL9xiFd-Vfgm_ePATIRxVj852Iblbb1DS_";`, // gitleaks:allow
-	}
+	)
 	fps := []string{
 		`oktaKey = 00000000000000000000000000000000000TUVWXYZ`,   // low entropy
 		`rookTable = 0023452Lllk2KqjLBvaxANWEgTd7bqjsxjo8aZj0wd`, // wrong case

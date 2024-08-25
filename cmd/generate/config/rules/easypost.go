@@ -19,9 +19,7 @@ func EasyPost() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("EZAK", "EZAK"+secrets.NewSecret(utils.AlphaNumeric("54"))),
-	}
+	tps := utils.GenerateSampleSecrets("EZAK", "EZAK"+secrets.NewSecret(utils.AlphaNumeric("54")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -36,8 +34,6 @@ func EasyPostTestAPI() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("EZTK", "EZTK"+secrets.NewSecret(utils.AlphaNumeric("54"))),
-	}
+	tps := utils.GenerateSampleSecrets("EZTK", "EZTK"+secrets.NewSecret(utils.AlphaNumeric("54")))
 	return utils.Validate(r, tps, nil)
 }

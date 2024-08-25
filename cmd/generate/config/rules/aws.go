@@ -11,8 +11,8 @@ import (
 func AWS() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		RuleID:      "aws-access-token",
+		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		Regex:       regexp.MustCompile(`\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})\b`),
 		Entropy:     3,
 		Keywords: []string{
@@ -33,18 +33,12 @@ func AWS() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("AWS", "AKIALALEMEL33243OLIB"), // gitleaks:allow
-
-		// as part of a URL
-		`https://aws.example.com/test/abc?AWSAccessKeyId=AKIALALEMEL33243OLIB&Signature=test`, // gitleaks:allow
-
-		// current AWS tokens cannot contain [0,1,8,9], so their entropy is slightly lower than expected.
-		utils.GenerateSampleSecret("AWS", "AKIA"+secrets.NewSecret("[A-Z2-7]{16}")),
-		utils.GenerateSampleSecret("AWS", "ASIA"+secrets.NewSecret("[A-Z2-7]{16}")),
-		utils.GenerateSampleSecret("AWS", "ABIA"+secrets.NewSecret("[A-Z2-7]{16}")),
-		utils.GenerateSampleSecret("AWS", "ACCA"+secrets.NewSecret("[A-Z2-7]{16}")),
-	}
+	tps := utils.GenerateSampleSecrets("AWS", "AKIALALEMEL33243OLIB") // gitleaks:allow
+	// current AWS tokens cannot contain [0,1,8,9], so their entropy is slightly lower than expected.
+	tps = append(tps, utils.GenerateSampleSecrets("AWS", "AKIA"+secrets.NewSecret("[A-Z2-7]{16}"))...)
+	tps = append(tps, utils.GenerateSampleSecrets("AWS", "ASIA"+secrets.NewSecret("[A-Z2-7]{16}"))...)
+	tps = append(tps, utils.GenerateSampleSecrets("AWS", "ABIA"+secrets.NewSecret("[A-Z2-7]{16}"))...)
+	tps = append(tps, utils.GenerateSampleSecrets("AWS", "ACCA"+secrets.NewSecret("[A-Z2-7]{16}"))...)
 	fps := []string{
 		`key = AKIAXXXXXXXXXXXXXXXX`,           // Low entropy
 		`aws_access_key: AKIAIOSFODNN7EXAMPLE`, // Placeholder

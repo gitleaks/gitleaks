@@ -20,9 +20,6 @@ func RapidAPIAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("rapidapi",
-			secrets.NewSecret(utils.AlphaNumericExtendedShort("50"))),
-	}
+	tps := utils.GenerateSampleSecrets("rapidapi", secrets.NewSecret(utils.AlphaNumericExtendedShort("50")))
 	return utils.Validate(r, tps, nil)
 }
