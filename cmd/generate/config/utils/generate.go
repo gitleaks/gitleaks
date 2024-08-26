@@ -22,12 +22,12 @@ const (
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,)`
+	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)`
 
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
-	secretPrefix       = `(?:\\*(?:'|")|[\x60\s=]){0,5}(`
+	secretPrefix       = `(?:\\*(?:'|")|[\x60\s=|>]){0,5}(`
 	secretSuffix       = `)(?:['"\x60\s;\\<,)]|$)`
 )
 
@@ -93,8 +93,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"yaml - singleline - unquoted":     "{i}_token: {s}",
 		"yaml - singleline - single quote": "{i}_token: '{s}'",
 		"yaml - singleline - double quote": "{i}_token: \"{s}\"",
-		//TODO: "yaml - multiline - literal":       "{i}_token: |\n  {s}",
-		//TODO: "yaml - multiline - folding":       "{i}_token: >\n  {s}",
+		"yaml - multiline - literal":       "{i}_token: |\n  {s}",
+		"yaml - multiline - folding":       "{i}_token: >\n  {s}",
 		//"": "",
 
 		// Programming Languages
