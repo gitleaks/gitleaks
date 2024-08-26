@@ -2,9 +2,8 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -18,7 +17,7 @@ func HuggingFaceAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "huggingface-access-token",
 		Description: "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data.",
-		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <])`),
+		Regex:       utils.GenerateUniqueTokenRegex("hf_(?i:[a-z]{34})", false),
 		Entropy:     2,
 		Keywords: []string{
 			"hf_",
@@ -73,7 +72,7 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "huggingface-organization-api-token",
 		Description: "Uncovered a Hugging Face Organization API token, potentially compromising AI organization accounts and associated data.",
-		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:\(,)])(api_org_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <\),])`),
+		Regex:       utils.GenerateUniqueTokenRegex("api_org_(?i:[a-z]{34})", false),
 
 		Entropy: 2,
 		Keywords: []string{
