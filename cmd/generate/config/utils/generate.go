@@ -18,17 +18,17 @@ const (
 	identifierCaseInsensitivePrefix = `[\w.-]{0,50}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `[\w.-]{0,50}?(?:`
-	identifierSuffix                = `)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}`
+	identifierSuffix                = `)(?:[\w \t.-]{0,20})(?:\\*['"]{0,3})?[ \t]{0,5}`
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:)`
+	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:|\()`
 
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
-	secretPrefix       = `(?:'|\"|\s|=|\x60){0,5}(`
-	secretSuffix       = `)(?:['|\"|\n|\r|\s|\x60|;]|$)`
+	secretPrefix       = `(?:\\*(?:'|")|[\x60\s=]){0,5}(`
+	secretSuffix       = `)(?:['"\x60\s;\\]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
@@ -81,8 +81,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"ini - unquoted1": "{i}Token={s}",
 		"ini - unquoted2": "{i}Token = {s}",
 		// JSON
-		"json - string": "{\n    \"{i}_token\": \"{s}\"\n}",
-		//TODO: "json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
+		"json - string":         "{\n    \"{i}_token\": \"{s}\"\n}",
+		"json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
 		//TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
 		// XML
 		//TODO: "xml - element":            "<{i}Token>{s}</{i}Token>",
