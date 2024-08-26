@@ -1,3 +1,7 @@
+// == WARNING ==
+// These functions are used to generate GitLeak's default config.
+// You are free to use these in your own project, HOWEVER, no API stability is guaranteed.
+
 package utils
 
 import (
