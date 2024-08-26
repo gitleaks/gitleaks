@@ -110,9 +110,14 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		//"": "",
 
 		// Miscellaneous
+		//TODO: "comment - slash": "//{s} is the password",
+		//TODO: "comment - slash multiline": "/*{s} is the password",
+		//TODO: "comment - hashtag":     "#{s} is the password",
+		//TODO: "comment - semicolon":     ";{s} is the password",
 		"csv - unquoted": `{i}Token,{s},`,
 		"logstash":       "  \"{i}Token\" => \"{s}\"",
-		//"sql":      "",
+		//TODO: "sql - tabular":      "|{s}|",
+		//TODO: "sql":      "",
 
 		// Makefile
 		// See: https://github.com/gitleaks/gitleaks/pull/1191
