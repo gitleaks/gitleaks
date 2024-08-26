@@ -22,13 +22,13 @@ const (
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:|\()`
+	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,)`
 
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:\\*(?:'|")|[\x60\s=]){0,5}(`
-	secretSuffix       = `)(?:['"\x60\s;\\]|$)`
+	secretSuffix       = `)(?:['"\x60\s;\\<,)]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
@@ -85,8 +85,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
 		//TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
 		// XML
-		//TODO: "xml - element":            "<{i}Token>{s}</{i}Token>",
-		//TODO: "xml - element multiline":  "<{i}Token>\n    {s}\n</{i}Token>",
+		"xml - element":           "<{i}Token>{s}</{i}Token>",
+		"xml - element multiline": "<{i}Token>\n    {s}\n</{i}Token>",
 		//TODO: "xml - attribute": "<entry name=\"{i}Token\" value=\"{s}\" />",
 		//TODO: "xml - key/value elements": "<entry>\n  <name=\"{i}Token\" />\n  <value=\"{s}\" />\n</entry>",
 		// YAML
@@ -110,7 +110,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		//"": "",
 
 		// Miscellaneous
-		"logstash": "  \"{i}Token\" => \"{s}\"",
+		"csv - unquoted": `{i}Token,{s},`,
+		"logstash":       "  \"{i}Token\" => \"{s}\"",
 		//"sql":      "",
 
 		// Makefile
