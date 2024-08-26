@@ -13,14 +13,14 @@ import (
 func init() {
 	rootCmd.AddCommand(gitCmd)
 	gitCmd.Flags().Bool("staged", false, "scan staged commits (good for pre-commit)")
-    gitCmd.Flags().Bool("pre-commit", false, "scan using git diff")
+	gitCmd.Flags().Bool("pre-commit", false, "scan using git diff")
 	gitCmd.Flags().String("log-opts", "", "git log options")
 }
 
 var gitCmd = &cobra.Command{
 	Use:   "git [flags] [repo]",
 	Short: "scan git repositories for secrets",
-    Args:  cobra.MaximumNArgs(1), // Allows for at most one positional argument (the repo path)
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runGit,
 }
 

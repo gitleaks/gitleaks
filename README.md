@@ -30,7 +30,7 @@
 Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
 ```
-➜  ~/code(master) gitleaks detect --source . -v
+➜  ~/code(master) gitleaks git -v
 
     ○
     │╲
@@ -64,11 +64,11 @@ brew install gitleaks
 
 # Docker (DockerHub)
 docker pull zricethezav/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] [OPTIONS] [SOURCE_PATH]
 
 # Docker (ghcr.io)
 docker pull ghcr.io/gitleaks/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] [OPTIONS] [SOURCE_PATH]
 
 # From Source (make sure `go` is installed)
 git clone https://github.com/gitleaks/gitleaks.git
@@ -105,7 +105,7 @@ jobs:
    ```
    repos:
      - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.16.1
+       rev: v8.19.0
        hooks:
          - id: gitleaks
    ```
@@ -163,7 +163,6 @@ Flags:
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
   -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
   -r, --report-path string            report file
-  -s, --source string                 path to source (default ".")
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
 
@@ -172,20 +171,22 @@ Use "gitleaks [command] --help" for more information about a command.
 
 ### Commands
 
-⚠️ v8.15.0 introduced a change that deprecated `detect` and `protect`. Those commands are still available _and_ supported but
+⚠️ v8.19.0 introduced a change that deprecated `detect` and `protect`. Those commands are still available _and_ supported but
 are hidden in the `--help` menu.
 
 There are three scanning modes: `git`, `dir`, and `stdin`.
 
 #### Git
-TODO
+The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
+You can configure the behavior of `git log -p` with the `log-opts` option.
+For example, if you wanted to run gitleaks on a range of commits you could use the following
+command: `gitleaks git -v --log-opts="--all commitA..commitB"`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
 
 #### Dir
-TODO
+The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory`
 
 #### Stdin
-TODO
-
+You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
 
 ### Creating a baseline
 
@@ -193,13 +194,13 @@ When scanning large repositories or repositories with a long history, it can be 
 gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
 
 ```
-gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
+gitleaks git --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
 ```
 
 Once as baseline is created it can be applied when running the detect command again:
 
 ```
-gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
+gitleaks git --baseline-path gitleaks-report.json --report-path findings.json
 ```
 
 After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
