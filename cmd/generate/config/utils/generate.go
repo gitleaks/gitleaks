@@ -118,7 +118,7 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"make - simple assignment":          "{i}_TOKEN := \"{s}\"",
 		"make - shell assignment":           "{i}_TOKEN ::= \"{s}\"",
 		"make - evaluated shell assignment": "{i}_TOKEN :::= \"{s}\"",
-		//TODO: "make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
+		"make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
 		//TODO: "make - append":                     "{i}_TOKEN += \"{s}\"",
 
 		//"": "",
