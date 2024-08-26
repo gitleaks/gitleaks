@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -12,7 +13,7 @@ func SidekiqSecret() *config.Rule {
 		Description: "Discovered a Sidekiq Secret, which could lead to compromised background job processing and application data breaches.",
 		RuleID:      "sidekiq-secret",
 
-		Regex: generateSemiGenericRegex([]string{"BUNDLE_ENTERPRISE__CONTRIBSYS__COM", "BUNDLE_GEMS__CONTRIBSYS__COM"},
+		Regex: utils.GenerateSemiGenericRegex([]string{"BUNDLE_ENTERPRISE__CONTRIBSYS__COM", "BUNDLE_GEMS__CONTRIBSYS__COM"},
 			`[a-f0-9]{8}:[a-f0-9]{8}`, true),
 		Keywords: []string{"BUNDLE_ENTERPRISE__CONTRIBSYS__COM", "BUNDLE_GEMS__CONTRIBSYS__COM"},
 	}
@@ -28,7 +29,7 @@ func SidekiqSecret() *config.Rule {
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef && echo 'hello world'",
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func SidekiqSensitiveUrl() *config.Rule {
@@ -55,5 +56,5 @@ func SidekiqSensitiveUrl() *config.Rule {
 		"http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80",
 		"http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1",
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

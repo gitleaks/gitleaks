@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,7 +19,7 @@ func Clojars() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("clojars", "CLOJARS_"+secrets.NewSecret(alphaNumeric("60"))),
+		utils.GenerateSampleSecret("clojars", "CLOJARS_"+secrets.NewSecret(utils.AlphaNumeric("60"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

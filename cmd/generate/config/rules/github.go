@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,9 +19,9 @@ func GitHubPat() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("github", "ghp_"+secrets.NewSecret(alphaNumeric("36"))),
+		utils.GenerateSampleSecret("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitHubFineGrainedPat() *config.Rule {
@@ -34,9 +35,9 @@ func GitHubFineGrainedPat() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("github", "github_pat_"+secrets.NewSecret(alphaNumeric("82"))),
+		utils.GenerateSampleSecret("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitHubOauth() *config.Rule {
@@ -50,9 +51,9 @@ func GitHubOauth() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("github", "gho_"+secrets.NewSecret(alphaNumeric("36"))),
+		utils.GenerateSampleSecret("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitHubApp() *config.Rule {
@@ -66,10 +67,10 @@ func GitHubApp() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("github", "ghu_"+secrets.NewSecret(alphaNumeric("36"))),
-		generateSampleSecret("github", "ghs_"+secrets.NewSecret(alphaNumeric("36"))),
+		utils.GenerateSampleSecret("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
+		utils.GenerateSampleSecret("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitHubRefresh() *config.Rule {
@@ -83,7 +84,7 @@ func GitHubRefresh() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("github", "ghr_"+secrets.NewSecret(alphaNumeric("36"))),
+		utils.GenerateSampleSecret("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
