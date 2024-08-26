@@ -21,8 +21,8 @@ func EtsyAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("ETSY", secrets.NewSecret(utils.AlphaNumeric("24")))
-	tps = append(tps, "etsy", secrets.NewSecret(utils.AlphaNumeric("24")))
-	tps = append(tps, "Etsy", secrets.NewSecret(utils.AlphaNumeric("24")))
+	tps = append(tps, utils.GenerateSampleSecrets("etsy", secrets.NewSecret(utils.AlphaNumeric("24")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("Etsy", secrets.NewSecret(utils.AlphaNumeric("24")))...)
 	fps := []string{
 		fmt.Sprintf(`SetSysctl = "%s"`, secrets.NewSecret(utils.AlphaNumeric("24"))),
 		`	if err := sysctl.SetSysctl(sysctlBridgeCallIPTables); err != nil {`,

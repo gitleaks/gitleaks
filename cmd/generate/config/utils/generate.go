@@ -21,7 +21,8 @@ const (
 	identifierSuffix                = `)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
-	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
+	//language=regexp
+	operator = `(?:[<>?+]?=|:{1,3}=|>|=>|:)`
 
 	// boundaries for the secret
 	// \x60 = `
@@ -119,7 +120,7 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"make - shell assignment":           "{i}_TOKEN ::= \"{s}\"",
 		"make - evaluated shell assignment": "{i}_TOKEN :::= \"{s}\"",
 		"make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
-		//TODO: "make - append":                     "{i}_TOKEN += \"{s}\"",
+		"make - append":                     "{i}_TOKEN += \"{s}\"",
 
 		//"": "",
 	}
