@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -25,5 +26,5 @@ func TeamsWebhook() *config.Rule {
 	tps := []string{
 		"https://mycompany.webhook.office.com/webhookb2/" + secrets.NewSecret(`[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}\/IncomingWebhook\/[a-z0-9]{32}\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}`), // gitleaks:allow
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

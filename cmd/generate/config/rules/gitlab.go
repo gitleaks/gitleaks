@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,9 +19,9 @@ func GitlabPat() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(alphaNumeric("20"))),
+		utils.GenerateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitlabPipelineTriggerToken() *config.Rule {
@@ -34,9 +35,9 @@ func GitlabPipelineTriggerToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("gitlab", "glptt-"+secrets.NewSecret(hex("40"))),
+		utils.GenerateSampleSecret("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func GitlabRunnerRegistrationToken() *config.Rule {
@@ -50,7 +51,7 @@ func GitlabRunnerRegistrationToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("gitlab", "GR1348941"+secrets.NewSecret(alphaNumeric("20"))),
+		utils.GenerateSampleSecret("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

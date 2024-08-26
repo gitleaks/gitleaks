@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -15,7 +16,7 @@ func KubernetesSecretWithDataBefore() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-before",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\b(?:data:))(\W+(?:\w+\W+){0,200}?)\bkind:.{0,10}Secret\b`, true),
+		Regex: utils.GenerateUniqueTokenRegex(`(?i)(?:\b(?:data:))(\W+(?:\w+\W+){0,200}?)\bkind:.{0,10}Secret\b`, true),
 
 		Keywords: []string{
 			"Secret",
@@ -34,7 +35,7 @@ func KubernetesSecretWithDataBefore() *config.Rule {
 		"kubernetes-quoted-1.yaml": "apiVersion: v1'\n' data:'\n' extra: YmFyCg=='\n' kind: 'Secret''\n' metadata:'\n' name: 'secret-sa-sample''\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'", // gitleaks:allow
 		"kubernetes-quoted-2.yaml": "apiVersion: v1'\n' data:'\n' extra: YmFyCg=='\n' kind: 'secret''\n' metadata:'\n' name: 'secret-sa-sample''\n' annotations:'\n' kubernetes.io/service-account.name: 'sa-name'", // gitleaks:allow
 	}
-	return validateWithPaths(r, tps, nil)
+	return utils.ValidateWithPaths(r, tps, nil)
 }
 
 // KubernetesSecretWithDataAfter validates if we detected a kubernetes secret which contains data, after the resource identifier!
@@ -44,7 +45,7 @@ func KubernetesSecretWithDataAfter() *config.Rule {
 		RuleID:      "kubernetes-secret-with-data-after",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		// We try to match secrets by looking if we have the keyword
-		Regex: generateUniqueTokenRegex(`(?i)(?:\bkind:.{0,10}Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+)`, true),
+		Regex: utils.GenerateUniqueTokenRegex(`(?i)(?:\bkind:.{0,10}Secret\b)(?:.|\s){0,200}?\b(?:data:)\s*(.+)`, true),
 
 		Keywords: []string{
 			"Secret",
@@ -64,5 +65,5 @@ func KubernetesSecretWithDataAfter() *config.Rule {
 		"kubernetes-quoted-2.yaml": "apiVersion: v1'\n' kind: 'secret''\n' data:'\n' password: UyFCXCpkJHpEc2I9'\n' username: YWRtaW4='\n' metadata:'\n' name: db-user-pass'\n' namespace: default'\n' type: Opaque", // gitleaks:allow
 	}
 
-	return validateWithPaths(r, tps, nil)
+	return utils.ValidateWithPaths(r, tps, nil)
 }

@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -20,13 +21,13 @@ func HashiCorpTerraform() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("hashicorpToken", secrets.NewSecret(hex("14"))+".atlasv1."+secrets.NewSecret(alphaNumericExtended("60,70"))),
+		utils.GenerateSampleSecret("hashicorpToken", secrets.NewSecret(utils.Hex("14"))+".atlasv1."+secrets.NewSecret(utils.AlphaNumericExtended("60,70"))),
 		`#token = "hE1hlYILrSqpqh.atlasv1.ARjZuyzl33F71WR55s6ln5GQ1HWIwTDDH3MiRjz7OnpCfaCb1RCF5zGaSncCWmJdcYA"`,
 	}
 	fps := []string{
 		`token        = "xxxxxxxxxxxxxx.atlasv1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`, // low entropy
 	}
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }
 
 func HashicorpField() *config.Rule {
@@ -35,7 +36,7 @@ func HashicorpField() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches.",
 		RuleID:      "hashicorp-tf-password",
-		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20")), true),
+		Regex:       utils.GenerateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, utils.AlphaNumericExtended("8,20")), true),
 		Keywords:    keywords,
 		Path:        regexp.MustCompile(`(?i)\.(?:tf|hcl)$`),
 	}
@@ -52,5 +53,5 @@ func HashicorpField() *config.Rule {
 		"unrelated.js": "password       = " + `"rootpasswd"`,
 	}
 
-	return validateWithPaths(r, tps, fps)
+	return utils.ValidateWithPaths(r, tps, fps)
 }

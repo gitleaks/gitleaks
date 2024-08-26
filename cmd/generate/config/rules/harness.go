@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,10 +19,10 @@ func HarnessApiKey() *config.Rule {
 
 	// Generate a sample secret for validation
 	tps := []string{
-		generateSampleSecret("harness", "pat."+secrets.NewSecret(alphaNumeric("22"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("20"))),
-		generateSampleSecret("harness", "sat."+secrets.NewSecret(alphaNumeric("22"))+"."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("20"))),
+		utils.GenerateSampleSecret("harness", "pat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20"))),
+		utils.GenerateSampleSecret("harness", "sat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
 
-	// Validate the rule
-	return validate(r, tps, nil)
+	// validate the rule
+	return utils.Validate(r, tps, nil)
 }
