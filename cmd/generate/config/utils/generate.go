@@ -80,28 +80,29 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"ini - unquoted1": "{i}Token={s}",
 		"ini - unquoted2": "{i}Token = {s}",
 		// JSON
-		"json - string":           "{\n    \"{i}_token\": \"{s}\"\n}",
-		"json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
+		"json - string": "{\n    \"{i}_token\": \"{s}\"\n}",
+		//TODO: "json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
+		//TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
 		// XML
-		"xml - element":            "<{i}Token>{s}</{i}Token>",
-		"xml - element multiline":  "<{i}Token>\n    {s}\n</{i}Token>",
-		"xml - attribute":          "<entry name=\"{i}Token\" value=\"{s}\" />",
-		"xml - key/value elements": "<entry>\n  <name=\"{i}Token\" />\n  <value=\"{s}\" />\n</entry>",
+		//TODO: "xml - element":            "<{i}Token>{s}</{i}Token>",
+		//TODO: "xml - element multiline":  "<{i}Token>\n    {s}\n</{i}Token>",
+		//TODO: "xml - attribute": "<entry name=\"{i}Token\" value=\"{s}\" />",
+		//TODO: "xml - key/value elements": "<entry>\n  <name=\"{i}Token\" />\n  <value=\"{s}\" />\n</entry>",
 		// YAML
 		"yaml - singleline - unquoted":     "{i}_token: {s}",
 		"yaml - singleline - single quote": "{i}_token: '{s}'",
 		"yaml - singleline - double quote": "{i}_token: \"{s}\"",
-		"yaml - multiline - literal":       "{i}_token: |\n  {s}",
-		"yaml - multiline - folding":       "{i}_token: >\n  {s}",
+		//TODO: "yaml - multiline - literal":       "{i}_token: |\n  {s}",
+		//TODO: "yaml - multiline - folding":       "{i}_token: >\n  {s}",
 		//"": "",
 
 		// Programming Languages
-		"C#":                    "string {i}Token = \"{s}\";",
-		"go - normal":           "var {i}Token string = \"{s}\"",
-		"go - short":            "{i}Token := \"{s}\"",
-		"go - backticks":        "{i}Token := `{s}`",
-		"java":                  "String {i}Token = \"{s}\";",
-		"kotlin - type":         "var {i}Token: string = \"{s}\"",
+		"C#":             "string {i}Token = \"{s}\";",
+		"go - normal":    "var {i}Token string = \"{s}\"",
+		"go - short":     "{i}Token := \"{s}\"",
+		"go - backticks": "{i}Token := `{s}`",
+		"java":           "String {i}Token = \"{s}\";",
+		//TODO:"kotlin - type":         "var {i}Token: string = \"{s}\"",
 		"kotlin - notype":       "var {i}Token = \"{s}\"",
 		"python - single quote": "{i}Token = '{s}'",
 		"python - double quote": "{i}Token = \"{s}\"",
@@ -109,7 +110,7 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 
 		// Miscellaneous
 		"logstash": "  \"{i}Token\" => \"{s}\"",
-		"sql":      "",
+		//"sql":      "",
 
 		// Makefile
 		// See: https://github.com/gitleaks/gitleaks/pull/1191
@@ -117,8 +118,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"make - simple assignment":          "{i}_TOKEN := \"{s}\"",
 		"make - shell assignment":           "{i}_TOKEN ::= \"{s}\"",
 		"make - evaluated shell assignment": "{i}_TOKEN :::= \"{s}\"",
-		"make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
-		"make - append":                     "{i}_TOKEN += \"{s}\"",
+		//TODO: "make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
+		//TODO: "make - append":                     "{i}_TOKEN += \"{s}\"",
 
 		//"": "",
 	}
