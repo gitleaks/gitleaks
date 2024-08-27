@@ -59,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
+	rootCmd.PersistentFlags().Duration("slow-warning-threshold", 10*time.Second, "the amount of time to wait before warning")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -265,6 +266,11 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
 		log.Fatal().Err(err).Msg("")
 	}
+
+	if detector.SlowWarningThreshold, err = cmd.Flags().GetDuration("slow-warning-threshold"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+
 	return detector
 }
 

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -77,6 +78,10 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
+	// This is useful for identifying problematic files and tuning the allowlist.
+	SlowWarningThreshold time.Duration
 }
 
 // Fragment contains the data to be scanned
