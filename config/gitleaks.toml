@@ -1995,6 +1995,7 @@ stopwords = [
 id = "github-app-token"
 description = "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security."
 regex = '''(?:ghu|ghs)_[0-9a-zA-Z]{36}'''
+entropy = 3
 keywords = [
     "ghu_","ghs_",
 ]
@@ -2002,7 +2003,8 @@ keywords = [
 [[rules]]
 id = "github-fine-grained-pat"
 description = "Found a GitHub Fine-Grained Personal Access Token, risking unauthorized repository access and code manipulation."
-regex = '''github_pat_[0-9a-zA-Z_]{82}'''
+regex = '''github_pat_\w{82}'''
+entropy = 3
 keywords = [
     "github_pat_",
 ]
@@ -2011,6 +2013,7 @@ keywords = [
 id = "github-oauth"
 description = "Discovered a GitHub OAuth Access Token, posing a risk of compromised GitHub account integrations and data leaks."
 regex = '''gho_[0-9a-zA-Z]{36}'''
+entropy = 3
 keywords = [
     "gho_",
 ]
@@ -2019,6 +2022,7 @@ keywords = [
 id = "github-pat"
 description = "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure."
 regex = '''ghp_[0-9a-zA-Z]{36}'''
+entropy = 3
 keywords = [
     "ghp_",
 ]
@@ -2027,6 +2031,7 @@ keywords = [
 id = "github-refresh-token"
 description = "Detected a GitHub Refresh Token, which could allow prolonged unauthorized access to GitHub services."
 regex = '''ghr_[0-9a-zA-Z]{36}'''
+entropy = 3
 keywords = [
     "ghr_",
 ]
