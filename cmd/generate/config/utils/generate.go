@@ -18,7 +18,7 @@ const (
 	identifierCaseInsensitivePrefix = `[\w.-]{0,50}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `[\w.-]{0,50}?(?:`
-	identifierSuffix                = `)(?:[\w \t.-]{0,20})(?:\\*['"]{0,3})?[ \t]{0,5}`
+	identifierSuffix                = `)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}`
 
 	// commonly used assignment operators or function call
 	//language=regexp
@@ -27,8 +27,8 @@ const (
 	// boundaries for the secret
 	// \x60 = `
 	secretPrefixUnique = `\b(`
-	secretPrefix       = `(?:\\*(?:'|")|[\x60\s=|>]){0,5}(`
-	secretSuffix       = `)(?:['"\x60\s;\\<,)]|$)`
+	secretPrefix       = `(?:\\*[\'"]|[\x60\s=|>]){0,5}(`
+	secretSuffix       = `)(?:[\'\"\x60\s;\\<,)]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
