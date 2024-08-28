@@ -98,11 +98,12 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		//"": "",
 
 		// Programming Languages
-		"C#":             `string {i}Token = "{s}";`,
-		"go - normal":    `var {i}Token string = "{s}"`,
-		"go - short":     `{i}Token := "{s}"`,
-		"go - backticks": "{i}Token := `{s}`",
-		"java":           "String {i}Token = \"{s}\";",
+		"C#":                    `string {i}Token = "{s}";`,
+		"go - normal":           `var {i}Token string = "{s}"`,
+		"go - short":            `{i}Token := "{s}"`,
+		"go - backticks":        "{i}Token := `{s}`",
+		"java":                  "String {i}Token = \"{s}\";",
+		"java - escaped quotes": `config.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"JDOE35\" {i}Token=\"{s}\""`,
 		//TODO:"kotlin - type":         "var {i}Token: string = \"{s}\"",
 		"kotlin - notype":     "var {i}Token = \"{s}\"",
 		"php - string concat": `${i}Token .= "{s}"`,
