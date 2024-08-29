@@ -67,13 +67,13 @@ keywords = ["ops_"]
 [[rules]]
 id = "adafruit-api-key"
 description = "Identified a potential Adafruit API Key, which could lead to unauthorized access to Adafruit services and sensitive data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:adafruit)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9_-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:adafruit)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9_-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["adafruit"]
 
 [[rules]]
 id = "adobe-client-id"
 description = "Detected a pattern that resembles an Adobe OAuth Web Client ID, posing a risk of compromised Adobe integrations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:adobe)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:adobe)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["adobe"]
 
@@ -93,13 +93,13 @@ keywords = ["age-secret-key-1"]
 [[rules]]
 id = "airtable-api-key"
 description = "Uncovered a possible Airtable API Key, potentially compromising database access and leading to data leakage or alteration."
-regex = '''(?i)[\w.-]{0,50}?(?:airtable)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{17})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:airtable)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{17})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["airtable"]
 
 [[rules]]
 id = "algolia-api-key"
 description = "Identified an Algolia API Key, which could result in unauthorized search operations and data exposure on Algolia-managed platforms."
-regex = '''(?i)[\w.-]{0,50}?(?:algolia)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:algolia)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["algolia"]
 
 [[rules]]
@@ -112,26 +112,26 @@ keywords = ["ltai"]
 [[rules]]
 id = "alibaba-secret-key"
 description = "Discovered a potential Alibaba Cloud Secret Key, potentially allowing unauthorized operations and data access within Alibaba Cloud."
-regex = '''(?i)[\w.-]{0,50}?(?:alibaba)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:alibaba)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["alibaba"]
 
 [[rules]]
 id = "asana-client-id"
 description = "Discovered a potential Asana Client ID, risking unauthorized access to Asana projects and sensitive task information."
-regex = '''(?i)[\w.-]{0,50}?(?:asana)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:asana)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["asana"]
 
 [[rules]]
 id = "asana-client-secret"
 description = "Identified an Asana Client Secret, which could lead to compromised project management integrity and unauthorized access."
-regex = '''(?i)[\w.-]{0,50}?(?:asana)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:asana)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["asana"]
 
 [[rules]]
 id = "atlassian-api-token"
 description = "Detected an Atlassian API token, posing a threat to project management and collaboration tool security and data confidentiality."
-regex = '''(?i)[\w.-]{0,50}?(?:atlassian|confluence|jira)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:atlassian|confluence|jira)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "atlassian",
     "confluence",
@@ -178,31 +178,31 @@ keywords = ["q~"]
 [[rules]]
 id = "beamer-api-token"
 description = "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates."
-regex = '''(?i)[\w.-]{0,50}?(?:beamer)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(b_[a-z0-9=_\-]{44})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:beamer)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(b_[a-z0-9=_\-]{44})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["beamer"]
 
 [[rules]]
 id = "bitbucket-client-id"
 description = "Discovered a potential Bitbucket Client ID, risking unauthorized repository access and potential codebase exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:bitbucket)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:bitbucket)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["bitbucket"]
 
 [[rules]]
 id = "bitbucket-client-secret"
 description = "Discovered a potential Bitbucket Client Secret, posing a risk of compromised code repositories and unauthorized access."
-regex = '''(?i)[\w.-]{0,50}?(?:bitbucket)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:bitbucket)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["bitbucket"]
 
 [[rules]]
 id = "bittrex-access-key"
 description = "Identified a Bittrex Access Key, which could lead to unauthorized access to cryptocurrency trading accounts and financial loss."
-regex = '''(?i)[\w.-]{0,50}?(?:bittrex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:bittrex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["bittrex"]
 
 [[rules]]
 id = "bittrex-secret-key"
 description = "Detected a Bittrex Secret Key, potentially compromising cryptocurrency transactions and financial security."
-regex = '''(?i)[\w.-]{0,50}?(?:bittrex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:bittrex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["bittrex"]
 
 [[rules]]
@@ -215,14 +215,14 @@ keywords = ["clojars_"]
 [[rules]]
 id = "cloudflare-api-key"
 description = "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security."
-regex = '''(?i)[\w.-]{0,50}?(?:cloudflare)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9_-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:cloudflare)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9_-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["cloudflare"]
 
 [[rules]]
 id = "cloudflare-global-api-key"
 description = "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security."
-regex = '''(?i)[\w.-]{0,50}?(?:cloudflare)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{37})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:cloudflare)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{37})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["cloudflare"]
 
@@ -239,13 +239,13 @@ keywords = [
 [[rules]]
 id = "codecov-access-token"
 description = "Found a pattern resembling a Codecov Access Token, posing a risk of unauthorized access to code coverage reports and sensitive data."
-regex = '''(?i)[\w.-]{0,50}?(?:codecov)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:codecov)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["codecov"]
 
 [[rules]]
 id = "cohere-api-token"
 description = "Identified a Cohere Token, posing a risk of unauthorized access to AI services and data manipulation."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:cohere|CO_API_KEY)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-zA-Z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:cohere|CO_API_KEY)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-zA-Z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 4
 keywords = [
     "cohere",
@@ -255,25 +255,25 @@ keywords = [
 [[rules]]
 id = "coinbase-access-token"
 description = "Detected a Coinbase Access Token, posing a risk of unauthorized access to cryptocurrency accounts and financial transactions."
-regex = '''(?i)[\w.-]{0,50}?(?:coinbase)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9_-]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:coinbase)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9_-]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["coinbase"]
 
 [[rules]]
 id = "confluent-access-token"
 description = "Identified a Confluent Access Token, which could compromise access to streaming data platforms and sensitive data flow."
-regex = '''(?i)[\w.-]{0,50}?(?:confluent)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:confluent)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["confluent"]
 
 [[rules]]
 id = "confluent-secret-key"
 description = "Found a Confluent Secret Key, potentially risking unauthorized operations and data access within Confluent services."
-regex = '''(?i)[\w.-]{0,50}?(?:confluent)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:confluent)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["confluent"]
 
 [[rules]]
 id = "contentful-delivery-api-token"
 description = "Discovered a Contentful delivery API token, posing a risk to content management systems and data integrity."
-regex = '''(?i)[\w.-]{0,50}?(?:contentful)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{43})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:contentful)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{43})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["contentful"]
 
 [[rules]]
@@ -310,13 +310,13 @@ keywords = ["dapi"]
 [[rules]]
 id = "datadog-access-token"
 description = "Detected a Datadog Access Token, potentially risking monitoring and analytics data exposure and manipulation."
-regex = '''(?i)[\w.-]{0,50}?(?:datadog)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:datadog)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["datadog"]
 
 [[rules]]
 id = "defined-networking-api-token"
 description = "Identified a Defined Networking API token, which could lead to unauthorized network operations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:dnkey)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:dnkey)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["dnkey"]
 
 [[rules]]
@@ -342,20 +342,20 @@ keywords = ["dor_v1_"]
 [[rules]]
 id = "discord-api-token"
 description = "Detected a Discord API key, potentially compromising communication channels and user data privacy on Discord."
-regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["discord"]
 
 [[rules]]
 id = "discord-client-id"
 description = "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications."
-regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9]{18})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9]{18})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["discord"]
 
 [[rules]]
 id = "discord-client-secret"
 description = "Discovered a potential Discord client secret, risking compromised Discord bot integrations and data leaks."
-regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["discord"]
 
@@ -369,25 +369,25 @@ keywords = ["dp.pt."]
 [[rules]]
 id = "droneci-access-token"
 description = "Detected a Droneci Access Token, potentially compromising continuous integration and deployment workflows."
-regex = '''(?i)[\w.-]{0,50}?(?:droneci)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:droneci)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["droneci"]
 
 [[rules]]
 id = "dropbox-api-token"
 description = "Identified a Dropbox API secret, which could lead to unauthorized file access and data breaches in Dropbox storage."
-regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{15})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{15})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["dropbox"]
 
 [[rules]]
 id = "dropbox-long-lived-api-token"
 description = "Found a Dropbox long-lived API token, risking prolonged unauthorized access to cloud storage and sensitive data."
-regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["dropbox"]
 
 [[rules]]
 id = "dropbox-short-lived-api-token"
 description = "Discovered a Dropbox short-lived API token, posing a risk of temporary but potentially harmful data access and manipulation."
-regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(sl\.[a-z0-9\-=_]{135})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:dropbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(sl\.[a-z0-9\-=_]{135})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["dropbox"]
 
 [[rules]]
@@ -421,7 +421,7 @@ keywords = ["eztk"]
 [[rules]]
 id = "etsy-access-token"
 description = "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data."
-regex = '''(?i)[\w.-]{0,50}?(?:(?-i:ETSY|[Ee]tsy))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:(?-i:ETSY|[Ee]tsy))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3
 keywords = ["etsy"]
 
@@ -444,38 +444,38 @@ keywords = [
 [[rules]]
 id = "facebook-secret"
 description = "Discovered a Facebook Application secret, posing a risk of unauthorized access to Facebook accounts and personal data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:facebook)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:facebook)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3
 keywords = ["facebook"]
 
 [[rules]]
 id = "fastly-api-token"
 description = "Uncovered a Fastly API key, which may compromise CDN and edge cloud services, leading to content delivery and security issues."
-regex = '''(?i)[\w.-]{0,50}?(?:fastly)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:fastly)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["fastly"]
 
 [[rules]]
 id = "finicity-api-token"
 description = "Detected a Finicity API token, potentially risking financial data access and unauthorized financial operations."
-regex = '''(?i)[\w.-]{0,50}?(?:finicity)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:finicity)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["finicity"]
 
 [[rules]]
 id = "finicity-client-secret"
 description = "Identified a Finicity Client Secret, which could lead to compromised financial service integrations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:finicity)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{20})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:finicity)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{20})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["finicity"]
 
 [[rules]]
 id = "finnhub-access-token"
 description = "Found a Finnhub Access Token, risking unauthorized access to financial market data and analytics."
-regex = '''(?i)[\w.-]{0,50}?(?:finnhub)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{20})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:finnhub)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{20})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["finnhub"]
 
 [[rules]]
 id = "flickr-access-token"
 description = "Discovered a Flickr Access Token, posing a risk of unauthorized photo management and potential data leakage."
-regex = '''(?i)[\w.-]{0,50}?(?:flickr)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:flickr)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["flickr"]
 
 [[rules]]
@@ -519,7 +519,7 @@ keywords = ["fio-u-"]
 [[rules]]
 id = "freshbooks-access-token"
 description = "Discovered a Freshbooks Access Token, posing a risk to accounting software access and sensitive financial data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:freshbooks)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:freshbooks)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["freshbooks"]
 
 [[rules]]
@@ -532,7 +532,7 @@ keywords = ["aiza"]
 [[rules]]
 id = "generic-api-key"
 description = "Detected a Generic API Key, potentially exposing access to various services and sensitive operations."
-regex = '''(?i)[\w.-]{0,50}?(?:access|auth|(?-i:[Aa]pi|API)|credential|creds|key|passwd|password|secret|token)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([\w.=-]{10,150})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:access|auth|(?-i:[Aa]pi|API)|credential|creds|key|passwd|password|secret|token)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([\w.=-]{10,150})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3.5
 keywords = [
     "access",
@@ -2173,13 +2173,13 @@ keywords = ["_gitlab_session="]
 [[rules]]
 id = "gitter-access-token"
 description = "Uncovered a Gitter Access Token, which may lead to unauthorized access to chat and communication services."
-regex = '''(?i)[\w.-]{0,50}?(?:gitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9_-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:gitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9_-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["gitter"]
 
 [[rules]]
 id = "gocardless-api-token"
 description = "Detected a GoCardless API token, potentially risking unauthorized direct debit payment operations and financial data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:gocardless)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(live_(?i)[a-z0-9\-_=]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:gocardless)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(live_(?i)[a-z0-9\-_=]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "live_",
     "gocardless",
@@ -2225,7 +2225,7 @@ keywords = ["atlasv1"]
 [[rules]]
 id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:administrator_login_password|password)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}("[a-z0-9=_\-]{8,20}")(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:administrator_login_password|password)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}("[a-z0-9=_\-]{8,20}")(?:[\'\"\x60\s;\\<,)]|$)'''
 path = '''(?i)\.(?:tf|hcl)$'''
 entropy = 2
 keywords = [
@@ -2236,13 +2236,13 @@ keywords = [
 [[rules]]
 id = "heroku-api-key"
 description = "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security."
-regex = '''(?i)[\w.-]{0,50}?(?:heroku)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:heroku)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["heroku"]
 
 [[rules]]
 id = "hubspot-api-key"
 description = "Found a HubSpot API Token, posing a risk to CRM data integrity and unauthorized marketing operations."
-regex = '''(?i)[\w.-]{0,50}?(?:hubspot)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:hubspot)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["hubspot"]
 
 [[rules]]
@@ -2269,7 +2269,7 @@ keywords = ["ico-"]
 [[rules]]
 id = "intercom-api-key"
 description = "Identified an Intercom API Token, which could compromise customer communication channels and data privacy."
-regex = '''(?i)[\w.-]{0,50}?(?:intercom)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{60})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:intercom)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{60})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["intercom"]
 
 [[rules]]
@@ -2286,7 +2286,7 @@ keywords = [
 [[rules]]
 id = "jfrog-api-key"
 description = "Found a JFrog API Key, posing a risk of unauthorized access to software artifact repositories and build pipelines."
-regex = '''(?i)[\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{73})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{73})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "jfrog",
     "artifactory",
@@ -2297,7 +2297,7 @@ keywords = [
 [[rules]]
 id = "jfrog-identity-token"
 description = "Discovered a JFrog Identity Token, potentially compromising access to JFrog services and sensitive software artifacts."
-regex = '''(?i)[\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "jfrog",
     "artifactory",
@@ -2322,7 +2322,7 @@ keywords = ["zxlk"]
 [[rules]]
 id = "kraken-access-token"
 description = "Identified a Kraken Access Token, potentially compromising cryptocurrency trading accounts and financial security."
-regex = '''(?i)[\w.-]{0,50}?(?:kraken)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9\/=_\+\-]{80,90})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:kraken)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9\/=_\+\-]{80,90})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["kraken"]
 
 [[rules]]
@@ -2340,19 +2340,19 @@ regexes = [
 [[rules]]
 id = "kucoin-access-token"
 description = "Found a Kucoin Access Token, risking unauthorized access to cryptocurrency exchange services and transactions."
-regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["kucoin"]
 
 [[rules]]
 id = "kucoin-secret-key"
 description = "Discovered a Kucoin Secret Key, which could lead to compromised cryptocurrency operations and financial data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["kucoin"]
 
 [[rules]]
 id = "launchdarkly-access-token"
 description = "Uncovered a Launchdarkly Access Token, potentially compromising feature flag management and application functionality."
-regex = '''(?i)[\w.-]{0,50}?(?:launchdarkly)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:launchdarkly)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["launchdarkly"]
 
 [[rules]]
@@ -2365,14 +2365,14 @@ keywords = ["lin_api_"]
 [[rules]]
 id = "linear-client-secret"
 description = "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data."
-regex = '''(?i)[\w.-]{0,50}?(?:linear)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:linear)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = ["linear"]
 
 [[rules]]
 id = "linkedin-client-id"
 description = "Found a LinkedIn Client ID, risking unauthorized access to LinkedIn integrations and professional data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:linked[_-]?in)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{14})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:linked[_-]?in)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{14})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = [
     "linkedin",
@@ -2383,7 +2383,7 @@ keywords = [
 [[rules]]
 id = "linkedin-client-secret"
 description = "Discovered a LinkedIn Client secret, potentially compromising LinkedIn application integrations and user data."
-regex = '''(?i)[\w.-]{0,50}?(?:linked[_-]?in)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:linked[_-]?in)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{16})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 2
 keywords = [
     "linkedin",
@@ -2394,7 +2394,7 @@ keywords = [
 [[rules]]
 id = "lob-api-key"
 description = "Uncovered a Lob API Key, which could lead to unauthorized access to mailing and address verification services."
-regex = '''(?i)[\w.-]{0,50}?(?:lob)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}((live|test)_[a-f0-9]{35})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:lob)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}((live|test)_[a-f0-9]{35})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "test_",
     "live_",
@@ -2403,7 +2403,7 @@ keywords = [
 [[rules]]
 id = "lob-pub-api-key"
 description = "Detected a Lob Publishable API Key, posing a risk of exposing mail and print service integrations."
-regex = '''(?i)[\w.-]{0,50}?(?:lob)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}((test|live)_pub_[a-f0-9]{31})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:lob)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}((test|live)_pub_[a-f0-9]{31})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "test_pub",
     "live_pub",
@@ -2413,43 +2413,43 @@ keywords = [
 [[rules]]
 id = "mailchimp-api-key"
 description = "Identified a Mailchimp API key, potentially compromising email marketing campaigns and subscriber data."
-regex = '''(?i)[\w.-]{0,50}?(?:MailchimpSDK.initialize|mailchimp)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{32}-us\d\d)(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:MailchimpSDK.initialize|mailchimp)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{32}-us\d\d)(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mailchimp"]
 
 [[rules]]
 id = "mailgun-private-api-token"
 description = "Found a Mailgun private API token, risking unauthorized email service operations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(key-[a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(key-[a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mailgun"]
 
 [[rules]]
 id = "mailgun-pub-key"
 description = "Discovered a Mailgun public validation key, which could expose email verification processes and associated data."
-regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(pubkey-[a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(pubkey-[a-f0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mailgun"]
 
 [[rules]]
 id = "mailgun-signing-key"
 description = "Uncovered a Mailgun webhook signing key, potentially compromising email automation and data integrity."
-regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mailgun"]
 
 [[rules]]
 id = "mapbox-api-token"
 description = "Detected a MapBox API token, posing a risk to geospatial services and sensitive location data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:mapbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:mapbox)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mapbox"]
 
 [[rules]]
 id = "mattermost-access-token"
 description = "Identified a Mattermost Access Token, which may compromise team communication channels and data privacy."
-regex = '''(?i)[\w.-]{0,50}?(?:mattermost)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{26})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:mattermost)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{26})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["mattermost"]
 
 [[rules]]
 id = "messagebird-api-token"
 description = "Found a MessageBird API token, risking unauthorized access to communication platforms and message data."
-regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{25})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{25})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "messagebird",
     "message-bird",
@@ -2459,7 +2459,7 @@ keywords = [
 [[rules]]
 id = "messagebird-client-id"
 description = "Discovered a MessageBird client ID, potentially compromising API integrations and sensitive communication data."
-regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "messagebird",
     "message-bird",
@@ -2479,25 +2479,25 @@ keywords = [
 [[rules]]
 id = "netlify-access-token"
 description = "Detected a Netlify Access Token, potentially compromising web hosting services and site management."
-regex = '''(?i)[\w.-]{0,50}?(?:netlify)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{40,46})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:netlify)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{40,46})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["netlify"]
 
 [[rules]]
 id = "new-relic-browser-api-token"
 description = "Identified a New Relic ingest browser API token, risking unauthorized access to application performance data and analytics."
-regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(NRJS-[a-f0-9]{19})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(NRJS-[a-f0-9]{19})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["nrjs-"]
 
 [[rules]]
 id = "new-relic-insert-key"
 description = "Discovered a New Relic insight insert key, compromising data injection into the platform."
-regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(NRII-[a-z0-9-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(NRII-[a-z0-9-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["nrii-"]
 
 [[rules]]
 id = "new-relic-user-api-id"
 description = "Found a New Relic user API ID, posing a risk to application monitoring services and data integrity."
-regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "new-relic",
     "newrelic",
@@ -2507,7 +2507,7 @@ keywords = [
 [[rules]]
 id = "new-relic-user-api-key"
 description = "Discovered a New Relic user API Key, which could lead to compromised application insights and performance monitoring."
-regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(NRAK-[a-z0-9]{27})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(NRAK-[a-z0-9]{27})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["nrak"]
 
 [[rules]]
@@ -2535,7 +2535,7 @@ regexes = [
 [[rules]]
 id = "nytimes-access-token"
 description = "Detected a Nytimes Access Token, risking unauthorized access to New York Times APIs and content services."
-regex = '''(?i)[\w.-]{0,50}?(?:nytimes|new-york-times,|newyorktimes)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:nytimes|new-york-times,|newyorktimes)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9=_\-]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "nytimes",
     "new-york-times",
@@ -2552,7 +2552,7 @@ keywords = ["api-"]
 [[rules]]
 id = "okta-access-token"
 description = "Identified an Okta Access Token, which may compromise identity management services and user authentication data."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:(?-i:[Oo]kta|OKTA))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(00[\w=\-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:(?-i:[Oo]kta|OKTA))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(00[\w=\-]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 4
 keywords = ["okta"]
 
@@ -2573,20 +2573,20 @@ keywords = ["sha256~"]
 [[rules]]
 id = "plaid-api-token"
 description = "Discovered a Plaid API Token, potentially compromising financial data aggregation and banking services."
-regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["plaid"]
 
 [[rules]]
 id = "plaid-client-id"
 description = "Uncovered a Plaid Client ID, which could lead to unauthorized financial service integrations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{24})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3.5
 keywords = ["plaid"]
 
 [[rules]]
 id = "plaid-secret-key"
 description = "Detected a Plaid Secret key, risking unauthorized access to financial accounts and sensitive transaction data."
-regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3.5
 keywords = ["plaid"]
 
@@ -2634,7 +2634,7 @@ keywords = ["-----begin"]
 [[rules]]
 id = "privateai-api-token"
 description = "Identified a PrivateAI Token, posing a risk of unauthorized access to AI services and data manipulation."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:private[_-]?ai)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:private[_-]?ai)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{32})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3
 keywords = [
     "privateai",
@@ -2659,7 +2659,7 @@ keywords = ["pypi-ageichlwas5vcmc"]
 [[rules]]
 id = "rapidapi-access-token"
 description = "Uncovered a RapidAPI Access Token, which could lead to unauthorized access to various APIs and data services."
-regex = '''(?i)[\w.-]{0,50}?(?:rapidapi)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9_-]{50})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:rapidapi)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9_-]{50})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["rapidapi"]
 
 [[rules]]
@@ -2686,13 +2686,13 @@ keywords = ["tk-us-"]
 [[rules]]
 id = "sendbird-access-id"
 description = "Discovered a Sendbird Access ID, which could compromise chat and messaging platform integrations."
-regex = '''(?i)[\w.-]{0,50}?(?:sendbird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:sendbird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["sendbird"]
 
 [[rules]]
 id = "sendbird-access-token"
 description = "Uncovered a Sendbird Access Token, potentially risking unauthorized access to communication services and user data."
-regex = '''(?i)[\w.-]{0,50}?(?:sendbird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:sendbird)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["sendbird"]
 
 [[rules]]
@@ -2712,7 +2712,7 @@ keywords = ["xkeysib-"]
 [[rules]]
 id = "sentry-access-token"
 description = "Found a Sentry Access Token, risking unauthorized access to error tracking services and sensitive application data."
-regex = '''(?i)[\w.-]{0,50}?(?:sentry)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:sentry)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["sentry"]
 
 [[rules]]
@@ -2753,7 +2753,7 @@ keywords = ["shpss_"]
 [[rules]]
 id = "sidekiq-secret"
 description = "Discovered a Sidekiq Secret, which could lead to compromised background job processing and application data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = [
     "bundle_enterprise__contribsys__com",
     "bundle_gems__contribsys__com",
@@ -2845,7 +2845,7 @@ keywords = ["hooks.slack.com"]
 [[rules]]
 id = "snyk-api-token"
 description = "Uncovered a Snyk API token, potentially compromising software vulnerability scanning and code security."
-regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["snyk"]
 
 [[rules]]
@@ -2861,7 +2861,7 @@ keywords = [
 [[rules]]
 id = "squarespace-access-token"
 description = "Identified a Squarespace Access Token, which may compromise website management and content control on Squarespace."
-regex = '''(?i)[\w.-]{0,50}?(?:squarespace)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:squarespace)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["squarespace"]
 
 [[rules]]
@@ -2881,27 +2881,27 @@ keywords = [
 [[rules]]
 id = "sumologic-access-id"
 description = "Discovered a SumoLogic Access ID, potentially compromising log management services and data analytics integrity."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:(?-i:[Ss]umo|SUMO))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(su[a-zA-Z0-9]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:(?-i:[Ss]umo|SUMO))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5})(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(su[a-zA-Z0-9]{12})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3
 keywords = ["sumo"]
 
 [[rules]]
 id = "sumologic-access-token"
 description = "Uncovered a SumoLogic Access Token, which could lead to unauthorized access to log data and analytics insights."
-regex = '''(?i)[\w.-]{0,50}?(?:(?-i:[Ss]umo|SUMO))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:(?-i:[Ss]umo|SUMO))(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{64})(?:[\'\"\x60\s;\\<,)]|$)'''
 entropy = 3
 keywords = ["sumo"]
 
 [[rules]]
 id = "telegram-bot-api-token"
 description = "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram."
-regex = '''(?i)[\w.-]{0,50}?(?:telegr)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:telegr)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["telegr"]
 
 [[rules]]
 id = "travisci-access-token"
 description = "Identified a Travis CI Access Token, potentially compromising continuous integration services and codebase security."
-regex = '''(?i)[\w.-]{0,50}?(?:travis)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{22})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:travis)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{22})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["travis"]
 
 [[rules]]
@@ -2914,43 +2914,43 @@ keywords = ["sk"]
 [[rules]]
 id = "twitch-api-token"
 description = "Discovered a Twitch API token, which could compromise streaming services and account integrations."
-regex = '''(?i)[\w.-]{0,50}?(?:twitch)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitch)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{30})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitch"]
 
 [[rules]]
 id = "twitter-access-secret"
 description = "Uncovered a Twitter Access Secret, potentially risking unauthorized Twitter integrations and data breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{45})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{45})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitter"]
 
 [[rules]]
 id = "twitter-access-token"
 description = "Detected a Twitter Access Token, posing a risk of unauthorized account operations and social media data exposure."
-regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitter"]
 
 [[rules]]
 id = "twitter-api-key"
 description = "Identified a Twitter API Key, which may compromise Twitter application integrations and user data security."
-regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{25})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{25})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitter"]
 
 [[rules]]
 id = "twitter-api-secret"
 description = "Found a Twitter API Secret, risking the security of Twitter app integrations and sensitive data access."
-regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{50})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{50})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitter"]
 
 [[rules]]
 id = "twitter-bearer-token"
 description = "Discovered a Twitter Bearer Token, potentially compromising API access and data retrieval from Twitter."
-regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(A{22}[a-zA-Z0-9%]{80,100})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:twitter)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(A{22}[a-zA-Z0-9%]{80,100})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["twitter"]
 
 [[rules]]
 id = "typeform-api-token"
 description = "Uncovered a Typeform API token, which could lead to unauthorized survey management and data collection."
-regex = '''(?i)[\w.-]{0,50}?(?:typeform)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(tfp_[a-z0-9\-_\.=]{59})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:typeform)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(tfp_[a-z0-9\-_\.=]{59})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["tfp_"]
 
 [[rules]]
@@ -2978,24 +2978,24 @@ regexes = [
 [[rules]]
 id = "yandex-access-token"
 description = "Found a Yandex Access Token, posing a risk to Yandex service integrations and user data privacy."
-regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["yandex"]
 
 [[rules]]
 id = "yandex-api-key"
 description = "Discovered a Yandex API Key, which could lead to unauthorized access to Yandex services and data manipulation."
-regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(AQVN[A-Za-z0-9_\-]{35,38})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(AQVN[A-Za-z0-9_\-]{35,38})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["yandex"]
 
 [[rules]]
 id = "yandex-aws-access-token"
 description = "Uncovered a Yandex AWS Access Token, potentially compromising cloud resource access and data security on Yandex Cloud."
-regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}(YC[a-zA-Z0-9_\-]{38})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:yandex)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}(YC[a-zA-Z0-9_\-]{38})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["yandex"]
 
 [[rules]]
 id = "zendesk-secret-key"
 description = "Detected a Zendesk Secret Key, risking unauthorized access to customer support services and sensitive ticketing data."
-regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s=|>]){0,5}([a-z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[\w \t.-]{0,20})(?:\\*[\'\"]{0,3})?[ \t]{0,5}(?:[<>?+]?=|:{1,3}=|>|=>|:|\(|,|\|)(?:\\*[\'"]|[\x60\s|>]){0,5}([a-z0-9]{40})(?:[\'\"\x60\s;\\<,)]|$)'''
 keywords = ["zendesk"]
 
