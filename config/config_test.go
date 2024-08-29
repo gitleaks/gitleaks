@@ -87,9 +87,19 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
+			cfgName:   "missing_id",
+			cfg:       Config{},
+			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+		},
+		{
+			cfgName:   "no_regex_or_path",
+			cfg:       Config{},
+			wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
+		},
+		{
 			cfgName:   "bad_entropy_group",
 			cfg:       Config{},
-			wantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
+			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "base",
@@ -122,18 +132,20 @@ func TestTranslate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		viper.Reset()
-		viper.AddConfigPath(configPath)
-		viper.SetConfigName(tt.cfgName)
-		viper.SetConfigType("toml")
-		err := viper.ReadInConfig()
-		require.NoError(t, err)
+		t.Run(tt.cfgName, func(t *testing.T) {
+			viper.Reset()
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
 
-		var vc ViperConfig
-		err = viper.Unmarshal(&vc)
-		require.NoError(t, err)
-		cfg, err := vc.Translate()
-		assert.Equal(t, tt.wantError, err)
-		assert.Equal(t, cfg.Rules, tt.cfg.Rules)
+			var vc ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			assert.Equal(t, tt.wantError, err)
+			assert.Equal(t, cfg.Rules, tt.cfg.Rules)
+		})
 	}
 }

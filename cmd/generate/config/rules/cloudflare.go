@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -28,7 +29,7 @@ func CloudflareGlobalAPIKey() *config.Rule {
 	r := config.Rule{
 		Description: "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-global-api-key",
-		Regex:       generateSemiGenericRegex(identifiers, hex("37"), true),
+		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.Hex("37"), true),
 
 		Keywords: identifiers,
 	}
@@ -37,7 +38,7 @@ func CloudflareGlobalAPIKey() *config.Rule {
 	tps := global_keys
 	fps := append(api_keys, origin_ca_keys...)
 
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }
 
 func CloudflareAPIKey() *config.Rule {
@@ -45,7 +46,7 @@ func CloudflareAPIKey() *config.Rule {
 	r := config.Rule{
 		Description: "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-api-key",
-		Regex:       generateSemiGenericRegex(identifiers, alphaNumericExtendedShort("40"), true),
+		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.AlphaNumericExtendedShort("40"), true),
 
 		Keywords: identifiers,
 	}
@@ -54,7 +55,7 @@ func CloudflareAPIKey() *config.Rule {
 	tps := api_keys
 	fps := append(global_keys, origin_ca_keys...)
 
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }
 
 func CloudflareOriginCAKey() *config.Rule {
@@ -63,7 +64,7 @@ func CloudflareOriginCAKey() *config.Rule {
 	r := config.Rule{
 		Description: "Detected a Cloudflare Origin CA Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-origin-ca-key",
-		Regex:       generateUniqueTokenRegex(`v1\.0-`+hex("24")+"-"+hex("146"), false),
+		Regex:       utils.GenerateUniqueTokenRegex(`v1\.0-`+utils.Hex("24")+"-"+utils.Hex("146"), false),
 
 		Keywords: ca_identifiers,
 	}
@@ -72,5 +73,5 @@ func CloudflareOriginCAKey() *config.Rule {
 	tps := origin_ca_keys
 	fps := append(global_keys, api_keys...)
 
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }

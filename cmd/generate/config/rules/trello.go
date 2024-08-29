@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -10,7 +11,7 @@ func TrelloAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "trello-access-token",
 		Description: "Trello Access Token",
-		Regex:       generateSemiGenericRegex([]string{"trello"}, `[a-zA-Z-0-9]{32}`, true),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"trello"}, `[a-zA-Z-0-9]{32}`, true),
 
 		Keywords: []string{
 			"trello",
@@ -19,7 +20,7 @@ func TrelloAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("trello", secrets.NewSecret(`[a-zA-Z-0-9]{32}`)),
+		utils.GenerateSampleSecret("trello", secrets.NewSecret(`[a-zA-Z-0-9]{32}`)),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

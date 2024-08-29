@@ -56,22 +56,11 @@ func getRules(cfg config.Config) []Rules {
 	// TODO	for _, rule := range cfg.Rules {
 	var rules []Rules
 	for _, rule := range cfg.GetOrderedRules() {
-		shortDescription := ShortDescription{
-			Text: rule.Description,
-		}
-		if rule.Regex != nil {
-			shortDescription = ShortDescription{
-				Text: rule.Regex.String(),
-			}
-		} else if rule.Path != nil {
-			shortDescription = ShortDescription{
-				Text: rule.Path.String(),
-			}
-		}
 		rules = append(rules, Rules{
-			ID:          rule.RuleID,
-			Name:        rule.Description,
-			Description: shortDescription,
+			ID: rule.RuleID,
+			Description: ShortDescription{
+				Text: rule.Description,
+			},
 		})
 	}
 	return rules
@@ -162,7 +151,6 @@ type FullDescription struct {
 
 type Rules struct {
 	ID          string           `json:"id"`
-	Name        string           `json:"name"`
 	Description ShortDescription `json:"shortDescription"`
 }
 
