@@ -9,12 +9,15 @@ import (
 func EtsyAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		RuleID:      "etsy-access-token",
-		Description: "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data.",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"etsy"}, utils.AlphaNumeric("24"), true),
-
+		RuleID:          "etsy-access-token",
+		Description:     "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data.",
+		Regex:           utils.GenerateSemiGenericRegex([]string{"etsy"}, utils.AlphaNumeric("24"), true),
+		IdentifierGroup: 1,
 		Keywords: []string{
 			"etsy",
+		},
+		Allowlist: config.Allowlist{
+			IdentifierStopWords: []string{"getsys", "setsys", "system"},
 		},
 	}
 
@@ -22,5 +25,8 @@ func EtsyAccessToken() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("etsy", secrets.NewSecret(utils.AlphaNumeric("24"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"sysctl.SetSysctl: sysctlBridgeCallIPTables",
+	}
+	return utils.Validate(r, tps, fps)
 }

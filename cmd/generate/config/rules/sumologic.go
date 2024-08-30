@@ -58,7 +58,6 @@ func SumoLogicAccessToken() *config.Rule {
 		Description: "Uncovered a SumoLogic Access Token, which could lead to unauthorized access to log data and analytics insights.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"sumo"},
 			utils.AlphaNumeric("64"), true),
-
 		Entropy: 3,
 		Keywords: []string{
 			"sumo",

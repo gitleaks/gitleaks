@@ -18,6 +18,9 @@ type Rule struct {
 	// entropy a regex group must have to be considered a secret.
 	Entropy float64
 
+	// IdentifierGroup is used to extract the identifier from regex match.
+	IdentifierGroup int
+
 	// SecretGroup is an int used to extract secret from regex
 	// match and used as the group that will have its entropy
 	// checked if `entropy` is set.
@@ -63,6 +66,11 @@ func (r Rule) Validate() error {
 	// Ensure the rule actually matches something.
 	if r.Regex == nil && r.Path == nil {
 		return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
+	}
+
+	// Ensure |IdentifierGroup| works.
+	if r.Regex != nil && r.IdentifierGroup > r.Regex.NumSubexp() {
+		return fmt.Errorf("%s: invalid regex identifier group %d, max regex secret group %d", r.RuleID, r.IdentifierGroup, r.Regex.NumSubexp())
 	}
 
 	// Ensure |secretGroup| works.
