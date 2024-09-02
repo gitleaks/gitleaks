@@ -140,6 +140,7 @@ func main() {
 		rules.NPM(),
 		rules.NytimesAccessToken(),
 		rules.OktaAccessToken(),
+		rules.OnfidoAPIToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
 		rules.PlaidAccessID(),

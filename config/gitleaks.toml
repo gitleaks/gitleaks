@@ -2446,6 +2446,14 @@ keywords = [
 ]
 
 [[rules]]
+id = "onfido-live-api-token"
+description = "Found an Onfido live API Token posing a risk of unauthorized access to identity verification services data, potentially leading to misuse of PII."
+regex = '''(?i)\b((?:api_live(?:_[a-zA-Z]{2})?\.[a-zA-Z0-9-_]{11}\.[-_a-zA-Z0-9]{32}))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "onfido","api_live","api_live_ca","api_live_us",
+]
+
+[[rules]]
 id = "openai-api-key"
 description = "Found an OpenAI API Key, posing a risk of unauthorized access to AI services and data manipulation."
 regex = '''(?i)\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
