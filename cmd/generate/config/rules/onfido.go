@@ -10,7 +10,7 @@ func OnfidoAPIToken() *config.Rule {
     r := config.Rule{
         RuleID:      "onfido-live-api-token",
         Description: "Found an Onfido live API Token posing a risk of unauthorized access to identity verification services data, potentially leading to misuse of PII.",
-        Regex:       utils.GenerateUniqueTokenRegex(`(?:api_live(?:_[a-zA-Z]{2})?\.[a-zA-Z0-9-_]{11}\.[-_a-zA-Z0-9]{32})`, true),
+        Regex:       utils.GenerateUniqueTokenRegex(`api_live(?:_[a-zA-Z]{2})?\.[\w-]{11}\.[\w-]{32}`, false),
 
         Keywords: []string{
             "onfido",
