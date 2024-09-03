@@ -13,7 +13,6 @@ func OnfidoAPIToken() *config.Rule {
         Regex:       utils.GenerateUniqueTokenRegex(`api_live(?:_[a-zA-Z]{2})?\.[\w-]{11}\.[\w-]{32}`, false),
 
         Keywords: []string{
-            "onfido",
             "api_live",
             "api_live_ca",
             "api_live_us",
