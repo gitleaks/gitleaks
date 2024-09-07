@@ -2577,6 +2577,14 @@ keywords = [
 ]
 
 [[rules]]
+id = "saladcloud-api-key"
+description = "Detected a SaladCloud API Key, risking unauthorized cloud resource access and data breaches."
+regex = '''\b(salad_cloud_[0-9A-Za-z]{1,7}_[0-9A-Za-z]{7,235})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "salad_cloud_",
+]
+
+[[rules]]
 id = "scalingo-api-token"
 description = "Found a Scalingo API token, posing a risk to cloud platform services and application deployment security."
 regex = '''\b(tk-us-[a-zA-Z0-9-_]{48})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
