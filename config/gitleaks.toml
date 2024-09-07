@@ -481,7 +481,7 @@ keywords = [
     "access",
 ]
 
-[rules.allowlist]
+[[rules.allowlist]]
 stopwords = [
     "000000",
     "aaaaaa",
@@ -2169,7 +2169,7 @@ regex = '''(?i)(?:\bkind:[ \t]*["']?secret["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0
 path = '''(?i)\.ya?ml$'''
 keywords = ["secret"]
 
-[rules.allowlist]
+[[rules.allowlist]]
 regexes = [
     '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')''',
 ]
@@ -2355,7 +2355,7 @@ path = '''(?i)nuget\.config$'''
 entropy = 1
 keywords = ["<add key="]
 
-[rules.allowlist]
+[[rules.allowlist]]
 regexes = [
     '''33f!!lloppa''',
     '''hal\+9ooo_da!sY''',
@@ -2685,10 +2685,14 @@ regex = '''(?i:(?:sumo)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{
 entropy = 3
 keywords = ["sumo"]
 
-[rules.allowlist]
+[[rules.allowlist]]
 regexTarget = "line"
 regexes = [
     '''sumOf''',
+]
+[[rules.allowlist]]
+paths = [
+    '''tests/.+$''',
 ]
 
 [[rules]]
@@ -2774,7 +2778,7 @@ keywords = [
     "s.",
 ]
 
-[rules.allowlist]
+[[rules.allowlist]]
 regexes = [
     '''s\.[A-Za-z]{24}''',
 ]

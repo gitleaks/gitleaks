@@ -31,13 +31,15 @@ func KubernetesSecret() *config.Rule {
 		},
 		// Kubernetes secrets are usually yaml files.
 		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
-		Allowlist: config.Allowlist{
-			Regexes: []*regexp.Regexp{
-				// Ignore empty or placeholder values.
-				// variable: {{ .Values.Example }} (https://helm.sh/docs/chart_template_guide/variables/)
-				// variable: ""
-				// variable: ''
-				regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
+		Allowlists: []config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					// Ignore empty or placeholder values.
+					// variable: {{ .Values.Example }} (https://helm.sh/docs/chart_template_guide/variables/)
+					// variable: ""
+					// variable: ''
+					regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
+				},
 			},
 		},
 	}

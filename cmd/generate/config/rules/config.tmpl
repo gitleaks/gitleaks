@@ -43,23 +43,21 @@ keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
-{{ if or $rule.Allowlist.Regexes $rule.Allowlist.Paths $rule.Allowlist.Commits $rule.Allowlist.StopWords }}
-[rules.allowlist]
-{{- with $rule.Allowlist.RegexTarget }}
-regexTarget = "{{ . }}"{{ end -}}
-{{- with $rule.Allowlist.Regexes }}
-regexes = [{{ range $i, $regex := . }}
+{{ with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}
+[[rules.allowlist]]
+{{ with $allowlist.RegexTarget }}regexTarget = "{{ . }}"
+{{ end -}}
+{{- with $allowlist.Regexes }}regexes = [{{ range $i, $regex := . }}
     '''{{ $regex }}''',{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlist.Paths }}paths = [
+{{- with $allowlist.Paths }}paths = [
     {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlist.Commits }}commits = [
+{{- with $allowlist.Commits }}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlist.StopWords }}
-stopwords = [{{ range $j, $stopword := . }}
+{{- with $allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
-]{{ end }}
+]{{ end }}{{ end }}{{ end }}
 {{ end }}
 {{ end -}}

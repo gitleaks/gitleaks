@@ -21,10 +21,17 @@ func SumoLogicAccessID() *config.Rule {
 		Keywords: []string{
 			"sumo",
 		},
-		Allowlist: config.Allowlist{
-			RegexTarget: "line",
-			Regexes: []*regexp.Regexp{
-				regexp.MustCompile(`sumOf`),
+		Allowlists: []config.Allowlist{
+			{
+				RegexTarget: "line",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`sumOf`),
+				},
+			},
+			{
+				Paths: []*regexp.Regexp{
+					regexp.MustCompile(`tests/.+$`),
+				},
 			},
 		},
 	}

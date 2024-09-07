@@ -50,12 +50,19 @@ func (a *Allowlist) CommitAllowed(c string) bool {
 
 // PathAllowed returns true if the path is allowed to be ignored.
 func (a *Allowlist) PathAllowed(path string) bool {
+	// If |Regexes| are defined, this should be handled by |RegexAllowed|.
+	if len(a.Regexes) > 0 {
+		return false
+	}
 	return anyRegexMatch(path, a.Paths)
 }
 
 // RegexAllowed returns true if the regex is allowed to be ignored.
-func (a *Allowlist) RegexAllowed(s string) bool {
-	return anyRegexMatch(s, a.Regexes)
+func (a *Allowlist) RegexAllowed(secret string, path string) bool {
+	if path != "" && len(a.Paths) > 0 {
+		return anyRegexMatch(secret, a.Regexes) && anyRegexMatch(path, a.Paths)
+	}
+	return anyRegexMatch(secret, a.Regexes)
 }
 
 func (a *Allowlist) ContainsStopWord(s string) bool {
