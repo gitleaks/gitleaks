@@ -35,7 +35,7 @@ type ViperConfig struct {
 		Path        string
 		Tags        []string
 
-		Allowlist struct {
+		Allowlists []struct {
 			RegexTarget string
 			Regexes     []string
 			Paths       []string
@@ -80,63 +80,63 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	)
 	rulesMap := make(map[string]Rule)
 
-	for _, r := range vc.Rules {
-		var allowlistRegexes []*regexp.Regexp
-		for _, a := range r.Allowlist.Regexes {
-			allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
-		}
-		var allowlistPaths []*regexp.Regexp
-		for _, a := range r.Allowlist.Paths {
-			allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
-		}
-
-		if r.Keywords == nil {
-			r.Keywords = []string{}
+	// Validate individual rules.
+	for _, vr := range vc.Rules {
+		if vr.Keywords == nil {
+			vr.Keywords = []string{}
 		} else {
-			for _, k := range r.Keywords {
+			for _, k := range vr.Keywords {
 				keywords = append(keywords, strings.ToLower(k))
 			}
 		}
 
-		if r.Tags == nil {
-			r.Tags = []string{}
+		if vr.Tags == nil {
+			vr.Tags = []string{}
 		}
 
 		var configRegex *regexp.Regexp
 		var configPathRegex *regexp.Regexp
-		if r.Regex == "" {
-			configRegex = nil
-		} else {
-			configRegex = regexp.MustCompile(r.Regex)
+		if vr.Regex != "" {
+			configRegex = regexp.MustCompile(vr.Regex)
 		}
-		if r.Path == "" {
-			configPathRegex = nil
-		} else {
-			configPathRegex = regexp.MustCompile(r.Path)
+		if vr.Path != "" {
+			configPathRegex = regexp.MustCompile(vr.Path)
 		}
-		r := Rule{
-			RuleID:      r.ID,
-			Description: r.Description,
+
+		rule := Rule{
+			RuleID:      vr.ID,
+			Description: vr.Description,
 			Regex:       configRegex,
 			Path:        configPathRegex,
-			SecretGroup: r.SecretGroup,
-			Entropy:     r.Entropy,
-			Tags:        r.Tags,
-			Keywords:    r.Keywords,
-			Allowlist: Allowlist{
-				RegexTarget: r.Allowlist.RegexTarget,
+			SecretGroup: vr.SecretGroup,
+			Entropy:     vr.Entropy,
+			Tags:        vr.Tags,
+			Keywords:    vr.Keywords,
+		}
+		for _, a := range vr.Allowlists {
+			var allowlistRegexes []*regexp.Regexp
+			for _, a := range a.Regexes {
+				allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+			}
+			var allowlistPaths []*regexp.Regexp
+			for _, a := range a.Paths {
+				allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+			}
+
+			rule.Allowlists = append(rule.Allowlists, Allowlist{
+				RegexTarget: a.RegexTarget,
 				Regexes:     allowlistRegexes,
 				Paths:       allowlistPaths,
-				Commits:     r.Allowlist.Commits,
-				StopWords:   r.Allowlist.StopWords,
-			},
+				Commits:     a.Commits,
+				StopWords:   a.StopWords,
+			})
 		}
-		if err := r.Validate(); err != nil {
+		if err := rule.Validate(); err != nil {
 			return Config{}, err
 		}
 
-		orderedRules = append(orderedRules, r.RuleID)
-		rulesMap[r.RuleID] = r
+		orderedRules = append(orderedRules, rule.RuleID)
+		rulesMap[rule.RuleID] = rule
 	}
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {

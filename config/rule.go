@@ -41,7 +41,7 @@ type Rule struct {
 
 	// Allowlist allows a rule to be ignored for specific
 	// regexes, paths, and/or commits
-	Allowlist Allowlist
+	Allowlists []Allowlist
 }
 
 // Validate guards against common misconfigurations.
