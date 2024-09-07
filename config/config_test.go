@@ -27,9 +27,11 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Regexes: []*regexp.Regexp{
-							regexp.MustCompile("AKIALALEMEL33243OLIA"),
+					Allowlists: []Allowlist{
+						{
+							Regexes: []*regexp.Regexp{
+								regexp.MustCompile("AKIALALEMEL33243OLIA"),
+							},
 						},
 					},
 				},
@@ -45,8 +47,10 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Commits: []string{"allowthiscommit"},
+					Allowlists: []Allowlist{
+						{
+							Commits: []string{"allowthiscommit"},
+						},
 					},
 				},
 				},
@@ -61,9 +65,11 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
 					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Paths: []*regexp.Regexp{
-							regexp.MustCompile(".go"),
+					Allowlists: []Allowlist{
+						{
+							Paths: []*regexp.Regexp{
+								regexp.MustCompile(".go"),
+							},
 						},
 					},
 				},
@@ -77,7 +83,7 @@ func TestTranslate(t *testing.T) {
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
 					RuleID:      "discord-api-key",
-					Allowlist:   Allowlist{},
+					Allowlists:  []Allowlist{},
 					Entropy:     3.5,
 					SecretGroup: 3,
 					Tags:        []string{},

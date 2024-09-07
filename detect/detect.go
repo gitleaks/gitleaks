@@ -215,9 +215,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	var findings []report.Finding
 
 	// check if filepath or commit is allowed for this rule
-	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) ||
-		rule.Allowlist.PathAllowed(fragment.FilePath) {
-		return findings
+	for _, a := range rule.Allowlists {
+		if a.CommitAllowed(fragment.CommitSHA) || a.PathAllowed(fragment.FilePath) {
+			return findings
+		}
 	}
 
 	if rule.Path != nil && rule.Regex == nil {
@@ -257,6 +258,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	}
 
 	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
+MatchLoop:
 	for _, matchIndex := range matchIndices {
 		// extract secret from match
 		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
@@ -319,14 +321,6 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry
-		allowlistTarget := finding.Secret
-		switch rule.Allowlist.RegexTarget {
-		case "match":
-			allowlistTarget = finding.Match
-		case "line":
-			allowlistTarget = finding.Line
-		}
-
 		globalAllowlistTarget := finding.Secret
 		switch d.Config.Allowlist.RegexTarget {
 		case "match":
@@ -334,15 +328,23 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		case "line":
 			globalAllowlistTarget = finding.Line
 		}
-		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
-			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget, "") || d.Config.Allowlist.ContainsStopWord(finding.Secret) {
 			continue
 		}
 
-		// check if the secret is in the list of stopwords
-		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
-			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
-			continue
+		for _, a := range rule.Allowlists {
+			allowlistTarget := finding.Secret
+			switch a.RegexTarget {
+			case "match":
+				allowlistTarget = finding.Match
+			case "line":
+				allowlistTarget = finding.Line
+			}
+
+			// check if the secret is in the list of stopwords
+			if a.RegexAllowed(allowlistTarget, fragment.FilePath) || a.ContainsStopWord(finding.Secret) {
+				continue MatchLoop
+			}
 		}
 
 		// check entropy
