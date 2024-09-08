@@ -4,6 +4,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"regexp"
 )
 
 func VaultServiceToken() *config.Rule {
@@ -14,6 +15,12 @@ func VaultServiceToken() *config.Rule {
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:hvs\.[\w-]{90,120}|s\.(?i:[a-z0-9]{24}))`, false),
 		Entropy:     3.5,
 		Keywords:    []string{"hvs", "s."},
+		Allowlist: config.Allowlist{
+			Regexes: []*regexp.Regexp{
+				// https://github.com/gitleaks/gitleaks/issues/1490#issuecomment-2334166357
+				regexp.MustCompile(`s\.[A-Za-z]{24}`),
+			},
+		},
 	}
 
 	// validate
@@ -29,7 +36,11 @@ func VaultServiceToken() *config.Rule {
 		// Old
 		`  credentials: new AWS.SharedIniFileCredentials({ profile: '<YOUR_PROFILE>' })`,                              // word boundary start
 		`INFO 4 --- [           main] o.s.b.f.s.DefaultListableBeanFactory     : Overriding bean definition for bean`, // word boundary end
-		`s.xxxxxxxxxxxxxxxxxxxxxxxx`, // low entropy
+		`s.xxxxxxxxxxxxxxxxxxxxxxxx`,        // low entropy
+		`s.THISSTRINGISALLUPPERCASE`,        // uppercase
+		`s.thisstringisalllowercase`,        // lowercase
+		`s.AcceptanceTimeoutSeconds `,       // pascal-case
+		`s.makeKubeConfigController = args`, // camel-case
 		// New
 		`hvs.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`, // low entropy
 	}
