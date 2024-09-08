@@ -461,7 +461,7 @@ MatchLoop:
 		}
 
 		// check entropy
-		entropy := shannonEntropy(finding.Secret)
+		entropy := ShannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
 		if r.Entropy != 0.0 {
 			// entropy is too low, skip this finding

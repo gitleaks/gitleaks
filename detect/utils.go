@@ -96,12 +96,12 @@ func createScmLink(scmPlatform scm.Platform, remoteUrl string, finding report.Fi
 	}
 }
 
-// shannonEntropy calculates the entropy of data using the formula defined here:
+// ShannonEntropy calculates the entropy of data using the formula defined here:
 // https://en.wiktionary.org/wiki/Shannon_entropy
 // Another way to think about what this is doing is calculating the number of bits
 // needed to on average encode the data. So, the higher the entropy, the more random the data, the
 // more bits needed to encode that data.
-func shannonEntropy(data string) (entropy float64) {
+func ShannonEntropy(data string) (entropy float64) {
 	if data == "" {
 		return 0
 	}

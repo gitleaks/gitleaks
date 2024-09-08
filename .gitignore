@@ -16,6 +16,7 @@ cmd/generate/config/gitleaks.toml
 
 # test results
 testdata/expected/report/*.got.*
+cmd/generate/config/rules/testdata/
 
 # Test binary
 *.out
