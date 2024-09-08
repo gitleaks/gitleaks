@@ -38,6 +38,7 @@ require (
 	github.com/tetratelabs/wazero v1.8.2 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
+	pgregory.net/rapid v1.1.0 // indirect
 )
 
 require (
