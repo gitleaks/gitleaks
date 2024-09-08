@@ -13,7 +13,8 @@ func GitlabPat() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure.",
 		RuleID:      "gitlab-pat",
-		Regex:       regexp.MustCompile(`glpat-[0-9a-zA-Z\-\_]{20}`),
+		Regex:       regexp.MustCompile(`glpat-[\w-]{20}`),
+		Entropy:     2,
 		Keywords:    []string{"glpat-"},
 	}
 
@@ -45,7 +46,8 @@ func GitlabRunnerRegistrationToken() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a GitLab Runner Registration Token, posing a risk to CI/CD pipeline integrity and unauthorized access.",
 		RuleID:      "gitlab-rrt",
-		Regex:       regexp.MustCompile(`GR1348941[0-9a-zA-Z\-\_]{20}`),
+		Regex:       regexp.MustCompile(`GR1348941[\w-]{20}`),
+		Entropy:     2,
 		Keywords:    []string{"GR1348941"},
 	}
 
