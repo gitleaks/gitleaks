@@ -59,14 +59,25 @@ func (r Rule) Validate() error {
 		return fmt.Errorf("rule |id| is missing or empty" + context)
 	}
 
-	// Ensure the rule actually matches something.
-	if r.Regex == nil && r.Path == nil {
-		return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
-	}
+	if r.Regex == nil {
+		// Ensure the rule actually matches something.
+		if r.Path == nil {
+			return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
+		}
+	} else {
+		// Ensure |secretGroup| works.
+		if r.SecretGroup > r.Regex.NumSubexp() {
+			return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+		}
 
-	// Ensure |secretGroup| works.
-	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
-		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+		// Ensure the pattern works as expected.
+		invalid, err := IsBoundaryBesideNonWord(r.Regex.String())
+		if err != nil {
+			return fmt.Errorf("%s: failed to validate regex: %v", r.RuleID, err)
+		}
+		if invalid {
+			return fmt.Errorf("regex contains word boundary (\\b) beside non-word character (i.e., not [A-Za-z0-9_]): %s", r.Regex)
+		}
 	}
 
 	return nil
