@@ -504,7 +504,11 @@ func TestDetect(t *testing.T) {
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
 			cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
-			assert.Equal(t, tt.wantError, err)
+			if tt.wantError != nil {
+				assert.Equal(t, tt.wantError, err)
+			} else {
+				require.NoError(t, err)
+			}
 			d := NewDetector(cfg)
 			d.MaxDecodeDepth = maxDecodeDepth
 			d.baselinePath = tt.baselinePath

@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -70,6 +71,9 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+
+	// Feature flags
+	rootCmd.PersistentFlags().BoolP("experimental-regexpcheck", "", false, "enables experimental regex validations, identifying pattern issues")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -180,6 +184,12 @@ func Execute() {
 }
 
 func Config(cmd *cobra.Command) config.Config {
+	// set experimental feature flag(s)
+	if mustGetBoolFlag(cmd, "experimental-regexpcheck") {
+		logging.Warn().Msgf("using experimental regex validations, updates may contain breaking changes!")
+		flags.EnableExperimentalPatternChecks.Store(true)
+	}
+
 	var vc config.ViperConfig
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
