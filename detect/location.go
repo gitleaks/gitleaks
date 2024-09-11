@@ -52,8 +52,8 @@ func location(fragment Fragment, matchIndex []int) Location {
 		}
 
 		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
-		// if endColumn set to 1 means most likely that rule has detected
-		// a secret that machtes until the end of the line
+		// fixes the bug that a new line from default secretSuffix
+		// leads in the reporting to a false positive in the following line
 		if location.endColumn == 1 {
 			location.endLine -= 1 // -1 because of newline in secretSuffix
 			location.endColumn = prevNewLine - location.startLineIndex
