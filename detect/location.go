@@ -50,6 +50,15 @@ func location(fragment Fragment, matchIndex []int) Location {
 			location.endColumn = (end - prevNewLine)
 			location.endLineIndex = newLineByteIndex
 		}
+
+		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
+		// if endColumn set to 1 means most likely that rule has detected
+		// a secret that machtes until the end of the line
+		if location.endColumn == 1 {
+			location.endLine -= 1 // -1 because of newline in secretSuffix
+			location.endColumn = prevNewLine - location.startLineIndex
+		}
+
 		prevNewLine = pair[0]
 	}
 
