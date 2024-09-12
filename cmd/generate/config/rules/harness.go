@@ -1,8 +1,9 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
+
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -13,7 +14,7 @@ func HarnessApiKey() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account.",
 		RuleID:      "harness-api-key",
-		Regex:       regexp.MustCompile(`(?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}`),
+		Regex:       regexp.MustCompile(`(?:pat|sat)\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}`),
 		Keywords:    []string{"pat.", "sat."},
 	}
 
