@@ -2105,7 +2105,7 @@ keywords = [
 [[rules]]
 id = "harness-api-key"
 description = "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account."
-regex = '''(?:pat|sat)\.[a-zA-Z0-9]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}'''
+regex = '''(?:pat|sat)\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}'''
 keywords = [
     "pat.","sat.",
 ]
