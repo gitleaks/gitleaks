@@ -149,7 +149,7 @@ Flags:
                                       order of precedence:
                                       1. --config/-c
                                       2. env var GITLEAKS_CONFIG
-                                      3. (--source/-s)/.gitleaks.toml
+                                      3. (target path)/.gitleaks.toml
                                       If none of the three options are used, then gitleaks will use the default config
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
