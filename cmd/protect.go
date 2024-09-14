@@ -25,18 +25,17 @@ var protectCmd = &cobra.Command{
 }
 
 func runProtect(cmd *cobra.Command, args []string) {
-	initConfig()
-	var err error
+	source, err := cmd.Flags().GetString("source")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get source")
+	}
+	initConfig(source)
 
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
 
 	exitCode, _ := cmd.Flags().GetInt("exit-code")
 	staged, _ := cmd.Flags().GetBool("staged")
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
 	start := time.Now()
 	detector := Detector(cmd, cfg, source)
 

@@ -88,7 +88,7 @@ func initLog() {
 	}
 }
 
-func initConfig() {
+func initConfig(source string) {
 	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
 	if err != nil {
 		log.Fatal().Msg(err.Error())
@@ -108,10 +108,6 @@ func initConfig() {
 		viper.SetConfigFile(envPath)
 		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
 	} else {
-		source, err := rootCmd.Flags().GetString("source")
-		if err != nil {
-			log.Fatal().Msg(err.Error())
-		}
 		fileInfo, err := os.Stat(source)
 		if err != nil {
 			log.Fatal().Msg(err.Error())

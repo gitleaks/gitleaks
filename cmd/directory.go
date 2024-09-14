@@ -23,7 +23,15 @@ var directoryCmd = &cobra.Command{
 }
 
 func runDirectory(cmd *cobra.Command, args []string) {
-	initConfig()
+	// grab source
+	source := "."
+	if len(args) == 1 {
+		source = args[0]
+		if source == "" {
+			source = "."
+		}
+	}
+	initConfig(source)
 	var (
 		findings []report.Finding
 		err      error
@@ -35,11 +43,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	// start timer
 	start := time.Now()
 
-	// grab source
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not get source")
-	}
+
 	detector := Detector(cmd, cfg, source)
 
 	// set exit code

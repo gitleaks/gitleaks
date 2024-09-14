@@ -46,11 +46,13 @@ var detectCmd = &cobra.Command{
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
-	initConfig()
-	var (
-		findings []report.Finding
-		err      error
-	)
+	source, err := cmd.Flags().GetString("source")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get source")
+	}
+	initConfig(source)
+
+	var findings []report.Finding
 
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
@@ -58,11 +60,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// start timer
 	start := time.Now()
 
-	// grab source
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not get source")
-	}
 	detector := Detector(cmd, cfg, source)
 
 	// set exit code

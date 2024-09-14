@@ -25,11 +25,21 @@ var gitCmd = &cobra.Command{
 }
 
 func runGit(cmd *cobra.Command, args []string) {
-	initConfig()
 	var (
 		findings []report.Finding
 		err      error
 	)
+
+	// grab source
+    source := "."
+    if len(args) == 1 {
+	    source = args[0]
+	if source == "" {
+		source = "."
+	}
+    }
+
+	initConfig(source)
 
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
@@ -38,10 +48,6 @@ func runGit(cmd *cobra.Command, args []string) {
 	start := time.Now()
 
 	// grab source
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not get source")
-	}
 	detector := Detector(cmd, cfg, source)
 
 	// set exit code
