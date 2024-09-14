@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -22,7 +21,7 @@ func GCPServiceAccount() *config.Rule {
 	tps := []string{
 		`"type": "service_account"`,
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }
 
 func GCPAPIKey() *config.Rule {
@@ -30,7 +29,7 @@ func GCPAPIKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gcp-api-key",
 		Description: "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
-		Regex:       utils.GenerateUniqueTokenRegex(`AIza[0-9A-Za-z\\-_]{35}`, true),
+		Regex:       generateUniqueTokenRegex(`AIza[0-9A-Za-z\\-_]{35}`, true),
 
 		Keywords: []string{
 			"AIza",
@@ -39,7 +38,7 @@ func GCPAPIKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("gcp", secrets.NewSecret(`AIza[0-9A-Za-z\\-_]{35}`)),
+		generateSampleSecret("gcp", secrets.NewSecret(`AIza[0-9A-Za-z\\-_]{35}`)),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

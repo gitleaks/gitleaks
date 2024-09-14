@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -19,7 +18,7 @@ func FrameIO() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("frameio", "fio-u-"+secrets.NewSecret(utils.AlphaNumericExtended("64"))),
+		generateSampleSecret("frameio", "fio-u-"+secrets.NewSecret(alphaNumericExtended("64"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

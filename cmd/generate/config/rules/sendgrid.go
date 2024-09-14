@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -11,7 +10,7 @@ func SendGridAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sendgrid-api-token",
 		Description: "Detected a SendGrid API token, posing a risk of unauthorized email service operations and data exposure.",
-		Regex:       utils.GenerateUniqueTokenRegex(`SG\.(?i)[a-z0-9=_\-\.]{66}`, true),
+		Regex:       generateUniqueTokenRegex(`SG\.(?i)[a-z0-9=_\-\.]{66}`, true),
 
 		Keywords: []string{
 			"SG.",
@@ -20,7 +19,7 @@ func SendGridAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("sengridAPIToken", "SG."+secrets.NewSecret(utils.AlphaNumericExtended("66"))),
+		generateSampleSecret("sengridAPIToken", "SG."+secrets.NewSecret(alphaNumericExtended("66"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

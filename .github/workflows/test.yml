@@ -24,3 +24,6 @@ jobs:
 
       - name: Test
         run: make test
+
+      - name: Validate Config
+        run: go generate ./... && git diff --exit-code

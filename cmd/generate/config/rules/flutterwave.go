@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -19,9 +18,9 @@ func FlutterwavePublicKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X"),
+		generateSampleSecret("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }
 
 func FlutterwaveSecretKey() *config.Rule {
@@ -35,9 +34,9 @@ func FlutterwaveSecretKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X"),
+		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("32"))+"-X"),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }
 
 func FlutterwaveEncKey() *config.Rule {
@@ -51,7 +50,7 @@ func FlutterwaveEncKey() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("12"))),
+		generateSampleSecret("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(hex("12"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

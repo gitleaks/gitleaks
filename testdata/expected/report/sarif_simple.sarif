@@ -11,218 +11,254 @@
      "rules": [
       {
        "id": "aws-access-key",
+       "name": "AWS Access Key",
        "shortDescription": {
-        "text": "AWS Access Key"
+        "text": "(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"
        }
       },
       {
        "id": "aws-secret-key",
+       "name": "AWS Secret Key",
        "shortDescription": {
-        "text": "AWS Secret Key"
+        "text": "(?i)aws_(.{0,20})?=?.[\\'\\\"0-9a-zA-Z\\/+]{40}"
        }
       },
       {
        "id": "aws-mws-key",
+       "name": "AWS MWS key",
        "shortDescription": {
-        "text": "AWS MWS key"
+        "text": "amzn\\.mws\\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
        }
       },
       {
        "id": "facebook-secret-key",
+       "name": "Facebook Secret Key",
        "shortDescription": {
-        "text": "Facebook Secret Key"
+        "text": "(?i)(facebook|fb)(.{0,20})?(?-i)['\\\"][0-9a-f]{32}['\\\"]"
        }
       },
       {
        "id": "facebook-client-id",
+       "name": "Facebook Client ID",
        "shortDescription": {
-        "text": "Facebook Client ID"
+        "text": "(?i)(facebook|fb)(.{0,20})?['\\\"][0-9]{13,17}['\\\"]"
        }
       },
       {
        "id": "twitter-secret-key",
+       "name": "Twitter Secret Key",
        "shortDescription": {
-        "text": "Twitter Secret Key"
+        "text": "(?i)twitter(.{0,20})?['\\\"][0-9a-z]{35,44}['\\\"]"
        }
       },
       {
        "id": "twitter-client-id",
+       "name": "Twitter Client ID",
        "shortDescription": {
-        "text": "Twitter Client ID"
+        "text": "(?i)twitter(.{0,20})?['\\\"][0-9a-z]{18,25}['\\\"]"
        }
       },
       {
        "id": "github-pat",
+       "name": "Github Personal Access Token",
        "shortDescription": {
-        "text": "Github Personal Access Token"
+        "text": "ghp_[0-9a-zA-Z]{36}"
        }
       },
       {
        "id": "github-oauth",
+       "name": "Github OAuth Access Token",
        "shortDescription": {
-        "text": "Github OAuth Access Token"
+        "text": "gho_[0-9a-zA-Z]{36}"
        }
       },
       {
        "id": "github-app",
+       "name": "Github App Token",
        "shortDescription": {
-        "text": "Github App Token"
+        "text": "(ghu|ghs)_[0-9a-zA-Z]{36}"
        }
       },
       {
        "id": "github-refresh",
+       "name": "Github Refresh Token",
        "shortDescription": {
-        "text": "Github Refresh Token"
+        "text": "ghr_[0-9a-zA-Z]{76}"
        }
       },
       {
        "id": "linkedin-client",
+       "name": "LinkedIn Client ID",
        "shortDescription": {
-        "text": "LinkedIn Client ID"
+        "text": "(?i)linkedin(.{0,20})?(?-i)[0-9a-z]{12}"
        }
       },
       {
        "id": "linkedin-secret",
+       "name": "LinkedIn Secret Key",
        "shortDescription": {
-        "text": "LinkedIn Secret Key"
+        "text": "(?i)linkedin(.{0,20})?[0-9a-z]{16}"
        }
       },
       {
        "id": "slack",
+       "name": "Slack",
        "shortDescription": {
-        "text": "Slack"
+        "text": "xox[baprs]-([0-9a-zA-Z]{10,48})?"
        }
       },
       {
        "id": "apkey",
+       "name": "Asymmetric Private Key",
        "shortDescription": {
-        "text": "Asymmetric Private Key"
+        "text": "-----BEGIN ((EC|PGP|DSA|RSA|OPENSSH) )?PRIVATE KEY( BLOCK)?-----"
        }
       },
       {
        "id": "google",
+       "name": "Google (GCP) Service Account",
        "shortDescription": {
-        "text": "Google (GCP) Service Account"
+        "text": "\"type\": \"service_account\""
        }
       },
       {
        "id": "google",
+       "name": "Google (GCP) Service Account",
        "shortDescription": {
-        "text": "Google (GCP) Service Account"
+        "text": "\"type\": \"service_account\""
        }
       },
       {
        "id": "heroku",
+       "name": "Heroku API key",
        "shortDescription": {
-        "text": "Heroku API key"
+        "text": "(?i)heroku(.{0,20})?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
        }
       },
       {
        "id": "mailchimp",
+       "name": "MailChimp API key",
        "shortDescription": {
-        "text": "MailChimp API key"
+        "text": "(?i)(mailchimp|mc)(.{0,20})?[0-9a-f]{32}-us[0-9]{1,2}"
        }
       },
       {
        "id": "mailgun",
+       "name": "Mailgun API key",
        "shortDescription": {
-        "text": "Mailgun API key"
+        "text": "((?i)(mailgun|mg)(.{0,20})?)?key-[0-9a-z]{32}"
        }
       },
       {
        "id": "paypal",
+       "name": "PayPal Braintree access token",
        "shortDescription": {
-        "text": "PayPal Braintree access token"
+        "text": "access_token\\$production\\$[0-9a-z]{16}\\$[0-9a-f]{32}"
        }
       },
       {
        "id": "piacatic",
+       "name": "Picatic API key",
        "shortDescription": {
-        "text": "Picatic API key"
+        "text": "sk_live_[0-9a-z]{32}"
        }
       },
       {
        "id": "sendgrid",
+       "name": "SendGrid API Key",
        "shortDescription": {
-        "text": "SendGrid API Key"
+        "text": "SG\\.[\\w_]{16,32}\\.[\\w_]{16,64}"
        }
       },
       {
        "id": "sidekiq-secret",
+       "name": "Sidekiq Secret",
        "shortDescription": {
-        "text": "Sidekiq Secret"
+        "text": "(?i)(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[0-9a-z\\-_\\t .]{0,20})(?:[\\s|']|[\\s|\"]){0,3}(?:=|\u003e|:=|\\|\\|:|\u003c=|=\u003e|:)(?:'|\\\"|\\s|=|\\x60){0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:['|\\\"|\\n|\\r|\\s|\\x60|;]|$)"
        }
       },
       {
        "id": "sidekiq-sensitive-url",
+       "name": "Sidekiq Sensitive URL",
        "shortDescription": {
-        "text": "Sidekiq Sensitive URL"
+        "text": "(?i)\\b(http(?:s??):\\/\\/)([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\\/|\\#|\\?|:]|$)"
        }
       },
       {
        "id": "slack-webhook",
+       "name": "Slack Webhook",
        "shortDescription": {
-        "text": "Slack Webhook"
+        "text": "https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8,12}/[a-zA-Z0-9_]{24}"
        }
       },
       {
        "id": "stripe",
+       "name": "Stripe API key",
        "shortDescription": {
-        "text": "Stripe API key"
+        "text": "(?i)stripe(.{0,20})?[sr]k_live_[0-9a-zA-Z]{24}"
        }
       },
       {
        "id": "square",
+       "name": "Square access token",
        "shortDescription": {
-        "text": "Square access token"
+        "text": "sq0atp-[0-9A-Za-z\\-_]{22}"
        }
       },
       {
        "id": "square-oauth",
+       "name": "Square OAuth secret",
        "shortDescription": {
-        "text": "Square OAuth secret"
+        "text": "sq0csp-[0-9A-Za-z\\-_]{43}"
        }
       },
       {
        "id": "twilio",
+       "name": "Twilio API key",
        "shortDescription": {
-        "text": "Twilio API key"
+        "text": "(?i)twilio(.{0,20})?SK[0-9a-f]{32}"
        }
       },
       {
        "id": "dynatrace",
+       "name": "Dynatrace ttoken",
        "shortDescription": {
-        "text": "Dynatrace ttoken"
+        "text": "dt0[a-zA-Z]{1}[0-9]{2}\\.[A-Z0-9]{24}\\.[A-Z0-9]{64}"
        }
       },
       {
        "id": "shopify",
+       "name": "Shopify shared secret",
        "shortDescription": {
-        "text": "Shopify shared secret"
+        "text": "shpss_[a-fA-F0-9]{32}"
        }
       },
       {
        "id": "shopify-access",
+       "name": "Shopify access token",
        "shortDescription": {
-        "text": "Shopify access token"
+        "text": "shpat_[a-fA-F0-9]{32}"
        }
       },
       {
        "id": "shopify-custom",
+       "name": "Shopify custom app access token",
        "shortDescription": {
-        "text": "Shopify custom app access token"
+        "text": "shpca_[a-fA-F0-9]{32}"
        }
       },
       {
        "id": "shopify-private",
+       "name": "Shopify private app access token",
        "shortDescription": {
-        "text": "Shopify private app access token"
+        "text": "shppa_[a-fA-F0-9]{32}"
        }
       },
       {
        "id": "pypi",
+       "name": "PyPI upload token",
        "shortDescription": {
-        "text": "PyPI upload token"
+        "text": "pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}"
        }
       }
      ]

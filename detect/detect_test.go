@@ -295,7 +295,7 @@ func TestDetect(t *testing.T) {
 				FilePath: "tmp.go",
 			},
 			expectedFindings: []report.Finding{},
-			wantError:        fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
+			wantError:        fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "simple",

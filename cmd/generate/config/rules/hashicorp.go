@@ -2,32 +2,26 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func HashiCorpTerraform() *config.Rule {
+func Hashicorp() *config.Rule {
 	// define rule
 	r := config.Rule{
 		Description: "Uncovered a HashiCorp Terraform user/org API token, which may lead to unauthorized infrastructure management and security breaches.",
 		RuleID:      "hashicorp-tf-api-token",
-		Regex:       regexp.MustCompile(`(?i)[a-z0-9]{14}\.(?-i:atlasv1)\.[a-z0-9\-_=]{60,70}`),
-		Entropy:     3.5,
+		Regex:       regexp.MustCompile(`(?i)[a-z0-9]{14}\.atlasv1\.[a-z0-9\-_=]{60,70}`),
 		Keywords:    []string{"atlasv1"},
 	}
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("hashicorpToken", secrets.NewSecret(utils.Hex("14"))+".atlasv1."+secrets.NewSecret(utils.AlphaNumericExtended("60,70"))),
-		`#token = "hE1hlYILrSqpqh.atlasv1.ARjZuyzl33F71WR55s6ln5GQ1HWIwTDDH3MiRjz7OnpCfaCb1RCF5zGaSncCWmJdcYA"`,
+		generateSampleSecret("hashicorpToken", secrets.NewSecret(hex("14"))+".atlasv1."+secrets.NewSecret(alphaNumericExtended("60,70"))),
 	}
-	fps := []string{
-		`token        = "xxxxxxxxxxxxxx.atlasv1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`, // low entropy
-	}
-	return utils.Validate(r, tps, fps)
+	return validate(r, tps, nil)
 }
 
 func HashicorpField() *config.Rule {
@@ -36,9 +30,9 @@ func HashicorpField() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches.",
 		RuleID:      "hashicorp-tf-password",
-		Regex:       utils.GenerateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, utils.AlphaNumericExtended("8,20")), true),
+		Regex:       generateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, alphaNumericExtended("8,20")), true),
 		Keywords:    keywords,
-		Path:        regexp.MustCompile(`(?i)\.(?:tf|hcl)$`),
+		Path:        regexp.MustCompile(`\.(tf|hcl)$`),
 	}
 
 	tps := map[string]string{
@@ -53,5 +47,5 @@ func HashicorpField() *config.Rule {
 		"unrelated.js": "password       = " + `"rootpasswd"`,
 	}
 
-	return utils.ValidateWithPaths(r, tps, fps)
+	return validateWithPaths(r, tps, fps)
 }

@@ -3,7 +3,6 @@ package rules
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -14,7 +13,7 @@ func JWT() *config.Rule {
 	r := config.Rule{
 		Description: "Uncovered a JSON Web Token, which may lead to unauthorized access to web applications and sensitive user data.",
 		RuleID:      "jwt",
-		Regex:       utils.GenerateUniqueTokenRegex(`ey[a-zA-Z0-9]{17,}\.ey[a-zA-Z0-9\/\\_-]{17,}\.(?:[a-zA-Z0-9\/\\_-]{10,}={0,2})?`, false),
+		Regex:       generateUniqueTokenRegex(`ey[a-zA-Z0-9]{17,}\.ey[a-zA-Z0-9\/\\_-]{17,}\.(?:[a-zA-Z0-9\/\\_-]{10,}={0,2})?`, false),
 		Keywords:    []string{"ey"},
 	}
 
@@ -62,7 +61,7 @@ func JWT() *config.Rule {
 		`# Req: Invoke-RestMethod -Uri 'http://localhost:8085/users' -Headers @{ 'X-API-KEY' = 'eyJhbGciOiJub25lIn0.eyJ1c2VybmFtZSI6Im1vcnR5Iiwic3ViIjoiMTIzIn0.' }`, // gitleaks:allow
 	}
 	fps := []string{}
-	return utils.Validate(r, tps, fps)
+	return validate(r, tps, fps)
 }
 
 func JWTBase64() *config.Rule {
@@ -110,7 +109,7 @@ vHVobJ8A
 =mIC1
 -----END PGP PUBLIC KEY BLOCK-----`,
 	}
-	return utils.Validate(r, tps, fps)
+	return validate(r, tps, fps)
 }
 
 func generateTestValues() []string {

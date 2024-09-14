@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -19,7 +18,7 @@ func Twilio() *config.Rule {
 
 	// validate
 	tps := []string{
-		"twilioAPIKey := \"SK" + secrets.NewSecret(utils.Hex("32")) + "\"",
+		"twilioAPIKey := \"SK" + secrets.NewSecret(hex("32")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -11,7 +10,7 @@ func LaunchDarklyAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "launchdarkly-access-token",
 		Description: "Uncovered a Launchdarkly Access Token, potentially compromising feature flag management and application functionality.",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"launchdarkly"}, utils.AlphaNumericExtended("40"), true),
+		Regex:       generateSemiGenericRegex([]string{"launchdarkly"}, alphaNumericExtended("40"), true),
 
 		Keywords: []string{
 			"launchdarkly",
@@ -20,7 +19,7 @@ func LaunchDarklyAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("launchdarkly", secrets.NewSecret(utils.AlphaNumericExtended("40"))),
+		generateSampleSecret("launchdarkly", secrets.NewSecret(alphaNumericExtended("40"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

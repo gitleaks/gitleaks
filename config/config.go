@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -126,8 +127,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			configPathRegex = regexp.MustCompile(r.Path)
 		}
 		r := Rule{
-			RuleID:      r.ID,
 			Description: r.Description,
+			RuleID:      r.ID,
 			Regex:       configRegex,
 			Path:        configPathRegex,
 			SecretGroup: r.SecretGroup,
@@ -143,11 +144,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords:   r.Allowlist.StopWords,
 			},
 		}
-		if err := r.Validate(); err != nil {
-			return Config{}, err
-		}
-
 		orderedRules = append(orderedRules, r.RuleID)
+
+		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
+			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
+		}
 		rulesMap[r.RuleID] = r
 	}
 	var allowlistRegexes []*regexp.Regexp

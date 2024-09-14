@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -10,7 +9,7 @@ func HubSpot() *config.Rule {
 	r := config.Rule{
 		Description: "Found a HubSpot API Token, posing a risk to CRM data integrity and unauthorized marketing operations.",
 		RuleID:      "hubspot-api-key",
-		Regex: utils.GenerateSemiGenericRegex([]string{"hubspot"},
+		Regex: generateSemiGenericRegex([]string{"hubspot"},
 			`[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}`, true),
 
 		Keywords: []string{"hubspot"},
@@ -20,5 +19,5 @@ func HubSpot() *config.Rule {
 	tps := []string{
 		`const hubspotKey = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

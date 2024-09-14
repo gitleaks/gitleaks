@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -11,7 +10,7 @@ func FinnhubAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "finnhub-access-token",
 		Description: "Found a Finnhub Access Token, risking unauthorized access to financial market data and analytics.",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"finnhub"}, utils.AlphaNumeric("20"), true),
+		Regex:       generateSemiGenericRegex([]string{"finnhub"}, alphaNumeric("20"), true),
 
 		Keywords: []string{
 			"finnhub",
@@ -20,7 +19,7 @@ func FinnhubAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("finnhub", secrets.NewSecret(utils.AlphaNumeric("20"))),
+		generateSampleSecret("finnhub", secrets.NewSecret(alphaNumeric("20"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }

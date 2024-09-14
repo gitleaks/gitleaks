@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,8 +17,8 @@ func ShopifySharedSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifySecret := \"shpss_" + secrets.NewSecret(utils.Hex("32")) + "\""}
-	return utils.Validate(r, tps, nil)
+	tps := []string{"shopifySecret := \"shpss_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps, nil)
 }
 
 func ShopifyAccessToken() *config.Rule {
@@ -32,8 +31,8 @@ func ShopifyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shpat_" + secrets.NewSecret(utils.Hex("32")) + "\""}
-	return utils.Validate(r, tps, nil)
+	tps := []string{"shopifyToken := \"shpat_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps, nil)
 }
 
 func ShopifyCustomAccessToken() *config.Rule {
@@ -46,8 +45,8 @@ func ShopifyCustomAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shpca_" + secrets.NewSecret(utils.Hex("32")) + "\""}
-	return utils.Validate(r, tps, nil)
+	tps := []string{"shopifyToken := \"shpca_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps, nil)
 }
 
 func ShopifyPrivateAppAccessToken() *config.Rule {
@@ -60,6 +59,6 @@ func ShopifyPrivateAppAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"shopifyToken := \"shppa_" + secrets.NewSecret(utils.Hex("32")) + "\""}
-	return utils.Validate(r, tps, nil)
+	tps := []string{"shopifyToken := \"shppa_" + secrets.NewSecret(hex("32")) + "\""}
+	return validate(r, tps, nil)
 }

@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -18,7 +17,7 @@ func InfracostAPIToken() *config.Rule {
 		// Regex capture group for the actual secret
 
 		// Regex used for detecting secrets. See regex section below for more details
-		Regex: utils.GenerateUniqueTokenRegex(`ico-[a-zA-Z0-9]{32}`, true),
+		Regex: generateUniqueTokenRegex(`ico-[a-zA-Z0-9]{32}`, true),
 
 		// Keywords used for string matching on fragments (think of this as a prefilter)
 		Keywords: []string{"ico-"},
@@ -26,7 +25,7 @@ func InfracostAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}")),
+		generateSampleSecret("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}")),
 	}
-	return utils.Validate(r, tps, nil)
+	return validate(r, tps, nil)
 }
