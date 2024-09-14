@@ -1,6 +1,7 @@
 package report
 
 import (
+	"encoding/json"
 	"math"
 	"strings"
 )
@@ -29,6 +30,15 @@ func (v VerificationStatus) String() string {
 		"ConfirmedInvalid",
 		"ConfirmedValid",
 	}[v]
+}
+
+func (v VerificationStatus) MarshalJSON() ([]byte, error) {
+	// If a finding doesn't support verification, use an empty string
+	// to be consistent with how other fields work.
+	if v == NotSupported {
+		return json.Marshal("")
+	}
+	return json.Marshal(v.String())
 }
 
 // Finding contains information about strings that
