@@ -21,7 +21,7 @@ var stdInCmd = &cobra.Command{
 }
 
 func runStdIn(cmd *cobra.Command, args []string) {
-	initConfig()
+	initConfig(".")
 	var (
 		findings []report.Finding
 		err      error
