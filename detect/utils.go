@@ -81,9 +81,6 @@ func filter(findings []report.Finding, redact uint) []report.Finding {
 			}
 		}
 
-		if redact > 0 {
-			f.Redact(redact)
-		}
 		if include {
 			retFindings = append(retFindings, f)
 		}

@@ -216,7 +216,17 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			findings = append(findings, d.detectRule(fragment, rule)...)
 		}
 	}
-	return d.Verify(filter(findings, d.Redact))
+	return d.redactAll(d.Verify(filter(findings, d.Redact)))
+}
+
+// TODO this could probably be optimized.
+func (d *Detector) redactAll(findings []report.Finding) []report.Finding {
+	redactedFindings := make([]report.Finding, len(findings))
+	for i, finding := range findings {
+		finding.Redact(d.Redact)
+		redactedFindings[i] = finding
+	}
+	return redactedFindings
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings

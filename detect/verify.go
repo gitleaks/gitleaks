@@ -2,11 +2,12 @@ package detect
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -24,16 +25,17 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	// build lookups.
 	findingsByRuleID := map[string][]report.Finding{}
 	verifiableFindings := []*report.Finding{} // Requires pointer for in-place updates.
-	unverifiableFindings := []report.Finding{}
+	retFindings := []report.Finding{}
 	for _, f := range findings {
 		// add finding to lookup
 		findingsByRuleID[f.RuleID] = append(findingsByRuleID[f.RuleID], f)
 
 		// this should always return a valid rule
 		rule := d.Config.Rules[f.RuleID]
+
 		// if rule.Verify is empty, continue
 		if rule.Verify.URL == "" {
-			unverifiableFindings = append(unverifiableFindings, f)
+			retFindings = append(retFindings, f)
 			continue
 		}
 
@@ -168,9 +170,9 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 
 	// append verified findings to findings. Filter will remove duplicates
 	for _, f := range verifiableFindings {
-		unverifiableFindings = append(unverifiableFindings, *f)
+		retFindings = append(retFindings, *f)
 	}
-	return unverifiableFindings
+	return retFindings
 }
 
 // This function generates all combinations of header values
