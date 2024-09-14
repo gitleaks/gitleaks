@@ -217,10 +217,15 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		}
 	}
 
-	if d.Redact > 0 {
-		return d.redactAll(d.Verify(filter(findings, d.Redact)))
+	// Deduplicate findings and apply optional processing (verification, redaction).
+	findings = filter(findings)
+	if d.EnableExperimentalVerification {
+		findings = d.Verify(findings)
 	}
-	return d.Verify(filter(findings, d.Redact))
+	if d.Redact > 0 {
+		findings = d.redactAll(findings)
+	}
+	return findings
 }
 
 // TODO this could probably be optimized.

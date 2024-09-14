@@ -17,10 +17,6 @@ var validatorReplaceRegex = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
 // Verify will iterate through findings and Verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-	if !d.EnableExperimentalVerification {
-		return findings
-	}
-
 	client := &http.Client{}
 	// build lookups.
 	findingsByRuleID := map[string][]report.Finding{}
