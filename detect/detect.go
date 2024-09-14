@@ -216,7 +216,11 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			findings = append(findings, d.detectRule(fragment, rule)...)
 		}
 	}
-	return d.redactAll(d.Verify(filter(findings, d.Redact)))
+
+	if d.Redact > 0 {
+		return d.redactAll(d.Verify(filter(findings, d.Redact)))
+	}
+	return d.Verify(filter(findings, d.Redact))
 }
 
 // TODO this could probably be optimized.
