@@ -113,7 +113,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed to construct verification request")
-						f.Status = report.Unknown
+						f.Status = report.Error
 						f.StatusReason = err.Error()
 						continue
 					}
@@ -129,7 +129,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed send verification request")
-						f.Status = report.Unknown
+						f.Status = report.Error
 						f.StatusReason = err.Error()
 						continue
 					}

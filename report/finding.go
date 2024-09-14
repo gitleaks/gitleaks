@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// VerificationStatus has four distinct states: NotVerified, Unknown, ConfirmedInactive, and ConfirmedActive.
+// VerificationStatus has four distinct states: NotSupported, Error, ConfirmedInvalid, and ConfirmedValid.
 // This explicitly differentiates between findings that don't support verification,
 // and the potential outcomes of verification.
 type VerificationStatus int
@@ -14,8 +14,8 @@ type VerificationStatus int
 const (
 	// NotSupported indicates that the finding cannot be verified.
 	NotSupported VerificationStatus = iota
-	// Unknown indicates that an error occurred.
-	Unknown
+	// Error indicates that an error occurred.
+	Error
 	// ConfirmedInvalid indicates that the secret did not match the expected status and body.
 	ConfirmedInvalid
 	// ConfirmedValid indicates that the secret matched the expected status and body.
@@ -25,7 +25,7 @@ const (
 func (v VerificationStatus) String() string {
 	return [...]string{
 		"NotSupported",
-		"Unknown",
+		"Error",
 		"ConfirmedInvalid",
 		"ConfirmedValid",
 	}[v]

@@ -157,7 +157,7 @@ func printFinding(f report.Finding, noColor bool) {
 		switch f.Status {
 		case report.NotSupported:
 			statusMsg = "N/A"
-		case report.Unknown:
+		case report.Error:
 			statusMsg = "Verification failed"
 		case report.ConfirmedInvalid:
 			statusMsg = "Invalid"
