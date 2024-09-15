@@ -1,0 +1,22 @@
+title = "gitleaks config"
+
+# Create a GitHub OAuth application
+# https://github.com/settings/applications/new
+[[rules]]
+id = "github-client-id"
+regex = '''(?i)\b([a-z0-9]{20})\b'''
+entropy = 1
+report = false
+
+[[rules]]
+id = "github-client-secret"
+regex = '''\b([a-f0-9]{40})\b'''
+entropy = 1
+[rules.verify]
+requires = ["github-client-id"]
+url = "https://api.github.com/rate_limit"
+httpVerb = "GET"
+expectedStatus = [
+    "200",
+]
+headers = {Accept = "application/vnd.github+json", Authorization = '''Basic ${base64("${github-client-id}:${github-client-secret}")}''', X-GitHub-Api-Version = "2022-11-28"}

@@ -5,9 +5,9 @@ import (
 	"io"
 )
 
-func writeJson(findings []Finding, w io.WriteCloser) error {
+func writeJson(findings []*Finding, w io.WriteCloser) error {
 	if len(findings) == 0 {
-		findings = []Finding{}
+		findings = []*Finding{}
 	}
 	defer w.Close()
 

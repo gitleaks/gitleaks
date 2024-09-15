@@ -6,8 +6,7 @@ import (
 	"strings"
 )
 
-// VerificationStatus has four distinct states: NotSupported, Error, ConfirmedInvalid, and ConfirmedValid.
-// This explicitly differentiates between findings that don't support verification,
+// VerificationStatus explicitly differentiates between findings that don't support verification,
 // and the potential outcomes of verification.
 type VerificationStatus int
 
@@ -17,6 +16,8 @@ const (
 	NotSupported VerificationStatus = iota
 	// Error indicates that an error occurred.
 	Error
+	// Skipped indicates that verification wasn't attempted, for some reason.
+	Skipped
 	// ConfirmedInvalid indicates that the secret did not match the expected status and body.
 	ConfirmedInvalid
 	// ConfirmedValid indicates that the secret matched the expected status and body.
@@ -27,6 +28,7 @@ func (v VerificationStatus) String() string {
 	return [...]string{
 		"NotSupported",
 		"Error",
+		"Skipped",
 		"ConfirmedInvalid",
 		"ConfirmedValid",
 	}[v]
@@ -81,6 +83,7 @@ type Finding struct {
 	// TODO: Ensure this serializes properly
 	Status       VerificationStatus
 	StatusReason string
+	Attributes   map[string]string `json:"-"`
 }
 
 // Redact removes sensitive information from a finding.

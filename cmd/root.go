@@ -283,10 +283,11 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	return detector
 }
 
-func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg config.Config, exitCode int, start time.Time, err error) {
+func findingSummaryAndExit(findings []*report.Finding, cmd *cobra.Command, cfg config.Config, exitCode int, start time.Time, err error) {
 	if err == nil {
 		log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
+			// TODO: Handle non-reported findings
 			log.Warn().Msgf("leaks found: %d", len(findings))
 		} else {
 			log.Info().Msg("no leaks found")

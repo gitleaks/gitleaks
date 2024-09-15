@@ -41,5 +41,19 @@ type Rule struct {
 	// regexes, paths, and/or commits
 	Allowlist Allowlist
 
+	// Report indicates whether the rule should be scanned/reported.
+	// This defaults to 'true' but can be set to 'false' for multi-part secret verification.
+	Report bool
 	Verify Verify
+}
+
+type Verify struct {
+	Requires             map[string]struct{}
+	URL                  string
+	Headers              map[string]string
+	Description          string
+	ExpectedStatus       []string
+	ExpectedBodyContains []string
+	UseDefault           bool
+	HTTPVerb             string
 }

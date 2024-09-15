@@ -1,0 +1,7 @@
+title = "gitleaks config"
+
+[[rules]]
+id = "azure-client-secret"
+regex = '''foo'''
+[rules.verify]
+requires = ["azure-client-id"]

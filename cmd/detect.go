@@ -26,7 +26,7 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	initConfig()
 	var (
-		findings []report.Finding
+		findings []*report.Finding
 		err      error
 	)
 

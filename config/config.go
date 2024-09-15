@@ -35,7 +35,17 @@ type ViperConfig struct {
 		Keywords    []string
 		Path        string
 		Tags        []string
-		Verify      Verify
+		Report      *bool
+		Verify      struct {
+			Requires             []string
+			URL                  string
+			Headers              map[string]string
+			Description          string
+			ExpectedStatus       []string
+			ExpectedBodyContains []string
+			UseDefault           bool
+			HTTPVerb             string
+		}
 
 		Allowlist struct {
 			RegexTarget string
@@ -75,22 +85,14 @@ type Extend struct {
 	UseDefault bool
 }
 
-type Verify struct {
-	URL                  string
-	Headers              map[string]string
-	Description          string
-	ExpectedStatus       []string
-	ExpectedBodyContains []string
-	UseDefault           bool
-	HTTPVerb             string
-}
-
 func (vc *ViperConfig) Translate() (Config, error) {
 	var (
 		keywords     []string
 		orderedRules []string
+
+		rulesMap         = make(map[string]Rule)
+		ruleDependencies = make(map[string]map[string]struct{})
 	)
-	rulesMap := make(map[string]Rule)
 
 	for _, r := range vc.Rules {
 		var allowlistRegexes []*regexp.Regexp
@@ -126,7 +128,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		} else {
 			configPathRegex = regexp.MustCompile(r.Path)
 		}
-		r := Rule{
+		rule := Rule{
 			Description: r.Description,
 			RuleID:      r.ID,
 			Regex:       configRegex,
@@ -135,7 +137,15 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Entropy:     r.Entropy,
 			Tags:        r.Tags,
 			Keywords:    r.Keywords,
-			Verify:      r.Verify,
+			Verify: Verify{
+				HTTPVerb:             r.Verify.HTTPVerb,
+				URL:                  r.Verify.URL,
+				Headers:              r.Verify.Headers,
+				Description:          r.Verify.Description,
+				ExpectedStatus:       r.Verify.ExpectedStatus,
+				ExpectedBodyContains: r.Verify.ExpectedBodyContains,
+				UseDefault:           r.Verify.UseDefault,
+			},
 			Allowlist: Allowlist{
 				RegexTarget: r.Allowlist.RegexTarget,
 				Regexes:     allowlistRegexes,
@@ -144,13 +154,34 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords:   r.Allowlist.StopWords,
 			},
 		}
-		orderedRules = append(orderedRules, r.RuleID)
-
-		if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
-			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", r.Description, r.SecretGroup, r.Regex.NumSubexp())
+		if r.Report == nil || *r.Report {
+			rule.Report = true
 		}
-		rulesMap[r.RuleID] = r
+		if len(r.Verify.Requires) > 0 {
+			rule.Verify.Requires = make(map[string]struct{})
+			ruleDependencies[rule.RuleID] = make(map[string]struct{})
+			for _, r := range r.Verify.Requires {
+				ruleDependencies[rule.RuleID][r] = struct{}{}
+				rule.Verify.Requires[r] = struct{}{}
+			}
+		}
+		orderedRules = append(orderedRules, rule.RuleID)
+
+		if rule.Regex != nil && rule.SecretGroup > rule.Regex.NumSubexp() {
+			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", rule.Description, rule.SecretGroup, rule.Regex.NumSubexp())
+		}
+		rulesMap[rule.RuleID] = rule
 	}
+
+	// Validate IDs in |verify.requires|.
+	for ruleID, requiredIDs := range ruleDependencies {
+		for requiredID := range requiredIDs {
+			if _, ok := rulesMap[requiredID]; !ok {
+				return Config{}, fmt.Errorf("%s: required rule ID '%s' does not exist", ruleID, requiredID)
+			}
+		}
+	}
+
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {
 		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))

@@ -113,3 +113,23 @@ func TestValidate(t *testing.T) {
 		// assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
+
+func Test_encodeBase64(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "a",
+			input: `Basic ${base64("${github-client-id}:${github-client-secret}")}`,
+			want:  `a`,
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, encodeBase64(tt.input), "encodeBase64(%v)", tt.input)
+		})
+	}
+}

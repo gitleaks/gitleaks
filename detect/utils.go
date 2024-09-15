@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"encoding/json"
 	// "encoding/json"
 	"fmt"
 	"math"
@@ -17,7 +18,7 @@ import (
 
 // augmentGitFinding updates the start and end line numbers of a finding to include the
 // delta from the git diff
-func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
+func augmentGitFinding(finding *report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) *report.Finding {
 	if !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)
 		finding.EndLine += int(textFragment.NewPosition)
@@ -60,8 +61,8 @@ func shannonEntropy(data string) (entropy float64) {
 }
 
 // filter will dedupe and redact findings
-func filter(findings []report.Finding) []report.Finding {
-	var retFindings []report.Finding
+func filter(findings []*report.Finding) []*report.Finding {
+	var retFindings []*report.Finding
 	for _, f := range findings {
 		include := true
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
@@ -88,7 +89,7 @@ func filter(findings []report.Finding) []report.Finding {
 	return retFindings
 }
 
-func printFinding(f report.Finding, noColor bool) {
+func printFinding(f *report.Finding, noColor bool) {
 	// trim all whitespace and tabs
 	f.Line = strings.TrimSpace(f.Line)
 	f.Secret = strings.TrimSpace(f.Secret)
@@ -145,23 +146,33 @@ func printFinding(f report.Finding, noColor bool) {
 		finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
 	}
 
+	var attributes string
+	if len(f.Attributes) > 0 {
+		a, _ := json.Marshal(f.Attributes)
+		attributes = string(a)
+	}
 	if skipColor || isFileMatch {
 		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
 		fmt.Printf("%-12s %s\n", "Secret:", f.Secret)
-		fmt.Printf("%-12s %v\n", "Verified:", f.Status.String())
+		fmt.Printf("%-12s %s\n", "Attributes:", attributes)
+		fmt.Printf("%-12s %v\n", "Status:", f.Status.String())
 	} else {
 		fmt.Printf("%-12s %s", "Finding:", finding)
 		fmt.Printf("%-12s %s\n", "Secret:", secret)
 
+		// TODO: Refactor this to work for non-colour.
 		var statusMsg any
 		switch f.Status {
 		case report.NotSupported:
 			statusMsg = "N/A"
 		case report.Error:
 			statusMsg = "Verification failed"
+		case report.Skipped:
+			statusMsg = "Verification skipped"
 		case report.ConfirmedInvalid:
 			statusMsg = "Invalid"
 		case report.ConfirmedValid:
+			fmt.Printf("%-12s %s\n", "Attributes:", attributes)
 			// set verified to green
 			statusMsg = lipgloss.NewStyle().SetString("Valid ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
 		}
