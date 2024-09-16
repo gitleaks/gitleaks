@@ -8,10 +8,10 @@ import (
 )
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
-func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
+func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]*report.Finding, error) {
 	reader := bufio.NewReader(r)
 	buf := make([]byte, 0, 1000*bufSize)
-	findings := []report.Finding{}
+	findings := []*report.Finding{}
 
 	for {
 		n, err := reader.Read(buf[:cap(buf)])

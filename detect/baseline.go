@@ -9,7 +9,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-func IsNew(finding report.Finding, baseline []report.Finding) bool {
+func IsNew(finding *report.Finding, baseline []report.Finding) bool {
 	// Explicitly testing each property as it gives significantly better performance in comparison to cmp.Equal(). Drawback is that
 	// the code requires maintenance if/when the Finding struct changes
 	for _, b := range baseline {

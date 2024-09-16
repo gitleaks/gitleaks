@@ -1,12 +1,12 @@
 package report
 
 import (
+	"encoding/json"
 	"math"
 	"strings"
 )
 
-// VerificationStatus has four distinct states: NotVerified, Unknown, ConfirmedInactive, and ConfirmedActive.
-// This explicitly differentiates between findings that don't support verification,
+// VerificationStatus explicitly differentiates between findings that don't support verification,
 // and the potential outcomes of verification.
 type VerificationStatus int
 
@@ -14,8 +14,10 @@ type VerificationStatus int
 const (
 	// NotSupported indicates that the finding cannot be verified.
 	NotSupported VerificationStatus = iota
-	// Unknown indicates that an error occurred.
-	Unknown
+	// Error indicates that an error occurred.
+	Error
+	// Skipped indicates that verification wasn't attempted, for some reason.
+	Skipped
 	// ConfirmedInvalid indicates that the secret did not match the expected status and body.
 	ConfirmedInvalid
 	// ConfirmedValid indicates that the secret matched the expected status and body.
@@ -25,10 +27,20 @@ const (
 func (v VerificationStatus) String() string {
 	return [...]string{
 		"NotSupported",
-		"Unknown",
+		"Error",
+		"Skipped",
 		"ConfirmedInvalid",
 		"ConfirmedValid",
 	}[v]
+}
+
+func (v VerificationStatus) MarshalJSON() ([]byte, error) {
+	// If a finding doesn't support verification, use an empty string
+	// to be consistent with how other fields work.
+	if v == NotSupported {
+		return json.Marshal("")
+	}
+	return json.Marshal(v.String())
 }
 
 // Finding contains information about strings that
@@ -71,6 +83,7 @@ type Finding struct {
 	// TODO: Ensure this serializes properly
 	Status       VerificationStatus
 	StatusReason string
+	Attributes   map[string]string `json:"-"`
 }
 
 // Redact removes sensitive information from a finding.

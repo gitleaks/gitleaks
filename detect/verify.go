@@ -1,7 +1,9 @@
 package detect
 
 import (
+	b64 "encoding/base64"
 	"fmt"
+	"golang.org/x/exp/maps"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -12,20 +14,17 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
+var base64HelperPat = regexp.MustCompile(`\${base64\("(.+?)"\)}`)
 var validatorReplaceRegex = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
 
 // Verify will iterate through findings and Verify them against validation
 // fields defined in the rule
-func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-	if !d.EnableExperimentalVerification {
-		return findings
-	}
-
+func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 	client := &http.Client{}
 	// build lookups.
-	findingsByRuleID := map[string][]report.Finding{}
+	findingsByRuleID := map[string][]*report.Finding{}
 	verifiableFindings := []*report.Finding{} // Requires pointer for in-place updates.
-	retFindings := []report.Finding{}
+	retFindings := []*report.Finding{}
 	for _, f := range findings {
 		// add finding to lookup
 		findingsByRuleID[f.RuleID] = append(findingsByRuleID[f.RuleID], f)
@@ -34,16 +33,22 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 		rule := d.Config.Rules[f.RuleID]
 
 		// if rule.Verify is empty, continue
-		if rule.Verify.URL == "" {
+		if rule.Verify.URL == "" || f.Status == report.Skipped {
 			retFindings = append(retFindings, f)
 			continue
 		}
 
-		verifiableFindings = append(verifiableFindings, &f)
+		verifiableFindings = append(verifiableFindings, f)
 	}
 
 	// iterate through the findings to Verify
 	for _, f := range verifiableFindings {
+		log.Debug().
+			Str("rule-id", f.RuleID).
+			Str("secret", f.Secret).
+			Strs("attributes", maps.Keys(f.Attributes)).
+			Msg("Verifying finding")
+
 		rule := d.Config.Rules[f.RuleID]
 		setsOfHeaders := make(map[string][]string)
 		staticHeaders := make(map[string]string)
@@ -70,13 +75,27 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 			headerMatches := validatorReplaceRegex.FindAllStringSubmatch(v, -1)
 			if len(headerMatches) == 0 {
 				staticHeaders[k] = v
+				continue
 			}
 
 			// Interpolate placeholders like `${github-pat}`.
 			for _, match := range headerMatches {
-				placeholder := match[0]
-				setsOfHeaders[k] = append(setsOfHeaders[k], strings.Replace(v, placeholder, f.Secret, -1))
+				var (
+					placeholder = match[0] // ${github-pat}
+					key         = match[1] // github-pat
+					substitute  = f.Secret // ghp_xxxxxxxxxxx
+				)
+				if key != f.RuleID {
+					substitute = f.Attributes[key]
+				}
+				v = strings.Replace(v, placeholder, substitute, -1)
 			}
+
+			// Interpolate helpers like `${base64("...")}
+			if strings.Contains(v, "${base64(") {
+				v = encodeBase64(v)
+			}
+			setsOfHeaders[k] = append(setsOfHeaders[k], v)
 		}
 
 		// iterate through urls and header combinations
@@ -105,7 +124,10 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 
 				// this is to prevent double counting of findings due to substitutions
 				if !secretInHeaderCombinationOrURL {
-					continue
+					// TODO: re-enable this.
+					// TODO: Check if it's in body as well.
+					// TODO: Handle things like base64-encoding
+					//continue
 				}
 
 				resp, exists := d.VerifyCache.Get(url, headerCombination)
@@ -117,7 +139,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed to construct verification request")
-						f.Status = report.Unknown
+						f.Status = report.Error
 						f.StatusReason = err.Error()
 						continue
 					}
@@ -133,7 +155,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed send verification request")
-						f.Status = report.Unknown
+						f.Status = report.Error
 						f.StatusReason = err.Error()
 						continue
 					}
@@ -159,10 +181,10 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	}
 
 	if d.Verification {
-		verifiedFindings := make([]report.Finding, 0)
+		verifiedFindings := make([]*report.Finding, 0)
 		for _, f := range verifiableFindings {
 			if f.Status == report.ConfirmedValid {
-				verifiedFindings = append(verifiedFindings, *f)
+				verifiedFindings = append(verifiedFindings, f)
 			}
 		}
 		return verifiedFindings
@@ -170,7 +192,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 
 	// append verified findings to findings. Filter will remove duplicates
 	for _, f := range verifiableFindings {
-		retFindings = append(retFindings, *f)
+		retFindings = append(retFindings, f)
 	}
 	return retFindings
 }
@@ -233,4 +255,13 @@ func isValidBody(body string, bodyContains []string) bool {
 		}
 	}
 	return false
+}
+
+func encodeBase64(input string) string {
+	// TODO: write this more efficiently
+	return base64HelperPat.ReplaceAllStringFunc(input, func(s string) string {
+		// Extract the capture group (without base64(...) wrapping)
+		submatch := base64HelperPat.FindStringSubmatch(s)
+		return b64.StdEncoding.EncodeToString([]byte(submatch[1]))
+	})
 }

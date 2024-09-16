@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"golang.org/x/exp/maps"
 	"os"
 	"regexp"
 	"strings"
@@ -66,7 +67,7 @@ type Detector struct {
 	// findings is a slice of report.Findings. This is the result
 	// of the detector's scan which can then be used to generate a
 	// report.
-	findings []report.Finding
+	findings []*report.Finding
 
 	// prefilter is a ahocorasick struct used for doing efficient string
 	// matching given a set of words (keywords from the rules in the config)
@@ -114,7 +115,7 @@ func NewDetector(cfg config.Config) *Detector {
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]bool),
 		findingMutex:   &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
+		findings:       make([]*report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
@@ -164,20 +165,20 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
-func (d *Detector) DetectBytes(content []byte) []report.Finding {
+func (d *Detector) DetectBytes(content []byte) []*report.Finding {
 	return d.DetectString(string(content))
 }
 
 // DetectString scans the given string and returns a list of findings
-func (d *Detector) DetectString(content string) []report.Finding {
+func (d *Detector) DetectString(content string) []*report.Finding {
 	return d.Detect(Fragment{
 		Raw: content,
 	})
 }
 
 // Detect scans the given fragment and returns a list of findings
-func (d *Detector) Detect(fragment Fragment) []report.Finding {
-	var findings []report.Finding
+func (d *Detector) Detect(fragment Fragment) []*report.Finding {
+	var findings []*report.Finding
 
 	// initiate fragment keywords
 	fragment.keywords = make(map[string]bool)
@@ -198,14 +199,23 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 	}
 
+RuleLoop:
 	for _, rule := range d.Config.Rules {
+		var (
+			ruleFindings            []*report.Finding
+			fragmentContainsKeyword = false
+		)
+
+		if !rule.Report {
+			// These rules shouldn't be scanned unless a dependent rule is found in the fragment.
+			continue
+		}
 		if len(rule.Keywords) == 0 {
 			// if not keywords are associated with the rule always scan the
 			// fragment using the rule
-			findings = append(findings, d.detectRule(fragment, rule)...)
-			continue
+			ruleFindings = d.detectRule(fragment, rule)
+			goto RuleLoopEnd
 		}
-		fragmentContainsKeyword := false
 		// check if keywords are in the fragment
 		for _, k := range rule.Keywords {
 			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
@@ -213,19 +223,90 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			}
 		}
 		if fragmentContainsKeyword {
-			findings = append(findings, d.detectRule(fragment, rule)...)
+			ruleFindings = d.detectRule(fragment, rule)
+		}
+
+	RuleLoopEnd:
+		if len(ruleFindings) == 0 {
+			continue
+		}
+
+		findings = append(findings, ruleFindings...)
+
+		// Detect any required rules.
+		requiredRuleIDs := rule.Verify.Requires
+		if len(requiredRuleIDs) == 0 {
+			continue RuleLoop
+		}
+
+		log.Debug().
+			Str("rule-id", rule.RuleID).
+			Strs("required-ids", maps.Keys(requiredRuleIDs)).
+			Msg("Detected multi-part secret, searching for required IDs")
+		for requiredID := range requiredRuleIDs {
+			r := d.Config.Rules[requiredID] // TODO: This should never fail.
+			// TODO: Don't perform duplicate runs of "reported" rules.
+			//if r.Report {
+			//	log.Debug().
+			//		Str("rule-id", rule.RuleID).
+			//		Str("required-id", requiredID).
+			//		Msg("Skipping required rule, it will be searched separately")
+			//	continue
+			//}
+
+			// TODO: Check keywords before running detect.
+			dependentFindings := d.detectRule(fragment, r)
+			if len(dependentFindings) == 0 {
+				log.Debug().
+					Str("rule-id", rule.RuleID).
+					Str("required-id", requiredID).
+					Msg("Skipping verification: no results for required rule")
+				reason := fmt.Sprintf("No match for required rule: %s", requiredID)
+				for _, f := range ruleFindings {
+					f.Status = report.Skipped
+					f.StatusReason = reason
+				}
+				continue RuleLoop
+			} else if len(dependentFindings) != 1 {
+				// TODO: Remove duplicate code
+				log.Debug().
+					Str("rule-id", rule.RuleID).
+					Str("required-id", requiredID).
+					Msg("Skipping verification: multiple results for required rule")
+				reason := fmt.Sprintf("Multiple results for required rule: %s", requiredID)
+				for _, f := range ruleFindings {
+					f.Status = report.Skipped
+					f.StatusReason = reason
+				}
+				continue RuleLoop
+			}
+
+			df := dependentFindings[0]
+			for _, f := range ruleFindings {
+				if f.Attributes == nil {
+					f.Attributes = make(map[string]string)
+				}
+
+				// TODO: This only works with a single match, not multiple. Should it?
+				f.Attributes[df.RuleID] = df.Secret
+			}
 		}
 	}
 
-	if d.Redact > 0 {
-		return d.redactAll(d.Verify(filter(findings, d.Redact)))
+	// Deduplicate findings and apply optional processing (verification, redaction).
+	findings = filter(findings)
+	if d.EnableExperimentalVerification {
+		findings = d.Verify(findings)
 	}
-	return d.Verify(filter(findings, d.Redact))
+	if d.Redact > 0 {
+		findings = d.redactAll(findings)
+	}
+	return findings
 }
 
 // TODO this could probably be optimized.
-func (d *Detector) redactAll(findings []report.Finding) []report.Finding {
-	redactedFindings := make([]report.Finding, len(findings))
+func (d *Detector) redactAll(findings []*report.Finding) []*report.Finding {
+	redactedFindings := make([]*report.Finding, len(findings))
 	for i, finding := range findings {
 		finding.Redact(d.Redact)
 		redactedFindings[i] = finding
@@ -234,8 +315,8 @@ func (d *Detector) redactAll(findings []report.Finding) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Finding {
-	var findings []report.Finding
+func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []*report.Finding {
+	var findings []*report.Finding
 
 	// check if filepath or commit is allowed for this rule
 	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) ||
@@ -246,7 +327,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	if rule.Path != nil && rule.Regex == nil {
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
-			finding := report.Finding{
+			finding := &report.Finding{
 				RuleID:      rule.RuleID,
 				Description: rule.Description,
 				File:        fragment.FilePath,
@@ -294,7 +375,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			loc.endLineIndex = matchIndex[1]
 		}
 
-		finding := report.Finding{
+		finding := &report.Finding{
 			RuleID:      rule.RuleID,
 			Description: rule.Description,
 			File:        fragment.FilePath,
@@ -389,7 +470,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 }
 
 // addFinding synchronously adds a finding to the findings slice
-func (d *Detector) addFinding(finding report.Finding) {
+func (d *Detector) addFinding(finding *report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
 	if finding.Commit != "" {
 		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
@@ -418,7 +499,8 @@ func (d *Detector) addFinding(finding report.Finding) {
 
 	d.findingMutex.Lock()
 	d.findings = append(d.findings, finding)
-	if d.Verbose {
+	// TODO: This is probably bad.
+	if d.Verbose && d.Config.Rules[finding.RuleID].Report {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()

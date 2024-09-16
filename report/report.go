@@ -13,7 +13,7 @@ const (
 	CWE_DESCRIPTION = "Use of Hard-coded Credentials"
 )
 
-func Write(findings []Finding, cfg config.Config, ext string, reportPath string) error {
+func Write(findings []*Finding, cfg config.Config, ext string, reportPath string) error {
 	file, err := os.Create(reportPath)
 	if err != nil {
 		return err

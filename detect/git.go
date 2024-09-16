@@ -7,7 +7,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
-func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
+func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]*report.Finding, error) {
 	defer gitCmd.Wait()
 	diffFilesCh := gitCmd.DiffFilesCh()
 	errCh := gitCmd.ErrCh()
