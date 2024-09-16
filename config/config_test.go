@@ -91,11 +91,11 @@ func TestTranslate(t *testing.T) {
 			cfg:       Config{},
 			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
 		},
-		{
-			cfgName:   "no_regex_or_path",
-			cfg:       Config{},
-			wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
-		},
+		//{
+		//	cfgName:   "no_regex_or_path",
+		//	cfg:       Config{},
+		//	wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
+		//},
 		{
 			cfgName:   "bad_entropy_group",
 			cfg:       Config{},

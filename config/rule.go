@@ -60,10 +60,12 @@ func (r Rule) Validate() error {
 		return fmt.Errorf("rule |id| is missing or empty" + context)
 	}
 
+	// TODO: uncomment this once it works with |extend|.
+	// See: https://github.com/gitleaks/gitleaks/issues/1507#issuecomment-2352559213
 	// Ensure the rule actually matches something.
-	if r.Regex == nil && r.Path == nil {
-		return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
-	}
+	//if r.Regex == nil && r.Path == nil {
+	//	return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
+	//}
 
 	// Ensure |secretGroup| works.
 	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
