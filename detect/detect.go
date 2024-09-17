@@ -295,21 +295,34 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		// (The first element is the full match, hence we check >= 2.)
 		groups := rule.Regex.FindStringSubmatch(finding.Secret)
 		if len(groups) >= 2 {
+			//fmt.Printf("[%s] IdentiferGroup: %d\n", rule.RuleID, rule.IdentifierGroup)
+			if rule.IdentifierGroup > 0 {
+				if len(groups) <= rule.IdentifierGroup {
+					// Config validation should prevent this
+					//fmt.Printf("Groups is less than: %d\n", rule.IdentifierGroup)
+					continue
+				}
+				finding.Identifier = groups[rule.IdentifierGroup]
+			}
+
 			if rule.SecretGroup > 0 {
 				if len(groups) <= rule.SecretGroup {
 					// Config validation should prevent this
 					continue
 				}
-				finding.Secret = groups[rule.SecretGroup]
+				//log.Info().Msgf("Setting secret because SecretGroup>0")
+				finding.Secret = groups[rule.SecretGroup+rule.IdentifierGroup]
 			} else {
 				// If |secretGroup| is not set, we will use the first suitable capture group.
 				if len(groups) == 2 {
+					//log.Info().Msgf("Setting secret because there are only two groups")
 					// Use the only group.
 					finding.Secret = groups[1]
 				} else {
 					// Use the first non-empty group.
 					for _, s := range groups[1:] {
-						if len(s) > 0 {
+						if len(s) > 0 && finding.Identifier != s {
+							//log.Info().Msgf("Setting secret to first non-empty")
 							finding.Secret = s
 							break
 						}
@@ -339,6 +352,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
+		// check if the identifier is in the list of stopwords
+		if finding.Identifier != "" && rule.Allowlist.ContainsIdentifierStopWord(finding.Identifier) {
+			continue
+		}
 		// check if the secret is in the list of stopwords
 		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
 			d.Config.Allowlist.ContainsStopWord(finding.Secret) {

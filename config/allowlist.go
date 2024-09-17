@@ -29,6 +29,10 @@ type Allowlist struct {
 	// Commits is a slice of commit SHAs that are allowed to be ignored.
 	Commits []string
 
+	// IdentifierStopWords is a slice of words that are allowed to be ignored.
+	// This targets the _identifier_, not the match or secret.
+	IdentifierStopWords []string
+
 	// StopWords is a slice of stop words that are allowed to be ignored.
 	// This targets the _secret_, not the content of the regex match like the
 	// Regexes slice.
@@ -56,6 +60,16 @@ func (a *Allowlist) PathAllowed(path string) bool {
 // RegexAllowed returns true if the regex is allowed to be ignored.
 func (a *Allowlist) RegexAllowed(s string) bool {
 	return anyRegexMatch(s, a.Regexes)
+}
+
+func (a *Allowlist) ContainsIdentifierStopWord(s string) bool {
+	s = strings.ToLower(s)
+	for _, stopWord := range a.IdentifierStopWords {
+		if strings.Contains(s, strings.ToLower(stopWord)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *Allowlist) ContainsStopWord(s string) bool {

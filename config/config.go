@@ -131,6 +131,14 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords:   r.Allowlist.StopWords,
 			},
 		}
+		// This is a hacky way to automatically set "IdentifierGroup".
+		if strings.Contains(r.Regex.String(), "(?:=|>|:{1,3}=|\\|\\|:|<=|=>|:|\\?=)") {
+			r.IdentifierGroup = 1
+			log.Info().Str("rule-id", r.RuleID).Msg("Set IdentiferGroup to 1")
+
+		} else {
+			log.Info().Str("rule-id", r.RuleID).Msg("Not setting IdentiferGroup")
+		}
 		if err := r.Validate(); err != nil {
 			return Config{}, err
 		}

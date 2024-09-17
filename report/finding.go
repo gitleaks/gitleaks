@@ -18,6 +18,7 @@ type Finding struct {
 
 	Match string
 
+	Identifier string
 	// Secret contains the full content of what is matched in
 	// the tree-sitter query.
 	Secret string

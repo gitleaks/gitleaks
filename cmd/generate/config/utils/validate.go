@@ -12,6 +12,11 @@ import (
 )
 
 func Validate(r config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+	// This is a hacky way to automatically set "IdentifierGroup".
+	if strings.Contains(r.Regex.String(), "(?:=|>|:{1,3}=|\\|\\|:|<=|=>|:|\\?=)") {
+		r.IdentifierGroup = 1
+	}
+
 	// normalize keywords like in the config package
 	var keywords []string
 	for _, k := range r.Keywords {
@@ -26,7 +31,8 @@ func Validate(r config.Rule, truePositives []string, falsePositives []string) *c
 		Keywords: keywords,
 	})
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) != 1 {
+		m := d.DetectString(tp)
+		if len(m) < 1 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -35,10 +41,13 @@ func Validate(r config.Rule, truePositives []string, falsePositives []string) *c
 		}
 	}
 	for _, fp := range falsePositives {
-		if len(d.DetectString(fp)) != 0 {
+		m := d.DetectString(fp)
+		if len(m) != 0 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
+				Str("identifier", m[0].Identifier).
+				Str("secret", m[0].Secret).
 				Str("regex", r.Regex.String()).
 				Msg("Failed to Validate. False positive was detected by regex.")
 		}
