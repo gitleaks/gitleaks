@@ -46,7 +46,7 @@ keywords = [
 [[rules]]
 id = "adobe-client-secret"
 description = "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation."
-regex = '''(?i)\b((p8e-)(?i)[a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(p8e-[a-zA-Z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "p8e-",
 ]
@@ -78,7 +78,7 @@ keywords = [
 [[rules]]
 id = "alibaba-access-key-id"
 description = "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise."
-regex = '''(?i)\b((LTAI)(?i)[a-z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(LTAI[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "ltai",
 ]
@@ -398,7 +398,7 @@ keywords = [
 [[rules]]
 id = "facebook-access-token"
 description = "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure."
-regex = '''(?i)\b(\d{15,16}(\||%)[0-9a-z\-_]{27,40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b(\d{15,16}[|%][0-9a-z\-_]{27,40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 
 [[rules]]
 id = "facebook-page-access-token"
@@ -2296,7 +2296,7 @@ keywords = [
 [[rules]]
 id = "lob-api-key"
 description = "Uncovered a Lob API Key, which could lead to unauthorized access to mailing and address verification services."
-regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}((live|test)_[a-f0-9]{35})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i:(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}((?:live|test)_[a-fA-F0-9]{35})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "test_","live_",
 ]
@@ -2304,7 +2304,7 @@ keywords = [
 [[rules]]
 id = "lob-pub-api-key"
 description = "Detected a Lob Publishable API Key, posing a risk of exposing mail and print service integrations."
-regex = '''(?i)(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}((test|live)_pub_[a-f0-9]{31})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i:(?:lob)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}((?:test|live)_pub_[a-fA-F0-9]{31})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "test_pub","live_pub","_pub",
 ]
@@ -2320,7 +2320,7 @@ keywords = [
 [[rules]]
 id = "mailgun-private-api-token"
 description = "Found a Mailgun private API token, risking unauthorized email service operations and data breaches."
-regex = '''(?i)(?:mailgun)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}(key-[a-f0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i:(?:mailgun)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}(key-(?i:[a-f0-9]{32}))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "mailgun",
 ]
@@ -2344,7 +2344,7 @@ keywords = [
 [[rules]]
 id = "mapbox-api-token"
 description = "Detected a MapBox API token, posing a risk to geospatial services and sensitive location data exposure."
-regex = '''(?i)(?:mapbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)(?:mapbox)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}((?-i:pk)\.[a-z0-9]{60}\.[a-z0-9]{22})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "mapbox",
 ]
@@ -2376,7 +2376,7 @@ keywords = [
 [[rules]]
 id = "microsoft-teams-webhook"
 description = "Uncovered a Microsoft Teams Webhook, which could lead to unauthorized access to team collaboration tools and data leaks."
-regex = '''https:\/\/[a-z0-9]+\.webhook\.office\.com\/webhookb2\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}\/IncomingWebhook\/[a-z0-9]{32}\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}'''
+regex = '''https:\/\/[a-z0-9]+\.webhook\.office\.com\/webhookb2\/[a-z0-9]{8}-(?:[a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}\/IncomingWebhook\/[a-z0-9]{32}\/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}'''
 keywords = [
     "webhook.office.com","webhookb2","incomingwebhook",
 ]
@@ -2627,7 +2627,7 @@ keywords = [
 [[rules]]
 id = "shippo-api-token"
 description = "Discovered a Shippo API token, potentially compromising shipping services and customer order data."
-regex = '''(?i)\b(shippo_(live|test)_[a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(shippo_(?:live|test)_(?i:[a-f0-9]{40}))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "shippo_",
 ]
@@ -2747,7 +2747,7 @@ keywords = [
 [[rules]]
 id = "slack-webhook-url"
 description = "Discovered a Slack Webhook, which could lead to unauthorized message posting and data leakage in Slack channels."
-regex = '''(https?:\/\/)?hooks.slack.com\/(services|workflows)\/[A-Za-z0-9+\/]{43,46}'''
+regex = '''(?:https?:\/\/)?hooks.slack.com\/(?:services|workflows)\/[A-Za-z0-9+\/]{43,46}'''
 keywords = [
     "hooks.slack.com",
 ]
@@ -2763,7 +2763,7 @@ keywords = [
 [[rules]]
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
-regex = '''(?i)\b((EAAA|sq0atp-)[0-9A-Za-z\-_]{22,60})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b((?:EAAA|sq0atp-)[\w-]{22,60})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "sq0atp-","eaaa",
 ]
@@ -2779,7 +2779,7 @@ keywords = [
 [[rules]]
 id = "stripe-access-token"
 description = "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data."
-regex = '''(?i)\b((sk|rk)_(test|live|prod)_[0-9a-z]{10,99})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b((?:sk|rk)_(?:test|live|prod)_(?i:[0-9a-z]{10,99}))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "sk_test","sk_live","sk_prod","rk_test","rk_live","rk_prod",
 ]

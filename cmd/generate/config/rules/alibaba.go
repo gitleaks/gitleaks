@@ -11,7 +11,7 @@ func AlibabaAccessKey() *config.Rule {
 	r := config.Rule{
 		Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
 		RuleID:      "alibaba-access-key-id",
-		Regex:       utils.GenerateUniqueTokenRegex(`(LTAI)(?i)[a-z0-9]{20}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`LTAI[a-zA-Z0-9]{20}`, false),
 		Keywords:    []string{"LTAI"},
 	}
 
@@ -19,7 +19,10 @@ func AlibabaAccessKey() *config.Rule {
 	tps := []string{
 		"alibabaKey := \"LTAI" + secrets.NewSecret(utils.Hex("20")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"https://mp.weixin.qq.com/s?__biz=ltAiJTIfmTcHF0Z3fohrsVLP&wx_header=1&scene=27#wechat_redirect)",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 // TODO

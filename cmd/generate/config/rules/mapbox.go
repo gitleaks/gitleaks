@@ -11,9 +11,8 @@ func MapBox() *config.Rule {
 	r := config.Rule{
 		Description: "Detected a MapBox API token, posing a risk to geospatial services and sensitive location data exposure.",
 		RuleID:      "mapbox-api-token",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"mapbox"}, `pk\.[a-z0-9]{60}\.[a-z0-9]{22}`, true),
-
-		Keywords: []string{"mapbox"},
+		Regex:       utils.GenerateSemiGenericRegex([]string{"mapbox"}, `(?-i:pk)\.[a-z0-9]{60}\.[a-z0-9]{22}`, true),
+		Keywords:    []string{"mapbox"},
 	}
 
 	// validate

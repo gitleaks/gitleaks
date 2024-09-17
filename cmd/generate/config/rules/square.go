@@ -11,13 +11,13 @@ func SquareAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "square-access-token",
 		Description: "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure.",
-		Regex:       utils.GenerateUniqueTokenRegex(`(EAAA|sq0atp-)[0-9A-Za-z\-_]{22,60}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`(?:EAAA|sq0atp-)[\w-]{22,60}`, false),
 		Keywords:    []string{"sq0atp-", "EAAA"},
 	}
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("square", secrets.NewSecret(`sq0atp-[0-9A-Za-z\-_]{22}`)),
+		utils.GenerateSampleSecret("square", secrets.NewSecret(`sq0atp-[\w-]{22}`)),
 		"ARG token=sq0atp-812erere3wewew45678901",                                    // gitleaks:allow
 		"ARG token=EAAAlsBxkkVgvmr7FasTFbM6VUGZ31EJ4jZKTJZySgElBDJ_wyafHuBFquFexY7E", // gitleaks:allow",
 	}

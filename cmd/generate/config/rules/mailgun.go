@@ -11,8 +11,7 @@ func MailGunPrivateAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "mailgun-private-api-token",
 		Description: "Found a Mailgun private API token, risking unauthorized email service operations and data breaches.",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"mailgun"}, `key-[a-f0-9]{32}`, true),
-
+		Regex:       utils.GenerateSemiGenericRegex([]string{"mailgun"}, `key-(?i:[a-f0-9]{32})`, false),
 		Keywords: []string{
 			"mailgun",
 		},
