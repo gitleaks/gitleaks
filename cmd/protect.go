@@ -38,7 +38,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	detector := Detector(cmd, cfg, source)
 
 	// start git scan
-	var findings []*report.Finding
+	var findings []report.Finding
 	gitCmd, err := sources.NewGitDiffCmd(source, staged)
 	if err != nil {
 		log.Fatal().Err(err).Msg("")

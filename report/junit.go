@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func writeJunit(findings []*Finding, w io.WriteCloser) error {
+func writeJunit(findings []Finding, w io.WriteCloser) error {
 	testSuites := TestSuites{
 		TestSuites: getTestSuites(findings),
 	}
@@ -19,7 +19,7 @@ func writeJunit(findings []*Finding, w io.WriteCloser) error {
 	return encoder.Encode(testSuites)
 }
 
-func getTestSuites(findings []*Finding) []TestSuite {
+func getTestSuites(findings []Finding) []TestSuite {
 	return []TestSuite{
 		{
 			Failures:  strconv.Itoa(len(findings)),
@@ -31,14 +31,14 @@ func getTestSuites(findings []*Finding) []TestSuite {
 	}
 }
 
-func getTestCases(findings []*Finding) []TestCase {
+func getTestCases(findings []Finding) []TestCase {
 	testCases := []TestCase{}
 	for _, f := range findings {
 		testCase := TestCase{
 			Classname: f.Description,
 			Failure:   getFailure(f),
 			File:      f.File,
-			Name:      getMessage(*f),
+			Name:      getMessage(f),
 			Time:      "",
 		}
 		testCases = append(testCases, testCase)
@@ -46,10 +46,10 @@ func getTestCases(findings []*Finding) []TestCase {
 	return testCases
 }
 
-func getFailure(f *Finding) Failure {
+func getFailure(f Finding) Failure {
 	return Failure{
-		Data:    getData(*f),
-		Message: getMessage(*f),
+		Data:    getData(f),
+		Message: getMessage(f),
 		Type:    f.Description,
 	}
 }

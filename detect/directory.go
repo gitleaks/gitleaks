@@ -11,7 +11,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
-func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]*report.Finding, error) {
+func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for pa := range paths {
 		p := pa
 		d.Sema.Go(func() error {

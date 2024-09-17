@@ -3,7 +3,6 @@ package detect
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"golang.org/x/exp/maps"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -17,14 +16,34 @@ import (
 var base64HelperPat = regexp.MustCompile(`\${base64\("(.+?)"\)}`)
 var validatorReplaceRegex = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
 
+// Function to compute the Cartesian product of a slice of slices
+func cartesianProduct(slices [][]string) [][]string {
+	var result [][]string
+	var helper func([]string, int)
+	helper = func(current []string, index int) {
+		if index == len(slices) {
+			temp := make([]string, len(current))
+			copy(temp, current)
+			result = append(result, temp)
+			return
+		}
+		for _, s := range slices[index] {
+			helper(append(current, s), index+1)
+		}
+	}
+	helper([]string{}, 0)
+	return result
+}
+
 // Verify will iterate through findings and Verify them against validation
 // fields defined in the rule
-func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
+func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	client := &http.Client{}
 	// build lookups.
-	findingsByRuleID := map[string][]*report.Finding{}
-	verifiableFindings := []*report.Finding{} // Requires pointer for in-place updates.
-	retFindings := []*report.Finding{}
+	findingsByRuleID := map[string][]report.Finding{}
+	verifiableFindings := []report.Finding{}
+	retFindings := []report.Finding{}
+	findingBySecret := map[string]string{}
 	for _, f := range findings {
 		// add finding to lookup
 		findingsByRuleID[f.RuleID] = append(findingsByRuleID[f.RuleID], f)
@@ -42,16 +61,16 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 	}
 
 	// iterate through the findings to Verify
-	for _, f := range verifiableFindings {
+	for i, f := range verifiableFindings {
 		log.Debug().
 			Str("rule-id", f.RuleID).
 			Str("secret", f.Secret).
-			Strs("attributes", maps.Keys(f.Attributes)).
 			Msg("Verifying finding")
 
 		rule := d.Config.Rules[f.RuleID]
 		setsOfHeaders := make(map[string][]string)
 		staticHeaders := make(map[string]string)
+
 		urls := []string{}
 
 		// url replacement if needed
@@ -78,24 +97,36 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 				continue
 			}
 
-			// Interpolate placeholders like `${github-pat}`.
+			placeholders := []string{}
+			findingsPerPlaceholder := [][]string{}
+
+			// Collect the placeholders and their possible findings
 			for _, match := range headerMatches {
-				var (
-					placeholder = match[0] // ${github-pat}
-					key         = match[1] // github-pat
-					substitute  = f.Secret // ghp_xxxxxxxxxxx
-				)
-				if key != f.RuleID {
-					substitute = f.Attributes[key]
+				placeholder := match[0]
+				ruleIDToReplace := match[1]
+				potentialFindings := findingsByRuleID[ruleIDToReplace]
+
+				secrets := []string{}
+				for _, pf := range potentialFindings {
+					secrets = append(secrets, pf.Secret)
+
+					// Store the finding secret for later use as attributes
+					findingBySecret[pf.Secret] = pf.RuleID
 				}
-				v = strings.Replace(v, placeholder, substitute, -1)
+				placeholders = append(placeholders, placeholder)
+				findingsPerPlaceholder = append(findingsPerPlaceholder, secrets)
 			}
 
-			// Interpolate helpers like `${base64("...")}
-			if strings.Contains(v, "${base64(") {
-				v = encodeBase64(v)
+			// Generate all combinations
+			combinations := cartesianProduct(findingsPerPlaceholder)
+
+			for _, combo := range combinations {
+				headerValue := v
+				for i, placeholder := range placeholders {
+					headerValue = strings.Replace(headerValue, placeholder, combo[i], -1)
+				}
+				setsOfHeaders[k] = append(setsOfHeaders[k], headerValue)
 			}
-			setsOfHeaders[k] = append(setsOfHeaders[k], v)
 		}
 
 		// iterate through urls and header combinations
@@ -139,11 +170,15 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed to construct verification request")
-						f.Status = report.Error
-						f.StatusReason = err.Error()
+						verifiableFindings[i].Status = report.Error
+						verifiableFindings[i].StatusReason = err.Error()
 						continue
 					}
 					for key, val := range headerCombination {
+						// do base64 encoding if needed so we can attribute supplemental findings
+						if strings.Contains(val, "${base64") {
+							val = encodeBase64(val)
+						}
 						req.Header.Add(key, val)
 					}
 
@@ -155,8 +190,8 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 							Str("secret", f.Secret). // TODO: properly redact this?
 							Err(err).
 							Msgf("Failed send verification request")
-						f.Status = report.Error
-						f.StatusReason = err.Error()
+						verifiableFindings[i].Status = report.Error
+						verifiableFindings[i].StatusReason = err.Error()
 						continue
 					}
 
@@ -165,10 +200,20 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 				}
 
 				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
-					f.Status = report.ConfirmedValid
+					verifiableFindings[i].Status = report.ConfirmedValid
+					attributes := make(map[string]string)
+					for _, v := range headerCombination {
+						for secret, ruleID := range findingBySecret {
+							if strings.Contains(v, secret) && secret != f.Secret {
+								attributes[ruleID] = secret
+							}
+						}
+					}
+					verifiableFindings[i].Attributes = attributes
+					goto RuleLoopEnd
 				} else {
-					f.Status = report.ConfirmedInvalid
-					f.StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
+					verifiableFindings[i].Status = report.ConfirmedInvalid
+					verifiableFindings[i].StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
 					if !exists {
 						log.Debug().
 							Str("rule", f.RuleID).
@@ -178,10 +223,11 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 				}
 			}
 		}
+	RuleLoopEnd:
 	}
 
 	if d.Verification {
-		verifiedFindings := make([]*report.Finding, 0)
+		verifiedFindings := make([]report.Finding, 0)
 		for _, f := range verifiableFindings {
 			if f.Status == report.ConfirmedValid {
 				verifiedFindings = append(verifiedFindings, f)
@@ -190,11 +236,7 @@ func (d *Detector) Verify(findings []*report.Finding) []*report.Finding {
 		return verifiedFindings
 	}
 
-	// append verified findings to findings. Filter will remove duplicates
-	for _, f := range verifiableFindings {
-		retFindings = append(retFindings, f)
-	}
-	return retFindings
+	return append(retFindings, verifiableFindings...)
 }
 
 // This function generates all combinations of header values

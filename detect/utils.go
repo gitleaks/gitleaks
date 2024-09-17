@@ -18,7 +18,7 @@ import (
 
 // augmentGitFinding updates the start and end line numbers of a finding to include the
 // delta from the git diff
-func augmentGitFinding(finding *report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) *report.Finding {
+func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
 	if !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)
 		finding.EndLine += int(textFragment.NewPosition)
@@ -61,8 +61,8 @@ func shannonEntropy(data string) (entropy float64) {
 }
 
 // filter will dedupe and redact findings
-func filter(findings []*report.Finding) []*report.Finding {
-	var retFindings []*report.Finding
+func filter(findings []report.Finding) []report.Finding {
+	var retFindings []report.Finding
 	for _, f := range findings {
 		include := true
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
@@ -89,7 +89,7 @@ func filter(findings []*report.Finding) []*report.Finding {
 	return retFindings
 }
 
-func printFinding(f *report.Finding, noColor bool) {
+func printFinding(f report.Finding, noColor bool) {
 	// trim all whitespace and tabs
 	f.Line = strings.TrimSpace(f.Line)
 	f.Secret = strings.TrimSpace(f.Secret)

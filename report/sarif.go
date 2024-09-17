@@ -8,7 +8,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func writeSarif(cfg config.Config, findings []*Finding, w io.WriteCloser) error {
+func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
 	sarif := Sarif{
 		Schema:  "https://json.schemastore.org/sarif-2.1.0.json",
 		Version: "2.1.0",
@@ -21,7 +21,7 @@ func writeSarif(cfg config.Config, findings []*Finding, w io.WriteCloser) error 
 	return encoder.Encode(sarif)
 }
 
-func getRuns(cfg config.Config, findings []*Finding) []Runs {
+func getRuns(cfg config.Config, findings []Finding) []Runs {
 	return []Runs{
 		{
 			Tool:    getTool(cfg),
@@ -86,15 +86,15 @@ func messageText(f Finding) string {
 
 }
 
-func getResults(findings []*Finding) []Results {
+func getResults(findings []Finding) []Results {
 	results := []Results{}
 	for _, f := range findings {
 		r := Results{
 			Message: Message{
-				Text: messageText(*f),
+				Text: messageText(f),
 			},
 			RuleId:    f.RuleID,
-			Locations: getLocation(*f),
+			Locations: getLocation(f),
 			// This information goes in partial fingerprings until revision
 			// data can be added somewhere else
 			PartialFingerPrints: PartialFingerPrints{

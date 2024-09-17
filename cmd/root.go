@@ -283,7 +283,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	return detector
 }
 
-func findingSummaryAndExit(findings []*report.Finding, cmd *cobra.Command, cfg config.Config, exitCode int, start time.Time, err error) {
+func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg config.Config, exitCode int, start time.Time, err error) {
 	if err == nil {
 		log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
