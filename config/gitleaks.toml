@@ -2903,6 +2903,12 @@ keywords = [
     "hvs","s.",
 ]
 
+[rules.allowlist]
+
+regexes = [
+    '''s\.[A-Za-z]{24}''',
+]
+
 [[rules]]
 id = "yandex-access-token"
 description = "Found a Yandex Access Token, posing a risk to Yandex service integrations and user data privacy."
