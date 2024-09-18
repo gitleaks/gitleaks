@@ -499,7 +499,8 @@ keywords = [
 [[rules]]
 id = "gcp-api-key"
 description = "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches."
-regex = '''(?i)\b(AIza[0-9A-Za-z\\-_]{35})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(AIza[\w-]{35})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
 keywords = [
     "aiza",
 ]
