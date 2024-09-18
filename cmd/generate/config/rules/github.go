@@ -14,6 +14,7 @@ func GitHubPat() *config.Rule {
 		Description: "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure.",
 		RuleID:      "github-pat",
 		Regex:       regexp.MustCompile(`ghp_[0-9a-zA-Z]{36}`),
+		Entropy:     3,
 		Keywords:    []string{"ghp_"},
 	}
 
@@ -21,7 +22,10 @@ func GitHubPat() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitHubFineGrainedPat() *config.Rule {
@@ -29,7 +33,8 @@ func GitHubFineGrainedPat() *config.Rule {
 	r := config.Rule{
 		Description: "Found a GitHub Fine-Grained Personal Access Token, risking unauthorized repository access and code manipulation.",
 		RuleID:      "github-fine-grained-pat",
-		Regex:       regexp.MustCompile(`github_pat_[0-9a-zA-Z_]{82}`),
+		Regex:       regexp.MustCompile(`github_pat_\w{82}`),
+		Entropy:     3,
 		Keywords:    []string{"github_pat_"},
 	}
 
@@ -37,7 +42,10 @@ func GitHubFineGrainedPat() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"github_pat_xxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitHubOauth() *config.Rule {
@@ -46,6 +54,7 @@ func GitHubOauth() *config.Rule {
 		Description: "Discovered a GitHub OAuth Access Token, posing a risk of compromised GitHub account integrations and data leaks.",
 		RuleID:      "github-oauth",
 		Regex:       regexp.MustCompile(`gho_[0-9a-zA-Z]{36}`),
+		Entropy:     3,
 		Keywords:    []string{"gho_"},
 	}
 
@@ -53,7 +62,10 @@ func GitHubOauth() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"gho_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitHubApp() *config.Rule {
@@ -62,6 +74,7 @@ func GitHubApp() *config.Rule {
 		Description: "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security.",
 		RuleID:      "github-app-token",
 		Regex:       regexp.MustCompile(`(?:ghu|ghs)_[0-9a-zA-Z]{36}`),
+		Entropy:     3,
 		Keywords:    []string{"ghu_", "ghs_"},
 	}
 
@@ -70,7 +83,11 @@ func GitHubApp() *config.Rule {
 		utils.GenerateSampleSecret("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 		utils.GenerateSampleSecret("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"ghu_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		"ghs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitHubRefresh() *config.Rule {
@@ -79,6 +96,7 @@ func GitHubRefresh() *config.Rule {
 		Description: "Detected a GitHub Refresh Token, which could allow prolonged unauthorized access to GitHub services.",
 		RuleID:      "github-refresh-token",
 		Regex:       regexp.MustCompile(`ghr_[0-9a-zA-Z]{36}`),
+		Entropy:     3,
 		Keywords:    []string{"ghr_"},
 	}
 
@@ -86,5 +104,8 @@ func GitHubRefresh() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"ghr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
