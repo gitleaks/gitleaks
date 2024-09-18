@@ -149,7 +149,11 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		d.gitleaksIgnore[scanner.Text()] = true
+		line := strings.TrimSpace(scanner.Text())
+		// Skip lines that start with a comment
+		if line != "" && !strings.HasPrefix(line, "#") {
+			d.gitleaksIgnore[line] = true
+		}
 	}
 	return nil
 }
