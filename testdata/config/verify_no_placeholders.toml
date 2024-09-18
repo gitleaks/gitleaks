@@ -5,4 +5,4 @@ id = "azure-client-secret"
 regex = '''secret = (.+)'''
 [rules.verify]
 url = "https://example.com"
-headers = {"X-Client-ID" = "${azure-client-id}", Authorization = "Bearer ${azure-client-secret}"}
+headers = {"Authorization" = "${azure-client-id}"}

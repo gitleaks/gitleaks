@@ -128,9 +128,14 @@ func TestTranslate(t *testing.T) {
 		},
 		// Verify
 		{
+			cfgName:   "verify_no_placeholders",
+			cfg:       Config{},
+			wantError: fmt.Errorf("azure-client-secret: verify config does not contain a placeholder for the rule's output (${azure-client-secret})"),
+		},
+		{
 			cfgName:   "verify_multipart_invalid_requires",
 			cfg:       Config{},
-			wantError: fmt.Errorf("azure-client-secret: required rule ID 'azure-client-id' does not exist"),
+			wantError: fmt.Errorf("rule ID 'azure-client-id' required by '[azure-client-secret]' does not exist"),
 		},
 	}
 
@@ -149,6 +154,75 @@ func TestTranslate(t *testing.T) {
 			cfg, err := vc.Translate()
 			assert.Equal(t, tt.wantError, err)
 			assert.Equal(t, cfg.Rules, tt.cfg.Rules)
+		})
+	}
+}
+
+func Test_parseVerify(t *testing.T) {
+	tests := []struct {
+		cfgName   string
+		verify    Verify
+		wantError error
+	}{
+		{
+			cfgName: "verify_multipart_header",
+			verify: Verify{
+				RequiredIDs: map[string]struct{}{
+					"github-client-id": {},
+				},
+				HTTPVerb: "GET",
+				URL:      "https://api.github.com/rate_limit",
+				StaticHeaders: map[string]string{
+					"Accept":               "application/vnd.github+json",
+					"X-GitHub-Api-Version": "2022-11-28",
+				},
+				Headers: map[string]string{
+					"Authorization": "Basic ${base64(\"${github-client-id}:${github-client-secret}\")}",
+				},
+				ExpectedStatus: []string{"200"},
+			},
+		},
+		{
+			cfgName: "verify_multipart_query",
+			verify: Verify{
+				RequiredIDs: map[string]struct{}{
+					"github-client-id": {},
+				},
+				HTTPVerb: "GET",
+				URL:      "https://api.github.com/rate_limit?client_id=${github-client-id}&client_secret=${github-client-secret}",
+				StaticHeaders: map[string]string{
+					"Accept":               "application/vnd.github+json",
+					"X-GitHub-Api-Version": "2022-11-28",
+				},
+				ExpectedStatus: []string{"200"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.cfgName, func(t *testing.T) {
+			viper.Reset()
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
+
+			var vc ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+
+			var actual Verify
+			for _, rule := range cfg.Rules {
+				if rule.Verify.URL == "" {
+					continue
+				}
+				actual = rule.Verify
+				break
+			}
+			assert.Equal(t, tt.wantError, err)
+			assert.Equal(t, tt.verify, actual)
 		})
 	}
 }

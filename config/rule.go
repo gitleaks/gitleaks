@@ -48,12 +48,32 @@ type Rule struct {
 }
 
 type Verify struct {
-	Requires             map[string]struct{}
+	HTTPVerb             string
 	URL                  string
 	Headers              map[string]string
-	Description          string
 	ExpectedStatus       []string
 	ExpectedBodyContains []string
-	UseDefault           bool
-	HTTPVerb             string
+
+	// RequiredIDs is a set of other rule IDs that must be present for verification.
+	requiredIDs      map[string]struct{}
+	placeholderInUrl bool
+	staticHeaders    map[string]string
+	dynamicHeaders   map[string]string
+	//buildRequestFunc *func(req *http.Request, rule Rule, finding report.Finding, findingsByRuleID map[string][]report.Finding) func() string
+}
+
+func (v Verify) GetRequiredIDs() map[string]struct{} {
+	return v.requiredIDs
+}
+
+func (v Verify) GetPlaceholderInUrl() bool {
+	return v.placeholderInUrl
+}
+
+func (v Verify) GetStaticHeaders() map[string]string {
+	return v.staticHeaders
+}
+
+func (v Verify) GetDynamicHeaders() map[string]string {
+	return v.dynamicHeaders
 }

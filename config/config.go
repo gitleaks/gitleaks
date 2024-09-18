@@ -3,6 +3,7 @@ package config
 import (
 	_ "embed"
 	"fmt"
+	"golang.org/x/exp/maps"
 	"regexp"
 	"sort"
 	"strings"
@@ -36,16 +37,7 @@ type ViperConfig struct {
 		Path        string
 		Tags        []string
 		Report      *bool
-		Verify      struct {
-			Requires             []string
-			URL                  string
-			Headers              map[string]string
-			Description          string
-			ExpectedStatus       []string
-			ExpectedBodyContains []string
-			UseDefault           bool
-			HTTPVerb             string
-		}
+		Verify      viperRuleVerify
 
 		Allowlist struct {
 			RegexTarget string
@@ -62,6 +54,15 @@ type ViperConfig struct {
 		Commits     []string
 		StopWords   []string
 	}
+}
+
+type viperRuleVerify struct {
+	HTTPVerb string
+	URL      string
+	Headers  map[string]string
+	// TODO: support request body? (e.g., GraphQL APIs require POST + body)
+	ExpectedStatus       []string
+	ExpectedBodyContains []string
 }
 
 // Config is a configuration struct that contains rules and an allowlist if present.
@@ -141,10 +142,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				HTTPVerb:             r.Verify.HTTPVerb,
 				URL:                  r.Verify.URL,
 				Headers:              r.Verify.Headers,
-				Description:          r.Verify.Description,
 				ExpectedStatus:       r.Verify.ExpectedStatus,
 				ExpectedBodyContains: r.Verify.ExpectedBodyContains,
-				UseDefault:           r.Verify.UseDefault,
 			},
 			Allowlist: Allowlist{
 				RegexTarget: r.Allowlist.RegexTarget,
@@ -157,12 +156,22 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if r.Report == nil || *r.Report {
 			rule.Report = true
 		}
-		if len(r.Verify.Requires) > 0 {
-			rule.Verify.Requires = make(map[string]struct{})
-			ruleDependencies[rule.RuleID] = make(map[string]struct{})
-			for _, r := range r.Verify.Requires {
-				ruleDependencies[rule.RuleID][r] = struct{}{}
-				rule.Verify.Requires[r] = struct{}{}
+
+		// TODO: Don't do anything verification-related unless `--experimental-verification` is enabled.
+		// TODO: Apply this validation for `go generate` as well.
+		if r.Verify.URL != "" {
+			verify, err := parseVerify(rule.RuleID, r.Verify)
+			if err != nil {
+				return Config{}, err
+			}
+			rule.Verify = verify
+			if len(rule.Verify.GetRequiredIDs()) > 0 {
+				for requiredID := range rule.Verify.GetRequiredIDs() {
+					if _, ok := ruleDependencies[requiredID]; !ok {
+						ruleDependencies[requiredID] = make(map[string]struct{})
+					}
+					ruleDependencies[requiredID][rule.RuleID] = struct{}{}
+				}
 			}
 		}
 		orderedRules = append(orderedRules, rule.RuleID)
@@ -174,11 +183,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	// Validate IDs in |verify.requires|.
-	for ruleID, requiredIDs := range ruleDependencies {
-		for requiredID := range requiredIDs {
-			if _, ok := rulesMap[requiredID]; !ok {
-				return Config{}, fmt.Errorf("%s: required rule ID '%s' does not exist", ruleID, requiredID)
-			}
+	for ruleID, dependentIDs := range ruleDependencies {
+		if _, ok := rulesMap[ruleID]; !ok {
+			return Config{}, fmt.Errorf("rule ID '%s' required by '%v' does not exist", ruleID, maps.Keys(dependentIDs))
 		}
 	}
 
@@ -298,4 +305,87 @@ func (c *Config) extend(extensionConfig Config) {
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
+}
+
+// TODO: Deduplicate these patterns between here and verify.go
+var (
+	verifyHelperFuncPat = regexp.MustCompile(`\${([A-Za-z0-9]{3,15})\("(.+?)"\)}`)
+	helperFuncs         = map[string]struct{}{
+		"base64":    {},
+		"urlEncode": {},
+	}
+	verifyPlaceholderPat = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
+)
+
+func parseVerify(ruleID string, v viperRuleVerify) (Verify, error) {
+	// TODO: Check that there's some sort of substitution happening here.
+	var (
+		verify  = Verify{}
+		ruleIDs = map[string]struct{}{}
+	)
+	// Parse URL.
+	for _, match := range verifyPlaceholderPat.FindAllStringSubmatch(v.URL, -1) {
+		if !verify.placeholderInUrl {
+			verify.placeholderInUrl = true
+		}
+		ruleIDs[match[1]] = struct{}{}
+	}
+	if err := checkVerifyHelperFuncs(v.URL); err != nil {
+		return verify, fmt.Errorf("%s: %w", ruleID, err)
+	}
+
+	// Parse headers.
+	staticHeaders := map[string]string{}
+	dynamicHeaders := map[string]string{}
+	for k, v := range v.Headers {
+		matches := verifyPlaceholderPat.FindAllStringSubmatch(v, -1)
+		if len(matches) == 0 {
+			staticHeaders[k] = v
+			continue
+		}
+
+		dynamicHeaders[k] = v
+		for _, match := range matches {
+			ruleIDs[match[1]] = struct{}{}
+		}
+
+		if err := checkVerifyHelperFuncs(v); err != nil {
+			return verify, fmt.Errorf("%s: %w", ruleID, err)
+		}
+	}
+
+	// TODO: Check in body as well
+	// TODO: Handle things like base64-encoding
+	if len(ruleIDs) == 0 {
+		return verify, fmt.Errorf("%s: verify config does not contain any placeholders (${rule-id})", ruleID)
+	} else if _, ok := ruleIDs[ruleID]; !ok {
+		return verify, fmt.Errorf("%s: verify config does not contain a placeholder for the rule's output (${%s})", ruleID, ruleID)
+	} else {
+		delete(ruleIDs, ruleID)
+	}
+	if len(staticHeaders) == 0 {
+		staticHeaders = nil
+	}
+	if len(dynamicHeaders) == 0 {
+		dynamicHeaders = nil
+	}
+
+	verify.requiredIDs = ruleIDs
+	verify.HTTPVerb = v.HTTPVerb
+	verify.URL = v.URL
+	verify.Headers = v.Headers
+	verify.staticHeaders = staticHeaders
+	verify.dynamicHeaders = dynamicHeaders
+	verify.ExpectedStatus = v.ExpectedStatus
+	verify.ExpectedBodyContains = v.ExpectedBodyContains
+	return verify, nil
+}
+
+func checkVerifyHelperFuncs(s string) error {
+	for _, match := range verifyHelperFuncPat.FindAllStringSubmatch(s, -1) {
+		if _, ok := helperFuncs[match[1]]; !ok {
+			return fmt.Errorf("unknown helper function '%s' (known: %v)", match[1], maps.Keys(helperFuncs))
+		}
+	}
+	return nil
 }

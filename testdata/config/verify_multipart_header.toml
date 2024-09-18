@@ -13,7 +13,6 @@ id = "github-client-secret"
 regex = '''\b([a-f0-9]{40})\b'''
 entropy = 1
 [rules.verify]
-requires = ["github-client-id"]
 url = "https://api.github.com/rate_limit"
 httpVerb = "GET"
 expectedStatus = [

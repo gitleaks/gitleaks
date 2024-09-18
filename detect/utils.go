@@ -172,7 +172,9 @@ func printFinding(f report.Finding, noColor bool) {
 		case report.ConfirmedInvalid:
 			statusMsg = "Invalid"
 		case report.ConfirmedValid:
-			fmt.Printf("%-12s %s\n", "Attributes:", attributes)
+			if len(attributes) > 0 {
+				fmt.Printf("%-12s %s\n", "Attributes:", attributes)
+			}
 			// set verified to green
 			statusMsg = lipgloss.NewStyle().SetString("Valid ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
 		}
