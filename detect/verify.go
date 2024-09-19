@@ -3,7 +3,6 @@ package detect
 import (
 	b64 "encoding/base64"
 	"fmt"
-	"golang.org/x/exp/maps"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -11,156 +10,188 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/maps"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-// Verify will iterate through findings and Verify them against validation
+var base64HelperPat = regexp.MustCompile(`\${base64\("(.+?)"\)}`)
+var urlEncodePat = regexp.MustCompile(`\${urlEncode\("(.+?)"\)}`)
+
+// Verify will iterate through findings and verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	client := &http.Client{}
-	// build lookups.
+
+	// Build lookups
 	findingsByRuleID := map[string][]report.Finding{}
 	secretsByRuleID := map[string]map[string]struct{}{}
 	retFindings := []report.Finding{}
-	verifiableFindings := []*report.Finding{}
+	verifiableFindings := []report.Finding{}
 	findingBySecret := map[string]string{}
+
 	for _, f := range findings {
-		// add finding to lookup
+		// Add finding to lookup
 		findingsByRuleID[f.RuleID] = append(findingsByRuleID[f.RuleID], f)
 		if _, ok := secretsByRuleID[f.RuleID]; !ok {
 			secretsByRuleID[f.RuleID] = map[string]struct{}{}
 		}
 		secretsByRuleID[f.RuleID][f.Secret] = struct{}{}
 
-		// this should always return a valid rule
+		// Get the rule associated with the finding
 		rule := d.Config.Rules[f.RuleID]
-		// if rule.Verify is empty or the finding is skipped, continue
+
+		// If rule.Verify is empty or the finding is skipped, continue
 		if rule.Verify.URL == "" || f.Status == report.Skipped {
 			if rule.Report {
-				// Exclude findings if |rule.report| is false.
+				// Exclude findings if rule.Report is false
 				retFindings = append(retFindings, f)
 			}
 			continue
 		}
-		verifiableFindings = append(verifiableFindings, &f)
+		// Add to verifiable findings
+		verifiableFindings = append(verifiableFindings, f)
 	}
 
-	// iterate through the findings to Verify
+	// Iterate through the findings to verify
 	for i, f := range verifiableFindings {
 		logger := log.With().
 			Str("rule-id", f.RuleID).
 			Str("secret", f.Secret). // TODO: Properly redact this?
 			Logger()
-		var (
-			rule = d.Config.Rules[f.RuleID]
-			err  error
-		)
 
-		// Expand URL placeholders, if needed.
-		var urls []string
-		url := rule.Verify.URL
-		if rule.Verify.GetPlaceholderInUrl() {
-			urls, err = expandUrlPlaceholders(url, rule.Verify.GetRequiredIDs(), f, secretsByRuleID, findingBySecret)
+		rule := d.Config.Rules[f.RuleID]
+
+		// Prepare required IDs and placeholders
+		requiredIDs := rule.Verify.GetRequiredIDs()
+		rulePlaceholder := fmt.Sprintf("${%s}", f.RuleID)
+		placeholderByRequiredID := make(map[string]string)
+		for requiredID := range requiredIDs {
+			placeholderByRequiredID[requiredID] = fmt.Sprintf("${%s}", requiredID)
+		}
+
+		// Collect findings per required ID
+		findingsPerRequiredID := make(map[string][]string)
+		for requiredID := range requiredIDs {
+			secrets := maps.Keys(secretsByRuleID[requiredID])
+			if len(secrets) == 0 {
+				f.Status = report.Skipped
+				f.StatusReason = fmt.Sprintf("No results for required rule: %s", requiredID)
+				continue
+			} else if len(secrets) > 3 {
+				f.Status = report.Skipped
+				f.StatusReason = fmt.Sprintf("Excessive number of results for required rule: %s", requiredID)
+				continue
+			}
+			findingsPerRequiredID[requiredID] = secrets
+			// Store the finding secret for later use as attributes
+			for _, secret := range secrets {
+				findingBySecret[secret] = requiredID
+			}
+		}
+
+		// Expand URL placeholders
+		urls, err := expandPlaceholdersInString(rule.Verify.URL, f.Secret, rulePlaceholder, placeholderByRequiredID, findingsPerRequiredID)
+		if err != nil {
+			f.Status = report.Skipped
+			f.StatusReason = err.Error()
+			continue
+		}
+		if len(urls) == 0 {
+			// No placeholders to replace, use the original URL
+			urls = []string{rule.Verify.URL}
+		}
+
+		// Expand header placeholders
+		setsOfHeaders := map[string][]string{}
+		for k, v := range rule.Verify.GetDynamicHeaders() {
+			headers, err := expandPlaceholdersInString(v, f.Secret, rulePlaceholder, placeholderByRequiredID, findingsPerRequiredID)
 			if err != nil {
 				f.Status = report.Skipped
 				f.StatusReason = err.Error()
 				continue
 			}
-		} else {
-			// There is no substitution, just use the original url.
-			urls = append(urls, url)
+			setsOfHeaders[k] = headers
 		}
 
-		// Expand header placeholders, if needed.
-		var setsOfHeaders map[string][]string
-		if len(rule.Verify.GetDynamicHeaders()) > 0 {
-			setsOfHeaders, err = expandHeaderPlaceholders(rule.Verify.GetDynamicHeaders(), rule.Verify.GetRequiredIDs(), f, secretsByRuleID, findingBySecret)
-			if err != nil {
-				f.Status = report.Skipped
-				f.StatusReason = err.Error()
-				continue
-			}
-		}
+		// Generate header combinations
+		headerCombinations := generateHeaderCombinations(setsOfHeaders)
 
-		// iterate through urls and header combinations
-		// make request
-		for _, url := range urls {
-			headerCombinations := generateHeaderCombinations(setsOfHeaders)
+		// Iterate through URLs and header combinations
+		for _, targetUrl := range urls {
 			for _, headerCombination := range headerCombinations {
-				// add static headers to headerCombination
+				// Add static headers to headerCombination
 				for k, v := range rule.Verify.GetStaticHeaders() {
 					headerCombination[k] = v
 				}
 
-				resp, exists := d.VerifyCache.Get(url, headerCombination)
+				// Send verification request
+				resp, exists := d.VerifyCache.Get(targetUrl, headerCombination)
 				if !exists {
 					logger.Debug().
 						Str("method", rule.Verify.HTTPVerb).
-						Str("url", url).
+						Str("url", targetUrl).
 						Fields(map[string]interface{}{"headers": headerCombination}).
-						Msgf("Sending verification request...")
-					req, err := http.NewRequest(rule.Verify.HTTPVerb, url, nil)
+						Msg("Sending verification request...")
+					req, err := http.NewRequest(rule.Verify.HTTPVerb, targetUrl, nil)
 					if err != nil {
-						logger.Error().Err(err).Msgf("Failed to construct verification request")
+						logger.Error().Err(err).Msg("Failed to construct verification request")
 						verifiableFindings[i].Status = report.Error
 						verifiableFindings[i].StatusReason = err.Error()
 						continue
 					}
+
 					for key, val := range headerCombination {
 						// TODO: Does order matter?
 						// do encoding if needed so we can attribute supplemental findings
 						if strings.Contains(val, "${base64") {
-							val = HelperFunctions.Base64Encode(val)
+							val = base64HelperPat.ReplaceAllStringFunc(val, func(s string) string {
+								submatch := base64HelperPat.FindStringSubmatch(s)
+								return b64.StdEncoding.EncodeToString([]byte(submatch[1]))
+							})
 						}
 						if strings.Contains(val, "${urlEncode") {
-							val = HelperFunctions.UrlEncode(val)
+							val = urlEncodePat.ReplaceAllStringFunc(val, func(s string) string {
+								submatch := urlEncodePat.FindStringSubmatch(s)
+								return url.QueryEscape(submatch[1])
+							})
 						}
 						req.Header.Add(key, val)
 					}
 
-					// TODO implement a retry if set with a polite backoff
+					// TODO: Implement retry with backoff if needed
 					resp, err = client.Do(req)
 					if err != nil {
-						logger.Error().Err(err).Msgf("Failed send verification request")
+						logger.Error().Err(err).Msg("Failed to send verification request")
 						verifiableFindings[i].Status = report.Error
 						verifiableFindings[i].StatusReason = err.Error()
 						continue
 					}
 
-					// set cache
-					d.VerifyCache.Set(url, headerCombination, resp)
+					// Set cache
+					d.VerifyCache.Set(targetUrl, headerCombination, resp)
 				}
 
 				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
 					verifiableFindings[i].Status = report.ConfirmedValid
-					// Build attributes for multi-part rules.
-					if len(rule.Verify.GetRequiredIDs()) > 0 {
-						attributes := make(map[string]string)
-						// Check for additional secrets used in URL.
-						if rule.Verify.GetPlaceholderInUrl() {
-							for secret, ruleID := range findingBySecret {
-								if strings.Contains(url, secret) {
-									attributes[ruleID] = secret
-								}
-							}
-						}
-						// Check for additional secrets used in headers.
-						for _, v := range headerCombination {
-							for secret, ruleID := range findingBySecret {
-								if strings.Contains(v, secret) {
-									attributes[ruleID] = secret
-								}
-							}
-						}
+					verifiableFindings[i].StatusReason = ""
+					// Build attributes for multi-part rules
+					if len(requiredIDs) > 0 {
+						attributes := collectAttributes(targetUrl, headerCombination, findingBySecret)
 						verifiableFindings[i].Attributes = attributes
 					}
 					if !exists {
 						logger.Debug().Msgf("Secret is valid: received status code '%d'", resp.StatusCode)
 					}
-
 					goto RuleLoopEnd
 				} else {
+					if verifiableFindings[i].Status == report.ConfirmedValid {
+						// If the finding was already confirmed valid, don't change the status.
+						// TODO: this means that if there is a valid multi-part rule that has a reported secret
+						// with _multiple_ valid attributes, only one of them will be reported as valid.
+						// This is a limitation of the current implementation.
+						goto RuleLoopEnd
+					}
 					verifiableFindings[i].Status = report.ConfirmedInvalid
 					verifiableFindings[i].StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
 					if !exists {
@@ -173,123 +204,72 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 	}
 
 	if d.Verification {
-		// Return only verified findings.
+		// Return only verified findings
 		verifiedFindings := make([]report.Finding, 0)
 		for _, f := range verifiableFindings {
 			if f.Status == report.ConfirmedValid {
-				verifiedFindings = append(verifiedFindings, *f)
+				verifiedFindings = append(verifiedFindings, f)
 			}
 		}
 		return verifiedFindings
 	}
 
-	// Return all findings.
-	for _, f := range verifiableFindings {
-		retFindings = append(retFindings, *f)
-	}
-	return retFindings
+	// Return all findings
+	return append(retFindings, verifiableFindings...)
 }
 
-// TODO: can some of the duplicated logic in expandHeaderPlaceholders be reduced?
-// TODO: decide on the arbitrary max limit of 3 results?
-func expandUrlPlaceholders(url string, requiredIDs map[string]struct{}, finding *report.Finding, secretsByRuleID map[string]map[string]struct{}, findingsBySecret map[string]string) ([]string, error) {
-	// e.g., a matrix of [[clientid1, clientid2], [secret]]
-	var (
-		urls                    []string
-		rulePlaceholder         = fmt.Sprintf("${%s}", finding.RuleID)
-		placeholderByRequiredID = make(map[string]string)
-		placeholders            = []string{}
-		findingsPerPlaceholder  = [][]string{}
-	)
-	for requiredID := range requiredIDs {
-		placeholderByRequiredID[requiredID] = fmt.Sprintf("${%s}", requiredID)
-	}
+// expandPlaceholdersInString expands placeholders in a template string using the provided findings
+func expandPlaceholdersInString(template, secret, rulePlaceholder string, placeholderByRequiredID map[string]string, findingsPerRequiredID map[string][]string) ([]string, error) {
+	// Replace the rule's own placeholder with its secret
+	template = strings.ReplaceAll(template, rulePlaceholder, secret)
 
-	// Interpolate the finding secret.
-	if strings.Contains(url, rulePlaceholder) {
-		url = strings.Replace(url, rulePlaceholder, finding.Secret, -1)
-	}
-
-	// Collect the placeholders and their possible findings
-	for requireID, placeholder := range placeholderByRequiredID {
+	// Collect placeholders and their possible values
+	placeholders := []string{}
+	findingsPerPlaceholder := [][]string{}
+	for requiredID, placeholder := range placeholderByRequiredID {
 		placeholders = append(placeholders, placeholder)
-		secrets := secretsByRuleID[requireID]
-		if len(secrets) == 0 {
-			return nil, fmt.Errorf("no results for required rule: %s", requireID)
-		} else if len(secrets) > 3 {
-			return nil, fmt.Errorf("excessive number of results for required rule: %s", requireID)
-		}
+		secrets := findingsPerRequiredID[requiredID]
+		findingsPerPlaceholder = append(findingsPerPlaceholder, secrets)
+	}
 
-		findingsPerPlaceholder = append(findingsPerPlaceholder, maps.Keys(secrets))
-		for secret := range secrets {
-			// Store the finding secret for later use as attributes
-			findingsBySecret[secret] = requireID
-		}
+	// If no placeholders, return the template as is
+	if len(placeholders) == 0 {
+		return []string{template}, nil
 	}
 
 	// Generate all combinations
 	combinations := cartesianProduct(findingsPerPlaceholder)
+
+	// Replace placeholders with combinations
+	var results []string
 	for _, combo := range combinations {
-		u := url
+		result := template
 		for i, placeholder := range placeholders {
-			u = strings.Replace(u, placeholder, combo[i], -1)
+			result = strings.ReplaceAll(result, placeholder, combo[i])
 		}
-		urls = append(urls, u)
+		results = append(results, result)
 	}
-	return urls, nil
+	return results, nil
 }
 
-func expandHeaderPlaceholders(headers map[string]string, requiredIDs map[string]struct{}, finding *report.Finding, secretsByRuleID map[string]map[string]struct{}, findingsBySecret map[string]string) (map[string][]string, error) {
-	var (
-		setsOfHeaders           = make(map[string][]string)
-		rulePlaceholder         = fmt.Sprintf("${%s}", finding.RuleID)
-		placeholderByRequiredID = make(map[string]string)
-	)
-	for requiredID := range requiredIDs {
-		placeholderByRequiredID[requiredID] = fmt.Sprintf("${%s}", requiredID)
-	}
-
-	// Iterate through each dynamic header.
-	for k, v := range headers {
-		var (
-			placeholders           []string
-			findingsPerPlaceholder [][]string
-		)
-
-		// Interpolate the finding secret.
-		if strings.Contains(v, rulePlaceholder) {
-			v = strings.Replace(v, rulePlaceholder, finding.Secret, -1)
-		}
-
-		// Collect the placeholders and their possible findings
-		for requireID, placeholder := range placeholderByRequiredID {
-			placeholders = append(placeholders, placeholder)
-			secrets := secretsByRuleID[requireID]
-			if len(secrets) == 0 {
-				return nil, fmt.Errorf("no results for required rule: %s", requireID)
-			} else if len(secrets) > 3 {
-				return nil, fmt.Errorf("excessive number of results for required rule: %s", requireID)
-			}
-
-			findingsPerPlaceholder = append(findingsPerPlaceholder, maps.Keys(secrets))
-			for secret := range secrets {
-				// Store the finding secret for later use as attributes
-				findingsBySecret[secret] = requireID
-			}
-		}
-
-		// Generate all combinations
-		combinations := cartesianProduct(findingsPerPlaceholder)
-		for _, combo := range combinations {
-			headerValue := v
-			for i, placeholder := range placeholders {
-				headerValue = strings.Replace(headerValue, placeholder, combo[i], -1)
-			}
-			setsOfHeaders[k] = append(setsOfHeaders[k], headerValue)
+// collectAttributes collects attributes from the URL and headers based on findings
+func collectAttributes(url string, headers map[string]string, findingBySecret map[string]string) map[string]string {
+	attributes := make(map[string]string)
+	// Check for secrets used in URL
+	for secret, ruleID := range findingBySecret {
+		if strings.Contains(url, secret) {
+			attributes[ruleID] = secret
 		}
 	}
-
-	return setsOfHeaders, nil
+	// Check for secrets used in headers
+	for _, v := range headers {
+		for secret, ruleID := range findingBySecret {
+			if strings.Contains(v, secret) {
+				attributes[ruleID] = secret
+			}
+		}
+	}
+	return attributes
 }
 
 // Function to compute the Cartesian product of a slice of slices
@@ -313,29 +293,22 @@ func cartesianProduct(slices [][]string) [][]string {
 
 // This function generates all combinations of header values
 func generateHeaderCombinations(setsOfHeaders map[string][]string) []map[string]string {
-	var keys []string
-	for k := range setsOfHeaders {
-		keys = append(keys, k)
+	if len(setsOfHeaders) == 0 {
+		return []map[string]string{{}}
 	}
-
-	// Start with a single empty combination
-	var combinations []map[string]string
-	combinations = append(combinations, make(map[string]string))
+	keys := maps.Keys(setsOfHeaders)
+	combinations := []map[string]string{{}}
 
 	for _, key := range keys {
-		newCombinations := []map[string]string{}
-		for _, oldValueMap := range combinations {
+		var temp []map[string]string
+		for _, combo := range combinations {
 			for _, value := range setsOfHeaders[key] {
-				// Copy the old combination and add a new value for the current key
-				newValueMap := make(map[string]string)
-				for k, v := range oldValueMap {
-					newValueMap[k] = v
-				}
-				newValueMap[key] = value
-				newCombinations = append(newCombinations, newValueMap)
+				newCombo := maps.Clone(combo)
+				newCombo[key] = value
+				temp = append(temp, newCombo)
 			}
 		}
-		combinations = newCombinations
+		combinations = temp
 	}
 	return combinations
 }
@@ -369,28 +342,4 @@ func isValidBody(body string, bodyContains []string) bool {
 		}
 	}
 	return false
-}
-
-var base64HelperPat = regexp.MustCompile(`\${base64\("(.+?)"\)}`)
-var urlEncodePat = regexp.MustCompile(`\${urlEncode\("(.+?)"\)}`)
-
-var HelperFunctions = struct {
-	Base64Encode func(s string) string
-	UrlEncode    func(s string) string
-}{
-	// TODO: write these more efficiently
-	Base64Encode: func(s string) string {
-		return base64HelperPat.ReplaceAllStringFunc(s, func(s string) string {
-			// Extract the capture group (without base64(...) wrapping)
-			submatch := base64HelperPat.FindStringSubmatch(s)
-			return b64.StdEncoding.EncodeToString([]byte(submatch[1]))
-		})
-	},
-	// TODO: Is this necessary? If a query parameter is specified, is Go smart enough to encode it automatically?
-	UrlEncode: func(s string) string {
-		return urlEncodePat.ReplaceAllStringFunc(s, func(s string) string {
-			submatch := urlEncodePat.FindStringSubmatch(s)
-			return url.QueryEscape(submatch[1])
-		})
-	},
 }
