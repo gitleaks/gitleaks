@@ -90,12 +90,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 		}
 
 		// Expand URL placeholders
-		urls, err := expandPlaceholdersInString(rule.Verify.URL, f.Secret, rulePlaceholder, placeholderByRequiredID, findingsPerRequiredID)
-		if err != nil {
-			f.Status = report.Skipped
-			f.StatusReason = err.Error()
-			continue
-		}
+		urls := expandPlaceholdersInString(rule.Verify.URL, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 		if len(urls) == 0 {
 			// No placeholders to replace, use the original URL
 			urls = []string{rule.Verify.URL}
@@ -104,12 +99,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 		// Expand header placeholders
 		setsOfHeaders := map[string][]string{}
 		for k, v := range rule.Verify.GetDynamicHeaders() {
-			headers, err := expandPlaceholdersInString(v, f.Secret, rulePlaceholder, placeholderByRequiredID, findingsPerRequiredID)
-			if err != nil {
-				f.Status = report.Skipped
-				f.StatusReason = err.Error()
-				continue
-			}
+			headers := expandPlaceholdersInString(v, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 			setsOfHeaders[k] = headers
 		}
 
@@ -218,7 +208,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 }
 
 // expandPlaceholdersInString expands placeholders in a template string using the provided findings
-func expandPlaceholdersInString(template, secret, rulePlaceholder string, placeholderByRequiredID map[string]string, findingsPerRequiredID map[string][]string) ([]string, error) {
+func expandPlaceholdersInString(template, rulePlaceholder, secret string, placeholderByRequiredID map[string]string, secretsByRequiredID map[string][]string) []string {
 	// Replace the rule's own placeholder with its secret
 	template = strings.ReplaceAll(template, rulePlaceholder, secret)
 
@@ -227,13 +217,13 @@ func expandPlaceholdersInString(template, secret, rulePlaceholder string, placeh
 	findingsPerPlaceholder := [][]string{}
 	for requiredID, placeholder := range placeholderByRequiredID {
 		placeholders = append(placeholders, placeholder)
-		secrets := findingsPerRequiredID[requiredID]
+		secrets := secretsByRequiredID[requiredID]
 		findingsPerPlaceholder = append(findingsPerPlaceholder, secrets)
 	}
 
 	// If no placeholders, return the template as is
 	if len(placeholders) == 0 {
-		return []string{template}, nil
+		return []string{template}
 	}
 
 	// Generate all combinations
@@ -248,7 +238,7 @@ func expandPlaceholdersInString(template, secret, rulePlaceholder string, placeh
 		}
 		results = append(results, result)
 	}
-	return results, nil
+	return results
 }
 
 // collectAttributes collects attributes from the URL and headers based on findings
