@@ -58,12 +58,13 @@ func (a *Allowlist) RegexAllowed(s string) bool {
 	return anyRegexMatch(s, a.Regexes)
 }
 
-func (a *Allowlist) ContainsStopWord(s string) bool {
+// ContainsStopWord returns true if the input contains a "stopword".
+func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 	s = strings.ToLower(s)
 	for _, stopWord := range a.StopWords {
 		if strings.Contains(s, strings.ToLower(stopWord)) {
-			return true
+			return true, stopWord
 		}
 	}
-	return false
+	return false, ""
 }
