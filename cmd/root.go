@@ -30,7 +30,7 @@ const configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. (--source/-s)/.gitleaks.toml
+3. (target path)/.gitleaks.toml
 If none of the three options are used, then gitleaks will use the default config`
 
 var rootCmd = &cobra.Command{
@@ -43,7 +43,6 @@ func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
-	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, junit, sarif)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
@@ -57,10 +56,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("only-verification", "", false, "check rules with verification only")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
-	rootCmd.PersistentFlags().String("log-opts", "", "git log options")
-	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id, ex: `gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token`")
+	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
-	rootCmd.PersistentFlags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -91,7 +88,7 @@ func initLog() {
 	}
 }
 
-func initConfig() {
+func initConfig(source string) {
 	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
 	if err != nil {
 		log.Fatal().Msg(err.Error())
@@ -111,10 +108,6 @@ func initConfig() {
 		viper.SetConfigFile(envPath)
 		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
 	} else {
-		source, err := rootCmd.Flags().GetString("source")
-		if err != nil {
-			log.Fatal().Msg(err.Error())
-		}
 		fileInfo, err := os.Stat(source)
 		if err != nil {
 			log.Fatal().Msg(err.Error())
@@ -276,10 +269,6 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Config.Rules = ruleOverride
 	}
 
-	// set follow symlinks flag
-	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
 	return detector
 }
 

@@ -91,9 +91,19 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
+			cfgName:   "missing_id",
+			cfg:       Config{},
+			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+		},
+		//{
+		//	cfgName:   "no_regex_or_path",
+		//	cfg:       Config{},
+		//	wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
+		//},
+		{
 			cfgName:   "bad_entropy_group",
 			cfg:       Config{},
-			wantError: fmt.Errorf("Discord API key invalid regex secret group 5, max regex secret group 3"),
+			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "base",
@@ -167,12 +177,12 @@ func Test_parseVerify(t *testing.T) {
 		{
 			cfgName: "verify_multipart_header",
 			verify: Verify{
-				RequiredIDs: map[string]struct{}{
+				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
 				HTTPVerb: "GET",
 				URL:      "https://api.github.com/rate_limit",
-				StaticHeaders: map[string]string{
+				staticHeaders: map[string]string{
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
 				},
@@ -185,12 +195,12 @@ func Test_parseVerify(t *testing.T) {
 		{
 			cfgName: "verify_multipart_query",
 			verify: Verify{
-				RequiredIDs: map[string]struct{}{
+				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
 				HTTPVerb: "GET",
 				URL:      "https://api.github.com/rate_limit?client_id=${github-client-id}&client_secret=${github-client-secret}",
-				StaticHeaders: map[string]string{
+				staticHeaders: map[string]string{
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
 				},

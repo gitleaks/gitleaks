@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -33,5 +34,5 @@ func OpenshiftUserToken() *config.Rule {
 		`oc login --token=sha256~_xxxxxx_xxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxx-X \
     --server=https://api.${zone}.appuio.cloud:6443`,
 	}
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }

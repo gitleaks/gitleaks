@@ -3,10 +3,11 @@ package config
 import (
 	_ "embed"
 	"fmt"
-	"golang.org/x/exp/maps"
 	"regexp"
 	"sort"
 	"strings"
+
+	"golang.org/x/exp/maps"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -179,7 +180,12 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if rule.Regex != nil && rule.SecretGroup > rule.Regex.NumSubexp() {
 			return Config{}, fmt.Errorf("%s invalid regex secret group %d, max regex secret group %d", rule.Description, rule.SecretGroup, rule.Regex.NumSubexp())
 		}
+
 		rulesMap[rule.RuleID] = rule
+
+		if err := rule.Validate(); err != nil {
+			return Config{}, err
+		}
 	}
 
 	// Validate IDs in |verify.requires|.

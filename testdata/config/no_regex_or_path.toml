@@ -1,0 +1,5 @@
+title = "gitleaks config"
+
+[[rules]]
+id = 'discord-api-key'
+description = "Discord API key"

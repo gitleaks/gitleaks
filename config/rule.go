@@ -1,16 +1,18 @@
 package config
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 )
 
 // Rules contain information that define details on how to detect secrets
 type Rule struct {
-	// Description is the description of the rule.
-	Description string
-
 	// RuleID is a unique identifier for this rule
 	RuleID string
+
+	// Description is the description of the rule.
+	Description string
 
 	// Entropy is a float representing the minimum shannon
 	// entropy a regex group must have to be considered a secret.
@@ -76,4 +78,35 @@ func (v Verify) GetStaticHeaders() map[string]string {
 
 func (v Verify) GetDynamicHeaders() map[string]string {
 	return v.dynamicHeaders
+}
+
+// Validate guards against common misconfigurations.
+func (r Rule) Validate() error {
+	// Ensure |id| is present.
+	if strings.TrimSpace(r.RuleID) == "" {
+		// Try to provide helpful context, since |id| is empty.
+		var context string
+		if r.Regex != nil {
+			context = ", regex: " + r.Regex.String()
+		} else if r.Path != nil {
+			context = ", path: " + r.Path.String()
+		} else if r.Description != "" {
+			context = ", description: " + r.Description
+		}
+		return fmt.Errorf("rule |id| is missing or empty" + context)
+	}
+
+	// TODO: uncomment this once it works with |extend|.
+	// See: https://github.com/gitleaks/gitleaks/issues/1507#issuecomment-2352559213
+	// Ensure the rule actually matches something.
+	//if r.Regex == nil && r.Path == nil {
+	//	return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
+	//}
+
+	// Ensure |secretGroup| works.
+	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
+		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+	}
+
+	return nil
 }

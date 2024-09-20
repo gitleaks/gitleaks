@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -10,9 +11,9 @@ func NytimesAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "nytimes-access-token",
 		Description: "Detected a Nytimes Access Token, risking unauthorized access to New York Times APIs and content services.",
-		Regex: generateSemiGenericRegex([]string{
+		Regex: utils.GenerateSemiGenericRegex([]string{
 			"nytimes", "new-york-times,", "newyorktimes"},
-			alphaNumericExtended("32"), true),
+			utils.AlphaNumericExtended("32"), true),
 
 		Keywords: []string{
 			"nytimes",
@@ -23,7 +24,7 @@ func NytimesAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("nytimes", secrets.NewSecret(alphaNumeric("32"))),
+		utils.GenerateSampleSecret("nytimes", secrets.NewSecret(utils.AlphaNumeric("32"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

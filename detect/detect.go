@@ -166,7 +166,11 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		d.gitleaksIgnore[scanner.Text()] = true
+		line := strings.TrimSpace(scanner.Text())
+		// Skip lines that start with a comment
+		if line != "" && !strings.HasPrefix(line, "#") {
+			d.gitleaksIgnore[line] = true
+		}
 	}
 	return nil
 }
@@ -337,24 +341,31 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			continue
 		}
 
-		// by default if secret group is not set, we will check to see if there
-		// are any capture groups. If there are, we will use the first capture to start
-		groups := rule.Regex.FindStringSubmatch(secret)
-		if rule.SecretGroup == 0 {
-			// if len(groups) == 2 that means there is only one capture group
-			// the first element in groups is the full match, the second is the
-			// first capture group
-			if len(groups) == 2 {
-				secret = groups[1]
-				finding.Secret = secret
+		// Set the value of |secret|, if the pattern contains at least one capture group.
+		// (The first element is the full match, hence we check >= 2.)
+		groups := rule.Regex.FindStringSubmatch(finding.Secret)
+		if len(groups) >= 2 {
+			if rule.SecretGroup > 0 {
+				if len(groups) <= rule.SecretGroup {
+					// Config validation should prevent this
+					continue
+				}
+				finding.Secret = groups[rule.SecretGroup]
+			} else {
+				// If |secretGroup| is not set, we will use the first suitable capture group.
+				if len(groups) == 2 {
+					// Use the only group.
+					finding.Secret = groups[1]
+				} else {
+					// Use the first non-empty group.
+					for _, s := range groups[1:] {
+						if len(s) > 0 {
+							finding.Secret = s
+							break
+						}
+					}
+				}
 			}
-		} else {
-			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
-				// Config validation should prevent this
-				continue
-			}
-			secret = groups[rule.SecretGroup]
-			finding.Secret = secret
 		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry
@@ -400,7 +411,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			// secret contains both digits and alphabetical characters.
 			// TODO: this should be replaced with stop words
 			if strings.HasPrefix(rule.RuleID, "generic") {
-				if !containsDigit(secret) {
+				if !containsDigit(finding.Secret) {
 					continue
 				}
 			}

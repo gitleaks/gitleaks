@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -10,7 +11,7 @@ func SendbirdAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sendbird-access-token",
 		Description: "Uncovered a Sendbird Access Token, potentially risking unauthorized access to communication services and user data.",
-		Regex:       generateSemiGenericRegex([]string{"sendbird"}, hex("40"), true),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"sendbird"}, utils.Hex("40"), true),
 
 		Keywords: []string{
 			"sendbird",
@@ -19,9 +20,9 @@ func SendbirdAccessToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("sendbird", secrets.NewSecret(hex("40"))),
+		utils.GenerateSampleSecret("sendbird", secrets.NewSecret(utils.Hex("40"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func SendbirdAccessID() *config.Rule {
@@ -29,7 +30,7 @@ func SendbirdAccessID() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sendbird-access-id",
 		Description: "Discovered a Sendbird Access ID, which could compromise chat and messaging platform integrations.",
-		Regex:       generateSemiGenericRegex([]string{"sendbird"}, hex8_4_4_4_12(), true),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"sendbird"}, utils.Hex8_4_4_4_12(), true),
 
 		Keywords: []string{
 			"sendbird",
@@ -38,7 +39,7 @@ func SendbirdAccessID() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("sendbird", secrets.NewSecret(hex8_4_4_4_12())),
+		utils.GenerateSampleSecret("sendbird", secrets.NewSecret(utils.Hex8_4_4_4_12())),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

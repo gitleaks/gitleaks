@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -10,7 +11,7 @@ func PulumiAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "pulumi-api-token",
 		Description: "Found a Pulumi API token, posing a risk to infrastructure as code services and cloud resource management.",
-		Regex:       generateUniqueTokenRegex(`pul-[a-f0-9]{40}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`pul-[a-f0-9]{40}`, true),
 
 		Keywords: []string{
 			"pul-",
@@ -19,7 +20,7 @@ func PulumiAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("pulumi-api-token", "pul-"+secrets.NewSecret(hex("40"))),
+		utils.GenerateSampleSecret("pulumi-api-token", "pul-"+secrets.NewSecret(utils.Hex("40"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

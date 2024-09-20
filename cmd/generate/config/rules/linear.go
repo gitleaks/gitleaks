@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -18,9 +19,9 @@ func LinearAPIToken() *config.Rule {
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linear", "lin_api_"+secrets.NewSecret(alphaNumeric("40"))),
+		utils.GenerateSampleSecret("linear", "lin_api_"+secrets.NewSecret(utils.AlphaNumeric("40"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func LinearClientSecret() *config.Rule {
@@ -28,13 +29,13 @@ func LinearClientSecret() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		RuleID:      "linear-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"linear"}, hex("32"), true),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"linear"}, utils.Hex("32"), true),
 		Keywords:    []string{"linear"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("linear", secrets.NewSecret(hex("32"))),
+		utils.GenerateSampleSecret("linear", secrets.NewSecret(utils.Hex("32"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }

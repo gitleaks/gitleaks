@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -63,7 +64,7 @@ func HuggingFaceAccessToken() *config.Rule {
 		`# HuggingFace API Token https://huggingface.co/settings/tokens
 		HUGGINGFACE_API_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,`,
 	}
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }
 
 // Will be deprecated Aug 1st, 2023.
@@ -111,5 +112,5 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 		You should see a token hf_xxxxx (old tokens are api_XXXXXXXX or api_org_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).
 		If you do not submit your API token when sending requests to the API, you will not be able to run inference on your private models.`,
 	}
-	return validate(r, tps, fps)
+	return utils.Validate(r, tps, fps)
 }
