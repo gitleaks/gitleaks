@@ -2,12 +2,13 @@ package detect
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/spf13/viper"
 
@@ -18,88 +19,152 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-type MockHTTPClient struct {
-	DoFunc func(req *http.Request) (*http.Response, error)
-}
-
-func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	if m.DoFunc != nil {
-		return m.DoFunc(req)
-	}
-	return nil, fmt.Errorf("no DoFunc defined")
-}
-
-func LoadConfig(t *testing.T, configFileName string) config.Config {
-	viper.Reset()
-	viper.AddConfigPath(configPath)
-	viper.SetConfigName(configFileName)
-	viper.SetConfigType("toml")
-	err := viper.ReadInConfig()
-	require.NoError(t, err)
-
-	var vc config.ViperConfig
-	err = viper.Unmarshal(&vc)
-	require.NoError(t, err)
-	cfg, err := vc.Translate()
-	require.NoError(t, err)
-
-	return cfg
-}
-
 func TestVerify(t *testing.T) {
-	// Prepare mock responses
-	mockResponses := map[string]*http.Response{
-		"https://api.github.com/rate_limit": {
-			StatusCode: 200,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"rate": {"limit": 5000}}`)),
-		},
-	}
-
-	// Create a mock HTTP client
-	mockClient := &MockHTTPClient{
-		DoFunc: func(req *http.Request) (*http.Response, error) {
-			resp, ok := mockResponses[req.URL.String()]
-			if !ok {
-				return &http.Response{
-					StatusCode: 404,
-					Body:       ioutil.NopCloser(strings.NewReader("Not Found")),
-				}, nil
+	// Create an httptest.Server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Inspect the request
+		switch r.URL.Path {
+		case "/valid":
+			// Check headers
+			if r.Header.Get("Authorization") == "Bearer validtoken" {
+				// Return 200 OK
+				w.WriteHeader(200)
+				w.Write([]byte(`{"status": "success"}`))
+			} else {
+				// Return 401 Unauthorized
+				w.WriteHeader(401)
+				w.Write([]byte(`{"status": "unauthorized"}`))
 			}
-			return resp, nil
-		},
-	}
+		case "/invalid":
+			w.WriteHeader(401)
+			w.Write([]byte(`{"status": "unauthorized"}`))
+		default:
+			// Return 404 Not Found
+			w.WriteHeader(404)
+			w.Write([]byte("Not Found"))
+		}
+	}))
+	defer server.Close()
 
-	// Initialize Detector with the mock client
+	// Initialize Detector with the server's client
 	detector := &Detector{
-		HTTPClient:  mockClient,
+		HTTPClient:  server.Client(), // Use the server's client
 		VerifyCache: *NewRequestCache(),
 	}
 
 	tests := []struct {
-		name       string
-		findings   []report.Finding
-		configName string
-		want       []report.Finding
+		name      string
+		findings  []report.Finding
+		configStr string
+		want      []report.Finding
 	}{
 		{
-			name:       "no findings",
-			findings:   []report.Finding{},
-			configName: "verify_multipart_header.toml",
-			want:       []report.Finding{},
+			name: "Valid token with correct header",
+			findings: []report.Finding{
+				{
+					RuleID: "TokenRule",
+					Secret: "validtoken",
+				},
+			},
+			configStr: fmt.Sprintf(`
+                [[rules]]
+                id = "TokenRule"
+                regex = '''(?i)\b([a-z0-9]{10})\b'''
+                report = false
+                [rules.verify]
+                url = "%s/valid"
+                httpVerb = "GET"
+                expectedStatus = ["200"]
+                headers = {Authorization = "Bearer ${TokenRule}"}
+            `, server.URL),
+			want: []report.Finding{
+				{
+					RuleID:       "TokenRule",
+					Secret:       "validtoken",
+					Status:       report.ConfirmedValid,
+					StatusReason: "",
+				},
+			},
+		},
+		{
+			name: "Invalid token",
+			findings: []report.Finding{
+				{
+					RuleID: "TokenRule",
+					Secret: "invalidtoken",
+				},
+			},
+			configStr: fmt.Sprintf(`
+                [[rules]]
+                id = "TokenRule"
+                regex = '''(?i)\b([a-z0-9]{12})\b'''
+                report = false
+                [rules.verify]
+                url = "%s/valid"
+                httpVerb = "GET"
+                expectedStatus = ["200"]
+                headers = {Authorization = "Bearer ${TokenRule}"}
+            `, server.URL),
+			want: []report.Finding{
+				{
+					RuleID:       "TokenRule",
+					Secret:       "invalidtoken",
+					Status:       report.ConfirmedInvalid,
+					StatusReason: "Status code '401'",
+				},
+			},
+		},
+		{
+			name: "Invalid URL path",
+			findings: []report.Finding{
+				{
+					RuleID: "TokenRule",
+					Secret: "validtoken",
+				},
+			},
+			configStr: fmt.Sprintf(`
+                [[rules]]
+                id = "TokenRule"
+                regex = '''(?i)\b([a-z0-9]{10})\b'''
+                report = false
+                [rules.verify]
+                url = "%s/invalid_path"
+                httpVerb = "GET"
+                expectedStatus = ["200"]
+                headers = {Authorization = "Bearer ${TokenRule}"}
+            `, server.URL),
+			want: []report.Finding{
+				{
+					RuleID:       "TokenRule",
+					Secret:       "validtoken",
+					Status:       report.ConfirmedInvalid,
+					StatusReason: "Status code '404'",
+				},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := LoadConfig(t, tt.configName)
+			// Load the config from tt.configStr
+			viper.Reset()
+			viper.SetConfigType("toml")
+			err := viper.ReadConfig(strings.NewReader(tt.configStr))
+			require.NoError(t, err)
+
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+
 			detector.Config = cfg
+
 			verifiedFindings := detector.Verify(tt.findings)
+			// Compare findings while ignoring unexported fields and order
 			assert.Equal(t, tt.want, verifiedFindings)
 		})
 	}
-
-	// Call the Verify function
-
 }
 
 func Test_expandPlaceholdersInString(t *testing.T) {
