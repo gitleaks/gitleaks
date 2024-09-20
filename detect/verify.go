@@ -21,7 +21,6 @@ var urlEncodePat = regexp.MustCompile(`\${urlEncode\("(.+?)"\)}`)
 // Verify will iterate through findings and verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-	client := &http.Client{}
 
 	// Build lookups
 	findingsByRuleID := map[string][]report.Finding{}
@@ -160,7 +159,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 					}
 
 					// TODO: Implement retry with backoff if needed
-					resp, err = client.Do(req)
+					resp, err = d.HTTPClient.Do(req)
 					if err != nil {
 						logger.Error().Err(err).Msg("Failed to send verification request")
 						verifiableFindings[i].Status = report.Error

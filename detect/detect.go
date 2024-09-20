@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -85,6 +86,12 @@ type Detector struct {
 	Sema *semgroup.Group
 
 	VerifyCache RequestCache
+
+	HTTPClient HTTPClient
+}
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 // Fragment contains the data to be scanned
@@ -119,6 +126,7 @@ func NewDetector(cfg config.Config) *Detector {
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
 		VerifyCache:    *NewRequestCache(),
+		HTTPClient:     &http.Client{},
 	}
 }
 
