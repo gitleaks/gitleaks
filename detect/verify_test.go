@@ -172,7 +172,7 @@ func TestVerify(t *testing.T) {
 					RuleID:       "TokenRule",
 					Secret:       "invalidtoken",
 					Status:       report.Error,
-					StatusReason: "Get \"http://127.0.0.1:63485/slow\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)'",
+					StatusReason: fmt.Sprintf("Get \"%s\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)", server.URL+"/slow"),
 				},
 			},
 		},
@@ -195,13 +195,6 @@ func TestVerify(t *testing.T) {
 			detector.Config = cfg
 
 			verifiedFindings := detector.Verify(tt.findings)
-
-			// manually check the slow response since http server is not deterministic
-			if tt.name == "Slow response" {
-				assert.Contains(t, verifiedFindings[0].StatusReason, "context deadline exceeded")
-				assert.Equal(t, report.Error, verifiedFindings[0].Status)
-				return
-			}
 
 			// Compare findings while ignoring unexported fields and order
 			assert.Equal(t, tt.want, verifiedFindings)
