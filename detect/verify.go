@@ -182,6 +182,7 @@ FindingLoop:
 					verifiableFindings[i].Status = report.ConfirmedValid
 					verifiableFindings[i].StatusReason = ""
 					// Build attributes for multi-part rules
+					// TODO: I don't think this works for base64-encoded secrets.
 					if len(requiredIDs) > 0 {
 						attributes := collectAttributes(targetUrl, headerCombination, findingBySecret)
 						verifiableFindings[i].Attributes = attributes
