@@ -285,7 +285,7 @@ func Test_expandPlaceholdersInString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := expandPlaceholdersInString(tt.args.template, tt.args.placeholder, tt.args.secret, tt.args.placeholderByRequiredID, tt.args.secretsByRequiredID)
+			actual, _ := expandPlaceholdersInString(tt.args.template, tt.args.placeholder, tt.args.secret, tt.args.placeholderByRequiredID, tt.args.secretsByRequiredID)
 			// https://stackoverflow.com/a/67624073
 			less := func(a, b string) bool { return a < b }
 			if diff := cmp.Diff(tt.want, actual, cmpopts.SortSlices(less)); diff != "" {

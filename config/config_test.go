@@ -186,7 +186,7 @@ func Test_parseVerify(t *testing.T) {
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
 				},
-				Headers: map[string]string{
+				dynamicHeaders: map[string]string{
 					"Authorization": "Basic ${base64(\"${github-client-id}:${github-client-secret}\")}",
 				},
 				ExpectedStatus: []string{"200"},
@@ -198,8 +198,9 @@ func Test_parseVerify(t *testing.T) {
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
-				HTTPVerb: "GET",
-				URL:      "https://api.github.com/rate_limit?client_id=${github-client-id}&client_secret=${github-client-secret}",
+				HTTPVerb:         "GET",
+				URL:              "https://api.github.com/rate_limit?client_id=${github-client-id}&client_secret=${github-client-secret}",
+				placeholderInUrl: true,
 				staticHeaders: map[string]string{
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
@@ -231,6 +232,18 @@ func Test_parseVerify(t *testing.T) {
 				actual = rule.Verify
 				break
 			}
+
+			// Lazy hack to avoid duplicate declaration for Headers.
+			if tt.verify.Headers == nil {
+				tt.verify.Headers = map[string]string{}
+				for k, v := range tt.verify.staticHeaders {
+					tt.verify.Headers[k] = v
+				}
+				for k, v := range tt.verify.dynamicHeaders {
+					tt.verify.Headers[k] = v
+				}
+			}
+
 			assert.Equal(t, tt.wantError, err)
 			assert.Equal(t, tt.verify, actual)
 		})
