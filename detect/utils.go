@@ -146,44 +146,14 @@ func printFinding(f report.Finding, noColor bool) {
 		finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
 	}
 
-	var attributes string
-	if len(f.Attributes) > 0 {
-		a, _ := json.Marshal(f.Attributes)
-		attributes = string(a)
-	}
 	if skipColor || isFileMatch {
 		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
 		fmt.Printf("%-12s %s\n", "Secret:", f.Secret)
-		fmt.Printf("%-12s %s\n", "Attributes:", attributes)
-		fmt.Printf("%-12s %v\n", "Status:", f.Status.String())
+		printStatus(f, false)
 	} else {
 		fmt.Printf("%-12s %s", "Finding:", finding)
 		fmt.Printf("%-12s %s\n", "Secret:", secret)
-
-		// TODO: Refactor this to work for non-colour.
-		var statusMsg any
-		switch f.Status {
-		case report.NotSupported:
-			statusMsg = "N/A"
-		case report.Error:
-			statusMsg = "Verification failed"
-		case report.Skipped:
-			statusMsg = "Verification skipped"
-		case report.ConfirmedInvalid:
-			statusMsg = "Invalid"
-		case report.ConfirmedValid:
-			if len(attributes) > 0 {
-				fmt.Printf("%-12s %s\n", "Attributes:", attributes)
-			}
-			// set verified to green
-			statusMsg = lipgloss.NewStyle().SetString("Valid ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
-		}
-		fmt.Printf("%-12s %v", "Status:", statusMsg)
-		if f.StatusReason != "" {
-			fmt.Printf(" (%s)\n", f.StatusReason)
-		} else {
-			fmt.Println()
-		}
+		printStatus(f, true)
 	}
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
@@ -205,6 +175,39 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %s\n", "Date:", f.Date)
 	fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
 	fmt.Println("")
+}
+
+func printStatus(f report.Finding, color bool) {
+	var statusMsg any
+	switch f.Status {
+	case report.NotSupported:
+		statusMsg = "N/A"
+	case report.Error:
+		statusMsg = "Verification failed"
+	case report.Skipped:
+		statusMsg = "Verification skipped"
+	case report.ConfirmedInvalid:
+		statusMsg = "Invalid"
+	case report.ConfirmedValid:
+		if len(f.Attributes) > 0 {
+			var attributes string
+			a, _ := json.Marshal(f.Attributes)
+			attributes = string(a)
+			fmt.Printf("%-12s %s\n", "Attributes:", attributes)
+		}
+		if color {
+			// set verified to green
+			statusMsg = lipgloss.NewStyle().SetString("Valid ✅").Bold(true).Foreground(lipgloss.Color("#00ff00"))
+		} else {
+			statusMsg = "Valid"
+		}
+	}
+	fmt.Printf("%-12s %v", "Status:", statusMsg)
+	if f.StatusReason != "" {
+		fmt.Printf(" (%s)\n", f.StatusReason)
+	} else {
+		fmt.Println()
+	}
 }
 
 func containsDigit(s string) bool {
