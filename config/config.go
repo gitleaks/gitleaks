@@ -3,6 +3,7 @@ package config
 import (
 	_ "embed"
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"regexp"
 	"sort"
 	"strings"
@@ -158,9 +159,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			rule.Report = true
 		}
 
-		// TODO: Don't do anything verification-related unless `--experimental-verification` is enabled.
 		// TODO: Apply this validation for `go generate` as well.
-		if r.Verify.URL != "" {
+		if flags.EnableExperimentalVerification.Load() && r.Verify.URL != "" {
 			verify, err := parseVerify(rule.RuleID, r.Verify)
 			if err != nil {
 				return Config{}, err

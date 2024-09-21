@@ -2,6 +2,8 @@ package detect
 
 import (
 	"encoding/json"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
+
 	// "encoding/json"
 	"fmt"
 	"math"
@@ -178,6 +180,10 @@ func printFinding(f report.Finding, noColor bool) {
 }
 
 func printStatus(f report.Finding, color bool) {
+	if !flags.EnableExperimentalVerification.Load() {
+		return
+	}
+
 	var statusMsg any
 	switch f.Status {
 	case report.NotSupported:

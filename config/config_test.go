@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"regexp"
 	"testing"
 
@@ -149,6 +150,8 @@ func TestTranslate(t *testing.T) {
 		},
 	}
 
+	// Required for verification tests to work.
+	flags.EnableExperimentalVerification.Store(true)
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
 			viper.Reset()
@@ -210,6 +213,7 @@ func Test_parseVerify(t *testing.T) {
 		},
 	}
 
+	flags.EnableExperimentalVerification.Store(true)
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
 			viper.Reset()

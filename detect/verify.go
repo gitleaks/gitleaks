@@ -21,7 +21,6 @@ var urlEncodePat = regexp.MustCompile(`\${urlEncode\("(.+?)"\)}`)
 // Verify will iterate through findings and verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-
 	// Build lookups
 	findingsByRuleID := map[string][]report.Finding{}
 	secretsByRuleID := map[string]map[string]struct{}{}
