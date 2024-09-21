@@ -87,7 +87,7 @@ type Finding struct {
 }
 
 // Redact removes sensitive information from a finding.
-func (f Finding) Redact(percent uint) {
+func (f *Finding) Redact(percent uint) {
 	secret := maskSecret(f.Secret, percent)
 	if percent >= 100 {
 		secret = "REDACTED"
