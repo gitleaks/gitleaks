@@ -122,7 +122,13 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 						Str("url", targetUrl).
 						Fields(map[string]interface{}{"headers": headerCombination}).
 						Msg("Sending verification request...")
+
 					req, err := http.NewRequest(rule.Verify.HTTPVerb, targetUrl, nil)
+
+					// TODO make configurable (globally and per rule)
+					// ctx, cancel := context.WithTimeout(context.Background(), timeout)
+					// defer cancel()
+
 					if err != nil {
 						logger.Error().Err(err).Msg("Failed to construct verification request")
 						verifiableFindings[i].Status = report.Error

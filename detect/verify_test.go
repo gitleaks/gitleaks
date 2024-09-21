@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -38,6 +39,10 @@ func TestVerify(t *testing.T) {
 		case "/invalid":
 			w.WriteHeader(401)
 			w.Write([]byte(`{"status": "unauthorized"}`))
+		case "/slow":
+			time.Sleep(2 * time.Second)
+			w.WriteHeader(200)
+			w.Write([]byte(`{"status": "success"}`))
 		default:
 			// Return 404 Not Found
 			w.WriteHeader(404)
@@ -46,9 +51,10 @@ func TestVerify(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Initialize Detector with the server's client
 	detector := &Detector{
-		HTTPClient:  server.Client(), // Use the server's client
+		HTTPClient: &http.Client{
+			Timeout: 1 * time.Second,
+		},
 		VerifyCache: *NewRequestCache(),
 	}
 
@@ -142,6 +148,34 @@ func TestVerify(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Slow response",
+			findings: []report.Finding{
+				{
+					RuleID: "TokenRule",
+					Secret: "invalidtoken",
+				},
+			},
+			configStr: fmt.Sprintf(`
+                [[rules]]
+                id = "TokenRule"
+                regex = '''(?i)\b([a-z0-9]{12})\b'''
+                report = false
+                [rules.verify]
+                url = "%s/slow"
+                httpVerb = "GET"
+                expectedStatus = ["200"]
+                headers = {Authorization = "Bearer ${TokenRule}"}
+            `, server.URL),
+			want: []report.Finding{
+				{
+					RuleID:       "TokenRule",
+					Secret:       "invalidtoken",
+					Status:       report.Error,
+					StatusReason: "Get \"http://127.0.0.1:63485/slow\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)'",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -161,8 +195,17 @@ func TestVerify(t *testing.T) {
 			detector.Config = cfg
 
 			verifiedFindings := detector.Verify(tt.findings)
+
+			// manually check the slow response since http server is not deterministic
+			if tt.name == "Slow response" {
+				assert.Contains(t, verifiedFindings[0].StatusReason, "context deadline exceeded")
+				assert.Equal(t, report.Error, verifiedFindings[0].Status)
+				return
+			}
+
 			// Compare findings while ignoring unexported fields and order
 			assert.Equal(t, tt.want, verifiedFindings)
+
 		})
 	}
 }

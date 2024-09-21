@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -126,7 +127,7 @@ func NewDetector(cfg config.Config) *Detector {
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
 		VerifyCache:    *NewRequestCache(),
-		HTTPClient:     &http.Client{},
+		HTTPClient:     &http.Client{Timeout: 5 * time.Second}, // default timeout to 5 seconds. TODO make configurable
 	}
 }
 
