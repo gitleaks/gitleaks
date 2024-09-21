@@ -207,10 +207,18 @@ func main() {
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
+		logger := log.With().Str("rule-id", rule.RuleID).Logger()
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
-			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
+			logger.Fatal().Msg("rule id is not unique")
 		}
+
+		if rule.Verify.URL != "" {
+			if err := rule.Verify.Validate(rule.RuleID); err != nil {
+				logger.Fatal().Err(err).Msg("invalid |verify| configuration")
+			}
+		}
+
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule

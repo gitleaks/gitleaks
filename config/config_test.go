@@ -180,6 +180,7 @@ func Test_parseVerify(t *testing.T) {
 		{
 			cfgName: "verify_multipart_header",
 			verify: Verify{
+				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
@@ -198,6 +199,7 @@ func Test_parseVerify(t *testing.T) {
 		{
 			cfgName: "verify_multipart_query",
 			verify: Verify{
+				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},

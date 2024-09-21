@@ -39,7 +39,7 @@ type ViperConfig struct {
 		Path        string
 		Tags        []string
 		Report      *bool
-		Verify      viperRuleVerify
+		Verify      Verify
 
 		Allowlist struct {
 			RegexTarget string
@@ -56,15 +56,6 @@ type ViperConfig struct {
 		Commits     []string
 		StopWords   []string
 	}
-}
-
-type viperRuleVerify struct {
-	HTTPVerb string
-	URL      string
-	Headers  map[string]string
-	// TODO: support request body? (e.g., GraphQL APIs require POST + body)
-	ExpectedStatus       []string
-	ExpectedBodyContains []string
 }
 
 // Config is a configuration struct that contains rules and an allowlist if present.
@@ -159,13 +150,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			rule.Report = true
 		}
 
-		// TODO: Apply this validation for `go generate` as well.
 		if flags.EnableExperimentalVerification.Load() && r.Verify.URL != "" {
-			verify, err := parseVerify(rule.RuleID, r.Verify)
-			if err != nil {
+			if err := r.Verify.Validate(rule.RuleID); err != nil {
 				return Config{}, err
 			}
-			rule.Verify = verify
+			rule.Verify = r.Verify
 			if len(rule.Verify.GetRequiredIDs()) > 0 {
 				for requiredID := range rule.Verify.GetRequiredIDs() {
 					if _, ok := ruleDependencies[requiredID]; !ok {
@@ -317,70 +306,6 @@ var (
 	}
 	verifyPlaceholderPat = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
 )
-
-func parseVerify(ruleID string, v viperRuleVerify) (Verify, error) {
-	// TODO: Check that there's some sort of substitution happening here.
-	var (
-		verify  = Verify{}
-		ruleIDs = map[string]struct{}{}
-	)
-	// Parse URL.
-	for _, match := range verifyPlaceholderPat.FindAllStringSubmatch(v.URL, -1) {
-		if !verify.placeholderInUrl {
-			verify.placeholderInUrl = true
-		}
-		ruleIDs[match[1]] = struct{}{}
-	}
-	if err := checkVerifyHelperFuncs(v.URL); err != nil {
-		return verify, fmt.Errorf("%s: %w", ruleID, err)
-	}
-
-	// Parse headers.
-	staticHeaders := map[string]string{}
-	dynamicHeaders := map[string]string{}
-	for k, v := range v.Headers {
-		matches := verifyPlaceholderPat.FindAllStringSubmatch(v, -1)
-		if len(matches) == 0 {
-			staticHeaders[k] = v
-			continue
-		}
-
-		dynamicHeaders[k] = v
-		for _, match := range matches {
-			ruleIDs[match[1]] = struct{}{}
-		}
-
-		if err := checkVerifyHelperFuncs(v); err != nil {
-			return verify, fmt.Errorf("%s: %w", ruleID, err)
-		}
-	}
-
-	// TODO: Check in body as well
-	// TODO: Handle things like base64-encoding
-	if len(ruleIDs) == 0 {
-		return verify, fmt.Errorf("%s: verify config does not contain any placeholders (${rule-id})", ruleID)
-	} else if _, ok := ruleIDs[ruleID]; !ok {
-		return verify, fmt.Errorf("%s: verify config does not contain a placeholder for the rule's output (${%s})", ruleID, ruleID)
-	} else {
-		delete(ruleIDs, ruleID)
-	}
-	if len(staticHeaders) == 0 {
-		staticHeaders = nil
-	}
-	if len(dynamicHeaders) == 0 {
-		dynamicHeaders = nil
-	}
-
-	verify.requiredIDs = ruleIDs
-	verify.HTTPVerb = v.HTTPVerb
-	verify.URL = v.URL
-	verify.Headers = v.Headers
-	verify.staticHeaders = staticHeaders
-	verify.dynamicHeaders = dynamicHeaders
-	verify.ExpectedStatus = v.ExpectedStatus
-	verify.ExpectedBodyContains = v.ExpectedBodyContains
-	return verify, nil
-}
 
 func checkVerifyHelperFuncs(s string) error {
 	for _, match := range verifyHelperFuncPat.FindAllStringSubmatch(s, -1) {

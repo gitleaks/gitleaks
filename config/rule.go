@@ -49,37 +49,6 @@ type Rule struct {
 	Verify Verify
 }
 
-type Verify struct {
-	HTTPVerb             string
-	URL                  string
-	Headers              map[string]string
-	ExpectedStatus       []string
-	ExpectedBodyContains []string
-
-	// RequiredIDs is a set of other rule IDs that must be present for verification.
-	requiredIDs      map[string]struct{}
-	placeholderInUrl bool
-	staticHeaders    map[string]string
-	dynamicHeaders   map[string]string
-	//buildRequestFunc *func(req *http.Request, rule Rule, finding report.Finding, findingsByRuleID map[string][]report.Finding) func() string
-}
-
-func (v Verify) GetRequiredIDs() map[string]struct{} {
-	return v.requiredIDs
-}
-
-func (v Verify) GetPlaceholderInUrl() bool {
-	return v.placeholderInUrl
-}
-
-func (v Verify) GetStaticHeaders() map[string]string {
-	return v.staticHeaders
-}
-
-func (v Verify) GetDynamicHeaders() map[string]string {
-	return v.dynamicHeaders
-}
-
 // Validate guards against common misconfigurations.
 func (r Rule) Validate() error {
 	// Ensure |id| is present.
@@ -106,6 +75,100 @@ func (r Rule) Validate() error {
 	// Ensure |secretGroup| works.
 	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
 		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+	}
+
+	return nil
+}
+
+type Verify struct {
+	HTTPVerb             string
+	URL                  string
+	Headers              map[string]string
+	ExpectedStatus       []string
+	ExpectedBodyContains []string
+
+	// RequiredIDs is a set of other rule IDs that must be present for verification.
+	initialized      bool
+	requiredIDs      map[string]struct{}
+	placeholderInUrl bool
+	staticHeaders    map[string]string
+	dynamicHeaders   map[string]string
+	//buildRequestFunc *func(req *http.Request, rule Rule, finding report.Finding, findingsByRuleID map[string][]report.Finding) func() string
+}
+
+func (v Verify) GetRequiredIDs() map[string]struct{} {
+	return v.requiredIDs
+}
+
+func (v Verify) GetPlaceholderInUrl() bool {
+	return v.placeholderInUrl
+}
+
+func (v Verify) GetStaticHeaders() map[string]string {
+	return v.staticHeaders
+}
+
+func (v Verify) GetDynamicHeaders() map[string]string {
+	return v.dynamicHeaders
+}
+
+func (v *Verify) Validate(ruleID string) error {
+	if v.initialized {
+		return nil
+	}
+
+	// TODO: Check that there's some sort of substitution happening here.
+	v.requiredIDs = map[string]struct{}{}
+	// Parse URL.
+	for _, match := range verifyPlaceholderPat.FindAllStringSubmatch(v.URL, -1) {
+		if !v.placeholderInUrl {
+			v.placeholderInUrl = true
+		}
+		v.requiredIDs[match[1]] = struct{}{}
+	}
+	if err := checkVerifyHelperFuncs(v.URL); err != nil {
+		return fmt.Errorf("%s: %w", ruleID, err)
+	}
+
+	// Parse headers.
+	v.staticHeaders = map[string]string{}
+	v.dynamicHeaders = map[string]string{}
+	for k, val := range v.Headers {
+		matches := verifyPlaceholderPat.FindAllStringSubmatch(val, -1)
+		if len(matches) == 0 {
+			v.staticHeaders[k] = val
+			continue
+		}
+
+		v.dynamicHeaders[k] = val
+		for _, match := range matches {
+			v.requiredIDs[match[1]] = struct{}{}
+		}
+
+		if err := checkVerifyHelperFuncs(val); err != nil {
+			return fmt.Errorf("%s: %w", ruleID, err)
+		}
+	}
+
+	// TODO: Check in body as well
+	// TODO: Handle things like base64-encoding
+	if len(v.requiredIDs) == 0 {
+		return fmt.Errorf("%s: verify config does not contain any placeholders (${rule-id})", ruleID)
+	} else if _, ok := v.requiredIDs[ruleID]; !ok {
+		return fmt.Errorf("%s: verify config does not contain a placeholder for the rule's output (${%s})", ruleID, ruleID)
+	} else {
+		delete(v.requiredIDs, ruleID)
+	}
+
+	v.initialized = true
+	if len(v.requiredIDs) == 0 {
+		v.requiredIDs = nil
+	}
+	if len(v.staticHeaders) == 0 {
+		v.staticHeaders = nil
+	}
+	if len(v.dynamicHeaders) == 0 {
+		v.dynamicHeaders = nil
 	}
 
 	return nil
