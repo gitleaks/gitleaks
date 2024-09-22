@@ -21,7 +21,7 @@ func SlackBotToken() *config.Rule {
 			"xoxb",
 		},
 	}
-	r.Verify = createVerify(r.RuleID)
+	r.Verify = createSlackVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -51,7 +51,7 @@ func SlackUserToken() *config.Rule {
 		Regex:    regexp.MustCompile(`xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}`),
 		Keywords: []string{"xoxp-", "xoxe-"},
 	}
-	r.Verify = createVerify(r.RuleID)
+	r.Verify = createSlackVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -157,7 +157,7 @@ func SlackLegacyBotToken() *config.Rule {
 			"xoxb",
 		},
 	}
-	r.Verify = createVerify(r.RuleID)
+	r.Verify = createSlackVerify(r.RuleID)
 
 	tps := []string{
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#LL42C38-L42C80
@@ -284,7 +284,7 @@ func SlackWebHookUrl() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func createVerify(ruleID string) *config.Verify {
+func createSlackVerify(ruleID string) *config.Verify {
 	return &config.Verify{
 		HTTPVerb: "POST",
 		URL:      "https://slack.com/api/auth.test",
