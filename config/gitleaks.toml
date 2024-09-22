@@ -2010,6 +2010,13 @@ entropy = 3
 keywords = [
     "github_pat_",
 ]
+[rules.Verify]
+httpVerb = "GET"
+url = "https://api.github.com/user"
+expectedStatus = [
+    "200",
+]
+headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-fine-grained-pat}", X-GitHub-Api-Version = "2022-11-28"}
 
 [[rules]]
 id = "github-oauth"
@@ -2029,8 +2036,8 @@ keywords = [
     "ghp_",
 ]
 [rules.Verify]
-url = "https://api.github.com/user"
 httpVerb = "GET"
+url = "https://api.github.com/user"
 expectedStatus = [
     "200",
 ]

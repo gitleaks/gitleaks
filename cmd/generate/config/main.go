@@ -213,7 +213,7 @@ func main() {
 			logger.Fatal().Msg("rule id is not unique")
 		}
 
-		if rule.Verify.URL != "" {
+		if rule.Verify != nil {
 			if err := rule.Verify.Validate(rule.RuleID); err != nil {
 				logger.Fatal().Err(err).Msg("invalid |verify| configuration")
 			}

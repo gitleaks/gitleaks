@@ -63,9 +63,9 @@ regexes = [
     "{{ $stopword }}",{{ end }}
 ]{{ end }}
 {{ end }}
-{{- if and $rule.Verify.URL $rule.Verify.HTTPVerb }}[rules.Verify]
-url = "{{ $rule.Verify.URL }}"
+{{- if and $rule.Verify }}[rules.Verify]
 httpVerb = "{{ $rule.Verify.HTTPVerb }}"
+url = "{{ $rule.Verify.URL }}"
 {{- with $rule.Verify.ExpectedStatus }}
 expectedStatus = [{{ range $j, $status := . }}
     "{{ $status }}",{{ end }}

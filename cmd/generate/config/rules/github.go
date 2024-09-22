@@ -19,13 +19,13 @@ func GitHubPat() *config.Rule {
 		Verify: &config.Verify{
 			HTTPVerb: "GET",
 			URL:      "https://api.github.com/user",
-			// ExpectedBodyContains: []string{"success"},
 			Headers: map[string]string{
 				"Authorization":        "Bearer ${github-pat}",
 				"Accept":               "application/vnd.github+json",
 				"X-GitHub-Api-Version": "2022-11-28",
 			},
 			ExpectedStatus: []string{"200"},
+			// ExpectedBodyContains: []string{"success"},
 		},
 	}
 
@@ -47,6 +47,17 @@ func GitHubFineGrainedPat() *config.Rule {
 		Regex:       regexp.MustCompile(`github_pat_\w{82}`),
 		Entropy:     3,
 		Keywords:    []string{"github_pat_"},
+		Verify: &config.Verify{
+			HTTPVerb: "GET",
+			URL:      "https://api.github.com/user",
+			Headers: map[string]string{
+				"Authorization":        "Bearer ${github-fine-grained-pat}",
+				"Accept":               "application/vnd.github+json",
+				"X-GitHub-Api-Version": "2022-11-28",
+			},
+			ExpectedStatus: []string{"200"},
+			// ExpectedBodyContains: []string{"success"},
+		},
 	}
 
 	// validate
