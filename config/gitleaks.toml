@@ -2010,7 +2010,7 @@ entropy = 3
 keywords = [
     "github_pat_",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://api.github.com/user"
 headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-fine-grained-pat}", X-GitHub-Api-Version = "2022-11-28"}
@@ -2035,7 +2035,7 @@ entropy = 3
 keywords = [
     "ghp_",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://api.github.com/user"
 headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-pat}", X-GitHub-Api-Version = "2022-11-28"}
@@ -2166,7 +2166,7 @@ entropy = 3
 keywords = [
     "hf_",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://huggingface.co/api/whoami-v2"
 headers = {Authorization = "Bearer ${huggingface-access-token}"}
@@ -2182,7 +2182,7 @@ entropy = 2
 keywords = [
     "api_org_",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://huggingface.co/api/whoami-v2"
 headers = {Authorization = "Bearer ${huggingface-organization-api-token}"}
@@ -2293,7 +2293,7 @@ entropy = 3
 keywords = [
     "api-","sdk-",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://app.launchdarkly.com/api/v2/caller-identity"
 headers = {Authorization = "${launchdarkly-access-token}"}
@@ -2472,7 +2472,7 @@ entropy = 4
 keywords = [
     "npm_",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "GET"
 url = "https://registry.npmjs.org/-/whoami"
 headers = {Authorization = "Bearer ${npm-access-token}", Content-Type = "application/json"}
@@ -2746,7 +2746,7 @@ regex = '''(xoxb-[0-9]{10,13}\-[0-9]{10,13}[a-zA-Z0-9-]*)'''
 keywords = [
     "xoxb",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "POST"
 url = "https://slack.com/api/auth.test"
 headers = {Authorization = "Bearer ${slack-bot-token}", Content-Type = "application/json"}
@@ -2780,7 +2780,7 @@ regex = '''(xoxb-[0-9]{8,14}\-[a-zA-Z0-9]{18,26})'''
 keywords = [
     "xoxb",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "POST"
 url = "https://slack.com/api/auth.test"
 headers = {Authorization = "Bearer ${slack-legacy-bot-token}", Content-Type = "application/json"}
@@ -2814,7 +2814,7 @@ regex = '''xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}'''
 keywords = [
     "xoxp-","xoxe-",
 ]
-[rules.Verify]
+[rules.verify]
 httpVerb = "POST"
 url = "https://slack.com/api/auth.test"
 headers = {Authorization = "Bearer ${slack-user-token}", Content-Type = "application/json"}

@@ -63,7 +63,7 @@ regexes = [
     "{{ $stopword }}",{{ end }}
 ]{{ end }}
 {{ end }}
-{{- if and $rule.Verify }}[rules.Verify]
+{{- if and $rule.Verify }}[rules.verify]
 httpVerb = "{{ $rule.Verify.HTTPVerb }}"
 url = "{{ $rule.Verify.URL }}"
 {{- with $rule.Verify.Headers }}
