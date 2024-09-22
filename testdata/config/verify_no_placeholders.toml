@@ -6,3 +6,4 @@ regex = '''secret = (.+)'''
 [rules.verify]
 url = "https://example.com"
 headers = {"Authorization" = "${azure-client-id}"}
+expectedStatus = [200]
