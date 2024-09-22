@@ -2161,10 +2161,17 @@ keywords = [
 [[rules]]
 id = "huggingface-access-token"
 description = "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data."
-regex = '''(?:^|[\\'"` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` <])'''
-entropy = 1
+regex = '''(?:^|[\\'"\x60>=:\s])(hf_[a-zA-Z0-9]{34})(?:$|[\\'"\x60<\s])'''
+entropy = 3
 keywords = [
     "hf_",
+]
+[rules.Verify]
+httpVerb = "GET"
+url = "https://huggingface.co/api/whoami-v2"
+headers = {Authorization = "Bearer ${huggingface-access-token}"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
@@ -2174,6 +2181,13 @@ regex = '''(?:^|[\\'"` >=:\(,)])(api_org_[a-zA-Z]{34})(?:$|[\\'"` <\),])'''
 entropy = 2
 keywords = [
     "api_org_",
+]
+[rules.Verify]
+httpVerb = "GET"
+url = "https://huggingface.co/api/whoami-v2"
+headers = {Authorization = "Bearer ${huggingface-organization-api-token}"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]

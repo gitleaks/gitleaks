@@ -18,13 +18,13 @@ func HuggingFaceAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "huggingface-access-token",
 		Description: "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data.",
-		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <])`),
-
-		Entropy: 1,
+		Regex:       regexp.MustCompile(`(?:^|[\\'"\x60>=:\s])(hf_[a-zA-Z0-9]{34})(?:$|[\\'"\x60<\s])`),
+		Entropy:     3,
 		Keywords: []string{
 			"hf_",
 		},
 	}
+	r.Verify = createHuggingFaceVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -80,6 +80,7 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 			"api_org_",
 		},
 	}
+	r.Verify = createHuggingFaceVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -113,4 +114,16 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 		If you do not submit your API token when sending requests to the API, you will not be able to run inference on your private models.`,
 	}
 	return utils.Validate(r, tps, fps)
+}
+
+func createHuggingFaceVerify(ruleID string) *config.Verify {
+	// https://huggingface.co/docs/hub/en/api#get-apiwhoami-v2
+	return &config.Verify{
+		HTTPVerb: "GET",
+		URL:      "https://huggingface.co/api/whoami-v2",
+		Headers: map[string]string{
+			"Authorization": fmt.Sprintf("Bearer ${%s}", ruleID),
+		},
+		ExpectedStatus: []int{200},
+	}
 }
