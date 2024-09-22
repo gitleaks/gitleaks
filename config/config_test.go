@@ -174,12 +174,12 @@ func TestTranslate(t *testing.T) {
 func Test_parseVerify(t *testing.T) {
 	tests := []struct {
 		cfgName   string
-		verify    Verify
+		verify    *Verify
 		wantError error
 	}{
 		{
 			cfgName: "verify_multipart_header",
-			verify: Verify{
+			verify: &Verify{
 				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
@@ -198,7 +198,7 @@ func Test_parseVerify(t *testing.T) {
 		},
 		{
 			cfgName: "verify_multipart_query",
-			verify: Verify{
+			verify: &Verify{
 				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
@@ -230,9 +230,9 @@ func Test_parseVerify(t *testing.T) {
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
 
-			var actual Verify
+			var actual *Verify
 			for _, rule := range cfg.Rules {
-				if rule.Verify.URL == "" {
+				if rule.Verify == nil {
 					continue
 				}
 				actual = rule.Verify

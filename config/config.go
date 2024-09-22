@@ -39,7 +39,7 @@ type ViperConfig struct {
 		Path        string
 		Tags        []string
 		Report      *bool
-		Verify      Verify
+		Verify      *Verify
 
 		Allowlist struct {
 			RegexTarget string
@@ -131,13 +131,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Entropy:     r.Entropy,
 			Tags:        r.Tags,
 			Keywords:    r.Keywords,
-			Verify: Verify{
-				HTTPVerb:             r.Verify.HTTPVerb,
-				URL:                  r.Verify.URL,
-				Headers:              r.Verify.Headers,
-				ExpectedStatus:       r.Verify.ExpectedStatus,
-				ExpectedBodyContains: r.Verify.ExpectedBodyContains,
-			},
 			Allowlist: Allowlist{
 				RegexTarget: r.Allowlist.RegexTarget,
 				Regexes:     allowlistRegexes,
@@ -150,7 +143,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			rule.Report = true
 		}
 
-		if flags.EnableExperimentalVerification.Load() && r.Verify.URL != "" {
+		if flags.EnableExperimentalVerification.Load() && r.Verify != nil {
 			if err := r.Verify.Validate(rule.RuleID); err != nil {
 				return Config{}, err
 			}

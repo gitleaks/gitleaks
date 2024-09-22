@@ -16,19 +16,18 @@ func GitHubPat() *config.Rule {
 		Regex:       regexp.MustCompile(`ghp_[0-9a-zA-Z]{36}`),
 		Entropy:     3,
 		Keywords:    []string{"ghp_"},
-	}
-	v := config.Verify{
-		ExpectedStatus: []string{"200"},
-		// ExpectedBodyContains: []string{"success"},
-		Headers: map[string]string{
-			"Authorization":        "Bearer ${github-pat}",
-			"Accept":               "application/vnd.github+json",
-			"X-GitHub-Api-Version": "2022-11-28",
+		Verify: &config.Verify{
+			HTTPVerb: "GET",
+			URL:      "https://api.github.com/user",
+			// ExpectedBodyContains: []string{"success"},
+			Headers: map[string]string{
+				"Authorization":        "Bearer ${github-pat}",
+				"Accept":               "application/vnd.github+json",
+				"X-GitHub-Api-Version": "2022-11-28",
+			},
+			ExpectedStatus: []string{"200"},
 		},
-		HTTPVerb: "GET",
-		URL:      "https://api.github.com/user",
 	}
-	r.Verify = v
 
 	// validate
 	tps := []string{

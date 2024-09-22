@@ -46,7 +46,7 @@ type Rule struct {
 	// Report indicates whether the rule should be scanned/reported.
 	// This defaults to 'true' but can be set to 'false' for multi-part secret verification.
 	Report bool
-	Verify Verify
+	Verify *Verify
 }
 
 // Validate guards against common misconfigurations.
@@ -96,19 +96,19 @@ type Verify struct {
 	//buildRequestFunc *func(req *http.Request, rule Rule, finding report.Finding, findingsByRuleID map[string][]report.Finding) func() string
 }
 
-func (v Verify) GetRequiredIDs() map[string]struct{} {
+func (v *Verify) GetRequiredIDs() map[string]struct{} {
 	return v.requiredIDs
 }
 
-func (v Verify) GetPlaceholderInUrl() bool {
+func (v *Verify) GetPlaceholderInUrl() bool {
 	return v.placeholderInUrl
 }
 
-func (v Verify) GetStaticHeaders() map[string]string {
+func (v *Verify) GetStaticHeaders() map[string]string {
 	return v.staticHeaders
 }
 
-func (v Verify) GetDynamicHeaders() map[string]string {
+func (v *Verify) GetDynamicHeaders() map[string]string {
 	return v.dynamicHeaders
 }
 
