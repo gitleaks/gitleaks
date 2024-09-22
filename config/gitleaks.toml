@@ -2467,9 +2467,17 @@ keywords = [
 [[rules]]
 id = "npm-access-token"
 description = "Uncovered an npm access token, potentially compromising package management and code repository access."
-regex = '''(?i)\b(npm_[a-z0-9]{36})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(npm_[a-zA-Z0-9]{36})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 4
 keywords = [
     "npm_",
+]
+[rules.Verify]
+httpVerb = "GET"
+url = "https://registry.npmjs.org/-/whoami"
+headers = {Authorization = "Bearer ${npm-access-token}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
