@@ -139,17 +139,27 @@ func TestTranslate(t *testing.T) {
 		},
 		// Verify
 		{
+			cfgName:   "verify_invalid_no_verb",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: verify config does not contain a |httpVerb|`),
+		},
+		{
+			cfgName:   "verify_invalid_verb",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: invalid HTTP verb: DELETE`),
+		},
+		{
 			cfgName:   "verify_invalid_url",
 			cfg:       Config{},
 			wantError: fmt.Errorf(`example-client-secret: invalid URL: parse " example_com": invalid URI for request`),
 		},
 		{
-			cfgName:   "verify_no_placeholders",
+			cfgName:   "verify_invalid_no_placeholders",
 			cfg:       Config{},
 			wantError: fmt.Errorf("azure-client-secret: verify config does not contain a placeholder for the rule's output (${azure-client-secret})"),
 		},
 		{
-			cfgName:   "verify_multipart_invalid_requires",
+			cfgName:   "verify_invalid_multipart_requires",
 			cfg:       Config{},
 			wantError: fmt.Errorf("rule ID 'azure-client-id' required by '[azure-client-secret]' does not exist"),
 		},

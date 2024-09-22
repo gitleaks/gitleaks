@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"golang.org/x/exp/maps"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -116,6 +117,11 @@ func (v *Verify) GetDynamicHeaders() map[string]string {
 
 var (
 	verifyPlaceholderPat = regexp.MustCompile(`(?i)\${([a-z0-9\-]+)}`)
+	validMethods         = map[string]struct{}{
+		http.MethodGet:  {},
+		http.MethodHead: {},
+		http.MethodPost: {},
+	}
 )
 
 func (v *Verify) Validate(ruleID string) error {
@@ -125,6 +131,15 @@ func (v *Verify) Validate(ruleID string) error {
 
 	// TODO: Check that there's some sort of substitution happening here.
 	v.requiredIDs = map[string]struct{}{}
+
+	// Validate verb.
+	if strings.TrimSpace(v.HTTPVerb) == "" {
+		return fmt.Errorf("%s: verify config does not contain a |httpVerb|", ruleID)
+	}
+	v.HTTPVerb = strings.ToUpper(v.HTTPVerb)
+	if _, ok := validMethods[v.HTTPVerb]; !ok {
+		return fmt.Errorf("%s: invalid HTTP verb: %s", ruleID, v.HTTPVerb)
+	}
 
 	// Parse URL.
 	if _, err := url.ParseRequestURI(v.URL); err != nil {
@@ -196,7 +211,7 @@ func (v *Verify) Validate(ruleID string) error {
 
 var (
 	verifyHelperFuncPat = regexp.MustCompile(`\${([A-Za-z0-9]{3,15})\("(.+?)"\)}`)
-	helperFuncs         = map[string]struct{}{
+	validFuncs          = map[string]struct{}{
 		"base64":    {},
 		"urlEncode": {},
 	}
@@ -204,8 +219,8 @@ var (
 
 func checkVerifyHelperFuncs(s string) error {
 	for _, match := range verifyHelperFuncPat.FindAllStringSubmatch(s, -1) {
-		if _, ok := helperFuncs[match[1]]; !ok {
-			return fmt.Errorf("unknown helper function '%s' (known: %v)", match[1], maps.Keys(helperFuncs))
+		if _, ok := validFuncs[match[1]]; !ok {
+			return fmt.Errorf("unknown helper function '%s' (known: %v)", match[1], maps.Keys(validFuncs))
 		}
 	}
 	return nil
