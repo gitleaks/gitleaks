@@ -68,7 +68,7 @@ httpVerb = "{{ $rule.Verify.HTTPVerb }}"
 url = "{{ $rule.Verify.URL }}"
 {{- with $rule.Verify.ExpectedStatus }}
 expectedStatus = [{{ range $j, $status := . }}
-    "{{ $status }}",{{ end }}
+    {{ $status }},{{ end }}
 ]{{ end }}
 {{- with $rule.Verify.ExpectedBodyContains }}
 expectedBodyContains = [{{ range $j, $body := . }}

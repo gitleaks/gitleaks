@@ -289,22 +289,3 @@ func (c *Config) extend(extensionConfig Config) {
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
 }
-
-// TODO: Deduplicate these patterns between here and verify.go
-var (
-	verifyHelperFuncPat = regexp.MustCompile(`\${([A-Za-z0-9]{3,15})\("(.+?)"\)}`)
-	helperFuncs         = map[string]struct{}{
-		"base64":    {},
-		"urlEncode": {},
-	}
-	verifyPlaceholderPat = regexp.MustCompile(`(?i)\${([a-z0-9\-]*)}`)
-)
-
-func checkVerifyHelperFuncs(s string) error {
-	for _, match := range verifyHelperFuncPat.FindAllStringSubmatch(s, -1) {
-		if _, ok := helperFuncs[match[1]]; !ok {
-			return fmt.Errorf("unknown helper function '%s' (known: %v)", match[1], maps.Keys(helperFuncs))
-		}
-	}
-	return nil
-}

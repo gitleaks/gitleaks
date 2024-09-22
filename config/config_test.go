@@ -193,7 +193,7 @@ func Test_parseVerify(t *testing.T) {
 				dynamicHeaders: map[string]string{
 					"Authorization": "Basic ${base64(\"${github-client-id}:${github-client-secret}\")}",
 				},
-				ExpectedStatus: []string{"200"},
+				ExpectedStatus: []int{200},
 			},
 		},
 		{
@@ -210,7 +210,7 @@ func Test_parseVerify(t *testing.T) {
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
 				},
-				ExpectedStatus: []string{"200"},
+				ExpectedStatus: []int{200},
 			},
 		},
 	}
@@ -250,8 +250,15 @@ func Test_parseVerify(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, tt.wantError, err)
-			assert.Equal(t, tt.verify, actual)
+			if err != nil {
+				if tt.wantError != nil {
+					assert.Equal(t, tt.wantError, err)
+				} else {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			} else {
+				assert.Equal(t, tt.verify, actual)
+			}
 		})
 	}
 }

@@ -16,6 +16,6 @@ entropy = 1
 url = "https://api.github.com/rate_limit?client_id=${github-client-id}&client_secret=${github-client-secret}"
 httpVerb = "GET"
 expectedStatus = [
-    "200",
+    200,
 ]
 headers = {Accept = "application/vnd.github+json", X-GitHub-Api-Version = "2022-11-28"}

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -326,22 +325,11 @@ func generateHeaderCombinations(setsOfHeaders map[string][]string) []map[string]
 }
 
 // isValidStatus checks if the status code matches any of the expected status patterns.
-func isValidStatus(status int, expectedStatuses []string) bool {
-	statusStr := strconv.Itoa(status)
-
+func isValidStatus(status int, expectedStatuses []int) bool {
 	for _, expectedStatus := range expectedStatuses {
 		// Check if the expectedStatus is an exact match
-		if expectedStatus == statusStr {
+		if expectedStatus == status {
 			return true
-		}
-
-		// Check if the expectedStatus is a range match (e.g., "2xx")
-		if len(expectedStatus) == 3 && strings.HasSuffix(expectedStatus, "xx") {
-			expectedPrefix := expectedStatus[0]
-			statusPrefix := statusStr[0]
-			if expectedPrefix == statusPrefix {
-				return true
-			}
 		}
 	}
 	return false

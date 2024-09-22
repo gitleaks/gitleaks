@@ -24,7 +24,7 @@ func GitHubPat() *config.Rule {
 				"Accept":               "application/vnd.github+json",
 				"X-GitHub-Api-Version": "2022-11-28",
 			},
-			ExpectedStatus: []string{"200"},
+			ExpectedStatus: []int{200},
 			// ExpectedBodyContains: []string{"success"},
 		},
 	}
@@ -55,7 +55,7 @@ func GitHubFineGrainedPat() *config.Rule {
 				"Accept":               "application/vnd.github+json",
 				"X-GitHub-Api-Version": "2022-11-28",
 			},
-			ExpectedStatus: []string{"200"},
+			ExpectedStatus: []int{200},
 			// ExpectedBodyContains: []string{"success"},
 		},
 	}

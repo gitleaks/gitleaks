@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"golang.org/x/exp/maps"
 	"regexp"
 	"strings"
 )
@@ -84,7 +85,7 @@ type Verify struct {
 	HTTPVerb             string
 	URL                  string
 	Headers              map[string]string
-	ExpectedStatus       []string
+	ExpectedStatus       []int
 	ExpectedBodyContains []string
 
 	// RequiredIDs is a set of other rule IDs that must be present for verification.
@@ -111,6 +112,10 @@ func (v *Verify) GetStaticHeaders() map[string]string {
 func (v *Verify) GetDynamicHeaders() map[string]string {
 	return v.dynamicHeaders
 }
+
+var (
+	verifyPlaceholderPat = regexp.MustCompile(`(?i)\${([a-z0-9\-]+)}`)
+)
 
 func (v *Verify) Validate(ruleID string) error {
 	if v.initialized {
@@ -150,6 +155,13 @@ func (v *Verify) Validate(ruleID string) error {
 		}
 	}
 
+	// Parse expected statuses.
+	for _, s := range v.ExpectedStatus {
+		if s < 100 || s > 599 {
+			return fmt.Errorf("%s: invalid status value: %d", ruleID, s)
+		}
+	}
+
 	// TODO: Check in body as well
 	// TODO: Handle things like base64-encoding
 	if len(v.requiredIDs) == 0 {
@@ -171,5 +183,22 @@ func (v *Verify) Validate(ruleID string) error {
 		v.dynamicHeaders = nil
 	}
 
+	return nil
+}
+
+var (
+	verifyHelperFuncPat = regexp.MustCompile(`\${([A-Za-z0-9]{3,15})\("(.+?)"\)}`)
+	helperFuncs         = map[string]struct{}{
+		"base64":    {},
+		"urlEncode": {},
+	}
+)
+
+func checkVerifyHelperFuncs(s string) error {
+	for _, match := range verifyHelperFuncPat.FindAllStringSubmatch(s, -1) {
+		if _, ok := helperFuncs[match[1]]; !ok {
+			return fmt.Errorf("unknown helper function '%s' (known: %v)", match[1], maps.Keys(helperFuncs))
+		}
+	}
 	return nil
 }
