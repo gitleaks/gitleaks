@@ -156,6 +156,9 @@ func (v *Verify) Validate(ruleID string) error {
 	}
 
 	// Parse expected statuses.
+	if len(v.ExpectedStatus) == 0 && len(v.ExpectedBodyContains) == 0 {
+		return fmt.Errorf("%s: verify config must contain |expectedStatus| or |expectedBodyContains|", ruleID)
+	}
 	for _, s := range v.ExpectedStatus {
 		if s < 100 || s > 599 {
 			return fmt.Errorf("%s: invalid status value: %d", ruleID, s)

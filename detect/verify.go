@@ -3,6 +3,7 @@ package detect
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -39,7 +40,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 		rule := d.Config.Rules[f.RuleID]
 
 		// If rule.Verify is empty or the finding is skipped, continue
-		if rule.Verify.URL == "" || f.Status == report.Skipped {
+		if rule.Verify == nil || f.Status == report.Skipped {
 			if rule.Report {
 				// Exclude findings if rule.Report is false
 				retFindings = append(retFindings, f)
@@ -59,9 +60,10 @@ FindingLoop:
 			Logger()
 
 		rule := d.Config.Rules[f.RuleID]
+		verify := rule.Verify
 
 		// Prepare required IDs and placeholders
-		requiredIDs := rule.Verify.GetRequiredIDs()
+		requiredIDs := verify.GetRequiredIDs()
 		rulePlaceholder := fmt.Sprintf("${%s}", f.RuleID)
 		placeholderByRequiredID := make(map[string]string)
 		for requiredID := range requiredIDs {
@@ -90,7 +92,7 @@ FindingLoop:
 		}
 
 		// Expand URL placeholders
-		urls, err := expandPlaceholdersInString(rule.Verify.URL, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
+		urls, err := expandPlaceholdersInString(verify.URL, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 		if err != nil {
 			verifiableFindings[i].Status = report.Error
 			verifiableFindings[i].StatusReason = err.Error()
@@ -98,12 +100,12 @@ FindingLoop:
 		}
 		if len(urls) == 0 {
 			// No placeholders to replace, use the original URL
-			urls = []string{rule.Verify.URL}
+			urls = []string{verify.URL}
 		}
 
 		// Expand header placeholders
 		setsOfHeaders := map[string][]string{}
-		for k, v := range rule.Verify.GetDynamicHeaders() {
+		for k, v := range verify.GetDynamicHeaders() {
 			headers, err := expandPlaceholdersInString(v, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 			if err != nil {
 				verifiableFindings[i].Status = report.Error
@@ -120,7 +122,7 @@ FindingLoop:
 		for _, targetUrl := range urls {
 			for _, headerCombination := range headerCombinations {
 				// Add static headers to headerCombination
-				for k, v := range rule.Verify.GetStaticHeaders() {
+				for k, v := range verify.GetStaticHeaders() {
 					headerCombination[k] = v
 				}
 
@@ -128,12 +130,12 @@ FindingLoop:
 				resp, exists := d.VerifyCache.Get(targetUrl, headerCombination)
 				if !exists {
 					logger.Debug().
-						Str("method", rule.Verify.HTTPVerb).
+						Str("method", verify.HTTPVerb).
 						Str("url", targetUrl).
 						Fields(map[string]interface{}{"headers": headerCombination}).
 						Msg("Sending verification request...")
 
-					req, err := http.NewRequest(rule.Verify.HTTPVerb, targetUrl, nil)
+					req, err := http.NewRequest(verify.HTTPVerb, targetUrl, nil)
 
 					// TODO make configurable (globally and per rule)
 					// ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -177,7 +179,12 @@ FindingLoop:
 					d.VerifyCache.Set(targetUrl, headerCombination, resp)
 				}
 
-				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
+				// TODO: Represent this in a better way? Conditional/lazy evaluation?
+				var (
+					isValidStatus, status = isValidStatus(resp.StatusCode, verify.ExpectedStatus)
+					isValidBody, body     = isValidBody(resp, verify.ExpectedBodyContains)
+				)
+				if (len(verify.ExpectedStatus) == 0 || isValidStatus) && (len(verify.ExpectedBodyContains) == 0 || isValidBody) {
 					verifiableFindings[i].Status = report.ConfirmedValid
 					verifiableFindings[i].StatusReason = ""
 					// Build attributes for multi-part rules
@@ -187,7 +194,17 @@ FindingLoop:
 						verifiableFindings[i].Attributes = attributes
 					}
 					if !exists {
-						logger.Debug().Msgf("Secret is valid: received status code '%d'", resp.StatusCode)
+						var sb strings.Builder
+						if status != 0 {
+							sb.WriteString(fmt.Sprintf("matched status condition '%d'", status))
+						}
+						if body != "" {
+							if status != 0 {
+								sb.WriteString(", ")
+							}
+							sb.WriteString(fmt.Sprintf("matched body condition '%s'", body))
+						}
+						logger.Debug().Msgf("Secret is valid: %s", sb.String())
 					}
 					goto RuleLoopEnd
 				} else {
@@ -199,9 +216,19 @@ FindingLoop:
 						goto RuleLoopEnd
 					}
 					verifiableFindings[i].Status = report.ConfirmedInvalid
-					verifiableFindings[i].StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
+					var sb strings.Builder
+					if status != 0 {
+						sb.WriteString(fmt.Sprintf("status code '%d'", status))
+					}
+					if body != "" {
+						if status != 0 {
+							sb.WriteString(", ")
+						}
+						sb.WriteString(fmt.Sprintf("body '%s'", body))
+					}
+					verifiableFindings[i].StatusReason = fmt.Sprintf("Status code '%d'", status)
 					if !exists {
-						logger.Debug().Msgf("Secret is not valid: received status code '%d'", resp.StatusCode)
+						logger.Debug().Msgf("Secret is not valid: received %s", sb.String())
 					}
 				}
 			}
@@ -325,21 +352,26 @@ func generateHeaderCombinations(setsOfHeaders map[string][]string) []map[string]
 }
 
 // isValidStatus checks if the status code matches any of the expected status patterns.
-func isValidStatus(status int, expectedStatuses []int) bool {
+func isValidStatus(status int, expectedStatuses []int) (bool, int) {
 	for _, expectedStatus := range expectedStatuses {
 		// Check if the expectedStatus is an exact match
-		if expectedStatus == status {
-			return true
+		if status == expectedStatus {
+			log.Debug().Int("status", status).Msgf("Status matches condition: %d", expectedStatus)
+			return true, expectedStatus
 		}
 	}
-	return false
+	return false, status
 }
 
-func isValidBody(body string, bodyContains []string) bool {
-	for _, b := range bodyContains {
-		if strings.Contains(b, body) {
-			return true
+func isValidBody(resp *http.Response, expectedBodyContains []string) (bool, string) {
+	// TODO: Don't ignore error?
+	body, _ := io.ReadAll(resp.Body)
+	bodyStr := string(body)
+	for _, b := range expectedBodyContains {
+		if strings.Contains(bodyStr, b) {
+			log.Debug().Str("body", bodyStr).Msgf("Body matches condition: %s", b)
+			return true, b
 		}
 	}
-	return false
+	return false, bodyStr
 }

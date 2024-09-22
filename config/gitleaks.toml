@@ -2013,10 +2013,10 @@ keywords = [
 [rules.Verify]
 httpVerb = "GET"
 url = "https://api.github.com/user"
+headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-fine-grained-pat}", X-GitHub-Api-Version = "2022-11-28"}
 expectedStatus = [
     200,
 ]
-headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-fine-grained-pat}", X-GitHub-Api-Version = "2022-11-28"}
 
 [[rules]]
 id = "github-oauth"
@@ -2038,10 +2038,10 @@ keywords = [
 [rules.Verify]
 httpVerb = "GET"
 url = "https://api.github.com/user"
+headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-pat}", X-GitHub-Api-Version = "2022-11-28"}
 expectedStatus = [
     200,
 ]
-headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-pat}", X-GitHub-Api-Version = "2022-11-28"}
 
 [[rules]]
 id = "github-refresh-token"
@@ -2713,6 +2713,13 @@ regex = '''(xoxb-[0-9]{10,13}\-[0-9]{10,13}[a-zA-Z0-9-]*)'''
 keywords = [
     "xoxb",
 ]
+[rules.Verify]
+httpVerb = "POST"
+url = "https://slack.com/api/auth.test"
+headers = {Authorization = "Bearer ${slack-bot-token}", Content-Type = "application/json"}
+expectedBodyContains = [
+    '''"ok":true''',
+]
 
 [[rules]]
 id = "slack-config-access-token"
@@ -2737,6 +2744,13 @@ regex = '''(xoxb-[0-9]{8,14}\-[a-zA-Z0-9]{18,26})'''
 keywords = [
     "xoxb",
 ]
+[rules.Verify]
+httpVerb = "POST"
+url = "https://slack.com/api/auth.test"
+headers = {Authorization = "Bearer ${slack-legacy-bot-token}", Content-Type = "application/json"}
+expectedBodyContains = [
+    '''"ok":true''',
+]
 
 [[rules]]
 id = "slack-legacy-token"
@@ -2760,6 +2774,13 @@ description = "Found a Slack User token, posing a risk of unauthorized user impe
 regex = '''xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}'''
 keywords = [
     "xoxp-","xoxe-",
+]
+[rules.Verify]
+httpVerb = "POST"
+url = "https://slack.com/api/auth.test"
+headers = {Authorization = "Bearer ${slack-user-token}", Content-Type = "application/json"}
+expectedBodyContains = [
+    '''"ok":true''',
 ]
 
 [[rules]]

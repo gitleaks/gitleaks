@@ -66,14 +66,6 @@ regexes = [
 {{- if and $rule.Verify }}[rules.Verify]
 httpVerb = "{{ $rule.Verify.HTTPVerb }}"
 url = "{{ $rule.Verify.URL }}"
-{{- with $rule.Verify.ExpectedStatus }}
-expectedStatus = [{{ range $j, $status := . }}
-    {{ $status }},{{ end }}
-]{{ end }}
-{{- with $rule.Verify.ExpectedBodyContains }}
-expectedBodyContains = [{{ range $j, $body := . }}
-    "{{ $body }}",{{ end }}
-]{{ end }}
 {{- with $rule.Verify.Headers }}
 headers = {
     {{- $headers := . }}
@@ -81,5 +73,13 @@ headers = {
     {{- range $key, $value := $headers }}
         {{- if not $first }}, {{ end }}
         {{- $first = false }}{{ $key }} = "{{ $value }}"{{- end }}}{{ end }}
+{{- with $rule.Verify.ExpectedStatus }}
+expectedStatus = [{{ range $j, $status := . }}
+    {{ $status }},{{ end }}
+]{{ end }}
+{{- with $rule.Verify.ExpectedBodyContains }}
+expectedBodyContains = [{{ range $j, $body := . }}
+    '''{{ $body }}''',{{ end }}
+]{{ end }}
 {{ end }}
 {{ end -}}
