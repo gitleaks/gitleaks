@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"golang.org/x/exp/maps"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -124,7 +125,11 @@ func (v *Verify) Validate(ruleID string) error {
 
 	// TODO: Check that there's some sort of substitution happening here.
 	v.requiredIDs = map[string]struct{}{}
+
 	// Parse URL.
+	if _, err := url.ParseRequestURI(v.URL); err != nil {
+		return fmt.Errorf("%s: invalid URL: %w", ruleID, err)
+	}
 	for _, match := range verifyPlaceholderPat.FindAllStringSubmatch(v.URL, -1) {
 		if !v.placeholderInUrl {
 			v.placeholderInUrl = true

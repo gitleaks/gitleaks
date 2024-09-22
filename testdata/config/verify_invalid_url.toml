@@ -1,0 +1,9 @@
+title = "gitleaks config"
+
+[[rules]]
+id = "example-client-secret"
+regex = '''secret = (.+)'''
+[rules.verify]
+url = " example_com"
+headers = {"Authorization" = "${example-client-secret}"}
+expectedStatus = [200]

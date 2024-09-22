@@ -139,6 +139,11 @@ func TestTranslate(t *testing.T) {
 		},
 		// Verify
 		{
+			cfgName:   "verify_invalid_url",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: invalid URL: parse " example_com": invalid URI for request`),
+		},
+		{
 			cfgName:   "verify_no_placeholders",
 			cfg:       Config{},
 			wantError: fmt.Errorf("azure-client-secret: verify config does not contain a placeholder for the rule's output (${azure-client-secret})"),
@@ -165,7 +170,10 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			assert.Equal(t, tt.wantError, err)
+			if err != nil {
+				assert.Equal(t, tt.wantError.Error(), err.Error())
+				return
+			}
 			assert.Equal(t, cfg.Rules, tt.cfg.Rules)
 		})
 	}
