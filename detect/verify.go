@@ -195,14 +195,14 @@ FindingLoop:
 					if !exists {
 						logger.Debug().Msgf("Secret is valid: %s", reason)
 					}
-					goto RuleLoopEnd
+					continue FindingLoop
 				} else {
 					if verifiableFindings[i].Status == report.ConfirmedValid {
 						// If the finding was already confirmed valid, don't change the status.
 						// TODO: this means that if there is a valid multi-part rule that has a reported secret
 						// with _multiple_ valid attributes, only one of them will be reported as valid.
 						// This is a limitation of the current implementation.
-						goto RuleLoopEnd
+						continue FindingLoop
 					}
 					verifiableFindings[i].Status = report.ConfirmedInvalid
 					verifiableFindings[i].StatusReason = fmt.Sprintf(reason)
@@ -212,7 +212,6 @@ FindingLoop:
 				}
 			}
 		}
-	RuleLoopEnd:
 	}
 
 	if d.Verification {
