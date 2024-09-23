@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"regexp"
 	"testing"
 
@@ -138,17 +139,34 @@ func TestTranslate(t *testing.T) {
 		},
 		// Verify
 		{
-			cfgName:   "verify_no_placeholders",
+			cfgName:   "verify_invalid_no_verb",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: verify config does not contain a |httpVerb|`),
+		},
+		{
+			cfgName:   "verify_invalid_verb",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: invalid HTTP verb: DELETE`),
+		},
+		{
+			cfgName:   "verify_invalid_url",
+			cfg:       Config{},
+			wantError: fmt.Errorf(`example-client-secret: invalid URL: parse " example_com": invalid URI for request`),
+		},
+		{
+			cfgName:   "verify_invalid_no_placeholders",
 			cfg:       Config{},
 			wantError: fmt.Errorf("azure-client-secret: verify config does not contain a placeholder for the rule's output (${azure-client-secret})"),
 		},
 		{
-			cfgName:   "verify_multipart_invalid_requires",
+			cfgName:   "verify_invalid_multipart_requires",
 			cfg:       Config{},
 			wantError: fmt.Errorf("rule ID 'azure-client-id' required by '[azure-client-secret]' does not exist"),
 		},
 	}
 
+	// Required for verification tests to work.
+	flags.EnableExperimentalVerification.Store(true)
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
 			viper.Reset()
@@ -162,7 +180,10 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			assert.Equal(t, tt.wantError, err)
+			if err != nil {
+				assert.Equal(t, tt.wantError.Error(), err.Error())
+				return
+			}
 			assert.Equal(t, cfg.Rules, tt.cfg.Rules)
 		})
 	}
@@ -171,12 +192,13 @@ func TestTranslate(t *testing.T) {
 func Test_parseVerify(t *testing.T) {
 	tests := []struct {
 		cfgName   string
-		verify    Verify
+		verify    *Verify
 		wantError error
 	}{
 		{
 			cfgName: "verify_multipart_header",
-			verify: Verify{
+			verify: &Verify{
+				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
@@ -189,12 +211,13 @@ func Test_parseVerify(t *testing.T) {
 				dynamicHeaders: map[string]string{
 					"Authorization": "Basic ${base64(\"${github-client-id}:${github-client-secret}\")}",
 				},
-				ExpectedStatus: []string{"200"},
+				ExpectedStatus: []int{200},
 			},
 		},
 		{
 			cfgName: "verify_multipart_query",
-			verify: Verify{
+			verify: &Verify{
+				initialized: true,
 				requiredIDs: map[string]struct{}{
 					"github-client-id": {},
 				},
@@ -205,11 +228,12 @@ func Test_parseVerify(t *testing.T) {
 					"Accept":               "application/vnd.github+json",
 					"X-GitHub-Api-Version": "2022-11-28",
 				},
-				ExpectedStatus: []string{"200"},
+				ExpectedStatus: []int{200},
 			},
 		},
 	}
 
+	flags.EnableExperimentalVerification.Store(true)
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
 			viper.Reset()
@@ -224,9 +248,9 @@ func Test_parseVerify(t *testing.T) {
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
 
-			var actual Verify
+			var actual *Verify
 			for _, rule := range cfg.Rules {
-				if rule.Verify.URL == "" {
+				if rule.Verify == nil {
 					continue
 				}
 				actual = rule.Verify
@@ -244,8 +268,15 @@ func Test_parseVerify(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, tt.wantError, err)
-			assert.Equal(t, tt.verify, actual)
+			if err != nil {
+				if tt.wantError != nil {
+					assert.Equal(t, tt.wantError, err)
+				} else {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			} else {
+				assert.Equal(t, tt.verify, actual)
+			}
 		})
 	}
 }

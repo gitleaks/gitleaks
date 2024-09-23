@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"net/http"
 	"os"
 	"regexp"
@@ -38,9 +39,6 @@ type Detector struct {
 
 	// verbose is a flag to print findings
 	Verbose bool
-
-	// EnableExperimentalVerification enables a preview of the verification feature.
-	EnableExperimentalVerification bool
 
 	// Verification
 	Verification bool
@@ -242,7 +240,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// Deduplicate findings and apply optional processing (verification, redaction).
 	findings = filter(findings)
-	if d.EnableExperimentalVerification {
+	if flags.EnableExperimentalVerification.Load() {
 		findings = d.Verify(findings)
 	}
 	if d.Redact > 0 {

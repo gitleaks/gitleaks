@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,6 +22,7 @@ import (
 )
 
 func TestVerify(t *testing.T) {
+	flags.EnableExperimentalVerification.Store(true)
 	// Create an httptest.Server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Inspect the request
@@ -116,7 +118,7 @@ func TestVerify(t *testing.T) {
 					RuleID:       "TokenRule",
 					Secret:       "invalidtoken",
 					Status:       report.ConfirmedInvalid,
-					StatusReason: "Status code '401'",
+					StatusReason: "status '401' did not match conditions",
 				},
 			},
 		},
@@ -144,7 +146,7 @@ func TestVerify(t *testing.T) {
 					RuleID:       "TokenRule",
 					Secret:       "validtoken",
 					Status:       report.ConfirmedInvalid,
-					StatusReason: "Status code '404'",
+					StatusReason: "status '404' did not match conditions",
 				},
 			},
 		},

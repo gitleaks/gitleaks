@@ -4,5 +4,7 @@ title = "gitleaks config"
 id = "azure-client-secret"
 regex = '''secret = (.+)'''
 [rules.verify]
+httpVerb = "GET"
 url = "https://example.com"
 headers = {"Authorization" = "${azure-client-id}"}
+expectedStatus = [200]

@@ -80,10 +80,9 @@ type Finding struct {
 	// unique identifier
 	Fingerprint string
 
-	// TODO: Ensure this serializes properly
-	Status       VerificationStatus
-	StatusReason string
-	Attributes   map[string]string `json:"-"`
+	Status       VerificationStatus `json:"Status,omitempty"`
+	StatusReason string             `json:"Status,omitempty"`
+	Attributes   map[string]string  `json:"Status,omitempty"`
 }
 
 // Redact removes sensitive information from a finding.

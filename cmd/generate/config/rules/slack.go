@@ -13,14 +13,15 @@ import (
 func SlackBotToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a Slack Bot token, which may compromise bot integrations and communication channel security.",
 		RuleID:      "slack-bot-token",
+		Description: "Identified a Slack Bot token, which may compromise bot integrations and communication channel security.",
 		Regex: regexp.MustCompile(
 			`(xoxb-[0-9]{10,13}\-[0-9]{10,13}[a-zA-Z0-9-]*)`),
 		Keywords: []string{
 			"xoxb",
 		},
 	}
+	r.Verify = createSlackVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -44,12 +45,13 @@ func SlackBotToken() *config.Rule {
 func SlackUserToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Found a Slack User token, posing a risk of unauthorized user impersonation and data access within Slack workspaces.",
 		RuleID:      "slack-user-token",
+		Description: "Found a Slack User token, posing a risk of unauthorized user impersonation and data access within Slack workspaces.",
 		// The last segment seems to be consistently 32 characters. I've made it 28-34 just in case.
 		Regex:    regexp.MustCompile(`xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}`),
 		Keywords: []string{"xoxp-", "xoxe-"},
 	}
+	r.Verify = createSlackVerify(r.RuleID)
 
 	// validate
 	tps := []string{
@@ -82,8 +84,8 @@ func SlackUserToken() *config.Rule {
 func SlackAppLevelToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Slack App-level token, risking unauthorized access to Slack applications and workspace data.",
 		RuleID:      "slack-app-token",
+		Description: "Detected a Slack App-level token, risking unauthorized access to Slack applications and workspace data.",
 		// This regex is based on a limited number of examples and may not be 100% accurate.
 		Regex:    regexp.MustCompile(`(?i)xapp-\d-[A-Z0-9]+-\d+-[a-z0-9]+`),
 		Keywords: []string{"xapp"},
@@ -146,8 +148,8 @@ func SlackConfigurationRefreshToken() *config.Rule {
 // Reference: https://api.slack.com/authentication/token-types#legacy_bot
 func SlackLegacyBotToken() *config.Rule {
 	r := config.Rule{
-		Description: "Uncovered a Slack Legacy bot token, which could lead to compromised legacy bot operations and data exposure.",
 		RuleID:      "slack-legacy-bot-token",
+		Description: "Uncovered a Slack Legacy bot token, which could lead to compromised legacy bot operations and data exposure.",
 		// This rule is based off the limited information I could find and may not be 100% accurate.
 		Regex: regexp.MustCompile(
 			`(xoxb-[0-9]{8,14}\-[a-zA-Z0-9]{18,26})`),
@@ -155,6 +157,7 @@ func SlackLegacyBotToken() *config.Rule {
 			"xoxb",
 		},
 	}
+	r.Verify = createSlackVerify(r.RuleID)
 
 	tps := []string{
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#LL42C38-L42C80
@@ -279,4 +282,19 @@ func SlackWebHookUrl() *config.Rule {
 		"http://hooks.slack.com/workflows/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",    // gitleaks:allow
 	}
 	return utils.Validate(r, tps, nil)
+}
+
+func createSlackVerify(ruleID string) *config.Verify {
+	return &config.Verify{
+		HTTPVerb: "POST",
+		URL:      "https://slack.com/api/auth.test",
+		Headers: map[string]string{
+			"Authorization": fmt.Sprintf("Bearer ${%s}", ruleID),
+			"Content-Type":  "application/json",
+		},
+		ExpectedStatus: []int{200},
+		ExpectedBodyContains: []string{
+			`"ok":true`,
+		},
+	}
 }

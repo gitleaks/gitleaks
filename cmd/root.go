@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"os"
 	"path/filepath"
 	"strings"
@@ -154,6 +155,16 @@ func Execute() {
 }
 
 func Config(cmd *cobra.Command) config.Config {
+	// set experimental feature flag
+	enabled, err := cmd.Flags().GetBool("experimental-verification")
+	if err != nil {
+		log.Fatal().Err(err).Msg("")
+	} else if enabled {
+		flags.EnableExperimentalVerification.Store(true)
+		log.Warn().Msgf("using experimental verification feature, updates may contain breaking changes!")
+	}
+
+	// load config
 	var vc config.ViperConfig
 	if err := viper.Unmarshal(&vc); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
@@ -207,14 +218,6 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
 		log.Fatal().Err(err).Msg("")
-	}
-
-	// set experimental feature flag
-	detector.EnableExperimentalVerification, err = cmd.Flags().GetBool("experimental-verification")
-	if err != nil {
-		log.Fatal().Err(err).Msg("")
-	} else if detector.EnableExperimentalVerification {
-		log.Warn().Msgf("using experimental verification feature, updates may contain breaking changes!")
 	}
 
 	// set verification flag

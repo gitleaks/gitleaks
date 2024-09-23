@@ -3,6 +3,8 @@ package detect
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/rs/zerolog"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -21,7 +23,6 @@ var urlEncodePat = regexp.MustCompile(`\${urlEncode\("(.+?)"\)}`)
 // Verify will iterate through findings and verify them against validation
 // fields defined in the rule
 func (d *Detector) Verify(findings []report.Finding) []report.Finding {
-
 	// Build lookups
 	findingsByRuleID := map[string][]report.Finding{}
 	secretsByRuleID := map[string]map[string]struct{}{}
@@ -41,7 +42,7 @@ func (d *Detector) Verify(findings []report.Finding) []report.Finding {
 		rule := d.Config.Rules[f.RuleID]
 
 		// If rule.Verify is empty or the finding is skipped, continue
-		if rule.Verify.URL == "" || f.Status == report.Skipped {
+		if rule.Verify == nil || f.Status == report.Skipped {
 			if rule.Report {
 				// Exclude findings if rule.Report is false
 				retFindings = append(retFindings, f)
@@ -61,9 +62,10 @@ FindingLoop:
 			Logger()
 
 		rule := d.Config.Rules[f.RuleID]
+		verify := rule.Verify
 
 		// Prepare required IDs and placeholders
-		requiredIDs := rule.Verify.GetRequiredIDs()
+		requiredIDs := verify.GetRequiredIDs()
 		rulePlaceholder := fmt.Sprintf("${%s}", f.RuleID)
 		placeholderByRequiredID := make(map[string]string)
 		for requiredID := range requiredIDs {
@@ -92,7 +94,7 @@ FindingLoop:
 		}
 
 		// Expand URL placeholders
-		urls, err := expandPlaceholdersInString(rule.Verify.URL, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
+		urls, err := expandPlaceholdersInString(verify.URL, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 		if err != nil {
 			verifiableFindings[i].Status = report.Error
 			verifiableFindings[i].StatusReason = err.Error()
@@ -100,12 +102,12 @@ FindingLoop:
 		}
 		if len(urls) == 0 {
 			// No placeholders to replace, use the original URL
-			urls = []string{rule.Verify.URL}
+			urls = []string{verify.URL}
 		}
 
 		// Expand header placeholders
 		setsOfHeaders := map[string][]string{}
-		for k, v := range rule.Verify.GetDynamicHeaders() {
+		for k, v := range verify.GetDynamicHeaders() {
 			headers, err := expandPlaceholdersInString(v, rulePlaceholder, f.Secret, placeholderByRequiredID, findingsPerRequiredID)
 			if err != nil {
 				verifiableFindings[i].Status = report.Error
@@ -122,7 +124,7 @@ FindingLoop:
 		for _, targetUrl := range urls {
 			for _, headerCombination := range headerCombinations {
 				// Add static headers to headerCombination
-				for k, v := range rule.Verify.GetStaticHeaders() {
+				for k, v := range verify.GetStaticHeaders() {
 					headerCombination[k] = v
 				}
 
@@ -130,12 +132,12 @@ FindingLoop:
 				resp, exists := d.VerifyCache.Get(targetUrl, headerCombination)
 				if !exists {
 					logger.Debug().
-						Str("method", rule.Verify.HTTPVerb).
+						Str("method", verify.HTTPVerb).
 						Str("url", targetUrl).
 						Fields(map[string]interface{}{"headers": headerCombination}).
 						Msg("Sending verification request...")
 
-					req, err := http.NewRequest(rule.Verify.HTTPVerb, targetUrl, nil)
+					req, err := http.NewRequest(verify.HTTPVerb, targetUrl, nil)
 
 					// TODO make configurable (globally and per rule)
 					// ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -179,35 +181,37 @@ FindingLoop:
 					d.VerifyCache.Set(targetUrl, headerCombination, resp)
 				}
 
-				if isValidStatus(resp.StatusCode, rule.Verify.ExpectedStatus) {
+				// TODO: Represent this in a better way? Conditional/lazy evaluation?
+				isValid, reason := isValid(resp, verify.ExpectedStatus, verify.ExpectedBodyContains, logger, !exists)
+				if isValid {
 					verifiableFindings[i].Status = report.ConfirmedValid
 					verifiableFindings[i].StatusReason = ""
 					// Build attributes for multi-part rules
+					// TODO: I don't think this works for base64-encoded secrets.
 					if len(requiredIDs) > 0 {
 						attributes := collectAttributes(targetUrl, headerCombination, findingBySecret)
 						verifiableFindings[i].Attributes = attributes
 					}
 					if !exists {
-						logger.Debug().Msgf("Secret is valid: received status code '%d'", resp.StatusCode)
+						logger.Debug().Msgf("Secret is valid: %s", reason)
 					}
-					goto RuleLoopEnd
+					continue FindingLoop
 				} else {
 					if verifiableFindings[i].Status == report.ConfirmedValid {
 						// If the finding was already confirmed valid, don't change the status.
 						// TODO: this means that if there is a valid multi-part rule that has a reported secret
 						// with _multiple_ valid attributes, only one of them will be reported as valid.
 						// This is a limitation of the current implementation.
-						goto RuleLoopEnd
+						continue FindingLoop
 					}
 					verifiableFindings[i].Status = report.ConfirmedInvalid
-					verifiableFindings[i].StatusReason = fmt.Sprintf("Status code '%d'", resp.StatusCode)
+					verifiableFindings[i].StatusReason = fmt.Sprintf(reason)
 					if !exists {
-						logger.Debug().Msgf("Secret is not valid: received status code '%d'", resp.StatusCode)
+						logger.Debug().Msgf("Secret is not valid: %s", reason)
 					}
 				}
 			}
 		}
-	RuleLoopEnd:
 	}
 
 	if d.Verification {
@@ -325,33 +329,68 @@ func generateHeaderCombinations(setsOfHeaders map[string][]string) []map[string]
 	return combinations
 }
 
-// isValidStatus checks if the status code matches any of the expected status patterns.
-func isValidStatus(status int, expectedStatuses []string) bool {
-	statusStr := strconv.Itoa(status)
-
-	for _, expectedStatus := range expectedStatuses {
-		// Check if the expectedStatus is an exact match
-		if expectedStatus == statusStr {
-			return true
-		}
-
-		// Check if the expectedStatus is a range match (e.g., "2xx")
-		if len(expectedStatus) == 3 && strings.HasSuffix(expectedStatus, "xx") {
-			expectedPrefix := expectedStatus[0]
-			statusPrefix := statusStr[0]
-			if expectedPrefix == statusPrefix {
-				return true
+func isValid(resp *http.Response, expectedStatuses []int, expectedBodyContains []string, logger zerolog.Logger, shouldLog bool) (bool, string) {
+	var (
+		sb          strings.Builder
+		checkStatus = len(expectedStatuses) > 0
+		status      = resp.StatusCode
+		checkBody   = len(expectedBodyContains) > 0
+		body        string
+	)
+	if checkStatus {
+		if statusMatches, match := isValidStatus(status, expectedStatuses); statusMatches {
+			if shouldLog {
+				logger.Debug().
+					Int("status", match).
+					Msg("Status matches condition.")
 			}
+			sb.WriteString(fmt.Sprintf("status '%d' matched condition", status))
+		} else {
+			sb.WriteString(fmt.Sprintf("status '%d' did not match conditions", status))
+			return false, sb.String()
 		}
 	}
-	return false
+	if checkBody {
+		if checkStatus {
+			sb.WriteString(", ")
+		}
+
+		// TODO: Don't ignore error?
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		body = string(bodyBytes)
+		if bodyMatches, match := isValidBody(body, expectedBodyContains); bodyMatches {
+			if shouldLog {
+				logger.Debug().
+					Str("body", body).
+					Str("condition", match).
+					Msg("Body matches condition.")
+			}
+			sb.WriteString(fmt.Sprintf("body matched condition '%s'", strconv.Quote(match)))
+		} else {
+			sb.WriteString(fmt.Sprintf("body did not match conditions"))
+			return false, sb.String()
+		}
+	}
+
+	return true, sb.String()
 }
 
-func isValidBody(body string, bodyContains []string) bool {
-	for _, b := range bodyContains {
-		if strings.Contains(b, body) {
-			return true
+// isValidStatus checks if the status code matches any of the expected status patterns.
+func isValidStatus(status int, expectedStatuses []int) (bool, int) {
+	for _, expectedStatus := range expectedStatuses {
+		// Check if the expectedStatus is an exact match
+		if status == expectedStatus {
+			return true, expectedStatus
 		}
 	}
-	return false
+	return false, status
+}
+
+func isValidBody(body string, expectedBodyContains []string) (bool, string) {
+	for _, b := range expectedBodyContains {
+		if strings.Contains(body, b) {
+			return true, b
+		}
+	}
+	return false, ""
 }
