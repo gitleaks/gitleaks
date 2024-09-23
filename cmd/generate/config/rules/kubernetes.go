@@ -17,8 +17,7 @@ func KubernetesSecret() *config.Rule {
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
 	//language=regexp
-	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9]{10,}={0,3}["']?|\{\{[ \t\w.-]+}}|""|''))`
-	//dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*["']?[a-z0-9]{10,}={0,3})["']?`
+	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
 
 	// define rule
 	r := config.Rule{
@@ -35,10 +34,10 @@ func KubernetesSecret() *config.Rule {
 		Allowlist: config.Allowlist{
 			Regexes: []*regexp.Regexp{
 				// Ignore empty or placeholder values.
-				// variable: {{ .Values.Example }}
+				// variable: {{ .Values.Example }} (https://helm.sh/docs/chart_template_guide/variables/)
 				// variable: ""
 				// variable: ''
-				regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w.-]+}}|""|'')`),
+				regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
 			},
 		},
 	}
