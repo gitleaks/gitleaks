@@ -2588,9 +2588,16 @@ keywords = [
 [[rules]]
 id = "postman-api-token"
 description = "Uncovered a Postman API token, potentially compromising API testing and development workflows."
-regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "pmak-",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.getpostman.com/me"
+headers = {X-API-Key = "${postman-api-token}"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
