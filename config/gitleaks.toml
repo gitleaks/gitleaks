@@ -2499,7 +2499,7 @@ keywords = [
 [[rules]]
 id = "openai-api-key"
 description = "Found an OpenAI API Key, posing a risk of unauthorized access to AI services and data manipulation."
-regex = '''(?i)\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "t3blbkfj",
 ]
@@ -2514,7 +2514,7 @@ expectedStatus = [
 [[rules]]
 id = "openai-project-api-key"
 description = "Found an OpenAI API Project Key, posing a risk of unauthorized access to AI services and data manipulation."
-regex = '''(?i)\b(sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "t3blbkfj",
 ]

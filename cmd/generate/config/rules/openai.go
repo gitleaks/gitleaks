@@ -12,7 +12,7 @@ func OpenAI() *config.Rule {
 	r := config.Rule{
 		RuleID:      "openai-api-key",
 		Description: "Found an OpenAI API Key, posing a risk of unauthorized access to AI services and data manipulation.",
-		Regex:       utils.GenerateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, false),
 		Keywords: []string{
 			"T3BlbkFJ",
 		},
@@ -34,7 +34,7 @@ func OpenAIProject() *config.Rule {
 	r := config.Rule{
 		RuleID:      "openai-project-api-key",
 		Description: "Found an OpenAI API Project Key, posing a risk of unauthorized access to AI services and data manipulation.",
-		Regex:       utils.GenerateUniqueTokenRegex(`sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}`, false),
 		Keywords: []string{
 			"T3BlbkFJ",
 		},
