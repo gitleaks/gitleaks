@@ -10,8 +10,18 @@ func DigitalOceanPAT() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a DigitalOcean Personal Access Token, posing a threat to cloud infrastructure security and data privacy.",
 		RuleID:      "digitalocean-pat",
-		Regex:       utils.GenerateUniqueTokenRegex(`dop_v1_[a-f0-9]{64}`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`dop_v1_[a-f0-9]{64}`, false),
 		Keywords:    []string{"dop_v1_"},
+		// https://docs.digitalocean.com/reference/api/api-reference/#section/Authentication
+		Verify: &config.Verify{
+			HTTPVerb: "GET",
+			URL:      "https://api.digitalocean.com/v2/account",
+			Headers: map[string]string{
+				"Authorization": "Bearer ${digitalocean-pat}",
+				"Content-Type":  "application/json",
+			},
+			ExpectedStatus: []int{200},
+		},
 	}
 
 	tps := []string{
@@ -25,7 +35,7 @@ func DigitalOceanOAuthToken() *config.Rule {
 		Description: "Found a DigitalOcean OAuth Access Token, risking unauthorized cloud resource access and data compromise.",
 		RuleID:      "digitalocean-access-token",
 
-		Regex:    utils.GenerateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`, true),
+		Regex:    utils.GenerateUniqueTokenRegex(`doo_v1_[a-f0-9]{64}`, false),
 		Keywords: []string{"doo_v1_"},
 	}
 
@@ -40,7 +50,7 @@ func DigitalOceanRefreshToken() *config.Rule {
 		Description: "Uncovered a DigitalOcean OAuth Refresh Token, which could allow prolonged unauthorized access and resource manipulation.",
 		RuleID:      "digitalocean-refresh-token",
 
-		Regex:    utils.GenerateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`, true),
+		Regex:    utils.GenerateUniqueTokenRegex(`dor_v1_[a-f0-9]{64}`, false),
 		Keywords: []string{"dor_v1_"},
 	}
 

@@ -270,7 +270,7 @@ keywords = [
 [[rules]]
 id = "digitalocean-access-token"
 description = "Found a DigitalOcean OAuth Access Token, risking unauthorized cloud resource access and data compromise."
-regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "doo_v1_",
 ]
@@ -278,15 +278,22 @@ keywords = [
 [[rules]]
 id = "digitalocean-pat"
 description = "Discovered a DigitalOcean Personal Access Token, posing a threat to cloud infrastructure security and data privacy."
-regex = '''(?i)\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "dop_v1_",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.digitalocean.com/v2/account"
+headers = {Authorization = "Bearer ${digitalocean-pat}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
 id = "digitalocean-refresh-token"
 description = "Uncovered a DigitalOcean OAuth Refresh Token, which could allow prolonged unauthorized access and resource manipulation."
-regex = '''(?i)\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "dor_v1_",
 ]
