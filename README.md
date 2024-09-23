@@ -276,6 +276,10 @@ keywords = [
   "token",
 ]
 
+# Report is a boolean that controls whether or not the rule will be included in stdout and the report output.
+# The default is true. This field is useful for matching supplemental credentials for verification, like client-ids. 
+report = true
+
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
 # with known/rotated secrets
 [rules.allowlist]
@@ -298,6 +302,37 @@ regexes = [
 stopwords = [
   '''client''',
   '''endpoint''',
+]
+
+# You can include a verify table for a single rule to verify the secret with a remote service.
+# The the gitleaks engine will substitute a matched secret from the parent rule with a placeholder where the
+# placeholder is located. Placeholder(s) can be used in the `url`, `headers`, and `body` fields.
+# The placeholder syntax is ${rule-id}. You can use multiple placeholders targeting different rules, 
+# e.g, `headers = {Authorization = "Bearer ${rule-1}:${rule-2}}.` 
+# If you use multiple placeholders and one of the placeholders is targeting a rule that matches supplemental credentials, like a client-id, you can 
+# silence the reported of that supplemental credential by setting `report=false` on the supplemental credential rule.
+[rules.verify]
+# The HTTP method used for the verification request.
+# Methods include GET, POST, HEAD.
+httpVerb = "GET"
+# The URL to which the request will be sent. In this case, the detected. 
+# If a placeholder is present, a matched secret will be substituted for the placeholder.
+url = "https://example.com/verify"
+# A table defining any headers that should be sent with the request.
+# In this case, we are using the detected secret as a bearer token in 
+# the Authorization header. The placeholder ${awesome-rule-1} will be
+# replaced by the actual secret detected by the rule.
+headers = {Authorization = "Bearer ${awesome-rule-1}"}
+# A list of expected HTTP status codes. If the verification response 
+# matches one of these statuses, the secret will be considered valid.
+# Can be used in conjunction with `expectedBodyContains`.
+expectedStatus = [
+  200,  # HTTP 200 OK status is expected for valid secrets
+]
+# A list of strings that are expected to appear in the body of the HTTP 
+# response. If any of these strings are found in the response body, the secret will be considered valid. Can be used in conjunction with `expectedStatus`.
+expectedBodyContains = [
+  '''success''',  # The response should contain "success" to confirm validity
 ]
 
 
