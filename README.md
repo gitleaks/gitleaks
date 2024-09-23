@@ -278,6 +278,7 @@ keywords = [
 
 # Report is a boolean that controls whether or not the rule will be included in stdout and the report output.
 # The default is true. This field is useful for matching supplemental credentials for verification, like client-ids. 
+# ️(introduced in v8.20.0) 
 report = true
 
 # You can include an allowlist table for a single rule to reduce false positives or ignore commits
@@ -304,6 +305,7 @@ stopwords = [
   '''endpoint''',
 ]
 
+# ⚠️ rules.verify is an experimental feature introduced in 8.20.0 and subject to change! ⚠️ 
 # You can include a verify table for a single rule to verify the secret with a remote service.
 # The the gitleaks engine will substitute a matched secret from the parent rule with a placeholder where the
 # placeholder is located. Placeholder(s) can be used in the `url`, `headers`, and `body` fields.
@@ -366,6 +368,91 @@ stopwords = [
 ```
 
 Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
+
+### Verification (⚠️ experimental feature added in v8.20.0)
+When a secret is detected based on a rule that includes a `verify` section, Gitleaks will send an HTTP request to a defined URL, substituting the secret into placeholders in the request. The response status and body are then checked against expected values to determine if the secret is valid.
+
+Example configuration w/ `rules.verify` set
+
+```toml
+[[rules]]
+id = "github-pat"
+description = "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure."
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+entropy = 3
+keywords = [
+    "ghp_",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.github.com/user"
+headers = {Accept = "application/vnd.github+json", Authorization = "Bearer ${github-pat}", X-GitHub-Api-Version = "2022-11-28"}
+expectedStatus = [
+    200,
+]
+```
+In the above example, Gitleaks will:
+- Detect any GitHub Personal Access Tokens matching the regex pattern.
+- Verify the token by sending a GET request to https://api.github.com/user with the detected token included in the Authorization header.
+- Check if the HTTP response status is 200 and confirm that the token is valid.
+
+Gitleaks' verify feature supports helper functions within placeholders to manipulate secret values before they are substituted into the request. The supported helper functions are:
+
+- Base64 Encoding: ${base64("string")} encodes the specified string using Base64 encoding.
+- URL Encoding: ${urlEncode("string")} encodes the specified string for safe inclusion in a URL query parameter.
+
+```
+headers = {
+    Authorization = "Basic ${base64("${rule-to-capture-username}:${rule-to-capture-password}")}",
+}
+```
+
+When using multiple placeholders in the verify section, Gitleaks will generate all possible combinations (cartesian product) of the secrets detected for the specified rules. This ensures that all combinations are tested for validity, which is particularly useful when a valid secret is composed of multiple parts.
+
+```toml
+[[rules]]
+id = "client-id"
+description = "OAuth Client ID"
+regex = '''client_id_[0-9a-zA-Z]{10}'''
+keywords = ["client_id"]
+report = false  # Suppress individual reporting
+
+[[rules]]
+id = "client-secret"
+description = "OAuth Client Secret"
+regex = '''client_secret_[0-9a-zA-Z]{20}'''
+keywords = ["client_secret"]
+[rules.verify]
+httpVerb = "POST"
+url = "https://api.example.com/oauth/token"
+headers = {
+    Content-Type = "application/x-www-form-urlencoded",
+}
+body = '''
+{
+  client_id="${client-id}",
+  client_secret="${client-secret}"
+}
+'''
+expectedStatus = [
+  200,
+]
+```
+
+In this example:
+
+- Detect both client-id and client-secret.
+- Combine them in the body of the verification request using placeholders.
+- Gitleaks will generate all combinations of detected client-id and client-secret values.
+
+Note: If multiple `client-ids` and `client-secrets` are detected, Gitleaks will attempt to verify each possible pair.
+
+Some limitations and best practices when using Gitleaks' verify rules:
+- Max Combinations Threshold: Gitleaks may limit the number of combinations to prevent excessive requests (e.g., skipping if more than 3 secrets per rule).
+- Suppression of Individual Findings: Use report = false on supplemental credential rules (like client-id) to avoid cluttering reports with partial un-verified secrets.
+- Error Handling: If verification fails due to too many combinations or missing required secrets, Gitleaks will skip verification for that finding and provide a status reason.
+</details>
+
 
 ### Additional Configuration
 
