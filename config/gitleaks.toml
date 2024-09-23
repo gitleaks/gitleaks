@@ -270,7 +270,7 @@ keywords = [
 [[rules]]
 id = "digitalocean-access-token"
 description = "Found a DigitalOcean OAuth Access Token, risking unauthorized cloud resource access and data compromise."
-regex = '''(?i)\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(doo_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "doo_v1_",
 ]
@@ -278,15 +278,22 @@ keywords = [
 [[rules]]
 id = "digitalocean-pat"
 description = "Discovered a DigitalOcean Personal Access Token, posing a threat to cloud infrastructure security and data privacy."
-regex = '''(?i)\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(dop_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "dop_v1_",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.digitalocean.com/v2/account"
+headers = {Authorization = "Bearer ${digitalocean-pat}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
 id = "digitalocean-refresh-token"
 description = "Uncovered a DigitalOcean OAuth Refresh Token, which could allow prolonged unauthorized access and resource manipulation."
-regex = '''(?i)\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(dor_v1_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "dor_v1_",
 ]
@@ -2499,9 +2506,31 @@ keywords = [
 [[rules]]
 id = "openai-api-key"
 description = "Found an OpenAI API Key, posing a risk of unauthorized access to AI services and data manipulation."
-regex = '''(?i)\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "t3blbkfj",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.openai.com/v1/me"
+headers = {Authorization = "Bearer ${openai-api-key}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
+]
+
+[[rules]]
+id = "openai-project-api-key"
+description = "Found an OpenAI API Project Key, posing a risk of unauthorized access to AI services and data manipulation."
+regex = '''\b(sk-proj-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "t3blbkfj",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.openai.com/v1/me"
+headers = {Authorization = "Bearer ${openai-project-api-key}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
@@ -2566,9 +2595,16 @@ keywords = [
 [[rules]]
 id = "postman-api-token"
 description = "Uncovered a Postman API token, potentially compromising API testing and development workflows."
-regex = '''(?i)\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(PMAK-(?i)[a-f0-9]{24}\-[a-f0-9]{34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = [
     "pmak-",
+]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.getpostman.com/me"
+headers = {X-API-Key = "${postman-api-token}"}
+expectedStatus = [
+    200,
 ]
 
 [[rules]]
