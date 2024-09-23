@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"regexp"
 	"testing"
 
@@ -91,11 +92,11 @@ func TestTranslate(t *testing.T) {
 			cfg:       Config{},
 			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
 		},
-		//{
-		//	cfgName:   "no_regex_or_path",
-		//	cfg:       Config{},
-		//	wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
-		//},
+		{
+			cfgName:   "no_regex_or_path",
+			cfg:       Config{},
+			wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
+		},
 		{
 			cfgName:   "bad_entropy_group",
 			cfg:       Config{},
@@ -129,11 +130,58 @@ func TestTranslate(t *testing.T) {
 				},
 			},
 		},
+		{
+			cfgName: "extend_rule_allowlist",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key-again-again": {
+						RuleID:      "aws-secret-key-again-again",
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:        []string{"key", "AWS"},
+						Keywords:    []string{},
+						Allowlist: Allowlist{
+							Commits: []string{"abcdefg1"},
+							Regexes: []*regexp.Regexp{
+								regexp.MustCompile(`foo.+bar`),
+							},
+							Paths: []*regexp.Regexp{
+								regexp.MustCompile(`ignore\.xaml`),
+							},
+							StopWords: []string{"example"},
+						},
+					},
+				},
+			},
+		},
+		{
+			cfgName: "extend_empty_regexpath",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key-again-again": {
+						RuleID:      "aws-secret-key-again-again",
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:        []string{"key", "AWS"},
+						Keywords:    []string{},
+						Allowlist: Allowlist{
+							Paths: []*regexp.Regexp{
+								regexp.MustCompile(`something.py`),
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
-			viper.Reset()
+			t.Cleanup(func() {
+				extendDepth = 0
+				viper.Reset()
+			})
+
 			viper.AddConfigPath(configPath)
 			viper.SetConfigName(tt.cfgName)
 			viper.SetConfigType("toml")
@@ -144,8 +192,21 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			assert.Equal(t, tt.wantError, err)
-			assert.Equal(t, cfg.Rules, tt.cfg.Rules)
+			if !assert.Equal(t, tt.wantError, err) {
+				return
+			}
+
+			var regexComparer = func(x, y *regexp.Regexp) bool {
+				// Compare the string representation of the regex patterns.
+				if x == nil || y == nil {
+					return x == y
+				}
+				return x.String() == y.String()
+			}
+			opts := cmp.Options{cmp.Comparer(regexComparer)}
+			if diff := cmp.Diff(tt.cfg.Rules, cfg.Rules, opts); diff != "" {
+				t.Errorf("%s diff: (-want +got)\n%s", tt.cfgName, diff)
+			}
 		})
 	}
 }
