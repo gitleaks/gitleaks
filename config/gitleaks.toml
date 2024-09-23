@@ -2503,6 +2503,13 @@ regex = '''(?i)\b(sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:['|\"|\n|\r|\s|\x
 keywords = [
     "t3blbkfj",
 ]
+[rules.verify]
+httpVerb = "GET"
+url = "https://api.openai.com/v1/me"
+headers = {Authorization = "Bearer ${openai-api-key}", Content-Type = "application/json"}
+expectedStatus = [
+    200,
+]
 
 [[rules]]
 id = "openshift-user-token"

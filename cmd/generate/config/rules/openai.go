@@ -16,6 +16,15 @@ func OpenAI() *config.Rule {
 		Keywords: []string{
 			"T3BlbkFJ",
 		},
+		Verify: &config.Verify{
+			HTTPVerb: "GET",
+			URL:      "https://api.openai.com/v1/me",
+			Headers: map[string]string{
+				"Authorization": "Bearer ${openai-api-key}",
+				"Content-Type":  "application/json",
+			},
+			ExpectedStatus: []int{200},
+		},
 	}
 
 	// validate
