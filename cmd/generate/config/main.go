@@ -81,6 +81,7 @@ func main() {
 		rules.FlutterwavePublicKey(),
 		rules.FlutterwaveSecretKey(),
 		rules.FlutterwaveEncKey(),
+		rules.FlyIOAccessToken(),
 		rules.FrameIO(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),

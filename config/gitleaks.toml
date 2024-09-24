@@ -390,7 +390,7 @@ keywords = [
 [[rules]]
 id = "etsy-access-token"
 description = "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data."
-regex = '''(?i)(?:(?-i:ETSY|etsy|Etsy))(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)(?:(?-i:ETSY|[Ee]tsy))(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{24})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 entropy = 3
 keywords = [
     "etsy",
@@ -479,6 +479,15 @@ description = "Identified a Flutterwave Secret Key, risking unauthorized financi
 regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
 keywords = [
     "flwseck_test",
+]
+
+[[rules]]
+id = "flyio-access-token"
+description = "Uncovered a Fly.io API key"
+regex = '''\b((?:fo1_[\w-]{43}|fm1[ar]_[a-zA-Z0-9+\/]{100,}={0,3}|fm2_[a-zA-Z0-9+\/]{100,}={0,3}))(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 4
+keywords = [
+    "fo1_","fm1","fm2_",
 ]
 
 [[rules]]
