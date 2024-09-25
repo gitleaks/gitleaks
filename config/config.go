@@ -131,9 +131,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords:   r.Allowlist.StopWords,
 			},
 		}
-		if err := r.Validate(); err != nil {
-			return Config{}, err
-		}
 
 		orderedRules = append(orderedRules, r.RuleID)
 		rulesMap[r.RuleID] = r
@@ -171,7 +168,15 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		} else if c.Extend.Path != "" {
 			c.extendPath()
 		}
+	}
 
+	// Validate the rules after everything has been assembled (including extended configs).
+	if extendDepth == 0 {
+		for _, rule := range rulesMap {
+			if err := rule.Validate(); err != nil {
+				return Config{}, err
+			}
+		}
 	}
 
 	return c, nil
@@ -235,12 +240,22 @@ func (c *Config) extendURL() {
 }
 
 func (c *Config) extend(extensionConfig Config) {
-	for ruleID, rule := range extensionConfig.Rules {
-		if _, ok := c.Rules[ruleID]; !ok {
-			log.Trace().Msgf("adding %s to base config", ruleID)
-			c.Rules[ruleID] = rule
-			c.Keywords = append(c.Keywords, rule.Keywords...)
+	for ruleID, baseRule := range extensionConfig.Rules {
+		currentRule, ok := c.Rules[ruleID]
+		if !ok {
+			// Rule doesn't exist, add it to the config.
+			c.Rules[ruleID] = baseRule
+			c.Keywords = append(c.Keywords, baseRule.Keywords...)
 			c.OrderedRules = append(c.OrderedRules, ruleID)
+		} else {
+			// Rule exists, merge our changes into the base.
+			baseRule.Allowlist.Commits = append(baseRule.Allowlist.Commits, currentRule.Allowlist.Commits...)
+			baseRule.Allowlist.Paths = append(baseRule.Allowlist.Paths, currentRule.Allowlist.Paths...)
+			baseRule.Allowlist.Regexes = append(baseRule.Allowlist.Regexes, currentRule.Allowlist.Regexes...)
+			baseRule.Allowlist.StopWords = append(baseRule.Allowlist.StopWords, currentRule.Allowlist.StopWords...)
+
+			delete(c.Rules, ruleID)
+			c.Rules[ruleID] = baseRule
 		}
 	}
 
