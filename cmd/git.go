@@ -31,13 +31,13 @@ func runGit(cmd *cobra.Command, args []string) {
 	)
 
 	// grab source
-    source := "."
-    if len(args) == 1 {
-	    source = args[0]
-	if source == "" {
-		source = "."
+	source := "."
+	if len(args) == 1 {
+		source = args[0]
+		if source == "" {
+			source = "."
+		}
 	}
-    }
 
 	initConfig(source)
 

@@ -43,7 +43,6 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	// start timer
 	start := time.Now()
 
-
 	detector := Detector(cmd, cfg, source)
 
 	// set exit code
