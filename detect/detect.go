@@ -418,6 +418,8 @@ func findFullLine(fragment Fragment, secret string) string {
 		return ""
 	}
 
+	secretEndingIdx := secretStartingIdx + len(secret)
+
 	newlineIndices := re.FindAllStringIndex(fragment.Raw, -1) // find all newline char idx
 
 	// find the nearest previous newline
@@ -433,7 +435,7 @@ func findFullLine(fragment Fragment, secret string) string {
 	// find the nearest next newline
 	nextNewlineIndex := len(fragment.Raw)
 	for _, match := range newlineIndices {
-		if match[0] > secretStartingIdx {
+		if match[0] > secretEndingIdx {
 			nextNewlineIndex = match[0] // start of the next newline
 			break
 		}
