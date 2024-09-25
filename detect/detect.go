@@ -270,13 +270,8 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
-		
-		full_fragment := ""
-		if( len(fragment.Raw)  > 250 ){
-			full_fragment = strings.TrimSpace(fragment.Raw[0:250])
-		}else{
-			full_fragment = strings.TrimSpace(fragment.Raw[0:])
-		}
+
+		full_fragment := findFullLine(fragment, secret)
 
 		finding := report.Finding{
 			Description: rule.Description,
@@ -412,4 +407,38 @@ func (d *Detector) addFinding(finding report.Finding) {
 // addCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
+}
+
+// this function knows how to find the full line based on the secret and the newline chars it is between
+func findFullLine(fragment Fragment, secret string) string {
+	re := regexp.MustCompile(`\r\n|\r|\n`) // regex to match all known newline chars
+
+	secretStartingIdx := strings.Index(fragment.Raw, secret)
+	if secretStartingIdx == -1 {
+		return ""
+	}
+
+	newlineIndices := re.FindAllStringIndex(fragment.Raw, -1) // find all newline char idx
+
+	// find the nearest previous newline
+	prevNewlineIndex := 0
+	for _, match := range newlineIndices {
+		if match[0] < secretStartingIdx {
+			prevNewlineIndex = match[1] // move past the newline character
+		} else {
+			break
+		}
+	}
+
+	// find the nearest next newline
+	nextNewlineIndex := len(fragment.Raw)
+	for _, match := range newlineIndices {
+		if match[0] > secretStartingIdx {
+			nextNewlineIndex = match[0] // start of the next newline
+			break
+		}
+	}
+
+	// return substring between indices
+	return strings.TrimSpace(fragment.Raw[prevNewlineIndex:nextNewlineIndex])
 }
