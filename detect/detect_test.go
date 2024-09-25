@@ -716,3 +716,76 @@ func moveDotGit(t *testing.T, from, to string) {
 		require.NoError(t, err)
 	}
 }
+
+func TestFindSecretLine(t *testing.T) {
+	tests := []struct {
+		name     string
+		fragment string
+		secret   string
+		expected string
+	}{
+		{
+			name:     "Secret in middle of line with \\n",
+			fragment: "Line 1\nThis is a line with some secret data.\nAnother line follows here.",
+			secret:   "secret",
+			expected: "This is a line with some secret data.",
+		},
+		{
+			name:     "Secret in middle of line with \\r\\n",
+			fragment: "Line 1\r\nThis is a line with some secret data.\r\nAnother line follows here.",
+			secret:   "secret",
+			expected: "This is a line with some secret data.",
+		},
+		{
+			name:     "Secret in middle of line with \\r",
+			fragment: "Line 1\rThis is a line with some secret data.\rAnother line follows here.",
+			secret:   "secret",
+			expected: "This is a line with some secret data.",
+		},
+		{
+			name:     "Secret at start of string",
+			fragment: "secret is at the start\nAnother line follows here.",
+			secret:   "secret",
+			expected: "secret is at the start",
+		},
+		{
+			name:     "Secret at end of string",
+			fragment: "Line 1\nAnother line follows here with secret",
+			secret:   "secret",
+			expected: "Another line follows here with secret",
+		},
+		{
+			name:     "Secret in single line string",
+			fragment: "This is a secret line.",
+			secret:   "secret",
+			expected: "This is a secret line.",
+		},
+		{
+			name:     "Secret with no newlines around",
+			fragment: "This is a line with secret in the middle and no newlines.",
+			secret:   "secret",
+			expected: "This is a line with secret in the middle and no newlines.",
+		},
+		{
+			name:     "Secret not found",
+			fragment: "This is a line with no secrets.",
+			secret:   "secret",
+			expected: "",
+		},
+		{
+			name:     "Multiple newlines",
+			fragment: "\n\nThis is a line with a secret in between\n\n",
+			secret:   "secret",
+			expected: "This is a line with a secret in between",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := findFullLine(Fragment{Raw: tt.fragment}, tt.secret)
+			if result != tt.expected {
+				t.Errorf("got %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
