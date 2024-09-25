@@ -603,11 +603,32 @@ func TestFromFiles(t *testing.T) {
 			cfgName:          "simple",
 			expectedFindings: []report.Finding{},
 		},
+		{
+			source:  filepath.Join(repoBasePath, "nogit", ".env.prod"),
+			cfgName: "generic",
+			expectedFindings: []report.Finding{
+				{
+					Description: "Generic API Key",
+					StartLine:   4,
+					EndLine:     4,
+					StartColumn: 5,
+					EndColumn:   35,
+					Match:       "PASSWORD=8ae31cacf141669ddfb5da",
+					Secret:      "8ae31cacf141669ddfb5da",
+					Line:        "\nDB_PASSWORD=8ae31cacf141669ddfb5da\nDB_NAME=best_db",
+					File:        "../testdata/repos/nogit/.env.prod",
+					RuleID:      "generic-api-key",
+					Tags:        []string{},
+					Entropy:     3.5383105,
+					Fingerprint: "../testdata/repos/nogit/.env.prod:generic-api-key:4",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		viper.AddConfigPath(configPath)
-		viper.SetConfigName("simple")
+		viper.SetConfigName(tt.cfgName)
 		viper.SetConfigType("toml")
 		err := viper.ReadInConfig()
 		require.NoError(t, err)
