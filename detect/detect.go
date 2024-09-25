@@ -413,12 +413,14 @@ func (d *Detector) addCommit(commit string) {
 func findFullLine(fragment Fragment, secret string) string {
 	re := regexp.MustCompile(`\r\n|\r|\n`) // regex to match all known newline chars
 
-	secretStartingIdx := strings.Index(fragment.Raw, secret)
+	secretStartingIdx := strings.Index(fragment.Raw, secret) // start of secret in fragment
+
+	// check if secret is found
 	if secretStartingIdx == -1 {
 		return ""
 	}
 
-	secretEndingIdx := secretStartingIdx + len(secret)
+	secretEndingIdx := secretStartingIdx + len(secret) // end of secret in fragment
 
 	newlineIndices := re.FindAllStringIndex(fragment.Raw, -1) // find all newline char idx
 
