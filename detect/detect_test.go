@@ -67,6 +67,7 @@ func TestDetect(t *testing.T) {
 					Match:       "AKIALALEMEL33243OKIA",
 					File:        "tmp.go",
 					Line:        `awsToken := \"AKIALALEMEL33243OKIA\"`,
+					FullLine:    `awsToken := \"AKIALALEMEL33243OKIA\"`,
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					StartLine:   0,
@@ -89,6 +90,7 @@ func TestDetect(t *testing.T) {
 					Secret:      "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
 					Match:       "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
 					Line:        `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
+					FullLine:    `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
 					File:        "tmp.go",
 					RuleID:      "pypi-upload-token",
 					Tags:        []string{"key", "pypi"},
@@ -112,6 +114,7 @@ func TestDetect(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
 					Line:        `awsToken := \"AKIALALEMEL33243OLIA\"`,
+					FullLine:    `awsToken := \"AKIALALEMEL33243OLIA\"`,
 					File:        "tmp.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -135,6 +138,7 @@ func TestDetect(t *testing.T) {
 					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
 					Secret:      "cafebabe:deadbeef",
 					Line:        `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
+					FullLine:    `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
 					File:        "tmp.sh",
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
@@ -159,6 +163,7 @@ func TestDetect(t *testing.T) {
 					Secret:      "cafebabe:deadbeef",
 					File:        "tmp.sh",
 					Line:        `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
+					FullLine:    `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
 					RuleID:      "sidekiq-secret",
 					Tags:        []string{},
 					Entropy:     2.6098502,
@@ -182,6 +187,7 @@ func TestDetect(t *testing.T) {
 					Secret:      "cafeb4b3:d3adb33f",
 					File:        "tmp.sh",
 					Line:        `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
+					FullLine:    `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
 					RuleID:      "sidekiq-sensitive-url",
 					Tags:        []string{},
 					Entropy:     2.984234,
@@ -229,6 +235,7 @@ func TestDetect(t *testing.T) {
 					Match:       "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
 					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
 					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+					FullLine:    `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 					File:        "tmp.go",
 					RuleID:      "discord-api-key",
 					Tags:        []string{},
@@ -260,6 +267,7 @@ func TestDetect(t *testing.T) {
 					Match:       "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
 					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
 					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+					FullLine:    `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 					File:        "tmp.py",
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
@@ -372,6 +380,7 @@ func TestFromGit(t *testing.T) {
 					StartColumn: 19,
 					EndColumn:   38,
 					Line:        "\n    awsToken := \"AKIALALEMEL33243OLIA\"",
+					FullLine:    "awsToken := \"AKIALALEMEL33243OLIA\"",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
 					File:        "main.go",
@@ -394,6 +403,7 @@ func TestFromGit(t *testing.T) {
 					Secret:      "AKIALALEMEL33243OLIA",
 					Match:       "AKIALALEMEL33243OLIA",
 					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					FullLine:    "aws_token := \"AKIALALEMEL33243OLIA\"",
 					File:        "foo/foo.go",
 					Date:        "2021-11-02T23:48:06Z",
 					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
@@ -420,6 +430,7 @@ func TestFromGit(t *testing.T) {
 					EndColumn:   36,
 					Secret:      "AKIALALEMEL33243OLIA",
 					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					FullLine:    "aws_token := \"AKIALALEMEL33243OLIA\"",
 					Match:       "AKIALALEMEL33243OLIA",
 					Date:        "2021-11-02T23:48:06Z",
 					File:        "foo/foo.go",
@@ -495,7 +506,7 @@ func TestFromGitStaged(t *testing.T) {
 					StartColumn: 18,
 					EndColumn:   37,
 					Line:        "\n\taws_token2 := \"AKIALALEMEL33243OLIA\" // this one is not",
-					FullLine:    "aws_token := \"AKIALALEMEL33243OLIA\"  // fingerprint of that secret is added to .gitleaksignore",
+					FullLine:    "aws_token2 := \"AKIALALEMEL33243OLIA\" // this one is not",
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
 					File:        "api/api.go",
@@ -568,6 +579,7 @@ func TestFromFiles(t *testing.T) {
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					FullLine:    "awsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
 					SymlinkFile: "",
 					RuleID:      "aws-access-key",
@@ -590,6 +602,7 @@ func TestFromFiles(t *testing.T) {
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
 					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					FullLine:    "awsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -657,6 +670,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 					Match:       "-----BEGIN OPENSSH PRIVATE KEY-----",
 					Secret:      "-----BEGIN OPENSSH PRIVATE KEY-----",
 					Line:        "-----BEGIN OPENSSH PRIVATE KEY-----",
+					FullLine:    "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW",
 					File:        "../testdata/repos/symlinks/source_file/id_ed25519",
 					SymlinkFile: "../testdata/repos/symlinks/file_symlink/symlinked_id_ed25519",
 					RuleID:      "apkey",
@@ -720,61 +734,80 @@ func moveDotGit(t *testing.T, from, to string) {
 func TestFindSecretLine(t *testing.T) {
 	tests := []struct {
 		name     string
-		fragment string
+		fragment Fragment
+		loc      Location
 		secret   string
 		expected string
 	}{
 		{
-			name:     "Secret in middle of line with \\n",
-			fragment: "Line 1\nThis is a line with some secret data.\nAnother line follows here.",
+			name: "Secret within a line with \\n",
+			fragment: Fragment{
+				Raw: "Line 1\nThis is a line with some secret data.\nAnother line follows here.",
+			},
+			loc:      Location{startLineIndex: 7, endLineIndex: 50},
 			secret:   "secret",
 			expected: "This is a line with some secret data.",
 		},
 		{
-			name:     "Secret in middle of line with \\r\\n",
-			fragment: "Line 1\r\nThis is a line with some secret data.\r\nAnother line follows here.",
+			name: "Secret within a line with \\r\\n",
+			fragment: Fragment{
+				Raw: "Line 1\r\nThis is a line with some secret data.\r\nAnother line follows here.",
+			},
+			loc:      Location{startLineIndex: 8, endLineIndex: 51},
 			secret:   "secret",
 			expected: "This is a line with some secret data.",
 		},
 		{
-			name:     "Secret in middle of line with \\r",
-			fragment: "Line 1\rThis is a line with some secret data.\rAnother line follows here.",
-			secret:   "secret",
-			expected: "This is a line with some secret data.",
-		},
-		{
-			name:     "Secret at start of string",
-			fragment: "secret is at the start\nAnother line follows here.",
+			name: "Secret at start of string",
+			fragment: Fragment{
+				Raw: "secret is at the start\nAnother line follows here.",
+			},
+			loc:      Location{startLineIndex: 0, endLineIndex: 21},
 			secret:   "secret",
 			expected: "secret is at the start",
 		},
 		{
-			name:     "Secret at end of string",
-			fragment: "Line 1\nAnother line follows here with secret",
+			name: "Secret at end of string",
+			fragment: Fragment{
+				Raw: "Line 1\nAnother line follows here with secret",
+			},
+			loc:      Location{startLineIndex: 29, endLineIndex: 45},
 			secret:   "secret",
 			expected: "Another line follows here with secret",
 		},
 		{
-			name:     "Secret in single line string",
-			fragment: "This is a secret line.",
+			name: "Secret in single line string",
+			fragment: Fragment{
+				Raw: "This is a secret line.",
+			},
+			loc:      Location{startLineIndex: 0, endLineIndex: 23},
 			secret:   "secret",
 			expected: "This is a secret line.",
 		},
 		{
-			name:     "Secret with no newlines around",
-			fragment: "This is a line with secret in the middle and no newlines.",
+			name: "Secret with no newlines around",
+			fragment: Fragment{
+				Raw: "This is a line with secret in the middle and no newlines.",
+			},
+			loc:      Location{startLineIndex: 0, endLineIndex: 57},
 			secret:   "secret",
 			expected: "This is a line with secret in the middle and no newlines.",
 		},
 		{
-			name:     "Secret not found",
-			fragment: "This is a line with no secrets.",
+			name: "Secret not found",
+			fragment: Fragment{
+				Raw: "This is a line with no secrets.",
+			},
+			loc:      Location{startLineIndex: 0, endLineIndex: 30},
 			secret:   "hello",
 			expected: "",
 		},
 		{
-			name:     "Multiple newlines",
-			fragment: "\n\nThis is a line with a secret in between\n\n",
+			name: "Multiple newlines",
+			fragment: Fragment{
+				Raw: "\n\nThis is a line with a secret in between\n\n",
+			},
+			loc:      Location{startLineIndex: 2, endLineIndex: 40},
 			secret:   "secret",
 			expected: "This is a line with a secret in between",
 		},
@@ -782,7 +815,7 @@ func TestFindSecretLine(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := findFullLine(Fragment{Raw: tt.fragment}, tt.secret)
+			result := findFullLine(tt.fragment, tt.loc, tt.secret)
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
 			}
