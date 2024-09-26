@@ -63,3 +63,13 @@
   description = 'Small Secret'
   regex = '''\bsmall-secret\b'''
   tags = ['small', 'secret']
+
+[[rules]]
+  # When the example value is decoded this will overlap and this is here to
+  # test that the location information is reported accurately when the match
+  # goes outside the bounds of the encoded value
+  id = 'overlapping'
+  description = 'Overlapping'
+  regex = '''secret=(decoded-secret-value)'''
+  tags = ['overlapping']
+  secretGroup = 1

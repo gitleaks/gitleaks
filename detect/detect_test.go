@@ -33,6 +33,11 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJ
 # A small secret at the end to make sure that as the other ones above shrink
 # when decoded, the positions are taken into consideratoin for overlaps
 c21hbGwtc2VjcmV0
+
+# This tests how it handles when the match bounds go outside the decoded value
+secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=
+# The above encoded again
+c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=
 `
 
 func TestDetect(t *testing.T) {
@@ -437,6 +442,34 @@ func TestDetect(t *testing.T) {
 					StartColumn: 2,
 					EndColumn:   17,
 					Entropy:     3.0849626,
+				},
+				{ // Secret where the decoded match goes outside the encoded value
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping"},
+					StartLine:   18,
+					EndLine:     18,
+					StartColumn: 2,
+					EndColumn:   36,
+					Entropy:     3.3037016,
+				},
+				{ // Secret where the decoded match goes outside the encoded value and then encoded again
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nc2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping"},
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 2,
+					EndColumn:   49,
+					Entropy:     3.3037016,
 				},
 			},
 		},
