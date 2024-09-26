@@ -261,6 +261,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		// extract secret from match
 		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
 
+		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
+		// removes the incorrectly following line that was detected by regex expression '\n' 
+		matchIndex[1] = matchIndex[0]+len(secret)
+
 		// determine location of match. Note that the location
 		// in the finding will be the line/column numbers of the _match_
 		// not the _secret_, which will be different if the secretGroup
