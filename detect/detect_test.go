@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -496,6 +495,7 @@ func TestFromGitStaged(t *testing.T) {
 					StartColumn: 18,
 					EndColumn:   37,
 					Line:        "\n\taws_token2 := \"AKIALALEMEL33243OLIA\" // this one is not",
+					FullLine:    "aws_token := \"AKIALALEMEL33243OLIA\"  // fingerprint of that secret is added to .gitleaksignore",
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
 					File:        "api/api.go",
@@ -769,7 +769,7 @@ func TestFindSecretLine(t *testing.T) {
 		{
 			name:     "Secret not found",
 			fragment: "This is a line with no secrets.",
-			secret:   "secret",
+			secret:   "hello",
 			expected: "",
 		},
 		{

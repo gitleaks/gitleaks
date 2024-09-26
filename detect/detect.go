@@ -411,38 +411,62 @@ func (d *Detector) addCommit(commit string) {
 
 // this function knows how to find the full line based on the secret and the newline chars it is between
 func findFullLine(fragment Fragment, secret string) string {
-	re := regexp.MustCompile(`\r\n|\r|\n`) // regex to match all known newline chars
 
 	secretStartingIdx := strings.Index(fragment.Raw, secret) // start of secret in fragment
-
-	// check if secret is found
 	if secretStartingIdx == -1 {
 		return ""
 	}
 
 	secretEndingIdx := secretStartingIdx + len(secret) // end of secret in fragment
 
-	newlineIndices := re.FindAllStringIndex(fragment.Raw, -1) // find all newline char idx
-
 	// find the nearest previous newline
-	prevNewlineIndex := 0
-	for _, match := range newlineIndices {
-		if match[0] < secretStartingIdx {
-			prevNewlineIndex = match[1] // move past the newline character
-		} else {
-			break
-		}
-	}
-
+	prevNewlineIndex := findIndexAfterPreviousNewline(fragment.Raw, secretStartingIdx)
 	// find the nearest next newline
-	nextNewlineIndex := len(fragment.Raw)
-	for _, match := range newlineIndices {
-		if match[0] > secretEndingIdx {
-			nextNewlineIndex = match[0] // start of the next newline
-			break
-		}
-	}
+	nextNewlineIndex := findIndexBeforeNextNewline(fragment.Raw, secretEndingIdx)
 
 	// return substring between indices
 	return strings.TrimSpace(fragment.Raw[prevNewlineIndex:nextNewlineIndex])
+}
+
+func findIndexAfterPreviousNewline(fragment string, startIdx int) int {
+	if startIdx <= 0 {
+		return 0
+	}
+
+	re, err := regexp.Compile(`\r|\n`)
+	if err != nil {
+		return 0
+	}
+
+	for i := startIdx - 1; i >= 1; i-- {
+		char := fragment[i]
+
+		if isNewline := re.Match([]byte{char}); isNewline {
+			return i
+		}
+	}
+
+	return 0
+}
+
+func findIndexBeforeNextNewline(fragment string, startIdx int) int {
+	maxIdx := len(fragment)
+	if startIdx == maxIdx {
+		return maxIdx
+	}
+
+	re, err := regexp.Compile(`\r|\n`)
+	if err != nil {
+		return maxIdx
+	}
+
+	for i := startIdx + 1; i < maxIdx-1; i++ {
+		char := fragment[i]
+
+		if isNewline := re.Match([]byte{char}); isNewline {
+			return i
+		}
+	}
+
+	return maxIdx
 }
