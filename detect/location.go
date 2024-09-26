@@ -1,5 +1,7 @@
 package detect
 
+import "fmt"
+
 // Location represents a location in a file
 type Location struct {
 	startLine      int
@@ -51,14 +53,6 @@ func location(fragment Fragment, matchIndex []int) Location {
 			location.endLineIndex = newLineByteIndex
 		}
 
-		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
-		// fixes the bug that a new line from default secretSuffix
-		// leads in the reporting to a false positive in the following line
-		if location.endColumn == 1 {
-			location.endLine -= 1 // -1 because of newline in secretSuffix
-			location.endColumn = prevNewLine - location.startLineIndex
-		}
-
 		prevNewLine = pair[0]
 	}
 
@@ -84,5 +78,6 @@ func location(fragment Fragment, matchIndex []int) Location {
 		}
 		location.endLineIndex = end + i
 	}
+	fmt.Println(location.startLineIndex, location.endLineIndex)
 	return location
 }
