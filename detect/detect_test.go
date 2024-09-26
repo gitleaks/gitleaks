@@ -615,7 +615,7 @@ func TestFromFiles(t *testing.T) {
 					EndColumn:   35,
 					Match:       "PASSWORD=8ae31cacf141669ddfb5da",
 					Secret:      "8ae31cacf141669ddfb5da",
-					Line:        "\nDB_PASSWORD=8ae31cacf141669ddfb5da\nDB_NAME=best_db",
+					Line:        "\nDB_PASSWORD=8ae31cacf141669ddfb5da",
 					File:        "../testdata/repos/nogit/.env.prod",
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
