@@ -1,7 +1,5 @@
 package detect
 
-import "fmt"
-
 // Location represents a location in a file
 type Location struct {
 	startLine      int
