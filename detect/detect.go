@@ -201,7 +201,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 		for _, rule := range d.Config.Rules {
 			if len(rule.Keywords) == 0 {
-				// if not keywords are associated with the rule always scan the
+				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
 				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
 				continue
