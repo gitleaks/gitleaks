@@ -23,7 +23,6 @@ import (
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
-	maxDetectPasses        = 3          // remove the chance of a decode infinite loop
 )
 
 var newLineRegexp = regexp.MustCompile("\n")
@@ -40,6 +39,9 @@ type Detector struct {
 
 	// verbose is a flag to print findings
 	Verbose bool
+
+	// MaxDecodeDepths limits how many recursive decoding passes are allowed
+	MaxDecodeDepth int
 
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
@@ -194,8 +196,9 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	currentRaw := fragment.Raw
 	currentKeywords := fragment.keywords
 	encodedSegments := []EncodedSegment{}
+	currentDecodeDepth := 0
 
-	for i := 0; i < maxDetectPasses; i++ {
+	for {
 		// build keyword map for prefiltering rules
 		normalizedRaw := strings.ToLower(currentRaw)
 		matches := d.prefilter.MatchString(normalizedRaw)
@@ -220,9 +223,13 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			}
 		}
 
-		// TODO: Use a cli flag to optionally enable this:
-		// https://github.com/gitleaks/gitleaks/issues/807#issuecomment-2357951242
-		// else break here
+		// increment the depth by 1 as we start our decoding pass
+		currentDecodeDepth++
+
+		// stop the loop if we've hit our max decoding depth
+		if currentDecodeDepth > d.MaxDecodeDepth {
+			break
+		}
 
 		// decode the currentRaw for the next pass
 		currentRaw, encodedSegments = decode(currentRaw, encodedSegments)

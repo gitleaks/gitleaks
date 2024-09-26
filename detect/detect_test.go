@@ -15,6 +15,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
+const maxDecodeDepth = 8
 const configPath = "../testdata/config/"
 const repoBasePath = "../testdata/repos/"
 const b64TestValues = `
@@ -490,6 +491,7 @@ func TestDetect(t *testing.T) {
 		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
 		assert.Equal(t, tt.wantError, err)
 		d := NewDetector(cfg)
+		d.MaxDecodeDepth = maxDecodeDepth
 		d.baselinePath = tt.baselinePath
 
 		findings := d.Detect(tt.fragment)
