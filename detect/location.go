@@ -78,6 +78,5 @@ func location(fragment Fragment, matchIndex []int) Location {
 		}
 		location.endLineIndex = end + i
 	}
-	fmt.Println(location.startLineIndex, location.endLineIndex)
 	return location
 }
