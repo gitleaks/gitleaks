@@ -100,10 +100,6 @@ type Fragment struct {
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
-
-	// keywords is a map of all the keywords contain within the contents
-	// of this fragment
-	keywords map[string]bool
 }
 
 // NewDetector creates a new detector with the given config
@@ -186,15 +182,12 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		return findings
 	}
 
-	// initiate fragment keywords
-	fragment.keywords = make(map[string]bool)
-
 	// add newline indices for location calculation in detectRule
 	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
-	currentKeywords := fragment.keywords
+	currentKeywords := make(map[string]bool)
 	encodedSegments := []EncodedSegment{}
 	currentDecodeDepth := 0
 
