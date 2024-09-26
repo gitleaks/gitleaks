@@ -187,16 +187,16 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
-	currentKeywords := make(map[string]bool)
 	encodedSegments := []EncodedSegment{}
 	currentDecodeDepth := 0
 
 	for {
 		// build keyword map for prefiltering rules
+		keywords := make(map[string]bool)
 		normalizedRaw := strings.ToLower(currentRaw)
 		matches := d.prefilter.MatchString(normalizedRaw)
 		for _, m := range matches {
-			currentKeywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
+			keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 		}
 
 		for _, rule := range d.Config.Rules {
@@ -209,7 +209,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
-				if _, ok := currentKeywords[strings.ToLower(k)]; ok {
+				if _, ok := keywords[strings.ToLower(k)]; ok {
 					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
 					break
 				}
@@ -231,9 +231,6 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		if len(encodedSegments) == 0 {
 			break
 		}
-
-		// reset the keywords for the next pass
-		currentKeywords = make(map[string]bool)
 	}
 
 	return filter(findings, d.Redact)
