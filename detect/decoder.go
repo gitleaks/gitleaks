@@ -20,6 +20,9 @@ var decoders = []func(string) ([]byte, error){
 // tree of segments needing to be decoded. This is why the term parent is used
 // in a few places below.
 type EncodedSegment struct {
+	// The segment that this segment was found in after it was decoded
+	parent *EncodedSegment
+
 	// relative vs absolute vs decoded values:
 	//
 	// If a value is double encoded, multiple passes happen do decode it all.
@@ -48,6 +51,60 @@ func (s EncodedSegment) isContainedInParent(parent EncodedSegment) bool {
 // decodedOverlaps checks if the decoded bounds of the segment overlaps a range
 func (s EncodedSegment) decodedOverlaps(start, end int) bool {
 	return start <= s.decodedEnd && end >= s.decodedStart
+}
+
+// adjustMatchIndex takes the index from the current decoding pass and updates
+// it to match the right location in the original text.
+//
+// If the match is completely within the bounds of an encoded value in the
+// original text, then the absolute bounds of that encoded value will be
+// set.
+//
+// If the match goes outside of an encoded value in the original text then
+// we start climbing the tree of segments to figure out if it overlaps
+// the segment in the original text
+func (s EncodedSegment) adjustMatchIndex(matchIndex []int) []int {
+	// The match is within the bounds of the segment so we just return
+	// the start and end of the root segment
+	if s.decodedStart <= matchIndex[0] && matchIndex[1] <= s.decodedEnd {
+		return []int{
+			s.absoluteStart,
+			s.absoluteEnd,
+		}
+	}
+
+	// Since it overlaps one side and/or the other, we're going to have to adjust
+	// and climb parents until we're either at the root or we've determined
+	// we're fully inside one of the parent segments.
+	adjustedMatchIndex := make([]int, 2)
+
+	if matchIndex[0] < s.decodedStart {
+		// It starts before the encoded segment so adjust the start to match
+		// the location before it was decoded
+		matchStartDelta := s.decodedStart - matchIndex[0]
+		adjustedMatchIndex[0] = s.relativeStart - matchStartDelta
+	} else {
+		// It starts within the encoded segment so set the bound to the
+		// relative start
+		adjustedMatchIndex[0] = s.relativeStart
+	}
+
+	if matchIndex[1] > s.decodedEnd {
+		// It ends after the encoded segment so adjust the end to match
+		// the location before it was decoded
+		matchEndDelta := matchIndex[1] - s.decodedEnd
+		adjustedMatchIndex[1] = s.relativeEnd + matchEndDelta
+	} else {
+		// It ends within the encoded segment so set the bound to the relative end
+		adjustedMatchIndex[1] = s.relativeEnd
+	}
+
+	// We're still not at a root segment so we'll need to keep on adjusting
+	if s.parent != nil {
+		return s.parent.adjustMatchIndex(adjustedMatchIndex)
+	}
+
+	return adjustedMatchIndex
 }
 
 // decode returns the data with the values decoded in-place
@@ -123,6 +180,7 @@ func findEncodedSegments(data string, parentSegments []EncodedSegment) []Encoded
 			if segment.isContainedInParent(parentSegment) {
 				segment.absoluteStart = parentSegment.absoluteStart
 				segment.absoluteEnd = parentSegment.absoluteEnd
+				segment.parent = &parentSegment
 				break
 			}
 		}

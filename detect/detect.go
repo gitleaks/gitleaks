@@ -295,8 +295,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		// to see if its potentially a new match
 		if len(encodedSegments) > 0 {
 			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
-				matchIndex[0] = segment.absoluteStart
-				matchIndex[1] = segment.absoluteEnd
+				matchIndex = segment.adjustMatchIndex(matchIndex)
 			} else {
 				// This item has already been added to a finding
 				continue
