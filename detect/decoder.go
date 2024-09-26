@@ -15,36 +15,36 @@ var decoders = []func(string) ([]byte, error){
 	base64.RawURLEncoding.DecodeString,
 }
 
-// EncodedSegment represents a portion of text that is encoded some way.
-// Decoded values can also have encoded text in them so there can be a kind of
-// tree of segments needing to be decoded. This is why the term parent is used
-// in a few places below.
+// EncodedSegment represents a portion of text that is encoded in some way.
+// `decode` supports recusive decoding and can result in "segment trees".
+// There can be multiple segments in the original text, so each can be thought
+// of as its own tree with the root being the original segment.
 type EncodedSegment struct {
-	// The segment that this segment was found in after it was decoded
+	// The parent segment in a segment tree. If nil, it is a root segment
 	parent *EncodedSegment
 
-	// relative vs absolute vs decoded values:
-	//
-	// If a value is double encoded, multiple passes happen do decode it all.
-	// Relative values are the bounds of the encoded value in the current pass.
-	// Absolute values refer to the bounds of the original encoded segment so
-	// that we can keep track of locations in the original data.
-	//
-	// When values are decoded they tend to shrink or grow depending on how they
-	// are encoded. decodedStart and decodedEnd track the bounds of the segments
-	// in the decoded version of the file.
+	// Relative start/end are the bounds of the encoded value in the current pass.
 	relativeStart int
 	relativeEnd   int
+
+	// Absolute start/end refer to the bounds of the root segment in this segment
+	// tree
 	absoluteStart int
 	absoluteEnd   int
-	decodedStart  int
-	decodedEnd    int
-	decodedValue  string
+
+	// Decoded start/end refer to the bounds of the decoded value in the current
+	// pass. These can differ from relative values because decoding can shrink
+	// or grow the size of the segment.
+	decodedStart int
+	decodedEnd   int
+
+	// This is the actual decoded content in the segment
+	decodedValue string
 }
 
-// isContainedInParent figures out if this segment is contained in a parent
-// segment (i.e. it was encoded multiple times)
-func (s EncodedSegment) isContainedInParent(parent EncodedSegment) bool {
+// isChildOf inspects the bounds of two segments to determine
+// if one should be the child of another
+func (s EncodedSegment) isChildOf(parent EncodedSegment) bool {
 	return parent.decodedStart <= s.relativeStart && parent.decodedEnd >= s.relativeEnd
 }
 
@@ -53,19 +53,11 @@ func (s EncodedSegment) decodedOverlaps(start, end int) bool {
 	return start <= s.decodedEnd && end >= s.decodedStart
 }
 
-// adjustMatchIndex takes the index from the current decoding pass and updates
-// it to match the right location in the original text.
-//
-// If the match is completely within the bounds of an encoded value in the
-// original text, then the absolute bounds of that encoded value will be
-// set.
-//
-// If the match goes outside of an encoded value in the original text then
-// we start climbing the tree of segments to figure out if it overlaps
-// the segment in the original text
+// adjustMatchIndex takes the matchIndex from the current decoding pass and
+// updates it to match the absolute matchIndex in the original text.
 func (s EncodedSegment) adjustMatchIndex(matchIndex []int) []int {
 	// The match is within the bounds of the segment so we just return
-	// the start and end of the root segment
+	// the absolute start and end of the root segment.
 	if s.decodedStart <= matchIndex[0] && matchIndex[1] <= s.decodedEnd {
 		return []int{
 			s.absoluteStart,
@@ -128,8 +120,8 @@ func decode(data string, parentSegments []EncodedSegment) (string, []EncodedSegm
 	return data, segments
 }
 
-// findEncodedSegments finds the encoded segments in the data and maps them to
-// any parent segments from a previous pass.
+// findEncodedSegments finds the encoded segments in the data and updates the
+// segment tree for this pass
 func findEncodedSegments(data string, parentSegments []EncodedSegment) []EncodedSegment {
 	if len(data) == 0 {
 		return []EncodedSegment{}
@@ -177,7 +169,7 @@ func findEncodedSegments(data string, parentSegments []EncodedSegment) []Encoded
 
 		// Adjust the absolute position of segments contained in parent segments
 		for _, parentSegment := range parentSegments {
-			if segment.isContainedInParent(parentSegment) {
+			if segment.isChildOf(parentSegment) {
 				segment.absoluteStart = parentSegment.absoluteStart
 				segment.absoluteEnd = parentSegment.absoluteEnd
 				segment.parent = &parentSegment
