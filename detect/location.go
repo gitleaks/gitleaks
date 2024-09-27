@@ -42,7 +42,7 @@ func location(fragment Fragment, matchIndex []int) Location {
 			location.startLine = lineNum
 			location.endLine = lineNum
 			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-			location.startLineIndex = prevNewLine
+			location.startLineIndex = prevNewLine + 1        // start after the newline.
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
