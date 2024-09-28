@@ -1,12 +1,13 @@
 module github.com/zricethezav/gitleaks/v8
 
-go 1.19
+go 1.22
 
 require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/fatih/semgroup v1.2.0
 	github.com/gitleaks/go-gitdiff v0.9.0
+	github.com/google/go-cmp v0.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.2.1
@@ -16,7 +17,6 @@ require (
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
