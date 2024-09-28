@@ -145,6 +145,7 @@ func TestTranslate(t *testing.T) {
 							Regexes: []*regexp.Regexp{
 								regexp.MustCompile(`foo.+bar`),
 							},
+							RegexTarget: "line",
 							Paths: []*regexp.Regexp{
 								regexp.MustCompile(`ignore\.xaml`),
 							},

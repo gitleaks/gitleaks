@@ -252,6 +252,7 @@ func (c *Config) extend(extensionConfig Config) {
 			baseRule.Allowlist.Commits = append(baseRule.Allowlist.Commits, currentRule.Allowlist.Commits...)
 			baseRule.Allowlist.Paths = append(baseRule.Allowlist.Paths, currentRule.Allowlist.Paths...)
 			baseRule.Allowlist.Regexes = append(baseRule.Allowlist.Regexes, currentRule.Allowlist.Regexes...)
+			baseRule.Allowlist.RegexTarget = currentRule.Allowlist.RegexTarget
 			baseRule.Allowlist.StopWords = append(baseRule.Allowlist.StopWords, currentRule.Allowlist.StopWords...)
 
 			delete(c.Rules, ruleID)
