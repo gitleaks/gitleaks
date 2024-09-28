@@ -9,10 +9,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var b64LikelyChars [128]byte
 var b64Regexp = regexp.MustCompile(`[\w\/\-\+]{16,}={0,3}`)
 var decoders = []func(string) ([]byte, error){
 	base64.StdEncoding.DecodeString,
 	base64.RawURLEncoding.DecodeString,
+}
+
+func init() {
+	// Basically look for anything that isn't just letters
+	for _, c := range `0123456789+/-_` {
+		b64LikelyChars[c] = 1
+	}
 }
 
 // EncodedSegment represents a portion of text that is encoded in some way.
@@ -99,9 +107,21 @@ func (s EncodedSegment) adjustMatchIndex(matchIndex []int) []int {
 	return adjustedMatchIndex
 }
 
+// Decoder decodes various types of data in place
+type Decoder struct {
+	decodedMap map[string]string
+}
+
+// NewDecoder creates a default decoder struct
+func NewDecoder() *Decoder {
+	return &Decoder{
+		decodedMap: make(map[string]string),
+	}
+}
+
 // decode returns the data with the values decoded in-place
-func decode(data string, parentSegments []EncodedSegment) (string, []EncodedSegment) {
-	segments := findEncodedSegments(data, parentSegments)
+func (d *Decoder) decode(data string, parentSegments []EncodedSegment) (string, []EncodedSegment) {
+	segments := d.findEncodedSegments(data, parentSegments)
 
 	if len(segments) > 0 {
 		result := bytes.NewBuffer(make([]byte, 0, len(data)))
@@ -122,7 +142,7 @@ func decode(data string, parentSegments []EncodedSegment) (string, []EncodedSegm
 
 // findEncodedSegments finds the encoded segments in the data and updates the
 // segment tree for this pass
-func findEncodedSegments(data string, parentSegments []EncodedSegment) []EncodedSegment {
+func (d *Decoder) findEncodedSegments(data string, parentSegments []EncodedSegment) []EncodedSegment {
 	if len(data) == 0 {
 		return []EncodedSegment{}
 	}
@@ -133,19 +153,24 @@ func findEncodedSegments(data string, parentSegments []EncodedSegment) []Encoded
 	}
 
 	segments := make([]EncodedSegment, 0, len(matchIndices))
-	decodedMap := make(map[string]string, len(matchIndices))
 
 	// Keeps up with offsets from the text changing size as things are decoded
 	decodedShift := 0
 
 	for _, matchIndex := range matchIndices {
 		encodedValue := data[matchIndex[0]:matchIndex[1]]
-		decodedValue, alreadyDecoded := decodedMap[encodedValue]
+
+		if !isLikelyB64(encodedValue) {
+			d.decodedMap[encodedValue] = ""
+			continue
+		}
+
+		decodedValue, alreadyDecoded := d.decodedMap[encodedValue]
 
 		// We haven't decoded this yet, so go ahead and decode it
 		if !alreadyDecoded {
 			decodedValue = decodeValue(encodedValue)
-			decodedMap[encodedValue] = decodedValue
+			d.decodedMap[encodedValue] = decodedValue
 		}
 
 		// Skip this segment because there was nothing to check
@@ -205,6 +230,18 @@ func isASCII(b []byte) bool {
 	}
 
 	return true
+}
+
+// Skip a lot of method signatures and things at the risk of missing about
+// 1% of base64
+func isLikelyB64(s string) bool {
+	for _, c := range s {
+		if b64LikelyChars[c] != 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Find a segment where the decoded bounds overlaps a range

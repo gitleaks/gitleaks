@@ -189,6 +189,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	currentRaw := fragment.Raw
 	encodedSegments := []EncodedSegment{}
 	currentDecodeDepth := 0
+	decoder := NewDecoder()
 
 	for {
 		// build keyword map for prefiltering rules
@@ -225,7 +226,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		}
 
 		// decode the currentRaw for the next pass
-		currentRaw, encodedSegments = decode(currentRaw, encodedSegments)
+		currentRaw, encodedSegments = decoder.decode(currentRaw, encodedSegments)
 
 		// stop the loop when there's nothing else to decode
 		if len(encodedSegments) == 0 {

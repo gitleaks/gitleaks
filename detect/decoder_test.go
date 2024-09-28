@@ -81,9 +81,10 @@ func TestDecode(t *testing.T) {
 		},
 	}
 
+	decoder := NewDecoder()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoded, _ := decode(tt.chunk, []EncodedSegment{})
+			decoded, _ := decoder.decode(tt.chunk, []EncodedSegment{})
 			assert.Equal(t, tt.expected, decoded)
 		})
 	}
