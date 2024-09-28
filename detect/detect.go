@@ -298,11 +298,11 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 				// This item has already been added to a finding
 				continue
 			}
+		} else {
+			// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
+			// removes the incorrectly following line that was detected by regex expression '\n'
+			matchIndex[1] = matchIndex[0] + len(secret)
 		}
-
-		// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
-		// removes the incorrectly following line that was detected by regex expression '\n'
-		matchIndex[1] = matchIndex[0] + len(secret)
 
 		// determine location of match. Note that the location
 		// in the finding will be the line/column numbers of the _match_
