@@ -76,9 +76,10 @@ type Config struct {
 // Extend is a struct that allows users to define how they want their
 // configuration extended by other configuration files.
 type Extend struct {
-	Path       string
-	URL        string
-	UseDefault bool
+	Path         string
+	URL          string
+	UseDefault   bool
+	IgnoredRules []string
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
@@ -213,7 +214,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	// Validate the rules after everything has been assembled (including extended configs).
 	if extendDepth == 0 {
-		for _, rule := range rulesMap {
+		for _, rule := range c.Rules {
 			if err := rule.Validate(); err != nil {
 				return Config{}, err
 			}
@@ -281,7 +282,35 @@ func (c *Config) extendURL() {
 }
 
 func (c *Config) extend(extensionConfig Config) {
+	// Get config name for helpful log messages.
+	var configName string
+	if c.Extend.Path != "" {
+		configName = c.Extend.Path
+	} else {
+		configName = "default"
+	}
+	// Convert |Config.IgnoredRules| into a map for ease of access.
+	ignoredRuleIDs := map[string]struct{}{}
+	for _, id := range c.Extend.IgnoredRules {
+		if _, ok := extensionConfig.Rules[id]; !ok {
+			log.Warn().
+				Str("rule-id", id).
+				Str("config", configName).
+				Msg("Ignored rule doesn't exist in extended config.")
+		}
+		ignoredRuleIDs[id] = struct{}{}
+	}
+
 	for ruleID, baseRule := range extensionConfig.Rules {
+		// Skip the rule.
+		if _, ok := ignoredRuleIDs[ruleID]; ok {
+			log.Debug().
+				Str("rule-id", ruleID).
+				Str("config", configName).
+				Msg("Ignoring rule from extended config.")
+			continue
+		}
+
 		currentRule, ok := c.Rules[ruleID]
 		if !ok {
 			// Rule doesn't exist, add it to the config.
@@ -319,6 +348,7 @@ func (c *Config) extend(extensionConfig Config) {
 			for _, k := range currentRule.Keywords {
 				c.Keywords[k] = struct{}{}
 			}
+
 			c.Rules[ruleID] = baseRule
 		}
 	}
