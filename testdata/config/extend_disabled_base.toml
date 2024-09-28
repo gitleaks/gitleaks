@@ -1,0 +1,11 @@
+title = "gitleaks extended 3"
+
+
+[[rules]]
+id = "aws-secret-key"
+regex = '''(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}'''
+tags = ["key", "AWS"]
+
+[[rules]]
+id = "custom-rule1"
+regex = '''[Cc]ustom!'''

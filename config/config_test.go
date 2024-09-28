@@ -39,8 +39,7 @@ func TestTranslate(t *testing.T) {
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -73,8 +72,7 @@ func TestTranslate(t *testing.T) {
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -92,8 +90,7 @@ func TestTranslate(t *testing.T) {
 							Commits:        []string{"allowthiscommit"},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -111,8 +108,7 @@ func TestTranslate(t *testing.T) {
 							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -122,12 +118,11 @@ func TestTranslate(t *testing.T) {
 					RuleID:      "discord-api-key",
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
-					Keywords:    []string{},
 					Entropy:     3.5,
 					SecretGroup: 3,
+					Keywords:    []string{},
 					Tags:        []string{},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -347,6 +342,25 @@ func TestTranslate(t *testing.T) {
 					Keywords:    []string{"puppy"},
 					Tags:        []string{"key", "AWS"},
 				},
+				},
+			},
+		},
+		{
+			cfgName: "extend_disabled",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key": {
+						RuleID:   "aws-secret-key",
+						Regex:    regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:     []string{"key", "AWS"},
+						Keywords: []string{},
+					},
+					"pypi-upload-token": {
+						RuleID:   "pypi-upload-token",
+						Regex:    regexp.MustCompile(`pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}`),
+						Tags:     []string{},
+						Keywords: []string{},
+					},
 				},
 			},
 		},

@@ -235,6 +235,8 @@ useDefault = true
 # or you can supply a path to a configuration. Path is relative to where gitleaks
 # was invoked, not the location of the base config.
 path = "common_config.toml"
+# If there are any rules you don't want to inherit, they can be specified here.
+disabledRules = [ "generic-api-key"]
 
 # An array of tables that contain information that define instructions
 # on how to detect secrets
