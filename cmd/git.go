@@ -57,17 +57,36 @@ func runGit(cmd *cobra.Command, args []string) {
 	}
 
 	var (
-		gitCmd  *sources.GitCmd
-		logOpts string
+		gitCmd    *sources.GitCmd
+		logOpts   string
+		preCommit bool
+		staged    bool
 	)
 	logOpts, err = cmd.Flags().GetString("log-opts")
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not call GetString() for log-opts")
 	}
-	gitCmd, err = sources.NewGitLogCmd(source, logOpts)
+	staged, err = cmd.Flags().GetBool("staged")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not create Git cmd")
+		log.Fatal().Err(err).Msg("could not call GetBool() for staged")
 	}
+	preCommit, err = cmd.Flags().GetBool("pre-commit")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not call GetBool() for pre-commit")
+	}
+
+	if preCommit || staged {
+		gitCmd, err = sources.NewGitDiffCmd(source, staged)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create Git diff cmd")
+		}
+	} else {
+		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create Git log cmd")
+		}
+	}
+
 	findings, err = detector.DetectGit(gitCmd)
 	if err != nil {
 		// don't exit on error, just log it
