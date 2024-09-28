@@ -13,7 +13,7 @@ func GitlabPat() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure.",
 		RuleID:      "gitlab-pat",
-		Regex:       regexp.MustCompile(`glpat-[0-9a-zA-Z\-\_]{20}`),
+		Regex:       regexp.MustCompile(`glpat-[\w-]{20}`),
 		Keywords:    []string{"glpat-"},
 	}
 

@@ -2050,7 +2050,7 @@ keywords = [
 [[rules]]
 id = "gitlab-pat"
 description = "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure."
-regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
+regex = '''glpat-[\w-]{20}'''
 keywords = [
     "glpat-",
 ]
