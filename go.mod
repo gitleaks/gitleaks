@@ -1,6 +1,6 @@
 module github.com/zricethezav/gitleaks/v8
 
-go 1.19
+go 1.18
 
 require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
