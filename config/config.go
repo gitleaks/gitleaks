@@ -254,6 +254,9 @@ func (c *Config) extend(extensionConfig Config) {
 			baseRule.Allowlist.Regexes = append(baseRule.Allowlist.Regexes, currentRule.Allowlist.Regexes...)
 			baseRule.Allowlist.RegexTarget = currentRule.Allowlist.RegexTarget
 			baseRule.Allowlist.StopWords = append(baseRule.Allowlist.StopWords, currentRule.Allowlist.StopWords...)
+			// The keywords from the base rule and the extended rule must be merged into the global keywords list
+			c.Keywords = append(c.Keywords, baseRule.Keywords...)
+			c.Keywords = append(c.Keywords, currentRule.Keywords...)
 
 			delete(c.Rules, ruleID)
 			c.Rules[ruleID] = baseRule
