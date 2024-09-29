@@ -8,5 +8,6 @@ path="../testdata/config/extend_3.toml"
 [rules.allowlist]
     commits = ['''abcdefg1''']
     regexes = ['''foo.+bar''']
+    regexTarget = "line"
     paths = ['''ignore\.xaml''']
     stopwords = ['''example''']
