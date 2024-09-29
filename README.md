@@ -300,6 +300,17 @@ stopwords = [
   '''endpoint''',
 ]
 
+# You can extend a particular rule from the default config. e.g., gitlab-pat
+# if you have defined a custom token prefix on your GitLab instance
+[[rules]]
+id = "gitlab-pat"
+# all the other attributes from the default rule are inherited
+
+[rules.allowlist]
+regexTarget = "line"
+regexes = [
+    '''MY-glpat-''',
+]
 
 # This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
