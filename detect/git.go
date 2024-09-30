@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
+	"strings"
 )
 
 func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
@@ -46,6 +47,16 @@ func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
 						Raw:       textFragment.Raw(gitdiff.OpAdd),
 						CommitSHA: commitSHA,
 						FilePath:  gitdiffFile.NewName,
+					}
+
+					// Warn if the file is hosted with Git LFS. It can't be scanned (for now).
+					if strings.Contains(fragment.Raw, "version https://git-lfs.github.com/spec/v") ||
+						(strings.Contains(fragment.Raw, "oid sha256:") && strings.Contains(fragment.Raw, "size ")) {
+						log.Warn().
+							Str("commit", fragment.CommitSHA).
+							Str("path", fragment.FilePath).
+							Msg("File is hosted with Git LFS and cannot be scanned.")
+						break
 					}
 
 					for _, finding := range d.Detect(fragment) {
