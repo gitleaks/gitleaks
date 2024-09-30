@@ -62,8 +62,9 @@ func init() {
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
 	rootCmd.PersistentFlags().BoolP("no-color", "", false, "turn off color for verbose output")
-	rootCmd.PersistentFlags().Int("max-target-megabytes", 0, "files larger than this will be skipped")
+	rootCmd.PersistentFlags().Int64("max-target-megabytes", 0, "files larger than this will be skipped")
 	rootCmd.PersistentFlags().BoolP("ignore-gitleaks-allow", "", false, "ignore gitleaks:allow comments")
+	rootCmd.PersistentFlags().BoolP("binary", "", false, "whether to scan binary files (default false)")
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
@@ -232,11 +233,12 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
 		logging.Fatal().Err(err).Msg("")
 	}
-	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
-		logging.Fatal().Err(err).Msg("")
-	}
+	detector.MaxTargetMegaBytes = mustGetInt64Flag(cmd, "max-target-megabytes")
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
+		logging.Fatal().Err(err).Msg("")
+	}
+	if detector.ScanBinaryFiles, err = cmd.Flags().GetBool("binary"); err != nil {
 		logging.Fatal().Err(err).Msg("")
 	}
 
@@ -471,6 +473,14 @@ func mustGetBoolFlag(cmd *cobra.Command, name string) bool {
 
 func mustGetIntFlag(cmd *cobra.Command, name string) int {
 	value, err := cmd.Flags().GetInt(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
+}
+
+func mustGetInt64Flag(cmd *cobra.Command, name string) int64 {
+	value, err := cmd.Flags().GetInt64(name)
 	if err != nil {
 		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
 	}

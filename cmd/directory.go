@@ -46,14 +46,9 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	detector := Detector(cmd, cfg, source)
 
 	// set follow symlinks flag
-	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		logging.Fatal().Err(err).Msg("")
-	}
+	detector.FollowSymlinks = mustGetBoolFlag(cmd, "follow-symlinks")
 	// set exit code
-	exitCode, err := cmd.Flags().GetInt("exit-code")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not get exit code")
-	}
+	exitCode := mustGetIntFlag(cmd, "exit-code")
 
 	var paths <-chan sources.ScanTarget
 	paths, err = sources.DirectoryTargets(

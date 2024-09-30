@@ -9,12 +9,13 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-// DetectReader accepts an io.Reader and a buffer size for the reader in KB
-func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
-	reader := bufio.NewReader(r)
-	buf := make([]byte, 1000*bufSize)
-	findings := []report.Finding{}
-
+// DetectReader accepts an io.Reader and an optional path
+func (d *Detector) DetectReader(r io.Reader, path string) ([]report.Finding, error) {
+	var (
+		findings []report.Finding
+		reader   = bufio.NewReader(r)
+		buf      = make([]byte, chunkSize)
+	)
 	for {
 		n, err := reader.Read(buf)
 
@@ -30,11 +31,11 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 			fragment := Fragment{
 				Raw: peekBuf.String(),
 			}
+			if path != "" {
+				fragment.FilePath = path
+			}
 			for _, finding := range d.Detect(fragment) {
-				findings = append(findings, finding)
-				if d.Verbose {
-					printFinding(finding, d.NoColor)
-				}
+				d.AddFinding(finding)
 			}
 		}
 
@@ -46,7 +47,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 		}
 	}
 
-	return findings, nil
+	return d.findings, nil
 }
 
 // StreamDetectReader streams the detection results from the provided io.Reader.
