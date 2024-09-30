@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -55,9 +56,19 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 					}
 
 					fragment := Fragment{
+						// TODO: Get context? What if this is in the middle of a file?
 						Raw:       textFragment.Raw(gitdiff.OpAdd),
 						CommitSHA: commitSHA,
 						FilePath:  gitdiffFile.NewName,
+					}
+
+					// Warn if the file is hosted with Git LFS. It can't be scanned (for now).
+					if isLFSPointer(fragment.Raw, textFragment.OldPosition) {
+						logging.Warn().
+							Str("commit", fragment.CommitSHA).
+							Str("path", fragment.FilePath).
+							Msg("File is hosted with Git LFS and cannot be scanned.")
+						break
 					}
 
 					for _, finding := range d.Detect(fragment) {
@@ -169,4 +180,61 @@ func platformFromHost(u *url.URL) scm.Platform {
 	default:
 		return scm.NoPlatform
 	}
+}
+
+var pointerKeys = []string{"version", "oid", "size"}
+
+// isLFSPointer returns true if the fragment matches the Git LFS spec.
+// https://github.com/git-lfs/git-lfs/blob/main/docs/spec.md
+// https://github.com/git-lfs/git-lfs/blob/9811573f7b571bc0cafa64ffd5fdd7a6681ba722/lfs/pointer.go
+func isLFSPointer(data string, oldPosition int64) bool {
+	// Only
+	if oldPosition != 0 {
+		return false
+	}
+	// "The first key is always version."
+	if !strings.HasPrefix(data, "version https://git-lfs.github.com/spec/v") {
+		return false
+	}
+
+	kvps := make(map[string]struct{}, len(pointerKeys))
+	scanner := bufio.NewScanner(strings.NewReader(data))
+	line := 0
+	numKeys := len(pointerKeys)
+	for scanner.Scan() {
+		text := scanner.Text()
+		if len(text) == 0 {
+			continue
+		}
+
+		// "Each line MUST be of the format `{key} {value}\n`"
+		parts := strings.SplitN(text, " ", 2)
+		if len(parts) < 2 {
+			return false
+		}
+
+		key := parts[0]
+		// value := parts[1]
+
+		// Extra lines could indicate a non-LFS pointer file.
+		if numKeys <= line {
+			return false
+		}
+
+		// Ignore extensions.
+		// "ext-{order}-{name} {hash-method}:{hash-of-input-to-extension}"
+		// https://github.com/git-lfs/git-lfs/blob/main/docs/extensions.md#clean
+		if strings.HasPrefix(key, "ext-") {
+			continue
+		}
+
+		line += 1
+		kvps[key] = struct{}{}
+	}
+
+	// "The required keys are: ... version, oid, size"
+	_, hasVersion := kvps["version"]
+	_, hasOid := kvps["oid"]
+	_, hasSize := kvps["size"]
+	return hasVersion && hasOid && hasSize
 }
