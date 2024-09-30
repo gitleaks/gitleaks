@@ -33,13 +33,11 @@ func TestDetectReader(t *testing.T) {
 	}{
 		{
 			name:          "Test case - Reader returns n > 0 bytes and nil error",
-			bufSize:       10,
 			findingsCount: 1,
 			reader:        strings.NewReader(secret),
 		},
 		{
 			name:          "Test case - Reader returns n > 0 bytes and io.EOF error",
-			bufSize:       10,
 			findingsCount: 1,
 			reader: &mockReader{
 				data: []byte(secret),
@@ -52,7 +50,7 @@ func TestDetectReader(t *testing.T) {
 			detector, err := NewDetectorDefaultConfig()
 			require.NoError(t, err)
 
-			findings, err := detector.DetectReader(test.reader, test.bufSize)
+			findings, err := detector.DetectReader(test.reader)
 			require.NoError(t, err)
 
 			assert.Equal(t, test.findingsCount, len(findings))
