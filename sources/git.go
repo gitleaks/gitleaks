@@ -20,6 +20,8 @@ type GitCmd struct {
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
+
+	repoPath string
 }
 
 // NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
@@ -77,6 +79,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		repoPath:    sourceClean,
 	}, nil
 }
 
@@ -117,6 +120,7 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		repoPath:    sourceClean,
 	}, nil
 }
 
@@ -136,6 +140,10 @@ func (c *GitCmd) ErrCh() <-chan error {
 // Wait also closes underlying stdout and stderr.
 func (c *GitCmd) Wait() (err error) {
 	return c.cmd.Wait()
+}
+
+func (c *GitCmd) GetRepoPath() string {
+	return c.repoPath
 }
 
 // listenForStdErr listens for stderr output from git, prints it to stdout,

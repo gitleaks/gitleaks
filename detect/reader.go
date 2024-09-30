@@ -8,11 +8,11 @@ import (
 )
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
-func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
-	reader := bufio.NewReader(r)
-	buf := make([]byte, 0, 1000*bufSize)
-	findings := []report.Finding{}
-
+func (d *Detector) DetectReader(r io.Reader) ([]report.Finding, error) {
+	var (
+		reader = bufio.NewReader(r)
+		buf    = make([]byte, 0, chunkSize)
+	)
 	for {
 		n, err := reader.Read(buf[:cap(buf)])
 
@@ -24,20 +24,17 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 				Raw: string(buf),
 			}
 			for _, finding := range d.Detect(fragment) {
-				findings = append(findings, finding)
-				if d.Verbose {
-					printFinding(finding, d.NoColor)
-				}
+				d.addFinding(finding)
 			}
 		}
 
 		if err != nil {
 			if err != io.EOF {
-				return findings, err
+				return d.findings, err
 			}
 			break
 		}
 	}
 
-	return findings, nil
+	return d.findings, nil
 }

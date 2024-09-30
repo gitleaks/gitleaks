@@ -103,7 +103,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.Error().Err(err).Msg("failed scan directory")
 		}
 	} else if fromPipe {
-		findings, err = detector.DetectReader(os.Stdin, 10)
+		findings, err = detector.DetectReader(os.Stdin)
 		if err != nil {
 			// log fatal to exit, no need to continue since a report
 			// will not be generated when scanning from a pipe...for now
