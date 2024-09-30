@@ -10,7 +10,7 @@ import (
 )
 
 var b64LikelyChars [128]byte
-var b64Regexp = regexp.MustCompile(`[\w\/\-\+]{16,}={0,3}`)
+var b64Regexp = regexp.MustCompile(`[\w/+-]{16,}={0,3}`)
 var decoders = []func(string) ([]byte, error){
 	base64.StdEncoding.DecodeString,
 	base64.RawURLEncoding.DecodeString,
