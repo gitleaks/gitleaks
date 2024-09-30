@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -13,6 +14,15 @@ func init() {
 	Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).
 		Level(zerolog.InfoLevel).
 		With().Timestamp().Logger()
+	zerolog.DefaultContextLogger = &Logger
+}
+
+func Ctx(ctx context.Context) *zerolog.Logger {
+	return zerolog.Ctx(ctx)
+}
+
+func WithContext(ctx context.Context) context.Context {
+	return Logger.WithContext(ctx)
 }
 
 func With() zerolog.Context {

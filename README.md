@@ -142,6 +142,7 @@ Available Commands:
 
 Flags:
   -b, --baseline-path string          path to baseline with issues that can be ignored
+  --binary                            whether to scan binary files (default false)
   -c, --config string                 config file path
                                       order of precedence:
                                       1. --config/-c
