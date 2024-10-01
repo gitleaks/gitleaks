@@ -3,6 +3,7 @@ package detect
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"regexp"
 	"unicode"
 
@@ -48,6 +49,9 @@ type EncodedSegment struct {
 
 	// This is the actual decoded content in the segment
 	decodedValue string
+
+	// This is the type of encoding
+	encoding string
 }
 
 // isChildOf inspects the bounds of two segments to determine
@@ -105,6 +109,26 @@ func (s EncodedSegment) adjustMatchIndex(matchIndex []int) []int {
 	}
 
 	return adjustedMatchIndex
+}
+
+// depth reports how many levels of decoding needed to be done (default is 1)
+func (s EncodedSegment) depth() int {
+	depth := 1
+
+	// Climb the tree and increment the depth
+	for current := &s; current.parent != nil; current = current.parent {
+		depth++
+	}
+
+	return depth
+}
+
+// tags returns additional meta data tags related to the types of segments
+func (s EncodedSegment) tags() []string {
+	return []string{
+		fmt.Sprintf("decoded:%s", s.encoding),
+		fmt.Sprintf("decode-depth:%d", s.depth()),
+	}
 }
 
 // Decoder decodes various types of data in place
@@ -187,6 +211,7 @@ func (d *Decoder) findEncodedSegments(data string, parentSegments []EncodedSegme
 			decodedStart:  matchIndex[0] + decodedShift,
 			decodedEnd:    matchIndex[0] + decodedShift + len(decodedValue),
 			decodedValue:  decodedValue,
+			encoding:      "base64",
 		}
 
 		// Shift decoded start and ends based on size changes

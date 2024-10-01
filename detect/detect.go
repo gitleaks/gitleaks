@@ -289,11 +289,15 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
+		// For any meta data from decoding
+		var metaTags []string
+
 		// Check if the decoded portions of the segment overlap with the match
 		// to see if its potentially a new match
 		if len(encodedSegments) > 0 {
 			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
 				matchIndex = segment.adjustMatchIndex(matchIndex)
+				metaTags = append(metaTags, segment.tags()...)
 			} else {
 				// This item has already been added to a finding
 				continue
@@ -325,7 +329,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 			EndColumn:   loc.endColumn,
 			Secret:      secret,
 			Match:       secret,
-			Tags:        rule.Tags,
+			Tags:        append(rule.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
