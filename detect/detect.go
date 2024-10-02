@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/rs/zerolog"
 	"os"
 	"regexp"
 	"strings"
@@ -181,6 +182,10 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
 		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
+		log.Trace().
+			Str("commit", fragment.CommitSHA).
+			Str("path", fragment.FilePath).
+			Msg("Skipping path due to global allowlist.")
 		return findings
 	}
 
@@ -218,10 +223,23 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 // detectRule scans the given fragment for the given rule and returns a list of findings
 func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Finding {
 	var findings []report.Finding
+	var logger = func() zerolog.Logger {
+		l := log.With().Str("rule", rule.RuleID)
+		if fragment.CommitSHA != "" {
+			l.Str("commit", fragment.CommitSHA)
+		}
+		if fragment.FilePath != "" {
+			l.Str("path", fragment.FilePath)
+		}
+		return l.Logger()
+	}()
 
 	// check if filepath or commit is allowed for this rule
-	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) ||
-		rule.Allowlist.PathAllowed(fragment.FilePath) {
+	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) {
+		logger.Trace().Msg("Skipping commit due to rule allowlist.")
+		return findings
+	} else if rule.Allowlist.PathAllowed(fragment.FilePath) {
+		logger.Trace().Msg("Skipping path due to rule allowlist.")
 		return findings
 	}
 
@@ -256,7 +274,9 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 	if d.MaxTargetMegaBytes > 0 {
 		rawLength := len(fragment.Raw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
-			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			logger.Debug().
+				Str("path", fragment.FilePath).
+				Msgf("skipping file scan due to size: %d", rawLength)
 			return findings
 		}
 	}
@@ -335,7 +355,10 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		case "line":
 			allowlistTarget = finding.Line
 		}
-
+		if rule.Allowlist.RegexAllowed(allowlistTarget) {
+			logger.Trace().Msgf("Skipping %s due to rule regex allowlist.", allowlistTarget)
+			continue
+		}
 		globalAllowlistTarget := finding.Secret
 		switch d.Config.Allowlist.RegexTarget {
 		case "match":
@@ -343,14 +366,17 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		case "line":
 			globalAllowlistTarget = finding.Line
 		}
-		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
-			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+			logger.Trace().Msgf("Skipping %s due to global regex allowlist.", globalAllowlistTarget)
 			continue
 		}
 
 		// check if the secret is in the list of stopwords
-		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
-			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+		if matches, word := rule.Allowlist.ContainsStopWord(finding.Secret); matches {
+			logger.Trace().Msgf("Skipping secret due to rule stopword: %s", word)
+			continue
+		} else if matches, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); matches {
+			logger.Trace().Msgf("Skipping secret due to global stopword: %s", word)
 			continue
 		}
 
