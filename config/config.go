@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -71,6 +72,25 @@ type Extend struct {
 	Path       string
 	URL        string
 	UseDefault bool
+}
+
+// This fixes: #1464
+// this function validates if the ViperConfig is set to it's default values
+// which means that the passed config is empty
+func (vc ViperConfig) Validate() bool {
+	defaultConfig := ViperConfig{}
+	ConfigValue := reflect.ValueOf(vc)
+	defaultConfigValue := reflect.ValueOf(defaultConfig)
+
+	for i := 0; i < ConfigValue.NumField(); i++ {
+		vFieldValue := ConfigValue.Field(i)
+		defaultFieldValue := defaultConfigValue.Field(i)
+
+		if !reflect.DeepEqual(vFieldValue.Interface(), defaultFieldValue.Interface()) {
+			return true
+		}
+	}
+	return false
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
