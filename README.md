@@ -27,7 +27,7 @@
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
+Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, API keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
 ```
 ➜  ~/code(master) gitleaks git -v
@@ -157,6 +157,7 @@ Flags:
   -h, --help                          help for gitleaks
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
+      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
       --max-target-megabytes int      files larger than this will be skipped
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
@@ -360,7 +361,35 @@ class CustomClass:
 
 You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
 
+#### Decoding
+
+Sometimes secrets are encoded in a way that can make them difficult to find
+with just regex. Now you can tell gitleaks to automatically find and decode
+encoded text. The flag `--max-decode-depth` enables this feature (the default
+value "0" means the feature is disabled by default).
+
+Recursive decoding is supported since decoded text can also contain encoded
+text.  The flag `--max-decode-depth` sets the recursion limit. Recursion stops
+when there are no new segments of encoded text to decode, so setting a really
+high max depth doesn't mean it will make that many passes. It will only make as
+many as it needs to decode the text. Overall, decoding only minimally increases
+scan times.
+
+The findings for encoded text differ from normal findings in the following
+ways:
+
+- The location points the bounds of the encoded text
+  - If the rule matches outside the encoded text, the bounds are adjusted to
+    include that as well
+- The match and secret contain the decoded value
+- Two tags are added `decoded:<encoding>` and `decode-depth:<depth>`
+
+Currently supported encodings:
+
+- `base64` (both standard and base64url)
+
 ## Sponsorships
+
 <p align="left">
 	<h3><a href="https://coderabbit.ai/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">coderabbit.ai</h3>
 	  <a href="https://coderabbit.ai/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">

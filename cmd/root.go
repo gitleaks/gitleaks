@@ -56,6 +56,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -170,6 +171,11 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 
 	// Setup common detector
 	detector := detect.NewDetector(cfg)
+
+	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
+
 	// set color flag at first
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
 		log.Fatal().Err(err).Msg("")

@@ -15,8 +15,31 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
+const maxDecodeDepth = 8
 const configPath = "../testdata/config/"
 const repoBasePath = "../testdata/repos/"
+const b64TestValues = `
+# Decoded
+-----BEGIN PRIVATE KEY-----
+135f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb
+u+QDkg0spw==
+-----END PRIVATE KEY-----
+
+# Encoded
+private_key: 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K'
+
+# Double Encoded: b64 encoded aws config inside a jwt
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJSbFptRjFiSFJkQ25KbFoybHZiaUE5SUhWekxXVmhjM1F0TWdwaGQzTmZZV05qWlhOelgydGxlVjlwWkNBOUlFRlRTVUZKVDFOR1QwUk9UamRNV0UweE1FcEpDbUYzYzE5elpXTnlaWFJmWVdOalpYTnpYMnRsZVNBOUlIZEtZV3h5V0ZWMGJrWkZUVWt2U3pkTlJFVk9SeTlpVUhoU1ptbERXVVZHVlVORWJFVllNVUVLIiwiaWF0IjoxNTE2MjM5MDIyfQ.8gxviXEOuIBQk2LvTYHSf-wXVhnEKC3h4yM5nlOF4zA
+
+# A small secret at the end to make sure that as the other ones above shrink
+# when decoded, the positions are taken into consideratoin for overlaps
+c21hbGwtc2VjcmV0
+
+# This tests how it handles when the match bounds go outside the decoded value
+secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=
+# The above encoded again
+c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=
+`
 
 func TestDetect(t *testing.T) {
 	tests := []struct {
@@ -330,6 +353,127 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName: "base64_encoded",
+			fragment: Fragment{
+				Raw:      b64TestValues,
+				FilePath: "tmp.go",
+			},
+			expectedFindings: []report.Finding{
+				{ // Plain text key captured by normal rule
+					Description: "Private Key",
+					Secret:      "-----BEGIN PRIVATE KEY-----\n135f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
+					Match:       "-----BEGIN PRIVATE KEY-----\n135f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
+					File:        "tmp.go",
+					Line:        "\n-----BEGIN PRIVATE KEY-----\n135f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
+					RuleID:      "private-key",
+					Tags:        []string{"key", "private"},
+					StartLine:   2,
+					EndLine:     5,
+					StartColumn: 2,
+					EndColumn:   26,
+					Entropy:     5.350665,
+				},
+				{ // Encoded key captured by custom b64 regex rule
+					Description: "Private Key",
+					Secret:      "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+					Match:       "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+					File:        "tmp.go",
+					Line:        "\nprivate_key: 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K'",
+					RuleID:      "b64-encoded-private-key",
+					Tags:        []string{"key", "private"},
+					StartLine:   8,
+					EndLine:     8,
+					StartColumn: 16,
+					EndColumn:   207,
+					Entropy:     5.3861146,
+				},
+				{ // Encoded key captured by plain text rule using the decoder
+					Description: "Private Key",
+					Secret:      "-----BEGIN PRIVATE KEY-----\n435f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
+					Match:       "-----BEGIN PRIVATE KEY-----\n435f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb\nu+QDkg0spw==\n-----END PRIVATE KEY-----",
+					File:        "tmp.go",
+					Line:        "\nprivate_key: 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCjQzNWYvYlJVQkhyYkhxTFkveFMzSTdPdGgrOHJnRyswdEJ3Zk1jYmswNVNneHE2UVV6U1lJUUFvcCtXdnNUd2syc1IrQzM4ZzBNbmIKdStRRGtnMHNwdz09Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K'",
+					RuleID:      "private-key",
+					Tags:        []string{"key", "private", "decoded:base64", "decode-depth:1"},
+					StartLine:   8,
+					EndLine:     8,
+					StartColumn: 16,
+					EndColumn:   207,
+					Entropy:     5.350665,
+				},
+				{ // Encoded AWS config with a access key id inside a JWT
+					Description: "AWS IAM Unique Identifier",
+					Secret:      "ASIAIOSFODNN7LXM10JI",
+					Match:       " ASIAIOSFODNN7LXM10JI",
+					File:        "tmp.go",
+					Line:        "\neyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJSbFptRjFiSFJkQ25KbFoybHZiaUE5SUhWekxXVmhjM1F0TWdwaGQzTmZZV05qWlhOelgydGxlVjlwWkNBOUlFRlRTVUZKVDFOR1QwUk9UamRNV0UweE1FcEpDbUYzYzE5elpXTnlaWFJmWVdOalpYTnpYMnRsZVNBOUlIZEtZV3h5V0ZWMGJrWkZUVWt2U3pkTlJFVk9SeTlpVUhoU1ptbERXVVZHVlVORWJFVllNVUVLIiwiaWF0IjoxNTE2MjM5MDIyfQ.8gxviXEOuIBQk2LvTYHSf-wXVhnEKC3h4yM5nlOF4zA",
+					RuleID:      "aws-iam-unique-identifier",
+					Tags:        []string{"aws", "identifier", "decoded:base64", "decode-depth:2"},
+					StartLine:   11,
+					EndLine:     11,
+					StartColumn: 39,
+					EndColumn:   344,
+					Entropy:     3.6841838,
+				},
+				{ // Encoded AWS config with a secret access key inside a JWT
+					Description: "AWS Secret Access Key",
+					Secret:      "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
+					Match:       "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEFUCDlEX1A",
+					File:        "tmp.go",
+					Line:        "\neyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJSbFptRjFiSFJkQ25KbFoybHZiaUE5SUhWekxXVmhjM1F0TWdwaGQzTmZZV05qWlhOelgydGxlVjlwWkNBOUlFRlRTVUZKVDFOR1QwUk9UamRNV0UweE1FcEpDbUYzYzE5elpXTnlaWFJmWVdOalpYTnpYMnRsZVNBOUlIZEtZV3h5V0ZWMGJrWkZUVWt2U3pkTlJFVk9SeTlpVUhoU1ptbERXVVZHVlVORWJFVllNVUVLIiwiaWF0IjoxNTE2MjM5MDIyfQ.8gxviXEOuIBQk2LvTYHSf-wXVhnEKC3h4yM5nlOF4zA",
+					RuleID:      "aws-secret-access-key",
+					Tags:        []string{"aws", "secret", "decoded:base64", "decode-depth:2"},
+					StartLine:   11,
+					EndLine:     11,
+					StartColumn: 39,
+					EndColumn:   344,
+					Entropy:     4.721928,
+				},
+				{ // Encoded Small secret at the end to make sure it's picked up by the decoding
+					Description: "Small Secret",
+					Secret:      "small-secret",
+					Match:       "small-secret",
+					File:        "tmp.go",
+					Line:        "\nc21hbGwtc2VjcmV0",
+					RuleID:      "small-secret",
+					Tags:        []string{"small", "secret", "decoded:base64", "decode-depth:1"},
+					StartLine:   15,
+					EndLine:     15,
+					StartColumn: 2,
+					EndColumn:   17,
+					Entropy:     3.0849626,
+				},
+				{ // Secret where the decoded match goes outside the encoded value
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:base64", "decode-depth:1"},
+					StartLine:   18,
+					EndLine:     18,
+					StartColumn: 2,
+					EndColumn:   36,
+					Entropy:     3.3037016,
+				},
+				{ // Secret where the decoded match goes outside the encoded value and then encoded again
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nc2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:base64", "decode-depth:2"},
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 2,
+					EndColumn:   49,
+					Entropy:     3.3037016,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -347,6 +491,7 @@ func TestDetect(t *testing.T) {
 		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
 		assert.Equal(t, tt.wantError, err)
 		d := NewDetector(cfg)
+		d.MaxDecodeDepth = maxDecodeDepth
 		d.baselinePath = tt.baselinePath
 
 		findings := d.Detect(tt.fragment)
