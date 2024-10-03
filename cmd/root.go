@@ -158,7 +158,7 @@ func Config(cmd *cobra.Command) config.Config {
 	}
 
 	if !vc.Validate() {
-		log.Fatal().Msg("passed config file is not valid")
+		log.Fatal().Msg("gitleaks config file is empty, cannot be processed")
 	}
 
 	cfg, err := vc.Translate()
