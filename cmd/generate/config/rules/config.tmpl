@@ -8,24 +8,20 @@
 # Rules instruct gitleaks on what should be considered a secret.
 # Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
 
-title = "gitleaks config"
+title = "{{.Title}}"
 
 [allowlist]
-description = "global allow lists"
-paths = [
-    '''gitleaks.toml''',
-    '''(.*?)(jpg|gif|doc|docx|zip|xls|pdf|bin|svg|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$''',
-    '''(go.mod|go.sum|go.work|go.work.sum)$''',
-    '''gradle.lockfile''',
-    '''verification-metadata.xml''',
-    '''node_modules''',
-    '''package-lock.json''',
-    '''yarn.lock''',
-    '''pnpm-lock.yaml''',
-    '''poetry.lock''',
-    '''Database.refactorlog''',
-    '''vendor''',
-]
+description = "{{.Allowlist.Description}}"
+{{- with .Allowlist.RegexTarget }}
+regexTarget = "{{ . }}"{{ end -}}
+{{- with .Allowlist.Regexes }}
+regexes = [
+    {{ range $i, $regex := . }}'''{{ $regex }}''',{{ end }}
+]{{ end }}
+{{- with .Allowlist.Paths }}
+paths = [{{ range $i, $path := . }}
+    '''{{ $path }}''',{{ end }}
+]{{ end }}
 
 {{ range $i, $rule := .Rules }}[[rules]]
 id = "{{$rule.RuleID}}"
@@ -38,9 +34,11 @@ secretGroup = {{ . }}{{ end -}}
 {{- with $rule.Entropy }}
 entropy = {{ . }}{{ end -}}
 {{- with $rule.Keywords }}
-keywords = [
-    {{ range $j, $keyword := . }}"{{ $keyword }}",{{ end }}
-]{{ end }}
+{{- if gt (len .) 1}}
+keywords = [{{ range $j, $keyword := . }}
+    "{{ $keyword }}",{{ end }}
+]{{else}}
+keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end }}
 {{- with $rule.Tags }}
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
