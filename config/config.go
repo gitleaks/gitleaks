@@ -54,6 +54,7 @@ type ViperConfig struct {
 
 // Config is a configuration struct that contains rules and an allowlist if present.
 type Config struct {
+	Title       string
 	Extend      Extend
 	Path        string
 	Description string

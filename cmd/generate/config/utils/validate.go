@@ -6,6 +6,7 @@ package utils
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"strings"
@@ -82,8 +83,8 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 	rules := map[string]config.Rule{
 		r.RuleID: *r,
 	}
-	return detect.NewDetector(config.Config{
-		Rules:    rules,
-		Keywords: uniqueKeywords,
-	})
+	cfg := base.CreateGlobalConfig()
+	cfg.Rules = rules
+	cfg.Keywords = uniqueKeywords
+	return detect.NewDetector(cfg)
 }
