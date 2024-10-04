@@ -15,8 +15,8 @@ description = "{{.Allowlist.Description}}"
 {{- with .Allowlist.RegexTarget }}
 regexTarget = "{{ . }}"{{ end -}}
 {{- with .Allowlist.Regexes }}
-regexes = [
-    {{ range $i, $regex := . }}'''{{ $regex }}''',{{ end }}
+regexes = [{{ range $i, $regex := . }}
+    '''{{ $regex }}''',{{ end }}
 ]{{ end }}
 {{- with .Allowlist.Paths }}
 paths = [{{ range $i, $path := . }}
@@ -45,20 +45,21 @@ tags = [
 ]{{ end }}
 {{ if or $rule.Allowlist.Regexes $rule.Allowlist.Paths $rule.Allowlist.Commits $rule.Allowlist.StopWords }}
 [rules.allowlist]
-{{ with $rule.Allowlist.RegexTarget }}
+{{- with $rule.Allowlist.RegexTarget }}
 regexTarget = "{{ . }}"{{ end -}}
 {{- with $rule.Allowlist.Regexes }}
-regexes = [
-    {{ range $j, $regex := . }}'''{{ $regex }}''',{{ end }}
+regexes = [{{ range $i, $regex := . }}
+    '''{{ $regex }}''',{{ end }}
 ]{{ end }}
 {{- with $rule.Allowlist.Paths }}paths = [
-    {{ range $j, $path := . }}"{{ $path }}",{{ end }}
+    {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
 ]{{ end }}
 {{- with $rule.Allowlist.Commits }}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
+{{- with $rule.Allowlist.StopWords }}
+stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
 ]{{ end }}
 {{ end }}
-{{ end }}
+{{ end -}}
