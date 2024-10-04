@@ -2443,6 +2443,22 @@ keywords = [
 ]
 
 [[rules]]
+id = "nuget-config-password"
+description = "Identified a password within a Nuget config file, potentially compromising package management access."
+regex = '''(?i)<add key=\"(?:(?:ClearText)?Password)\"\s*value=\"(.{8,})\"\s*/>'''
+path = '''(?i)nuget\.config$'''
+entropy = 1
+keywords = [
+    "<add key=",
+]
+
+[rules.allowlist]
+
+regexes = [
+    '''33f!!lloppa''','''hal\+9ooo_da!sY''','''^\%\S.*\%$''',
+]
+
+[[rules]]
 id = "nytimes-access-token"
 description = "Detected a Nytimes Access Token, risking unauthorized access to New York Times APIs and content services."
 regex = '''(?i)(?:nytimes|new-york-times,|newyorktimes)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''

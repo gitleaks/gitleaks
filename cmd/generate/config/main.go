@@ -138,6 +138,7 @@ func main() {
 		rules.NewRelicBrowserAPIKey(),
 		rules.NewRelicInsertKey(),
 		rules.NPM(),
+		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
