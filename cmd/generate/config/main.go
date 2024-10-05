@@ -49,6 +49,7 @@ func main() {
 		rules.CloudflareAPIKey(),
 		rules.CloudflareGlobalAPIKey(),
 		rules.CloudflareOriginCAKey(),
+		rules.CohereAPIToken(),
 		rules.ConfluentAccessToken(),
 		rules.ConfluentSecretKey(),
 		rules.Contentful(),
