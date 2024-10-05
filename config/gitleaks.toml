@@ -197,6 +197,16 @@ regex = '''(?i)(?:codecov)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|
 keywords = ["codecov"]
 
 [[rules]]
+id = "cohere-api-token"
+description = "Identified a Cohere Token, posing a risk of unauthorized access to AI services and data manipulation."
+regex = '''(?i:(?:cohere|CO_API_KEY)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-zA-Z0-9]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 4
+keywords = [
+    "cohere",
+    "co_api_key",
+]
+
+[[rules]]
 id = "coinbase-access-token"
 description = "Detected a Coinbase Access Token, posing a risk of unauthorized access to cryptocurrency accounts and financial transactions."
 regex = '''(?i)(?:coinbase)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9_-]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
