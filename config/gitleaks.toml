@@ -2427,6 +2427,17 @@ regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?K
 keywords = ["-----begin"]
 
 [[rules]]
+id = "privateai-api-token"
+description = "Identified a PrivateAI Token, posing a risk of unauthorized access to AI services and data manipulation."
+regex = '''(?i:(?:private[_-]?ai)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
+keywords = [
+    "privateai",
+    "private_ai",
+    "private-ai",
+]
+
+[[rules]]
 id = "pulumi-api-token"
 description = "Found a Pulumi API token, posing a risk to infrastructure as code services and cloud resource management."
 regex = '''(?i)\b(pul-[a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''

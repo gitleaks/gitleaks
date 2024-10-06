@@ -153,6 +153,7 @@ func main() {
 		rules.PlanetScaleOAuthToken(),
 		rules.PostManAPI(),
 		rules.Prefect(),
+		rules.PrivateAIToken(),
 		rules.PrivateKey(),
 		rules.PulumiAPIToken(),
 		rules.PyPiUploadToken(),
