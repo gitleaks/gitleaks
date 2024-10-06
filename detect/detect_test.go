@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"os"
 	"path/filepath"
 	"testing"
@@ -708,11 +709,11 @@ func TestFromFiles(t *testing.T) {
 					Description: "AWS Access Key",
 					StartLine:   20,
 					EndLine:     20,
-					StartColumn: 16,
-					EndColumn:   35,
+					StartColumn: 15,
+					EndColumn:   34,
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
-					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Line:        "\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
 					SymlinkFile: "",
 					RuleID:      "aws-access-key",
@@ -730,11 +731,11 @@ func TestFromFiles(t *testing.T) {
 					Description: "AWS Access Key",
 					StartLine:   20,
 					EndLine:     20,
-					StartColumn: 16,
-					EndColumn:   35,
+					StartColumn: 15,
+					EndColumn:   34,
 					Match:       "AKIALALEMEL33243OLIA",
 					Secret:      "AKIALALEMEL33243OLIA",
-					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Line:        "\tawsToken := \"AKIALALEMEL33243OLIA\"",
 					File:        "../testdata/repos/nogit/main.go",
 					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
@@ -756,11 +757,11 @@ func TestFromFiles(t *testing.T) {
 					Description: "Generic API Key",
 					StartLine:   4,
 					EndLine:     4,
-					StartColumn: 5,
-					EndColumn:   35,
+					StartColumn: 4,
+					EndColumn:   34,
 					Match:       "PASSWORD=8ae31cacf141669ddfb5da",
 					Secret:      "8ae31cacf141669ddfb5da",
-					Line:        "\nDB_PASSWORD=8ae31cacf141669ddfb5da",
+					Line:        "DB_PASSWORD=8ae31cacf141669ddfb5da",
 					File:        "../testdata/repos/nogit/.env.prod",
 					RuleID:      "generic-api-key",
 					Tags:        []string{},
@@ -800,7 +801,9 @@ func TestFromFiles(t *testing.T) {
 		require.NoError(t, err)
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+		if diff := cmp.Diff(tt.expectedFindings, findings); diff != "" {
+			t.Errorf("diff: (-got +want)\n%s", diff)
+		}
 	}
 }
 
