@@ -10,10 +10,30 @@ func CreateGlobalConfig() config.Config {
 		Title: "gitleaks config",
 		Allowlist: config.Allowlist{
 			Description: "global allow lists",
+			Regexes: []*regexp.Regexp{
+				// ----------- General placeholders -----------
+				regexp.MustCompile(`(?i)^true|false|null$`),
+				// ----------- Interpolated Variables -----------
+				// Ansible (https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html)
+				regexp.MustCompile(`^\{\{[ \t]*[\w ().|]+[ \t]*}}$`),
+				// GitHub Actions
+				// https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+				// https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions
+				regexp.MustCompile(`^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$`),
+				// NuGet (https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file#using-environment-variables)
+				regexp.MustCompile(`^%([A-Z_]+|[a-z_]+)%$`),
+				// Urban Code Deploy (https://www.ibm.com/support/pages/replace-token-step-replaces-replacement-values-windows-variables)
+				regexp.MustCompile(`^@([A-Z_]+|[a-z_]+)@$`),
+
+				// ----------- Environment Variables -----------
+				regexp.MustCompile(`^\$(\d+|{\d+})$`),
+				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
+				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
+			},
 			Paths: []*regexp.Regexp{
 				regexp.MustCompile(`^gitleaks\.toml$`),
 
-				// Images
+				// ----------- Documents and media -----------
 				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`),
 				regexp.MustCompile(`(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$`),
 
