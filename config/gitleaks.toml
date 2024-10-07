@@ -143,6 +143,11 @@ keywords = [
     "acca",
 ]
 
+[rules.allowlist]
+stopwords = [
+    "AKIAIOSFODNN7EXAMPLE",
+]
+
 [[rules]]
 id = "beamer-api-token"
 description = "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates."
@@ -1901,6 +1906,7 @@ stopwords = [
     "within",
     "without",
     "wizard",
+    "wjalrxutnfemi/k7mdeng/bpxrficyexamplekey",
     "word",
     "wordpres",
     "work",
