@@ -23,7 +23,7 @@ regexes = [
     '''^\${([A-Z_]+|[a-z_]+)}$''',
 ]
 paths = [
-    '''^gitleaks\.toml$''',
+    '''gitleaks\.toml''',
     '''(?i)\.(bmp|gif|jpe?g|svg|tiff?)$''',
     '''(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$''',
     '''go\.(mod|sum|work(\.sum)?)$''',
