@@ -31,7 +31,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
 			},
 			Paths: []*regexp.Regexp{
-				regexp.MustCompile(`^gitleaks\.toml$`),
+				regexp.MustCompile(`gitleaks\.toml`),
 
 				// ----------- Documents and media -----------
 				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`),
