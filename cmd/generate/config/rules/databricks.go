@@ -16,8 +16,6 @@ func Databricks() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("databricks", "dapi"+secrets.NewSecret(utils.Hex("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("databricks", "dapi"+secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }

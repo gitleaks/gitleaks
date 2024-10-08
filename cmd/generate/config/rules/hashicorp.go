@@ -20,10 +20,10 @@ func HashiCorpTerraform() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("hashicorpToken", secrets.NewSecret(utils.Hex("14"))+".atlasv1."+secrets.NewSecret(utils.AlphaNumericExtended("60,70"))),
+	tps := utils.GenerateSampleSecrets("hashicorpToken", secrets.NewSecret(utils.Hex("14"))+".atlasv1."+secrets.NewSecret(utils.AlphaNumericExtended("60,70")))
+	tps = append(tps,
 		`#token = "hE1hlYILrSqpqh.atlasv1.ARjZuyzl33F71WR55s6ln5GQ1HWIwTDDH3MiRjz7OnpCfaCb1RCF5zGaSncCWmJdcYA"`,
-	}
+	)
 	fps := []string{
 		`token        = "xxxxxxxxxxxxxx.atlasv1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`, // low entropy
 	}

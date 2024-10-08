@@ -16,9 +16,7 @@ func DiscordAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Hex("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("discord", secrets.NewSecret(utils.Hex("64")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -32,9 +30,7 @@ func DiscordClientID() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Numeric("18"))),
-	}
+	tps := utils.GenerateSampleSecrets("discord", secrets.NewSecret(utils.Numeric("18")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -48,8 +44,6 @@ func DiscordClientSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Numeric("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("discord", secrets.NewSecret(utils.Numeric("32")))
 	return utils.Validate(r, tps, nil)
 }

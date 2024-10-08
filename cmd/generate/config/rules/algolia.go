@@ -16,8 +16,6 @@ func AlgoliaApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		"algolia_key := " + secrets.NewSecret(utils.Hex("32")),
-	}
+	tps := utils.GenerateSampleSecrets("algolia", secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }

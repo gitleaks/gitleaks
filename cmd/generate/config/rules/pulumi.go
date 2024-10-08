@@ -19,8 +19,6 @@ func PulumiAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("pulumi-api-token", "pul-"+secrets.NewSecret(utils.Hex("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("pulumi-api-token", "pul-"+secrets.NewSecret(utils.Hex("40")))
 	return utils.Validate(r, tps, nil)
 }

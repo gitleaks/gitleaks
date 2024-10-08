@@ -19,8 +19,6 @@ func TrelloAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("trello", secrets.NewSecret(`[a-zA-Z-0-9]{32}`)),
-	}
+	tps := utils.GenerateSampleSecrets("trello", secrets.NewSecret(`[a-zA-Z-0-9]{32}`))
 	return utils.Validate(r, tps, nil)
 }

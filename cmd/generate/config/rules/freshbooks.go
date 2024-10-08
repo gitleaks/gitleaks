@@ -19,8 +19,6 @@ func FreshbooksAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("freshbooks", secrets.NewSecret(utils.AlphaNumeric("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("freshbooks", secrets.NewSecret(utils.AlphaNumeric("64")))
 	return utils.Validate(r, tps, nil)
 }

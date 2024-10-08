@@ -23,6 +23,6 @@ func AWS() *config.Rule {
 	}
 
 	// validate
-	tps := []string{utils.GenerateSampleSecret("AWS", "AKIALALEMEL33243OLIB")} // gitleaks:allow
+	tps := utils.GenerateSampleSecrets("AWS", "AKIALALEMEL33243OLIB") // gitleaks:allow
 	return utils.Validate(r, tps, nil)
 }
