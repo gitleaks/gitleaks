@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
+	"github.com/zricethezav/gitleaks/v8/detect/fingerprint"
 	"os"
 	"regexp"
 	"strings"
@@ -81,6 +83,8 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]bool
 
+	fingerprinter fingerprint.Fingerprint
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 }
@@ -104,7 +108,7 @@ type Fragment struct {
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
-	return &Detector{
+	d := &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]bool),
 		findingMutex:   &sync.Mutex{},
@@ -113,6 +117,12 @@ func NewDetector(cfg config.Config) *Detector {
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
 	}
+	if flags.EnableExperimentalFingerprint.Load() {
+		d.fingerprinter = fingerprint.NewV2(d.gitleaksIgnore)
+	} else {
+		d.fingerprinter = fingerprint.NewV1(d.gitleaksIgnore)
+	}
+	return d
 }
 
 // NewDetectorDefaultConfig creates a new detector with the default config
@@ -131,7 +141,14 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDetector(cfg), nil
+
+	d := NewDetector(cfg)
+	if flags.EnableExperimentalFingerprint.Load() {
+		d.fingerprinter = fingerprint.NewV2(d.gitleaksIgnore)
+	} else {
+		d.fingerprinter = fingerprint.NewV1(d.gitleaksIgnore)
+	}
+	return d, nil
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
@@ -154,6 +171,9 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
 		if line != "" && !strings.HasPrefix(line, "#") {
+			if flags.EnableExperimentalFingerprint.Load() && !strings.HasPrefix(line, "sha1_") {
+				return fmt.Errorf(".gitleaksignore v1 format is not compatible with --experimental-fingerprint")
+			}
 			d.gitleaksIgnore[line] = true
 		}
 	}
@@ -522,26 +542,13 @@ func allTrue(bools []bool) bool {
 
 // addFinding synchronously adds a finding to the findings slice
 func (d *Detector) addFinding(finding report.Finding) {
-	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
-	if finding.Commit != "" {
-		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
-	} else {
-		finding.Fingerprint = globalFingerprint
-	}
-
-	// check if we should ignore this finding
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with global Fingerprint %s",
-			finding.Fingerprint)
+	finding.Fingerprint = d.fingerprinter.GetFingerprint(finding)
+	log.Info().Msgf("Finding fingerprint: %s", finding.Fingerprint)
+	if d.fingerprinter.IsIgnored(finding) {
+		log.Debug().Msgf("ignoring finding with fingerprint %s", finding.Fingerprint)
 		return
-	} else if finding.Commit != "" {
-		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			log.Debug().Msgf("ignoring finding with Fingerprint %s",
-				finding.Fingerprint)
-			return
-		}
 	}
+	log.Info().Msgf("Finding is not ignored: %s", finding.Fingerprint)
 
 	if d.baseline != nil && !IsNew(finding, d.baseline) {
 		log.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
