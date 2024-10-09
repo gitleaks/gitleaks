@@ -157,6 +157,11 @@ func Config(cmd *cobra.Command) config.Config {
 	if err := viper.Unmarshal(&vc); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
 	}
+
+	if !vc.Validate() {
+		log.Fatal().Msg("gitleaks config file is empty, cannot be processed")
+	}
+
 	cfg, err := vc.Translate()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load config")
