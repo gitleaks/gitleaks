@@ -252,6 +252,27 @@ func (c *Config) extend(extensionConfig Config) {
 			c.OrderedRules = append(c.OrderedRules, ruleID)
 		} else {
 			// Rule exists, merge our changes into the base.
+			if currentRule.Description != "" {
+				baseRule.Description = currentRule.Description
+			}
+			if currentRule.Entropy != 0 {
+				baseRule.Entropy = currentRule.Entropy
+			}
+			if currentRule.SecretGroup != 0 {
+				baseRule.SecretGroup = currentRule.SecretGroup
+			}
+			if currentRule.Regex != nil {
+				baseRule.Regex = currentRule.Regex
+			}
+			if currentRule.Path != nil {
+				baseRule.Path = currentRule.Path
+			}
+			if len(currentRule.Tags) > 0 {
+				baseRule.Tags = currentRule.Tags
+			}
+			if len(currentRule.Keywords) > 0 {
+				baseRule.Keywords = currentRule.Keywords
+			}
 			baseRule.Allowlist.Commits = append(baseRule.Allowlist.Commits, currentRule.Allowlist.Commits...)
 			baseRule.Allowlist.Paths = append(baseRule.Allowlist.Paths, currentRule.Allowlist.Paths...)
 			baseRule.Allowlist.Regexes = append(baseRule.Allowlist.Regexes, currentRule.Allowlist.Regexes...)
