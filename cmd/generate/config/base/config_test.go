@@ -39,6 +39,16 @@ func TestConfigAllowlistRegexes(t *testing.T) {
 				`%MY_PASSWORD%`, `%password%`,
 			},
 		},
+		"interpolated variables - string fmt - golang": {
+			invalid: []string{
+				`%b`, `%c`, `%d`, `% d`, `%e`, `%E`, `%f`, `%F`, `%g`, `%G`, `%o`, `%O`, `%p`, `%q`, `%-s`, `%s`, `%t`, `%T`, `%U`, `%#U`, `%+v`, `%#v`, `%v`, `%x`, `%X`,
+			},
+		},
+		"interpolated variables - string fmt - python": {
+			invalid: []string{
+				`{}`, `{0}`, `{10}`,
+			},
+		},
 		"interpolated variables - ucd": {
 			invalid: []string{`@password@`, `@LDAP_PASS@`},
 			valid:   []string{`@username@mastodon.example`},

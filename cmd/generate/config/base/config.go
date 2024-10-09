@@ -13,6 +13,12 @@ func CreateGlobalConfig() config.Config {
 			Regexes: []*regexp.Regexp{
 				// ----------- General placeholders -----------
 				regexp.MustCompile(`(?i)^true|false|null$`),
+
+				// ----------- Environment Variables -----------
+				regexp.MustCompile(`^\$(\d+|{\d+})$`),
+				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
+				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
+
 				// ----------- Interpolated Variables -----------
 				// Ansible (https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html)
 				regexp.MustCompile(`^\{\{[ \t]*[\w ().|]+[ \t]*}}$`),
@@ -22,13 +28,11 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$`),
 				// NuGet (https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file#using-environment-variables)
 				regexp.MustCompile(`^%([A-Z_]+|[a-z_]+)%$`),
+				// String formatting.
+				regexp.MustCompile(`^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$`), // Golang (https://pkg.go.dev/fmt)
+				regexp.MustCompile(`^\{\d{0,2}}$`),                       // Python (https://docs.python.org/3/tutorial/inputoutput.html)
 				// Urban Code Deploy (https://www.ibm.com/support/pages/replace-token-step-replaces-replacement-values-windows-variables)
 				regexp.MustCompile(`^@([A-Z_]+|[a-z_]+)@$`),
-
-				// ----------- Environment Variables -----------
-				regexp.MustCompile(`^\$(\d+|{\d+})$`),
-				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
-				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
 			},
 			Paths: []*regexp.Regexp{
 				regexp.MustCompile(`gitleaks\.toml`),

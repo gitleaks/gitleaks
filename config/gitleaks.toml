@@ -14,13 +14,15 @@ title = "gitleaks config"
 description = "global allow lists"
 regexes = [
     '''(?i)^true|false|null$''',
-    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
-    '''^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
-    '''^%([A-Z_]+|[a-z_]+)%$''',
-    '''^@([A-Z_]+|[a-z_]+)@$''',
     '''^\$(\d+|{\d+})$''',
     '''^\$([A-Z_]+|[a-z_]+)$''',
     '''^\${([A-Z_]+|[a-z_]+)}$''',
+    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
+    '''^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
+    '''^%([A-Z_]+|[a-z_]+)%$''',
+    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
+    '''^\{\d{0,2}}$''',
+    '''^@([A-Z_]+|[a-z_]+)@$''',
 ]
 paths = [
     '''gitleaks\.toml''',
