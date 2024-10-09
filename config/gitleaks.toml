@@ -27,6 +27,7 @@ regexes = [
 paths = [
     '''gitleaks\.toml''',
     '''(?i)\.(bmp|gif|jpe?g|svg|tiff?)$''',
+    '''\.(eot|[ot]tf|woff2?)$''',
     '''(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$''',
     '''go\.(mod|sum|work(\.sum)?)$''',
     '''(^|/)vendor/modules\.txt$''',

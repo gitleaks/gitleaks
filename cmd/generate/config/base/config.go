@@ -38,7 +38,8 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`gitleaks\.toml`),
 
 				// ----------- Documents and media -----------
-				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`),
+				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`), // Images
+				regexp.MustCompile(`\.(eot|[ot]tf|woff2?)$`),           // Fonts
 				regexp.MustCompile(`(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$`),
 
 				// ----------- Golang files -----------
