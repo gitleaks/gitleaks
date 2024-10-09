@@ -267,12 +267,8 @@ func (c *Config) extend(extensionConfig Config) {
 			if currentRule.Path != nil {
 				baseRule.Path = currentRule.Path
 			}
-			if len(currentRule.Tags) > 0 {
-				baseRule.Tags = currentRule.Tags
-			}
-			if len(currentRule.Keywords) > 0 {
-				baseRule.Keywords = currentRule.Keywords
-			}
+			baseRule.Tags = append(baseRule.Tags, currentRule.Tags...)
+			baseRule.Keywords = append(baseRule.Keywords, currentRule.Keywords...)
 			baseRule.Allowlist.Commits = append(baseRule.Allowlist.Commits, currentRule.Allowlist.Commits...)
 			baseRule.Allowlist.Paths = append(baseRule.Allowlist.Paths, currentRule.Allowlist.Paths...)
 			baseRule.Allowlist.Regexes = append(baseRule.Allowlist.Regexes, currentRule.Allowlist.Regexes...)

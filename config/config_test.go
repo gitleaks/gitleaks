@@ -261,7 +261,7 @@ func TestTranslate(t *testing.T) {
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
-					Tags:        []string{"puppy"},
+					Tags:        []string{"key", "AWS", "puppy"},
 				},
 				},
 			},
