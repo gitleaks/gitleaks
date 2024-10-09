@@ -1,8 +1,10 @@
 package base
 
 import (
+	"fmt"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"regexp"
+	"strings"
 )
 
 func CreateGlobalConfig() config.Config {
@@ -13,6 +15,21 @@ func CreateGlobalConfig() config.Config {
 			Regexes: []*regexp.Regexp{
 				// ----------- General placeholders -----------
 				regexp.MustCompile(`(?i)^true|false|null$`),
+				// Awkward workaround to detect repeated characters.
+				func() *regexp.Regexp {
+					var (
+						letters  = "abcdefghijklmnopqrstuvwxyz*."
+						patterns []string
+					)
+					for _, char := range letters {
+						if char == '*' || char == '.' {
+							patterns = append(patterns, fmt.Sprintf("\\%c+", char))
+						} else {
+							patterns = append(patterns, fmt.Sprintf("%c+", char))
+						}
+					}
+					return regexp.MustCompile("^(?i:" + strings.Join(patterns, "|") + ")$")
+				}(),
 
 				// ----------- Environment Variables -----------
 				regexp.MustCompile(`^\$(\d+|{\d+})$`),

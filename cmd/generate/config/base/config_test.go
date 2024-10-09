@@ -14,6 +14,16 @@ func TestConfigAllowlistRegexes(t *testing.T) {
 				`true`, `True`, `false`, `False`, `null`, `NULL`,
 			},
 		},
+		"general placeholders - repeated characters": {
+			invalid: []string{
+				`aaaaaaaaaaaaaaaaa`, `BBBBBBBBBBbBBBBBBBbBB`, `********************`,
+			},
+			valid: []string{`aaaaaaaaaaaaaaaaaaabaa`, `pas*************d`},
+		},
+		"environment variables": {
+			invalid: []string{`$2`, `$GIT_PASSWORD`, `${GIT_PASSWORD}`, `$password`},
+			valid:   []string{`$yP@R.@=ibxI`, `$2a6WCust9aE`, `${not_complete1`},
+		},
 		"interpolated variables - ansible": {
 			invalid: []string{
 				`{{ x }}`, `{{ password }}`, `{{password}}`, `{{ data.proxy_password }}`,
@@ -52,10 +62,6 @@ func TestConfigAllowlistRegexes(t *testing.T) {
 		"interpolated variables - ucd": {
 			invalid: []string{`@password@`, `@LDAP_PASS@`},
 			valid:   []string{`@username@mastodon.example`},
-		},
-		"environment variables": {
-			invalid: []string{`$2`, `$GIT_PASSWORD`, `${GIT_PASSWORD}`, `$password`},
-			valid:   []string{`$yP@R.@=ibxI`, `$2a6WCust9aE`, `${not_complete1`},
 		},
 	}
 
