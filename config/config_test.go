@@ -15,8 +15,13 @@ const configPath = "../testdata/config/"
 
 func TestTranslate(t *testing.T) {
 	tests := []struct {
-		cfgName   string
-		cfg       Config
+		// Configuration file basename to load, from `../testdata/config/`.
+		cfgName string
+		// Expected result.
+		cfg Config
+		// Rules to compare.
+		rules []string
+		// Error to expect.
 		wantError error
 	}{
 		{
@@ -174,6 +179,107 @@ func TestTranslate(t *testing.T) {
 				},
 			},
 		},
+		{
+			cfgName: "override_description",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "Puppy Doggy",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_entropy",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Entropy:     999.0,
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_secret_group",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:a)(?:a)"),
+					SecretGroup: 2,
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_regex",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:a)"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_path",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Path:        regexp.MustCompile("(?:puppy)"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_tags",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS", "puppy"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_keywords",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{"puppy"},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -195,6 +301,14 @@ func TestTranslate(t *testing.T) {
 			cfg, err := vc.Translate()
 			if !assert.Equal(t, tt.wantError, err) {
 				return
+			}
+
+			if len(tt.rules) > 0 {
+				rules := make(map[string]Rule)
+				for _, name := range tt.rules {
+					rules[name] = cfg.Rules[name]
+				}
+				cfg.Rules = rules
 			}
 
 			var regexComparer = func(x, y *regexp.Regexp) bool {
