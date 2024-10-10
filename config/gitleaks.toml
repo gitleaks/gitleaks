@@ -14,17 +14,21 @@ title = "gitleaks config"
 description = "global allow lists"
 regexes = [
     '''(?i)^true|false|null$''',
-    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
-    '''^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
-    '''^%([A-Z_]+|[a-z_]+)%$''',
-    '''^@([A-Z_]+|[a-z_]+)@$''',
+    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
     '''^\$(\d+|{\d+})$''',
     '''^\$([A-Z_]+|[a-z_]+)$''',
     '''^\${([A-Z_]+|[a-z_]+)}$''',
+    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
+    '''^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
+    '''^%([A-Z_]+|[a-z_]+)%$''',
+    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
+    '''^\{\d{0,2}}$''',
+    '''^@([A-Z_]+|[a-z_]+)@$''',
 ]
 paths = [
     '''gitleaks\.toml''',
     '''(?i)\.(bmp|gif|jpe?g|svg|tiff?)$''',
+    '''\.(eot|[ot]tf|woff2?)$''',
     '''(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$''',
     '''go\.(mod|sum|work(\.sum)?)$''',
     '''(^|/)vendor/modules\.txt$''',

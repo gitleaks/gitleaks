@@ -1,8 +1,10 @@
 package base
 
 import (
+	"fmt"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"regexp"
+	"strings"
 )
 
 func CreateGlobalConfig() config.Config {
@@ -13,6 +15,27 @@ func CreateGlobalConfig() config.Config {
 			Regexes: []*regexp.Regexp{
 				// ----------- General placeholders -----------
 				regexp.MustCompile(`(?i)^true|false|null$`),
+				// Awkward workaround to detect repeated characters.
+				func() *regexp.Regexp {
+					var (
+						letters  = "abcdefghijklmnopqrstuvwxyz*."
+						patterns []string
+					)
+					for _, char := range letters {
+						if char == '*' || char == '.' {
+							patterns = append(patterns, fmt.Sprintf("\\%c+", char))
+						} else {
+							patterns = append(patterns, fmt.Sprintf("%c+", char))
+						}
+					}
+					return regexp.MustCompile("^(?i:" + strings.Join(patterns, "|") + ")$")
+				}(),
+
+				// ----------- Environment Variables -----------
+				regexp.MustCompile(`^\$(\d+|{\d+})$`),
+				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
+				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
+
 				// ----------- Interpolated Variables -----------
 				// Ansible (https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html)
 				regexp.MustCompile(`^\{\{[ \t]*[\w ().|]+[ \t]*}}$`),
@@ -22,19 +45,18 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$`),
 				// NuGet (https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file#using-environment-variables)
 				regexp.MustCompile(`^%([A-Z_]+|[a-z_]+)%$`),
+				// String formatting.
+				regexp.MustCompile(`^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$`), // Golang (https://pkg.go.dev/fmt)
+				regexp.MustCompile(`^\{\d{0,2}}$`),                       // Python (https://docs.python.org/3/tutorial/inputoutput.html)
 				// Urban Code Deploy (https://www.ibm.com/support/pages/replace-token-step-replaces-replacement-values-windows-variables)
 				regexp.MustCompile(`^@([A-Z_]+|[a-z_]+)@$`),
-
-				// ----------- Environment Variables -----------
-				regexp.MustCompile(`^\$(\d+|{\d+})$`),
-				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
-				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
 			},
 			Paths: []*regexp.Regexp{
 				regexp.MustCompile(`gitleaks\.toml`),
 
 				// ----------- Documents and media -----------
-				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`),
+				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`), // Images
+				regexp.MustCompile(`\.(eot|[ot]tf|woff2?)$`),           // Fonts
 				regexp.MustCompile(`(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$`),
 
 				// ----------- Golang files -----------
