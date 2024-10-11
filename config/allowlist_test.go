@@ -62,7 +62,7 @@ func TestRegexAllowed(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.regexAllowed, tt.allowlist.RegexAllowed(tt.secret, ""))
+		assert.Equal(t, tt.regexAllowed, tt.allowlist.RegexAllowed(tt.secret))
 	}
 }
 

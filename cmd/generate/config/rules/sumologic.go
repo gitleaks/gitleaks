@@ -24,14 +24,10 @@ func SumoLogicAccessID() *config.Rule {
 		Allowlists: []config.Allowlist{
 			{
 				RegexTarget: "line",
-				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`sumOf`),
-				},
+				Regexes:     []*regexp.Regexp{regexp.MustCompile(`sumOf`)},
 			},
 			{
-				Paths: []*regexp.Regexp{
-					regexp.MustCompile(`tests/.+$`),
-				},
+				Paths: []*regexp.Regexp{regexp.MustCompile(`tests/.+$`)},
 			},
 		},
 	}

@@ -14,7 +14,7 @@ import (
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
-
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
@@ -239,11 +239,53 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
 func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.Rule, encodedSegments []EncodedSegment) []report.Finding {
-	var findings []report.Finding
+	var (
+		findings []report.Finding
+		logger   = func() zerolog.Logger {
+			l := log.With().Str("rule-id", rule.RuleID)
+			if fragment.CommitSHA != "" {
+				l = l.Str("commit", fragment.CommitSHA)
+			}
+			l = l.Str("path", fragment.FilePath)
+			return l.Logger()
+		}()
+	)
 
 	// check if filepath or commit is allowed for this rule
 	for _, a := range rule.Allowlists {
-		if a.CommitAllowed(fragment.CommitSHA) || a.PathAllowed(fragment.FilePath) {
+		var (
+			isAllowed     bool
+			commitAllowed = a.CommitAllowed(fragment.CommitSHA)
+			pathAllowed   = a.PathAllowed(fragment.FilePath)
+		)
+		if a.MatchCondition == config.AllowlistMatchAnd {
+			// Determine applicable checks.
+			var allowlistChecks []bool
+			if len(a.Commits) > 0 {
+				allowlistChecks = append(allowlistChecks, commitAllowed)
+			}
+			if len(a.Paths) > 0 {
+				allowlistChecks = append(allowlistChecks, pathAllowed)
+			}
+			// These will be checked later.
+			if len(a.Regexes) > 0 {
+				allowlistChecks = append(allowlistChecks, false)
+			}
+			if len(a.StopWords) > 0 {
+				allowlistChecks = append(allowlistChecks, false)
+			}
+
+			// Check if allowed.
+			isAllowed = allTrue(allowlistChecks)
+		} else {
+			isAllowed = commitAllowed || pathAllowed
+		}
+		if isAllowed {
+			logger.Trace().
+				Str("condition", string(a.MatchCondition)).
+				Bool("commit-allowed", commitAllowed).
+				Bool("path-allowed", commitAllowed).
+				Msg("Skipping fragment due to rule allowlist")
 			return findings
 		}
 	}
@@ -335,8 +377,11 @@ MatchLoop:
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
-		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			gitleaksAllowSignature) && !d.IgnoreGitleaksAllow {
+		if !d.IgnoreGitleaksAllow &&
+			strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex], gitleaksAllowSignature) {
+			logger.Trace().
+				Str("finding", finding.Secret).
+				Msg("Skipping finding due to 'gitleaks:allow' signature")
 			continue
 		}
 
@@ -376,10 +421,19 @@ MatchLoop:
 		case "line":
 			globalAllowlistTarget = finding.Line
 		}
-		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget, "") || d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+			logger.Trace().
+				Str("finding", globalAllowlistTarget).
+				Msg("Skipping finding due to global allowlist regex")
+			continue
+		} else if d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+			logger.Trace().
+				Str("finding", finding.Secret).
+				Msg("Skipping finding due to global allowlist stopword")
 			continue
 		}
 
+		// check if the result matches any of the rule allowlists.
 		for _, a := range rule.Allowlists {
 			allowlistTarget := finding.Secret
 			switch a.RegexTarget {
@@ -389,8 +443,41 @@ MatchLoop:
 				allowlistTarget = finding.Line
 			}
 
+			var (
+				isAllowed        bool
+				regexAllowed     = a.RegexAllowed(allowlistTarget)
+				containsStopword = a.ContainsStopWord(finding.Secret)
+			)
 			// check if the secret is in the list of stopwords
-			if a.RegexAllowed(allowlistTarget, fragment.FilePath) || a.ContainsStopWord(finding.Secret) {
+			if a.MatchCondition == config.AllowlistMatchAnd {
+				// Determine applicable checks.
+				var allowlistChecks []bool
+				if len(a.Commits) > 0 {
+					allowlistChecks = append(allowlistChecks, a.CommitAllowed(fragment.CommitSHA))
+				}
+				if len(a.Paths) > 0 {
+					allowlistChecks = append(allowlistChecks, a.PathAllowed(fragment.FilePath))
+				}
+				if len(a.Regexes) > 0 {
+					allowlistChecks = append(allowlistChecks, regexAllowed)
+				}
+				if len(a.StopWords) > 0 {
+					allowlistChecks = append(allowlistChecks, containsStopword)
+				}
+
+				// Check if allowed.
+				isAllowed = allTrue(allowlistChecks)
+			} else {
+				isAllowed = regexAllowed || containsStopword
+			}
+
+			if isAllowed {
+				logger.Trace().
+					Str("finding", finding.Secret).
+					Str("condition", string(a.MatchCondition)).
+					Bool("regex-allowed", regexAllowed).
+					Bool("contains-stopword", containsStopword).
+					Msg("Skipping finding due to rule allowlist")
 				continue MatchLoop
 			}
 		}
@@ -420,6 +507,17 @@ MatchLoop:
 		findings = append(findings, finding)
 	}
 	return findings
+}
+
+func allTrue(bools []bool) bool {
+	allMatch := true
+	for _, check := range bools {
+		if !check {
+			allMatch = false
+			break
+		}
+	}
+	return allMatch
 }
 
 // addFinding synchronously adds a finding to the findings slice

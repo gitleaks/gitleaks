@@ -44,17 +44,19 @@ tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
 {{ with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}
-[[rules.allowlist]]
-{{ with $allowlist.RegexTarget }}regexTarget = "{{ . }}"
+[[rules.allowlists]]
+{{ with $allowlist.MatchCondition }}condition = "{{ . }}"
 {{ end -}}
-{{- with $allowlist.Regexes }}regexes = [{{ range $i, $regex := . }}
-    '''{{ $regex }}''',{{ end }}
+{{- with $allowlist.Commits }}commits = [
+    {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
 {{- with $allowlist.Paths }}paths = [
     {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
 ]{{ end }}
-{{- with $allowlist.Commits }}commits = [
-    {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
+{{- with $allowlist.RegexTarget }}regexTarget = "{{ . }}"
+{{ end -}}
+{{- with $allowlist.Regexes }}regexes = [{{ range $i, $regex := . }}
+    '''{{ $regex }}''',{{ end }}
 ]{{ end }}
 {{- with $allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
