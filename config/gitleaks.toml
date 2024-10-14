@@ -2367,14 +2367,25 @@ regex = '''(?i)[\w.-]{0,50}?(?:kraken)(?:[ \t\w.-]{0,20})[\s'"|]{0,3}(?:=|>|:{1,
 keywords = ["kraken"]
 
 [[rules]]
-id = "kubernetes-secret-yaml"
+id = "kubernetes-secret-stringdata-yaml"
 description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
-regex = '''(?i)(?:\bkind:[ \t]*["']?\bsecret\b["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?\bsecret\b["']?)'''
+regex = '''(?:\bkind:[ \t]*["']?(?i:secret)["']?(?:.|\s){0,200}?\bstringData:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\|[-+]?|>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|["']?[[:graph:]]{5,}["']?|""|''))|\bstringData:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\|[-+]?|>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|["']?[[:graph:]]{5,}["']?|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?(?i:secret)["']?)'''
 path = '''(?i)\.ya?ml$'''
 keywords = ["secret"]
 [[rules.allowlists]]
 regexes = [
-    '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')''',
+    '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|""|'')''',
+]
+
+[[rules]]
+id = "kubernetes-secret-yaml"
+description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
+regex = '''(?:\bkind:[ \t]*["']?\b(?i:secret)\b["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-zA-Z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-zA-Z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?\b(?i:secret)\b["']?)'''
+path = '''(?i)\.ya?ml$'''
+keywords = ["secret"]
+[[rules.allowlists]]
+regexes = [
+    '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|""|'')''',
 ]
 [[rules.allowlists]]
 regexTarget = "match"
