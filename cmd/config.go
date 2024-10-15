@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
-	url "net/url"
+	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -52,7 +52,7 @@ func fetchConfig(url string) ([]byte, error) {
 func writeToDisk(content []byte, filePath string) (int, error) {
 	// create directory path if not already created
 	dirPath := filepath.Dir(filePath)
-	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		return 0, fmt.Errorf("failed to create directory ~/.config/gitleaks : %v", err)
 	}
 
