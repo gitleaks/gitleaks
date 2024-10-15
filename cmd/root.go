@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,8 +30,7 @@ const configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. URL specified in env var GITLEAKS_CONFIG_URL
-4. (target path)/.gitleaks.toml
+3. (target path)/.gitleaks.toml
 If none of the three options are used, then gitleaks will use the default config`
 
 var rootCmd = &cobra.Command{
@@ -101,6 +99,13 @@ func initConfig(source string) {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal().Msgf("unable to get user home directory: %s", err)
+	}
+	homeDirConfigPath := filepath.Join(homeDir, ".config", "gitleaks", "config.toml")
+
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
 		log.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
@@ -108,19 +113,9 @@ func initConfig(source string) {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
 		viper.SetConfigFile(envPath)
 		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
-	} else if os.Getenv("GITLEAKS_CONFIG_URL") != "" {
-		url := os.Getenv("GITLEAKS_CONFIG_URL")
-		if isValidURL(url) {
-			err := loadConfigFromURL(url)
-			if err != nil {
-				log.Fatal().Msgf("err reading toml from remote URL %s", err.Error())
-			}
-			return
-		} else {
-			log.Fatal().Msg("invalid URL provided in GITLEAKS_CONFIG_URL")
-		}
-
-		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG_URL env var: %s", url)
+	} else if _, err := os.Stat(homeDirConfigPath); err == nil {
+		viper.SetConfigFile(homeDirConfigPath)
+		log.Debug().Msgf("using gitleaks config from %s", homeDirConfigPath)
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
@@ -336,28 +331,4 @@ func FormatDuration(d time.Duration) string {
 		scale = scale / 10
 	}
 	return d.Round(scale / 100).String()
-}
-
-func isValidURL(url string) bool {
-	lowerURL := strings.ToLower(url)
-	return strings.HasPrefix(lowerURL, "http://") || strings.HasPrefix(lowerURL, "https://")
-}
-
-func loadConfigFromURL(url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to fetch config from URL, status code: %d", resp.StatusCode)
-	}
-
-	viper.SetConfigType("toml")
-	if err := viper.ReadConfig(resp.Body); err != nil {
-		return err
-	}
-	return nil
 }
