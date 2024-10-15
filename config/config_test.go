@@ -34,7 +34,7 @@ func TestTranslate(t *testing.T) {
 					Keywords: []string{},
 					Allowlists: []Allowlist{
 						{
-							MatchCondition: "OR",
+							MatchCondition: AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
 						},
 					},
@@ -68,7 +68,7 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Allowlists: []Allowlist{
 						{
-							MatchCondition: "OR",
+							MatchCondition: AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
@@ -87,7 +87,7 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Allowlists: []Allowlist{
 						{
-							MatchCondition: "OR",
+							MatchCondition: AllowlistMatchOr,
 							Commits:        []string{"allowthiscommit"},
 						},
 					},
@@ -106,7 +106,7 @@ func TestTranslate(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Allowlists: []Allowlist{
 						{
-							MatchCondition: "OR",
+							MatchCondition: AllowlistMatchOr,
 							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
@@ -184,11 +184,11 @@ func TestTranslate(t *testing.T) {
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []Allowlist{
 							{
-								MatchCondition: "OR",
+								MatchCondition: AllowlistMatchOr,
 								StopWords:      []string{"fake"},
 							},
 							{
-								MatchCondition: "OR",
+								MatchCondition: AllowlistMatchOr,
 								Commits:        []string{"abcdefg1"},
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
 								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
@@ -212,11 +212,11 @@ func TestTranslate(t *testing.T) {
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []Allowlist{
 							{
-								MatchCondition: "OR",
+								MatchCondition: AllowlistMatchOr,
 								StopWords:      []string{"fake"},
 							},
 							{
-								MatchCondition: "AND",
+								MatchCondition: AllowlistMatchAnd,
 								Commits:        []string{"abcdefg1"},
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
 								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
@@ -240,7 +240,7 @@ func TestTranslate(t *testing.T) {
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []Allowlist{
 							{
-								MatchCondition: "OR",
+								MatchCondition: AllowlistMatchOr,
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`something.py`)},
 							},
 						},
