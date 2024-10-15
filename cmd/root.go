@@ -25,14 +25,16 @@ const banner = `
     ░    gitleaks
 
 `
-
-const configDescription = `config file path
+const (
+	configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
 3. ~/.config/.gitleaks/config.toml
 4. (target path)/.gitleaks.toml
 If none of the four options are used, then gitleaks will use the default config`
+	gitleaksHomeConfigRelPath = ".config/gitleaks/config.toml"
+)
 
 var rootCmd = &cobra.Command{
 	Use:     "gitleaks",
@@ -105,7 +107,7 @@ func initConfig(source string) {
 	if err != nil {
 		log.Fatal().Msgf("unable to get user home directory: %s", err)
 	}
-	homeDirConfigPath := filepath.Join(homeDir, ".config", "gitleaks", "config.toml")
+	homeDirConfigPath := filepath.Join(homeDir, gitleaksHomeConfigRelPath)
 
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
