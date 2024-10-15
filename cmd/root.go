@@ -30,8 +30,9 @@ const configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. (target path)/.gitleaks.toml
-If none of the three options are used, then gitleaks will use the default config`
+3. ~/.config/.gitleaks/config.toml
+4. (target path)/.gitleaks.toml
+If none of the four options are used, then gitleaks will use the default config`
 
 var rootCmd = &cobra.Command{
 	Use:     "gitleaks",
