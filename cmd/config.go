@@ -35,10 +35,11 @@ func runFetch(cmd *cobra.Command, args []string) {
 		log.Fatal().Err(err).Msg("unable to get URL flag")
 	}
 
+	// build file path
 	homeDir, err := os.UserHomeDir()
-
 	filePath := filepath.Join(homeDir, ".config", "gitleaks", "config.toml")
 
+	// check if URL is valid and download config
 	var resp []byte
 	if isValidURL(rawURL) {
 		resp, err = downloadConfig(rawURL)
@@ -49,17 +50,22 @@ func runFetch(cmd *cobra.Command, args []string) {
 		log.Fatal().Msg("invalid URL url")
 	}
 
+	// create directory path if it doesn't exist
 	dirPath := filepath.Dir(filePath)
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
-		panic(fmt.Errorf("failed to create directory: %v", err))
+		panic(fmt.Errorf("failed to create directory ~/.config/gitleaks : %v", err))
 	}
 
-	file, err := os.Create(filePath)
+	// create or open file
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		panic(fmt.Errorf("failed to create or open file: %w", err))
+		panic(fmt.Errorf("failed to create or open file : %v", err))
 	}
 	defer file.Close()
 
+	// TODO: if file already exists only overwrite if changes detected using a hashing comparison
+
+	// write to file if changes detected
 	_, err = file.Write(resp)
 	if err != nil {
 		panic(fmt.Errorf("failed to write to file: %w", err))
