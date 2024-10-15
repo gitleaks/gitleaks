@@ -3,6 +3,6 @@ path="../testdata/config/extend_3.toml"
 
 [[rules]]
 id = "aws-secret-key-again-again"
-[rules.allowlist]
+[[rules.allowlists]]
 description = "False positive. Keys used for colors match the rule, and should be excluded."
 paths = ['''something.py''']

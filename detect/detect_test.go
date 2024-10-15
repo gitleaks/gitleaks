@@ -2,8 +2,10 @@ package detect
 
 import (
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -60,7 +62,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `awsToken := \"AKIALALEMEL33243OKIA\ // gitleaks:allow"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "simple",
@@ -72,7 +73,6 @@ func TestDetect(t *testing.T) {
 		        `,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "simple",
@@ -222,7 +222,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "allow_path",
@@ -230,7 +229,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "allow_commit",
@@ -239,7 +237,6 @@ func TestDetect(t *testing.T) {
 				FilePath:  "tmp.go",
 				CommitSHA: "allowthiscommit",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "entropy_group",
@@ -270,7 +267,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "generic_with_py_path",
@@ -317,8 +313,7 @@ func TestDetect(t *testing.T) {
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
-			wantError:        fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
+			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
 		{
 			cfgName: "simple",
@@ -326,7 +321,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: filepath.Join(configPath, "simple.toml"),
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "allow_global_aws_re",
@@ -334,7 +328,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "generic_with_py_path",
@@ -342,7 +335,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `const Discord_Public_Key = "load2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.py",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName:      "path_only",
@@ -351,7 +343,6 @@ func TestDetect(t *testing.T) {
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: ".baseline.json",
 			},
-			expectedFindings: []report.Finding{},
 		},
 		{
 			cfgName: "base64_encoded",
@@ -477,25 +468,27 @@ func TestDetect(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		viper.Reset()
-		viper.AddConfigPath(configPath)
-		viper.SetConfigName(tt.cfgName)
-		viper.SetConfigType("toml")
-		err := viper.ReadInConfig()
-		require.NoError(t, err)
+		t.Run(fmt.Sprintf("%s - %s", tt.cfgName, tt.fragment.FilePath), func(t *testing.T) {
+			viper.Reset()
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
 
-		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
-		require.NoError(t, err)
-		cfg, err := vc.Translate()
-		cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
-		assert.Equal(t, tt.wantError, err)
-		d := NewDetector(cfg)
-		d.MaxDecodeDepth = maxDecodeDepth
-		d.baselinePath = tt.baselinePath
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			cfg.Path = filepath.Join(configPath, tt.cfgName+".toml")
+			assert.Equal(t, tt.wantError, err)
+			d := NewDetector(cfg)
+			d.MaxDecodeDepth = maxDecodeDepth
+			d.baselinePath = tt.baselinePath
 
-		findings := d.Detect(tt.fragment)
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+			findings := d.Detect(tt.fragment)
+			assert.ElementsMatch(t, tt.expectedFindings, findings)
+		})
 	}
 }
 
@@ -852,6 +845,237 @@ func TestDetectWithSymlinks(t *testing.T) {
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
+	}
+}
+
+func TestDetectRuleAllowlist(t *testing.T) {
+	cases := map[string]struct {
+		fragment  Fragment
+		allowlist config.Allowlist
+		expected  []report.Finding
+	}{
+		// Commit / path
+		"commit allowed": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+			},
+			allowlist: config.Allowlist{
+				Commits: []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+			},
+		},
+		"path allowed": {
+			fragment: Fragment{
+				FilePath: "package-lock.json",
+			},
+			allowlist: config.Allowlist{
+				Paths: []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+			},
+		},
+		"commit AND path allowed": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+				FilePath:  "package-lock.json",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+			},
+		},
+		"commit AND path NOT allowed": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+				FilePath:  "package.json",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+			},
+			expected: []report.Finding{
+				{
+					StartColumn: 50,
+					EndColumn:   60,
+					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
+					Match:       "Summer2024!",
+					Secret:      "Summer2024!",
+					File:        "package.json",
+					Entropy:     3.095795154571533,
+					RuleID:      "test-rule",
+				},
+			},
+		},
+		"commit AND path NOT allowed - other conditions": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+				FilePath:  "package-lock.json",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+				Regexes:        []*regexp.Regexp{regexp.MustCompile("password")},
+			},
+			expected: []report.Finding{
+				{
+					StartColumn: 50,
+					EndColumn:   60,
+					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
+					Match:       "Summer2024!",
+					Secret:      "Summer2024!",
+					File:        "package-lock.json",
+					Entropy:     3.095795154571533,
+					RuleID:      "test-rule",
+				},
+			},
+		},
+		"commit OR path allowed": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+				FilePath:  "package-lock.json",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchOr,
+				Commits:        []string{"704178e7dca77ff143778a31cff0fc192d59b030"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+			},
+		},
+
+		// Regex / stopwords
+		"regex allowed": {
+			fragment: Fragment{},
+			allowlist: config.Allowlist{
+				Regexes: []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
+			},
+		},
+		"stopwords allowed": {
+			fragment: Fragment{},
+			allowlist: config.Allowlist{
+				StopWords: []string{"summer"},
+			},
+		},
+		"regex AND stopword allowed": {
+			fragment: Fragment{},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
+				StopWords:      []string{"2024"},
+			},
+		},
+		"regex AND stopword allowed - other conditions": {
+			fragment: Fragment{
+				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
+				FilePath:  "config.js",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
+				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
+				StopWords:      []string{"2024"},
+			},
+		},
+		"regex AND stopword NOT allowed - non-git, other conditions": {
+			fragment: Fragment{
+				FilePath: "config.js",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
+				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
+				StopWords:      []string{"2024"},
+			},
+			expected: []report.Finding{
+				{
+					StartColumn: 50,
+					EndColumn:   60,
+					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
+					Match:       "Summer2024!",
+					Secret:      "Summer2024!",
+					File:        "config.js",
+					Entropy:     3.095795154571533,
+					RuleID:      "test-rule",
+				},
+			},
+		},
+		"regex AND stopword NOT allowed": {
+			fragment: Fragment{},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`(?i)winter.+`),
+				},
+				StopWords: []string{"2024"},
+			},
+			expected: []report.Finding{
+				{
+					StartColumn: 50,
+					EndColumn:   60,
+					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
+					Match:       "Summer2024!",
+					Secret:      "Summer2024!",
+					Entropy:     3.095795154571533,
+					RuleID:      "test-rule",
+				},
+			},
+		},
+		"regex AND stopword NOT allowed - other conditions": {
+			fragment: Fragment{
+				CommitSHA: "a060c9d2d5e90c992763f1bd4c3cd2a6f121241b",
+				FilePath:  "config.js",
+			},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)winter.+`)},
+				StopWords:      []string{"2024"},
+			},
+			expected: []report.Finding{
+				{
+					StartColumn: 50,
+					EndColumn:   60,
+					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
+					Match:       "Summer2024!",
+					Secret:      "Summer2024!",
+					File:        "config.js",
+					Entropy:     3.095795154571533,
+					RuleID:      "test-rule",
+				},
+			},
+		},
+		"regex OR stopword allowed": {
+			fragment: Fragment{},
+			allowlist: config.Allowlist{
+				MatchCondition: config.AllowlistMatchOr,
+				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
+				StopWords:      []string{"winter"},
+			},
+		},
+	}
+
+	raw := `let username = 'james@mail.com';
+let password = 'Summer2024!';`
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			rule := config.Rule{
+				RuleID: "test-rule",
+				Regex:  regexp.MustCompile(`Summer2024!`),
+				Allowlists: []config.Allowlist{
+					tc.allowlist,
+				},
+			}
+			d, err := NewDetectorDefaultConfig()
+			require.NoError(t, err)
+
+			f := tc.fragment
+			f.Raw = raw
+			actual := d.detectRule(f, raw, rule, []EncodedSegment{})
+			if diff := cmp.Diff(tc.expected, actual); diff != "" {
+				t.Errorf("diff: (-want +got)\n%s", diff)
+			}
+		})
 	}
 }
 

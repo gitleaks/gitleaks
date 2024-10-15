@@ -25,17 +25,51 @@ func TestTranslate(t *testing.T) {
 		wantError error
 	}{
 		{
+			cfgName: "allowlist_old_compat",
+			cfg: Config{
+				Rules: map[string]Rule{"example": {
+					RuleID:   "example",
+					Regex:    regexp.MustCompile(`example\d+`),
+					Tags:     []string{},
+					Keywords: []string{},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: "OR",
+							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
+						},
+					},
+				},
+				},
+			},
+		},
+		{
+			cfgName:   "allowlist_invalid_empty",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: [[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+		},
+		{
+			cfgName:   "allowlist_invalid_old_and_new",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]"),
+		},
+		{
+			cfgName:   "allowlist_invalid_regextarget",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+		},
+		{
 			cfgName: "allow_aws_re",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Regexes: []*regexp.Regexp{
-							regexp.MustCompile("AKIALALEMEL33243OLIA"),
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: "OR",
+							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
 				},
@@ -46,13 +80,16 @@ func TestTranslate(t *testing.T) {
 			cfgName: "allow_commit",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Commits: []string{"allowthiscommit"},
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: "OR",
+							Commits:        []string{"allowthiscommit"},
+						},
 					},
 				},
 				},
@@ -62,14 +99,15 @@ func TestTranslate(t *testing.T) {
 			cfgName: "allow_path",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Paths: []*regexp.Regexp{
-							regexp.MustCompile(".go"),
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: "OR",
+							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
 				},
@@ -80,14 +118,13 @@ func TestTranslate(t *testing.T) {
 			cfgName: "entropy_group",
 			cfg: Config{
 				Rules: map[string]Rule{"discord-api-key": {
+					RuleID:      "discord-api-key",
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
-					RuleID:      "discord-api-key",
-					Allowlist:   Allowlist{},
+					Keywords:    []string{},
 					Entropy:     3.5,
 					SecretGroup: 3,
 					Tags:        []string{},
-					Keywords:    []string{},
 				},
 				},
 			},
@@ -112,49 +149,80 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{
 					"aws-access-key": {
+						RuleID:      "aws-access-key",
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-access-key",
+						Tags:        []string{"key", "AWS"},
 					},
 					"aws-secret-key": {
+						RuleID:      "aws-secret-key",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-secret-key",
+						Tags:        []string{"key", "AWS"},
 					},
 					"aws-secret-key-again": {
+						RuleID:      "aws-secret-key-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-secret-key-again",
+						Tags:        []string{"key", "AWS"},
 					},
 				},
 			},
 		},
 		{
-			cfgName: "extend_rule_allowlist",
+			cfgName: "extend_rule_allowlist_or",
 			cfg: Config{
 				Rules: map[string]Rule{
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						Allowlist: Allowlist{
-							Commits: []string{"abcdefg1"},
-							Regexes: []*regexp.Regexp{
-								regexp.MustCompile(`foo.+bar`),
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: "OR",
+								StopWords:      []string{"fake"},
 							},
-							RegexTarget: "line",
-							Paths: []*regexp.Regexp{
-								regexp.MustCompile(`ignore\.xaml`),
+							{
+								MatchCondition: "OR",
+								Commits:        []string{"abcdefg1"},
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
+								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
+								RegexTarget:    "line",
+								StopWords:      []string{"example"},
 							},
-							StopWords: []string{"example"},
+						},
+					},
+				},
+			},
+		},
+		{
+			cfgName: "extend_rule_allowlist_and",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key-again-again": {
+						RuleID:      "aws-secret-key-again-again",
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: "OR",
+								StopWords:      []string{"fake"},
+							},
+							{
+								MatchCondition: "AND",
+								Commits:        []string{"abcdefg1"},
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
+								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
+								RegexTarget:    "line",
+								StopWords:      []string{"example"},
+							},
 						},
 					},
 				},
@@ -168,11 +236,12 @@ func TestTranslate(t *testing.T) {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						Allowlist: Allowlist{
-							Paths: []*regexp.Regexp{
-								regexp.MustCompile(`something.py`),
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: "OR",
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`something.py`)},
 							},
 						},
 					},
@@ -200,8 +269,8 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
-					Entropy:     999.0,
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Entropy:     999.0,
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
 				},
@@ -299,7 +368,7 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			if !assert.Equal(t, tt.wantError, err) {
+			if err != nil && !assert.EqualError(t, tt.wantError, err.Error()) {
 				return
 			}
 

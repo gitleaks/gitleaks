@@ -39,9 +39,8 @@ type Rule struct {
 	// keyword(s) are in the content being scanned.
 	Keywords []string
 
-	// Allowlist allows a rule to be ignored for specific
-	// regexes, paths, and/or commits
-	Allowlist Allowlist
+	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
+	Allowlists []Allowlist
 }
 
 // Validate guards against common misconfigurations.
