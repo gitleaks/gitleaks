@@ -16,23 +16,19 @@ func NewConfigManager() *ConfigManager {
 	return &ConfigManager{}
 }
 
-func (c *ConfigManager) FetchTo(rawURL, filePath string) error {
+func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
 	var (
 		resp []byte
 		err  error
 	)
-	// check if URL is valid and download config
-	if isValidURL(rawURL) {
-		resp, err = fetchConfig(rawURL)
-		if err != nil {
-			return fmt.Errorf("could not download config from remote url: %w", err)
-		}
-	} else {
-		return fmt.Errorf("invalid URL")
+
+	resp, err = fetch(rawURL)
+	if err != nil {
+		return fmt.Errorf("could not download config from remote url: %w", err)
 	}
 
 	// write downloaded config to ~/.config/gitleaks/config.toml
-	_, err = writeToDisk(resp, filePath)
+	_, err = writeToDisk(resp, targetPath)
 	if err != nil {
 		return fmt.Errorf("failed to write config to disk : %v", err)
 	}
@@ -41,19 +37,37 @@ func (c *ConfigManager) FetchTo(rawURL, filePath string) error {
 }
 
 func isValidURL(rawURL string) bool {
-	_, err := url.ParseRequestURI(rawURL)
-	return err == nil
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+
+	// Check if the scheme is HTTP or HTTPS
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+
+	// Check if the host is present
+	if u.Host == "" {
+		return false
+	}
+
+	return true
 }
 
-func fetchConfig(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func fetch(rawURL string) ([]byte, error) {
+	if !isValidURL(rawURL) {
+		return nil, fmt.Errorf("invalid URL")
+	}
+
+	resp, err := http.Get(rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download config from URL: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("status code:%d return from URL:%s", resp.StatusCode, url)
+		return nil, fmt.Errorf("status code:%d returned from remote URL", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -62,7 +76,7 @@ func fetchConfig(url string) ([]byte, error) {
 	}
 
 	if len(body) == 0 {
-		return nil, fmt.Errorf("empty response body from URL: %s", url)
+		return nil, fmt.Errorf("empty response body from URL")
 	}
 
 	return body, nil
