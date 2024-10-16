@@ -26,9 +26,6 @@ func SumoLogicAccessID() *config.Rule {
 				RegexTarget: "line",
 				Regexes:     []*regexp.Regexp{regexp.MustCompile(`sumOf`)},
 			},
-			{
-				Paths: []*regexp.Regexp{regexp.MustCompile(`tests/.+$`)},
-			},
 		},
 	}
 

@@ -43,6 +43,32 @@ keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
+
+{{- /*
+    * Use [rules.allowlist] for a while, allow people to catch up with the new syntax.
+    * TODO: Remove this a few major versions after 8.21.0
+    * https://github.com/gitleaks/gitleaks/issues/1571
+    */}}
+{{- if eq (len $rule.Allowlists) 1 }}{{ with index $rule.Allowlists 0}}{{ if or .Regexes .Paths .Commits .StopWords }}
+# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
+[rules.allowlist]
+{{ with .MatchCondition }}condition = "{{ . }}"
+{{ end -}}
+{{- with .Commits }}commits = [
+    {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
+]{{ end }}
+{{- with .Paths }}paths = [
+    {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
+]{{ end }}
+{{- with .RegexTarget }}regexTarget = "{{ . }}"
+{{ end -}}
+{{- with .Regexes }}regexes = [{{ range $i, $regex := . }}
+    '''{{ $regex }}''',{{ end }}
+]{{ end }}
+{{- with .StopWords }}stopwords = [{{ range $j, $stopword := . }}
+    "{{ $stopword }}",{{ end }}
+]{{ end }}{{ end }}{{ end }}
+{{ else }}
 {{ with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}
 [[rules.allowlists]]
 {{ with $allowlist.MatchCondition }}condition = "{{ . }}"
@@ -61,5 +87,5 @@ tags = [
 {{- with $allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
 ]{{ end }}{{ end }}{{ end }}
-{{ end }}
+{{ end }}{{ end }}
 {{ end -}}
