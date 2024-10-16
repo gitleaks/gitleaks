@@ -41,9 +41,17 @@ func fetchConfig(url string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("status code:%d return from URL:%s", resp.StatusCode, url)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if len(body) == 0 {
+		return nil, fmt.Errorf("empty response body from URL: %s", url)
 	}
 
 	return body, nil
