@@ -6,12 +6,19 @@ import (
 	"strings"
 )
 
-type AllowlistMatchCondition string
+type AllowlistMatchCondition int
 
 const (
-	AllowlistMatchOr  AllowlistMatchCondition = "OR"
-	AllowlistMatchAnd                         = "AND"
+	AllowlistMatchOr AllowlistMatchCondition = iota
+	AllowlistMatchAnd
 )
+
+func (a AllowlistMatchCondition) String() string {
+	return [...]string{
+		"OR",
+		"AND",
+	}[a]
+}
 
 // Allowlist allows a rule to be ignored for specific
 // regexes, paths, and/or commits

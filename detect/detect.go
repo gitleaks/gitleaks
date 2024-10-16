@@ -282,7 +282,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		}
 		if isAllowed {
 			logger.Trace().
-				Str("condition", string(a.MatchCondition)).
+				Str("condition", a.MatchCondition.String()).
 				Bool("commit-allowed", commitAllowed).
 				Bool("path-allowed", commitAllowed).
 				Msg("Skipping fragment due to rule allowlist")
@@ -474,7 +474,7 @@ MatchLoop:
 			if isAllowed {
 				logger.Trace().
 					Str("finding", finding.Secret).
-					Str("condition", string(a.MatchCondition)).
+					Str("condition", a.MatchCondition.String()).
 					Bool("regex-allowed", regexAllowed).
 					Bool("contains-stopword", containsStopword).
 					Msg("Skipping finding due to rule allowlist")

@@ -71,7 +71,7 @@ tags = [
 {{ else }}
 {{ with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}
 [[rules.allowlists]]
-{{ with $allowlist.MatchCondition }}condition = "{{ . }}"
+{{ with $allowlist.MatchCondition }}condition = "{{ .String }}"
 {{ end -}}
 {{- with $allowlist.Commits }}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
