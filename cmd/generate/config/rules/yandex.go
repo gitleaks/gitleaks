@@ -19,10 +19,7 @@ func YandexAWSAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("yandex",
-			secrets.NewSecret(`YC[a-zA-Z0-9_\-]{38}`)),
-	}
+	tps := utils.GenerateSampleSecrets("yandex", secrets.NewSecret(`YC[a-zA-Z0-9_\-]{38}`))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -40,10 +37,7 @@ func YandexAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("yandex",
-			secrets.NewSecret(`AQVN[A-Za-z0-9_\-]{35,38}`)),
-	}
+	tps := utils.GenerateSampleSecrets("yandex", secrets.NewSecret(`AQVN[A-Za-z0-9_\-]{35,38}`))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -61,9 +55,6 @@ func YandexAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("yandex",
-			secrets.NewSecret(`t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2}`)),
-	}
+	tps := utils.GenerateSampleSecrets("yandex", secrets.NewSecret(`t1\.[A-Z0-9a-z_-]+[=]{0,2}\.[A-Z0-9a-z_-]{86}[=]{0,2}`))
 	return utils.Validate(r, tps, nil)
 }

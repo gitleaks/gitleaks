@@ -19,9 +19,7 @@ func GitHubPat() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	fps := []string{
 		"ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
@@ -39,9 +37,7 @@ func GitHubFineGrainedPat() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82"))),
-	}
+	tps := utils.GenerateSampleSecrets("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82")))
 	fps := []string{
 		"github_pat_xxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
@@ -59,9 +55,7 @@ func GitHubOauth() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	fps := []string{
 		"gho_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
@@ -79,10 +73,8 @@ func GitHubApp() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-		utils.GenerateSampleSecret("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	tps = append(tps, utils.GenerateSampleSecrets("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36")))...)
 	fps := []string{
 		"ghu_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 		"ghs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -101,9 +93,7 @@ func GitHubRefresh() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	fps := []string{
 		"ghr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}

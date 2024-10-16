@@ -26,14 +26,17 @@ func VaultServiceToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		// Old
-		utils.GenerateSampleSecret("vault", "s."+secrets.NewSecret(utils.AlphaNumeric("24"))),
+	// Old
+	tps := utils.GenerateSampleSecrets("vault", "s."+secrets.NewSecret(utils.AlphaNumeric("24")))
+	tps = append(tps,
 		`token: s.ZC9Ecf4M5g9o34Q6RkzGsj0z`,
-		// New
-		utils.GenerateSampleSecret("vault", "hvs."+secrets.NewSecret(utils.AlphaNumericExtendedShort("90"))),
+	)
+	// New
+	tps = append(tps, utils.GenerateSampleSecrets("vault", "hvs."+secrets.NewSecret(utils.AlphaNumericExtendedShort("90")))...)
+	tps = append(tps,
 		`-vaultToken hvs.CAESIP2jTxc9S2K7Z6CtcFWQv7-044m_oSsxnPE1H3nF89l3GiYKHGh2cy5sQmlIZVNyTWJNcDRsYWJpQjlhYjVlb1cQh6PL8wEYAg"`, // longer than 100 chars
-	}
+	)
+
 	fps := []string{
 		// Old
 		`  credentials: new AWS.SharedIniFileCredentials({ profile: '<YOUR_PROFILE>' })`,                              // word boundary start
@@ -59,8 +62,6 @@ func VaultBatchToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138"))),
-	}
+	tps := utils.GenerateSampleSecrets("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138")))
 	return utils.Validate(r, tps, nil)
 }

@@ -19,8 +19,6 @@ func OpenAI() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("openaiApiKey", "sk-"+secrets.NewSecret(utils.AlphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(utils.AlphaNumeric("20"))),
-	}
+	tps := utils.GenerateSampleSecrets("openaiApiKey", "sk-"+secrets.NewSecret(utils.AlphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(utils.AlphaNumeric("20")))
 	return utils.Validate(r, tps, nil)
 }
