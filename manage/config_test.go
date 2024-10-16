@@ -115,7 +115,7 @@ func TestFetchConfigError(t *testing.T) {
 
 func TestFetchConfigBodyReadError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Length", "1") // This will cause io.ReadAll to fail
+		w.Header().Set("Content-Length", "1") // This will cause io.ReadAll to fail , sets length to 1 but reads 0 bytes
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
