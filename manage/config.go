@@ -6,14 +6,28 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 )
 
-type ConfigManager struct{}
+type ConfigManager struct {
+	fsWriter FileSystemWriter
+}
 
-func NewConfigManager() *ConfigManager {
-	return &ConfigManager{}
+func NewConfigManager(options ...func(manager *ConfigManager)) *ConfigManager {
+	// initialize with default option
+	mgr := &ConfigManager{
+		fsWriter: osRepository{},
+	}
+	for _, opt := range options {
+		opt(mgr)
+	}
+	return mgr
+}
+
+func WithFileSystemWriter(fs FileSystemWriter) func(manager *ConfigManager) {
+	return func(manager *ConfigManager) {
+		manager.fsWriter = fs
+	}
 }
 
 func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
@@ -22,13 +36,13 @@ func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
 		err  error
 	)
 
-	resp, err = fetch(rawURL)
+	resp, err = c.fetch(rawURL)
 	if err != nil {
 		return fmt.Errorf("could not download config from remote url: %w", err)
 	}
 
 	// write downloaded config to ~/.config/gitleaks/config.toml
-	_, err = writeToDisk(resp, targetPath)
+	_, err = c.writeToDisk(resp, targetPath)
 	if err != nil {
 		return fmt.Errorf("failed to write config to disk : %v", err)
 	}
@@ -55,7 +69,7 @@ func isValidURL(rawURL string) bool {
 	return true
 }
 
-func fetch(rawURL string) ([]byte, error) {
+func (c *ConfigManager) fetch(rawURL string) ([]byte, error) {
 	if !isValidURL(rawURL) {
 		return nil, fmt.Errorf("invalid URL")
 	}
@@ -82,20 +96,20 @@ func fetch(rawURL string) ([]byte, error) {
 	return body, nil
 }
 
-func writeToDisk(content []byte, filePath string) (int, error) {
+func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error) {
 	// create directory path if not already created
 	dirPath := filepath.Dir(filePath)
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
+	if err := c.fsWriter.MkdirAll(dirPath, 0700); err != nil {
 		return 0, fmt.Errorf("failed to create directory ~/.config/gitleaks : %v", err)
 	}
 
 	// Create a temporary file in the same directory
-	tempFile, err := os.CreateTemp(dirPath, "gitleaks-config-*.tmp")
+	tempFile, err := c.fsWriter.CreateTemp(dirPath, "gitleaks-config-*.tmp")
 	if err != nil {
 		return 0, fmt.Errorf("failed to create temporary file: %v", err)
 	}
 	tempFilePath := tempFile.Name()
-	defer os.Remove(tempFilePath) // Clean up the temp file in case of failure
+	defer c.fsWriter.Remove(tempFilePath) // Clean up the temp file in case of failure
 
 	// Write to the temporary file
 	writer := bufio.NewWriter(tempFile)
@@ -114,7 +128,7 @@ func writeToDisk(content []byte, filePath string) (int, error) {
 	}
 
 	// replaces or creates the expected file
-	if err = os.Rename(tempFilePath, filePath); err != nil {
+	if err = c.fsWriter.Rename(tempFilePath, filePath); err != nil {
 		return 0, fmt.Errorf("failed to rename temporary file: %v", err)
 	}
 

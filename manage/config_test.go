@@ -80,6 +80,8 @@ func TestFetchConfig(t *testing.T) {
 		},
 	}
 
+	ctgMgr := NewConfigManager()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +90,7 @@ func TestFetchConfig(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			got, err := fetch(ts.URL)
+			got, err := ctgMgr.fetch(ts.URL)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("fetch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -107,7 +109,8 @@ func TestFetchConfig(t *testing.T) {
 }
 
 func TestFetchConfigError(t *testing.T) {
-	_, err := fetch("invalid://url")
+	ctgMgr := NewConfigManager()
+	_, err := ctgMgr.fetch("invalid://url")
 	if err == nil {
 		t.Errorf("Expected an error for invalid URL, got nil")
 	}
@@ -120,7 +123,8 @@ func TestFetchConfigBodyReadError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	_, err := fetch(ts.URL)
+	ctgMgr := NewConfigManager()
+	_, err := ctgMgr.fetch(ts.URL)
 	if err == nil {
 		t.Errorf("Expected an error for body read failure, got nil")
 	}
