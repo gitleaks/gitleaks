@@ -21,26 +21,34 @@ var configCmd = &cobra.Command{
 
 var configFetchCmd = &cobra.Command{
 	Use:   "fetch",
-	Short: "fetch custom config from a remote URL. Config will be written to ~/.config/gitleaks/config.toml",
+	Short: "fetch custom config from a remote URL",
+	Long:  "fetch custom config from a remote URL. Config will be written to ~/.config/gitleaks/config.toml",
 	Run:   runFetch,
 }
 
 func runFetch(cmd *cobra.Command, args []string) {
 	// check if URL flag is set
 	rawURL, err := cmd.Flags().GetString("url")
-	if err != nil || rawURL == "" {
+	if err != nil {
 		log.Fatal().Err(err).Msg("unable to get URL flag")
+	}
+	if rawURL == "" {
+		log.Fatal().Msg("URL flag is required")
 	}
 
 	// build file path
 	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal().Err(err).Msg("unable to get user home directory")
+	}
+
 	targetPath := filepath.Join(homeDir, gitleaksHomeConfigRelPath)
 
 	// Setup config handler
-	m := manage.NewConfigManager()
+	configManager := manage.NewConfigManager()
 
 	// fetch config and write to target
-	err = m.FetchTo(rawURL, targetPath)
+	err = configManager.FetchTo(rawURL, targetPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("unable to fetch config")
 	}

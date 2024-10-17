@@ -6,28 +6,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 )
 
-type ConfigManager struct {
-	fsWriter FileSystemWriter
-}
+type ConfigManager struct{}
 
-func NewConfigManager(options ...func(manager *ConfigManager)) *ConfigManager {
-	// initialize with default option
-	mgr := &ConfigManager{
-		fsWriter: osRepository{},
-	}
-	for _, opt := range options {
-		opt(mgr)
-	}
-	return mgr
-}
-
-func WithFileSystemWriter(fs FileSystemWriter) func(manager *ConfigManager) {
-	return func(manager *ConfigManager) {
-		manager.fsWriter = fs
-	}
+func NewConfigManager() *ConfigManager {
+	return &ConfigManager{}
 }
 
 func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
@@ -99,17 +85,21 @@ func (c *ConfigManager) fetch(rawURL string) ([]byte, error) {
 func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error) {
 	// create directory path if not already created
 	dirPath := filepath.Dir(filePath)
-	if err := c.fsWriter.MkdirAll(dirPath, 0700); err != nil {
+	if err := os.MkdirAll(dirPath, 0700); err != nil {
 		return 0, fmt.Errorf("failed to create directory ~/.config/gitleaks : %v", err)
 	}
 
 	// Create a temporary file in the same directory
-	tempFile, err := c.fsWriter.CreateTemp(dirPath, "gitleaks-config-*.tmp")
+	tempFile, err := os.CreateTemp(dirPath, "gitleaks-config-*.tmp")
 	if err != nil {
 		return 0, fmt.Errorf("failed to create temporary file: %v", err)
 	}
 	tempFilePath := tempFile.Name()
-	defer c.fsWriter.Remove(tempFilePath) // Clean up the temp file in case of failure
+	defer func() {
+		if removeErr := os.Remove(tempFilePath); removeErr != nil {
+			err = fmt.Errorf("failed to remove temporary file: %v (original error: %v)", removeErr, err)
+		} // Clean up the temp file in case of failure
+	}()
 
 	// Write to the temporary file
 	writer := bufio.NewWriter(tempFile)
@@ -128,7 +118,7 @@ func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error
 	}
 
 	// replaces or creates the expected file
-	if err = c.fsWriter.Rename(tempFilePath, filePath); err != nil {
+	if err = os.Rename(tempFilePath, filePath); err != nil {
 		return 0, fmt.Errorf("failed to rename temporary file: %v", err)
 	}
 
