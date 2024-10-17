@@ -266,7 +266,7 @@ path = '''a-file-path-regex'''
 # Keywords are used for pre-regex check filtering. Rules that contain
 # keywords will perform a quick string compare check to make sure the
 # keyword(s) are in the content being scanned. Ideally these values should
-# either be part of the idenitifer or unique strings specific to the rule's regex
+# either be part of the identiifer or unique strings specific to the rule's regex
 # (introduced in v8.6.0)
 keywords = [
   "auth",
@@ -301,7 +301,7 @@ tags = ["tag","another tag"]
 
     [[rules.allowlists]]
     # The "AND" condition can be used to make sure all criteria match.
-    # e.g., this matches if |regexes| AND |paths| are satisified.
+    # e.g., this matches if |regexes| AND |paths| are satisfied.
     condition = "AND"
     # note: |regexes| defaults to check the _Secret_ in the finding.
     # Acceptable values for |regexTarget| are "secret" (default), "match", and "line".
