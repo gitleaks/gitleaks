@@ -16,26 +16,6 @@ func NewConfigManager() *ConfigManager {
 	return &ConfigManager{}
 }
 
-func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
-	var (
-		resp []byte
-		err  error
-	)
-
-	resp, err = c.fetch(rawURL)
-	if err != nil {
-		return fmt.Errorf("could not download config from remote url: %w", err)
-	}
-
-	// write downloaded config to ~/.config/gitleaks/config.toml
-	_, err = c.writeToDisk(resp, targetPath)
-	if err != nil {
-		return fmt.Errorf("failed to write config to disk : %v", err)
-	}
-
-	return nil
-}
-
 func isValidURL(rawURL string) bool {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -123,4 +103,24 @@ func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error
 	}
 
 	return bytesWritten, nil
+}
+
+func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
+	var (
+		resp []byte
+		err  error
+	)
+
+	resp, err = c.fetch(rawURL)
+	if err != nil {
+		return fmt.Errorf("could not download config from remote url: %w", err)
+	}
+
+	// write downloaded config to target path
+	_, err = c.writeToDisk(resp, targetPath)
+	if err != nil {
+		return fmt.Errorf("failed to write config to disk : %v", err)
+	}
+
+	return nil
 }
