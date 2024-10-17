@@ -252,6 +252,20 @@ regex = '''(?i)(?:contentful)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=
 keywords = ["contentful"]
 
 [[rules]]
+id = "curl-auth-user"
+description = ""
+regex = '''\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)[ =](?:("[^:"]{3,}:[^"]{3,}")|('[^:']{3,}:[^']{3,}')|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+))|)(?:\s|\z)'''
+keywords = ["curl"]
+# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
+[rules.allowlist]
+regexes = [
+    '''[^:]+:(changeme|pass(word)?|pwd|\*+|x+)''',
+    '''<[^>]+>:<[^>]+>|<[^:]+:[^>]+>''',
+    '''[^:]+:\[[^]]+]''',
+    '''(?i)[^:]+:\$(\d|[a-z]\w+|(\{\d|[a-z]\w+}))''',
+]
+
+[[rules]]
 id = "databricks-api-token"
 description = "Uncovered a Databricks API token, which may compromise big data analytics platforms and sensitive data processing."
 regex = '''(?i)\b(dapi[a-h0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
