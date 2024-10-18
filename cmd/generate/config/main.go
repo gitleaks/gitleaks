@@ -55,6 +55,7 @@ func main() {
 		rules.ConfluentSecretKey(),
 		rules.Contentful(),
 		rules.CurlBasicAuth(),
+		rules.CurlHeaderAuth(),
 		rules.Databricks(),
 		rules.DatadogtokenAccessToken(),
 		rules.DefinedNetworkingAPIToken(),
