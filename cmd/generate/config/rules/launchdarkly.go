@@ -19,8 +19,6 @@ func LaunchDarklyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("launchdarkly", secrets.NewSecret(utils.AlphaNumericExtended("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("launchdarkly", secrets.NewSecret(utils.AlphaNumericExtended("40")))
 	return utils.Validate(r, tps, nil)
 }

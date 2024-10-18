@@ -20,9 +20,6 @@ func GitterAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gitter",
-			secrets.NewSecret(utils.AlphaNumericExtendedShort("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("gitter", secrets.NewSecret(utils.AlphaNumericExtendedShort("40")))
 	return utils.Validate(r, tps, nil)
 }

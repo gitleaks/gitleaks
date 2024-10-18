@@ -19,10 +19,8 @@ func HarnessApiKey() *config.Rule {
 	}
 
 	// Generate a sample secret for validation
-	tps := []string{
-		utils.GenerateSampleSecret("harness", "pat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20"))),
-		utils.GenerateSampleSecret("harness", "sat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20"))),
-	}
+	tps := utils.GenerateSampleSecrets("harness", "pat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20")))
+	tps = append(tps, utils.GenerateSampleSecrets("harness", "sat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20")))...)
 
 	// validate the rule
 	return utils.Validate(r, tps, nil)

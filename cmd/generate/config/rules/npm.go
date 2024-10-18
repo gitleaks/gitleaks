@@ -19,8 +19,6 @@ func NPM() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("npmAccessToken", "npm_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("npmAccessToken", "npm_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	return utils.Validate(r, tps, nil)
 }

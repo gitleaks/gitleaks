@@ -19,8 +19,6 @@ func Typeform() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("typeformAPIToken", "tfp_"+secrets.NewSecret(utils.AlphaNumericExtended("59"))),
-	}
+	tps := utils.GenerateSampleSecrets("typeformAPIToken", "tfp_"+secrets.NewSecret(utils.AlphaNumericExtended("59")))
 	return utils.Validate(r, tps, nil)
 }

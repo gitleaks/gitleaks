@@ -17,11 +17,7 @@ func GrafanaApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("grafana-api-key",
-			"eyJrIjoi"+
-				secrets.NewSecret(utils.AlphaNumeric("70"))),
-	}
+	tps := utils.GenerateSampleSecrets("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -36,11 +32,7 @@ func GrafanaCloudApiToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("grafana-cloud-api-token",
-			"glc_"+
-				secrets.NewSecret(utils.AlphaNumeric("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("grafana-cloud-api-token", "glc_"+secrets.NewSecret(utils.AlphaNumeric("32")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -55,12 +47,6 @@ func GrafanaServiceAccountToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("grafana-service-account-token",
-			"glsa_"+
-				secrets.NewSecret(utils.AlphaNumeric("32"))+
-				"_"+
-				secrets.NewSecret((utils.Hex("8")))),
-	}
+	tps := utils.GenerateSampleSecrets("grafana-service-account-token", "glsa_"+secrets.NewSecret(utils.AlphaNumeric("32"))+"_"+secrets.NewSecret(utils.Hex("8")))
 	return utils.Validate(r, tps, nil)
 }

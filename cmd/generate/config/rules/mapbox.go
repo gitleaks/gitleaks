@@ -17,8 +17,6 @@ func MapBox() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("mapbox", "pk."+secrets.NewSecret(utils.AlphaNumeric("60"))+"."+secrets.NewSecret(utils.AlphaNumeric("22"))),
-	}
+	tps := utils.GenerateSampleSecrets("mapbox", "pk."+secrets.NewSecret(utils.AlphaNumeric("60"))+"."+secrets.NewSecret(utils.AlphaNumeric("22")))
 	return utils.Validate(r, tps, nil)
 }
