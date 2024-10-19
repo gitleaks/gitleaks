@@ -147,6 +147,11 @@ keywords = [
     "acca",
 ]
 
+[rules.allowlist]
+stopwords = [
+    "AKIAIOSFODNN7EXAMPLE",
+]
+
 [[rules]]
 id = "azure-ad-client-secret"
 description = "Azure AD Client Secret"
@@ -1933,6 +1938,7 @@ stopwords = [
     "within",
     "without",
     "wizard",
+    "wjalrxutnfemi/k7mdeng/bpxrficyexamplekey",
     "word",
     "wordpres",
     "work",
