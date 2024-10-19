@@ -45,7 +45,8 @@ paths = [
 ]
 regexes = [
     '''(?i)^true|false|null$''',
-    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
+    '''(?i)(?:(?:12){6,}|(?:123){5,}|(?:1234){4,}|(?:12345){3,}|(?:123456|1234567|12345678){2,}|(?:0123456789|1234567890))''',
+    '''(?i)(?:^(?:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|0+|1+|2+|3+|4+|5+|6+|7+|8+|9+|\*+|\.+)$|.*(?:a{12,}|b{12,}|c{12,}|d{12,}|e{12,}|f{12,}|g{12,}|h{12,}|i{12,}|j{12,}|k{12,}|l{12,}|m{12,}|n{12,}|o{12,}|p{12,}|q{12,}|r{12,}|s{12,}|t{12,}|u{12,}|v{12,}|w{12,}|x{12,}|y{12,}|z{12,}|0{12,}|1{12,}|2{12,}|3{12,}|4{12,}|5{12,}|6{12,}|7{12,}|8{12,}|9{12,}|\*{12,}|\.{12,})$)''',
     '''^\$(?:\d+|{\d+})$''',
     '''^\$(?:[A-Z_]+|[a-z_]+)$''',
     '''^\${(?:[A-Z_]+|[a-z_]+)}$''',
@@ -101,6 +102,7 @@ keywords = ["p8e-"]
 id = "age-secret-key"
 description = "Discovered a potential Age encryption tool secret key, risking data decryption and unauthorized access to sensitive information."
 regex = '''AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}'''
+entropy = 3
 keywords = ["age-secret-key-1"]
 
 [[rules]]
@@ -2320,6 +2322,7 @@ keywords = [
 id = "heroku-api-key"
 description = "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security."
 regex = '''(?i)[\w.-]{0,50}?(?:heroku)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
 keywords = ["heroku"]
 
 [[rules]]
@@ -2333,6 +2336,7 @@ keywords = ["hrku-aa"]
 id = "hubspot-api-key"
 description = "Found a HubSpot API Token, posing a risk to CRM data integrity and unauthorized marketing operations."
 regex = '''(?i)[\w.-]{0,50}?(?:hubspot)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
 keywords = ["hubspot"]
 
 [[rules]]
@@ -2551,6 +2555,7 @@ keywords = ["_mmk"]
 id = "messagebird-api-token"
 description = "Found a MessageBird API token, risking unauthorized access to communication platforms and message data."
 regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{25})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 2
 keywords = [
     "messagebird",
     "message-bird",
@@ -2561,6 +2566,7 @@ keywords = [
 id = "messagebird-client-id"
 description = "Discovered a MessageBird client ID, potentially compromising API integrations and sensitive communication data."
 regex = '''(?i)[\w.-]{0,50}?(?:message[_-]?bird)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
 keywords = [
     "messagebird",
     "message-bird",
@@ -3001,6 +3007,7 @@ keywords = ["hooks.slack.com"]
 id = "snyk-api-token"
 description = "Uncovered a Snyk API token, potentially compromising software vulnerability scanning and code security."
 regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
 keywords = ["snyk"]
 
 [[rules]]

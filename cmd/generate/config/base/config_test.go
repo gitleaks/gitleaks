@@ -15,9 +15,47 @@ var allowlistRegexTests = map[string]struct {
 	},
 	"general placeholders - repeated characters": {
 		invalid: []string{
-			`aaaaaaaaaaaaaaaaa`, `BBBBBBBBBBbBBBBBBBbBB`, `********************`,
+			// full
+			`aaaaaaaaaaaaaaaaa`, `BBBBBBBBBBbBBBBBBBbBB`, `00000000000000000000000000000000`, `********************`, `.................`,
+			// partial
+			`ACCAXXXXXXXXXXXXXXXX`, `ico-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
 		},
-		valid: []string{`aaaaaaaaaaaaaaaaaaabaa`, `pas*************d`},
+		valid: []string{
+			// These obviously aren't valid, but if we do partial matches we could inadvertently skip the other examples.
+			`aaaaaaaaaaaaaaaaaaabaa`, `pas*************d`, `glsa_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX_AAAAAAAA`,
+			`ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2JuV3z0fopWIkb+T69ORpeMlnW/7GXFTBhrvNCfnAVgVteVDGeQphYj5zhg8AybuaMiC5IBHM6LOgUNNzp5lBeNb5fTCcrEHYGWGkw0aAU3O1YBZQsyx`,
+			`-----BEGIN PGP PUBLIC KEY BLOCK-----
+mQENBEznhOQBCADZZh6L+9YH/bjmhQAuqeZUvk9y/Q8GZNMYpLx9accXabL8fnnG
+Uu1CERympAKZmSdVvPIuRapAcLJVh/m+i+eQo7QQW8jiT4TwtivfsjPm+gqqyDyL
+SFrbgXDCT32q4baAUoowfVP+stKpnTZLuthuh++DOZfJKKj4p6dy3qUEQf769lWq
+oEzS6dHdtJrTLw6h5ORTpZrK4pLyo7w3BlxT4lso+a/BXFiWyQz17m2h63mNUDql
+Q6KahO66jJg0veYsKrziMkaDO/yglMcOXMNoFQVh3ZpYq6oT+7LSfU9u0p1J7BnN
+6fTZC9c8pTz707xJQWHjsKW8sBkI0iqVmVBpABEBAAG0MURhbWllbiBSZWdhZCAo
+TWFudGlzQlQgZGV2KSA8ZHJfbWFudGlzQHJlZ2FkLm9yZz6JATgEEwECACIFAlCd
+j8YCGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEA/+d/t+CBBf5hsIALt2
+5cm4Qgz3eXTSSn0+Zb/6rf76IcuVrRCtF6G38g9sKvO1TOqAy1wrQOsmBmewKrC/
+89ku9nnZv7rWfwNCo/9LJPQQAy/wdse6jOjeWrSun8Zns+0NZilRvt4e4K9QvMO1
+pJDUQGF72wrexYlDXhtlPfkdk2OJ0yEVBsUZPOMF9Z53YMqOsA3geMaphL10U/Tq
+nOiDfY10R/4HQYKlp2waCKjKU8NqqpvNnsQleuwJA352/BDgr5CINKm8Je9BoIzK
+dOsf2LscXYAqPnyd9eD/h3SHVMuE+7+R6yORYjAkOANU8bgcEjrKlDPqG3TW9Zkl
+FwGROcjQxn9MlDVQZHOJAU8EEwECADkCGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4B
+AheAFiEE6qY/HyhMqPUVN0kHD/53+34IEF8FAl6kD/QACgkQD/53+34IEF+E7gf/
+ed+ANT3T9wqTZLo5TTRZugdolb6PfqOn7H3LTUosrXEEPXWXIi1invTGI/Zp+Xs4
+bjXZUe0+mzfa+9hCqhAUyRkSuVfi/rDi/UbTBnlIgsFvbVbGRgiMOEKR+xtr7sQl
+T7DOQKfXKpZa+QdzPR9LenmhK1UYVk6NA93B7oc9kRj4ff4KHCO6Vol47OK+xaki
+ETr8S8SAIgXDFtCi5TBR4mUO7QUaIsBpPsT1PNw98gc7mr/Mm7cjES5gKhlEnDWk
+G7YvtzCi6K/zMTQWdtrqhXckRIhXNcxWxSkNehMQ0DGRg838uYQnmdl7v+N/d8xt
+co6tfsyLLxS1vu00N4ZRy9HdZN1iARAAAQEAAAAAAAAAAAAAAAD/2P/gABBKRklG
+AAEBAAABAAEAAP/+AD5DUkVBVE9SOiBnZC1qcGVnIHYxLjAgKHVzaW5nIElKRyBK
+UEVHIHY2MiksIGRlZmF1bHQgcXVhbGl0eQr/2wBDAAgGBgcGBQgHBwcJCQgKDBQN
+-----END PGP PUBLIC KEY BLOCK-----`,
+		},
+	},
+	"general placeholders - repeated sequences": {
+		invalid: []string{
+			`LR134894112312312312312312312`,
+			`01234567890123456789012345678901`, `1234567890123456789012345678901`,
+		},
 	},
 	"environment variables": {
 		invalid: []string{`$2`, `$GIT_PASSWORD`, `${GIT_PASSWORD}`, `$password`},
