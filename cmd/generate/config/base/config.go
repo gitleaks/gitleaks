@@ -17,20 +17,15 @@ func CreateGlobalConfig() config.Config {
 				Regexes: []*regexp.Regexp{
 					// ----------- General placeholders -----------
 					regexp.MustCompile(`(?i)^true|false|null$`),
-					// Awkward workaround to detect repeated characters.
+					// Repeated numerical sequences.
+					regexp.MustCompile(`(?i)(?:(?:12){6,}|(?:123){5,}|(?:1234){4,}|(?:12345){3,}|(?:123456|1234567|12345678){2,}|(?:0123456789|1234567890))`),
+					// Repeated characters.
 					func() *regexp.Regexp {
-						var (
-							letters  = "abcdefghijklmnopqrstuvwxyz*."
-							patterns []string
-						)
-						for _, char := range letters {
-							if char == '*' || char == '.' {
-								patterns = append(patterns, fmt.Sprintf("\\%c+", char))
-							} else {
-								patterns = append(patterns, fmt.Sprintf("%c+", char))
-							}
-						}
-						return regexp.MustCompile("^(?i:" + strings.Join(patterns, "|") + ")$")
+						fullPat := "^" + createRepeatedCharPat("+") + "$"
+						// TODO: This conflicts with twitter-bearer-token.
+						//prefixPat := "^" + createRepeatedCharPat("{12,}") + ".*"
+						suffixPat := ".*" + createRepeatedCharPat("{12,}") + "$"
+						return regexp.MustCompile(fmt.Sprintf("(?i)(?:%s|%s)", fullPat, suffixPat))
 					}(),
 
 					// ----------- Environment Variables -----------
@@ -118,4 +113,21 @@ func CreateGlobalConfig() config.Config {
 			},
 		},
 	}
+}
+
+// createRepeatedCharPat is an awkward workaround to detect repeated characters.
+// Go does not support look aheads or look behinds.
+func createRepeatedCharPat(repetition string) string {
+	var (
+		letters  = "abcdefghijklmnopqrstuvwxyz0123456789*."
+		patterns []string
+	)
+	for _, char := range letters {
+		if char == '*' || char == '.' {
+			patterns = append(patterns, fmt.Sprintf("\\%c%s", char, repetition))
+		} else {
+			patterns = append(patterns, fmt.Sprintf("%c%s", char, repetition))
+		}
+	}
+	return "(?:" + strings.Join(patterns, "|") + ")"
 }
