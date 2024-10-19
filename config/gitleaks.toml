@@ -252,6 +252,13 @@ regex = '''(?i)(?:contentful)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=
 keywords = ["contentful"]
 
 [[rules]]
+id = "curl-auth-header"
+description = ""
+regex = '''\bcurl\b(?:.*?|.*?(?:[\r\n]{1,2}.*?){1,5})[ \t\n\r](?:-H|--header)[ =](?:"(?i)(?:Authorization:[ \t]?(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|Token)[ \t]([\w=@.+/-]{8,})|([\w=.+/-]{8,}))|(?:ApiKey|Token|X-API-KEY):[ \t]?([\w=@.+/-]{8,}))"|'(?i)(?:Authorization:[ \t]?(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|Token)[ \t]([\w=@.+/-]{8,})|([\w=.+/-]{8,}))|(?:ApiKey|Token|X-API-KEY):[ \t]?([\w=@.+/-]{8,}))')(?:\B|\s|\z)'''
+entropy = 2.75
+keywords = ["curl"]
+
+[[rules]]
 id = "curl-auth-user"
 description = ""
 regex = '''\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)[ =](?:("[^:"]{3,}:[^"]{3,}")|('[^:']{3,}:[^']{3,}')|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+))|)(?:\s|\z)'''
