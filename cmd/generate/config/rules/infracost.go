@@ -25,8 +25,6 @@ func InfracostAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}")),
-	}
+	tps := utils.GenerateSampleSecrets("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}"))
 	return utils.Validate(r, tps, nil)
 }

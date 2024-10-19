@@ -19,11 +19,11 @@ func FacebookSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("facebook", secrets.NewSecret(utils.Hex("32"))),
+	tps := utils.GenerateSampleSecrets("facebook", secrets.NewSecret(utils.Hex("32")))
+	tps = append(tps,
 		`facebook_app_secret = "6dca6432e45d933e13650d1882bd5e69"`,       // gitleaks:allow
 		`facebook_client_access_token: 26f5fd13099f2c1331aafb86f6489692`, // gitleaks:allow
-	}
+	)
 	return utils.Validate(r, tps, nil)
 }
 

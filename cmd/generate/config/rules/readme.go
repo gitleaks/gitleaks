@@ -19,8 +19,6 @@ func ReadMe() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("api-token", "rdme_"+secrets.NewSecret(utils.AlphaNumeric("70"))),
-	}
+	tps := utils.GenerateSampleSecrets("api-token", "rdme_"+secrets.NewSecret(utils.AlphaNumeric("70")))
 	return utils.Validate(r, tps, nil)
 }

@@ -18,9 +18,7 @@ func GitlabPat() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20"))),
-	}
+	tps := utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -34,9 +32,7 @@ func GitlabPipelineTriggerToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -50,8 +46,6 @@ func GitlabRunnerRegistrationToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20"))),
-	}
+	tps := utils.GenerateSampleSecrets("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20")))
 	return utils.Validate(r, tps, nil)
 }

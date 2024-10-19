@@ -20,8 +20,6 @@ func OktaAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("okta", secrets.NewSecret(utils.AlphaNumeric("42"))),
-	}
+	tps := utils.GenerateSampleSecrets("okta", secrets.NewSecret(utils.AlphaNumeric("42")))
 	return utils.Validate(r, tps, nil)
 }

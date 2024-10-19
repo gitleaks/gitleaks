@@ -19,8 +19,6 @@ func Prefect() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("api-token", "pnu_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
-	}
+	tps := utils.GenerateSampleSecrets("api-token", "pnu_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	return utils.Validate(r, tps, nil)
 }
