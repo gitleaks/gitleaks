@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const secret = "AKIAIRYLJVKMPEXAMPLE"
+const secret = "AKIAIRYLJVKMPEGZMPJS"
 
 type mockReader struct {
 	data []byte
