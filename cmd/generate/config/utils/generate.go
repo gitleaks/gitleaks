@@ -15,10 +15,10 @@ const (
 	caseInsensitive = `(?i)`
 
 	// identifier prefix (just an ignore group)
-	identifierCaseInsensitivePrefix = `(?i:`
+	identifierCaseInsensitivePrefix = `[\w.-]{0,10}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
-	identifierPrefix                = `(?:`
-	identifierSuffix                = `)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}`
+	identifierPrefix                = `[\w.-]{0,10}?(?:`
+	identifierSuffix                = `)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
 	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
