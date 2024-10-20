@@ -277,22 +277,25 @@ keywords = ["contentful"]
 [[rules]]
 id = "curl-auth-header"
 description = ""
-regex = '''\bcurl\b(?:.*?|.*?(?:[\r\n]{1,2}.*?){1,5})[ \t\n\r](?:-H|--header)[ =](?:"(?i)(?:Authorization:[ \t]?(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|Token)[ \t]([\w=@.+/-]{8,})|([\w=.+/-]{8,}))|(?:ApiKey|Token|X-API-KEY):[ \t]?([\w=@.+/-]{8,}))"|'(?i)(?:Authorization:[ \t]?(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|Token)[ \t]([\w=@.+/-]{8,})|([\w=.+/-]{8,}))|(?:ApiKey|Token|X-API-KEY):[ \t]?([\w=@.+/-]{8,}))')(?:\B|\s|\z)'''
+regex = '''\bcurl\b(?:.*?|.*?(?:[\r\n]{1,2}.*?){1,5})[ \t\n\r](?:-H|--header)(?:=|[ \t]{0,5})(?:"(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-)?Api-?(?:Key|Token)|Token):[ \t]{0,5}([\w=~@.+/-]{8,}))"|'(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-)?Api-?(?:Key|Token)|Token):[ \t]{0,5}([\w=~@.+/-]{8,}))')(?:\B|\s|\z)'''
 entropy = 2.75
 keywords = ["curl"]
 
 [[rules]]
 id = "curl-auth-user"
 description = ""
-regex = '''\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)[ =](?:("[^:"]{3,}:[^"]{3,}")|('[^:']{3,}:[^']{3,}')|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+))|)(?:\s|\z)'''
+regex = '''\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)'''
+entropy = 2
 keywords = ["curl"]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
 [rules.allowlist]
 regexes = [
-    '''[^:]+:(changeme|pass(word)?|pwd|\*+|x+)''',
+    '''[^:]+:(change(it|me)|pass(word)?|pwd|test|token|\*+|x+)''',
     '''<[^>]+>:<[^>]+>|<[^:]+:[^>]+>''',
     '''[^:]+:\[[^]]+]''',
-    '''(?i)[^:]+:\$(\d|[a-z]\w+|(\{\d|[a-z]\w+}))''',
+    '''[^:]+:\$(\d|\w+|\{(\d|\w+)})''',
+    '''\$\([^)]+\):\$\([^)]+\)''',
+    '''\$?{{[^}]+}}:\$?{{[^}]+}}''',
 ]
 
 [[rules]]
