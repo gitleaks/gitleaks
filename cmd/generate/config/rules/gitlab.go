@@ -11,9 +11,10 @@ import (
 func GitlabPat() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure.",
 		RuleID:      "gitlab-pat",
-		Regex:       regexp.MustCompile(`glpat-[0-9a-zA-Z\-\_]{20}`),
+		Description: "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure.",
+		Regex:       regexp.MustCompile(`glpat-[\w-]{20}`),
+		Entropy:     3,
 		Keywords:    []string{"glpat-"},
 	}
 
@@ -21,15 +22,19 @@ func GitlabPat() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"glpat-XXXXXXXXXXX-XXXXXXXX",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitlabPipelineTriggerToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Found a GitLab Pipeline Trigger Token, potentially compromising continuous integration workflows and project security.",
 		RuleID:      "gitlab-ptt",
+		Description: "Found a GitLab Pipeline Trigger Token, potentially compromising continuous integration workflows and project security.",
 		Regex:       regexp.MustCompile(`glptt-[0-9a-f]{40}`),
+		Entropy:     3,
 		Keywords:    []string{"glptt-"},
 	}
 
@@ -37,15 +42,19 @@ func GitlabPipelineTriggerToken() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"glptt-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func GitlabRunnerRegistrationToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a GitLab Runner Registration Token, posing a risk to CI/CD pipeline integrity and unauthorized access.",
 		RuleID:      "gitlab-rrt",
-		Regex:       regexp.MustCompile(`GR1348941[0-9a-zA-Z\-\_]{20}`),
+		Description: "Discovered a GitLab Runner Registration Token, posing a risk to CI/CD pipeline integrity and unauthorized access.",
+		Regex:       regexp.MustCompile(`GR1348941[\w-]{20}`),
+		Entropy:     3,
 		Keywords:    []string{"GR1348941"},
 	}
 
@@ -53,5 +62,9 @@ func GitlabRunnerRegistrationToken() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"GR134894112312312312312312312",
+		"GR1348941XXXXXXXXXXXXXXXXXXXX",
+	}
+	return utils.Validate(r, tps, fps)
 }

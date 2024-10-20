@@ -332,12 +332,14 @@ keywords = ["discord"]
 id = "discord-client-id"
 description = "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications."
 regex = '''(?i)(?:discord)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9]{18})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 2
 keywords = ["discord"]
 
 [[rules]]
 id = "discord-client-secret"
 description = "Discovered a potential Discord client secret, risking compromised Discord bot integrations and data leaks."
 regex = '''(?i)(?:discord)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9=_\-]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 2
 keywords = ["discord"]
 
 [[rules]]
@@ -2035,19 +2037,22 @@ keywords = ["ghr_"]
 [[rules]]
 id = "gitlab-pat"
 description = "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure."
-regex = '''glpat-[0-9a-zA-Z\-\_]{20}'''
+regex = '''glpat-[\w-]{20}'''
+entropy = 3
 keywords = ["glpat-"]
 
 [[rules]]
 id = "gitlab-ptt"
 description = "Found a GitLab Pipeline Trigger Token, potentially compromising continuous integration workflows and project security."
 regex = '''glptt-[0-9a-f]{40}'''
+entropy = 3
 keywords = ["glptt-"]
 
 [[rules]]
 id = "gitlab-rrt"
 description = "Discovered a GitLab Runner Registration Token, posing a risk to CI/CD pipeline integrity and unauthorized access."
-regex = '''GR1348941[0-9a-zA-Z\-\_]{20}'''
+regex = '''GR1348941[\w-]{20}'''
+entropy = 3
 keywords = ["gr1348941"]
 
 [[rules]]
@@ -2068,19 +2073,21 @@ keywords = [
 [[rules]]
 id = "grafana-api-key"
 description = "Identified a Grafana API key, which could compromise monitoring dashboards and sensitive data analytics."
-regex = '''(?i)\b(eyJrIjoi[A-Za-z0-9]{70,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b(eyJrIjoi[A-Za-z0-9]{70,400}={0,3})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = ["eyjrijoi"]
 
 [[rules]]
 id = "grafana-cloud-api-token"
 description = "Found a Grafana cloud API token, risking unauthorized access to cloud-based monitoring services and data exposure."
-regex = '''(?i)\b(glc_[A-Za-z0-9+/]{32,400}={0,2})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)\b(glc_[A-Za-z0-9+/]{32,400}={0,3})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
 keywords = ["glc_"]
 
 [[rules]]
 id = "grafana-service-account-token"
 description = "Discovered a Grafana service account token, posing a risk of compromised monitoring services and data integrity."
 regex = '''(?i)\b(glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
 keywords = ["glsa_"]
 
 [[rules]]
@@ -2138,7 +2145,8 @@ keywords = ["api_org_"]
 [[rules]]
 id = "infracost-api-token"
 description = "Detected an Infracost API Token, risking unauthorized access to cloud cost estimation tools and financial data."
-regex = '''(?i)\b(ico-[a-zA-Z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''\b(ico-[a-zA-Z0-9]{32})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
 keywords = ["ico-"]
 
 [[rules]]
