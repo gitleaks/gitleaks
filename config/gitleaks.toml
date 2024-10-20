@@ -544,6 +544,10 @@ keywords = [
 ]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
 [rules.allowlist]
+regexTarget = "match"
+regexes = [
+    '''(?i)(public[_.-]?(key|token)|(api|client)[_.-]?(version|id)|(secret|client)[_.-]?name|key[_.-]?word|(?-i:[DdMm]onkey|[DM]ONKEY)|keyboard|keying|keystone|rapid|capital)''',
+]
 stopwords = [
     "000000",
     "aaaaaa",
@@ -1171,6 +1175,7 @@ stopwords = [
     "jbos",
     "jekyll",
     "jenkin",
+    "jetbrains",
     "job-",
     "job.",
     "job_",
@@ -1714,6 +1719,7 @@ stopwords = [
     "smart",
     "smtp",
     "snake",
+    "snapshot",
     "snippet",
     "soap",
     "social",
