@@ -2,8 +2,6 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -14,18 +12,10 @@ func SumoLogicAccessID() *config.Rule {
 		RuleID:      "sumologic-access-id",
 		Description: "Discovered a SumoLogic Access ID, potentially compromising log management services and data analytics integrity.",
 		// TODO: Make 'su' case-sensitive.
-		Regex: utils.GenerateSemiGenericRegex([]string{"sumo"},
-			"su[a-zA-Z0-9]{12}", false),
-
+		Regex:   utils.GenerateSemiGenericRegex([]string{"(?-i:[Ss]umo|SUMO)"}, "su[a-zA-Z0-9]{12}", false),
 		Entropy: 3,
 		Keywords: []string{
 			"sumo",
-		},
-		Allowlists: []config.Allowlist{
-			{
-				RegexTarget: "line",
-				Regexes:     []*regexp.Regexp{regexp.MustCompile(`sumOf`)},
-			},
 		},
 	}
 
@@ -47,6 +37,7 @@ func SumoLogicAccessID() *config.Rule {
 		`sumologic_access_id         = ""`,
 		`SUMOLOGIC_ACCESSID: ${SUMOLOGIC_ACCESSID}`,
 		`export SUMOLOGIC_ACCESSID=XXXXXXXXXXXXXX`, // gitleaks:allow
+		`sumObj = suGyI5imvADdvU`,
 	}
 	return utils.Validate(r, tps, fps)
 }
@@ -56,10 +47,8 @@ func SumoLogicAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sumologic-access-token",
 		Description: "Uncovered a SumoLogic Access Token, which could lead to unauthorized access to log data and analytics insights.",
-		Regex: utils.GenerateSemiGenericRegex([]string{"sumo"},
-			utils.AlphaNumeric("64"), true),
-
-		Entropy: 3,
+		Regex:       utils.GenerateSemiGenericRegex([]string{"(?-i:[Ss]umo|SUMO)"}, utils.AlphaNumeric("64"), true),
+		Entropy:     3,
 		Keywords: []string{
 			"sumo",
 		},
@@ -80,6 +69,7 @@ func SumoLogicAccessToken() *config.Rule {
 		`SUMO_ACCESS_KEY=${SUMO_ACCESS_KEY:=$2}`,
 		`sumo_access_key   = "<SUMOLOGIC ACCESS KEY>"`,
 		`SUMO_ACCESS_KEY: AbCeFG123`,
+		`sumOfExposures = 3Kof2VffNQ0QgYIhXUPJosVlCaQKm2hfpWE6F1fT9YGY74blQBIPsrkCcf1TwKE5;`,
 	}
 	return utils.Validate(r, tps, fps)
 }

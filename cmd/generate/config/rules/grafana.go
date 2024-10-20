@@ -12,14 +12,13 @@ func GrafanaApiKey() *config.Rule {
 		RuleID:      "grafana-api-key",
 		Description: "Identified a Grafana API key, which could compromise monitoring dashboards and sensitive data analytics.",
 		Regex:       utils.GenerateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,3}`, true),
+		Entropy:     3,
 		Keywords:    []string{"eyJrIjoi"},
 	}
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("grafana-api-key",
-			"eyJrIjoi"+
-				secrets.NewSecret(utils.AlphaNumeric("70"))),
+		utils.GenerateSampleSecret("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70"))),
 	}
 	return utils.Validate(r, tps, nil)
 }

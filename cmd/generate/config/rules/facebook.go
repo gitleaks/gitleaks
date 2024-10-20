@@ -11,11 +11,11 @@ import (
 func FacebookSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a Facebook Application secret, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		RuleID:      "facebook-secret",
+		Description: "Discovered a Facebook Application secret, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"facebook"}, utils.Hex("32"), true),
-
-		Keywords: []string{"facebook"},
+		Entropy:     3,
+		Keywords:    []string{"facebook"},
 	}
 
 	// validate
@@ -31,9 +31,10 @@ func FacebookSecret() *config.Rule {
 func FacebookAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		RuleID:      "facebook-access-token",
+		Description: "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`\d{15,16}(\||%)[0-9a-z\-_]{27,40}`, true),
+		Entropy:     3,
 	}
 
 	// validate
@@ -49,9 +50,10 @@ func FacebookAccessToken() *config.Rule {
 func FacebookPageAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a Facebook Page Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		RuleID:      "facebook-page-access-token",
-		Regex:       utils.GenerateUniqueTokenRegex("EAA[MC]"+utils.AlphaNumeric("20,"), true),
+		Description: "Discovered a Facebook Page Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
+		Regex:       utils.GenerateUniqueTokenRegex("EAA[MC](?i)"+utils.AlphaNumeric("20,"), false),
+		Entropy:     3,
 		Keywords:    []string{"EAAM", "EAAC"},
 	}
 
@@ -62,5 +64,8 @@ func FacebookPageAccessToken() *config.Rule {
 		`- name: FACEBOOK_TOKEN
 		value: "EAACEdEose0cBA1bad3afsf2aew"`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`eaaaC0b75a9329fded2ffa9a02b47e0117831b82`,
+	}
+	return utils.Validate(r, tps, fps)
 }

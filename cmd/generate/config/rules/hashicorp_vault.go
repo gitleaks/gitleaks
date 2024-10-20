@@ -14,7 +14,7 @@ func VaultServiceToken() *config.Rule {
 		Description: "Identified a Vault Service Token, potentially compromising infrastructure security and access to sensitive credentials.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:hvs\.[\w-]{90,120}|s\.(?i:[a-z0-9]{24}))`, false),
 		Entropy:     3.5,
-		Keywords:    []string{"hvs", "s."},
+		Keywords:    []string{"hvs.", "s."},
 		Allowlists: []config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
@@ -52,15 +52,17 @@ func VaultServiceToken() *config.Rule {
 func VaultBatchToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
 		RuleID:      "vault-batch-token",
-		Regex:       utils.GenerateUniqueTokenRegex(`hvb\.[a-z0-9_-]{138,212}`, true),
-		Keywords:    []string{"hvb"},
+		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
+		Regex:       utils.GenerateUniqueTokenRegex(`hvb\.[\w-]{138,300}`, false),
+		Entropy:     4,
+		Keywords:    []string{"hvb."},
 	}
 
 	// validate
 	tps := []string{
 		utils.GenerateSampleSecret("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138"))),
+		`hvb.AAAAAQJgxDgqsGNorpoOR7hPZ5SU-ynBvCl764jyRP_fnX7WvkdkDzGjbLNGdPdtlY33Als2P36yDZueqzfdGw9RsaTeaYXSH7E4RYSWuRoQ9YRKIw8o7mDDY2ZcT3KOB7RwtW1w1FN2eDqcy_sbCjXPaM1iBVH-mqMSYRmRd2nb5D1SJPeBzIYRqSglLc31wUGN7xEzyrKUczqOKsIcybQA`, // gitleaks:allow
 	}
 	return utils.Validate(r, tps, nil)
 }

@@ -19,8 +19,7 @@ func HuggingFaceAccessToken() *config.Rule {
 		RuleID:      "huggingface-access-token",
 		Description: "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data.",
 		Regex:       regexp.MustCompile(`(?:^|[\\'"` + "`" + ` >=:])(hf_[a-zA-Z]{34})(?:$|[\\'"` + "`" + ` <])`),
-
-		Entropy: 1,
+		Entropy:     2,
 		Keywords: []string{
 			"hf_",
 		},

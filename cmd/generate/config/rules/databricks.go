@@ -9,15 +9,20 @@ import (
 func Databricks() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Uncovered a Databricks API token, which may compromise big data analytics platforms and sensitive data processing.",
 		RuleID:      "databricks-api-token",
-		Regex:       utils.GenerateUniqueTokenRegex(`dapi[a-h0-9]{32}`, true),
+		Description: "Uncovered a Databricks API token, which may compromise big data analytics platforms and sensitive data processing.",
+		Regex:       utils.GenerateUniqueTokenRegex(`dapi[a-f0-9]{32}(?:-\d)?`, false),
+		Entropy:     3,
 		Keywords:    []string{"dapi"},
 	}
 
 	// validate
 	tps := []string{
 		utils.GenerateSampleSecret("databricks", "dapi"+secrets.NewSecret(utils.Hex("32"))),
+		`token = dapif13ac4b49d1cb31f69f678e39602e381-2`, // gitleaks:ignore
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`DATABRICKS_TOKEN=dapi123456789012345678a9bc01234defg5`,
+	}
+	return utils.Validate(r, tps, fps)
 }

@@ -27,11 +27,11 @@ var identifiers = []string{"cloudflare"}
 func CloudflareGlobalAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-global-api-key",
+		Description: "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security.",
 		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.Hex("37"), true),
-
-		Keywords: identifiers,
+		Entropy:     2,
+		Keywords:    identifiers,
 	}
 
 	// validate
@@ -44,11 +44,11 @@ func CloudflareGlobalAPIKey() *config.Rule {
 func CloudflareAPIKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-api-key",
+		Description: "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security.",
 		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.AlphaNumericExtendedShort("40"), true),
-
-		Keywords: identifiers,
+		Entropy:     2,
+		Keywords:    identifiers,
 	}
 
 	// validate
@@ -65,8 +65,8 @@ func CloudflareOriginCAKey() *config.Rule {
 		Description: "Detected a Cloudflare Origin CA Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-origin-ca-key",
 		Regex:       utils.GenerateUniqueTokenRegex(`v1\.0-`+utils.Hex("24")+"-"+utils.Hex("146"), false),
-
-		Keywords: ca_identifiers,
+		Entropy:     2,
+		Keywords:    ca_identifiers,
 	}
 
 	// validate

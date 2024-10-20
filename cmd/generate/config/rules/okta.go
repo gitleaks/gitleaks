@@ -11,9 +11,8 @@ func OktaAccessToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "okta-access-token",
 		Description: "Identified an Okta Access Token, which may compromise identity management services and user authentication data.",
-		Regex: utils.GenerateSemiGenericRegex([]string{"okta"},
-			utils.AlphaNumericExtended("42"), true),
-
+		Regex:       utils.GenerateSemiGenericRegex([]string{"okta"}, utils.AlphaNumericExtended("42"), true),
+		Entropy:     3,
 		Keywords: []string{
 			"okta",
 		},
@@ -23,5 +22,8 @@ func OktaAccessToken() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("okta", secrets.NewSecret(utils.AlphaNumeric("42"))),
 	}
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		"00000000000000000000000000000000000TUVWXYZ",
+	}
+	return utils.Validate(r, tps, fps)
 }
