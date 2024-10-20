@@ -147,11 +147,18 @@ keywords = [
 id = "aws-access-token"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
 regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+entropy = 3
 keywords = [
+    "a3t",
     "akia",
     "asia",
     "abia",
     "acca",
+]
+# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
+[rules.allowlist]
+regexes = [
+    '''.+EXAMPLE$''',
 ]
 
 [[rules]]
