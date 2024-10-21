@@ -203,7 +203,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		OrderedRules: orderedRules,
 	}
 
-	if maxExtendDepth != extendDepth {
+	currentExtendDepth := extendDepth
+	if maxExtendDepth != currentExtendDepth {
 		// disallow both usedefault and path from being set
 		if c.Extend.Path != "" && c.Extend.UseDefault {
 			logging.Fatal().Msg("unable to load config due to extend.path and extend.useDefault being set")
@@ -216,7 +217,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	// Validate the rules after everything has been assembled (including extended configs).
-	if extendDepth == 0 {
+	if currentExtendDepth == 0 {
 		for _, rule := range c.Rules {
 			if err := rule.Validate(); err != nil {
 				return Config{}, err
