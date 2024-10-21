@@ -171,6 +171,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 
 	// Setup common detector
 	detector := detect.NewDetector(cfg)
+	detector.SetBasePath(source)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
 		log.Fatal().Err(err).Msg("")

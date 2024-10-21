@@ -83,6 +83,9 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	// The path where the scan is being invoked for
+	basePath string
 }
 
 // Fragment contains the data to be scanned
@@ -132,6 +135,10 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 		return nil, err
 	}
 	return NewDetector(cfg), nil
+}
+
+func (d *Detector) SetBasePath(basePath string) {
+	d.basePath = basePath
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {

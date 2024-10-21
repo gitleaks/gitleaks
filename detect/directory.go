@@ -3,6 +3,7 @@ package detect
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
@@ -60,9 +61,15 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				// Count the number of newlines in this chunk
 				linesInChunk := strings.Count(string(buf[:n]), "\n")
 				totalLines += linesInChunk
+
+				relativePath, err := filepath.Rel(d.basePath, p.Path)
+				if err != nil {
+					log.Fatal().Err(err)
+				}
+
 				fragment := Fragment{
 					Raw:      string(buf[:n]),
-					FilePath: p.Path,
+					FilePath: relativePath,
 				}
 				if p.Symlink != "" {
 					fragment.SymlinkFile = p.Symlink
