@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -128,7 +129,8 @@ func TestIgnoreIssuesInBaseline(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		d, _ := NewDetectorDefaultConfig()
+		d, err := NewDetectorDefaultConfig()
+		require.NoError(t, err)
 		d.baseline = test.baseline
 		for _, finding := range test.findings {
 			d.addFinding(finding)

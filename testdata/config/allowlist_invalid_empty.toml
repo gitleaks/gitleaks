@@ -1,0 +1,6 @@
+title = "simple config with allowlist for aws"
+
+[[rules]]
+id = "example"
+regex = '''example\d+'''
+    [[rules.allowlists]]

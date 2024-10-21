@@ -50,6 +50,7 @@ func location(fragment Fragment, matchIndex []int) Location {
 			location.endColumn = (end - prevNewLine)
 			location.endLineIndex = newLineByteIndex
 		}
+
 		prevNewLine = pair[0]
 	}
 

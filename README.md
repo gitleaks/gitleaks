@@ -10,13 +10,13 @@
 
 <p align="left">
   <p align="left">
-	  <a href="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml">
-		  <img alt="Github Test" src="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml/badge.svg">
+	  <a href="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml">
+		  <img alt="Github Test" src="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg">
 	  </a>
 	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
 		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
 	  </a>
-	  <a href="https://github.com/zricethezav/gitleaks-action">
+	  <a href="https://github.com/gitleaks/gitleaks-action">
         	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
     	 </a>
 	  <a href="https://twitter.com/intent/follow?screen_name=zricethezav">
@@ -27,10 +27,10 @@
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
+Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, API keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
 
 ```
-➜  ~/code(master) gitleaks detect --source . -v
+➜  ~/code(master) gitleaks git -v
 
     ○
     │╲
@@ -54,7 +54,7 @@ Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/
 
 ## Getting Started
 
-Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action).
+Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/gitleaks/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action).
 
 ### Installing
 
@@ -64,13 +64,13 @@ brew install gitleaks
 
 # Docker (DockerHub)
 docker pull zricethezav/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] [OPTIONS] [SOURCE_PATH]
 
 # Docker (ghcr.io)
 docker pull ghcr.io/gitleaks/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
+docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] [OPTIONS] [SOURCE_PATH]
 
-# From Source
+# From Source (make sure `go` is installed)
 git clone https://github.com/gitleaks/gitleaks.git
 cd gitleaks
 make build
@@ -105,12 +105,12 @@ jobs:
    ```
    repos:
      - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.16.1
+       rev: v8.19.0
        hooks:
          - id: gitleaks
    ```
 
-   for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
+   for a [native execution of GitLeaks](https://github.com/gitleaks/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
 
 3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
 4. Install with `pre-commit install`
@@ -137,63 +137,60 @@ Usage:
 
 Available Commands:
   completion  generate the autocompletion script for the specified shell
-  detect      detect secrets in code
+  dir         scan directories or files for secrets
+  git         scan git repositories for secrets
   help        Help about any command
-  protect     protect secrets in code
+  stdin       detect secrets from stdin
   version     display gitleaks version
 
 Flags:
-  -b, --baseline-path string       path to baseline with issues that can be ignored
-  -c, --config string              config file path
-                                   order of precedence:
-                                   1. --config/-c
-                                   2. env var GITLEAKS_CONFIG
-                                   3. (--source/-s)/.gitleaks.toml
-                                   If none of the three options are used, then gitleaks will use the default config
-      --exit-code int              exit code when leaks have been encountered (default 1)
-  -h, --help                       help for gitleaks
-  -l, --log-level string           log level (trace, debug, info, warn, error, fatal) (default "info")
-      --max-target-megabytes int   files larger than this will be skipped
-      --no-color                   turn off color for verbose output
-      --no-banner                  suppress banner
-      --redact                     redact secrets from logs and stdout
-  -f, --report-format string       output format (json, csv, junit, sarif) (default "json")
-  -r, --report-path string         report file
-  -s, --source string              path to source (default ".")
-  -v, --verbose                    show verbose output from scan
+  -b, --baseline-path string          path to baseline with issues that can be ignored
+  -c, --config string                 config file path
+                                      order of precedence:
+                                      1. --config/-c
+                                      2. env var GITLEAKS_CONFIG
+                                      3. (target path)/.gitleaks.toml
+                                      If none of the three options are used, then gitleaks will use the default config
+      --enable-rule strings           only enable specific rules by id
+      --exit-code int                 exit code when leaks have been encountered (default 1)
+  -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
+  -h, --help                          help for gitleaks
+      --ignore-gitleaks-allow         ignore gitleaks:allow comments
+  -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
+      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
+      --max-target-megabytes int      files larger than this will be skipped
+      --no-banner                     suppress banner
+      --no-color                      turn off color for verbose output
+      --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
+  -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
+  -r, --report-path string            report file
+  -v, --verbose                       show verbose output from scan
+      --version                       version for gitleaks
 
 Use "gitleaks [command] --help" for more information about a command.
 ```
 
 ### Commands
 
-There are two commands you will use to detect secrets; `detect` and `protect`.
+⚠️ v8.19.0 introduced a change that deprecated `detect` and `protect`. Those commands are still available but
+are hidden in the `--help` menu. Take a look at this [gist](https://gist.github.com/zricethezav/b325bb93ebf41b9c0b0507acf12810d2) for easy command translations.
+If you find v8.19.0 broke an existing command (`detect`/`protect`), please open an issue.
 
-#### Detect
+There are three scanning modes: `git`, `dir`, and `stdin`.
 
-The `detect` command is used to scan repos, directories, and files. This command can be used on developer machines and in CI environments.
+#### Git
+The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
+You can configure the behavior of `git log -p` with the `log-opts` option.
+For example, if you wanted to run gitleaks on a range of commits you could use the following
+command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
+If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
-When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)).
-[`git log -p` generates patches](https://git-scm.com/docs/git-log#_generating_patch_text_with_p) which gitleaks will use to detect secrets.
-You can configure what commits `git log` will range over by using the `--log-opts` flag. `--log-opts` accepts any option for `git log -p`.
-For example, if you wanted to run gitleaks on a range of commits you could use the following command: `gitleaks detect --source . --log-opts="--all commitA..commitB"`.
-See the `git log` [documentation](https://git-scm.com/docs/git-log) for more information.
+#### Dir
+The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
+If there is no target specified as a positional argument, then gitleaks will scan the current working directory.
 
-You can scan files and directories by using the `--no-git` option.
-
-If you want to run only specific rules you can do so by using the `--enable-rule` option (with a rule ID as a parameter), this flag can be used multiple times. For example: `--enable-rule=atlassian-api-token` will only apply that rule. You can find a list of rules [here](config/gitleaks.toml).
-
-#### Protect
-
-The `protect` command is used to scan uncommitted changes in a git repo. This command should be used on developer machines in accordance with
-[shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security).
-When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the
-`--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
-as a pre-commit.
-
-**NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
+#### Stdin
+You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
 
 ### Creating a baseline
 
@@ -201,64 +198,16 @@ When scanning large repositories or repositories with a long history, it can be 
 gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
 
 ```
-gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
+gitleaks git --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
 ```
 
 Once as baseline is created it can be applied when running the detect command again:
 
 ```
-gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
+gitleaks git --baseline-path gitleaks-report.json --report-path findings.json
 ```
 
 After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
-
-### Verify Findings
-
-You can verify a finding found by gitleaks using a `git log` command.
-Example output:
-
-```
-Finding:     aws_secret="AKIAIMNOJVGFDXXXE4OA"
-RuleID:      aws-access-token
-Secret       AKIAIMNOJVGFDXXXE4OA
-Entropy:     3.65
-File:        checks_test.go
-Line:        37
-Commit:      ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-Author:      Zachary Rice
-Email:       z@email.com
-Date:        2018-01-28T17:39:00Z
-Fingerprint: ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29:checks_test.go:aws-access-token:37
-```
-
-We can use the following format to verify the leak:
-
-```
-git log -L {StartLine,EndLine}:{File} {Commit}
-```
-
-So in this example it would look like:
-
-```
-git log -L 37,37:checks_test.go ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-```
-
-Which gives us:
-
-```
-commit ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-Author: zricethezav <thisispublicanyways@gmail.com>
-Date:   Sun Jan 28 17:39:00 2018 -0500
-
-    [update] entropy check
-
-diff --git a/checks_test.go b/checks_test.go
---- a/checks_test.go
-+++ b/checks_test.go
-@@ -28,0 +37,1 @@
-+               "aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
-
-```
 
 ## Pre-Commit hook
 
@@ -283,7 +232,7 @@ title = "Gitleaks title"
 # useDefault and path can NOT be used at the same time. Choose one.
 [extend]
 # useDefault will extend the base configuration with the default gitleaks config:
-# https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml
+# https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
 useDefault = true
 # or you can supply a path to a configuration. Path is relative to where gitleaks
 # was invoked, not the location of the base config.
@@ -303,13 +252,6 @@ description = "awesome rule 1"
 # does not support lookaheads.
 regex = '''one-go-style-regex-for-this-rule'''
 
-# Golang regular expression used to match paths. This can be used as a standalone rule or it can be used
-# in conjunction with a valid `regex` entry.
-path = '''a-file-path-regex'''
-
-# Array of strings used for metadata and reporting purposes.
-tags = ["tag","another tag"]
-
 # Int used to extract secret from regex match and used as the group that will have
 # its entropy checked if `entropy` is set.
 secretGroup = 3
@@ -317,10 +259,14 @@ secretGroup = 3
 # Float representing the minimum shannon entropy a regex group must have to be considered a secret.
 entropy = 3.5
 
+# Golang regular expression used to match paths. This can be used as a standalone rule or it can be used
+# in conjunction with a valid `regex` entry.
+path = '''a-file-path-regex'''
+
 # Keywords are used for pre-regex check filtering. Rules that contain
 # keywords will perform a quick string compare check to make sure the
 # keyword(s) are in the content being scanned. Ideally these values should
-# either be part of the idenitifer or unique strings specific to the rule's regex
+# either be part of the identiifer or unique strings specific to the rule's regex
 # (introduced in v8.6.0)
 keywords = [
   "auth",
@@ -328,30 +274,50 @@ keywords = [
   "token",
 ]
 
-# You can include an allowlist table for a single rule to reduce false positives or ignore commits
-# with known/rotated secrets
-[rules.allowlist]
-description = "ignore commit A"
-commits = [ "commit-A", "commit-B"]
-paths = [
-  '''go\.mod''',
-  '''go\.sum'''
-]
-# note: (rule) regexTarget defaults to check the _Secret_ in the finding.
-# if regexTarget is not specified then _Secret_ will be used.
-# Acceptable values for regexTarget are "match" and "line"
-regexTarget = "match"
-regexes = [
-  '''process''',
-  '''getenv''',
-]
-# note: stopwords targets the extracted secret, not the entire regex match
-# like 'regexes' does. (stopwords introduced in 8.8.0)
-stopwords = [
-  '''client''',
-  '''endpoint''',
-]
+# Array of strings used for metadata and reporting purposes.
+tags = ["tag","another tag"]
 
+    # ⚠️ In v8.21.0 `[rules.allowlist]` was replaced with `[[rules.allowlists]]`.
+    # This change was backwards-compatible: instances of `[rules.allowlist]` still  work.  
+    #
+    # You can define multiple allowlists for a rule to reduce false positives.
+    # A finding will be ignored if _ANY_ `[[rules.allowlists]]` matches.
+    [[rules.allowlists]]
+    description = "ignore commit A"
+    # When multiple criteria are defined the default condition is "OR".
+    # e.g., this can match on |commits| OR |paths| OR |stopwords|.
+    condition = "OR"
+    commits = [ "commit-A", "commit-B"]
+    paths = [
+      '''go\.mod''',
+      '''go\.sum'''
+    ]
+    # note: stopwords targets the extracted secret, not the entire regex match
+    # like 'regexes' does. (stopwords introduced in 8.8.0)
+    stopwords = [
+      '''client''',
+      '''endpoint''',
+    ]
+
+    [[rules.allowlists]]
+    # The "AND" condition can be used to make sure all criteria match.
+    # e.g., this matches if |regexes| AND |paths| are satisfied.
+    condition = "AND"
+    # note: |regexes| defaults to check the _Secret_ in the finding.
+    # Acceptable values for |regexTarget| are "secret" (default), "match", and "line".
+    regexTarget = "match"
+    regexes = [ '''(?i)parseur[il]''' ]
+    paths = [ '''package-lock\.json''' ]
+
+# You can extend a particular rule from the default config. e.g., gitlab-pat
+# if you have defined a custom token prefix on your GitLab instance
+[[rules]]
+id = "gitlab-pat"
+# all the other attributes from the default rule are inherited
+
+    [[rules.allowlists]]
+    regexTarget = "line"
+    regexes = [ '''MY-glpat-''' ]
 
 # This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
@@ -368,7 +334,6 @@ paths = [
 # if regexTarget is not specified then _Secret_ will be used.
 # Acceptable values for regexTarget are "match" and "line"
 regexTarget = "match"
-
 regexes = [
   '''219-09-9999''',
   '''078-05-1120''',
@@ -382,7 +347,7 @@ stopwords = [
 ]
 ```
 
-Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/zricethezav/gitleaks/blob/master/README.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
+Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
 
 ### Additional Configuration
 
@@ -399,15 +364,49 @@ class CustomClass:
 
 #### .gitleaksignore
 
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+
+#### Decoding
+
+Sometimes secrets are encoded in a way that can make them difficult to find
+with just regex. Now you can tell gitleaks to automatically find and decode
+encoded text. The flag `--max-decode-depth` enables this feature (the default
+value "0" means the feature is disabled by default).
+
+Recursive decoding is supported since decoded text can also contain encoded
+text.  The flag `--max-decode-depth` sets the recursion limit. Recursion stops
+when there are no new segments of encoded text to decode, so setting a really
+high max depth doesn't mean it will make that many passes. It will only make as
+many as it needs to decode the text. Overall, decoding only minimally increases
+scan times.
+
+The findings for encoded text differ from normal findings in the following
+ways:
+
+- The location points the bounds of the encoded text
+  - If the rule matches outside the encoded text, the bounds are adjusted to
+    include that as well
+- The match and secret contain the decoded value
+- Two tags are added `decoded:<encoding>` and `decode-depth:<depth>`
+
+Currently supported encodings:
+
+- `base64` (both standard and base64url)
 
 ## Sponsorships
 
+<p align="left">
+	<h3><a href="https://coderabbit.ai/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">coderabbit.ai</h3>
+	  <a href="https://coderabbit.ai/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">
+		  <img alt="CodeRabbit.ai Sponsorship" src="https://github.com/gitleaks/gitleaks/assets/15034943/76c30a85-887b-47ca-9956-17a8e55c6c41" width=200>
+	  </a>
+</p>
 <p align="left">
 	  <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">
 		  <img alt="Tines Sponsorship" src="https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png" width=200>
 	  </a>
   </p>
+
 
 ## Exit Codes
 

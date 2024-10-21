@@ -39,7 +39,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
 
 
            // Regex used for detecting secrets. See regex section below for more details
-           Regex: generateSemiGenericRegex([]string{"beamer"}, `b_[a-z0-9=_\-]{44}`, true)
+           Regex: GenerateSemiGenericRegex([]string{"beamer"}, `b_[a-z0-9=_\-]{44}`, true)
 
            // Keywords used for string matching on fragments (think of this as a prefilter)
            Keywords: []string{"beamer"},
@@ -57,32 +57,32 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    This file should be fairly self-explanatory except for a few items;
    regex and secret generation. To help with maintence, _most_ rules should
    be uniform. The functions,
-   [`generateSemiGenericRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L31) and [`generateUniqueTokenRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L44) will generate rules
+   [`GenerateSemiGenericRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L31) and [`GenerateUniqueTokenRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L44) will generate rules
    that follow defined patterns.
 
    The function signatures look like this:
 
    ```golang
-   func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp
+   func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp
 
-   func generateUniqueTokenRegex(secretRegex string, isCaseInsensitive bool) *regexp.Regexp
+   func GenerateUniqueTokenRegex(secretRegex string, isCaseInsensitive bool) *regexp.Regexp
    ```
 
-   `generateSemiGenericRegex` accepts a list of identifiers, a regex, and a boolean indicating whether the pattern should be case-insensitive.
+   `GenerateSemiGenericRegex` accepts a list of identifiers, a regex, and a boolean indicating whether the pattern should be case-insensitive.
    The list of identifiers _should_ match the list of `Keywords` in the rule
-   definition above. Both `identifiers` in the `generateSemiGenericRegex`
+   definition above. Both `identifiers` in the `GenerateSemiGenericRegex`
    function _and_ `Keywords` act as filters for Gitleaks telling the program
    "_at least one of these strings must be present to be considered a leak_"
 
-   `generateUniqueToken` just accepts a regex and a boolean indicating whether the pattern should be case-insensitive. If you are writing a rule for a
+   `GenerateUniqueTokenRegex` just accepts a regex and a boolean indicating whether the pattern should be case-insensitive. If you are writing a rule for a
    token that is unique enough not to require an identifier then you can use
    this function. For example, Pulumi's API Token has the prefix `pul-` which is
-   unique enough to use `generateUniqueToken`. But something like Beamer's API
-   token that has a `b_` prefix is not unique enough to use `generateUniqueToken`,
-   so instead we use `generateSemiGenericRegex` and require a `beamer`
+   unique enough to use `GenerateUniqueTokenRegex`. But something like Beamer's API
+   token that has a `b_` prefix is not unique enough to use `GenerateUniqueTokenRegex`,
+   so instead we use `GenerateSemiGenericRegex` and require a `beamer`
    identifier is part of the rule.
    If a token's prefix has more than `3` characters then you could
-   probably get away with using `generateUniqueToken`.
+   probably get away with using `GenerateUniqueTokenRegex`.
 
    Last thing you'll want to hit before we move on from this file is the
    validation part. You can use `generateSampleSecret` to create a secret for the

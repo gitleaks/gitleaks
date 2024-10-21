@@ -5,5 +5,5 @@ title = "simple config with allowlist for .go files"
     id = "aws-access-key"
     regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
     tags = ["key", "AWS"]
-    [rules.allowlist]
+    [[rules.allowlists]]
         paths = ['''.go''']

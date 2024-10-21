@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,47 +9,59 @@ import (
 func DiscordAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Discord API key, potentially compromising communication channels and user data privacy on Discord.",
 		RuleID:      "discord-api-token",
-		Regex:       generateSemiGenericRegex([]string{"discord"}, hex("64"), true),
+		Description: "Detected a Discord API key, potentially compromising communication channels and user data privacy on Discord.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.Hex("64"), true),
 		Keywords:    []string{"discord"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("discord", secrets.NewSecret(hex("64"))),
+		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Hex("64"))),
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 func DiscordClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications.",
 		RuleID:      "discord-client-id",
-		Regex:       generateSemiGenericRegex([]string{"discord"}, numeric("18"), true),
+		Description: "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.Numeric("18"), true),
+		Entropy:     2,
 		Keywords:    []string{"discord"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("discord", secrets.NewSecret(numeric("18"))),
+		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Numeric("18"))),
 	}
-	return validate(r, tps, nil)
+	fps := []string{
+		// Low entropy
+		`discord=000000000000000000`,
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func DiscordClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a potential Discord client secret, risking compromised Discord bot integrations and data leaks.",
 		RuleID:      "discord-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"discord"}, alphaNumericExtended("32"), true),
+		Description: "Discovered a potential Discord client secret, risking compromised Discord bot integrations and data leaks.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.AlphaNumericExtended("32"), true),
+		Entropy:     2,
 		Keywords:    []string{"discord"},
 	}
 
 	// validate
 	tps := []string{
-		generateSampleSecret("discord", secrets.NewSecret(numeric("32"))),
+		utils.GenerateSampleSecret("discord", secrets.NewSecret(utils.Numeric("32"))),
 	}
-	return validate(r, tps, nil)
+	fps := []string{
+		// Low entropy
+		`discord=00000000000000000000000000000000`,
+		// TODO:
+		//`discord=01234567890123456789012345678901`,
+	}
+	return utils.Validate(r, tps, fps)
 }

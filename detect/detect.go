@@ -14,15 +14,18 @@ import (
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
-
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 )
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
 )
+
+var newLineRegexp = regexp.MustCompile("\n")
 
 // Detector is the main detector struct
 type Detector struct {
@@ -36,6 +39,9 @@ type Detector struct {
 
 	// verbose is a flag to print findings
 	Verbose bool
+
+	// MaxDecodeDepths limits how many recursive decoding passes are allowed
+	MaxDecodeDepth int
 
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
@@ -97,10 +103,6 @@ type Fragment struct {
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
-
-	// keywords is a map of all the keywords contain within the contents
-	// of this fragment
-	keywords map[string]bool
 }
 
 // NewDetector creates a new detector with the given config
@@ -111,7 +113,7 @@ func NewDetector(cfg config.Config) *Detector {
 		findingMutex:   &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(cfg.Keywords).Build(),
+		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
 	}
 }
@@ -156,7 +158,11 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		d.gitleaksIgnore[scanner.Text()] = true
+		line := strings.TrimSpace(scanner.Text())
+		// Skip lines that start with a comment
+		if line != "" && !strings.HasPrefix(line, "#") {
+			d.gitleaksIgnore[line] = true
+		}
 	}
 	return nil
 }
@@ -177,9 +183,6 @@ func (d *Detector) DetectString(content string) []report.Finding {
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
 
-	// initiate fragment keywords
-	fragment.keywords = make(map[string]bool)
-
 	// check if filepath is allowed
 	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
 		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
@@ -187,47 +190,114 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 
 	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = regexp.MustCompile("\n").FindAllStringIndex(fragment.Raw, -1)
+	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
-	// build keyword map for prefiltering rules
-	normalizedRaw := strings.ToLower(fragment.Raw)
-	matches := d.prefilter.MatchString(normalizedRaw)
-	for _, m := range matches {
-		fragment.keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
-	}
+	// setup variables to handle different decoding passes
+	currentRaw := fragment.Raw
+	encodedSegments := []EncodedSegment{}
+	currentDecodeDepth := 0
+	decoder := NewDecoder()
 
-	for _, rule := range d.Config.Rules {
-		if len(rule.Keywords) == 0 {
-			// if not keywords are associated with the rule always scan the
-			// fragment using the rule
-			findings = append(findings, d.detectRule(fragment, rule)...)
-			continue
+	for {
+		// build keyword map for prefiltering rules
+		keywords := make(map[string]bool)
+		normalizedRaw := strings.ToLower(currentRaw)
+		matches := d.prefilter.MatchString(normalizedRaw)
+		for _, m := range matches {
+			keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 		}
-		fragmentContainsKeyword := false
-		// check if keywords are in the fragment
-		for _, k := range rule.Keywords {
-			if _, ok := fragment.keywords[strings.ToLower(k)]; ok {
-				fragmentContainsKeyword = true
+
+		for _, rule := range d.Config.Rules {
+			if len(rule.Keywords) == 0 {
+				// if no keywords are associated with the rule always scan the
+				// fragment using the rule
+				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				continue
+			}
+
+			// check if keywords are in the fragment
+			for _, k := range rule.Keywords {
+				if _, ok := keywords[strings.ToLower(k)]; ok {
+					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					break
+				}
 			}
 		}
-		if fragmentContainsKeyword {
-			findings = append(findings, d.detectRule(fragment, rule)...)
+
+		// increment the depth by 1 as we start our decoding pass
+		currentDecodeDepth++
+
+		// stop the loop if we've hit our max decoding depth
+		if currentDecodeDepth > d.MaxDecodeDepth {
+			break
+		}
+
+		// decode the currentRaw for the next pass
+		currentRaw, encodedSegments = decoder.decode(currentRaw, encodedSegments)
+
+		// stop the loop when there's nothing else to decode
+		if len(encodedSegments) == 0 {
+			break
 		}
 	}
+
 	return filter(findings, d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Finding {
-	var findings []report.Finding
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.Rule, encodedSegments []EncodedSegment) []report.Finding {
+	var (
+		findings []report.Finding
+		logger   = func() zerolog.Logger {
+			l := log.With().Str("rule-id", rule.RuleID)
+			if fragment.CommitSHA != "" {
+				l = l.Str("commit", fragment.CommitSHA)
+			}
+			l = l.Str("path", fragment.FilePath)
+			return l.Logger()
+		}()
+	)
 
 	// check if filepath or commit is allowed for this rule
-	if rule.Allowlist.CommitAllowed(fragment.CommitSHA) ||
-		rule.Allowlist.PathAllowed(fragment.FilePath) {
-		return findings
+	for _, a := range rule.Allowlists {
+		var (
+			isAllowed     bool
+			commitAllowed = a.CommitAllowed(fragment.CommitSHA)
+			pathAllowed   = a.PathAllowed(fragment.FilePath)
+		)
+		if a.MatchCondition == config.AllowlistMatchAnd {
+			// Determine applicable checks.
+			var allowlistChecks []bool
+			if len(a.Commits) > 0 {
+				allowlistChecks = append(allowlistChecks, commitAllowed)
+			}
+			if len(a.Paths) > 0 {
+				allowlistChecks = append(allowlistChecks, pathAllowed)
+			}
+			// These will be checked later.
+			if len(a.Regexes) > 0 {
+				allowlistChecks = append(allowlistChecks, false)
+			}
+			if len(a.StopWords) > 0 {
+				allowlistChecks = append(allowlistChecks, false)
+			}
+
+			// Check if allowed.
+			isAllowed = allTrue(allowlistChecks)
+		} else {
+			isAllowed = commitAllowed || pathAllowed
+		}
+		if isAllowed {
+			logger.Trace().
+				Str("condition", a.MatchCondition.String()).
+				Bool("commit-allowed", commitAllowed).
+				Bool("path-allowed", commitAllowed).
+				Msg("Skipping fragment due to rule allowlist")
+			return findings
+		}
 	}
 
-	if rule.Path != nil && rule.Regex == nil {
+	if rule.Path != nil && rule.Regex == nil && len(encodedSegments) == 0 {
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
@@ -254,19 +324,40 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		return findings
 	}
 
-	// If flag configure and raw data size bigger then the flag
+	// if flag configure and raw data size bigger then the flag
 	if d.MaxTargetMegaBytes > 0 {
-		rawLength := len(fragment.Raw) / 1000000
+		rawLength := len(currentRaw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
 			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
 			return findings
 		}
 	}
 
-	matchIndices := rule.Regex.FindAllStringIndex(fragment.Raw, -1)
-	for _, matchIndex := range matchIndices {
-		// extract secret from match
-		secret := strings.Trim(fragment.Raw[matchIndex[0]:matchIndex[1]], "\n")
+	// use currentRaw instead of fragment.Raw since this represents the current
+	// decoding pass on the text
+MatchLoop:
+	for _, matchIndex := range rule.Regex.FindAllStringIndex(currentRaw, -1) {
+		// Extract secret from match
+		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
+
+		// For any meta data from decoding
+		var metaTags []string
+
+		// Check if the decoded portions of the segment overlap with the match
+		// to see if its potentially a new match
+		if len(encodedSegments) > 0 {
+			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
+				matchIndex = segment.adjustMatchIndex(matchIndex)
+				metaTags = append(metaTags, segment.tags()...)
+			} else {
+				// This item has already been added to a finding
+				continue
+			}
+		} else {
+			// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
+			// removes the incorrectly following line that was detected by regex expression '\n'
+			matchIndex[1] = matchIndex[0] + len(secret)
+		}
 
 		// determine location of match. Note that the location
 		// in the finding will be the line/column numbers of the _match_
@@ -289,44 +380,47 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			EndColumn:   loc.endColumn,
 			Secret:      secret,
 			Match:       secret,
-			Tags:        rule.Tags,
+			Tags:        append(rule.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
-		if strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			gitleaksAllowSignature) && !d.IgnoreGitleaksAllow {
+		if !d.IgnoreGitleaksAllow &&
+			strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex], gitleaksAllowSignature) {
+			logger.Trace().
+				Str("finding", finding.Secret).
+				Msg("Skipping finding due to 'gitleaks:allow' signature")
 			continue
 		}
 
-		// by default if secret group is not set, we will check to see if there
-		// are any capture groups. If there are, we will use the first capture to start
-		groups := rule.Regex.FindStringSubmatch(secret)
-		if rule.SecretGroup == 0 {
-			// if len(groups) == 2 that means there is only one capture group
-			// the first element in groups is the full match, the second is the
-			// first capture group
-			if len(groups) == 2 {
-				secret = groups[1]
-				finding.Secret = secret
+		// Set the value of |secret|, if the pattern contains at least one capture group.
+		// (The first element is the full match, hence we check >= 2.)
+		groups := rule.Regex.FindStringSubmatch(finding.Secret)
+		if len(groups) >= 2 {
+			if rule.SecretGroup > 0 {
+				if len(groups) <= rule.SecretGroup {
+					// Config validation should prevent this
+					continue
+				}
+				finding.Secret = groups[rule.SecretGroup]
+			} else {
+				// If |secretGroup| is not set, we will use the first suitable capture group.
+				if len(groups) == 2 {
+					// Use the only group.
+					finding.Secret = groups[1]
+				} else {
+					// Use the first non-empty group.
+					for _, s := range groups[1:] {
+						if len(s) > 0 {
+							finding.Secret = s
+							break
+						}
+					}
+				}
 			}
-		} else {
-			if len(groups) <= rule.SecretGroup || len(groups) == 0 {
-				// Config validation should prevent this
-				continue
-			}
-			secret = groups[rule.SecretGroup]
-			finding.Secret = secret
 		}
 
 		// check if the regexTarget is defined in the allowlist "regexes" entry
-		allowlistTarget := finding.Secret
-		switch rule.Allowlist.RegexTarget {
-		case "match":
-			allowlistTarget = finding.Match
-		case "line":
-			allowlistTarget = finding.Line
-		}
-
+		// or if the secret is in the list of stopwords
 		globalAllowlistTarget := finding.Secret
 		switch d.Config.Allowlist.RegexTarget {
 		case "match":
@@ -334,15 +428,65 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		case "line":
 			globalAllowlistTarget = finding.Line
 		}
-		if rule.Allowlist.RegexAllowed(allowlistTarget) ||
-			d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+			logger.Trace().
+				Str("finding", globalAllowlistTarget).
+				Msg("Skipping finding due to global allowlist regex")
+			continue
+		} else if d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+			logger.Trace().
+				Str("finding", finding.Secret).
+				Msg("Skipping finding due to global allowlist stopword")
 			continue
 		}
 
-		// check if the secret is in the list of stopwords
-		if rule.Allowlist.ContainsStopWord(finding.Secret) ||
-			d.Config.Allowlist.ContainsStopWord(finding.Secret) {
-			continue
+		// check if the result matches any of the rule allowlists.
+		for _, a := range rule.Allowlists {
+			allowlistTarget := finding.Secret
+			switch a.RegexTarget {
+			case "match":
+				allowlistTarget = finding.Match
+			case "line":
+				allowlistTarget = finding.Line
+			}
+
+			var (
+				isAllowed        bool
+				regexAllowed     = a.RegexAllowed(allowlistTarget)
+				containsStopword = a.ContainsStopWord(finding.Secret)
+			)
+			// check if the secret is in the list of stopwords
+			if a.MatchCondition == config.AllowlistMatchAnd {
+				// Determine applicable checks.
+				var allowlistChecks []bool
+				if len(a.Commits) > 0 {
+					allowlistChecks = append(allowlistChecks, a.CommitAllowed(fragment.CommitSHA))
+				}
+				if len(a.Paths) > 0 {
+					allowlistChecks = append(allowlistChecks, a.PathAllowed(fragment.FilePath))
+				}
+				if len(a.Regexes) > 0 {
+					allowlistChecks = append(allowlistChecks, regexAllowed)
+				}
+				if len(a.StopWords) > 0 {
+					allowlistChecks = append(allowlistChecks, containsStopword)
+				}
+
+				// Check if allowed.
+				isAllowed = allTrue(allowlistChecks)
+			} else {
+				isAllowed = regexAllowed || containsStopword
+			}
+
+			if isAllowed {
+				logger.Trace().
+					Str("finding", finding.Secret).
+					Str("condition", a.MatchCondition.String()).
+					Bool("regex-allowed", regexAllowed).
+					Bool("contains-stopword", containsStopword).
+					Msg("Skipping finding due to rule allowlist")
+				continue MatchLoop
+			}
 		}
 
 		// check entropy
@@ -361,7 +505,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			// secret contains both digits and alphabetical characters.
 			// TODO: this should be replaced with stop words
 			if strings.HasPrefix(rule.RuleID, "generic") {
-				if !containsDigit(secret) {
+				if !containsDigit(finding.Secret) {
 					continue
 				}
 			}
@@ -370,6 +514,17 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		findings = append(findings, finding)
 	}
 	return findings
+}
+
+func allTrue(bools []bool) bool {
+	allMatch := true
+	for _, check := range bools {
+		if !check {
+			allMatch = false
+			break
+		}
+	}
+	return allMatch
 }
 
 // addFinding synchronously adds a finding to the findings slice

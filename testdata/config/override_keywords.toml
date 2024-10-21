@@ -1,0 +1,8 @@
+title = "override a built-in rule's keywords"
+
+[extend]
+path = "../testdata/config/simple.toml"
+
+[[rules]]
+id = "aws-access-key"
+keywords = ["puppy"]
