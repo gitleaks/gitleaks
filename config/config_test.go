@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
@@ -129,7 +130,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName:   "missing_id",
 			cfg:       Config{},
-			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+			wantError: fmt.Errorf("rule |id| is missing or empty, description: Discord API key, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
 		},
 		{
 			cfgName:   "no_regex_or_path",
@@ -282,7 +283,7 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:a)(?:a)"),
+					Regex:       regexp.MustCompile("(a)(a)"),
 					SecretGroup: 2,
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
@@ -366,6 +367,10 @@ func TestTranslate(t *testing.T) {
 				},
 			},
 		},
+		{
+			cfgName:   "extend_invalid_ruleid",
+			wantError: errors.New("rule |id| is missing or empty"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -385,8 +390,17 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			if err != nil && !assert.EqualError(t, tt.wantError, err.Error()) {
-				return
+			if err != nil {
+				if tt.wantError != nil {
+					assert.EqualError(t, tt.wantError, err.Error())
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				if tt.wantError != nil {
+					t.Fatalf("expected error but got none: %v", tt.wantError)
+					return
+				}
 			}
 
 			if len(tt.rules) > 0 {
