@@ -11,8 +11,8 @@ func RubyGemsAPIToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "rubygems-api-token",
 		Description: "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management.",
-		Regex:       utils.GenerateUniqueTokenRegex(`rubygems_[a-f0-9]{48}`, true),
-
+		Regex:       utils.GenerateUniqueTokenRegex(`rubygems_[a-f0-9]{48}`, false),
+		Entropy:     2,
 		Keywords: []string{
 			"rubygems_",
 		},

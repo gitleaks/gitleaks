@@ -11,9 +11,10 @@ import (
 func LinearAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		RuleID:      "linear-api-key",
+		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		Regex:       regexp.MustCompile(`lin_api_(?i)[a-z0-9]{40}`),
+		Entropy:     2,
 		Keywords:    []string{"lin_api_"},
 	}
 
@@ -27,9 +28,10 @@ func LinearAPIToken() *config.Rule {
 func LinearClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		RuleID:      "linear-client-secret",
+		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"linear"}, utils.Hex("32"), true),
+		Entropy:     2,
 		Keywords:    []string{"linear"},
 	}
 

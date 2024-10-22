@@ -11,10 +11,11 @@ import (
 func Clojars() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation.",
 		RuleID:      "clojars-api-token",
+		Description: "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation.",
 		Regex:       regexp.MustCompile(`(?i)CLOJARS_[a-z0-9]{60}`),
-		Keywords:    []string{"clojars"},
+		Entropy:     2,
+		Keywords:    []string{"clojars_"},
 	}
 
 	// validate

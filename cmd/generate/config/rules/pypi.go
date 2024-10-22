@@ -13,8 +13,8 @@ func PyPiUploadToken() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a PyPI upload token, potentially compromising Python package distribution and repository integrity.",
 		RuleID:      "pypi-upload-token",
-		Regex: regexp.MustCompile(
-			`pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}`),
+		Regex:       regexp.MustCompile(`pypi-AgEIcHlwaS5vcmc[\w-]{50,1000}`),
+		Entropy:     3,
 		Keywords: []string{
 			"pypi-AgEIcHlwaS5vcmc",
 		},

@@ -12,6 +12,7 @@ func SquareAccessToken() *config.Rule {
 		RuleID:      "square-access-token",
 		Description: "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:EAAA|sq0atp-)[\w-]{22,60}`, false),
+		Entropy:     2,
 		Keywords:    []string{"sq0atp-", "EAAA"},
 	}
 
@@ -33,6 +34,7 @@ func SquareSecret() *config.Rule {
 		RuleID:      "square-secret",
 		Description: "Square Secret",
 		Regex:       utils.GenerateUniqueTokenRegex(`sq0csp-[\w-]{43}`, false),
+		Entropy:     2,
 		Keywords:    []string{"sq0csp-"},
 	}
 

@@ -11,9 +11,10 @@ import (
 func EasyPost() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified an EasyPost API token, which could lead to unauthorized postal and shipment service access and data exposure.",
 		RuleID:      "easypost-api-token",
+		Description: "Identified an EasyPost API token, which could lead to unauthorized postal and shipment service access and data exposure.",
 		Regex:       regexp.MustCompile(`\bEZAK(?i)[a-z0-9]{54}`),
+		Entropy:     2,
 		Keywords:    []string{"EZAK"},
 	}
 
@@ -27,9 +28,10 @@ func EasyPost() *config.Rule {
 func EasyPostTestAPI() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected an EasyPost test API token, risking exposure of test environments and potentially sensitive shipment data.",
 		RuleID:      "easypost-test-api-token",
+		Description: "Detected an EasyPost test API token, risking exposure of test environments and potentially sensitive shipment data.",
 		Regex:       regexp.MustCompile(`\bEZTK(?i)[a-z0-9]{54}`),
+		Entropy:     2,
 		Keywords:    []string{"EZTK"},
 	}
 

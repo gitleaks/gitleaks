@@ -17,7 +17,7 @@ func KubernetesSecret() *config.Rule {
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
 	//language=regexp
-	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
+	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
 
 	// define rule
 	r := config.Rule{
@@ -46,6 +46,11 @@ func KubernetesSecret() *config.Rule {
 
 	// validate
 	tps := map[string]string{
+		"base64-characters.yaml": `
+apiVersion: v1
+kind: Secret
+data:
+	password: AAAAAAAAAAC7hjsA+H3owFygUv4w5B67lcSx14zff9FCPADiNbSwYWgE+O7Dhiy5tkRecs21ljjofvebe6xsYlA4cVmght0=`,
 		"comment.yaml": `
 apiVersion: v1
 kind: Secret
