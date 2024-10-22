@@ -43,6 +43,7 @@ paths = [
     '''(^|/)pnpm-lock\.yaml$''',
     '''(^|/)npm-shrinkwrap\.json$''',
     '''(^|/)bower_components/.*?$''',
+    '''(^|/)jquery(-ui)?-[a-zA-Z0-9.-]+\.js$''',
     '''(^|/)Pipfile\.lock$''',
     '''(^|/)poetry\.lock$''',
     '''(?i)/?(v?env|virtualenv)/lib/.+$''',

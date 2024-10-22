@@ -71,7 +71,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)mvnw(\.cmd)?$`),
 				regexp.MustCompile(`(^|/)\.mvn/wrapper/MavenWrapperDownloader\.java$`),
 
-				// ----------- Node.js files -----------
+				// ----------- JavaScript files -----------
 				// Dependencies and lock files.
 				regexp.MustCompile(`(^|/)node_modules/.*?$`),
 				regexp.MustCompile(`(^|/)package-lock\.json$`),
@@ -79,6 +79,8 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)pnpm-lock\.yaml$`),
 				regexp.MustCompile(`(^|/)npm-shrinkwrap\.json$`),
 				regexp.MustCompile(`(^|/)bower_components/.*?$`),
+				// TODO: Add more common static assets, such as swagger-ui.
+				regexp.MustCompile(`(^|/)jquery(-ui)?-[a-zA-Z0-9.-]+\.js$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
