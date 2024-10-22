@@ -23,7 +23,7 @@ func PlaidAccessID() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("plaid", secrets.NewSecret(utils.AlphaNumeric("24"))),
+		utils.GenerateSampleSecret("plaid", secrets.NewSecret(`[a-zA-Z0-9]{24}`)),
 	}
 	return utils.Validate(r, tps, nil)
 }
