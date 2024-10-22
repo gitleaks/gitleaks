@@ -82,6 +82,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)bower_components(/.*)?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
 				regexp.MustCompile(`(^|/)(angular|bootstrap|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
+				regexp.MustCompile(`(^|/)javascript\.json$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
@@ -99,7 +100,7 @@ func CreateGlobalConfig() config.Config {
 				// Misc
 				regexp.MustCompile(`verification-metadata\.xml`),
 				regexp.MustCompile(`Database.refactorlog`),
-				//regexp.MustCompile(`vendor`),
+				// regexp.MustCompile(`vendor`),
 			},
 			StopWords: []string{
 				// ----------- Secrets -----------

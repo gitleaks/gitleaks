@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/scm"
+	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -25,27 +27,38 @@ var protectCmd = &cobra.Command{
 }
 
 func runProtect(cmd *cobra.Command, args []string) {
-	source, err := cmd.Flags().GetString("source")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not get source")
-	}
-	initConfig(source)
+	// start timer
+	start := time.Now()
+	source := mustGetStringFlag(cmd, "source")
 
 	// setup config (aka, the thing that defines rules)
+	initConfig(source)
 	cfg := Config(cmd)
 
-	exitCode, _ := cmd.Flags().GetInt("exit-code")
-	staged, _ := cmd.Flags().GetBool("staged")
-	start := time.Now()
+	// create detector
 	detector := Detector(cmd, cfg, source)
 
-	// start git scan
-	var findings []report.Finding
-	gitCmd, err := sources.NewGitDiffCmd(source, staged)
-	if err != nil {
-		logging.Fatal().Err(err).Msg("")
-	}
-	findings, err = detector.DetectGit(gitCmd)
+	// parse flags
+	exitCode := mustGetIntFlag(cmd, "exit-code")
+	staged := mustGetBoolFlag(cmd, "staged")
 
+	// start git scan
+	var (
+		findings []report.Finding
+		err      error
+
+		gitCmd *sources.GitCmd
+		remote *detect.RemoteInfo
+	)
+
+	if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
+		logging.Fatal().Err(err).Msg("could not create Git diff cmd")
+	}
+	remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
+
+	if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
+		// don't exit on error, just log it
+		logging.Error().Err(err).Msg("failed to scan Git repository")
+	}
 	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

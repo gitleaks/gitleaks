@@ -276,7 +276,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 
 	// Validate report settings.
-	reportPath := mustGetStringFlag("report-path")
+	reportPath := mustGetStringFlag(cmd, "report-path")
 	if reportPath != "" {
 		if reportPath != report.StdoutReportPath {
 			// Ensure the path is writable.
@@ -291,8 +291,8 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		// Build report writer.
 		var (
 			reporter       report.Reporter
-			reportFormat   = mustGetStringFlag("report-format")
-			reportTemplate = mustGetStringFlag("report-template")
+			reportFormat   = mustGetStringFlag(cmd, "report-format")
+			reportTemplate = mustGetStringFlag(cmd, "report-template")
 		)
 		switch strings.TrimSpace(strings.ToLower(reportFormat)) {
 		case "csv":
@@ -323,14 +323,6 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 
 	return detector
-}
-
-func mustGetStringFlag(name string) string {
-	reportPath, err := rootCmd.Flags().GetString(name)
-	if err != nil {
-		logging.Fatal().Msg(err.Error())
-	}
-	return reportPath
 }
 
 func bytesConvert(bytes uint64) string {
@@ -441,4 +433,28 @@ func FormatDuration(d time.Duration) string {
 		scale = scale / 10
 	}
 	return d.Round(scale / 100).String()
+}
+
+func mustGetBoolFlag(cmd *cobra.Command, name string) bool {
+	value, err := cmd.Flags().GetBool(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
+}
+
+func mustGetIntFlag(cmd *cobra.Command, name string) int {
+	value, err := cmd.Flags().GetInt(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
+}
+
+func mustGetStringFlag(cmd *cobra.Command, name string) string {
+	value, err := cmd.Flags().GetString(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
 }

@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/scm"
+	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -12,6 +14,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(gitCmd)
+	gitCmd.Flags().String("platform", "", "the target platform used to generate links (github, gitlab)")
 	gitCmd.Flags().Bool("staged", false, "scan staged commits (good for pre-commit)")
 	gitCmd.Flags().Bool("pre-commit", false, "scan using git diff")
 	gitCmd.Flags().String("log-opts", "", "git log options")
@@ -25,10 +28,8 @@ var gitCmd = &cobra.Command{
 }
 
 func runGit(cmd *cobra.Command, args []string) {
-	var (
-		findings []report.Finding
-		err      error
-	)
+	// start timer
+	start := time.Now()
 
 	// grab source
 	source := "."
@@ -39,55 +40,46 @@ func runGit(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	initConfig(source)
-
 	// setup config (aka, the thing that defines rules)
+	initConfig(source)
 	cfg := Config(cmd)
 
-	// start timer
-	start := time.Now()
-
-	// grab source
+	// create detector
 	detector := Detector(cmd, cfg, source)
 
-	// set exit code
-	exitCode, err := cmd.Flags().GetInt("exit-code")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not get exit code")
-	}
+	// parse flags
+	exitCode := mustGetIntFlag(cmd, "exit-code")
+	logOpts := mustGetStringFlag(cmd, "log-opts")
+	staged := mustGetBoolFlag(cmd, "staged")
+	preCommit := mustGetBoolFlag(cmd, "pre-commit")
 
 	var (
-		gitCmd    *sources.GitCmd
-		logOpts   string
-		preCommit bool
-		staged    bool
-	)
-	logOpts, err = cmd.Flags().GetString("log-opts")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not call GetString() for log-opts")
-	}
-	staged, err = cmd.Flags().GetBool("staged")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not call GetBool() for staged")
-	}
-	preCommit, err = cmd.Flags().GetBool("pre-commit")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not call GetBool() for pre-commit")
-	}
+		findings []report.Finding
+		err      error
 
+		gitCmd      *sources.GitCmd
+		scmPlatform scm.Platform
+		remote      *detect.RemoteInfo
+	)
 	if preCommit || staged {
-		gitCmd, err = sources.NewGitDiffCmd(source, staged)
-		if err != nil {
+		if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 		}
+		// Remote info + links are irrelevant for staged changes.
+		remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
 	} else {
-		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
-		if err != nil {
+		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git log cmd")
+		}
+		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
+			logging.Fatal().Err(err).Send()
+		}
+		if remote, err = detect.NewRemoteInfo(scmPlatform, source); err != nil {
+			logging.Fatal().Err(err).Msg("failed to scan Git repository")
 		}
 	}
 
-	findings, err = detector.DetectGit(gitCmd)
+	findings, err = detector.DetectGit(gitCmd, remote)
 	if err != nil {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")
