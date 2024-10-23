@@ -83,3 +83,35 @@ func TestConfigAllowlistRegexes(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigAllowlistPaths(t *testing.T) {
+	tests := map[string]struct {
+		invalid []string
+		valid   []string
+	}{
+		"javascript - jquery.js": {
+			invalid: []string{
+				`src/main/resources/static/jquery-ui-1.12.1/jquery-ui-min.js`,
+				`src/main/resources/static/js/jquery-ui-1.10.4.min.js`,
+			},
+		},
+	}
+
+	cfg := CreateGlobalConfig()
+	allowlist := cfg.Allowlist
+	for name, cases := range tests {
+		t.Run(name, func(t *testing.T) {
+			for _, c := range cases.invalid {
+				if !allowlist.PathAllowed(c) {
+					t.Errorf("invalid path not marked as allowed: %s", c)
+				}
+			}
+
+			for _, c := range cases.valid {
+				if allowlist.PathAllowed(c) {
+					t.Errorf("valid path marked as allowed: %s", c)
+				}
+			}
+		})
+	}
+}
