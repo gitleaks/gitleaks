@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"golang.org/x/exp/maps"
 )
 
 type AllowlistMatchCondition int
@@ -93,6 +95,23 @@ func (a *Allowlist) Validate() error {
 		len(a.Regexes) == 0 &&
 		len(a.StopWords) == 0 {
 		return fmt.Errorf("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords")
+	}
+
+	// Deduplicate commits and stopwords.
+	if len(a.Commits) > 0 {
+		uniqueCommits := make(map[string]struct{})
+		for _, commit := range a.Commits {
+			uniqueCommits[commit] = struct{}{}
+		}
+		a.Commits = maps.Keys(uniqueCommits)
+	}
+
+	if len(a.StopWords) > 0 {
+		uniqueStopwords := make(map[string]struct{})
+		for _, stopWord := range a.StopWords {
+			uniqueStopwords[stopWord] = struct{}{}
+		}
+		a.StopWords = maps.Keys(uniqueStopwords)
 	}
 
 	return nil

@@ -381,7 +381,6 @@ func TestTranslate(t *testing.T) {
 			}
 
 			var regexComparer = func(x, y *regexp.Regexp) bool {
-				// Compare the string representation of the regex patterns.
 				if x == nil || y == nil {
 					return x == y
 				}
