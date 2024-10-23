@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/report"
 	"os"
 	"regexp"
 	"strings"
 	"sync"
-
-	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/report"
+	"time"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
@@ -23,6 +23,10 @@ import (
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 10 * 1_000 // 10kb
+
+	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
+	// This is useful for identifying problematic files and tuning the allowlist.
+	SlowWarningThreshold = 5 * time.Second
 )
 
 var newLineRegexp = regexp.MustCompile("\n")
