@@ -84,18 +84,10 @@ func CreateGlobalConfig() config.Config {
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
-				regexp.MustCompile(`(^|/)Pipfile\.lock$`),
-				regexp.MustCompile(`(^|/)poetry\.lock$`),
+				regexp.MustCompile(`(^|/)(Pipfile|poetry)\.lock$`),
 				// Virtual environments
-				// env/lib/python3.7/site-packages/urllib3/util/url.py
-				regexp.MustCompile(`(?i)/?(v?env|virtualenv)/lib/.+$`),
-				// /python/3.7.4/Lib/site-packages/dask/bytes/tests/test_bytes_utils.py
-				// python/3.7.4/Lib/site-packages/fsspec/utils.py
-				// python/2.7.16.32/Lib/bsddb/test/test_dbenv.py
-				regexp.MustCompile(`(?i)/?python/[23](\.\d{1,2})+/lib/.+$`),
-				// python/lib/python3.8/site-packages/boto3/data/ec2/2016-04-01/resources-1.json
-				// python/lib/python3.8/site-packages/botocore/data/alexaforbusiness/2017-11-09/service-2.json
-				regexp.MustCompile(`(?i)/?python/lib/python[23](\.\d{1,2})+/.+$`),
+				regexp.MustCompile(`(?i)/?(v?env|virtualenv)/lib(64)?/.+$`),
+				regexp.MustCompile(`(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+/|python/[23](\.\d{1,2})+/lib(64)?/).+$`),
 				// dist-info directory (https://py-pkgs.org/04-package-structure.html#building-sdists-and-wheels)
 				regexp.MustCompile(`(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info/.+$`),
 
