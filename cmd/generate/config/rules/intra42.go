@@ -9,12 +9,11 @@ import (
 func Intra42ClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Found a Intra42 client secret, which could lead to unauthorized access to the 42School API and sensitive data.",
 		RuleID:      "intra42-client-secret",
-		Regex:       utils.GenerateUniqueTokenRegex(`s-s4t2(?:ud|af)-(?i)[abcdef0123456789]{64}`, false),
+		Description: "Found a Intra42 client secret, which could lead to unauthorized access to the 42School API and sensitive data.",
+		Regex:       utils.GenerateUniqueTokenRegex(`s-s4t2(?:ud|af)-(?i)[a-f0-9]{64}`, false),
 		Entropy:     3,
 		Keywords: []string{
-			"intra",
 			"s-s4t2ud-",
 			"s-s4t2af-",
 		},
