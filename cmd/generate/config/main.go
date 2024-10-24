@@ -147,6 +147,7 @@ func main() {
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
 		rules.OktaAccessToken(),
+		rules.OnfidoAPIToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
 		rules.PlaidAccessID(),
