@@ -95,6 +95,28 @@ func TestConfigAllowlistPaths(t *testing.T) {
 				`src/main/resources/static/js/jquery-ui-1.10.4.min.js`,
 			},
 		},
+		"python": {
+			invalid: []string{
+				// lock files
+				`Pipfile.lock`, `poetry.lock`,
+				// virtual environments
+				"env/lib/python3.7/site-packages/urllib3/util/url.py",
+				"venv/Lib/site-packages/regex-2018.08.29.dist-info/DESCRIPTION.rst",
+				"venv/lib64/python3.5/site-packages/pynvml.py",
+				"python/python3/virtualenv/Lib/site-packages/pyphonetics/utils.py",
+				"virtualenv/lib64/python3.7/base64.py",
+				// packages
+				"cde-root/usr/lib64/python2.4/site-packages/Numeric.pth",
+				"lib/python3.9/site-packages/setuptools/_distutils/msvccompiler.py",
+				"lib/python3.8/site-packages/botocore/data/alexaforbusiness/2017-11-09/service-2.json",
+				"code/python/3.7.4/Lib/site-packages/dask/bytes/tests/test_bytes_utils.py",
+				"python/3.7.4/Lib/site-packages/fsspec/utils.py",
+				"python/2.7.16.32/Lib/bsddb/test/test_dbenv.py",
+				"python/lib/python3.8/site-packages/boto3/data/ec2/2016-04-01/resources-1.json",
+				// distinfo
+				"libs/PyX-0.15.dist-info/AUTHORS",
+			},
+		},
 	}
 
 	cfg := CreateGlobalConfig()
