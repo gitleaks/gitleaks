@@ -13,7 +13,7 @@ func SumoLogicAccessID() *config.Rule {
 		Description: "Discovered a SumoLogic Access ID, potentially compromising log management services and data analytics integrity.",
 		// TODO: Make 'su' case-sensitive.
 		Regex:   utils.GenerateSemiGenericRegex([]string{"(?-i:[Ss]umo|SUMO)"}, "su[a-zA-Z0-9]{12}", false),
-		Entropy: 3,
+		Entropy: 2.5,
 		Keywords: []string{
 			"sumo",
 		},
@@ -25,7 +25,7 @@ func SumoLogicAccessID() *config.Rule {
 		`sumologic_access_id = "sug5XpdpaoxtOH"`,     // gitleaks:allow
 		`export SUMOLOGIC_ACCESSID="suDbJw97o9WVo0"`, // gitleaks:allow
 		`SUMO_ACCESS_ID = "suGyI5imvADdvU"`,          // gitleaks:allow
-		utils.GenerateSampleSecret("sumo", "su"+secrets.NewSecret(utils.AlphaNumeric("12"))),
+		utils.GenerateSampleSecret("sumo", secrets.NewSecret(`su[a-zA-Z0-9]{12}`)),
 	}
 	fps := []string{
 		`- (NSNumber *)sumOfProperty:(NSString *)property;`,

@@ -15,7 +15,7 @@ func PlaidAccessID() *config.Rule {
 		Description: "Uncovered a Plaid Client ID, which could lead to unauthorized financial service integrations and data breaches.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"plaid"}, utils.AlphaNumeric("24"), true),
 
-		Entropy: 3.5,
+		Entropy: 3.4,
 		Keywords: []string{
 			"plaid",
 		},
@@ -23,7 +23,7 @@ func PlaidAccessID() *config.Rule {
 
 	// validate
 	tps := []string{
-		utils.GenerateSampleSecret("plaid", secrets.NewSecret(utils.AlphaNumeric("24"))),
+		utils.GenerateSampleSecret("plaid", secrets.NewSecret(`[a-zA-Z0-9]{24}`)),
 	}
 	return utils.Validate(r, tps, nil)
 }
