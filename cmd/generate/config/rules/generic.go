@@ -3,6 +3,7 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"regexp"
 )
 
 func GenericCredential() *config.Rule {
@@ -35,6 +36,11 @@ func GenericCredential() *config.Rule {
 		Entropy: 3.5,
 		Allowlists: []config.Allowlist{
 			{
+				// NOTE: this is a goofy hack to get around the fact there golang's regex engine does not support positive lookaheads.
+				// Ideally we would want to ensure the secret contains both numbers and alphabetical characters, not just alphabetical characters.
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`^[a-zA-Z_.-]+$`),
+				},
 				StopWords: DefaultStopWords,
 			},
 		},
