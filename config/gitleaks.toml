@@ -544,7 +544,9 @@ keywords = [
 ]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
 [rules.allowlist]
-stopwords = [
+regexes = [
+    '''^[a-zA-Z_.-]+$''',
+]stopwords = [
     "000000",
     "aaaaaa",
     "about",
