@@ -50,6 +50,8 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`^\{\d{0,2}}$`),                       // Python (https://docs.python.org/3/tutorial/inputoutput.html)
 				// Urban Code Deploy (https://www.ibm.com/support/pages/replace-token-step-replaces-replacement-values-windows-variables)
 				regexp.MustCompile(`^@([A-Z_]+|[a-z_]+)@$`),
+
+				// ----------- Miscellaneous -----------
 			},
 			Paths: []*regexp.Regexp{
 				regexp.MustCompile(`gitleaks\.toml`),
@@ -80,7 +82,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)npm-shrinkwrap\.json$`),
 				regexp.MustCompile(`(^|/)bower_components/.*?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
-				regexp.MustCompile(`(^|/)jquery(-ui)?-[a-zA-Z0-9.-]+\.js$`),
+				regexp.MustCompile(`(^|/)(jquery(-?ui)?|swagger-?ui)-[a-zA-Z0-9.-]+\.js(\.map)?$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
@@ -99,6 +101,11 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`verification-metadata.xml`),
 				regexp.MustCompile(`Database.refactorlog`),
 				//regexp.MustCompile(`vendor`),
+			},
+			StopWords: []string{
+				// ----------- Secrets -----------
+				// Checkmarx client secret. (https://github.com/checkmarx-ts/checkmarx-python-sdk/blob/86560f6e2a3e46d16322101294da10d5d190312d/README.md?plain=1#L56)
+				"014df517-39d1-4453-b7b3-9930c563627c",
 			},
 		},
 	}
