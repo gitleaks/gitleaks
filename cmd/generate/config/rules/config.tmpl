@@ -52,20 +52,18 @@ tags = [
 {{- if eq (len $rule.Allowlists) 1 }}{{ with index $rule.Allowlists 0}}{{ if or .Regexes .Paths .Commits .StopWords }}
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
 [rules.allowlist]
-{{ with .MatchCondition }}condition = "{{ . }}"
-{{ end -}}
-{{- with .Commits }}commits = [
+{{- with .MatchCondition }}{{println}}condition = "{{ .MatchCondition.String }}"{{ end }}
+{{- with .Commits -}}{{println}}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
-{{- with .Paths }}paths = [
+{{- with .Paths }}{{println}}paths = [
     {{ range $j, $path := . }}'''{{ $path }}''',{{ end }}
 ]{{ end }}
-{{- with .RegexTarget }}regexTarget = "{{ . }}"
-{{ end -}}
-{{- with .Regexes }}regexes = [{{ range $i, $regex := . }}
+{{- if and .RegexTarget .Regexes }}{{println}}regexTarget = "{{ .RegexTarget }}"{{ end -}}
+{{- with .Regexes }}{{println}}regexes = [{{ range $i, $regex := . }}
     '''{{ $regex }}''',{{ end }}
 ]{{ end }}
-{{- with .StopWords }}stopwords = [{{ range $j, $stopword := . }}
+{{- with .StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
 ]{{ end }}{{ end }}{{ end }}
 {{ else }}
@@ -84,7 +82,7 @@ tags = [
 {{- with $allowlist.Regexes }}regexes = [{{ range $i, $regex := . }}
     '''{{ $regex }}''',{{ end }}
 ]{{ end }}
-{{- with $allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
+{{ with $allowlist.StopWords }}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
 ]{{ end }}{{ end }}{{ end }}
 {{ end }}{{ end }}

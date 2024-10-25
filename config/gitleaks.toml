@@ -529,14 +529,15 @@ keywords = ["aiza"]
 [[rules]]
 id = "generic-api-key"
 description = "Detected a Generic API Key, potentially exposing access to various services and sensitive operations."
-regex = '''(?i)[\w.-]{0,10}?(?:key|api|token|secret|client|passwd|password|auth|access)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+regex = '''(?i)[\w.-]{0,10}?(?:key|api|token|secret|credential|creds|passwd|password|auth|access)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 entropy = 3.5
 keywords = [
     "key",
     "api",
     "token",
     "secret",
-    "client",
+    "credential",
+    "creds",
     "passwd",
     "password",
     "auth",
@@ -544,6 +545,10 @@ keywords = [
 ]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
 [rules.allowlist]
+regexTarget = "match"
+regexes = [
+    '''(?i)(public[_.-]?(key|token)|api[_.-]?(version|id)|(secret)[_.-]?name|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(primary|foreign|natural|definition|hot)[_.-]?key|key[_.-]?(alias|board|code|stone|storetype|word|up|down|left|right)|rapid|capital)''',
+]
 stopwords = [
     "000000",
     "aaaaaa",
@@ -1171,6 +1176,7 @@ stopwords = [
     "jbos",
     "jekyll",
     "jenkin",
+    "jetbrains",
     "job-",
     "job.",
     "job_",
@@ -1714,6 +1720,7 @@ stopwords = [
     "smart",
     "smtp",
     "snake",
+    "snapshot",
     "snippet",
     "soap",
     "social",
