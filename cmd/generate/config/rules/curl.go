@@ -20,11 +20,11 @@ func CurlBasicAuth() *config.Rule {
 			{
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`[^:]+:(change(it|me)|pass(word)?|pwd|test|token|\*+|x+)`), // common placeholder passwords
-					regexp.MustCompile(`<[^>]+>:<[^>]+>|<[^:]+:[^>]+>`),                           // <placeholder>
+					regexp.MustCompile(`['"]?<[^>]+>['"]?:['"]?<[^>]+>|<[^:]+:[^>]+>['"]?`),       // <placeholder>
 					regexp.MustCompile(`[^:]+:\[[^]]+]`),                                          // [placeholder]
-					regexp.MustCompile(`[^:]+:\$(\d|\w+|\{(\d|\w+)})`),                            // $1 or $VARIABLE
+					regexp.MustCompile(`['"]?[^:]+['"]?:['"]?\$(\d|\w+|\{(\d|\w+)})['"]?`),        // $1 or $VARIABLE
 					regexp.MustCompile(`\$\([^)]+\):\$\([^)]+\)`),                                 // $(cat login.txt)
-					regexp.MustCompile(`\$?{{[^}]+}}:\$?{{[^}]+}}`),                               // ${{ secrets.FOO }} or {{ .Values.foo }}
+					regexp.MustCompile(`['"]?\$?{{[^}]+}}['"]?:['"]?\$?{{[^}]+}}['"]?`),           // ${{ secrets.FOO }} or {{ .Values.foo }}
 				},
 			},
 		},
@@ -63,6 +63,7 @@ func CurlBasicAuth() *config.Rule {
 		`curl -u "myusername" http://localhost:15130/api/check_user/`, // no password
 		`curl -u username:token`,
 		`curl -u "${_username}:${_password}"`,
+		`curl -u "${username}":"${password}"`,
 		`curl -k -X POST -I -u "SRVC_JENKINS:${APPID}"`,
 
 		// long
@@ -96,7 +97,7 @@ nc -u -l 41234`,
 // https://curl.se/docs/manpage.html#-H
 func CurlHeaderAuth() *config.Rule {
 	// language=regexp
-	authPat := `(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-)?Api-?(?:Key|Token)|Token):[ \t]{0,5}([\w=~@.+/-]{8,}))`
+	authPat := `(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-(?:[a-z]+-)?)?(?:Api-?)?(?:Key|Token)):[ \t]{0,5}([\w=~@.+/-]{8,}))`
 	r := config.Rule{
 		RuleID: "curl-auth-header",
 		// TODO: Description: "",
@@ -160,6 +161,8 @@ func CurlHeaderAuth() *config.Rule {
      -H "Accept: application/json" \`, // apikey
 		`curl -X POST --header "Api-Token: Sk94HG7f6KB"`, // api-token
 		`curl -XPOST http://localhost:8080/api/tasks -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -H "Token: 3fea6af1349166ea" -d "content=hello-curl"`, // token
+		`curl -X GET https://octopus.corp.net/
+     -H "X-Octopus-ApiKey: 3a16750d-d363-41a4-8ebd-035408f7730f" \`, // X-$thing-ApiKey
 	}
 	fps := []string{
 		// Placeholders
