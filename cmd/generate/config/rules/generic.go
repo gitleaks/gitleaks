@@ -17,7 +17,8 @@ func GenericCredential() *config.Rule {
 			"api",
 			"token",
 			"secret",
-			"client",
+			"credential",
+			"creds",
 			"passwd",
 			"password",
 			"auth",
@@ -28,7 +29,8 @@ func GenericCredential() *config.Rule {
 			"api",
 			"token",
 			"secret",
-			"client",
+			"credential",
+			"creds",
 			"passwd",
 			"password",
 			"auth",
@@ -42,9 +44,12 @@ func GenericCredential() *config.Rule {
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)(` +
 						`public[_.-]?(key|token)` + // public key -> not a secret
-						`|(api|client)[_.-]?(version|id)` + // version/id -> not a secret
-						`|(secret|client)[_.-]?name` + // name of client, name of env variable, ...
-						`|key[_.-]?word|(?-i:[DdMm]onkey|[DM]ONKEY)|keyboard|keying|keystone` + // common words containing "key"
+						`|api[_.-]?(version|id)` + // version/id -> not a secret
+						`|(secret)[_.-]?name` + // name of e.g. env variable
+						`|issuerkeyhash` + // part of ssl cert
+						`|(?-i:[DdMm]onkey|[DM]ONKEY)|keying` + // common words containing "key"
+						`|(primary|foreign|natural|definition|hot)[_.-]?key` +
+						`|key[_.-]?(alias|board|code|stone|storetype|word|up|down|left|right)` +
 						`|rapid|capital` + // common words containing "api"
 						`)`),
 				},
@@ -58,13 +63,14 @@ func GenericCredential() *config.Rule {
 	tps := []string{
 		utils.GenerateSampleSecret("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443"), //gitleaks:allow
 		utils.GenerateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
-		`"client_pw" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
+		`"credentials" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
 		`passwd = ` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`private-key: ` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{100}`),
 		`mySecretString=` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 		`some_api_token_123 = "` + newPlausibleSecret(`[a-zA-Z0-9]{60}`) + `"`,
 		`todo_secret_do_not_commit = ` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
+		`creds = ` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 	}
 	fps := []string{
 		`client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.client-vpn-endpoint.id`,
@@ -83,6 +89,10 @@ R5: Regulatory--21`,
 		`rapidstring:marm64-uwp=fail`,
 		`<entry key="jetbrains.mps.v8_elimination" value="executed" />`,
 		`event-bus-message-api:rc0.15.0_20231217_1420-SNAPSHOT'`,
+		`primaryKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		`foreignKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		`key_down_event=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		`issuerKeyHash=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 	}
 	return utils.Validate(r, tps, fps)
 }
