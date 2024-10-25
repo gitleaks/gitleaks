@@ -146,6 +146,7 @@ func main() {
 		rules.NPM(),
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
+		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
