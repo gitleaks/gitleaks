@@ -22,6 +22,9 @@ regexes = [{{ range $i, $regex := . }}
 paths = [{{ range $i, $path := . }}
     '''{{ $path }}''',{{ end }}
 ]{{ end }}
+{{- with .Allowlist.StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
+    "{{ $stopword }}",{{ end }}
+]{{ end }}
 
 {{ range $i, $rule := .Rules }}[[rules]]
 id = "{{$rule.RuleID}}"
