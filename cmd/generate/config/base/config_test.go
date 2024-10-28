@@ -95,6 +95,7 @@ func TestConfigAllowlistPaths(t *testing.T) {
 				`src/main/resources/static/js/jquery-ui-1.10.4.min.js`,
 				`swagger/swaggerui/swagger-ui-bundle.js.map`,
 				`swagger/swaggerui/swagger-ui-es-bundle.js.map`,
+				`src/main/static/swagger-ui.min.js`,
 			},
 		},
 		"python": {
