@@ -91,8 +91,10 @@ func TestConfigAllowlistPaths(t *testing.T) {
 	}{
 		"javascript - common static assets": {
 			invalid: []string{
+				`src/main/static/lib/angular.1.2.16.min.js`,
 				`src/main/resources/static/jquery-ui-1.12.1/jquery-ui-min.js`,
 				`src/main/resources/static/js/jquery-ui-1.10.4.min.js`,
+				`src-static/js/plotly.min.js`,
 				`swagger/swaggerui/swagger-ui-bundle.js.map`,
 				`swagger/swaggerui/swagger-ui-es-bundle.js.map`,
 				`src/main/static/swagger-ui.min.js`,

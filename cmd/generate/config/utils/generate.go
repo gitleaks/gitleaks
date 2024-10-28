@@ -15,9 +15,9 @@ const (
 	caseInsensitive = `(?i)`
 
 	// identifier prefix (just an ignore group)
-	identifierCaseInsensitivePrefix = `[\w.-]{0,10}?(?i:`
+	identifierCaseInsensitivePrefix = `[\w.-]{0,50}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
-	identifierPrefix                = `[\w.-]{0,10}?(?:`
+	identifierPrefix                = `[\w.-]{0,50}?(?:`
 	identifierSuffix                = `)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}`
 
 	// commonly used assignment operators or function call
