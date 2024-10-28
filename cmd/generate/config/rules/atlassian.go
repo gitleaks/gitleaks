@@ -18,12 +18,8 @@ func Atlassian() *config.Rule {
 				true,
 			),
 			utils.GenerateUniqueTokenRegex(`ATATT3[A-Za-z0-9_\-=]{186}`, false),
-				[]string{"atlassian", "confluence", "jira"},
-				`[A-Za-z0-9_\-=]{192}`,
-				false,
-			),
 		),
-		Entropy: 3.5,
+		Entropy:  3.5,
 		Keywords: []string{"atlassian", "confluence", "jira"},
 	}
 
