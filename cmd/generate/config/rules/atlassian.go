@@ -14,13 +14,13 @@ func Atlassian() *config.Rule {
 		Regex: utils.MergeRegexps(
 			utils.GenerateSemiGenericRegex(
 				[]string{"atlassian", "confluence", "jira"},
-				utils.AlphaNumeric("24"),
-				true,
+				`[a-zA-Z0-9{24}`,
+				false,
 			),
-			utils.GenerateUniqueTokenRegex(`ATATT3[A-Za-z0-9_\-=]{186}`, false),
+			utils.GenerateUniqueTokenRegex(`ATATT3[\w-]{177}=[A-F0-9]{8}`, false),
 		),
 		Entropy:  3.5,
-		Keywords: []string{"atlassian", "confluence", "jira"},
+		Keywords: []string{"atlassian", "confluence", "jira", "atatt3"},
 	}
 
 	// validate
