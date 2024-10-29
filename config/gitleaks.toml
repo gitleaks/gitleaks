@@ -517,6 +517,13 @@ regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
 keywords = ["fio-u-"]
 
 [[rules]]
+id = "freemius-secret-key"
+description = "Detected a Freemius secret key, potentially exposing sensitive information."
+regex = '''(?i)["']secret_key["']\s*=>\s*["'](sk_[\S]{29})["']'''
+path = '''(?i)\.php$'''
+keywords = ["secret_key"]
+
+[[rules]]
 id = "freshbooks-access-token"
 description = "Discovered a Freshbooks Access Token, posing a risk to accounting software access and sensitive financial data exposure."
 regex = '''(?i)[\w.-]{0,10}?(?:freshbooks)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-z0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
