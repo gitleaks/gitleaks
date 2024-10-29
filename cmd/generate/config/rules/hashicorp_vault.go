@@ -28,10 +28,10 @@ func VaultServiceToken() *config.Rule {
 	// validate
 	tps := []string{
 		// Old
-		utils.GenerateSampleSecret("vault", secrets.NewSecret(`s\.[a-zA-Z0-9]{24}`)),
+		utils.GenerateSampleSecret("vault", secrets.NewSecret(`s\.[0-9][a-zA-Z0-9]{23}`)),
 		`token: s.ZC9Ecf4M5g9o34Q6RkzGsj0z`,
 		// New
-		utils.GenerateSampleSecret("vault", secrets.NewSecret(`hvs\.[\w\-]{90}`)),
+		utils.GenerateSampleSecret("vault", secrets.NewSecret(`hvs\.[0-9][\w\-]{89}`)),
 		`-vaultToken hvs.CAESIP2jTxc9S2K7Z6CtcFWQv7-044m_oSsxnPE1H3nF89l3GiYKHGh2cy5sQmlIZVNyTWJNcDRsYWJpQjlhYjVlb1cQh6PL8wEYAg"`, // longer than 100 chars
 	}
 	fps := []string{
