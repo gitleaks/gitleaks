@@ -43,7 +43,7 @@ paths = [
     '''(^|/)pnpm-lock\.yaml$''',
     '''(^|/)npm-shrinkwrap\.json$''',
     '''(^|/)bower_components/.*?$''',
-    '''(^|/)(jquery(-?ui)?|swagger-?ui)-[a-zA-Z0-9.-]+\.js(\.map)?$''',
+    '''(^|/)(jquery(-?ui)?|swagger-?ui)[a-zA-Z0-9.-]+\.js(\.map)?$''',
     '''(^|/)(Pipfile|poetry)\.lock$''',
     '''(?i)/?(v?env|virtualenv)/lib(64)?/.+$''',
     '''(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+/|python/[23](\.\d{1,2})+/lib(64)?/).+$''',
@@ -153,7 +153,7 @@ keywords = [
 [[rules]]
 id = "aws-access-token"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
-regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+regex = '''\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 entropy = 3
 keywords = [
     "a3t",
@@ -2086,6 +2086,55 @@ entropy = 3
 keywords = ["ghr_"]
 
 [[rules]]
+id = "gitlab-cicd-job-token"
+description = "Identified a GitLab CI/CD Job Token, potential access to projects and some APIs on behalf of a user while the CI job is running."
+regex = '''glcbt-[0-9a-zA-Z]{1,5}_[0-9a-zA-Z_-]{20}'''
+entropy = 3
+keywords = ["glcbt-"]
+
+[[rules]]
+id = "gitlab-deploy-token"
+description = "Identified a GitLab Deploy Token, risking access to repositories, packages and containers with write access."
+regex = '''gldt-[0-9a-zA-Z_\-]{20}'''
+entropy = 3
+keywords = ["gldt-"]
+
+[[rules]]
+id = "gitlab-feature-flag-client-token"
+description = "Identified a GitLab feature flag client token, risks exposing user lists and features flags used by an application."
+regex = '''glffct-[0-9a-zA-Z_\-]{20}'''
+entropy = 3
+keywords = ["glffct-"]
+
+[[rules]]
+id = "gitlab-feed-token"
+description = "Identified a GitLab feed token, risking exposure of user data."
+regex = '''glft-[0-9a-zA-Z_\-]{20}'''
+entropy = 3
+keywords = ["glft-"]
+
+[[rules]]
+id = "gitlab-incoming-mail-token"
+description = "Identified a GitLab incoming mail token, risking manipulation of data sent by mail."
+regex = '''glimt-[0-9a-zA-Z_\-]{25}'''
+entropy = 3
+keywords = ["glimt-"]
+
+[[rules]]
+id = "gitlab-kubernetes-agent-token"
+description = "Identified a GitLab Kubernetes Agent token, risking access to repos and registry of projects connected via agent."
+regex = '''glagent-[0-9a-zA-Z_\-]{50}'''
+entropy = 3
+keywords = ["glagent-"]
+
+[[rules]]
+id = "gitlab-oauth-app-secret"
+description = "Identified a GitLab OIDC Application Secret, risking access to apps using GitLab as authentication provider."
+regex = '''gloas-[0-9a-zA-Z_\-]{64}'''
+entropy = 3
+keywords = ["gloas-"]
+
+[[rules]]
 id = "gitlab-pat"
 description = "Identified a GitLab Personal Access Token, risking unauthorized access to GitLab repositories and codebase exposure."
 regex = '''glpat-[\w-]{20}'''
@@ -2105,6 +2154,27 @@ description = "Discovered a GitLab Runner Registration Token, posing a risk to C
 regex = '''GR1348941[\w-]{20}'''
 entropy = 3
 keywords = ["gr1348941"]
+
+[[rules]]
+id = "gitlab-runner-authentication-token"
+description = "Discovered a GitLab Runner Authentication Token, posing a risk to CI/CD pipeline integrity and unauthorized access."
+regex = '''glrt-[0-9a-zA-Z_\-]{20}'''
+entropy = 3
+keywords = ["glrt-"]
+
+[[rules]]
+id = "gitlab-scim-token"
+description = "Discovered a GitLab SCIM Token, posing a risk to unauthorized access for a organization or instance."
+regex = '''glsoat-[0-9a-zA-Z_\-]{20}'''
+entropy = 3
+keywords = ["glsoat-"]
+
+[[rules]]
+id = "gitlab-session-cookie"
+description = "Discovered a GitLab Session Cookie, posing a risk to unauthorized access to a user account."
+regex = '''_gitlab_session=[0-9a-z]{32}'''
+entropy = 3
+keywords = ["_gitlab_session="]
 
 [[rules]]
 id = "gitter-access-token"
@@ -2473,6 +2543,13 @@ keywords = [
     "new-york-times",
     "newyorktimes",
 ]
+
+[[rules]]
+id = "octopus-deploy-api-key"
+description = "Discovered a potential Octopus Deploy API key, risking application deployments and operational security."
+regex = '''\b(API-[A-Z0-9]{26})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
+keywords = ["api-"]
 
 [[rules]]
 id = "okta-access-token"

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"os"
 	"text/template"
+
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 
 	"github.com/rs/zerolog/log"
 
@@ -100,9 +101,19 @@ func main() {
 		rules.GitHubOauth(),
 		rules.GitHubApp(),
 		rules.GitHubRefresh(),
+		rules.GitlabCiCdJobToken(),
+		rules.GitlabDeployToken(),
+		rules.GitlabFeatureFlagClientToken(),
+		rules.GitlabFeedToken(),
+		rules.GitlabIncomingMailToken(),
+		rules.GitlabKubernetesAgentToken(),
+		rules.GitlabOauthAppSecret(),
 		rules.GitlabPat(),
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
+		rules.GitlabRunnerAuthenticationToken(),
+		rules.GitlabScimToken(),
+		rules.GitlabSessionCookie(),
 		rules.GitterAccessToken(),
 		rules.GrafanaApiKey(),
 		rules.GrafanaCloudApiToken(),
@@ -147,6 +158,7 @@ func main() {
 		rules.NPM(),
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
+		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
