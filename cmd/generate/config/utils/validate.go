@@ -25,7 +25,8 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		if len(d.DetectString(fp)) != 0 {
+		findings := d.DetectString(fp)
+		if len(findings) != 0 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
