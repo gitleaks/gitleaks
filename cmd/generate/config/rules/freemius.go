@@ -12,7 +12,7 @@ func Freemius() *config.Rule {
 		Description: "Detected a Freemius secret key.",
 		RuleID:      "freemius-secret-key",
 		Regex: utils.GenerateSemiGenericRegex([]string{"secret_key"},
-			`sk_[\S]{29}`, true),
+			`sk_[\S]{29}`, false),
 		Keywords: []string{"secret_key"},
 	}
 
