@@ -13,7 +13,7 @@ func AWS() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		RuleID:      "aws-access-token",
-		Regex:       utils.GenerateUniqueTokenRegex("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}", false),
+		Regex:       regexp.MustCompile(`\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})\b`),
 		Entropy:     3,
 		Keywords: []string{
 			// https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
@@ -35,6 +35,10 @@ func AWS() *config.Rule {
 	// validate
 	tps := []string{
 		utils.GenerateSampleSecret("AWS", "AKIALALEMEL33243OLIB"), // gitleaks:allow
+
+		// as part of a URL
+		`https://aws.example.com/test/abc?AWSAccessKeyId=AKIALALEMEL33243OLIB&Signature=test`, // gitleaks:allow
+
 		// current AWS tokens cannot contain [0,1,8,9], so their entropy is slightly lower than expected.
 		utils.GenerateSampleSecret("AWS", "AKIA"+secrets.NewSecret("[A-Z2-7]{16}")),
 		utils.GenerateSampleSecret("AWS", "ASIA"+secrets.NewSecret("[A-Z2-7]{16}")),
