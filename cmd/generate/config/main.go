@@ -4,6 +4,8 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
@@ -24,6 +26,7 @@ func main() {
 	gitleaksConfigPath := os.Args[1]
 
 	configRules := []*config.Rule{
+		rules.OnePasswordServiceAccountToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
 		rules.AdobeClientSecret(),
@@ -37,6 +40,7 @@ func main() {
 		rules.Atlassian(),
 		rules.Authress(),
 		rules.AWS(),
+		rules.AzureActiveDirectoryClientSecret(),
 		rules.BitBucketClientID(),
 		rules.BitBucketClientSecret(),
 		rules.BittrexAccessKey(),
@@ -48,9 +52,12 @@ func main() {
 		rules.CloudflareAPIKey(),
 		rules.CloudflareGlobalAPIKey(),
 		rules.CloudflareOriginCAKey(),
+		rules.CohereAPIToken(),
 		rules.ConfluentAccessToken(),
 		rules.ConfluentSecretKey(),
 		rules.Contentful(),
+		rules.CurlHeaderAuth(),
+		rules.CurlBasicAuth(),
 		rules.Databricks(),
 		rules.DatadogtokenAccessToken(),
 		rules.DefinedNetworkingAPIToken(),
@@ -93,9 +100,19 @@ func main() {
 		rules.GitHubOauth(),
 		rules.GitHubApp(),
 		rules.GitHubRefresh(),
+		rules.GitlabCiCdJobToken(),
+		rules.GitlabDeployToken(),
+		rules.GitlabFeatureFlagClientToken(),
+		rules.GitlabFeedToken(),
+		rules.GitlabIncomingMailToken(),
+		rules.GitlabKubernetesAgentToken(),
+		rules.GitlabOauthAppSecret(),
 		rules.GitlabPat(),
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
+		rules.GitlabRunnerAuthenticationToken(),
+		rules.GitlabScimToken(),
+		rules.GitlabSessionCookie(),
 		rules.GitterAccessToken(),
 		rules.GrafanaApiKey(),
 		rules.GrafanaCloudApiToken(),
@@ -138,7 +155,9 @@ func main() {
 		rules.NewRelicBrowserAPIKey(),
 		rules.NewRelicInsertKey(),
 		rules.NPM(),
+		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
+		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
@@ -150,6 +169,7 @@ func main() {
 		rules.PlanetScaleOAuthToken(),
 		rules.PostManAPI(),
 		rules.Prefect(),
+		rules.PrivateAIToken(),
 		rules.PrivateKey(),
 		rules.PulumiAPIToken(),
 		rules.PyPiUploadToken(),
@@ -227,7 +247,9 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
 
-	if err = tmpl.Execute(f, config.Config{Rules: ruleLookUp}); err != nil {
+	cfg := base.CreateGlobalConfig()
+	cfg.Rules = ruleLookUp
+	if err = tmpl.Execute(f, cfg); err != nil {
 		log.Fatal().Err(err).Msg("could not execute template")
 	}
 

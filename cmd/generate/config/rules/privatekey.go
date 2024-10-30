@@ -12,7 +12,7 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
 		RuleID:      "private-key",
-		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*KEY(?: BLOCK)?----`),
+		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?KEY(?: BLOCK)?-----`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 

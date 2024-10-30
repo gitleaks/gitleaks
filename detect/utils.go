@@ -162,6 +162,9 @@ func printFinding(f report.Finding, noColor bool) {
 		fmt.Println("")
 		return
 	}
+	if len(f.Tags) > 0 {
+		fmt.Printf("%-12s %s\n", "Tags:", f.Tags)
+	}
 	fmt.Printf("%-12s %s\n", "File:", f.File)
 	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {

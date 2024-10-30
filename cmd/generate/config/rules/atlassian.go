@@ -17,9 +17,9 @@ func Atlassian() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("atlassian", secrets.NewSecret(utils.AlphaNumeric("24"))),
-		utils.GenerateSampleSecret("confluence", secrets.NewSecret(utils.AlphaNumeric("24"))),
-	}
+	tps := utils.GenerateSampleSecrets("atlassian", secrets.NewSecret(utils.AlphaNumeric("24")))
+	tps = append(tps, utils.GenerateSampleSecrets("confluence", secrets.NewSecret(utils.AlphaNumeric("24")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("jira", secrets.NewSecret(utils.AlphaNumeric("24")))...)
+
 	return utils.Validate(r, tps, nil)
 }

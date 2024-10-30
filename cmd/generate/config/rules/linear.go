@@ -11,31 +11,29 @@ import (
 func LinearAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		RuleID:      "linear-api-key",
+		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		Regex:       regexp.MustCompile(`lin_api_(?i)[a-z0-9]{40}`),
+		Entropy:     2,
 		Keywords:    []string{"lin_api_"},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("linear", "lin_api_"+secrets.NewSecret(utils.AlphaNumeric("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("linear", "lin_api_"+secrets.NewSecret(utils.AlphaNumeric("40")))
 	return utils.Validate(r, tps, nil)
 }
 
 func LinearClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		RuleID:      "linear-client-secret",
+		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"linear"}, utils.Hex("32"), true),
+		Entropy:     2,
 		Keywords:    []string{"linear"},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("linear", secrets.NewSecret(utils.Hex("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("linear", secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }

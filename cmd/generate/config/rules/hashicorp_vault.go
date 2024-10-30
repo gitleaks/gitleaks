@@ -14,24 +14,29 @@ func VaultServiceToken() *config.Rule {
 		Description: "Identified a Vault Service Token, potentially compromising infrastructure security and access to sensitive credentials.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:hvs\.[\w-]{90,120}|s\.(?i:[a-z0-9]{24}))`, false),
 		Entropy:     3.5,
-		Keywords:    []string{"hvs", "s."},
-		Allowlist: config.Allowlist{
-			Regexes: []*regexp.Regexp{
-				// https://github.com/gitleaks/gitleaks/issues/1490#issuecomment-2334166357
-				regexp.MustCompile(`s\.[A-Za-z]{24}`),
+		Keywords:    []string{"hvs.", "s."},
+		Allowlists: []config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					// https://github.com/gitleaks/gitleaks/issues/1490#issuecomment-2334166357
+					regexp.MustCompile(`s\.[A-Za-z]{24}`),
+				},
 			},
 		},
 	}
 
 	// validate
-	tps := []string{
-		// Old
-		utils.GenerateSampleSecret("vault", "s."+secrets.NewSecret(utils.AlphaNumeric("24"))),
+	// Old
+	tps := utils.GenerateSampleSecrets("vault", "s."+secrets.NewSecret(`s\.[a-zA-Z0-9]{24}`))
+	tps = append(tps,
 		`token: s.ZC9Ecf4M5g9o34Q6RkzGsj0z`,
-		// New
-		utils.GenerateSampleSecret("vault", "hvs."+secrets.NewSecret(utils.AlphaNumericExtendedShort("90"))),
+	)
+	// New
+	tps = append(tps, utils.GenerateSampleSecrets("vault", secrets.NewSecret(`hvs\.[\w\-]{90}`))...)
+	tps = append(tps,
 		`-vaultToken hvs.CAESIP2jTxc9S2K7Z6CtcFWQv7-044m_oSsxnPE1H3nF89l3GiYKHGh2cy5sQmlIZVNyTWJNcDRsYWJpQjlhYjVlb1cQh6PL8wEYAg"`, // longer than 100 chars
-	}
+	)
+
 	fps := []string{
 		// Old
 		`  credentials: new AWS.SharedIniFileCredentials({ profile: '<YOUR_PROFILE>' })`,                              // word boundary start
@@ -50,15 +55,15 @@ func VaultServiceToken() *config.Rule {
 func VaultBatchToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
 		RuleID:      "vault-batch-token",
-		Regex:       utils.GenerateUniqueTokenRegex(`hvb\.[a-z0-9_-]{138,212}`, true),
-		Keywords:    []string{"hvb"},
+		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
+		Regex:       utils.GenerateUniqueTokenRegex(`hvb\.[\w-]{138,300}`, false),
+		Entropy:     4,
+		Keywords:    []string{"hvb."},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138"))),
-	}
+	tps := utils.GenerateSampleSecrets("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138")))
+	tps = append(tps, `hvb.AAAAAQJgxDgqsGNorpoOR7hPZ5SU-ynBvCl764jyRP_fnX7WvkdkDzGjbLNGdPdtlY33Als2P36yDZueqzfdGw9RsaTeaYXSH7E4RYSWuRoQ9YRKIw8o7mDDY2ZcT3KOB7RwtW1w1FN2eDqcy_sbCjXPaM1iBVH-mqMSYRmRd2nb5D1SJPeBzIYRqSglLc31wUGN7xEzyrKUczqOKsIcybQA`) // gitleaks:allow
 	return utils.Validate(r, tps, nil)
 }

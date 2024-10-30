@@ -20,8 +20,6 @@ func GoCardless() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gocardless", "live_"+secrets.NewSecret(utils.AlphaNumericExtended("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("gocardless", "live_"+secrets.NewSecret(utils.AlphaNumericExtended("40")))
 	return utils.Validate(r, tps, nil)
 }

@@ -15,22 +15,61 @@ const configPath = "../testdata/config/"
 
 func TestTranslate(t *testing.T) {
 	tests := []struct {
-		cfgName   string
-		cfg       Config
+		// Configuration file basename to load, from `../testdata/config/`.
+		cfgName string
+		// Expected result.
+		cfg Config
+		// Rules to compare.
+		rules []string
+		// Error to expect.
 		wantError error
 	}{
+		{
+			cfgName: "allowlist_old_compat",
+			cfg: Config{
+				Rules: map[string]Rule{"example": {
+					RuleID:   "example",
+					Regex:    regexp.MustCompile(`example\d+`),
+					Tags:     []string{},
+					Keywords: []string{},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: AllowlistMatchOr,
+							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
+						},
+					},
+				},
+				},
+			},
+		},
+		{
+			cfgName:   "allowlist_invalid_empty",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: [[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+		},
+		{
+			cfgName:   "allowlist_invalid_old_and_new",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]"),
+		},
+		{
+			cfgName:   "allowlist_invalid_regextarget",
+			cfg:       Config{},
+			wantError: fmt.Errorf("example: unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+		},
 		{
 			cfgName: "allow_aws_re",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Regexes: []*regexp.Regexp{
-							regexp.MustCompile("AKIALALEMEL33243OLIA"),
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: AllowlistMatchOr,
+							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
 				},
@@ -41,13 +80,16 @@ func TestTranslate(t *testing.T) {
 			cfgName: "allow_commit",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Commits: []string{"allowthiscommit"},
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: AllowlistMatchOr,
+							Commits:        []string{"allowthiscommit"},
+						},
 					},
 				},
 				},
@@ -57,14 +99,15 @@ func TestTranslate(t *testing.T) {
 			cfgName: "allow_path",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Tags:        []string{"key", "AWS"},
 					Keywords:    []string{},
-					RuleID:      "aws-access-key",
-					Allowlist: Allowlist{
-						Paths: []*regexp.Regexp{
-							regexp.MustCompile(".go"),
+					Tags:        []string{"key", "AWS"},
+					Allowlists: []Allowlist{
+						{
+							MatchCondition: AllowlistMatchOr,
+							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
 				},
@@ -75,14 +118,13 @@ func TestTranslate(t *testing.T) {
 			cfgName: "entropy_group",
 			cfg: Config{
 				Rules: map[string]Rule{"discord-api-key": {
+					RuleID:      "discord-api-key",
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
-					RuleID:      "discord-api-key",
-					Allowlist:   Allowlist{},
+					Keywords:    []string{},
 					Entropy:     3.5,
 					SecretGroup: 3,
 					Tags:        []string{},
-					Keywords:    []string{},
 				},
 				},
 			},
@@ -107,49 +149,80 @@ func TestTranslate(t *testing.T) {
 			cfg: Config{
 				Rules: map[string]Rule{
 					"aws-access-key": {
+						RuleID:      "aws-access-key",
 						Description: "AWS Access Key",
 						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-access-key",
+						Tags:        []string{"key", "AWS"},
 					},
 					"aws-secret-key": {
+						RuleID:      "aws-secret-key",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-secret-key",
+						Tags:        []string{"key", "AWS"},
 					},
 					"aws-secret-key-again": {
+						RuleID:      "aws-secret-key-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						RuleID:      "aws-secret-key-again",
+						Tags:        []string{"key", "AWS"},
 					},
 				},
 			},
 		},
 		{
-			cfgName: "extend_rule_allowlist",
+			cfgName: "extend_rule_allowlist_or",
 			cfg: Config{
 				Rules: map[string]Rule{
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						Allowlist: Allowlist{
-							Commits: []string{"abcdefg1"},
-							Regexes: []*regexp.Regexp{
-								regexp.MustCompile(`foo.+bar`),
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: AllowlistMatchOr,
+								StopWords:      []string{"fake"},
 							},
-							RegexTarget: "line",
-							Paths: []*regexp.Regexp{
-								regexp.MustCompile(`ignore\.xaml`),
+							{
+								MatchCondition: AllowlistMatchOr,
+								Commits:        []string{"abcdefg1"},
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
+								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
+								RegexTarget:    "line",
+								StopWords:      []string{"example"},
 							},
-							StopWords: []string{"example"},
+						},
+					},
+				},
+			},
+		},
+		{
+			cfgName: "extend_rule_allowlist_and",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key-again-again": {
+						RuleID:      "aws-secret-key-again-again",
+						Description: "AWS Secret Key",
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: AllowlistMatchOr,
+								StopWords:      []string{"fake"},
+							},
+							{
+								MatchCondition: AllowlistMatchAnd,
+								Commits:        []string{"abcdefg1"},
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
+								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
+								RegexTarget:    "line",
+								StopWords:      []string{"example"},
+							},
 						},
 					},
 				},
@@ -163,14 +236,116 @@ func TestTranslate(t *testing.T) {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
-						Tags:        []string{"key", "AWS"},
 						Keywords:    []string{},
-						Allowlist: Allowlist{
-							Paths: []*regexp.Regexp{
-								regexp.MustCompile(`something.py`),
+						Tags:        []string{"key", "AWS"},
+						Allowlists: []Allowlist{
+							{
+								MatchCondition: AllowlistMatchOr,
+								Paths:          []*regexp.Regexp{regexp.MustCompile(`something.py`)},
 							},
 						},
 					},
+				},
+			},
+		},
+		{
+			cfgName: "override_description",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "Puppy Doggy",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_entropy",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Entropy:     999.0,
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_secret_group",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:a)(?:a)"),
+					SecretGroup: 2,
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_regex",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:a)"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_path",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Path:        regexp.MustCompile("(?:puppy)"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_tags",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{},
+					Tags:        []string{"key", "AWS", "puppy"},
+				},
+				},
+			},
+		},
+		{
+			cfgName: "override_keywords",
+			rules:   []string{"aws-access-key"},
+			cfg: Config{
+				Rules: map[string]Rule{"aws-access-key": {
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+					Keywords:    []string{"puppy"},
+					Tags:        []string{"key", "AWS"},
+				},
 				},
 			},
 		},
@@ -193,12 +368,19 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			if !assert.Equal(t, tt.wantError, err) {
+			if err != nil && !assert.EqualError(t, tt.wantError, err.Error()) {
 				return
 			}
 
+			if len(tt.rules) > 0 {
+				rules := make(map[string]Rule)
+				for _, name := range tt.rules {
+					rules[name] = cfg.Rules[name]
+				}
+				cfg.Rules = rules
+			}
+
 			var regexComparer = func(x, y *regexp.Regexp) bool {
-				// Compare the string representation of the regex patterns.
 				if x == nil || y == nil {
 					return x == y
 				}

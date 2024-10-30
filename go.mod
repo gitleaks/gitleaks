@@ -8,7 +8,7 @@ require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/fatih/semgroup v1.2.0
-	github.com/gitleaks/go-gitdiff v0.9.0
+	github.com/gitleaks/go-gitdiff v0.9.1
 	github.com/google/go-cmp v0.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/rs/zerolog v1.26.1

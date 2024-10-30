@@ -11,16 +11,17 @@ func Prefect() *config.Rule {
 	r := config.Rule{
 		RuleID:      "prefect-api-token",
 		Description: "Detected a Prefect API token, risking unauthorized access to workflow management and automation services.",
-		Regex:       utils.GenerateUniqueTokenRegex(`pnu_[a-z0-9]{36}`, true),
-
+		Regex:       utils.GenerateUniqueTokenRegex(`pnu_[a-zA-Z0-9]{36}`, false),
+		Entropy:     2,
 		Keywords: []string{
 			"pnu_",
 		},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("api-token", "pnu_"+secrets.NewSecret(utils.AlphaNumeric("36"))),
+	tps := utils.GenerateSampleSecrets("api-token", "pnu_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	fps := []string{
+		`PREFECT_API_KEY = "pnu_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"`,
 	}
-	return utils.Validate(r, tps, nil)
+	return utils.Validate(r, tps, fps)
 }

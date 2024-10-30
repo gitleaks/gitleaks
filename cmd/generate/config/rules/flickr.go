@@ -19,8 +19,6 @@ func FlickrAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("flickr", secrets.NewSecret(utils.AlphaNumeric("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("flickr", secrets.NewSecret(utils.AlphaNumeric("32")))
 	return utils.Validate(r, tps, nil)
 }

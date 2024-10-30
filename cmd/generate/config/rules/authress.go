@@ -12,9 +12,10 @@ func Authress() *config.Rule {
 	// Rule Definition
 	// (Note: When changes are made to this, rerun `go generate ./...` and commit the config/gitleaks.toml file
 	r := config.Rule{
-		Description: "Uncovered a possible Authress Service Client Access Key, which may compromise access control services and sensitive data.",
 		RuleID:      "authress-service-client-access-key",
-		Regex:       utils.GenerateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.acc[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`, true),
+		Description: "Uncovered a possible Authress Service Client Access Key, which may compromise access control services and sensitive data.",
+		Regex:       utils.GenerateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_(?i)[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.(?-i:acc)[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`, false),
+		Entropy:     2,
 		Keywords:    []string{"sc_", "ext_", "scauth_", "authress_"},
 	}
 
@@ -25,8 +26,6 @@ func Authress() *config.Rule {
 	account_id := "acc_" + utils.AlphaNumeric("10")
 	signature_key := utils.AlphaNumericExtendedShort("40")
 
-	tps := []string{
-		utils.GenerateSampleSecret("authress", secrets.NewSecret(fmt.Sprintf(`%s\.%s\.%s\.%s`, service_client_id, access_key_id, account_id, signature_key))),
-	}
+	tps := utils.GenerateSampleSecrets("authress", secrets.NewSecret(fmt.Sprintf(`%s\.%s\.%s\.%s`, service_client_id, access_key_id, account_id, signature_key)))
 	return utils.Validate(r, tps, nil)
 }

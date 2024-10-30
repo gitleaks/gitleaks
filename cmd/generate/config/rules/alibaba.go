@@ -9,9 +9,10 @@ import (
 func AlibabaAccessKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
 		RuleID:      "alibaba-access-key-id",
-		Regex:       utils.GenerateUniqueTokenRegex(`(LTAI)(?i)[a-z0-9]{20}`, true),
+		Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
+		Regex:       utils.GenerateUniqueTokenRegex(`LTAI(?i)[a-z0-9]{20}`, false),
+		Entropy:     2,
 		Keywords:    []string{"LTAI"},
 	}
 
@@ -26,17 +27,14 @@ func AlibabaAccessKey() *config.Rule {
 func AlibabaSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a potential Alibaba Cloud Secret Key, potentially allowing unauthorized operations and data access within Alibaba Cloud.",
 		RuleID:      "alibaba-secret-key",
-		Regex: utils.GenerateSemiGenericRegex([]string{"alibaba"},
-			utils.AlphaNumeric("30"), true),
-
-		Keywords: []string{"alibaba"},
+		Description: "Discovered a potential Alibaba Cloud Secret Key, potentially allowing unauthorized operations and data access within Alibaba Cloud.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"alibaba"}, utils.AlphaNumeric("30"), true),
+		Entropy:     2,
+		Keywords:    []string{"alibaba"},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("alibaba", secrets.NewSecret(utils.AlphaNumeric("30"))),
-	}
+	tps := utils.GenerateSampleSecrets("alibaba", secrets.NewSecret(utils.AlphaNumeric("30")))
 	return utils.Validate(r, tps, nil)
 }

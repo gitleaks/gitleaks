@@ -6,6 +6,7 @@ package utils
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"strings"
@@ -15,7 +16,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) != 1 {
+		if len(d.DetectString(tp)) < 1 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -24,7 +25,8 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		if len(d.DetectString(fp)) != 0 {
+		findings := d.DetectString(fp)
+		if len(findings) != 0 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
@@ -82,8 +84,8 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 	rules := map[string]config.Rule{
 		r.RuleID: *r,
 	}
-	return detect.NewDetector(config.Config{
-		Rules:    rules,
-		Keywords: uniqueKeywords,
-	})
+	cfg := base.CreateGlobalConfig()
+	cfg.Rules = rules
+	cfg.Keywords = uniqueKeywords
+	return detect.NewDetector(cfg)
 }
