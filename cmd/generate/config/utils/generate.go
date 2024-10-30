@@ -28,7 +28,7 @@ const (
 	// \x60 = `
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `(?:\\*[\'"]|[\x60\s|>]){0,5}(`
-	secretSuffix       = `)(?:[\'\"\x60\s;\\<,)]|$)`
+	secretSuffix       = `)(?:[\s\'\"\x60&;\\<,)]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
@@ -113,6 +113,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		//"": "",
 
 		// Miscellaneous
+		//"url - basic auth":      `https://{i}:{s}@example.com/`,
+		"url - query parameter": "https://example.com?{i}Token={s}&fooBar=baz",
 		//TODO: "comment - slash": "//{s} is the password",
 		//TODO: "comment - slash multiline": "/*{s} is the password",
 		//TODO: "comment - hashtag":     "#{s} is the password",
