@@ -17,8 +17,6 @@ func Beamer() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("beamer", "b_"+secrets.NewSecret(utils.AlphaNumericExtended("44"))),
-	}
+	tps := utils.GenerateSampleSecrets("beamer", "b_"+secrets.NewSecret(utils.AlphaNumericExtended("44")))
 	return utils.Validate(r, tps, nil)
 }

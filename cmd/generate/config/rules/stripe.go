@@ -24,11 +24,12 @@ func StripeAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		"stripeToken := \"sk_test_" + secrets.NewSecret(utils.AlphaNumeric("30")) + "\"",
+	tps := utils.GenerateSampleSecrets("stripe", "sk_test_"+secrets.NewSecret(utils.AlphaNumeric("30")))
+	tps = append(tps, utils.GenerateSampleSecrets("stripe", "sk_prod_"+secrets.NewSecret(utils.AlphaNumeric("99")))...)
+	tps = append(tps,
 		"sk_test_51OuEMLAlTWGaDypq4P5cuDHbuKeG4tAGPYHJpEXQ7zE8mKK3jkhTFPvCxnSSK5zB5EQZrJsYdsatNmAHGgb0vSKD00GTMSWRHs", // gitleaks:allow
 		"rk_prod_51OuEMLAlTWGaDypquDn9aZigaJOsa9NR1w1BxZXs9JlYsVVkv5XDu6aLmAxwt5Tgun5WcSwQMKzQyqV16c9iD4sx00BRijuoon", // gitleaks:allow
-	}
+	)
 	fps := []string{"nonMatchingToken := \"task_test_" + secrets.NewSecret(utils.AlphaNumeric("30")) + "\""}
 	return utils.Validate(r, tps, fps)
 }

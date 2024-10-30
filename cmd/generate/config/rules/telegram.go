@@ -2,8 +2,6 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -14,7 +12,7 @@ func TelegramBotToken() *config.Rule {
 		Description: "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram.",
 		RuleID:      "telegram-bot-api-token",
 
-		Regex: regexp.MustCompile(`(?i:telegr(?:[0-9a-z\(-_\t .\\]{0,40})(?:[\s|']|[\s|"]){0,3})(?:=|\|\|:|<=|=>|:|\?=|\()(?:'|\"|\s|=|\x60){0,5}([0-9]{5,16}:A[a-z0-9_\-]{34})(?:['|\"|\n|\r|\s|\x60|;|\\]|$)`),
+		Regex: utils.GenerateSemiGenericRegex([]string{"telegr"}, "[0-9]{5,16}:(?-i:A)[a-z0-9_\\-]{34}", true),
 		Keywords: []string{
 			"telegr",
 		},
@@ -27,24 +25,24 @@ func TelegramBotToken() *config.Rule {
 		maxToken   = secrets.NewSecret(utils.Numeric("16") + ":A" + utils.AlphaNumericExtendedShort("34"))
 		// xsdWithToken = secrets.NewSecret(`<xsd:element name="AgencyIdentificationCode" type="` + Numeric("5") + `:A` + AlphaNumericExtendedShort("34") + `"/>`)
 	)
-	tps := []string{
-		// variable assignment
-		utils.GenerateSampleSecret("telegram", validToken),
+	// variable assignment
+	tps := utils.GenerateSampleSecrets("telegram", validToken)
+	// Token with min bot_id
+	tps = append(tps, utils.GenerateSampleSecrets("telegram", minToken)...)
+	// Token with max bot_id
+	tps = append(tps, utils.GenerateSampleSecrets("telegram", maxToken)...)
+	tps = append(tps,
 		// URL containing token TODO add another url based rule
 		// GenerateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
-		`const bot = new Telegraf("` + validToken + `")`,
+		//TODO: `const bot = new Telegraf("`+validToken+`")`,
 		// .env
-		`TELEGRAM_API_TOKEN = ` + validToken,
+		`TELEGRAM_API_TOKEN = `+validToken,
 		// YAML
-		`telegram bot: ` + validToken,
-		// Token with min bot_id
-		utils.GenerateSampleSecret("telegram", minToken),
-		// Token with max bot_id
-		utils.GenerateSampleSecret("telegram", maxToken),
+		`telegram bot: `+validToken,
 		// Valid token in XSD document TODO separate rule for this
-		// GenerateSampleSecret("telegram", xsdWithToken),
-	}
+		// generateSampleSecret("telegram", xsdWithToken),
+	)
 
 	var (
 		tooSmallToken                = secrets.NewSecret(utils.Numeric("4") + ":A" + utils.AlphaNumericExtendedShort("34"))

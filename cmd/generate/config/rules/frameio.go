@@ -18,8 +18,6 @@ func FrameIO() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("frameio", "fio-u-"+secrets.NewSecret(utils.AlphaNumericExtended("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("frameio", "fio-u-"+secrets.NewSecret(utils.AlphaNumericExtended("64")))
 	return utils.Validate(r, tps, nil)
 }

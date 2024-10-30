@@ -16,9 +16,7 @@ func BitBucketClientID() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("bitbucket", secrets.NewSecret(utils.AlphaNumeric("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("bitbucket", secrets.NewSecret(utils.AlphaNumeric("32")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -33,8 +31,6 @@ func BitBucketClientSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("bitbucket", secrets.NewSecret(utils.AlphaNumeric("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("bitbucket", secrets.NewSecret(utils.AlphaNumeric("64")))
 	return utils.Validate(r, tps, nil)
 }
