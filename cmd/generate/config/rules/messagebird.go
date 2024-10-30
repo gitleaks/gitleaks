@@ -42,9 +42,10 @@ func MessageBirdClientID() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("MessageBird", "9d3e45e5-907d-4056-a088-389ad91fa2aa") // gitleaks:allow
+	tps = append(tps,
 		`const MessageBirdClientID = "9d3e45e5-907d-4056-a088-389ad91fa2aa"`, // gitleaks:allow
-	}
+	)
 	fps := []string{
 		`const MessageBirdClientID = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
