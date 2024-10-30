@@ -19,8 +19,6 @@ func Twilio() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		"twilioAPIKey := \"SK" + secrets.NewSecret(utils.Hex("32")) + "\"",
-	}
+	tps := utils.GenerateSampleSecrets("twilio", "SK"+secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }

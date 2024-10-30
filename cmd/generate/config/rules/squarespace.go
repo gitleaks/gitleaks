@@ -19,8 +19,6 @@ func SquareSpaceAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("squarespace", secrets.NewSecret(utils.Hex8_4_4_4_12())),
-	}
+	tps := utils.GenerateSampleSecrets("squarespace", secrets.NewSecret(utils.Hex8_4_4_4_12()))
 	return utils.Validate(r, tps, nil)
 }

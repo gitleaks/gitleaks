@@ -2,6 +2,7 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -35,7 +36,8 @@ func CloudflareGlobalAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := global_keys
+	tps := utils.GenerateSampleSecrets("cloudflare", secrets.NewSecret(utils.Hex("37")))
+	tps = append(tps, global_keys...)
 	fps := append(api_keys, origin_ca_keys...)
 
 	return utils.Validate(r, tps, fps)
@@ -52,7 +54,8 @@ func CloudflareAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := api_keys
+	tps := utils.GenerateSampleSecrets("cloudflare", secrets.NewSecret(utils.AlphaNumericExtendedShort("40")))
+	tps = append(tps, api_keys...)
 	fps := append(global_keys, origin_ca_keys...)
 
 	return utils.Validate(r, tps, fps)
@@ -70,7 +73,8 @@ func CloudflareOriginCAKey() *config.Rule {
 	}
 
 	// validate
-	tps := origin_ca_keys
+	tps := utils.GenerateSampleSecrets("cloudflare", "v1.0-aaa334dc886f30631ba0a610-0d98ef66290d7e50aac7c27b5986c99e6f3f1084c881d8ac0eae5de1d1aa0644076ff57022069b3237d19afe60ad045f207ef2b16387ee37b749441b2ae2e9ebe5b4606e846475d4a5")
+	tps = append(tps, origin_ca_keys...)
 	fps := append(global_keys, api_keys...)
 
 	return utils.Validate(r, tps, fps)

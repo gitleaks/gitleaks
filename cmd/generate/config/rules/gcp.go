@@ -38,11 +38,11 @@ func GCPAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("gcp", secrets.NewSecret(`AIza[\w-]{35}`)),
+	tps := utils.GenerateSampleSecrets("gcp", secrets.NewSecret(`AIza[\w-]{35}`))
+	tps = append(tps,
 		// non-word character at end
 		`AIzaSyNHxIf32IQ1a1yjl3ZJIqKZqzLAK1XhDk-`, // gitleaks:allow
-	}
+	)
 	fps := []string{
 		`GWw4hjABFzZCGiRpmlDyDdo87Jn9BN9THUA47muVRNunLxsa82tMAdvmrhOqNkRKiYMEAFbTJAIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDq`, // text boundary start
 		`AIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDqabcd123`,                                                                   // text boundary end

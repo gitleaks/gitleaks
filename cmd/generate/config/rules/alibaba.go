@@ -35,8 +35,6 @@ func AlibabaSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("alibaba", secrets.NewSecret(utils.AlphaNumeric("30"))),
-	}
+	tps := utils.GenerateSampleSecrets("alibaba", secrets.NewSecret(utils.AlphaNumeric("30")))
 	return utils.Validate(r, tps, nil)
 }

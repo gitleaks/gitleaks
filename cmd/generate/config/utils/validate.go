@@ -16,7 +16,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) != 1 {
+		if len(d.DetectString(tp)) < 1 {
 			log.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).

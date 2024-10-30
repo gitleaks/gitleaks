@@ -17,9 +17,7 @@ func DropBoxAPISecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("dropbox", secrets.NewSecret(utils.AlphaNumeric("15"))),
-	}
+	tps := utils.GenerateSampleSecrets("dropbox", secrets.NewSecret(utils.AlphaNumeric("15")))
 	return utils.Validate(r, tps, nil)
 }
 

@@ -17,8 +17,6 @@ func Contentful() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("contentful", secrets.NewSecret(utils.AlphaNumeric("43"))),
-	}
+	tps := utils.GenerateSampleSecrets("contentful", secrets.NewSecret(utils.AlphaNumeric("43")))
 	return utils.Validate(r, tps, nil)
 }
