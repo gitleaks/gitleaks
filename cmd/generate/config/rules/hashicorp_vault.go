@@ -1,10 +1,11 @@
 package rules
 
 import (
+	"regexp"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"regexp"
 )
 
 func VaultServiceToken() *config.Rule {
@@ -26,16 +27,14 @@ func VaultServiceToken() *config.Rule {
 	}
 
 	// validate
-	// Old
-	tps := utils.GenerateSampleSecrets("vault", "s."+secrets.NewSecret(`s\.[a-zA-Z0-9]{24}`))
-	tps = append(tps,
+	tps := []string{
+		// Old
+		utils.GenerateSampleSecret("vault", secrets.NewSecret(`s\.[0-9][a-zA-Z0-9]{23}`)),
 		`token: s.ZC9Ecf4M5g9o34Q6RkzGsj0z`,
-	)
-	// New
-	tps = append(tps, utils.GenerateSampleSecrets("vault", secrets.NewSecret(`hvs\.[\w\-]{90}`))...)
-	tps = append(tps,
+		// New
+		utils.GenerateSampleSecret("vault", secrets.NewSecret(`hvs\.[0-9][\w\-]{89}`)),
 		`-vaultToken hvs.CAESIP2jTxc9S2K7Z6CtcFWQv7-044m_oSsxnPE1H3nF89l3GiYKHGh2cy5sQmlIZVNyTWJNcDRsYWJpQjlhYjVlb1cQh6PL8wEYAg"`, // longer than 100 chars
-	)
+	}
 
 	fps := []string{
 		// Old
