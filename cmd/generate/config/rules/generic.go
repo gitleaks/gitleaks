@@ -81,34 +81,36 @@ func GenericCredential() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443") //gitleaks:allow
+	tps = append(tps, utils.GenerateSampleSecrets("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB")...)
+	tps = append(tps,
 		// Access
 		`'access_token': 'eyJ0eXAioiJKV1slS3oASx=='`,
 
 		// API
-		`some_api_token_123 = "` + newPlausibleSecret(`[a-zA-Z0-9]{60}`) + `"`,
+		`some_api_token_123 = "`+newPlausibleSecret(`[a-zA-Z0-9]{60}`)+`"`,
 
 		// Auth
 		// Credentials
 		`"credentials" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
-		`creds = ` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
+		`creds = `+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 
 		// Key
-		`private-key: ` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{100}`),
+		`private-key: `+newPlausibleSecret(`[a-zA-Z0-9\-_.=]{100}`),
 
 		// Password
-		`passwd = ` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		`passwd = `+newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		// TODO: `ID=dbuser;password=` + newPlausibleSecret(`[a-zA-Z0-9+/]{30}={0,3}`) + `;"`,
 
 		// Secret
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
-		`mySecretString=` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
-		`todo_secret_do_not_commit = ` + newPlausibleSecret(`[a-zA-Z0-9]{30}`),
+		`mySecretString=`+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
+		`todo_secret_do_not_commit = `+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 
 		// Token
 		utils.GenerateSampleSecret("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443"), //gitleaks:allow
 		utils.GenerateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
-	}
+	)
 	fps := []string{
 		// Access
 		`"accessor":"rA1wk0Y45YCufyfq",`,

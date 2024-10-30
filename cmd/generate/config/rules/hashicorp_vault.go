@@ -33,7 +33,8 @@ func VaultServiceToken() *config.Rule {
 		// New
 		utils.GenerateSampleSecret("vault", secrets.NewSecret(`hvs\.[0-9][\w\-]{89}`)),
 		`-vaultToken hvs.CAESIP2jTxc9S2K7Z6CtcFWQv7-044m_oSsxnPE1H3nF89l3GiYKHGh2cy5sQmlIZVNyTWJNcDRsYWJpQjlhYjVlb1cQh6PL8wEYAg"`, // longer than 100 chars
-	}
+	)
+
 	fps := []string{
 		// Old
 		`  credentials: new AWS.SharedIniFileCredentials({ profile: '<YOUR_PROFILE>' })`,                              // word boundary start
@@ -60,9 +61,7 @@ func VaultBatchToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138"))),
-		`hvb.AAAAAQJgxDgqsGNorpoOR7hPZ5SU-ynBvCl764jyRP_fnX7WvkdkDzGjbLNGdPdtlY33Als2P36yDZueqzfdGw9RsaTeaYXSH7E4RYSWuRoQ9YRKIw8o7mDDY2ZcT3KOB7RwtW1w1FN2eDqcy_sbCjXPaM1iBVH-mqMSYRmRd2nb5D1SJPeBzIYRqSglLc31wUGN7xEzyrKUczqOKsIcybQA`, // gitleaks:allow
-	}
+	tps := utils.GenerateSampleSecrets("vault", "hvb."+secrets.NewSecret(utils.AlphaNumericExtendedShort("138")))
+	tps = append(tps, `hvb.AAAAAQJgxDgqsGNorpoOR7hPZ5SU-ynBvCl764jyRP_fnX7WvkdkDzGjbLNGdPdtlY33Als2P36yDZueqzfdGw9RsaTeaYXSH7E4RYSWuRoQ9YRKIw8o7mDDY2ZcT3KOB7RwtW1w1FN2eDqcy_sbCjXPaM1iBVH-mqMSYRmRd2nb5D1SJPeBzIYRqSglLc31wUGN7xEzyrKUczqOKsIcybQA`) // gitleaks:allow
 	return utils.Validate(r, tps, nil)
 }

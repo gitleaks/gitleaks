@@ -19,8 +19,6 @@ func DatadogtokenAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("datadog", secrets.NewSecret(utils.AlphaNumeric("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("datadog", secrets.NewSecret(utils.AlphaNumeric("40")))
 	return utils.Validate(r, tps, nil)
 }

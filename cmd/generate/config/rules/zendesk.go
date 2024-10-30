@@ -18,8 +18,6 @@ func ZendeskSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("zendesk", secrets.NewSecret(utils.AlphaNumeric("40"))),
-	}
+	tps := utils.GenerateSampleSecrets("zendesk", secrets.NewSecret(utils.AlphaNumeric("40")))
 	return utils.Validate(r, tps, nil)
 }

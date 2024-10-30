@@ -17,8 +17,8 @@ func InfracostAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}")),
+	tps := utils.GenerateSampleSecrets("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}"))
+	tps = append(tps,
 		`  variable {
     name = "INFRACOST_API_KEY"
     secret_value = "ico-mlCr1Mn3SRcRiZMObUZOTHLcgtH2Lpgt"
@@ -29,7 +29,7 @@ func InfracostAPIToken() *config.Rule {
 		//'X-Api-Key': 'ico-EeDdSfctrmjD14f45f45te5gJ7l6lw4o6M36sXT62a6',
 		//'Content-Type': 'application/json',
 		//}`,
-	}
+	)
 	fps := []string{
 		// Low entropy
 		`ico-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
