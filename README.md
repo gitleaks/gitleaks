@@ -162,7 +162,7 @@ Flags:
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
+  -f, --report-format string          output format (json, jsonextra, csv, junit, sarif) (default "json")
   -r, --report-path string            report file
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
@@ -278,7 +278,7 @@ keywords = [
 tags = ["tag","another tag"]
 
     # ⚠️ In v8.21.0 `[rules.allowlist]` was replaced with `[[rules.allowlists]]`.
-    # This change was backwards-compatible: instances of `[rules.allowlist]` still  work.  
+    # This change was backwards-compatible: instances of `[rules.allowlist]` still  work.
     #
     # You can define multiple allowlists for a rule to reduce false positives.
     # A finding will be ignored if _ANY_ `[[rules.allowlists]]` matches.
