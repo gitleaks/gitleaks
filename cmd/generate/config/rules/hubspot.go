@@ -2,6 +2,7 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -17,9 +18,10 @@ func HubSpot() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	tps := utils.GenerateSampleSecrets("hubspot", secrets.NewSecret(utils.Hex8_4_4_4_12()))
+	tps = append(tps,
 		`const hubspotKey = "b7bc6633-e1fc-431e-b812-4231e2ffdd2e"`, // gitleaks:allow
-	}
+	)
 	fps := []string{
 		`const hubspotKey = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	}
