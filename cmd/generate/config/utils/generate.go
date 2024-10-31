@@ -50,6 +50,16 @@ func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseIn
 	return regexp.MustCompile(sb.String())
 }
 
+func MergeRegexps(regexps ...*regexp.Regexp) *regexp.Regexp {
+	patterns := make([]string, len(regexps))
+
+	for i, r := range regexps {
+		patterns[i] = r.String()
+	}
+
+	return regexp.MustCompile(strings.Join(patterns, "|"))
+}
+
 func writeIdentifiers(sb *strings.Builder, identifiers []string) {
 	sb.WriteString(identifierPrefix)
 	sb.WriteString(strings.Join(identifiers, "|"))
