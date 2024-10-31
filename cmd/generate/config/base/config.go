@@ -82,7 +82,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)npm-shrinkwrap\.json$`),
 				regexp.MustCompile(`(^|/)bower_components/.*?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
-				regexp.MustCompile(`(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]+(\.min)?\.js(\.map)?$`),
+				regexp.MustCompile(`(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.

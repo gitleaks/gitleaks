@@ -59,7 +59,7 @@ func GenericCredential() *config.Rule {
 						`|(credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
 						`|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(alias|board|code|ring|stone|storetype|word|up|down|left|right)` +
+						`|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)` +
 						`|key(store|tab)[_.-]?(file|path)` +
 						`|issuerkeyhash` + // part of ssl cert
 						`|(?-i:[DdMm]onkey|[DM]ONKEY)|keying` + // common words containing "key"
@@ -162,6 +162,8 @@ func GenericCredential() *config.Rule {
 		`sequenceKey = "18"`,
 		`app.keystore.file=env/cert.p12`,
 		`-DKEYTAB_FILE=/tmp/app.keytab`,
+		`	doc.Security.KeySize = PdfEncryptionKeySize.Key128Bit;`,
+		`o.keySelector=n,o.haKey=!1,`,
 		// TODO: Requires line-level allowlists.
 		//`<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//	`secret:

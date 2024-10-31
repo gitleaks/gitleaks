@@ -550,7 +550,7 @@ keywords = [
 [rules.allowlist]
 regexTarget = "match"
 regexes = [
-    '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|ring|stone|storetype|word|up|down|left|right)|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
+    '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
 ]
 stopwords = [
     "000000",
