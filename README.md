@@ -27,7 +27,7 @@
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, API keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
+Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos.
 
 ```
 ➜  ~/code(master) gitleaks git -v
@@ -278,7 +278,7 @@ keywords = [
 tags = ["tag","another tag"]
 
     # ⚠️ In v8.21.0 `[rules.allowlist]` was replaced with `[[rules.allowlists]]`.
-    # This change was backwards-compatible: instances of `[rules.allowlist]` still  work.  
+    # This change was backwards-compatible: instances of `[rules.allowlist]` still  work.
     #
     # You can define multiple allowlists for a rule to reduce false positives.
     # A finding will be ignored if _ANY_ `[[rules.allowlists]]` matches.
