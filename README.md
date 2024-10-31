@@ -162,7 +162,7 @@ Flags:
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
+  -f, --report-format string          output format (json, jsonextra, csv, junit, sarif) (default "json")
   -r, --report-path string            report file
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
