@@ -27,7 +27,7 @@
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
-Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos.
+Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`.
 
 ```
 ➜  ~/code(master) gitleaks git -v
