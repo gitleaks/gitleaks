@@ -25,8 +25,13 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+      - name: Set up gotestsum
+        run: |
+          go install gotest.tools/gotestsum@latest
+
       - name: Test
-        run: make test
+        run: |
+          gotestsum --raw-command -- go test -json ./... --race
 
       - name: Validate Config
         run: go generate ./... && git diff --exit-code
