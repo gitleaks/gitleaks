@@ -20,9 +20,16 @@ func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool) (<-
 		defer close(paths)
 		return filepath.Walk(source,
 			func(path string, fInfo os.FileInfo, err error) error {
+				logger := log.With().Str("path", path).Logger()
 				if err != nil {
+					if os.IsPermission(err) {
+						// This seems to only fail on directories at this stage.
+						logger.Warn().Msg("Skipping directory: permission denied")
+						return filepath.SkipDir
+					}
 					return err
 				}
+
 				if fInfo.Name() == ".git" && fInfo.IsDir() {
 					return filepath.SkipDir
 				}
