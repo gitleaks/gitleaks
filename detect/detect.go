@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -79,7 +80,7 @@ type Detector struct {
 	baselinePath string
 
 	// gitleaksIgnore
-	gitleaksIgnore map[string]bool
+	gitleaksIgnore map[string]struct{}
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
@@ -106,7 +107,7 @@ type Fragment struct {
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
 		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]bool),
+		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
@@ -149,12 +150,25 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		}
 	}()
 	scanner := bufio.NewScanner(file)
-
+	replacer := strings.NewReplacer("\\", "/")
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
 		if line != "" && !strings.HasPrefix(line, "#") {
-			d.gitleaksIgnore[line] = true
+			// Normalize the path.
+			// TODO: Make this a breaking change in v9.
+			s := strings.Split(line, ":")
+			switch len(s) {
+			case 3:
+				// Global fingerprint.
+				s[0] = replacer.Replace(s[0])
+			case 4:
+				// Commit fingerprint.
+				s[1] = replacer.Replace(s[1])
+			default:
+				log.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
+			}
+			d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
 		}
 	}
 	return nil
@@ -293,12 +307,13 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	if rule.Path != nil && rule.Regex == nil && len(encodedSegments) == 0 {
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
+			file := filepath.ToSlash(fragment.FilePath)
 			finding := report.Finding{
-				Description: rule.Description,
-				File:        fragment.FilePath,
-				SymlinkFile: fragment.SymlinkFile,
 				RuleID:      rule.RuleID,
-				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
+				Description: rule.Description,
+				File:        file,
+				SymlinkFile: fragment.SymlinkFile,
+				Match:       fmt.Sprintf("file detected: %s", file),
 				Tags:        rule.Tags,
 			}
 			return append(findings, finding)
@@ -363,18 +378,18 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			Description: rule.Description,
-			File:        fragment.FilePath,
-			SymlinkFile: fragment.SymlinkFile,
 			RuleID:      rule.RuleID,
+			Description: rule.Description,
+			File:        filepath.ToSlash(fragment.FilePath),
+			SymlinkFile: filepath.ToSlash(fragment.SymlinkFile),
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
-			Secret:      secret,
-			Match:       secret,
-			Tags:        append(rule.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Match:       secret,
+			Secret:      secret,
+			Tags:        append(rule.Tags, metaTags...),
 		}
 
 		if !d.IgnoreGitleaksAllow &&
@@ -531,14 +546,12 @@ func (d *Detector) addFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with global Fingerprint %s",
-			finding.Fingerprint)
+		log.Debug().Msgf("ignoring finding with global Fingerprint %s", finding.Fingerprint)
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			log.Debug().Msgf("ignoring finding with Fingerprint %s",
-				finding.Fingerprint)
+			log.Debug().Msgf("ignoring finding with Fingerprint %s", finding.Fingerprint)
 			return
 		}
 	}
