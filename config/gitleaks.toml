@@ -409,14 +409,14 @@ keywords = ["dt0c01"]
 [[rules]]
 id = "easypost-api-token"
 description = "Identified an EasyPost API token, which could lead to unauthorized postal and shipment service access and data exposure."
-regex = '''\bEZAK(?i)[a-z0-9]{54}'''
+regex = '''\bEZAK(?i)[a-z0-9]{54}\b'''
 entropy = 2
 keywords = ["ezak"]
 
 [[rules]]
 id = "easypost-test-api-token"
 description = "Detected an EasyPost test API token, risking exposure of test environments and potentially sensitive shipment data."
-regex = '''\bEZTK(?i)[a-z0-9]{54}'''
+regex = '''\bEZTK(?i)[a-z0-9]{54}\b'''
 entropy = 2
 keywords = ["eztk"]
 
