@@ -15,9 +15,13 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 	for pa := range paths {
 		d.Sema.Go(func() error {
 			logger := log.With().Str("path", pa.Path).Logger()
-			log.Trace().Msgf("Scanning path: %s", pa)
+			logger.Trace().Msg("Scanning path")
 			f, err := os.Open(pa.Path)
 			if err != nil {
+				if os.IsPermission(err) {
+					logger.Warn().Msg("Skipping file: permission denied")
+					return nil
+				}
 				return err
 			}
 			defer f.Close()
