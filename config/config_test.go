@@ -402,12 +402,12 @@ func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
 		expectedKeywords string
 	}{
 		{
-			name:             "Extend base with AWS keyword with new attribute to existing rule",
-			cfgName:          "extend_rule_allowlist_or",
+			name:             "Extend base rule that includes AWS keyword with new attribute",
+			cfgName:          "extend_base_rule_including_keysword_with_attribute",
 			expectedKeywords: "aws",
 		},
 		{
-			name:             "Extend base with a new rule",
+			name:             "Extend base with a new rule with CMS keyword",
 			cfgName:          "extend_with_new_rule",
 			expectedKeywords: "cms",
 		},

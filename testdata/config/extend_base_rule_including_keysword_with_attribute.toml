@@ -4,5 +4,5 @@ title = "gitleaks extended 3"
 path="../testdata/config/extend_rule_keywords_base.toml"
 
 [[rules]]
-    id = "aws-rule-that-is-not-in-base"
-    keywords = ["CMS"]
+    id = "aws-secret-key-again-again"
+    description = "A new description"
