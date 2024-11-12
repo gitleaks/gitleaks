@@ -94,7 +94,6 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			vr.Keywords = []string{}
 		} else {
 			for _, k := range vr.Keywords {
-				// test here (This is the original downcase)
 				keywords[strings.ToLower(k)] = struct{}{}
 			}
 		}
@@ -288,7 +287,6 @@ func (c *Config) extend(extensionConfig Config) {
 			// Rule doesn't exist, add it to the config.
 			c.Rules[ruleID] = baseRule
 			for _, k := range baseRule.Keywords {
-				// Craig test this - extend_with_new_rule
 				c.Keywords[strings.ToLower(k)] = struct{}{}
 			}
 			c.OrderedRules = append(c.OrderedRules, ruleID)
@@ -316,13 +314,7 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
-				// Craig test here - Extend base with AWS keyword with new attribute to existing rule
 				c.Keywords[strings.ToLower(k)] = struct{}{}
-			}
-			// I don't think this is necessary because all of the current keywords are included in the base keywords
-			// Delete this
-			for _, k := range currentRule.Keywords {
-				c.Keywords[k] = struct{}{}
 			}
 			c.Rules[ruleID] = baseRule
 		}
