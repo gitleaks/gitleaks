@@ -432,7 +432,7 @@ func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
 			require.NoError(t, err)
 
 			_, exists := cfg.Keywords[tt.expectedKeywords]
-			require.True(t, exists)
+			require.Truef(t, exists, "The expected keyword %s did not exist as a key of cfg.Keywords", tt.expectedKeywords)
 		})
 	}
 }
