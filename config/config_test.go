@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"regexp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -390,6 +391,48 @@ func TestTranslate(t *testing.T) {
 			if diff := cmp.Diff(tt.cfg.Rules, cfg.Rules, opts); diff != "" {
 				t.Errorf("%s diff: (-want +got)\n%s", tt.cfgName, diff)
 			}
+		})
+	}
+}
+
+func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
+	tests := []struct {
+		name             string
+		cfgName          string
+		expectedKeywords string
+	}{
+		{
+			name:             "Extend base with AWS keyword with new attribute to existing rule",
+			cfgName:          "extend_rule_allowlist_or",
+			expectedKeywords: "aws",
+		},
+		{
+			name:             "Extend base with a new rule",
+			cfgName:          "extend_with_new_rule",
+			expectedKeywords: "cms",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Cleanup(func() {
+				viper.Reset()
+			})
+
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
+
+			var vc ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+
+			_, exists := cfg.Keywords[tt.expectedKeywords]
+			require.True(t, exists)
 		})
 	}
 }
