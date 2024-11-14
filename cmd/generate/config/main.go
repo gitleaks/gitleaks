@@ -182,6 +182,8 @@ func main() {
 		rules.SendGridAPIToken(),
 		rules.SendInBlueAPIToken(),
 		rules.SentryAccessToken(),
+		rules.SentryOrgToken(),
+		rules.SentryUserToken(),
 		rules.ShippoAPIToken(),
 		rules.ShopifyAccessToken(),
 		rules.ShopifyCustomAccessToken(),
