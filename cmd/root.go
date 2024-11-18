@@ -283,16 +283,19 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 	// write report if desired
 	reportPath, _ := cmd.Flags().GetString("report-path")
 	ext, _ := cmd.Flags().GetString("report-format")
-	reportWriter := os.Stdout
-	if reportPath != "" && reportPath != "-" {
-		reportWriter, err = os.Create(reportPath)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not create report file")
-		}
-	}
 
-	if err = report.Write(findings, cfg, ext, reportWriter); err != nil {
-		log.Fatal().Err(err).Msg("could not write")
+	if reportPath != "" {
+		reportWriter := os.Stdout
+		if reportPath != "-" {
+			reportWriter, err = os.Create(reportPath)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not create report file")
+			}
+		}
+
+		if err = report.Write(findings, cfg, ext, reportWriter); err != nil {
+			log.Fatal().Err(err).Msg("could not write")
+		}
 	}
 
 	if err != nil {
