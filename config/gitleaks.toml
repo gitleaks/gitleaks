@@ -2713,9 +2713,24 @@ keywords = ["xkeysib-"]
 
 [[rules]]
 id = "sentry-access-token"
-description = "Found a Sentry Access Token, risking unauthorized access to error tracking services and sensitive application data."
+description = "Found a Sentry.io Access Token (old format), risking unauthorized access to error tracking services and sensitive application data."
 regex = '''(?i)[\w.-]{0,50}?(?:sentry)(?:[ \t\w.-]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
 keywords = ["sentry"]
+
+[[rules]]
+id = "sentry-org-token"
+description = "Found a Sentry.io Organization Token, risking unauthorized access to error tracking services and sensitive application data."
+regex = '''\bsntrys_eyJpYXQiO[a-zA-Z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[a-zA-Z0-9+/]{10,200}={0,2}_[a-zA-Z0-9+/]{43}\b'''
+entropy = 4.5
+keywords = ["sntrys_eyjpyxqio"]
+
+[[rules]]
+id = "sentry-user-token"
+description = "Found a Sentry.io User Token, risking unauthorized access to error tracking services and sensitive application data."
+regex = '''\b(sntryu_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3.5
+keywords = ["sntryu_"]
 
 [[rules]]
 id = "shippo-api-token"
