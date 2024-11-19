@@ -13,7 +13,7 @@ format:
 	go fmt ./...
 
 test:
-	./test.sh
+	./scripts/test.sh
 
 build: format
 	go mod tidy
