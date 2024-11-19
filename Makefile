@@ -12,8 +12,8 @@ test-cover:
 format:
 	go fmt ./...
 
-test: format
-	go test -v ./... --race $(PKG)
+test:
+	./test.sh
 
 build: format
 	go mod tidy
