@@ -5,23 +5,12 @@ import (
 	"io"
 )
 
-func writeJson(findings []Finding, w io.WriteCloser) error {
-	if len(findings) == 0 {
-		findings = []Finding{}
-	}
-	for i := range findings {
-		// Remove `Line` from JSON output
-		findings[i].Line = ""
-	}
-	return writeJsonExtra(findings, w)
+type JsonReporter struct {
 }
 
-func writeJsonExtra(findings []Finding, w io.WriteCloser) error {
-	if len(findings) == 0 {
-		findings = []Finding{}
-	}
-	defer w.Close()
+var _ Reporter = (*JsonReporter)(nil)
 
+func (t *JsonReporter) Write(w io.WriteCloser, findings []Finding) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
 	return encoder.Encode(findings)

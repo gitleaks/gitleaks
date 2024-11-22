@@ -2,11 +2,12 @@ package detect
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

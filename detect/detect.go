@@ -83,6 +83,10 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	// report-related settings.
+	ReportPath string
+	Reporter   report.Reporter
 }
 
 // Fragment contains the data to be scanned
@@ -238,11 +242,11 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.Rule, encodedSegments []EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
-			l := log.With().Str("rule-id", rule.RuleID)
+			l := log.With().Str("rule-id", r.RuleID)
 			if fragment.CommitSHA != "" {
 				l = l.Str("commit", fragment.CommitSHA)
 			}
@@ -252,7 +256,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	)
 
 	// check if filepath or commit is allowed for this rule
-	for _, a := range rule.Allowlists {
+	for _, a := range r.Allowlists {
 		var (
 			isAllowed     bool
 			commitAllowed = a.CommitAllowed(fragment.CommitSHA)
@@ -290,30 +294,30 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		}
 	}
 
-	if rule.Path != nil && rule.Regex == nil && len(encodedSegments) == 0 {
+	if r.Path != nil && r.Regex == nil && len(encodedSegments) == 0 {
 		// Path _only_ rule
-		if rule.Path.MatchString(fragment.FilePath) {
+		if r.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
-				Description: rule.Description,
+				Description: r.Description,
 				File:        fragment.FilePath,
 				SymlinkFile: fragment.SymlinkFile,
-				RuleID:      rule.RuleID,
+				RuleID:      r.RuleID,
 				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-				Tags:        rule.Tags,
+				Tags:        r.Tags,
 			}
 			return append(findings, finding)
 		}
-	} else if rule.Path != nil {
+	} else if r.Path != nil {
 		// if path is set _and_ a regex is set, then we need to check both
 		// so if the path does not match, then we should return early and not
 		// consider the regex
-		if !rule.Path.MatchString(fragment.FilePath) {
+		if !r.Path.MatchString(fragment.FilePath) {
 			return findings
 		}
 	}
 
 	// if path only rule, skip content checks
-	if rule.Regex == nil {
+	if r.Regex == nil {
 		return findings
 	}
 
@@ -329,7 +333,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
 MatchLoop:
-	for _, matchIndex := range rule.Regex.FindAllStringIndex(currentRaw, -1) {
+	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
@@ -363,17 +367,17 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			Description: rule.Description,
+			Description: r.Description,
 			File:        fragment.FilePath,
 			SymlinkFile: fragment.SymlinkFile,
-			RuleID:      rule.RuleID,
+			RuleID:      r.RuleID,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Secret:      secret,
 			Match:       secret,
-			Tags:        append(rule.Tags, metaTags...),
+			Tags:        append(r.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
@@ -387,14 +391,14 @@ MatchLoop:
 
 		// Set the value of |secret|, if the pattern contains at least one capture group.
 		// (The first element is the full match, hence we check >= 2.)
-		groups := rule.Regex.FindStringSubmatch(finding.Secret)
+		groups := r.Regex.FindStringSubmatch(finding.Secret)
 		if len(groups) >= 2 {
-			if rule.SecretGroup > 0 {
-				if len(groups) <= rule.SecretGroup {
+			if r.SecretGroup > 0 {
+				if len(groups) <= r.SecretGroup {
 					// Config validation should prevent this
 					continue
 				}
-				finding.Secret = groups[rule.SecretGroup]
+				finding.Secret = groups[r.SecretGroup]
 			} else {
 				// If |secretGroup| is not set, we will use the first suitable capture group.
 				if len(groups) == 2 {
@@ -434,7 +438,7 @@ MatchLoop:
 		}
 
 		// check if the result matches any of the rule allowlists.
-		for _, a := range rule.Allowlists {
+		for _, a := range r.Allowlists {
 			allowlistTarget := finding.Secret
 			switch a.RegexTarget {
 			case "match":
@@ -485,8 +489,8 @@ MatchLoop:
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
-		if rule.Entropy != 0.0 {
-			if entropy <= rule.Entropy {
+		if r.Entropy != 0.0 {
+			if entropy <= r.Entropy {
 				// entropy is too low, skip this finding
 				continue
 			}
@@ -497,7 +501,7 @@ MatchLoop:
 			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
 			// secret contains both digits and alphabetical characters.
 			// TODO: this should be replaced with stop words
-			if strings.HasPrefix(rule.RuleID, "generic") {
+			if strings.HasPrefix(r.RuleID, "generic") {
 				if !containsDigit(finding.Secret) {
 					continue
 				}

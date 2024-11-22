@@ -1,11 +1,12 @@
 package rules
 
 import (
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
+
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 )
 
 // OpenShift 4 user tokens are prefixed with `sha256~`.

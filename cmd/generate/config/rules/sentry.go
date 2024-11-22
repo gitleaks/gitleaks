@@ -2,10 +2,11 @@ package rules
 
 import (
 	"encoding/base64"
+	"regexp"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"regexp"
 )
 
 func SentryAccessToken() *config.Rule {
