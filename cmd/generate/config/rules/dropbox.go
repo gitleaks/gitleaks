@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func DropBoxAPISecret() *config.Rule {
+func DropBoxAPISecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Identified a Dropbox API secret, which could lead to unauthorized file access and data breaches in Dropbox storage.",
 		RuleID:      "dropbox-api-token",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"dropbox"}, utils.AlphaNumeric("15"), true),
@@ -21,9 +21,9 @@ func DropBoxAPISecret() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func DropBoxShortLivedAPIToken() *config.Rule {
+func DropBoxShortLivedAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "dropbox-short-lived-api-token",
 		Description: "Discovered a Dropbox short-lived API token, posing a risk of temporary but potentially harmful data access and manipulation.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"dropbox"}, `sl\.[a-z0-9\-=_]{135}`, true),
@@ -34,9 +34,9 @@ func DropBoxShortLivedAPIToken() *config.Rule {
 	return &r
 }
 
-func DropBoxLongLivedAPIToken() *config.Rule {
+func DropBoxLongLivedAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "dropbox-long-lived-api-token",
 		Description: "Found a Dropbox long-lived API token, risking prolonged unauthorized access to cloud storage and sensitive data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"dropbox"}, `[a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\-_=]{43}`, true),

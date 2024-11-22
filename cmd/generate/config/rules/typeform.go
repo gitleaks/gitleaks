@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func Typeform() *config.Rule {
+func Typeform() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "typeform-api-token",
 		Description: "Uncovered a Typeform API token, which could lead to unauthorized survey management and data collection.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"typeform"},

@@ -1,22 +1,22 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func VaultServiceToken() *config.Rule {
+func VaultServiceToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "vault-service-token",
 		Description: "Identified a Vault Service Token, potentially compromising infrastructure security and access to sensitive credentials.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:hvs\.[\w-]{90,120}|s\.(?i:[a-z0-9]{24}))`, false),
 		Entropy:     3.5,
 		Keywords:    []string{"hvs.", "s."},
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// https://github.com/gitleaks/gitleaks/issues/1490#issuecomment-2334166357
@@ -51,9 +51,9 @@ func VaultServiceToken() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func VaultBatchToken() *config.Rule {
+func VaultBatchToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "vault-batch-token",
 		Description: "Detected a Vault Batch Token, risking unauthorized access to secret management services and sensitive data.",
 		Regex:       utils.GenerateUniqueTokenRegex(`hvb\.[\w-]{138,300}`, false),

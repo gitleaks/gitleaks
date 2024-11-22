@@ -1,22 +1,21 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func NugetConfigPassword() *config.Rule {
-	r := config.Rule{
+func NugetConfigPassword() *rule.Rule {
+	r := rule.Rule{
 		Description: "Identified a password within a Nuget config file, potentially compromising package management access.",
 		RuleID:      "nuget-config-password",
 		Regex:       regexp.MustCompile(`(?i)<add key=\"(?:(?:ClearText)?Password)\"\s*value=\"(.{8,})\"\s*/>`),
 		Path:        regexp.MustCompile(`(?i)nuget\.config$`),
 		Keywords:    []string{"<add key="},
 		Entropy:     1,
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// samples from https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file

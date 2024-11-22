@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func SendbirdAccessToken() *config.Rule {
+func SendbirdAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "sendbird-access-token",
 		Description: "Uncovered a Sendbird Access Token, potentially risking unauthorized access to communication services and user data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"sendbird"}, utils.Hex("40"), true),
@@ -23,9 +23,9 @@ func SendbirdAccessToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func SendbirdAccessID() *config.Rule {
+func SendbirdAccessID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "sendbird-access-id",
 		Description: "Discovered a Sendbird Access ID, which could compromise chat and messaging platform integrations.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"sendbird"}, utils.Hex8_4_4_4_12(), true),

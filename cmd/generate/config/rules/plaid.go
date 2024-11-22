@@ -3,14 +3,14 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func PlaidAccessID() *config.Rule {
+func PlaidAccessID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "plaid-client-id",
 		Description: "Uncovered a Plaid Client ID, which could lead to unauthorized financial service integrations and data breaches.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"plaid"}, utils.AlphaNumeric("24"), true),
@@ -26,9 +26,9 @@ func PlaidAccessID() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func PlaidSecretKey() *config.Rule {
+func PlaidSecretKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "plaid-secret-key",
 		Description: "Detected a Plaid Secret key, risking unauthorized access to financial accounts and sensitive transaction data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"plaid"}, utils.AlphaNumeric("30"), true),
@@ -44,9 +44,9 @@ func PlaidSecretKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func PlaidAccessToken() *config.Rule {
+func PlaidAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "plaid-api-token",
 		Description: "Discovered a Plaid API Token, potentially compromising financial data aggregation and banking services.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"plaid"},

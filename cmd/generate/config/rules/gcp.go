@@ -2,16 +2,16 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // TODO this one could probably use some work
-func GCPServiceAccount() *config.Rule {
+func GCPServiceAccount() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Google (GCP) Service-account",
 		RuleID:      "gcp-service-account",
 		Regex:       regexp.MustCompile(`\"type\": \"service_account\"`),
@@ -25,9 +25,9 @@ func GCPServiceAccount() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func GCPAPIKey() *config.Rule {
+func GCPAPIKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "gcp-api-key",
 		Description: "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
 		Regex:       utils.GenerateUniqueTokenRegex(`AIza[\w-]{35}`, false),

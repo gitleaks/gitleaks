@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func PrivateAIToken() *config.Rule {
+func PrivateAIToken() *rule.Rule {
 	// https://docs.private-ai.com/reference/latest/operation/metrics_metrics_get/
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "privateai-api-token",
 		Description: "Identified a PrivateAI Token, posing a risk of unauthorized access to AI services and data manipulation.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"private[_-]?ai"}, `[a-z0-9]{32}`, false),

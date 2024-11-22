@@ -3,14 +3,14 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
 // This rule includes both App Secret and Client Access Token
 // https://developers.facebook.com/docs/facebook-login/guides/access-tokens/
-func FacebookSecret() *config.Rule {
+func FacebookSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "facebook-secret",
 		Description: "Discovered a Facebook Application secret, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"facebook"}, utils.Hex("32"), true),
@@ -28,9 +28,9 @@ func FacebookSecret() *config.Rule {
 }
 
 // https://developers.facebook.com/docs/facebook-login/guides/access-tokens/#apptokens
-func FacebookAccessToken() *config.Rule {
+func FacebookAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "facebook-access-token",
 		Description: "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`\d{15,16}(\||%)[0-9a-z\-_]{27,40}`, true),
@@ -47,9 +47,9 @@ func FacebookAccessToken() *config.Rule {
 }
 
 // https://developers.facebook.com/docs/facebook-login/guides/access-tokens/#pagetokens
-func FacebookPageAccessToken() *config.Rule {
+func FacebookPageAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "facebook-page-access-token",
 		Description: "Discovered a Facebook Page Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex("EAA[MC](?i)[a-z0-9]{100,}", false),

@@ -3,14 +3,13 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func SidekiqSecret() *config.Rule {
+func SidekiqSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Discovered a Sidekiq Secret, which could lead to compromised background job processing and application data breaches.",
 		RuleID:      "sidekiq-secret",
 
@@ -35,9 +34,9 @@ func SidekiqSecret() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func SidekiqSensitiveUrl() *config.Rule {
+func SidekiqSensitiveUrl() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Uncovered a Sidekiq Sensitive URL, potentially exposing internal job queues and sensitive operation details.",
 		RuleID:      "sidekiq-sensitive-url",
 		Regex:       regexp.MustCompile(`(?i)\bhttps?://([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\/|\#|\?|:]|$)`),

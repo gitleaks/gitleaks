@@ -3,7 +3,7 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
 var global_keys = []string{
@@ -25,9 +25,9 @@ var origin_ca_keys = []string{
 
 var identifiers = []string{"cloudflare"}
 
-func CloudflareGlobalAPIKey() *config.Rule {
+func CloudflareGlobalAPIKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "cloudflare-global-api-key",
 		Description: "Detected a Cloudflare Global API Key, potentially compromising cloud application deployments and operational security.",
 		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.Hex("37"), true),
@@ -43,9 +43,9 @@ func CloudflareGlobalAPIKey() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func CloudflareAPIKey() *config.Rule {
+func CloudflareAPIKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "cloudflare-api-key",
 		Description: "Detected a Cloudflare API Key, potentially compromising cloud application deployments and operational security.",
 		Regex:       utils.GenerateSemiGenericRegex(identifiers, utils.AlphaNumericExtendedShort("40"), true),
@@ -61,10 +61,10 @@ func CloudflareAPIKey() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func CloudflareOriginCAKey() *config.Rule {
+func CloudflareOriginCAKey() *rule.Rule {
 	ca_identifiers := append(identifiers, "v1.0-")
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Detected a Cloudflare Origin CA Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "cloudflare-origin-ca-key",
 		Regex:       utils.GenerateUniqueTokenRegex(`v1\.0-`+utils.Hex("24")+"-"+utils.Hex("146"), false),

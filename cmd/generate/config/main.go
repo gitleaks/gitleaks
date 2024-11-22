@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"os"
 	"text/template"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 const (
@@ -25,7 +25,7 @@ func main() {
 	}
 	gitleaksConfigPath := os.Args[1]
 
-	configRules := []*config.Rule{
+	configRules := []*rule.Rule{
 		rules.OnePasswordServiceAccountToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
@@ -230,7 +230,7 @@ func main() {
 	}
 
 	// ensure rules have unique ids
-	ruleLookUp := make(map[string]config.Rule, len(configRules))
+	ruleLookUp := make(map[string]rule.Rule, len(configRules))
 	for _, rule := range configRules {
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {

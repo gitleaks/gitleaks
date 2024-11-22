@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func ScalingoAPIToken() *config.Rule {
+func ScalingoAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Found a Scalingo API token, posing a risk to cloud platform services and application deployment security.",
 		RuleID:      "scalingo-api-token",
 		Regex:       utils.GenerateUniqueTokenRegex(`tk-us-[\w-]{48}`, false),

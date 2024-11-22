@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func Beamer() *config.Rule {
+func Beamer() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates.",
 		RuleID:      "beamer-api-token",
 		Regex: utils.GenerateSemiGenericRegex([]string{"beamer"},

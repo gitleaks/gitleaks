@@ -3,16 +3,16 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // https://api.slack.com/authentication/token-types#bot
-func SlackBotToken() *config.Rule {
+func SlackBotToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-bot-token",
 		Description: "Identified a Slack Bot token, which may compromise bot integrations and communication channel security.",
 		Regex:       regexp.MustCompile(`xoxb-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*`),
@@ -42,9 +42,9 @@ func SlackBotToken() *config.Rule {
 }
 
 // https://api.slack.com/authentication/token-types#user
-func SlackUserToken() *config.Rule {
+func SlackUserToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-user-token",
 		Description: "Found a Slack User token, posing a risk of unauthorized user impersonation and data access within Slack workspaces.",
 		// The last segment seems to be consistently 32 characters. I've made it 28-34 just in case.
@@ -82,9 +82,9 @@ func SlackUserToken() *config.Rule {
 }
 
 // Reference: https://api.slack.com/authentication/token-types#app
-func SlackAppLevelToken() *config.Rule {
+func SlackAppLevelToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-app-token",
 		Description: "Detected a Slack App-level token, risking unauthorized access to Slack applications and workspace data.",
 		// This regex is based on a limited number of examples and may not be 100% accurate.
@@ -105,9 +105,9 @@ func SlackAppLevelToken() *config.Rule {
 }
 
 // Reference: https://api.slack.com/authentication/config-tokens
-func SlackConfigurationToken() *config.Rule {
+func SlackConfigurationToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-config-access-token",
 		Description: "Found a Slack Configuration access token, posing a risk to workspace configuration and sensitive data access.",
 		Regex:       regexp.MustCompile(`(?i)xoxe.xox[bp]-\d-[A-Z0-9]{163,166}`),
@@ -132,9 +132,9 @@ func SlackConfigurationToken() *config.Rule {
 }
 
 // Reference: https://api.slack.com/authentication/config-tokens
-func SlackConfigurationRefreshToken() *config.Rule {
+func SlackConfigurationRefreshToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-config-refresh-token",
 		Description: "Discovered a Slack Configuration refresh token, potentially allowing prolonged unauthorized access to configuration settings.",
 		Regex:       regexp.MustCompile(`(?i)xoxe-\d-[A-Z0-9]{146}`),
@@ -153,8 +153,8 @@ func SlackConfigurationRefreshToken() *config.Rule {
 }
 
 // Reference: https://api.slack.com/authentication/token-types#legacy_bot
-func SlackLegacyBotToken() *config.Rule {
-	r := config.Rule{
+func SlackLegacyBotToken() *rule.Rule {
+	r := rule.Rule{
 		RuleID:      "slack-legacy-bot-token",
 		Description: "Uncovered a Slack Legacy bot token, which could lead to compromised legacy bot operations and data exposure.",
 		// This rule is based off the limited information I could find and may not be 100% accurate.
@@ -197,8 +197,8 @@ func SlackLegacyBotToken() *config.Rule {
 }
 
 // Reference: https://api.slack.com/authentication/token-types#workspace
-func SlackLegacyWorkspaceToken() *config.Rule {
-	r := config.Rule{
+func SlackLegacyWorkspaceToken() *rule.Rule {
+	r := rule.Rule{
 		RuleID:      "slack-legacy-workspace-token",
 		Description: "Identified a Slack Legacy Workspace token, potentially compromising access to workspace data and legacy features.",
 		// This is by far the least confident pattern.
@@ -232,9 +232,9 @@ func SlackLegacyWorkspaceToken() *config.Rule {
 // - https://api.slack.com/changelog/2016-05-19-authorship-changing-for-older-tokens
 // - https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#L29
 // - https://gist.github.com/thesubtlety/a1c460d53df0837c5817c478b9f10588#file-local-slack-jack-py-L32
-func SlackLegacyToken() *config.Rule {
+func SlackLegacyToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-legacy-token",
 		Description: "Detected a Slack Legacy token, risking unauthorized access to older Slack integrations and user data.",
 		Regex:       regexp.MustCompile(`xox[os]-\d+-\d+-\d+-[a-fA-F\d]+`),
@@ -265,9 +265,9 @@ func SlackLegacyToken() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func SlackWebHookUrl() *config.Rule {
+func SlackWebHookUrl() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "slack-webhook-url",
 		Description: "Discovered a Slack Webhook, which could lead to unauthorized message posting and data leakage in Slack channels.",
 		// If this generates too many false-positives we should define an allowlist (e.g., "xxxx", "00000").

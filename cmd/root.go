@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
@@ -44,7 +46,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
-	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, jsonextra, csv, junit, sarif)")
+	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, jsonextra, csv, junit, sarif, template)")
+	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
@@ -95,6 +98,7 @@ func initConfig(source string) {
 	if !hideBanner {
 		_, _ = fmt.Fprint(os.Stderr, banner)
 	}
+
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {
 		log.Fatal().Msg(err.Error())
@@ -163,7 +167,78 @@ func Config(cmd *cobra.Command) config.Config {
 	}
 	cfg.Path, _ = cmd.Flags().GetString("config")
 
+	// Validate report settings.
+	reportPath := getReportPath()
+	if reportPath != "" {
+		if reportPath != report.StdoutReportPath {
+			// Ensure the path is writable.
+			if f, err := os.Create(reportPath); err != nil {
+				log.Fatal().Err(err).Msgf("Report path is not writable: %s", reportPath)
+			} else {
+				_ = f.Close()
+				_ = os.Remove(reportPath)
+			}
+		}
+
+		// Build report writer.
+		var (
+			reporter       report.Reporter
+			reportFormat   = getReportFormat()
+			reportTemplate = getReportTemplate()
+		)
+		switch strings.TrimSpace(strings.ToLower(reportFormat)) {
+		case "csv":
+			reporter = &report.CsvReporter{}
+		case "json":
+			reporter = &report.JsonReporter{}
+		case "junit":
+			reporter = &report.JunitReporter{}
+		case "sarif":
+			reporter = &report.SarifReporter{
+				OrderedRules: cfg.GetOrderedRules(),
+			}
+		case "template":
+			if reporter, err = report.NewTemplateReporter(reportTemplate); err != nil {
+				log.Fatal().Err(err).Msg("Invalid report template")
+			}
+		default:
+			log.Fatal().Msgf("unknown report format %s", reportFormat)
+		}
+
+		// Sanity check.
+		if reportTemplate != "" && reportFormat != "template" {
+			log.Fatal().Msgf("Report format must be 'template' if --report-template is specified")
+		}
+
+		cfg.ReportPath = reportPath
+		cfg.Reporter = reporter
+	}
+
 	return cfg
+}
+
+func getReportPath() string {
+	reportPath, err := rootCmd.Flags().GetString("report-path")
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+	return reportPath
+}
+
+func getReportFormat() string {
+	reportFormat, err := rootCmd.Flags().GetString("report-format")
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+	return reportFormat
+}
+
+func getReportTemplate() string {
+	reportTemplate, err := rootCmd.Flags().GetString("report-template")
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+	return reportTemplate
 }
 
 func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Detector {
@@ -249,10 +324,10 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	rules, _ := cmd.Flags().GetStringSlice("enable-rule")
 	if len(rules) > 0 {
 		log.Info().Msg("Overriding enabled rules: " + strings.Join(rules, ", "))
-		ruleOverride := make(map[string]config.Rule)
+		ruleOverride := make(map[string]rule.Rule)
 		for _, ruleName := range rules {
-			if rule, ok := cfg.Rules[ruleName]; ok {
-				ruleOverride[ruleName] = rule
+			if r, ok := cfg.Rules[ruleName]; ok {
+				ruleOverride[ruleName] = r
 			} else {
 				log.Fatal().Msgf("Requested rule %s not found in rules", ruleName)
 			}
@@ -281,20 +356,32 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 	}
 
 	// write report if desired
-	reportPath, _ := cmd.Flags().GetString("report-path")
-	ext, _ := cmd.Flags().GetString("report-format")
+	if cfg.Reporter != nil {
+		var (
+			file      io.WriteCloser
+			reportErr error
+		)
 
-	if reportPath != "" {
-		reportWriter := os.Stdout
-		if reportPath != "-" {
-			reportWriter, err = os.Create(reportPath)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not create report file")
+		if cfg.ReportPath == report.StdoutReportPath {
+			file = os.Stdout
+		} else {
+			// Open the file.
+			if file, reportErr = os.Create(cfg.ReportPath); reportErr != nil {
+				goto ReportEnd
 			}
+			defer func() {
+				_ = file.Close()
+			}()
 		}
 
-		if err = report.Write(findings, cfg, ext, reportWriter); err != nil {
-			log.Fatal().Err(err).Msg("could not write")
+		// Write to the file.
+		if reportErr = cfg.Reporter.Write(file, findings); reportErr != nil {
+			goto ReportEnd
+		}
+
+	ReportEnd:
+		if reportErr != nil {
+			log.Fatal().Err(reportErr).Msg("failed to write report")
 		}
 	}
 
@@ -305,7 +392,6 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 	if len(findings) != 0 {
 		os.Exit(exitCode)
 	}
-
 }
 
 func fileExists(fileName string) bool {

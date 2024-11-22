@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func RapidAPIAccessToken() *config.Rule {
+func RapidAPIAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "rapidapi-access-token",
 		Description: "Uncovered a RapidAPI Access Token, which could lead to unauthorized access to various APIs and data services.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"rapidapi"},

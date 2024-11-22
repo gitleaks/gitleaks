@@ -3,13 +3,13 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 )
 
-func GenericCredential() *config.Rule {
+func GenericCredential() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
 		Regex: utils.GenerateSemiGenericRegex([]string{
@@ -37,10 +37,10 @@ func GenericCredential() *config.Rule {
 			"token",
 		},
 		Entropy: 3.5,
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Description:    "Allowlist for Generic API Keys",
-				MatchCondition: config.AllowlistMatchOr,
+				MatchCondition: rule.AllowlistMatchOr,
 				RegexTarget:    "match",
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)(` +
@@ -198,7 +198,7 @@ R5: Regulatory--21`,
 }
 
 func newPlausibleSecret(regex string) string {
-	allowList := config.Allowlist{StopWords: DefaultStopWords}
+	allowList := rule.Allowlist{StopWords: DefaultStopWords}
 	// attempt to generate a random secret,
 	// retrying until it contains at least one digit and no stop words
 	// TODO: currently the DefaultStopWords list contains many short words,

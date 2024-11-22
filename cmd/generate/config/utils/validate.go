@@ -7,12 +7,12 @@ package utils
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"strings"
 )
 
-func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+func Validate(rule rule.Rule, truePositives []string, falsePositives []string) *rule.Rule {
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
@@ -37,7 +37,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 	return r
 }
 
-func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
+func ValidateWithPaths(rule rule.Rule, truePositives map[string]string, falsePositives map[string]string) *rule.Rule {
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for path, tp := range truePositives {
@@ -65,7 +65,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	return r
 }
 
-func createSingleRuleDetector(r *config.Rule) *detect.Detector {
+func createSingleRuleDetector(r *rule.Rule) *detect.Detector {
 	// normalize keywords like in the config package
 	var (
 		uniqueKeywords = make(map[string]struct{})
@@ -81,7 +81,7 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 	}
 	r.Keywords = keywords
 
-	rules := map[string]config.Rule{
+	rules := map[string]rule.Rule{
 		r.RuleID: *r,
 	}
 	cfg := base.CreateGlobalConfig()

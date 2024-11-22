@@ -3,6 +3,7 @@ package detect
 import (
 	"fmt"
 	"github.com/google/go-cmp/cmp"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -851,7 +852,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 func TestDetectRuleAllowlist(t *testing.T) {
 	cases := map[string]struct {
 		fragment  Fragment
-		allowlist config.Allowlist
+		allowlist rule.Allowlist
 		expected  []report.Finding
 	}{
 		// Commit / path
@@ -859,7 +860,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 			},
-			allowlist: config.Allowlist{
+			allowlist: rule.Allowlist{
 				Commits: []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 			},
 		},
@@ -867,7 +868,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				FilePath: "package-lock.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: rule.Allowlist{
 				Paths: []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 			},
 		},
@@ -876,8 +877,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 			},
@@ -887,8 +888,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package.json",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 			},
@@ -910,8 +911,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 				Regexes:        []*regexp.Regexp{regexp.MustCompile("password")},
@@ -934,8 +935,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchOr,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchOr,
 				Commits:        []string{"704178e7dca77ff143778a31cff0fc192d59b030"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 			},
@@ -944,20 +945,20 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		// Regex / stopwords
 		"regex allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: rule.Allowlist{
 				Regexes: []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 			},
 		},
 		"stopwords allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: rule.Allowlist{
 				StopWords: []string{"summer"},
 			},
 		},
 		"regex AND stopword allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 				StopWords:      []string{"2024"},
 			},
@@ -967,8 +968,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "config.js",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
@@ -979,8 +980,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				FilePath: "config.js",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
@@ -1001,8 +1002,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		},
 		"regex AND stopword NOT allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)winter.+`),
 				},
@@ -1025,8 +1026,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "a060c9d2d5e90c992763f1bd4c3cd2a6f121241b",
 				FilePath:  "config.js",
 			},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchAnd,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)winter.+`)},
@@ -1047,8 +1048,8 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		},
 		"regex OR stopword allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
-				MatchCondition: config.AllowlistMatchOr,
+			allowlist: rule.Allowlist{
+				MatchCondition: rule.AllowlistMatchOr,
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 				StopWords:      []string{"winter"},
 			},
@@ -1059,10 +1060,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 let password = 'Summer2024!';`
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			rule := config.Rule{
+			rule := rule.Rule{
 				RuleID: "test-rule",
 				Regex:  regexp.MustCompile(`Summer2024!`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []rule.Allowlist{
 					tc.allowlist,
 				},
 			}

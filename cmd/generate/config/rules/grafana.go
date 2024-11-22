@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func GrafanaApiKey() *config.Rule {
+func GrafanaApiKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "grafana-api-key",
 		Description: "Identified a Grafana API key, which could compromise monitoring dashboards and sensitive data analytics.",
 		Regex:       utils.GenerateUniqueTokenRegex(`eyJrIjoi[A-Za-z0-9]{70,400}={0,3}`, true),
@@ -21,9 +21,9 @@ func GrafanaApiKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func GrafanaCloudApiToken() *config.Rule {
+func GrafanaCloudApiToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "grafana-cloud-api-token",
 		Description: "Found a Grafana cloud API token, risking unauthorized access to cloud-based monitoring services and data exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`glc_[A-Za-z0-9+/]{32,400}={0,3}`, true),
@@ -58,9 +58,9 @@ void GLC_StateBeginUnderwaterAliasModelCaustics(texture_ref base_texture, textur
 	return utils.Validate(r, tps, fps)
 }
 
-func GrafanaServiceAccountToken() *config.Rule {
+func GrafanaServiceAccountToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "grafana-service-account-token",
 		Description: "Discovered a Grafana service account token, posing a risk of compromised monitoring services and data integrity.",
 		Regex:       utils.GenerateUniqueTokenRegex(`glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}`, true),

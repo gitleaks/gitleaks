@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func AsanaClientID() *config.Rule {
+func AsanaClientID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Discovered a potential Asana Client ID, risking unauthorized access to Asana projects and sensitive task information.",
 		RuleID:      "asana-client-id",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"asana"}, utils.Numeric("16"), true),
@@ -20,9 +20,9 @@ func AsanaClientID() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func AsanaClientSecret() *config.Rule {
+func AsanaClientSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Identified an Asana Client Secret, which could lead to compromised project management integrity and unauthorized access.",
 		RuleID:      "asana-client-secret",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"asana"}, utils.AlphaNumeric("32"), true),

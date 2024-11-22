@@ -2,14 +2,14 @@ package rules
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // KubernetesSecret validates if we detected a kubernetes secret which contains data!
-func KubernetesSecret() *config.Rule {
+func KubernetesSecret() *rule.Rule {
 	// Only match basic variations of `kind: secret`, we don't want things like `kind: ExternalSecret`.
 	//language=regexp
 	kindPat := `\bkind:[ \t]*["']?\bsecret\b["']?`
@@ -20,7 +20,7 @@ func KubernetesSecret() *config.Rule {
 	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
 
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "kubernetes-secret-yaml",
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		Regex: regexp.MustCompile(fmt.Sprintf(
@@ -31,7 +31,7 @@ func KubernetesSecret() *config.Rule {
 		},
 		// Kubernetes secrets are usually yaml files.
 		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// Ignore empty or placeholder values.

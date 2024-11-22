@@ -4,13 +4,13 @@ import (
 	"encoding/base64"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 )
 
-func SentryAccessToken() *config.Rule {
+func SentryAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "sentry-access-token",
 		Description: "Found a Sentry.io Access Token (old format), risking unauthorized access to error tracking services and sensitive application data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"sentry"}, utils.Hex("64"), true),
@@ -25,7 +25,7 @@ func SentryAccessToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func SentryOrgToken() *config.Rule {
+func SentryOrgToken() *rule.Rule {
 
 	// format: sntrys_[base64_json]_[base64_secret]
 	// the json contains the following fields : {"iat": ,"url": ,"region_url": ,"org": }
@@ -39,7 +39,7 @@ func SentryOrgToken() *config.Rule {
 	// cmVnaW9uX3VybCI6 = `region_url":`
 
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "sentry-org-token",
 		Description: "Found a Sentry.io Organization Token, risking unauthorized access to error tracking services and sensitive application data.",
 		Regex:       regexp.MustCompile(`\bsntrys_eyJpYXQiO[a-zA-Z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[a-zA-Z0-9+/]{10,200}={0,2}_[a-zA-Z0-9+/]{43}\b`),
@@ -73,9 +73,9 @@ func SentryOrgToken() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func SentryUserToken() *config.Rule {
+func SentryUserToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "sentry-user-token",
 		Description: "Found a Sentry.io User Token, risking unauthorized access to error tracking services and sensitive application data.",
 		Regex:       utils.GenerateUniqueTokenRegex(`sntryu_[a-f0-9]{64}`, false),

@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func MailGunPrivateAPIToken() *config.Rule {
+func MailGunPrivateAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "mailgun-private-api-token",
 		Description: "Found a Mailgun private API token, risking unauthorized email service operations and data breaches.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"mailgun"}, `key-[a-f0-9]{32}`, true),
@@ -23,9 +23,9 @@ func MailGunPrivateAPIToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func MailGunPubAPIToken() *config.Rule {
+func MailGunPubAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "mailgun-pub-key",
 		Description: "Discovered a Mailgun public validation key, which could expose email verification processes and associated data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"mailgun"}, `pubkey-[a-f0-9]{32}`, true),
@@ -40,9 +40,9 @@ func MailGunPubAPIToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func MailGunSigningKey() *config.Rule {
+func MailGunSigningKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "mailgun-signing-key",
 		Description: "Uncovered a Mailgun webhook signing key, potentially compromising email automation and data integrity.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"mailgun"}, `[a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8}`, true),

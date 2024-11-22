@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func YandexAWSAccessToken() *config.Rule {
+func YandexAWSAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "yandex-aws-access-token",
 		Description: "Uncovered a Yandex AWS Access Token, potentially compromising cloud resource access and data security on Yandex Cloud.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"yandex"},
@@ -23,9 +23,9 @@ func YandexAWSAccessToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func YandexAPIKey() *config.Rule {
+func YandexAPIKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "yandex-api-key",
 		Description: "Discovered a Yandex API Key, which could lead to unauthorized access to Yandex services and data manipulation.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"yandex"},
@@ -41,9 +41,9 @@ func YandexAPIKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func YandexAccessToken() *config.Rule {
+func YandexAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "yandex-access-token",
 		Description: "Found a Yandex Access Token, posing a risk to Yandex service integrations and user data privacy.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"yandex"},

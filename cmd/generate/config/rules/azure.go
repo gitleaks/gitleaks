@@ -3,18 +3,18 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // References:
 // - https://learn.microsoft.com/en-us/microsoft-365/compliance/sit-defn-azure-ad-client-secret
 // - https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app#add-credentials
-func AzureActiveDirectoryClientSecret() *config.Rule {
+func AzureActiveDirectoryClientSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "azure-ad-client-secret",
 		Description: "Azure AD Client Secret",
 		// After inspecting dozens of secrets, I'm fairly confident that they start with `xxx\dQ~`.

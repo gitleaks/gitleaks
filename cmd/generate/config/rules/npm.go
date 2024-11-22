@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func NPM() *config.Rule {
+func NPM() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "npm-access-token",
 		Description: "Uncovered an npm access token, potentially compromising package management and code repository access.",
 		Regex:       utils.GenerateUniqueTokenRegex(`npm_[a-z0-9]{36}`, true),

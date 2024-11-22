@@ -2,19 +2,19 @@ package rules
 
 import (
 	"fmt"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // Reference: https://huggingface.co/docs/hub/security-tokens
 //
 // Old tokens have the prefix `api_`, however, I am not sure it's worth detecting them as that would be high noise.
 // https://huggingface.co/docs/api-inference/quicktour
-func HuggingFaceAccessToken() *config.Rule {
+func HuggingFaceAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "huggingface-access-token",
 		Description: "Discovered a Hugging Face Access token, which could lead to unauthorized access to AI models and sensitive data.",
 		Regex:       utils.GenerateUniqueTokenRegex("hf_(?i:[a-z]{34})", false),
@@ -67,9 +67,9 @@ func HuggingFaceAccessToken() *config.Rule {
 }
 
 // Will be deprecated Aug 1st, 2023.
-func HuggingFaceOrganizationApiToken() *config.Rule {
+func HuggingFaceOrganizationApiToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "huggingface-organization-api-token",
 		Description: "Uncovered a Hugging Face Organization API token, potentially compromising AI organization accounts and associated data.",
 		Regex:       utils.GenerateUniqueTokenRegex("api_org_(?i:[a-z]{34})", false),

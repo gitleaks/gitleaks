@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func DefinedNetworkingAPIToken() *config.Rule {
+func DefinedNetworkingAPIToken() *rule.Rule {
 	// Define Rule
-	r := config.Rule{
+	r := rule.Rule{
 		// Human redable description of the rule
 		Description: "Identified a Defined Networking API token, which could lead to unauthorized network operations and data breaches.",
 

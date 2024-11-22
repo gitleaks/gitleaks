@@ -3,15 +3,15 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func Authress() *config.Rule {
+func Authress() *rule.Rule {
 	// Rule Definition
 	// (Note: When changes are made to this, rerun `go generate ./...` and commit the config/gitleaks.toml file
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "authress-service-client-access-key",
 		Description: "Uncovered a possible Authress Service Client Access Key, which may compromise access control services and sensitive data.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:sc|ext|scauth|authress)_(?i)[a-z0-9]{5,30}\.[a-z0-9]{4,6}\.(?-i:acc)[_-][a-z0-9-]{10,32}\.[a-z0-9+/_=-]{30,120}`, false),
