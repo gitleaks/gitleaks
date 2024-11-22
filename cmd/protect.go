@@ -47,5 +47,5 @@ func runProtect(cmd *cobra.Command, args []string) {
 	}
 	findings, err = detector.DetectGit(gitCmd)
 
-	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
+	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

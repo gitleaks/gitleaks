@@ -2,9 +2,10 @@ package base
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/config"
 	"regexp"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 func CreateGlobalConfig() config.Config {

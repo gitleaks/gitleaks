@@ -4,9 +4,9 @@ import (
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // overview with all GitLab tokens:

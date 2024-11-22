@@ -2,9 +2,9 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
