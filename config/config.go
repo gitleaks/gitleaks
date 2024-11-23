@@ -93,10 +93,10 @@ type Config struct {
 // Extend is a struct that allows users to define how they want their
 // configuration extended by other configuration files.
 type Extend struct {
-	Path          string
-	URL           string
-	UseDefault    bool
-	DisabledRules []string
+	Path          string   `toml:"path,omitempty"`
+	URL           string   `toml:"url,omitempty"`
+	UseDefault    bool     `toml:"useDefault,omitempty"`
+	DisabledRules []string `toml:"disabledRules,omitempty"`
 }
 
 func (vc *ViperConfig) Translate() (Config, error) {
