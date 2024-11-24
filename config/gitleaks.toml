@@ -2138,6 +2138,13 @@ entropy = 3
 keywords = ["glpat-"]
 
 [[rules]]
+id = "gitlab-pat-routable"
+description = "Identified a GitLab Personal Access Token (routable), risking unauthorized access to GitLab repositories and codebase exposure."
+regex = '''glpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}'''
+entropy = 3
+keywords = ["glpat-"]
+
+[[rules]]
 id = "gitlab-ptt"
 description = "Found a GitLab Pipeline Trigger Token, potentially compromising continuous integration workflows and project security."
 regex = '''glptt-[0-9a-f]{40}'''
