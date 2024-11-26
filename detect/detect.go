@@ -417,11 +417,10 @@ MatchLoop:
 
 		finding.Entropy = float32(entropy)
 		if rule.Entropy != 0.0 {
-			if entropy <= rule.Entropy {				
+			if entropy <= rule.Entropy {
 				logger.Trace().
-					//Here you can add REDACTED finding or finding.line or leave as is (at your discretion)				
+					//Here you can add REDACTED finding or finding.line or leave as is (at your discretion)
 					Float32("entropy", finding.Entropy).
-					Str("rule-id", rule.RuleID).
 					Msg("Skipping finding due to low entropy")
 				// entropy is too low, skip this finding
 				continue
@@ -507,7 +506,7 @@ MatchLoop:
 					Msg("Skipping finding due to rule allowlist")
 				continue MatchLoop
 			}
-		}		
+		}
 
 		findings = append(findings, finding)
 	}
