@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -9,18 +10,15 @@ func DatadogtokenAccessToken() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "datadog-access-token",
-		Description: "Datadog Access Token",
-		Regex: generateSemiGenericRegex([]string{"datadog"},
-			alphaNumeric("40")),
-		SecretGroup: 1,
+		Description: "Detected a Datadog Access Token, potentially risking monitoring and analytics data exposure and manipulation.",
+		Regex: utils.GenerateSemiGenericRegex([]string{"datadog"},
+			utils.AlphaNumeric("40"), true),
 		Keywords: []string{
 			"datadog",
 		},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("datadog", secrets.NewSecret(alphaNumeric("40"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("datadog", secrets.NewSecret(utils.AlphaNumeric("40")))
+	return utils.Validate(r, tps, nil)
 }

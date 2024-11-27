@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,16 +9,13 @@ import (
 func Airtable() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Airtable API Key",
+		Description: "Uncovered a possible Airtable API Key, potentially compromising database access and leading to data leakage or alteration.",
 		RuleID:      "airtable-api-key",
-		Regex:       generateSemiGenericRegex([]string{"airtable"}, alphaNumeric("17")),
-		SecretGroup: 1,
+		Regex:       utils.GenerateSemiGenericRegex([]string{"airtable"}, utils.AlphaNumeric("17"), true),
 		Keywords:    []string{"airtable"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("airtable", secrets.NewSecret(alphaNumeric("17"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("airtable", secrets.NewSecret(utils.AlphaNumeric("17")))
+	return utils.Validate(r, tps, nil)
 }

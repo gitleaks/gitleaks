@@ -1,0 +1,8 @@
+title = "override a built-in rule's description"
+
+[extend]
+path = "../testdata/config/simple.toml"
+
+[[rules]]
+id = "aws-access-key"
+description = "Puppy Doggy"

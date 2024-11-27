@@ -22,8 +22,12 @@ func Write(findings []Finding, cfg config.Config, ext string, reportPath string)
 	switch ext {
 	case ".json", "json":
 		err = writeJson(findings, file)
+	case ".jsonextra", "jsonextra":
+		err = writeJsonExtra(findings, file)
 	case ".csv", "csv":
 		err = writeCsv(findings, file)
+	case ".xml", "junit":
+		err = writeJunit(findings, file)
 	case ".sarif", "sarif":
 		err = writeSarif(cfg, findings, file)
 	}

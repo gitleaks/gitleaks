@@ -6,12 +6,14 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 const (
 	expectPath = "../testdata/expected/"
-	tmpPath    = "../testdata/tmp"
 )
 
 func TestReport(t *testing.T) {
@@ -69,6 +71,22 @@ func TestReport(t *testing.T) {
 				},
 			},
 		},
+		{
+			ext: ".xml",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
+		{
+			ext: "junit",
+			findings: []Finding{
+				{
+					RuleID: "test-rule",
+				},
+			},
+		},
 		// {
 		// 	ext: "SARIF",
 		// 	findings: []Finding{
@@ -80,32 +98,19 @@ func TestReport(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		tmpfile, err := os.Create(filepath.Join(tmpPath, strconv.Itoa(i)+test.ext))
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		err = Write(test.findings, config.Config{}, test.ext, tmpfile.Name())
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		got, err := os.ReadFile(tmpfile.Name())
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		os.Remove(tmpfile.Name())
-
-		if len(got) == 0 && !test.wantEmpty {
-			t.Errorf("got empty file with extension " + test.ext)
-		}
-
-		if test.wantEmpty {
-			if len(got) > 0 {
-				t.Errorf("Expected empty file, got %s", got)
+		t.Run(test.ext, func(t *testing.T) {
+			tmpfile, err := os.Create(filepath.Join(t.TempDir(), strconv.Itoa(i)+test.ext))
+			require.NoError(t, err)
+			err = Write(test.findings, config.Config{}, test.ext, tmpfile.Name())
+			require.NoError(t, err)
+			got, err := os.ReadFile(tmpfile.Name())
+			require.NoError(t, err)
+			assert.FileExists(t, tmpfile.Name())
+			if test.wantEmpty {
+				assert.Empty(t, got)
+				return
 			}
-			continue
-		}
+			assert.NotEmpty(t, got)
+		})
 	}
 }

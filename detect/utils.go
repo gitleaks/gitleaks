@@ -60,7 +60,7 @@ func shannonEntropy(data string) (entropy float64) {
 }
 
 // filter will dedupe and redact findings
-func filter(findings []report.Finding, redact bool) []report.Finding {
+func filter(findings []report.Finding, redact uint) []report.Finding {
 	var retFindings []report.Finding
 	for _, f := range findings {
 		include := true
@@ -74,15 +74,15 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 
 					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
 					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
-					log.Trace().Msgf("skipping %s finding (%s), %s rule takes precendence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
+					log.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
 					include = false
 					break
 				}
 			}
 		}
 
-		if redact {
-			f.Redact()
+		if redact > 0 {
+			f.Redact(redact)
 		}
 		if include {
 			retFindings = append(retFindings, f)
@@ -91,49 +91,79 @@ func filter(findings []report.Finding, redact bool) []report.Finding {
 	return retFindings
 }
 
-func printFinding(f report.Finding) {
-	// trim all whitespace and tabs from the line
+func printFinding(f report.Finding, noColor bool) {
+	// trim all whitespace and tabs
 	f.Line = strings.TrimSpace(f.Line)
-	// trim all whitespace and tabs from the secret
 	f.Secret = strings.TrimSpace(f.Secret)
-	// trim all whitespace and tabs from the match
 	f.Match = strings.TrimSpace(f.Match)
 
-	matchInLineIDX := strings.Index(f.Line, f.Match)
-	secretInMatchIdx := strings.Index(f.Match, f.Secret)
+	isFileMatch := strings.HasPrefix(f.Match, "file detected:")
+	skipColor := noColor
+	finding := ""
+	var secret lipgloss.Style
 
-	start := f.Line[0:matchInLineIDX]
-	startMatchIdx := 0
-	if matchInLineIDX > 20 {
-		startMatchIdx = matchInLineIDX - 20
-		start = "..." + f.Line[startMatchIdx:matchInLineIDX]
-	}
+	// Matches from filenames do not have a |line| or |secret|
+	if !isFileMatch {
+		matchInLineIDX := strings.Index(f.Line, f.Match)
+		secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
-	matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
-	secret := lipgloss.NewStyle().SetString(f.Secret).
-		Bold(true).
-		Italic(true).
-		Foreground(lipgloss.Color("#f05c07"))
-	matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
-	lineEnd := f.Line[matchInLineIDX+len(f.Match):]
-	if len(f.Secret) > 100 {
-		secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
+		skipColor = false
+
+		if matchInLineIDX == -1 || noColor {
+			skipColor = true
+			matchInLineIDX = 0
+		}
+
+		start := f.Line[0:matchInLineIDX]
+		startMatchIdx := 0
+		if matchInLineIDX > 20 {
+			startMatchIdx = matchInLineIDX - 20
+			start = "..." + f.Line[startMatchIdx:matchInLineIDX]
+		}
+
+		matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
+		secret = lipgloss.NewStyle().SetString(f.Secret).
 			Bold(true).
 			Italic(true).
 			Foreground(lipgloss.Color("#f05c07"))
-	}
-	if len(lineEnd) > 20 {
-		lineEnd = lineEnd[0:20] + "..."
+		matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
+
+		lineEndIdx := matchInLineIDX + len(f.Match)
+		if len(f.Line)-1 <= lineEndIdx {
+			lineEndIdx = len(f.Line)
+		}
+
+		lineEnd := f.Line[lineEndIdx:]
+
+		if len(f.Secret) > 100 {
+			secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
+				Bold(true).
+				Italic(true).
+				Foreground(lipgloss.Color("#f05c07"))
+		}
+		if len(lineEnd) > 20 {
+			lineEnd = lineEnd[0:20] + "..."
+		}
+
+		finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
 	}
 
-	finding := fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
-	fmt.Printf("%-12s %s", "Finding:", finding)
-	fmt.Printf("%-12s %s\n", "Secret:", secret)
+	if skipColor || isFileMatch {
+		fmt.Printf("%-12s %s\n", "Finding:", f.Match)
+		fmt.Printf("%-12s %s\n", "Secret:", f.Secret)
+	} else {
+		fmt.Printf("%-12s %s", "Finding:", finding)
+		fmt.Printf("%-12s %s\n", "Secret:", secret)
+	}
+
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
 	if f.File == "" {
 		fmt.Println("")
 		return
+	}
+	if len(f.Tags) > 0 {
+		fmt.Printf("%-12s %s\n", "Tags:", f.Tags)
 	}
 	fmt.Printf("%-12s %s\n", "File:", f.File)
 	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)

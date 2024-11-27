@@ -1,13 +1,14 @@
 package report
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -42,70 +43,40 @@ func TestWriteSarif(t *testing.T) {
 					Author:      "John Doe",
 					Email:       "johndoe@gmail.com",
 					Date:        "10-19-2003",
-					Tags:        []string{},
+					Tags:        []string{"tag1", "tag2", "tag3"},
 				},
 			}},
 	}
 
 	for _, test := range tests {
-		// create tmp file using os.TempDir()
-		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".json"))
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		viper.Reset()
-		viper.AddConfigPath(configPath)
-		viper.SetConfigName(test.cfgName)
-		viper.SetConfigType("toml")
-		err = viper.ReadInConfig()
-		if err != nil {
-			t.Error(err)
-		}
+		t.Run(test.cfgName, func(t *testing.T) {
+			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
+			require.NoError(t, err)
+			viper.Reset()
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(test.cfgName)
+			viper.SetConfigType("toml")
+			err = viper.ReadInConfig()
+			require.NoError(t, err)
 
-		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
-		if err != nil {
-			t.Error(err)
-		}
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
 
-		cfg, err := vc.Translate()
-		if err != nil {
-			t.Error(err)
-		}
-		err = writeSarif(cfg, test.findings, tmpfile)
-		fmt.Println(cfg)
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		got, err := os.ReadFile(tmpfile.Name())
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		if test.wantEmpty {
-			if len(got) > 0 {
-				os.Remove(tmpfile.Name())
-				t.Errorf("Expected empty file, got %s", got)
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+			err = writeSarif(cfg, test.findings, tmpfile)
+			require.NoError(t, err)
+			assert.FileExists(t, tmpfile.Name())
+			got, err := os.ReadFile(tmpfile.Name())
+			require.NoError(t, err)
+			if test.wantEmpty {
+				assert.Empty(t, got)
+				return
 			}
-			os.Remove(tmpfile.Name())
-			continue
-		}
-		want, err := os.ReadFile(test.expected)
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-
-		if string(got) != string(want) {
-			err = os.WriteFile(strings.Replace(test.expected, ".sarif", ".got.sarif", 1), got, 0644)
-			if err != nil {
-				t.Error(err)
-			}
-			t.Errorf("got %s, want %s", string(got), string(want))
-		}
-
-		os.Remove(tmpfile.Name())
+			want, err := os.ReadFile(test.expected)
+			require.NoError(t, err)
+			assert.Equal(t, string(want), string(got))
+		})
 	}
 }

@@ -1,2 +1,2 @@
-RuleID,Commit,File,SymlinkFile,Secret,Match,StartLine,EndLine,StartColumn,EndColumn,Author,Message,Date,Email,Fingerprint
-test-rule,0000000000000000,auth.py,,a secret,line containing secret,1,2,1,2,John Doe,opps,10-19-2003,johndoe@gmail.com,fingerprint
+RuleID,Commit,File,SymlinkFile,Secret,Match,StartLine,EndLine,StartColumn,EndColumn,Author,Message,Date,Email,Fingerprint,Tags
+test-rule,0000000000000000,auth.py,,a secret,line containing secret,1,2,1,2,John Doe,opps,10-19-2003,johndoe@gmail.com,fingerprint,tag1 tag2 tag3

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,16 +9,14 @@ import (
 func FastlyAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Fastly API key",
+		Description: "Uncovered a Fastly API key, which may compromise CDN and edge cloud services, leading to content delivery and security issues.",
 		RuleID:      "fastly-api-token",
-		Regex:       generateSemiGenericRegex([]string{"fastly"}, alphaNumericExtended("32")),
-		SecretGroup: 1,
-		Keywords:    []string{"fastly"},
+		Regex:       utils.GenerateSemiGenericRegex([]string{"fastly"}, utils.AlphaNumericExtended("32"), true),
+
+		Keywords: []string{"fastly"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("fastly", secrets.NewSecret(alphaNumericExtended("32"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("fastly", secrets.NewSecret(utils.AlphaNumericExtended("32")))
+	return utils.Validate(r, tps, nil)
 }

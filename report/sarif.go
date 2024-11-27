@@ -10,10 +10,11 @@ import (
 
 func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
 	sarif := Sarif{
-		Schema:  "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+		Schema:  "https://json.schemastore.org/sarif-2.1.0.json",
 		Version: "2.1.0",
 		Runs:    getRuns(cfg, findings),
 	}
+	defer w.Close()
 
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
@@ -34,6 +35,7 @@ func getTool(cfg config.Config) Tool {
 		Driver: Driver{
 			Name:            driver,
 			SemanticVersion: version,
+			InformationUri:  "https://github.com/gitleaks/gitleaks",
 			Rules:           getRules(cfg),
 		},
 	}
@@ -53,23 +55,12 @@ func hasEmptyRules(tool Tool) bool {
 func getRules(cfg config.Config) []Rules {
 	// TODO	for _, rule := range cfg.Rules {
 	var rules []Rules
-	for _, rule := range cfg.OrderedRules() {
-		shortDescription := ShortDescription{
-			Text: rule.Description,
-		}
-		if rule.Regex != nil {
-			shortDescription = ShortDescription{
-				Text: rule.Regex.String(),
-			}
-		} else if rule.Path != nil {
-			shortDescription = ShortDescription{
-				Text: rule.Path.String(),
-			}
-		}
+	for _, rule := range cfg.GetOrderedRules() {
 		rules = append(rules, Rules{
-			ID:          rule.RuleID,
-			Name:        rule.Description,
-			Description: shortDescription,
+			ID: rule.RuleID,
+			Description: ShortDescription{
+				Text: rule.Description,
+			},
 		})
 	}
 	return rules
@@ -101,6 +92,9 @@ func getResults(findings []Finding) []Results {
 				CommitMessage: f.Message,
 				Date:          f.Date,
 				Author:        f.Author,
+			},
+			Properties: Properties{
+				Tags: f.Tags,
 			},
 		}
 		results = append(results, r)
@@ -157,13 +151,13 @@ type FullDescription struct {
 
 type Rules struct {
 	ID          string           `json:"id"`
-	Name        string           `json:"name"`
 	Description ShortDescription `json:"shortDescription"`
 }
 
 type Driver struct {
 	Name            string  `json:"name"`
 	SemanticVersion string  `json:"semanticVersion"`
+	InformationUri  string  `json:"informationUri"`
 	Rules           []Rules `json:"rules"`
 }
 
@@ -200,11 +194,16 @@ type Locations struct {
 	PhysicalLocation PhysicalLocation `json:"physicalLocation"`
 }
 
+type Properties struct {
+	Tags []string `json:"tags"`
+}
+
 type Results struct {
 	Message             Message     `json:"message"`
 	RuleId              string      `json:"ruleId"`
 	Locations           []Locations `json:"locations"`
 	PartialFingerPrints `json:"partialFingerprints"`
+	Properties          Properties `json:"properties"`
 }
 
 type Runs struct {

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -10,32 +11,29 @@ import (
 func LinearAPIToken() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Linear API Token",
 		RuleID:      "linear-api-key",
+		Description: "Detected a Linear API Token, posing a risk to project management tools and sensitive task data.",
 		Regex:       regexp.MustCompile(`lin_api_(?i)[a-z0-9]{40}`),
+		Entropy:     2,
 		Keywords:    []string{"lin_api_"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("linear", "lin_api_"+secrets.NewSecret(alphaNumeric("40"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("linear", "lin_api_"+secrets.NewSecret(utils.AlphaNumeric("40")))
+	return utils.Validate(r, tps, nil)
 }
 
 func LinearClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Linear Client Secret",
 		RuleID:      "linear-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"linear"}, hex("32")),
+		Description: "Identified a Linear Client Secret, which may compromise secure integrations and sensitive project management data.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"linear"}, utils.Hex("32"), true),
+		Entropy:     2,
 		Keywords:    []string{"linear"},
-		SecretGroup: 1,
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("linear", secrets.NewSecret(hex("32"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("linear", secrets.NewSecret(utils.Hex("32")))
+	return utils.Validate(r, tps, nil)
 }

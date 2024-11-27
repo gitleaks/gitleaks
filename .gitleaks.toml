@@ -1,0 +1,12 @@
+# This is NOT the default gitleaks config. The default gitleaks config is located 
+# here: https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+# This gitleaks config extends the default config and ignores secrets located in the `cmd/generate/config/rules`
+
+title = "Gitleaks development"
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''(^|/)cmd/generate/config/rules''',
+]

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,33 +9,28 @@ import (
 func AsanaClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Asana Client ID",
+		Description: "Discovered a potential Asana Client ID, risking unauthorized access to Asana projects and sensitive task information.",
 		RuleID:      "asana-client-id",
-		Regex:       generateSemiGenericRegex([]string{"asana"}, numeric("16")),
-		SecretGroup: 1,
+		Regex:       utils.GenerateSemiGenericRegex([]string{"asana"}, utils.Numeric("16"), true),
 		Keywords:    []string{"asana"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("asana", secrets.NewSecret(numeric("16"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("asana", secrets.NewSecret(utils.Numeric("16")))
+	return utils.Validate(r, tps, nil)
 }
 
 func AsanaClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Asana Client Secret",
+		Description: "Identified an Asana Client Secret, which could lead to compromised project management integrity and unauthorized access.",
 		RuleID:      "asana-client-secret",
-		Regex:       generateSemiGenericRegex([]string{"asana"}, alphaNumeric("32")),
-		SecretGroup: 1,
-		Keywords:    []string{"asana"},
+		Regex:       utils.GenerateSemiGenericRegex([]string{"asana"}, utils.AlphaNumeric("32"), true),
+
+		Keywords: []string{"asana"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("asana", secrets.NewSecret(alphaNumeric("32"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("asana", secrets.NewSecret(utils.AlphaNumeric("32")))
+	return utils.Validate(r, tps, nil)
 }

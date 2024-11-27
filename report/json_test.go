@@ -3,9 +3,31 @@ package report
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+var simpleFinding = Finding{
+	Description: "",
+	RuleID:      "test-rule",
+	Match:       "line containing secret",
+	Line:        "whole line containing secret",
+	Secret:      "a secret",
+	StartLine:   1,
+	EndLine:     2,
+	StartColumn: 1,
+	EndColumn:   2,
+	Message:     "opps",
+	File:        "auth.py",
+	SymlinkFile: "",
+	Commit:      "0000000000000000",
+	Author:      "John Doe",
+	Email:       "johndoe@gmail.com",
+	Date:        "10-19-2003",
+	Tags:        []string{},
+}
 
 func TestWriteJSON(t *testing.T) {
 	tests := []struct {
@@ -18,25 +40,7 @@ func TestWriteJSON(t *testing.T) {
 			testReportName: "simple",
 			expected:       filepath.Join(expectPath, "report", "json_simple.json"),
 			findings: []Finding{
-				{
-
-					Description: "",
-					RuleID:      "test-rule",
-					Match:       "line containing secret",
-					Secret:      "a secret",
-					StartLine:   1,
-					EndLine:     2,
-					StartColumn: 1,
-					EndColumn:   2,
-					Message:     "opps",
-					File:        "auth.py",
-					SymlinkFile: "",
-					Commit:      "0000000000000000",
-					Author:      "John Doe",
-					Email:       "johndoe@gmail.com",
-					Date:        "10-19-2003",
-					Tags:        []string{},
-				},
+				simpleFinding,
 			}},
 		{
 
@@ -46,44 +50,41 @@ func TestWriteJSON(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		// create tmp file using os.TempDir()
-		tmpfile, err := os.Create(filepath.Join(tmpPath, test.testReportName+".json"))
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		err = writeJson(test.findings, tmpfile)
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		got, err := os.ReadFile(tmpfile.Name())
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-		if test.wantEmpty {
-			if len(got) > 0 {
-				os.Remove(tmpfile.Name())
-				t.Errorf("Expected empty file, got %s", got)
+		t.Run(test.testReportName, func(t *testing.T) {
+			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
+			require.NoError(t, err)
+			err = writeJson(test.findings, tmpfile)
+			require.NoError(t, err)
+			assert.FileExists(t, tmpfile.Name())
+			got, err := os.ReadFile(tmpfile.Name())
+			require.NoError(t, err)
+			if test.wantEmpty {
+				assert.Empty(t, got)
+				return
 			}
-			os.Remove(tmpfile.Name())
-			continue
-		}
-		want, err := os.ReadFile(test.expected)
-		if err != nil {
-			os.Remove(tmpfile.Name())
-			t.Error(err)
-		}
-
-		if string(got) != string(want) {
-			err = os.WriteFile(strings.Replace(test.expected, ".json", ".got.json", 1), got, 0644)
-			if err != nil {
-				t.Error(err)
-			}
-			t.Errorf("got %s, want %s", string(got), string(want))
-		}
-
-		os.Remove(tmpfile.Name())
+			want, err := os.ReadFile(test.expected)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+		})
 	}
+}
+
+func TestWriteJSONExtra(t *testing.T) {
+	findings := []Finding{
+		simpleFinding,
+	}
+	expected := filepath.Join(expectPath, "report", "json_extra_simple.json")
+
+	tmpfile, err := os.Create(filepath.Join(t.TempDir(), "simple_extra.json"))
+	require.NoError(t, err)
+
+	err = writeJsonExtra(findings, tmpfile)
+	require.NoError(t, err)
+	assert.FileExists(t, tmpfile.Name())
+
+	got, err := os.ReadFile(tmpfile.Name())
+	require.NoError(t, err)
+	want, err := os.ReadFile(expected)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
 }

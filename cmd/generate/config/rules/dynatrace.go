@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -10,15 +11,14 @@ import (
 func Dynatrace() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Dynatrace API token",
 		RuleID:      "dynatrace-api-token",
+		Description: "Detected a Dynatrace API token, potentially risking application performance monitoring and data exposure.",
 		Regex:       regexp.MustCompile(`dt0c01\.(?i)[a-z0-9]{24}\.[a-z0-9]{64}`),
-		Keywords:    []string{"dynatrace"},
+		Entropy:     4,
+		Keywords:    []string{"dt0c01"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("dynatrace", "dt0c01."+secrets.NewSecret(alphaNumeric("24"))+"."+secrets.NewSecret(alphaNumeric("64"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("dynatrace", "dt0c01."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("64")))
+	return utils.Validate(r, tps, nil)
 }

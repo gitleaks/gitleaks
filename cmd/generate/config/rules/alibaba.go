@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,34 +9,32 @@ import (
 func AlibabaAccessKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Alibaba AccessKey ID",
 		RuleID:      "alibaba-access-key-id",
-		Regex:       generateUniqueTokenRegex(`(LTAI)(?i)[a-z0-9]{20}`),
+		Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
+		Regex:       utils.GenerateUniqueTokenRegex(`LTAI(?i)[a-z0-9]{20}`, false),
+		Entropy:     2,
 		Keywords:    []string{"LTAI"},
 	}
 
 	// validate
 	tps := []string{
-		"alibabaKey := \"LTAI" + secrets.NewSecret(hex("20")) + "\"",
+		"alibabaKey := \"LTAI" + secrets.NewSecret(utils.Hex("20")) + "\"",
 	}
-	return validate(r, tps, nil)
+	return utils.Validate(r, tps, nil)
 }
 
 // TODO
 func AlibabaSecretKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Alibaba Secret Key",
 		RuleID:      "alibaba-secret-key",
-		Regex: generateSemiGenericRegex([]string{"alibaba"},
-			alphaNumeric("30")),
-		SecretGroup: 1,
+		Description: "Discovered a potential Alibaba Cloud Secret Key, potentially allowing unauthorized operations and data access within Alibaba Cloud.",
+		Regex:       utils.GenerateSemiGenericRegex([]string{"alibaba"}, utils.AlphaNumeric("30"), true),
+		Entropy:     2,
 		Keywords:    []string{"alibaba"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("alibaba", secrets.NewSecret(alphaNumeric("30"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("alibaba", secrets.NewSecret(utils.AlphaNumeric("30")))
+	return utils.Validate(r, tps, nil)
 }

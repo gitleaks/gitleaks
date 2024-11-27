@@ -1,6 +1,9 @@
 name: Test
 
 on:
+  push:
+    branches:
+      - "*"
   pull_request:
     branches:
       - "*"
@@ -9,12 +12,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: 1.22
 
       - name: Build
         run: go build -v ./...
@@ -23,4 +26,4 @@ jobs:
         run: make test
 
       - name: Validate Config
-        run: cd cmd/generate/config && go run main.go
+        run: go generate ./... && git diff --exit-code

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -8,17 +9,14 @@ import (
 func Beamer() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Beamer API token",
+		Description: "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates.",
 		RuleID:      "beamer-api-token",
-		SecretGroup: 1,
-		Regex: generateSemiGenericRegex([]string{"beamer"},
-			`b_[a-z0-9=_\-]{44}`),
+		Regex: utils.GenerateSemiGenericRegex([]string{"beamer"},
+			`b_[a-z0-9=_\-]{44}`, true),
 		Keywords: []string{"beamer"},
 	}
 
 	// validate
-	tps := []string{
-		generateSampleSecret("beamer", "b_"+secrets.NewSecret(alphaNumericExtended("44"))),
-	}
-	return validate(r, tps, nil)
+	tps := utils.GenerateSampleSecrets("beamer", "b_"+secrets.NewSecret(utils.AlphaNumericExtended("44")))
+	return utils.Validate(r, tps, nil)
 }
