@@ -8,6 +8,7 @@
 *.idea
 *.got
 gitleaks
+gitleaks.exe
 build
 
 # configs

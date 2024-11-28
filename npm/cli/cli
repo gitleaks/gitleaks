@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+const { platform, arch, argv, version, release } = process;
+const { resolve } = require('node:path');
+const { spawnSync } = require('node:child_process');
+
+const PLATFORMS = {
+  win32: {
+    x64: 'npm/win32-x64/gitleaks.exe',
+    // arm64: 'npm/win32-arm64/gitleaks.exe',
+  },
+  darwin: {
+    x64: 'npm/darwin-x64/gitleaks',
+    // arm64: 'npm/darwin-arm64/gitleaks',
+  },
+  linux: {
+    x64: 'npm/linux-x64/gitleaks',
+    // arm64: 'npm/linux-arm64/gitleaks',
+  },
+};
+
+const binPath = PLATFORMS?.[platform]?.[arch];
+
+if (binPath) {
+  const result = spawnSync(resolve(binPath), argv.slice(2), { stdio: 'inherit' });
+
+  if (result.error) {
+    throw result.error;
+  }
+} else {
+  console.error(
+    "The gitleaks CLI package doesn't ship with prebuilt binaries for your platform yet. " +
+      'You can still use the CLI by cloning the gitleaks/tools repo from GitHub, ' +
+      'and follow the instructions there to build the CLI for your platform.',
+  );
+  process.exitCode = 1;
+}

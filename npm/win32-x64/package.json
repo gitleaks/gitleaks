@@ -1,0 +1,17 @@
+{
+  "name": "@gitleaks/win32-x64",
+  "version": "8.21.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitleaks/gitleaks.git",
+    "directory": "npm/win32-x64"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/gitleaks/gitleaks#readme",
+  "scripts": { "release": "npx semantic-release" },
+  "publishConfig": {
+    "provenance": true
+  },
+  "os": ["win32"],
+  "cpu": ["x64"]
+}

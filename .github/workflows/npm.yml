@@ -1,0 +1,69 @@
+name: Release NPM
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+jobs:
+  publish_linux_x64:
+    runs-on: 	ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: node ./build-npm.js
+      - run: |
+          cd npm/linux-x64
+          npx semantic-release
+
+  publish_win32_x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: node ./build-npm.js
+      - run: |
+          cd npm/win32-x64
+          npx semantic-release
+
+  publish_darwin_x64:
+    runs-on: 	macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: node ./build-npm.js
+      - run: |
+          cd npm/darwin-x64
+          npx semantic-release
+
+  publish_cli:
+    runs-on: 	ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: |
+          cd npm/cli
+          npx semantic-release
