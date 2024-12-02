@@ -119,7 +119,7 @@ func GitlabPatRoutable() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gitlab-pat-routable",
 		Description: "Identified a GitLab Personal Access Token (routable), risking unauthorized access to GitLab repositories and codebase exposure.",
-		Regex:       regexp.MustCompile(`glpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}`),
+		Regex:       regexp.MustCompile(`\bglpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b`),
 		Entropy:     4,
 		Keywords:    []string{"glpat-"},
 	}
