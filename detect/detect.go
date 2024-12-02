@@ -22,7 +22,7 @@ import (
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
-	chunkSize              = 10 * 1_000 // 10kb
+	chunkSize              = 100 * 1_000 // 100kb
 )
 
 var newLineRegexp = regexp.MustCompile("\n")
