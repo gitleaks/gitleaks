@@ -1443,6 +1443,7 @@ var DefaultStopWords = []string{
 	"within",
 	"without",
 	"wizard",
+	"wjalrxutnfemi/k7mdeng/bpxrficyexamplekey", // example AWS secret key
 	"word",
 	"wordpres",
 	"work",
