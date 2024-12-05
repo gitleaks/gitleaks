@@ -12,7 +12,7 @@ import (
 func KubernetesSecret() *config.Rule {
 	// Only match basic variations of `kind: secret`, we don't want things like `kind: ExternalSecret`.
 	//language=regexp
-	kindPat := `\bkind:[ \t]*["']?secret["']?`
+	kindPat := `\bkind:[ \t]*["']?\bsecret\b["']?`
 	// Only matches values (`key: value`) under `data:` that are:
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
@@ -39,6 +39,9 @@ func KubernetesSecret() *config.Rule {
 					// variable: ""
 					// variable: ''
 					regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
+					// TODO: Requires multiple allowlists to target match.
+					// Avoid overreach between directives.
+					//regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
 				},
 			},
 		},
@@ -239,6 +242,43 @@ metadata:
   name: kubernetes-dashboard-key-holder
   namespace: kubernetes-dashboard
 type: Opaque
+`,
+		// TODO: Requires multiple allowlists.
+		//		"overly-permissive3.yaml": ` kind: Secret
+		//  target:
+		//    name: mysecret
+		//    creationPolicy: Owner
+		//
+		//---
+		//
+		//kind: ConfigMap
+		//  data:
+		//        conversionStrategy: Default
+		//        decodingStrategy: None
+		//        key: secret/mysecret
+		//        property: foo
+		//      secretKey: foo`,
+		// https://github.com/gitleaks/gitleaks/issues/1644
+		"wrong-kind.yaml": `apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: example
+  namespace: example-ns
+spec:
+  refreshInterval: 15s
+  secretStoreRef:
+    name: example
+    kind: SecretStore
+  target:
+    name: mysecret
+    creationPolicy: Owner
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: secret/mysecret
+        property: foo
+      secretKey: foo
 `,
 		"sopssecret.yaml": `apiVersion: isindir.github.com/v1alpha3
 kind: SopsSecret
