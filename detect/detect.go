@@ -490,18 +490,6 @@ MatchLoop:
 				// entropy is too low, skip this finding
 				continue
 			}
-			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
-			// does not support positive lookaheads. Ideally we would want to add a
-			// restriction on generic rules regex that requires the secret match group
-			// contains both numbers and alphabetical characters, not just alphabetical characters.
-			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
-			// secret contains both digits and alphabetical characters.
-			// TODO: this should be replaced with stop words
-			if strings.HasPrefix(rule.RuleID, "generic") {
-				if !containsDigit(finding.Secret) {
-					continue
-				}
-			}
 		}
 
 		findings = append(findings, finding)
