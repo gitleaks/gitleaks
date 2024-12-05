@@ -2140,7 +2140,7 @@ keywords = ["glpat-"]
 [[rules]]
 id = "gitlab-pat-routable"
 description = "Identified a GitLab Personal Access Token (routable), risking unauthorized access to GitLab repositories and codebase exposure."
-regex = '''glpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}'''
+regex = '''\bglpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b'''
 entropy = 4
 keywords = ["glpat-"]
 
