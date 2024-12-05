@@ -90,6 +90,7 @@ func main() {
 		rules.FlutterwaveEncKey(),
 		rules.FlyIOAccessToken(),
 		rules.FrameIO(),
+		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
 		// TODO figure out what makes sense for GCP
