@@ -1,9 +1,7 @@
 package report
 
 import (
-	"os"
-	"path/filepath"
-	"strconv"
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -97,15 +95,14 @@ func TestReport(t *testing.T) {
 		// },
 	}
 
-	for i, test := range tests {
+	for _, test := range tests {
 		t.Run(test.ext, func(t *testing.T) {
-			tmpfile, err := os.Create(filepath.Join(t.TempDir(), strconv.Itoa(i)+test.ext))
+			buf := testWriter{
+				bytes.NewBuffer(nil),
+			}
+			err := Write(test.findings, config.Config{}, test.ext, buf)
 			require.NoError(t, err)
-			err = Write(test.findings, config.Config{}, test.ext, tmpfile.Name())
-			require.NoError(t, err)
-			got, err := os.ReadFile(tmpfile.Name())
-			require.NoError(t, err)
-			assert.FileExists(t, tmpfile.Name())
+			got := buf.Bytes()
 			if test.wantEmpty {
 				assert.Empty(t, got)
 				return
@@ -113,4 +110,12 @@ func TestReport(t *testing.T) {
 			assert.NotEmpty(t, got)
 		})
 	}
+}
+
+type testWriter struct {
+	*bytes.Buffer
+}
+
+func (t testWriter) Close() error {
+	return nil
 }

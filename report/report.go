@@ -1,7 +1,7 @@
 package report
 
 import (
-	"os"
+	"io"
 	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -13,23 +13,20 @@ const (
 	CWE_DESCRIPTION = "Use of Hard-coded Credentials"
 )
 
-func Write(findings []Finding, cfg config.Config, ext string, reportPath string) error {
-	file, err := os.Create(reportPath)
-	if err != nil {
-		return err
-	}
+func Write(findings []Finding, cfg config.Config, ext string, report io.WriteCloser) error {
+	var err error
 	ext = strings.ToLower(ext)
 	switch ext {
 	case ".json", "json":
-		err = writeJson(findings, file)
+		err = writeJson(findings, report)
 	case ".jsonextra", "jsonextra":
-		err = writeJsonExtra(findings, file)
+		err = writeJsonExtra(findings, report)
 	case ".csv", "csv":
-		err = writeCsv(findings, file)
+		err = writeCsv(findings, report)
 	case ".xml", "junit":
-		err = writeJunit(findings, file)
+		err = writeJunit(findings, report)
 	case ".sarif", "sarif":
-		err = writeSarif(cfg, findings, file)
+		err = writeSarif(cfg, findings, report)
 	}
 
 	return err
