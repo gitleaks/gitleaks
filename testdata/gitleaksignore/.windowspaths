@@ -1,0 +1,4 @@
+foo\bar\gitleaks-false-positive.yaml:aws-access-token:4
+b55d88dc151f7022901cda41a03d43e0e508f2b7:test_data\test_local_repo_three_leaks.json:aws-access-token:73
+foo/bar/gitleaks-false-positive.yaml:aws-access-token:5
+# comment
