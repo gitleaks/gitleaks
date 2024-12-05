@@ -16,6 +16,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 		d.Sema.Go(func() error {
 			logger := log.With().Str("path", pa.Path).Logger()
 			logger.Trace().Msg("Scanning path")
+
 			f, err := os.Open(pa.Path)
 			if err != nil {
 				if os.IsPermission(err) {
@@ -24,7 +25,9 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				}
 				return err
 			}
-			defer f.Close()
+			defer func() {
+				_ = f.Close()
+			}()
 
 			// Get file size
 			fileInfo, err := f.Stat()
@@ -37,7 +40,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				if rawLength > int64(d.MaxTargetMegaBytes) {
 					logger.Debug().
 						Int64("size", rawLength).
-						Msgf("Skipping file: exceeds --max-target-megabytes")
+						Msg("Skipping file: exceeds --max-target-megabytes")
 					return nil
 				}
 			}
