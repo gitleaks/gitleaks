@@ -109,6 +109,7 @@ func main() {
 		rules.GitlabKubernetesAgentToken(),
 		rules.GitlabOauthAppSecret(),
 		rules.GitlabPat(),
+		rules.GitlabPatRoutable(),
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
 		rules.GitlabRunnerAuthenticationToken(),

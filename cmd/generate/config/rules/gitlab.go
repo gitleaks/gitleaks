@@ -115,6 +115,23 @@ func GitlabPat() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
+func GitlabPatRoutable() *config.Rule {
+	r := config.Rule{
+		RuleID:      "gitlab-pat-routable",
+		Description: "Identified a GitLab Personal Access Token (routable), risking unauthorized access to GitLab repositories and codebase exposure.",
+		Regex:       regexp.MustCompile(`\bglpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b`),
+		Entropy:     4,
+		Keywords:    []string{"glpat-"},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
+	fps := []string{
+		"glpat-xxxxxxxx-xxxxxxxxxxxxxxxxxx.xxxxxxxxx",
+	}
+	return utils.Validate(r, tps, fps)
+}
+
 func GitlabPipelineTriggerToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gitlab-ptt",
