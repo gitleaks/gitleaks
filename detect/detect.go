@@ -412,6 +412,33 @@ MatchLoop:
 			}
 		}
 
+		// check entropy
+		entropy := shannonEntropy(finding.Secret)
+
+		finding.Entropy = float32(entropy)
+		if rule.Entropy != 0.0 {
+			if entropy <= rule.Entropy {				
+				logger.Trace().
+					//Here you can add REDACTED finding or finding.line or leave as is (at your discretion)				
+					Float32("entropy", finding.Entropy).
+					Str("rule-id", rule.RuleID).
+					Msg("Skipping finding due to low entropy")
+				// entropy is too low, skip this finding
+				continue
+			}
+			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
+			// does not support positive lookaheads. Ideally we would want to add a
+			// restriction on generic rules regex that requires the secret match group
+			// contains both numbers and alphabetical characters, not just alphabetical characters.
+			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
+			// secret contains both digits and alphabetical characters.
+			// TODO: this should be replaced with stop words
+			if strings.HasPrefix(rule.RuleID, "generic") {
+				if !containsDigit(finding.Secret) {
+					continue
+				}
+			}
+		}
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		// or if the secret is in the list of stopwords
 		globalAllowlistTarget := finding.Secret
@@ -480,29 +507,7 @@ MatchLoop:
 					Msg("Skipping finding due to rule allowlist")
 				continue MatchLoop
 			}
-		}
-
-		// check entropy
-		entropy := shannonEntropy(finding.Secret)
-		finding.Entropy = float32(entropy)
-		if rule.Entropy != 0.0 {
-			if entropy <= rule.Entropy {
-				// entropy is too low, skip this finding
-				continue
-			}
-			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
-			// does not support positive lookaheads. Ideally we would want to add a
-			// restriction on generic rules regex that requires the secret match group
-			// contains both numbers and alphabetical characters, not just alphabetical characters.
-			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
-			// secret contains both digits and alphabetical characters.
-			// TODO: this should be replaced with stop words
-			if strings.HasPrefix(rule.RuleID, "generic") {
-				if !containsDigit(finding.Secret) {
-					continue
-				}
-			}
-		}
+		}		
 
 		findings = append(findings, finding)
 	}
