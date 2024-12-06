@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func EtsyAccessToken() *config.Rule {
+func EtsyAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "etsy-access-token",
 		Description: "Found an Etsy Access Token, potentially compromising Etsy shop management and customer data.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"(?-i:ETSY|[Ee]tsy)"}, utils.AlphaNumeric("24"), true),

@@ -3,15 +3,15 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func HashiCorpTerraform() *config.Rule {
+func HashiCorpTerraform() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "hashicorp-tf-api-token",
 		Description: "Uncovered a HashiCorp Terraform user/org API token, which may lead to unauthorized infrastructure management and security breaches.",
 		Regex:       regexp.MustCompile(`(?i)[a-z0-9]{14}\.(?-i:atlasv1)\.[a-z0-9\-_=]{60,70}`),
@@ -30,10 +30,10 @@ func HashiCorpTerraform() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func HashicorpField() *config.Rule {
+func HashicorpField() *rule.Rule {
 	keywords := []string{"administrator_login_password", "password"}
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "hashicorp-tf-password",
 		Description: "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches.",
 		Regex:       utils.GenerateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, utils.AlphaNumericExtended("8,20")), true),

@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func ReadMe() *config.Rule {
+func ReadMe() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "readme-api-token",
 		Description: "Detected a Readme API token, risking unauthorized documentation management and content exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`rdme_[a-z0-9]{70}`, false),

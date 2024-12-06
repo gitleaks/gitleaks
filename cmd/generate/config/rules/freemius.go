@@ -2,13 +2,14 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
+
 	"regexp"
 )
 
-func Freemius() *config.Rule {
+func Freemius() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "freemius-secret-key",
 		Description: "Detected a Freemius secret key, potentially exposing sensitive information.",
 		Regex:       regexp.MustCompile(`(?i)["']secret_key["']\s*=>\s*["'](sk_[\S]{29})["']`),

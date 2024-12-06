@@ -2,12 +2,12 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func Snyk() *config.Rule {
+func Snyk() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Uncovered a Snyk API token, potentially compromising software vulnerability scanning and code security.",
 		RuleID:      "snyk-api-token",
 

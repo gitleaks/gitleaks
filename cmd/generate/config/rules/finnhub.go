@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func FinnhubAccessToken() *config.Rule {
+func FinnhubAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "finnhub-access-token",
 		Description: "Found a Finnhub Access Token, risking unauthorized access to financial market data and analytics.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"finnhub"}, utils.AlphaNumeric("20"), true),

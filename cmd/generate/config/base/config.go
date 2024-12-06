@@ -3,6 +3,7 @@ package base
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 	"strings"
 )
@@ -10,7 +11,7 @@ import (
 func CreateGlobalConfig() config.Config {
 	return config.Config{
 		Title: "gitleaks config",
-		Allowlist: config.Allowlist{
+		Allowlist: rule.Allowlist{
 			Description: "global allow lists",
 			Regexes: []*regexp.Regexp{
 				// ----------- General placeholders -----------

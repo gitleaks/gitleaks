@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func InfracostAPIToken() *config.Rule {
+func InfracostAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "infracost-api-token",
 		Description: "Detected an Infracost API Token, risking unauthorized access to cloud cost estimation tools and financial data.",
 		Regex:       utils.GenerateUniqueTokenRegex(`ico-[a-zA-Z0-9]{32}`, false),

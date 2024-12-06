@@ -2,15 +2,15 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func FlutterwavePublicKey() *config.Rule {
+func FlutterwavePublicKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "flutterwave-public-key",
 		Description: "Detected a Finicity Public Key, potentially exposing public cryptographic operations and integrations.",
 		Regex:       regexp.MustCompile(`FLWPUBK_TEST-(?i)[a-h0-9]{32}-X`),
@@ -23,9 +23,9 @@ func FlutterwavePublicKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func FlutterwaveSecretKey() *config.Rule {
+func FlutterwaveSecretKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "flutterwave-secret-key",
 		Description: "Identified a Flutterwave Secret Key, risking unauthorized financial transactions and data breaches.",
 		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{32}-X`),
@@ -38,9 +38,9 @@ func FlutterwaveSecretKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func FlutterwaveEncKey() *config.Rule {
+func FlutterwaveEncKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "flutterwave-encryption-key",
 		Description: "Uncovered a Flutterwave Encryption Key, which may compromise payment processing and sensitive financial information.",
 		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{12}`),

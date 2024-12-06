@@ -2,13 +2,13 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-var githubAllowlist = []config.Allowlist{
+var githubAllowlist = []rule.Allowlist{
 	{
 		Paths: []*regexp.Regexp{
 			// https://github.com/octokit/auth-token.js/?tab=readme-ov-file#createtokenauthtoken-options
@@ -17,9 +17,9 @@ var githubAllowlist = []config.Allowlist{
 	},
 }
 
-func GitHubPat() *config.Rule {
+func GitHubPat() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "github-pat",
 		Description: "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure.",
 		Regex:       regexp.MustCompile(`ghp_[0-9a-zA-Z]{36}`),
@@ -36,9 +36,9 @@ func GitHubPat() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func GitHubFineGrainedPat() *config.Rule {
+func GitHubFineGrainedPat() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "github-fine-grained-pat",
 		Description: "Found a GitHub Fine-Grained Personal Access Token, risking unauthorized repository access and code manipulation.",
 		Regex:       regexp.MustCompile(`github_pat_\w{82}`),
@@ -54,9 +54,9 @@ func GitHubFineGrainedPat() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func GitHubOauth() *config.Rule {
+func GitHubOauth() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "github-oauth",
 		Description: "Discovered a GitHub OAuth Access Token, posing a risk of compromised GitHub account integrations and data leaks.",
 		Regex:       regexp.MustCompile(`gho_[0-9a-zA-Z]{36}`),
@@ -72,9 +72,9 @@ func GitHubOauth() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func GitHubApp() *config.Rule {
+func GitHubApp() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "github-app-token",
 		Description: "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security.",
 		Regex:       regexp.MustCompile(`(?:ghu|ghs)_[0-9a-zA-Z]{36}`),
@@ -93,9 +93,9 @@ func GitHubApp() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func GitHubRefresh() *config.Rule {
+func GitHubRefresh() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "github-refresh-token",
 		Description: "Detected a GitHub Refresh Token, which could allow prolonged unauthorized access to GitHub services.",
 		Regex:       regexp.MustCompile(`ghr_[0-9a-zA-Z]{36}`),

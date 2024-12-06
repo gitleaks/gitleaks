@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func Heroku() *config.Rule {
+func Heroku() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security.",
 		RuleID:      "heroku-api-key",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"heroku"}, utils.Hex8_4_4_4_12(), true),

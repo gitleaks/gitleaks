@@ -3,16 +3,16 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func JFrogAPIKey() *config.Rule {
+func JFrogAPIKey() *rule.Rule {
 	keywords := []string{"jfrog", "artifactory", "bintray", "xray"}
 
 	// Define Rule
-	r := config.Rule{
+	r := rule.Rule{
 		// Human readable description of the rule
 		Description: "Found a JFrog API Key, posing a risk of unauthorized access to software artifact repositories and build pipelines.",
 
@@ -34,11 +34,11 @@ func JFrogAPIKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func JFrogIdentityToken() *config.Rule {
+func JFrogIdentityToken() *rule.Rule {
 	keywords := []string{"jfrog", "artifactory", "bintray", "xray"}
 
 	// Define Rule
-	r := config.Rule{
+	r := rule.Rule{
 		// Human readable description of the rule
 		Description: "Discovered a JFrog Identity Token, potentially compromising access to JFrog services and sensitive software artifacts.",
 

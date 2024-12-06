@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func DiscordAPIToken() *config.Rule {
+func DiscordAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "discord-api-token",
 		Description: "Detected a Discord API key, potentially compromising communication channels and user data privacy on Discord.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.Hex("64"), true),
@@ -20,9 +20,9 @@ func DiscordAPIToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func DiscordClientID() *config.Rule {
+func DiscordClientID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "discord-client-id",
 		Description: "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.Numeric("18"), true),
@@ -39,9 +39,9 @@ func DiscordClientID() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func DiscordClientSecret() *config.Rule {
+func DiscordClientSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "discord-client-secret",
 		Description: "Discovered a potential Discord client secret, risking compromised Discord bot integrations and data leaks.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"discord"}, utils.AlphaNumericExtended("32"), true),

@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func LinkedinClientID() *config.Rule {
+func LinkedinClientID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "linkedin-client-id",
 		Description: "Found a LinkedIn Client ID, risking unauthorized access to LinkedIn integrations and professional data exposure.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"linked[_-]?in"}, utils.AlphaNumeric("14"), true),
@@ -25,9 +25,9 @@ func LinkedinClientID() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func LinkedinClientSecret() *config.Rule {
+func LinkedinClientSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "linkedin-client-secret",
 		Description: "Discovered a LinkedIn Client secret, potentially compromising LinkedIn application integrations and user data.",
 		Regex: utils.GenerateSemiGenericRegex([]string{

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/google/go-cmp/cmp"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 	"testing"
 
@@ -27,14 +28,14 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allowlist_old_compat",
 			cfg: Config{
-				Rules: map[string]Rule{"example": {
+				Rules: map[string]rule.Rule{"example": {
 					RuleID:   "example",
 					Regex:    regexp.MustCompile(`example\d+`),
 					Tags:     []string{},
 					Keywords: []string{},
-					Allowlists: []Allowlist{
+					Allowlists: []rule.Allowlist{
 						{
-							MatchCondition: AllowlistMatchOr,
+							MatchCondition: rule.AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
 						},
 					},
@@ -60,15 +61,15 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_aws_re",
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []rule.Allowlist{
 						{
-							MatchCondition: AllowlistMatchOr,
+							MatchCondition: rule.AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
@@ -79,15 +80,15 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_commit",
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []rule.Allowlist{
 						{
-							MatchCondition: AllowlistMatchOr,
+							MatchCondition: rule.AllowlistMatchOr,
 							Commits:        []string{"allowthiscommit"},
 						},
 					},
@@ -98,15 +99,15 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "allow_path",
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []rule.Allowlist{
 						{
-							MatchCondition: AllowlistMatchOr,
+							MatchCondition: rule.AllowlistMatchOr,
 							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
@@ -117,7 +118,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "entropy_group",
 			cfg: Config{
-				Rules: map[string]Rule{"discord-api-key": {
+				Rules: map[string]rule.Rule{"discord-api-key": {
 					RuleID:      "discord-api-key",
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
@@ -147,7 +148,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "base",
 			cfg: Config{
-				Rules: map[string]Rule{
+				Rules: map[string]rule.Rule{
 					"aws-access-key": {
 						RuleID:      "aws-access-key",
 						Description: "AWS Access Key",
@@ -175,20 +176,20 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "extend_rule_allowlist_or",
 			cfg: Config{
-				Rules: map[string]Rule{
+				Rules: map[string]rule.Rule{
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []rule.Allowlist{
 							{
-								MatchCondition: AllowlistMatchOr,
+								MatchCondition: rule.AllowlistMatchOr,
 								StopWords:      []string{"fake"},
 							},
 							{
-								MatchCondition: AllowlistMatchOr,
+								MatchCondition: rule.AllowlistMatchOr,
 								Commits:        []string{"abcdefg1"},
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
 								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
@@ -203,20 +204,20 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "extend_rule_allowlist_and",
 			cfg: Config{
-				Rules: map[string]Rule{
+				Rules: map[string]rule.Rule{
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []rule.Allowlist{
 							{
-								MatchCondition: AllowlistMatchOr,
+								MatchCondition: rule.AllowlistMatchOr,
 								StopWords:      []string{"fake"},
 							},
 							{
-								MatchCondition: AllowlistMatchAnd,
+								MatchCondition: rule.AllowlistMatchAnd,
 								Commits:        []string{"abcdefg1"},
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`ignore\.xaml`)},
 								Regexes:        []*regexp.Regexp{regexp.MustCompile(`foo.+bar`)},
@@ -231,16 +232,16 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName: "extend_empty_regexpath",
 			cfg: Config{
-				Rules: map[string]Rule{
+				Rules: map[string]rule.Rule{
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []rule.Allowlist{
 							{
-								MatchCondition: AllowlistMatchOr,
+								MatchCondition: rule.AllowlistMatchOr,
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`something.py`)},
 							},
 						},
@@ -252,7 +253,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_description",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "Puppy Doggy",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
@@ -266,7 +267,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_entropy",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
@@ -281,7 +282,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_secret_group",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:a)(?:a)"),
@@ -296,7 +297,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_regex",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:a)"),
@@ -310,7 +311,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_path",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
@@ -325,7 +326,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_tags",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
@@ -339,7 +340,7 @@ func TestTranslate(t *testing.T) {
 			cfgName: "override_keywords",
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
-				Rules: map[string]Rule{"aws-access-key": {
+				Rules: map[string]rule.Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
@@ -373,7 +374,7 @@ func TestTranslate(t *testing.T) {
 			}
 
 			if len(tt.rules) > 0 {
-				rules := make(map[string]Rule)
+				rules := make(map[string]rule.Rule)
 				for _, name := range tt.rules {
 					rules[name] = cfg.Rules[name]
 				}

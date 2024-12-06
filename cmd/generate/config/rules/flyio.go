@@ -3,15 +3,15 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
 // https://fly.io/docs/security/tokens/
 // https://github.com/trufflesecurity/trufflehog/pull/2381/files#r1565860579
 // https://github.com/superfly/macaroon-elixir/blob/8b42043b0a24aada5c8b8eb8505dbf1590557f1b/test/vectors.json#L7
-func FlyIOAccessToken() *config.Rule {
+func FlyIOAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "flyio-access-token",
 		Description: "Uncovered a Fly.io API key", // TODO
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:fo1_[\w-]{43}|fm1[ar]_[a-zA-Z0-9+\/]{100,}={0,3}|fm2_[a-zA-Z0-9+\/]{100,}={0,3})`, false),

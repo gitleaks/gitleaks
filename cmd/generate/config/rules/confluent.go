@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func ConfluentSecretKey() *config.Rule {
+func ConfluentSecretKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "confluent-secret-key",
 		Description: "Found a Confluent Secret Key, potentially risking unauthorized operations and data access within Confluent services.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"confluent"}, utils.AlphaNumeric("64"), true),
@@ -22,9 +22,9 @@ func ConfluentSecretKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func ConfluentAccessToken() *config.Rule {
+func ConfluentAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "confluent-access-token",
 		Description: "Identified a Confluent Access Token, which could compromise access to streaming data platforms and sensitive data flow.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"confluent"}, utils.AlphaNumeric("16"), true),

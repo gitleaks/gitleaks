@@ -2,15 +2,15 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func Duffel() *config.Rule {
+func Duffel() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "duffel-api-token",
 		Description: "Uncovered a Duffel API token, which may compromise travel platform integrations and sensitive customer data.",
 		Regex:       regexp.MustCompile(`duffel_(?:test|live)_(?i)[a-z0-9_\-=]{43}`),

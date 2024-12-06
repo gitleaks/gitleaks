@@ -2,16 +2,16 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // OpenShift 4 user tokens are prefixed with `sha256~`.
 // https://docs.redhat.com/en/documentation/openshift_container_platform/4.10/html-single/authentication_and_authorization/index#oauth-view-details-tokens_managing-oauth-access-tokens
-func OpenshiftUserToken() *config.Rule {
-	r := config.Rule{
+func OpenshiftUserToken() *rule.Rule {
+	r := rule.Rule{
 		RuleID:      "openshift-user-token",
 		Description: "Found an OpenShift user token, potentially compromising an OpenShift/Kubernetes cluster.",
 		// TODO: Do tokens vary in length or are they always 43?

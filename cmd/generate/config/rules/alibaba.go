@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func AlibabaAccessKey() *config.Rule {
+func AlibabaAccessKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "alibaba-access-key-id",
 		Description: "Detected an Alibaba Cloud AccessKey ID, posing a risk of unauthorized cloud resource access and potential data compromise.",
 		Regex:       utils.GenerateUniqueTokenRegex(`LTAI(?i)[a-z0-9]{20}`, false),
@@ -24,9 +24,9 @@ func AlibabaAccessKey() *config.Rule {
 }
 
 // TODO
-func AlibabaSecretKey() *config.Rule {
+func AlibabaSecretKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "alibaba-secret-key",
 		Description: "Discovered a potential Alibaba Cloud Secret Key, potentially allowing unauthorized operations and data access within Alibaba Cloud.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"alibaba"}, utils.AlphaNumeric("30"), true),

@@ -2,14 +2,13 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func PrivateKey() *config.Rule {
+func PrivateKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
 		RuleID:      "private-key",
 		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?KEY(?: BLOCK)?-----`),

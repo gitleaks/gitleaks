@@ -2,15 +2,15 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func FrameIO() *config.Rule {
+func FrameIO() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Found a Frame.io API token, potentially compromising video collaboration and project management.",
 		RuleID:      "frameio-api-token",
 		Regex:       regexp.MustCompile(`fio-u-(?i)[a-z0-9\-_=]{64}`),

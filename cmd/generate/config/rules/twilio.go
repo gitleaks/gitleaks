@@ -2,15 +2,15 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func Twilio() *config.Rule {
+func Twilio() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "twilio-api-key",
 		Description: "Found a Twilio API Key, posing a risk to communication services and sensitive customer interaction data.",
 		Regex:       regexp.MustCompile(`SK[0-9a-fA-F]{32}`),

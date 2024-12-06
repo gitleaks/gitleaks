@@ -3,14 +3,13 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func AWS() *config.Rule {
+func AWS() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "aws-access-token",
 		Description: "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
 		Regex:       regexp.MustCompile(`\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})\b`),
@@ -23,7 +22,7 @@ func AWS() *config.Rule {
 			"ABIA", // AWS STS service bearer token
 			"ACCA", // Context-specific credential
 		},
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`.+EXAMPLE$`),

@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func JWT() *config.Rule {
+func JWT() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Uncovered a JSON Web Token, which may lead to unauthorized access to web applications and sensitive user data.",
 		RuleID:      "jwt",
 		Regex:       utils.GenerateUniqueTokenRegex(`ey[a-zA-Z0-9]{17,}\.ey[a-zA-Z0-9\/\\_-]{17,}\.(?:[a-zA-Z0-9\/\\_-]{10,}={0,2})?`, false),
@@ -69,9 +68,9 @@ func JWT() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func JWTBase64() *config.Rule {
+func JWTBase64() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "jwt-base64",
 		Description: "Detected a Base64-encoded JSON Web Token, posing a risk of exposing encoded authentication and data exchange information.",
 		Regex: regexp.MustCompile(

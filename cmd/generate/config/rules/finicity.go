@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func FinicityClientSecret() *config.Rule {
+func FinicityClientSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Identified a Finicity Client Secret, which could lead to compromised financial service integrations and data breaches.",
 		RuleID:      "finicity-client-secret",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"finicity"}, utils.AlphaNumeric("20"), true),
@@ -21,9 +21,9 @@ func FinicityClientSecret() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func FinicityAPIToken() *config.Rule {
+func FinicityAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Detected a Finicity API token, potentially risking financial data access and unauthorized financial operations.",
 		RuleID:      "finicity-api-token",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"finicity"}, utils.Hex("32"), true),

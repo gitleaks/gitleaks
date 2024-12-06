@@ -3,20 +3,19 @@ package rules
 import (
 	"fmt"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // https://curl.se/docs/manpage.html#-u
-func CurlBasicAuth() *config.Rule {
-	r := config.Rule{
+func CurlBasicAuth() *rule.Rule {
+	r := rule.Rule{
 		RuleID:      "curl-auth-user",
 		Description: "Discovered a potential basic authorization token provided in a curl command, which could compromise the curl accessed resource.",
 		Regex:       regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
 		Keywords:    []string{"curl"},
 		Entropy:     2,
-		Allowlists: []config.Allowlist{
+		Allowlists: []rule.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`[^:]+:(change(it|me)|pass(word)?|pwd|test|token|\*+|x+)`), // common placeholder passwords
@@ -95,10 +94,10 @@ nc -u -l 41234`,
 }
 
 // https://curl.se/docs/manpage.html#-H
-func CurlHeaderAuth() *config.Rule {
+func CurlHeaderAuth() *rule.Rule {
 	// language=regexp
 	authPat := `(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-(?:[a-z]+-)?)?(?:Api-?)?(?:Key|Token)):[ \t]{0,5}([\w=~@.+/-]{8,}))`
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "curl-auth-header",
 		Description: "Discovered a potential authorization token provided in a curl command header, which could compromise the curl accessed resource.",
 		Regex: regexp.MustCompile(

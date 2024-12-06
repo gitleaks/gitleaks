@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func SquareAccessToken() *config.Rule {
+func SquareAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "square-access-token",
 		Description: "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`(?:EAAA|sq0atp-)[\w-]{22,60}`, false),
@@ -28,9 +28,9 @@ func SquareAccessToken() *config.Rule {
 	return utils.Validate(r, tps, fps)
 }
 
-func SquareSecret() *config.Rule {
+func SquareSecret() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "square-secret",
 		Description: "Square Secret",
 		Regex:       utils.GenerateUniqueTokenRegex(`sq0csp-[\w-]{43}`, false),

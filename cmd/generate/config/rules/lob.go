@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func LobPubAPIToken() *config.Rule {
+func LobPubAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Detected a Lob Publishable API Key, posing a risk of exposing mail and print service integrations.",
 		RuleID:      "lob-pub-api-key",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"lob"}, `(test|live)_pub_[a-f0-9]{31}`, true),
@@ -25,9 +25,9 @@ func LobPubAPIToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func LobAPIToken() *config.Rule {
+func LobAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Uncovered a Lob API Key, which could lead to unauthorized access to mailing and address verification services.",
 		RuleID:      "lob-api-key",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"lob"}, `(live|test)_[a-f0-9]{35}`, true),

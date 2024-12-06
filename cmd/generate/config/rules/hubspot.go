@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func HubSpot() *config.Rule {
+func HubSpot() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		Description: "Found a HubSpot API Token, posing a risk to CRM data integrity and unauthorized marketing operations.",
 		RuleID:      "hubspot-api-key",
 		Regex: utils.GenerateSemiGenericRegex([]string{"hubspot"},

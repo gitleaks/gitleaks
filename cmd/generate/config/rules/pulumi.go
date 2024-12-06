@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func PulumiAPIToken() *config.Rule {
+func PulumiAPIToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "pulumi-api-token",
 		Description: "Found a Pulumi API token, posing a risk to infrastructure as code services and cloud resource management.",
 		Regex:       utils.GenerateUniqueTokenRegex(`pul-[a-f0-9]{40}`, false),

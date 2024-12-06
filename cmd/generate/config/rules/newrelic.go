@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func NewRelicUserID() *config.Rule {
+func NewRelicUserID() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "new-relic-user-api-key",
 		Description: "Discovered a New Relic user API Key, which could lead to compromised application insights and performance monitoring.",
 		Regex: utils.GenerateSemiGenericRegex([]string{
@@ -27,9 +27,9 @@ func NewRelicUserID() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func NewRelicUserKey() *config.Rule {
+func NewRelicUserKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "new-relic-user-api-id",
 		Description: "Found a New Relic user API ID, posing a risk to application monitoring services and data integrity.",
 		Regex: utils.GenerateSemiGenericRegex([]string{
@@ -50,9 +50,9 @@ func NewRelicUserKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func NewRelicBrowserAPIKey() *config.Rule {
+func NewRelicBrowserAPIKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "new-relic-browser-api-token",
 		Description: "Identified a New Relic ingest browser API token, risking unauthorized access to application performance data and analytics.",
 		Regex: utils.GenerateSemiGenericRegex([]string{
@@ -71,9 +71,9 @@ func NewRelicBrowserAPIKey() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
-func NewRelicInsertKey() *config.Rule {
+func NewRelicInsertKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "new-relic-insert-key",
 		Description: "Discovered a New Relic insight insert key, compromising data injection into the platform.",
 		Regex: utils.GenerateSemiGenericRegex([]string{

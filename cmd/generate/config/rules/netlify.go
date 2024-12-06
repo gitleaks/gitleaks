@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func NetlifyAccessToken() *config.Rule {
+func NetlifyAccessToken() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "netlify-access-token",
 		Description: "Detected a Netlify Access Token, potentially compromising web hosting services and site management.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"netlify"},

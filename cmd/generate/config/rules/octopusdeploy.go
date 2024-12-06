@@ -3,12 +3,12 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/rule"
 )
 
-func OctopusDeployApiKey() *config.Rule {
+func OctopusDeployApiKey() *rule.Rule {
 	// define rule
-	r := config.Rule{
+	r := rule.Rule{
 		RuleID:      "octopus-deploy-api-key",
 		Description: "Discovered a potential Octopus Deploy API key, risking application deployments and operational security.",
 		Regex:       utils.GenerateUniqueTokenRegex(`API-[A-Z0-9]{26}`, false),
