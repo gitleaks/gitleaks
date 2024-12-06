@@ -168,6 +168,16 @@ regexes = [
 ]
 
 [[rules]]
+id = "aws-secret-key"
+regex = '''(?i)(?:[^a-z0-9+/.-]|\A)([a-z0-9+/]{40})(?:[^a-z0-9+/.-]|\z)'''
+entropy = 4.5
+keywords = [
+    "access",
+    "secret",
+    "key"
+]
+
+[[rules]]
 id = "azure-ad-client-secret"
 description = "Azure AD Client Secret"
 regex = '''(?:^|[\\'"\x60\s>=:(,)])([a-zA-Z0-9_~.]{3}\dQ~[a-zA-Z0-9_~.-]{31,34})(?:$|[\\'"\x60\s<),])'''
@@ -2069,7 +2079,7 @@ keywords = ["gho_"]
 [[rules]]
 id = "github-pat"
 description = "Uncovered a GitHub Personal Access Token, potentially leading to unauthorized repository access and sensitive content exposure."
-regex = '''ghp_[0-9a-zA-Z]{36}'''
+regex = '''\bghp_[0-9a-zA-Z]{36}\b'''
 entropy = 3
 keywords = ["ghp_"]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
