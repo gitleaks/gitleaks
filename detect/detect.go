@@ -294,12 +294,13 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		// Path _only_ rule
 		if rule.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
-				Description: rule.Description,
-				File:        fragment.FilePath,
-				SymlinkFile: fragment.SymlinkFile,
-				RuleID:      rule.RuleID,
-				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-				Tags:        rule.Tags,
+				Description:    rule.Description,
+				File:           fragment.FilePath,
+				SymlinkFile:    fragment.SymlinkFile,
+				RuleID:         rule.RuleID,
+				IsPathOnlyRule: true,
+				Match:          fmt.Sprintf("file detected: %s", fragment.FilePath),
+				Tags:           rule.Tags,
 			}
 			return append(findings, finding)
 		}
