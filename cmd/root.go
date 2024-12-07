@@ -25,13 +25,16 @@ const banner = `
     ░    gitleaks
 
 `
-
-const configDescription = `config file path
+const (
+	configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. (target path)/.gitleaks.toml
-If none of the three options are used, then gitleaks will use the default config`
+3. ~/.config/.gitleaks/config.toml
+4. (target path)/.gitleaks.toml
+If none of the four options are used, then gitleaks will use the default config`
+	gitleaksHomeConfigRelPath = ".config/gitleaks/config.toml"
+)
 
 var rootCmd = &cobra.Command{
 	Use:     "gitleaks",
@@ -99,6 +102,13 @@ func initConfig(source string) {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal().Msgf("unable to get user home directory: %s", err)
+	}
+	homeDirConfigPath := filepath.Join(homeDir, gitleaksHomeConfigRelPath)
+
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
 		log.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
@@ -106,6 +116,9 @@ func initConfig(source string) {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
 		viper.SetConfigFile(envPath)
 		log.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+	} else if _, err := os.Stat(homeDirConfigPath); err == nil {
+		viper.SetConfigFile(homeDirConfigPath)
+		log.Debug().Msgf("using gitleaks config from %s", homeDirConfigPath)
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
