@@ -2744,21 +2744,21 @@ entropy = 3.5
 keywords = ["sntryu_"]
 
 [[rules]]
-id = "settlemint-personal-access-token"
-description="Found a Settlemint Personal Access Token."
-regex='''(?i)(sm_pat)(_)([0-9a-zA-Z]+)'''
-keywords = ["sm_pat"]
-
-[[rules]]
 id = "settlemint-application-access-token"
-description="Found a Settlemint Application Access Token."
-regex='''(?i)(sm_aat)(_)([0-9a-zA-Z]+)'''
+description = "Found a Settlemint Application Access Token."
+regex = '''\b((sm_aat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = ["sm_aat"]
 
 [[rules]]
+id = "settlemint-personal-access-token"
+description = "Found a Settlemint Personal Access Token."
+regex = '''\b((sm_pat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_pat"]
+
+[[rules]]
 id = "settlemint-service-access-token"
-description="Found a Settlemint Service Access Token."
-regex='''(?i)(sm_sat)(_)([0-9a-zA-Z]+)'''
+description = "Found a Settlemint Service Access Token."
+regex = '''\b((sm_sat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 keywords = ["sm_sat"]
 
 [[rules]]
