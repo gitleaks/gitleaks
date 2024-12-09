@@ -11,14 +11,14 @@ func SettlemintPersonalAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Found a Settlemint Personal Access Token.",
 		RuleID:      "settlemint-personal-access-token",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_pat_"}, `[a-zA-Z0-9]+`, false),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_pat"}, `[a-zA-Z0-9]+`, false),
 		Keywords: []string{
 			"sm_pat",
 		},
 	}
 
 	// validate
-	tps := []string{"settlemintToken := \"sm_pat_" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
+	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_pat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
 	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
 	return utils.Validate(r, tps, fps)
 }
@@ -28,14 +28,14 @@ func SettlemintApplicationAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Found a Settlemint Application Access Token.",
 		RuleID:      "settlemint-application-access-token",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_aat_"}, `[a-zA-Z0-9]+`, false),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_aat"}, `[a-zA-Z0-9]+`, false),
 		Keywords: []string{
 			"sm_aat",
 		},
 	}
 
 	// validate
-	tps := []string{"settlemintToken := \"sm_aat_" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
+	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_aat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
 	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
 	return utils.Validate(r, tps, fps)
 }
@@ -45,14 +45,14 @@ func SettlemintServiceAccessToken() *config.Rule {
 	r := config.Rule{
 		Description: "Found a Settlemint Service Access Token.",
 		RuleID:      "settlemint-service-access-token",
-		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_sat_"}, `[a-zA-Z0-9]+`, false),
+		Regex:       utils.GenerateSemiGenericRegex([]string{"sm_sat"}, `[a-zA-Z0-9]+`, false),
 		Keywords: []string{
 			"sm_sat",
 		},
 	}
 
 	// validate
-	tps := []string{"settlemintToken := \"sm_sat" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
+	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_sat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
 	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
 	return utils.Validate(r, tps, fps)
 }
