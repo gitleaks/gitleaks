@@ -2542,6 +2542,24 @@ keywords = [
 ]
 
 [[rules]]
+id = "settlemint-application-access-token"
+description = "Found a Settlemint Application Access Token."
+regex = '''\b((sm_aat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_aat"]
+
+[[rules]]
+id = "settlemint-personal-access-token"
+description = "Found a Settlemint Personal Access Token."
+regex = '''\b((sm_pat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_pat"]
+
+[[rules]]
+id = "settlemint-service-access-token"
+description = "Found a Settlemint Service Access Token."
+regex = '''\b((sm_sat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_sat"]
+
+[[rules]]
 id = "shippo-api-token"
 description = "Discovered a Shippo API token, potentially compromising shipping services and customer order data."
 regex = '''(?i)\b(shippo_(live|test)_[a-f0-9]{40})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
