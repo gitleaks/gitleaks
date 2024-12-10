@@ -48,22 +48,26 @@ func TestWriteCSV(t *testing.T) {
 		},
 	}
 
+	reporter := CsvReporter{}
 	for _, test := range tests {
 		t.Run(test.testReportName, func(t *testing.T) {
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".csv"))
 			require.NoError(t, err)
-			err = writeCsv(test.findings, tmpfile)
+
+			err = reporter.Write(tmpfile, test.findings)
 			require.NoError(t, err)
 			assert.FileExists(t, tmpfile.Name())
+
 			got, err := os.ReadFile(tmpfile.Name())
 			require.NoError(t, err)
 			if test.wantEmpty {
 				assert.Empty(t, got)
 				return
 			}
+
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, want, got)
+			assert.Equal(t, string(want), string(got))
 		})
 	}
 }

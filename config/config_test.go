@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"regexp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
