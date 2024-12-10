@@ -552,8 +552,8 @@ keywords = [
     "secret",
     "token",
 ]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+
+[[rules.allowlists]]
 regexTarget = "match"
 regexes = [
     '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
@@ -2036,6 +2036,11 @@ stopwords = [
     "zsh.",
     "zsh_",
 ]
+[[rules.allowlists]]
+regexes = [
+    '''^[a-zA-Z_.-]+$''',
+]
+
 
 [[rules]]
 id = "github-app-token"
