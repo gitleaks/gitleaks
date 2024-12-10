@@ -19,7 +19,10 @@ func SettlemintPersonalAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_pat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
-	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
+	fps := []string{
+		"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\"",
+		"nonMatchingToken := \"sm_pat_" + secrets.NewSecret(utils.AlphaNumeric("10")) + "\"",
+	}
 	return utils.Validate(r, tps, fps)
 }
 
@@ -36,7 +39,10 @@ func SettlemintApplicationAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_aat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
-	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\""}
+	fps := []string{
+		"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\"",
+		"nonMatchingToken := \"sm_aat_" + secrets.NewSecret(utils.AlphaNumeric("10")) + "\"",
+	}
 	return utils.Validate(r, tps, fps)
 }
 
@@ -53,6 +59,9 @@ func SettlemintServiceAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("settlemintToken", "sm_sat_"+secrets.NewSecret(utils.AlphaNumeric("16")))
-	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\"", "nonMatchingToken := \"sm_sat_" + secrets.NewSecret(utils.AlphaNumeric("10")) + "\""}
+	fps := []string{
+		"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("16")) + "\"",
+		"nonMatchingToken := \"sm_sat_" + secrets.NewSecret(utils.AlphaNumeric("10")) + "\"",
+	}
 	return utils.Validate(r, tps, fps)
 }
