@@ -5,11 +5,13 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
-	"strings"
 )
 
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {

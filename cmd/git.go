@@ -93,5 +93,5 @@ func runGit(cmd *cobra.Command, args []string) {
 		log.Error().Err(err).Msg("failed to scan Git repository")
 	}
 
-	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
+	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

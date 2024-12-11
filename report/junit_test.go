@@ -65,20 +65,24 @@ func TestWriteJunit(t *testing.T) {
 		},
 	}
 
+	reporter := JunitReporter{}
 	for _, test := range tests {
 		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".xml"))
 		require.NoError(t, err)
-		err = writeJunit(test.findings, tmpfile)
+
+		err = reporter.Write(tmpfile, test.findings)
 		require.NoError(t, err)
 		assert.FileExists(t, tmpfile.Name())
+
 		got, err := os.ReadFile(tmpfile.Name())
 		require.NoError(t, err)
 		if test.wantEmpty {
 			assert.Empty(t, got)
 			return
 		}
+
 		want, err := os.ReadFile(test.expected)
 		require.NoError(t, err)
-		assert.Equal(t, want, got)
+		assert.Equal(t, string(want), string(got))
 	}
 }
