@@ -45,6 +45,7 @@ func main() {
 		rules.BittrexAccessKey(),
 		rules.BittrexSecretKey(),
 		rules.Beamer(),
+		rules.ChargebeeAccessToken(),
 		rules.CodecovAccessToken(),
 		rules.CoinbaseAccessToken(),
 		rules.Clojars(),
