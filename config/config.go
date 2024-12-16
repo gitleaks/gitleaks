@@ -93,8 +93,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if vr.Keywords == nil {
 			vr.Keywords = []string{}
 		} else {
-			for _, k := range vr.Keywords {
-				keywords[strings.ToLower(k)] = struct{}{}
+			for i, k := range vr.Keywords {
+				keyword := strings.ToLower(k)
+				keywords[keyword] = struct{}{}
+				vr.Keywords[i] = keyword
 			}
 		}
 
