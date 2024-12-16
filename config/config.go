@@ -289,7 +289,7 @@ func (c *Config) extend(extensionConfig Config) {
 			// Rule doesn't exist, add it to the config.
 			c.Rules[ruleID] = baseRule
 			for _, k := range baseRule.Keywords {
-				c.Keywords[strings.ToLower(k)] = struct{}{}
+				c.Keywords[k] = struct{}{}
 			}
 			c.OrderedRules = append(c.OrderedRules, ruleID)
 		} else {
@@ -316,7 +316,7 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
-				c.Keywords[strings.ToLower(k)] = struct{}{}
+				c.Keywords[k] = struct{}{}
 			}
 			c.Rules[ruleID] = baseRule
 		}
