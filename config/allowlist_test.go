@@ -2,12 +2,12 @@ package config
 
 import (
 	"errors"
-	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
+	regexp "github.com/wasilibs/go-re2"
 )
 
 func TestCommitAllowed(t *testing.T) {

@@ -2,7 +2,8 @@ package rules
 
 import (
 	"fmt"
-	"regexp"
+
+	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 
@@ -42,7 +43,7 @@ func KubernetesSecret() *config.Rule {
 					regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
 					// TODO: Requires multiple allowlists to target match.
 					// Avoid overreach between directives.
-					//regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
+					// regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
 				},
 			},
 		},
@@ -250,9 +251,9 @@ type: Opaque
 		//    name: mysecret
 		//    creationPolicy: Owner
 		//
-		//---
+		// ---
 		//
-		//kind: ConfigMap
+		// kind: ConfigMap
 		//  data:
 		//        conversionStrategy: Default
 		//        decodingStrategy: None

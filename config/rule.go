@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	regexp "github.com/wasilibs/go-re2"
 )
 
 // Rules contain information that define details on how to detect secrets

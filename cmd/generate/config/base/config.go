@@ -2,9 +2,9 @@ package base
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
+	regexp "github.com/wasilibs/go-re2"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
