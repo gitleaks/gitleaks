@@ -93,8 +93,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if vr.Keywords == nil {
 			vr.Keywords = []string{}
 		} else {
-			for _, k := range vr.Keywords {
-				keywords[strings.ToLower(k)] = struct{}{}
+			for i, k := range vr.Keywords {
+				keyword := strings.ToLower(k)
+				keywords[keyword] = struct{}{}
+				vr.Keywords[i] = keyword
 			}
 		}
 
@@ -314,9 +316,6 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
-				c.Keywords[k] = struct{}{}
-			}
-			for _, k := range currentRule.Keywords {
 				c.Keywords[k] = struct{}{}
 			}
 			c.Rules[ruleID] = baseRule
