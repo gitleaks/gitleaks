@@ -1,7 +1,7 @@
 package config
 
 import (
-	"regexp"
+	regexp "github.com/wasilibs/go-re2"
 )
 
 func anyRegexMatch(f string, res []*regexp.Regexp) bool {

@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
+	regexp "github.com/wasilibs/go-re2"
 	"golang.org/x/exp/maps"
 )
 
