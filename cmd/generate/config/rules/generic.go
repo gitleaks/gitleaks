@@ -20,11 +20,10 @@ func GenericCredential() *config.Rule {
 			"credential",
 			"creds",
 			"key",
-			"passwd",
-			"password",
+			"passw(or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}`, true),
+		}, `(?:[0-9a-z\-_.=]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -111,6 +110,8 @@ func GenericCredential() *config.Rule {
 		// Token
 		utils.GenerateSampleSecret("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443"), //gitleaks:allow
 		utils.GenerateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
+		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
+		`"user_auth": "am9obmRvZTpkMDY5NGIxYi1jMTcxLTQ4ODYt+TMyYS0wMmUwOWQ1/mIwNjc="`,
 	)
 	fps := []string{
 		// Access
@@ -127,7 +128,7 @@ func GenericCredential() *config.Rule {
 		`[DEBUG]		org.neo4j.neo4j-graphdb-api:jar:3.5.12:test`,
 		`apiUrl=apigee.corpint.com`,
 		// TODO: Jetbrains IML files (requires line-level allowlist).
-		//`<orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.directory.api:api-asn1-api:1.0.0-M20" level="projcet" />`
+		// `<orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.directory.api:api-asn1-api:1.0.0-M20" level="projcet" />`
 
 		// Auth
 		`author = "james.fake@ymail.com",`,
@@ -156,9 +157,9 @@ func GenericCredential() *config.Rule {
 		`minisat-master-keying:x64-uwp=fail`,
 		`IceSSL.KeyFile=s_rsa1024_priv.pem`,
 		`"bucket_key": "SalesResults-1.2"`,
-		//`<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
+		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
 		`<key tag="SecurityIdentifier" name="SecurityIdentifier" type="STRING" />`,
-		//`packageKey":` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		// `packageKey":` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`schemaKey = 'DOC_Vector_5_32'`,
 		`sequenceKey = "18"`,
 		`app.keystore.file=env/cert.p12`,
@@ -166,15 +167,15 @@ func GenericCredential() *config.Rule {
 		`	doc.Security.KeySize = PdfEncryptionKeySize.Key128Bit;`,
 		`o.keySelector=n,o.haKey=!1,`,
 		// TODO: Requires line-level allowlists.
-		//`<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
+		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//	`secret:
-		//secretName: app-decryption-secret
-		//items:
+		// secretName: app-decryption-secret
+		// items:
 		//	- key: app-k8s.yml
 		//	  path: app-k8s.yml`,
 
 		// TODO: https://learn.microsoft.com/en-us/windows/apps/design/style/xaml-theme-resources
-		//`<Color x:Key="NormalBrushGradient1">#FFBAE4FF</Color>`,
+		// `<Color x:Key="NormalBrushGradient1">#FFBAE4FF</Color>`,
 
 		// Password
 		`password combination.
