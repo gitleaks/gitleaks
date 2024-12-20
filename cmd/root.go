@@ -378,7 +378,7 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 	}
 
 	// write report if desired
-	if detector.Reporter != nil && len(findings) > 0 {
+	if detector.Reporter != nil {
 		var (
 			file      io.WriteCloser
 			reportErr error
