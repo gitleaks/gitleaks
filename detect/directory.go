@@ -110,11 +110,12 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					}
 
 					// Count the number of newlines in this chunk
-					chunk := string(peekBuf.Bytes())
+					chunk := peekBuf.String()
 					linesInChunk := strings.Count(chunk, "\n")
 					totalLines += linesInChunk
 					fragment := Fragment{
 						Raw:      chunk,
+						Bytes:    peekBuf.Bytes(),
 						FilePath: pa.Path,
 					}
 					if pa.Symlink != "" {

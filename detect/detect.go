@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -87,12 +88,16 @@ type Detector struct {
 	// report-related settings.
 	ReportPath string
 	Reporter   report.Reporter
+
+	TotalBytes uint64
 }
 
 // Fragment contains the data to be scanned
 type Fragment struct {
 	// Raw is the raw content of the fragment
 	Raw string
+
+	Bytes []byte
 
 	// FilePath is the path to the file if applicable
 	FilePath    string
@@ -178,6 +183,11 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	if fragment.Bytes == nil {
+		atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Raw)))
+	}
+	atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Bytes)))
+
 	var findings []report.Finding
 
 	// check if filepath is allowed
