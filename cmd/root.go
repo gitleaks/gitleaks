@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -40,6 +41,13 @@ var rootCmd = &cobra.Command{
 	Version: Version,
 }
 
+const (
+	BYTE     = 1.0
+	KILOBYTE = BYTE * 1000
+	MEGABYTE = KILOBYTE * 1000
+	GIGABYTE = MEGABYTE * 1000
+)
+
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
@@ -59,6 +67,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -321,15 +330,45 @@ func mustGetStringFlag(name string) string {
 	return reportPath
 }
 
+func bytesConvert(bytes uint64) string {
+	unit := ""
+	value := float32(bytes)
+
+	switch {
+	case bytes >= GIGABYTE:
+		unit = "GB"
+		value = value / GIGABYTE
+	case bytes >= MEGABYTE:
+		unit = "MB"
+		value = value / MEGABYTE
+	case bytes >= KILOBYTE:
+		unit = "KB"
+		value = value / KILOBYTE
+	case bytes >= BYTE:
+		unit = "bytes"
+	case bytes == 0:
+		return "0"
+	}
+
+	stringValue := strings.TrimSuffix(
+		fmt.Sprintf("%.2f", value), ".00",
+	)
+
+	return fmt.Sprintf("%s %s", stringValue, unit)
+}
+
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+	totalBytes := atomic.LoadUint64(&detector.TotalBytes)
+	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
-		log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
+		log.Info().Msgf("%s in %s", bytesMsg, FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("leaks found: %d", len(findings))
 		} else {
 			log.Info().Msg("no leaks found")
 		}
 	} else {
+		log.Warn().Msg(bytesMsg)
 		log.Warn().Msgf("partial scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("%d leaks found in partial scan", len(findings))
