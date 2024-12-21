@@ -411,16 +411,10 @@ MatchLoop:
 				finding.Secret = groups[r.SecretGroup]
 			} else {
 				// If |secretGroup| is not set, we will use the first suitable capture group.
-				if len(groups) == 2 {
-					// Use the only group.
-					finding.Secret = groups[1]
-				} else {
-					// Use the first non-empty group.
-					for _, s := range groups[1:] {
-						if len(s) > 0 {
-							finding.Secret = s
-							break
-						}
+				for _, s := range groups[1:] {
+					if len(s) > 0 {
+						finding.Secret = s
+						break
 					}
 				}
 			}
