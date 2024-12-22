@@ -2,6 +2,7 @@ package detect
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -10,18 +11,23 @@ import (
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
-	buf := make([]byte, 0, 1000*bufSize)
+	buf := make([]byte, 1000*bufSize)
 	findings := []report.Finding{}
 
 	for {
-		n, err := reader.Read(buf[:cap(buf)])
+		n, err := reader.Read(buf)
 
 		// "Callers should always process the n > 0 bytes returned before considering the error err."
 		// https://pkg.go.dev/io#Reader
 		if n > 0 {
-			buf = buf[:n]
+			// Try to split chunks across large areas of whitespace, if possible.
+			peekBuf := bytes.NewBuffer(buf[:n])
+			if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
+				return findings, readErr
+			}
+
 			fragment := Fragment{
-				Raw: string(buf),
+				Raw: peekBuf.String(),
 			}
 			for _, finding := range d.Detect(fragment) {
 				findings = append(findings, finding)
@@ -32,10 +38,10 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 		}
 
 		if err != nil {
-			if err != io.EOF {
-				return findings, err
+			if err == io.EOF {
+				break
 			}
-			break
+			return findings, err
 		}
 	}
 

@@ -1,10 +1,11 @@
 package detect
 
 import (
-	"github.com/stretchr/testify/require"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,11 +14,17 @@ const secret = "AKIAIRYLJVKMPEGZMPJS"
 
 type mockReader struct {
 	data []byte
+	read bool
 }
 
 func (r *mockReader) Read(p []byte) (n int, err error) {
+	if r.read {
+		return 0, io.EOF
+	}
+
 	// Copy data to the provided buffer.
 	n = copy(p, r.data)
+	r.read = true
 
 	// Return io.EOF along with the bytes.
 	return n, io.EOF
