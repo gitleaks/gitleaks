@@ -423,8 +423,8 @@ MatchLoop:
 		// check entropy
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
-		if rule.Entropy != 0.0 {
-			if entropy <= rule.Entropy {
+		if r.Entropy != 0.0 {
+			if entropy <= r.Entropy {
 				logger.Trace().
 					Float32("entropy", finding.Entropy).
 					Msg("Skipping finding due to low entropy")
@@ -438,7 +438,7 @@ MatchLoop:
 			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
 			// secret contains both digits and alphabetical characters.
 			// TODO: this should be replaced with stop words
-			if strings.HasPrefix(rule.RuleID, "generic") {
+			if strings.HasPrefix(r.RuleID, "generic") {
 				if !containsDigit(finding.Secret) {
 					continue
 				}
