@@ -32,25 +32,22 @@ paths = [
     '''(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$''',
     '''go\.(mod|sum|work(\.sum)?)$''',
     '''(^|/)vendor/modules\.txt$''',
-    '''(^|/)vendor/(github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)/.*$''',
+    '''(^|/)vendor/(github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)(/.*)?$''',
     '''(^|/)gradlew(\.bat)?$''',
     '''(^|/)gradle\.lockfile$''',
     '''(^|/)mvnw(\.cmd)?$''',
     '''(^|/)\.mvn/wrapper/MavenWrapperDownloader\.java$''',
-    '''(^|/)node_modules/.*?$''',
-    '''(^|/)package-lock\.json$''',
-    '''(^|/)yarn\.lock$''',
-    '''(^|/)pnpm-lock\.yaml$''',
-    '''(^|/)npm-shrinkwrap\.json$''',
-    '''(^|/)bower_components/.*?$''',
+    '''(^|/)node_modules(/.*)?$''',
+    '''(^|/)(npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$''',
+    '''(^|/)bower_components(/.*)?$''',
     '''(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$''',
     '''(^|/)(Pipfile|poetry)\.lock$''',
-    '''(?i)/?(v?env|virtualenv)/lib(64)?/.+$''',
-    '''(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+/|python/[23](\.\d{1,2})+/lib(64)?/).+$''',
-    '''(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info/.+$''',
-    '''(^|/)vendor/(bundle|ruby)/.*?$''',
+    '''(?i)/?(v?env|virtualenv)/lib(64)?(/.*)?$''',
+    '''(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+|python/[23](\.\d{1,2})+/lib(64)?)(/.*)?$''',
+    '''(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info(/.+)?$''',
+    '''(^|/)vendor/(bundle|ruby)(/.*?)?$''',
     '''\.gem$''',
-    '''verification-metadata.xml''',
+    '''verification-metadata\.xml''',
     '''Database.refactorlog''',
 ]
 stopwords = [
@@ -517,6 +514,13 @@ id = "frameio-api-token"
 description = "Found a Frame.io API token, potentially compromising video collaboration and project management."
 regex = '''fio-u-(?i)[a-z0-9\-_=]{64}'''
 keywords = ["fio-u-"]
+
+[[rules]]
+id = "freemius-secret-key"
+description = "Detected a Freemius secret key, potentially exposing sensitive information."
+regex = '''(?i)["']secret_key["']\s*=>\s*["'](sk_[\S]{29})["']'''
+path = '''(?i)\.php$'''
+keywords = ["secret_key"]
 
 [[rules]]
 id = "freshbooks-access-token"
@@ -2138,6 +2142,13 @@ entropy = 3
 keywords = ["glpat-"]
 
 [[rules]]
+id = "gitlab-pat-routable"
+description = "Identified a GitLab Personal Access Token (routable), risking unauthorized access to GitLab repositories and codebase exposure."
+regex = '''\bglpat-[0-9a-zA-Z_-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b'''
+entropy = 4
+keywords = ["glpat-"]
+
+[[rules]]
 id = "gitlab-ptt"
 description = "Found a GitLab Pipeline Trigger Token, potentially compromising continuous integration workflows and project security."
 regex = '''glptt-[0-9a-f]{40}'''
@@ -2330,7 +2341,7 @@ keywords = ["kraken"]
 [[rules]]
 id = "kubernetes-secret-yaml"
 description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
-regex = '''(?i)(?:\bkind:[ \t]*["']?secret["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?secret["']?)'''
+regex = '''(?i)(?:\bkind:[ \t]*["']?\bsecret\b["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?\bsecret\b["']?)'''
 path = '''(?i)\.ya?ml$'''
 keywords = ["secret"]
 # NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
@@ -2731,6 +2742,27 @@ description = "Found a Sentry.io User Token, risking unauthorized access to erro
 regex = '''\b(sntryu_[a-f0-9]{64})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
 entropy = 3.5
 keywords = ["sntryu_"]
+
+[[rules]]
+id = "settlemint-application-access-token"
+description = "Found a Settlemint Application Access Token."
+regex = '''\b(sm_aat_[a-zA-Z0-9]{16})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
+keywords = ["sm_aat"]
+
+[[rules]]
+id = "settlemint-personal-access-token"
+description = "Found a Settlemint Personal Access Token."
+regex = '''\b(sm_pat_[a-zA-Z0-9]{16})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
+keywords = ["sm_pat"]
+
+[[rules]]
+id = "settlemint-service-access-token"
+description = "Found a Settlemint Service Access Token."
+regex = '''\b(sm_sat_[a-zA-Z0-9]{16})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+entropy = 3
+keywords = ["sm_sat"]
 
 [[rules]]
 id = "shippo-api-token"

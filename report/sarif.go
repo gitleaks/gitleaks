@@ -8,35 +8,40 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
-func writeSarif(cfg config.Config, findings []Finding, w io.WriteCloser) error {
+type SarifReporter struct {
+	OrderedRules []config.Rule
+}
+
+var _ Reporter = (*SarifReporter)(nil)
+
+func (r *SarifReporter) Write(w io.WriteCloser, findings []Finding) error {
 	sarif := Sarif{
 		Schema:  "https://json.schemastore.org/sarif-2.1.0.json",
 		Version: "2.1.0",
-		Runs:    getRuns(cfg, findings),
+		Runs:    r.getRuns(findings),
 	}
-	defer w.Close()
 
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
 	return encoder.Encode(sarif)
 }
 
-func getRuns(cfg config.Config, findings []Finding) []Runs {
+func (r *SarifReporter) getRuns(findings []Finding) []Runs {
 	return []Runs{
 		{
-			Tool:    getTool(cfg),
+			Tool:    r.getTool(),
 			Results: getResults(findings),
 		},
 	}
 }
 
-func getTool(cfg config.Config) Tool {
+func (r *SarifReporter) getTool() Tool {
 	tool := Tool{
 		Driver: Driver{
 			Name:            driver,
 			SemanticVersion: version,
 			InformationUri:  "https://github.com/gitleaks/gitleaks",
-			Rules:           getRules(cfg),
+			Rules:           r.getRules(),
 		},
 	}
 
@@ -52,10 +57,10 @@ func hasEmptyRules(tool Tool) bool {
 	return len(tool.Driver.Rules) == 0
 }
 
-func getRules(cfg config.Config) []Rules {
+func (r *SarifReporter) getRules() []Rules {
 	// TODO	for _, rule := range cfg.Rules {
 	var rules []Rules
-	for _, rule := range cfg.GetOrderedRules() {
+	for _, rule := range r.OrderedRules {
 		rules = append(rules, Rules{
 			ID: rule.RuleID,
 			Description: ShortDescription{

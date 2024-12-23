@@ -8,7 +8,12 @@ import (
 	"strconv"
 )
 
-func writeJunit(findings []Finding, w io.WriteCloser) error {
+type JunitReporter struct {
+}
+
+var _ Reporter = (*JunitReporter)(nil)
+
+func (r *JunitReporter) Write(w io.WriteCloser, findings []Finding) error {
 	testSuites := TestSuites{
 		TestSuites: getTestSuites(findings),
 	}

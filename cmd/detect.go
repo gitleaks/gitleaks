@@ -62,6 +62,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	detector := Detector(cmd, cfg, source)
 
+	// set follow symlinks flag
+	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
+		log.Fatal().Err(err).Msg("")
+	}
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
@@ -83,7 +87,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// start the detector scan
 	if noGit {
 		var paths <-chan sources.ScanTarget
-		paths, err = sources.DirectoryTargets(source, detector.Sema, detector.FollowSymlinks)
+		paths, err = sources.DirectoryTargets(
+			source,
+			detector.Sema,
+			detector.FollowSymlinks,
+			detector.Config.Allowlist.PathAllowed,
+		)
 		if err != nil {
 			log.Fatal().Err(err)
 		}
@@ -120,10 +129,5 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// set follow symlinks flag
-	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err).Msg("")
-	}
-
-	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
+	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

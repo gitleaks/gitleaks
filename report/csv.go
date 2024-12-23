@@ -7,12 +7,16 @@ import (
 	"strings"
 )
 
-// writeCsv writes the list of findings to a writeCloser.
-func writeCsv(f []Finding, w io.WriteCloser) error {
-	if len(f) == 0 {
+type CsvReporter struct {
+}
+
+var _ Reporter = (*CsvReporter)(nil)
+
+func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
+	if len(findings) == 0 {
 		return nil
 	}
-	defer w.Close()
+
 	cw := csv.NewWriter(w)
 	err := cw.Write([]string{"RuleID",
 		"Commit",
@@ -34,7 +38,7 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 	if err != nil {
 		return err
 	}
-	for _, f := range f {
+	for _, f := range findings {
 		err = cw.Write([]string{f.RuleID,
 			f.Commit,
 			f.File,

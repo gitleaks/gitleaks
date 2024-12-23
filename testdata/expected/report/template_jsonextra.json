@@ -1,0 +1,23 @@
+[
+    {
+        "Description": "A test rule",
+        "StartLine": 1,
+        "EndLine": 2,
+        "StartColumn": 1,
+        "EndColumn": 2,
+        "Line": "whole line containing secret",
+        "Match": "line containing secret",
+        "Secret": "a secret",
+        "File": "auth.py",
+        "SymlinkFile": "",
+        "Commit": "0000000000000000",
+        "Entropy": 0,
+        "Author": "John Doe",
+        "Email": "johndoe@gmail.com",
+        "Date": "10-19-2003",
+        "Message": "opps",
+        "Tags": ["tag1","tag2","tag3"],
+        "RuleID": "test-rule",
+        "Fingerprint": ""
+    }
+]

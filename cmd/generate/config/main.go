@@ -4,10 +4,9 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
-
 	"github.com/rs/zerolog/log"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -90,6 +89,7 @@ func main() {
 		rules.FlutterwaveEncKey(),
 		rules.FlyIOAccessToken(),
 		rules.FrameIO(),
+		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
 		// TODO figure out what makes sense for GCP
@@ -108,6 +108,7 @@ func main() {
 		rules.GitlabKubernetesAgentToken(),
 		rules.GitlabOauthAppSecret(),
 		rules.GitlabPat(),
+		rules.GitlabPatRoutable(),
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
 		rules.GitlabRunnerAuthenticationToken(),
@@ -184,6 +185,9 @@ func main() {
 		rules.SentryAccessToken(),
 		rules.SentryOrgToken(),
 		rules.SentryUserToken(),
+		rules.SettlemintApplicationAccessToken(),
+		rules.SettlemintPersonalAccessToken(),
+		rules.SettlemintServiceAccessToken(),
 		rules.ShippoAPIToken(),
 		rules.ShopifyAccessToken(),
 		rules.ShopifyCustomAccessToken(),

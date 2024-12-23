@@ -3,12 +3,12 @@ package config
 import (
 	_ "embed"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	regexp "github.com/wasilibs/go-re2"
 )
 
 //go:embed gitleaks.toml
@@ -93,8 +93,10 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		if vr.Keywords == nil {
 			vr.Keywords = []string{}
 		} else {
-			for _, k := range vr.Keywords {
-				keywords[strings.ToLower(k)] = struct{}{}
+			for i, k := range vr.Keywords {
+				keyword := strings.ToLower(k)
+				keywords[keyword] = struct{}{}
+				vr.Keywords[i] = keyword
 			}
 		}
 
@@ -111,7 +113,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			configPathRegex = regexp.MustCompile(vr.Path)
 		}
 
-		rule := Rule{
+		cr := Rule{
 			RuleID:      vr.ID,
 			Description: vr.Description,
 			Regex:       configRegex,
@@ -124,7 +126,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		// Parse the allowlist, including the older format for backwards compatibility.
 		if vr.AllowList != nil {
 			if len(vr.Allowlists) > 0 {
-				return Config{}, fmt.Errorf("%s: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]", rule.RuleID)
+				return Config{}, fmt.Errorf("%s: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]", cr.RuleID)
 			}
 			vr.Allowlists = append(vr.Allowlists, *vr.AllowList)
 		}
@@ -137,7 +139,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			case "", "OR", "||":
 				condition = AllowlistMatchOr
 			default:
-				return Config{}, fmt.Errorf("%s: unknown allowlist condition '%s' (expected 'and', 'or')", rule.RuleID, c)
+				return Config{}, fmt.Errorf("%s: unknown allowlist condition '%s' (expected 'and', 'or')", cr.RuleID, c)
 			}
 
 			// Validate the target.
@@ -148,7 +150,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				case "match", "line":
 					// do nothing
 				default:
-					return Config{}, fmt.Errorf("%s: unknown allowlist |regexTarget| '%s' (expected 'match', 'line')", rule.RuleID, a.RegexTarget)
+					return Config{}, fmt.Errorf("%s: unknown allowlist |regexTarget| '%s' (expected 'match', 'line')", cr.RuleID, a.RegexTarget)
 				}
 			}
 			var allowlistRegexes []*regexp.Regexp
@@ -169,12 +171,12 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				StopWords:      a.StopWords,
 			}
 			if err := allowlist.Validate(); err != nil {
-				return Config{}, fmt.Errorf("%s: %w", rule.RuleID, err)
+				return Config{}, fmt.Errorf("%s: %w", cr.RuleID, err)
 			}
-			rule.Allowlists = append(rule.Allowlists, allowlist)
+			cr.Allowlists = append(cr.Allowlists, allowlist)
 		}
-		orderedRules = append(orderedRules, rule.RuleID)
-		rulesMap[rule.RuleID] = rule
+		orderedRules = append(orderedRules, cr.RuleID)
+		rulesMap[cr.RuleID] = cr
 	}
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range vc.Allowlist.Regexes {
@@ -314,9 +316,6 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
-				c.Keywords[k] = struct{}{}
-			}
-			for _, k := range currentRule.Keywords {
 				c.Keywords[k] = struct{}{}
 			}
 			c.Rules[ruleID] = baseRule

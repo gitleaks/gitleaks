@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -39,12 +41,20 @@ var rootCmd = &cobra.Command{
 	Version: Version,
 }
 
+const (
+	BYTE     = 1.0
+	KILOBYTE = BYTE * 1000
+	MEGABYTE = KILOBYTE * 1000
+	GIGABYTE = MEGABYTE * 1000
+)
+
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
-	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, jsonextra, csv, junit, sarif)")
+	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, jsonextra, csv, junit, sarif, template)")
+	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "show verbose output from scan")
@@ -57,6 +67,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		log.Fatal().Msgf("err binding config %s", err.Error())
@@ -95,6 +106,7 @@ func initConfig(source string) {
 	if !hideBanner {
 		_, _ = fmt.Fprint(os.Stderr, banner)
 	}
+
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {
 		log.Fatal().Msg(err.Error())
@@ -251,8 +263,8 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		log.Info().Msg("Overriding enabled rules: " + strings.Join(rules, ", "))
 		ruleOverride := make(map[string]config.Rule)
 		for _, ruleName := range rules {
-			if rule, ok := cfg.Rules[ruleName]; ok {
-				ruleOverride[ruleName] = rule
+			if r, ok := cfg.Rules[ruleName]; ok {
+				ruleOverride[ruleName] = r
 			} else {
 				log.Fatal().Msgf("Requested rule %s not found in rules", ruleName)
 			}
@@ -260,18 +272,103 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Config.Rules = ruleOverride
 	}
 
+	// Validate report settings.
+	reportPath := mustGetStringFlag("report-path")
+	if reportPath != "" {
+		if reportPath != report.StdoutReportPath {
+			// Ensure the path is writable.
+			if f, err := os.Create(reportPath); err != nil {
+				log.Fatal().Err(err).Msgf("Report path is not writable: %s", reportPath)
+			} else {
+				_ = f.Close()
+				_ = os.Remove(reportPath)
+			}
+		}
+
+		// Build report writer.
+		var (
+			reporter       report.Reporter
+			reportFormat   = mustGetStringFlag("report-format")
+			reportTemplate = mustGetStringFlag("report-template")
+		)
+		switch strings.TrimSpace(strings.ToLower(reportFormat)) {
+		case "csv":
+			reporter = &report.CsvReporter{}
+		case "json":
+			reporter = &report.JsonReporter{}
+		case "junit":
+			reporter = &report.JunitReporter{}
+		case "sarif":
+			reporter = &report.SarifReporter{
+				OrderedRules: cfg.GetOrderedRules(),
+			}
+		case "template":
+			if reporter, err = report.NewTemplateReporter(reportTemplate); err != nil {
+				log.Fatal().Err(err).Msg("Invalid report template")
+			}
+		default:
+			log.Fatal().Msgf("unknown report format %s", reportFormat)
+		}
+
+		// Sanity check.
+		if reportTemplate != "" && reportFormat != "template" {
+			log.Fatal().Msgf("Report format must be 'template' if --report-template is specified")
+		}
+
+		detector.ReportPath = reportPath
+		detector.Reporter = reporter
+	}
+
 	return detector
 }
 
-func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg config.Config, exitCode int, start time.Time, err error) {
+func mustGetStringFlag(name string) string {
+	reportPath, err := rootCmd.Flags().GetString(name)
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+	return reportPath
+}
+
+func bytesConvert(bytes uint64) string {
+	unit := ""
+	value := float32(bytes)
+
+	switch {
+	case bytes >= GIGABYTE:
+		unit = "GB"
+		value = value / GIGABYTE
+	case bytes >= MEGABYTE:
+		unit = "MB"
+		value = value / MEGABYTE
+	case bytes >= KILOBYTE:
+		unit = "KB"
+		value = value / KILOBYTE
+	case bytes >= BYTE:
+		unit = "bytes"
+	case bytes == 0:
+		return "0"
+	}
+
+	stringValue := strings.TrimSuffix(
+		fmt.Sprintf("%.2f", value), ".00",
+	)
+
+	return fmt.Sprintf("%s %s", stringValue, unit)
+}
+
+func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+	totalBytes := atomic.LoadUint64(&detector.TotalBytes)
+	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
-		log.Info().Msgf("scan completed in %s", FormatDuration(time.Since(start)))
+		log.Info().Msgf("%s in %s", bytesMsg, FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("leaks found: %d", len(findings))
 		} else {
 			log.Info().Msg("no leaks found")
 		}
 	} else {
+		log.Warn().Msg(bytesMsg)
 		log.Warn().Msgf("partial scan completed in %s", FormatDuration(time.Since(start)))
 		if len(findings) != 0 {
 			log.Warn().Msgf("%d leaks found in partial scan", len(findings))
@@ -281,11 +378,32 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 	}
 
 	// write report if desired
-	reportPath, _ := cmd.Flags().GetString("report-path")
-	ext, _ := cmd.Flags().GetString("report-format")
-	if reportPath != "" {
-		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
-			log.Fatal().Err(err).Msg("could not write")
+	if detector.Reporter != nil {
+		var (
+			file      io.WriteCloser
+			reportErr error
+		)
+
+		if detector.ReportPath == report.StdoutReportPath {
+			file = os.Stdout
+		} else {
+			// Open the file.
+			if file, reportErr = os.Create(detector.ReportPath); reportErr != nil {
+				goto ReportEnd
+			}
+			defer func() {
+				_ = file.Close()
+			}()
+		}
+
+		// Write to the file.
+		if reportErr = detector.Reporter.Write(file, findings); reportErr != nil {
+			goto ReportEnd
+		}
+
+	ReportEnd:
+		if reportErr != nil {
+			log.Fatal().Err(reportErr).Msg("failed to write report")
 		}
 	}
 
@@ -296,7 +414,6 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 	if len(findings) != 0 {
 		os.Exit(exitCode)
 	}
-
 }
 
 func fileExists(fileName string) bool {
