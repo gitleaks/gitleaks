@@ -190,3 +190,7 @@ func containsDigit(s string) bool {
 	}
 	return false
 }
+
+func isWhitespace(ch byte) bool {
+	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+}
