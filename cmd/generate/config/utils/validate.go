@@ -20,7 +20,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 
 	// Warn if Keywords are nil or empty
 	if r.Keywords == nil || len(r.Keywords) == 0 {
-		log.Warn().
+		log.Fatal().
 			Str("rule", r.RuleID).
 			Str("regex", r.Regex.String()).
 			Msg("Keywords are nil or empty. Consider adding keywords to improve detection efficiency.")
@@ -54,7 +54,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 
 	// Warn if Keywords are nil or empty
 	if r.Keywords == nil || len(r.Keywords) == 0 {
-		log.Warn().
+		log.Fatal().
 			Str("rule", r.RuleID).
 			Str("regex", r.Regex.String()).
 			Msg("Keywords are nil or empty. Consider adding keywords to improve detection efficiency.")
