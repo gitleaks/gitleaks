@@ -49,7 +49,10 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
        tps := []string{
            generateSampleSecret("beamer", "b_"+secrets.NewSecret(alphaNumericExtended("44"))),
        }
-       return validate(r, tps, nil)
+       fps := []string{
+           `R21A-A-V010SP13RC181024R16900-CN-B_250K-Release-OTA-97B6C6C59241976086FABDC41472150C.bfu`,
+       }
+       return validate(r, tps, fps)
    }
    ```
 
