@@ -17,6 +17,15 @@ import (
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
 	r := &rule
 	d := createSingleRuleDetector(r)
+
+	// Warn if Keywords are nil or empty
+	if r.Keywords == nil || len(r.Keywords) == 0 {
+		log.Fatal().
+			Str("rule", r.RuleID).
+			Str("regex", r.Regex.String()).
+			Msg("Keywords are nil or empty. Consider adding keywords to improve detection efficiency.")
+	}
+
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) < 1 {
 			log.Fatal().
@@ -42,6 +51,14 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
 	r := &rule
 	d := createSingleRuleDetector(r)
+
+	// Warn if Keywords are nil or empty
+	if r.Keywords == nil || len(r.Keywords) == 0 {
+		log.Fatal().
+			Str("rule", r.RuleID).
+			Str("regex", r.Regex.String()).
+			Msg("Keywords are nil or empty. Consider adding keywords to improve detection efficiency.")
+	}
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
 		if len(d.Detect(f)) != 1 {
