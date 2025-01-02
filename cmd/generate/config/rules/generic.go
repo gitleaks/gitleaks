@@ -20,11 +20,10 @@ func GenericCredential() *config.Rule {
 			"credential",
 			"creds",
 			"key",
-			"passwd",
-			"password",
+			"passw(or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}`, true),
+		}, `(?:[0-9a-z\-_.=]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -111,6 +110,8 @@ func GenericCredential() *config.Rule {
 		// Token
 		utils.GenerateSampleSecret("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443"), //gitleaks:allow
 		utils.GenerateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
+		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
+		`"user_auth": "am9obmRvZTpkMDY5NGIxYi1jMTcxLTQ4ODYt+TMyYS0wMmUwOWQ1/mIwNjc="`,
 	)
 	fps := []string{
 		// Access
