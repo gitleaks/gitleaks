@@ -23,7 +23,7 @@ const (
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
+	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)`
 
 	// boundaries for the secret
 	// \x60 = `

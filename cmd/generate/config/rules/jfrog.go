@@ -59,5 +59,6 @@ func JFrogIdentityToken() *config.Rule {
 	tps = append(tps, utils.GenerateSampleSecrets("artifactory", secrets.NewSecret(utils.AlphaNumeric("64")))...)
 	tps = append(tps, utils.GenerateSampleSecrets("bintray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
 	tps = append(tps, utils.GenerateSampleSecrets("xray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
+	tps = append(tps, fmt.Sprintf("\"artifactory\", \"%s\"", secrets.NewSecret(utils.AlphaNumeric("64"))))
 	return utils.Validate(r, tps, nil)
 }
