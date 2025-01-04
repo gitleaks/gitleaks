@@ -30,6 +30,11 @@ func AWS() *config.Rule {
 				},
 			},
 		},
+		Allowlist: config.Allowlist{
+			StopWords: []string{
+				"AKIAIOSFODNN7EXAMPLE",
+			},
+		},
 	}
 
 	// validate
