@@ -131,6 +131,8 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		// TODO: "comment - hashtag":     "#{s} is the password",
 		// TODO: "comment - semicolon":     ";{s} is the password",
 		// TODO: "csv - unquoted": `{i}Token,{s},`,
+		"misc - comma operator": `System.setProperty("{I}_TOKEN", "{s}")`,
+		// TODO: "misc - comma suffix": `environmentVariables = {PATH=/usr/local/bin, ENV=/etc/bashrc, {I}_PASSWORD={s}, LC_CTYPE=en_CA.UTF-8},`, // Spotted in `./Library/Logs/gradle-kotlin-dsl-resolver-xxxx.log`
 		"logstash": "  \"{i}Token\" => \"{s}\"",
 		// TODO: "sql - tabular":      "|{s}|",
 		// TODO: "sql":      "",
@@ -147,7 +149,11 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		// "": "",
 	}
 
-	replacer := strings.NewReplacer("{i}", identifier, "{s}", secret)
+	replacer := strings.NewReplacer(
+		"{i}", identifier,
+		"{I}", strings.ToUpper(identifier),
+		"{s}", secret,
+	)
 	cases := make([]string, 0, len(samples))
 	for _, v := range samples {
 		cases = append(cases, replacer.Replace(v))
