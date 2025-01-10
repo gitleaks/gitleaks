@@ -3,9 +3,9 @@ package cmd
 import (
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -47,12 +47,12 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Msg("")
 	}
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get exit code")
+		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
 	var paths <-chan sources.ScanTarget
@@ -63,13 +63,13 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		detector.Config.Allowlist.PathAllowed,
 	)
 	if err != nil {
-		log.Fatal().Err(err)
+		logging.Fatal().Err(err)
 	}
 
 	findings, err = detector.DetectFiles(paths)
 	if err != nil {
 		// don't exit on error, just log it
-		log.Error().Err(err).Msg("failed scan directory")
+		logging.Error().Err(err).Msg("failed scan directory")
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

@@ -2,7 +2,8 @@ package detect
 
 import (
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/rs/zerolog/log"
+
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -67,7 +68,7 @@ func (d *Detector) DetectGit(gitCmd *sources.GitCmd) ([]report.Finding, error) {
 	if err := d.Sema.Wait(); err != nil {
 		return d.findings, err
 	}
-	log.Info().Msgf("%d commits scanned.", len(d.commitMap))
-	log.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
+	logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
+	logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	return d.findings, nil
 }

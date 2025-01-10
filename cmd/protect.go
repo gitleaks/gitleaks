@@ -3,9 +3,9 @@ package cmd
 import (
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -27,7 +27,7 @@ var protectCmd = &cobra.Command{
 func runProtect(cmd *cobra.Command, args []string) {
 	source, err := cmd.Flags().GetString("source")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get source")
+		logging.Fatal().Err(err).Msg("could not get source")
 	}
 	initConfig(source)
 
@@ -43,7 +43,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 	var findings []report.Finding
 	gitCmd, err := sources.NewGitDiffCmd(source, staged)
 	if err != nil {
-		log.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Msg("")
 	}
 	findings, err = detector.DetectGit(gitCmd)
 

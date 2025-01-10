@@ -6,9 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	regexp "github.com/wasilibs/go-re2"
+
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 //go:embed gitleaks.toml
@@ -204,7 +205,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	if maxExtendDepth != extendDepth {
 		// disallow both usedefault and path from being set
 		if c.Extend.Path != "" && c.Extend.UseDefault {
-			log.Fatal().Msg("unable to load config due to extend.path and extend.useDefault being set")
+			logging.Fatal().Msg("unable to load config due to extend.path and extend.useDefault being set")
 		}
 		if c.Extend.UseDefault {
 			c.extendDefault()
@@ -239,20 +240,20 @@ func (c *Config) extendDefault() {
 	extendDepth++
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
 	defaultViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
 	cfg, err := defaultViperConfig.Translate()
 	if err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
-	log.Debug().Msg("extending config with default config")
+	logging.Debug().Msg("extending config with default config")
 	c.extend(cfg)
 
 }
@@ -261,20 +262,20 @@ func (c *Config) extendPath() {
 	extendDepth++
 	viper.SetConfigFile(c.Extend.Path)
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
 	extensionViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
 	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
-		log.Fatal().Msgf("failed to load extended config, err: %s", err)
+		logging.Fatal().Msgf("failed to load extended config, err: %s", err)
 		return
 	}
-	log.Debug().Msgf("extending config with %s", c.Extend.Path)
+	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
 	c.extend(cfg)
 }
 

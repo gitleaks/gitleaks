@@ -9,10 +9,10 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/rs/zerolog/log"
 )
 
 // augmentGitFinding updates the start and end line numbers of a finding to include the
@@ -74,7 +74,7 @@ func filter(findings []report.Finding, redact uint) []report.Finding {
 
 					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
 					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
-					log.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
+					logging.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
 					include = false
 					break
 				}

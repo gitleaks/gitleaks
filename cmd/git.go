@@ -3,9 +3,9 @@ package cmd
 import (
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -53,7 +53,7 @@ func runGit(cmd *cobra.Command, args []string) {
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get exit code")
+		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
 	var (
@@ -64,33 +64,33 @@ func runGit(cmd *cobra.Command, args []string) {
 	)
 	logOpts, err = cmd.Flags().GetString("log-opts")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not call GetString() for log-opts")
+		logging.Fatal().Err(err).Msg("could not call GetString() for log-opts")
 	}
 	staged, err = cmd.Flags().GetBool("staged")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not call GetBool() for staged")
+		logging.Fatal().Err(err).Msg("could not call GetBool() for staged")
 	}
 	preCommit, err = cmd.Flags().GetBool("pre-commit")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not call GetBool() for pre-commit")
+		logging.Fatal().Err(err).Msg("could not call GetBool() for pre-commit")
 	}
 
 	if preCommit || staged {
 		gitCmd, err = sources.NewGitDiffCmd(source, staged)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not create Git diff cmd")
+			logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 		}
 	} else {
 		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not create Git log cmd")
+			logging.Fatal().Err(err).Msg("could not create Git log cmd")
 		}
 	}
 
 	findings, err = detector.DetectGit(gitCmd)
 	if err != nil {
 		// don't exit on error, just log it
-		log.Error().Err(err).Msg("failed to scan Git repository")
+		logging.Error().Err(err).Msg("failed to scan Git repository")
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

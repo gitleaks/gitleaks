@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
-	"github.com/rs/zerolog/log"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -19,7 +19,7 @@ const maxPeekSize = 25 * 1_000 // 10kb
 func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for pa := range paths {
 		d.Sema.Go(func() error {
-			logger := log.With().Str("path", pa.Path).Logger()
+			logger := logging.With().Str("path", pa.Path).Logger()
 			logger.Trace().Msg("Scanning path")
 
 			f, err := os.Open(pa.Path)
