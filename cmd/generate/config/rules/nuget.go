@@ -1,11 +1,11 @@
 package rules
 
 import (
-	"regexp"
-
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 )
 
 func NugetConfigPassword() *config.Rule {

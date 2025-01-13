@@ -2,20 +2,20 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-	"regexp"
+	regexp "github.com/wasilibs/go-re2"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 // https://curl.se/docs/manpage.html#-u
 func CurlBasicAuth() *config.Rule {
 	r := config.Rule{
-		RuleID: "curl-auth-user",
-		// TODO: Description: "",
-		Regex:    regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
-		Keywords: []string{"curl"},
-		Entropy:  2,
+		RuleID:      "curl-auth-user",
+		Description: "Discovered a potential basic authorization token provided in a curl command, which could compromise the curl accessed resource.",
+		Regex:       regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
+		Keywords:    []string{"curl"},
+		Entropy:     2,
 		Allowlists: []config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
@@ -99,8 +99,8 @@ func CurlHeaderAuth() *config.Rule {
 	// language=regexp
 	authPat := `(?i)(?:Authorization:[ \t]{0,5}(?:Basic[ \t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \t]([\w=~@.+/-]{8,})|([\w=~@.+/-]{8,}))|(?:(?:X-(?:[a-z]+-)?)?(?:Api-?)?(?:Key|Token)):[ \t]{0,5}([\w=~@.+/-]{8,}))`
 	r := config.Rule{
-		RuleID: "curl-auth-header",
-		// TODO: Description: "",
+		RuleID:      "curl-auth-header",
+		Description: "Discovered a potential authorization token provided in a curl command header, which could compromise the curl accessed resource.",
 		Regex: regexp.MustCompile(
 			// language=regexp
 			fmt.Sprintf(`\bcurl\b(?:.*?|.*?(?:[\r\n]{1,2}.*?){1,5})[ \t\n\r](?:-H|--header)(?:=|[ \t]{0,5})(?:"%s"|'%s')(?:\B|\s|\z)`, authPat, authPat)),

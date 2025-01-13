@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"unicode"
 
-	"github.com/rs/zerolog/log"
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 var b64LikelyChars [128]byte
@@ -227,7 +227,7 @@ func (d *Decoder) findEncodedSegments(data string, parentSegments []EncodedSegme
 			}
 		}
 
-		log.Debug().Msgf("segment found: %#v", segment)
+		logging.Debug().Msgf("segment found: %#v", segment)
 		segments = append(segments, segment)
 	}
 

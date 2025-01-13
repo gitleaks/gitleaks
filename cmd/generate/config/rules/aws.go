@@ -1,10 +1,10 @@
 package rules
 
 import (
+	regexp "github.com/wasilibs/go-re2"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 

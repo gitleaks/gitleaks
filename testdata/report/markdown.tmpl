@@ -1,0 +1,5 @@
+| File | Line | Secret |
+|:-----|-----:|--------|
+{{ range . -}}
+| {{ .File }} | {{ .StartLine }} | {{ quote .Secret }} |
+{{ end -}}

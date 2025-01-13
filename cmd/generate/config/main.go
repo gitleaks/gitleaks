@@ -5,11 +5,9 @@ import (
 	"text/template"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
-
-	"github.com/rs/zerolog/log"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 const (
@@ -90,6 +88,7 @@ func main() {
 		rules.FlutterwaveEncKey(),
 		rules.FlyIOAccessToken(),
 		rules.FrameIO(),
+		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
 		// TODO figure out what makes sense for GCP
@@ -108,6 +107,7 @@ func main() {
 		rules.GitlabKubernetesAgentToken(),
 		rules.GitlabOauthAppSecret(),
 		rules.GitlabPat(),
+		rules.GitlabPatRoutable(),
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
 		rules.GitlabRunnerAuthenticationToken(),
@@ -182,6 +182,11 @@ func main() {
 		rules.SendGridAPIToken(),
 		rules.SendInBlueAPIToken(),
 		rules.SentryAccessToken(),
+		rules.SentryOrgToken(),
+		rules.SentryUserToken(),
+		rules.SettlemintApplicationAccessToken(),
+		rules.SettlemintPersonalAccessToken(),
+		rules.SettlemintServiceAccessToken(),
 		rules.ShippoAPIToken(),
 		rules.ShopifyAccessToken(),
 		rules.ShopifyCustomAccessToken(),
@@ -230,7 +235,7 @@ func main() {
 	for _, rule := range configRules {
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
-			log.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
+			logging.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
 		}
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
@@ -239,18 +244,17 @@ func main() {
 
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to parse template")
+		logging.Fatal().Err(err).Msg("Failed to parse template")
 	}
 
 	f, err := os.Create(gitleaksConfigPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create rules.toml")
+		logging.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
 
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
 	if err = tmpl.Execute(f, cfg); err != nil {
-		log.Fatal().Err(err).Msg("could not execute template")
+		logging.Fatal().Err(err).Msg("could not execute template")
 	}
-
 }

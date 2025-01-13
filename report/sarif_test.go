@@ -5,14 +5,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/spf13/viper"
+	"github.com/zricethezav/gitleaks/v8/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/zricethezav/gitleaks/v8/config"
 )
-
-const configPath = "../testdata/config/"
 
 func TestWriteSarif(t *testing.T) {
 	tests := []struct {
@@ -29,8 +26,8 @@ func TestWriteSarif(t *testing.T) {
 			findings: []Finding{
 				{
 
-					Description: "A test rule",
 					RuleID:      "test-rule",
+					Description: "A test rule",
 					Match:       "line containing secret",
 					Secret:      "a secret",
 					StartLine:   1,
@@ -52,28 +49,31 @@ func TestWriteSarif(t *testing.T) {
 		t.Run(test.cfgName, func(t *testing.T) {
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
 			require.NoError(t, err)
-			viper.Reset()
-			viper.AddConfigPath(configPath)
-			viper.SetConfigName(test.cfgName)
-			viper.SetConfigType("toml")
-			err = viper.ReadInConfig()
-			require.NoError(t, err)
 
-			var vc config.ViperConfig
-			err = viper.Unmarshal(&vc)
-			require.NoError(t, err)
-
-			cfg, err := vc.Translate()
-			require.NoError(t, err)
-			err = writeSarif(cfg, test.findings, tmpfile)
+			reporter := SarifReporter{
+				OrderedRules: []config.Rule{
+					{
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+					},
+					{
+						RuleID:      "pypi",
+						Description: "PyPI upload token",
+					},
+				},
+			}
+			err = reporter.Write(tmpfile, test.findings)
 			require.NoError(t, err)
 			assert.FileExists(t, tmpfile.Name())
+
 			got, err := os.ReadFile(tmpfile.Name())
 			require.NoError(t, err)
+
 			if test.wantEmpty {
 				assert.Empty(t, got)
 				return
 			}
+
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
 			assert.Equal(t, string(want), string(got))

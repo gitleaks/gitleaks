@@ -4,9 +4,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
@@ -37,15 +37,15 @@ func runStdIn(cmd *cobra.Command, args []string) {
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get exit code")
+		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
 	findings, err = detector.DetectReader(os.Stdin, 10)
 	if err != nil {
 		// log fatal to exit, no need to continue since a report
 		// will not be generated when scanning from a pipe...for now
-		log.Fatal().Err(err).Msg("failed scan input from stdin")
+		logging.Fatal().Err(err).Msg("failed scan input from stdin")
 	}
 
-	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
+	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

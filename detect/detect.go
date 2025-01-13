@@ -8,21 +8,22 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
 )
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
-	chunkSize              = 10 * 1_000 // 10kb
+	chunkSize              = 100 * 1_000 // 100kb
 )
 
 var newLineRegexp = regexp.MustCompile("\n")
@@ -83,12 +84,20 @@ type Detector struct {
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
+
+	// report-related settings.
+	ReportPath string
+	Reporter   report.Reporter
+
+	TotalBytes uint64
 }
 
 // Fragment contains the data to be scanned
 type Fragment struct {
 	// Raw is the raw content of the fragment
 	Raw string
+
+	Bytes []byte
 
 	// FilePath is the path to the file if applicable
 	FilePath    string
@@ -135,7 +144,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	log.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
+	logging.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
 	file, err := os.Open(gitleaksIgnorePath)
 
 	if err != nil {
@@ -145,7 +154,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	// https://github.com/securego/gosec/issues/512
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
+			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
 		}
 	}()
 	scanner := bufio.NewScanner(file)
@@ -174,6 +183,11 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	if fragment.Bytes == nil {
+		atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Raw)))
+	}
+	atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Bytes)))
+
 	var findings []report.Finding
 
 	// check if filepath is allowed
@@ -238,11 +252,11 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.Rule, encodedSegments []EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
-			l := log.With().Str("rule-id", rule.RuleID)
+			l := logging.With().Str("rule-id", r.RuleID)
 			if fragment.CommitSHA != "" {
 				l = l.Str("commit", fragment.CommitSHA)
 			}
@@ -252,7 +266,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	)
 
 	// check if filepath or commit is allowed for this rule
-	for _, a := range rule.Allowlists {
+	for _, a := range r.Allowlists {
 		var (
 			isAllowed     bool
 			commitAllowed = a.CommitAllowed(fragment.CommitSHA)
@@ -290,30 +304,30 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 		}
 	}
 
-	if rule.Path != nil && rule.Regex == nil && len(encodedSegments) == 0 {
+	if r.Path != nil && r.Regex == nil && len(encodedSegments) == 0 {
 		// Path _only_ rule
-		if rule.Path.MatchString(fragment.FilePath) {
+		if r.Path.MatchString(fragment.FilePath) {
 			finding := report.Finding{
-				Description: rule.Description,
+				Description: r.Description,
 				File:        fragment.FilePath,
 				SymlinkFile: fragment.SymlinkFile,
-				RuleID:      rule.RuleID,
+				RuleID:      r.RuleID,
 				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-				Tags:        rule.Tags,
+				Tags:        r.Tags,
 			}
 			return append(findings, finding)
 		}
-	} else if rule.Path != nil {
+	} else if r.Path != nil {
 		// if path is set _and_ a regex is set, then we need to check both
 		// so if the path does not match, then we should return early and not
 		// consider the regex
-		if !rule.Path.MatchString(fragment.FilePath) {
+		if !r.Path.MatchString(fragment.FilePath) {
 			return findings
 		}
 	}
 
 	// if path only rule, skip content checks
-	if rule.Regex == nil {
+	if r.Regex == nil {
 		return findings
 	}
 
@@ -321,7 +335,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	if d.MaxTargetMegaBytes > 0 {
 		rawLength := len(currentRaw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
-			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			logging.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
 			return findings
 		}
 	}
@@ -329,7 +343,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, rule config.
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
 MatchLoop:
-	for _, matchIndex := range rule.Regex.FindAllStringIndex(currentRaw, -1) {
+	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
@@ -363,17 +377,17 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			Description: rule.Description,
+			Description: r.Description,
 			File:        fragment.FilePath,
 			SymlinkFile: fragment.SymlinkFile,
-			RuleID:      rule.RuleID,
+			RuleID:      r.RuleID,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Secret:      secret,
 			Match:       secret,
-			Tags:        append(rule.Tags, metaTags...),
+			Tags:        append(r.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
 		}
 
@@ -387,31 +401,49 @@ MatchLoop:
 
 		// Set the value of |secret|, if the pattern contains at least one capture group.
 		// (The first element is the full match, hence we check >= 2.)
-		groups := rule.Regex.FindStringSubmatch(finding.Secret)
+		groups := r.Regex.FindStringSubmatch(finding.Secret)
 		if len(groups) >= 2 {
-			if rule.SecretGroup > 0 {
-				if len(groups) <= rule.SecretGroup {
+			if r.SecretGroup > 0 {
+				if len(groups) <= r.SecretGroup {
 					// Config validation should prevent this
 					continue
 				}
-				finding.Secret = groups[rule.SecretGroup]
+				finding.Secret = groups[r.SecretGroup]
 			} else {
 				// If |secretGroup| is not set, we will use the first suitable capture group.
-				if len(groups) == 2 {
-					// Use the only group.
-					finding.Secret = groups[1]
-				} else {
-					// Use the first non-empty group.
-					for _, s := range groups[1:] {
-						if len(s) > 0 {
-							finding.Secret = s
-							break
-						}
+				for _, s := range groups[1:] {
+					if len(s) > 0 {
+						finding.Secret = s
+						break
 					}
 				}
 			}
 		}
 
+		// check entropy
+		entropy := shannonEntropy(finding.Secret)
+		finding.Entropy = float32(entropy)
+		if r.Entropy != 0.0 {
+			if entropy <= r.Entropy {
+				logger.Trace().
+					Float32("entropy", finding.Entropy).
+					Msg("Skipping finding due to low entropy")
+				// entropy is too low, skip this finding
+				continue
+			}
+			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
+			// does not support positive lookaheads. Ideally we would want to add a
+			// restriction on generic rules regex that requires the secret match group
+			// contains both numbers and alphabetical characters, not just alphabetical characters.
+			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
+			// secret contains both digits and alphabetical characters.
+			// TODO: this should be replaced with stop words
+			if strings.HasPrefix(r.RuleID, "generic") {
+				if !containsDigit(finding.Secret) {
+					continue
+				}
+			}
+		}
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		// or if the secret is in the list of stopwords
 		globalAllowlistTarget := finding.Secret
@@ -434,7 +466,7 @@ MatchLoop:
 		}
 
 		// check if the result matches any of the rule allowlists.
-		for _, a := range rule.Allowlists {
+		for _, a := range r.Allowlists {
 			allowlistTarget := finding.Secret
 			switch a.RegexTarget {
 			case "match":
@@ -481,29 +513,6 @@ MatchLoop:
 				continue MatchLoop
 			}
 		}
-
-		// check entropy
-		entropy := shannonEntropy(finding.Secret)
-		finding.Entropy = float32(entropy)
-		if rule.Entropy != 0.0 {
-			if entropy <= rule.Entropy {
-				// entropy is too low, skip this finding
-				continue
-			}
-			// NOTE: this is a goofy hack to get around the fact there golang's regex engine
-			// does not support positive lookaheads. Ideally we would want to add a
-			// restriction on generic rules regex that requires the secret match group
-			// contains both numbers and alphabetical characters, not just alphabetical characters.
-			// What this bit of code does is check if the ruleid is prepended with "generic" and enforces the
-			// secret contains both digits and alphabetical characters.
-			// TODO: this should be replaced with stop words
-			if strings.HasPrefix(rule.RuleID, "generic") {
-				if !containsDigit(finding.Secret) {
-					continue
-				}
-			}
-		}
-
 		findings = append(findings, finding)
 	}
 	return findings
@@ -531,20 +540,20 @@ func (d *Detector) addFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with global Fingerprint %s",
+		logging.Debug().Msgf("ignoring finding with global Fingerprint %s",
 			finding.Fingerprint)
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			log.Debug().Msgf("ignoring finding with Fingerprint %s",
+			logging.Debug().Msgf("ignoring finding with Fingerprint %s",
 				finding.Fingerprint)
 			return
 		}
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.baseline) {
-		log.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
+		logging.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
 		return
 	}
 

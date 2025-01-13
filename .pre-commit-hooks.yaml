@@ -1,16 +1,16 @@
 - id: gitleaks
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks protect --verbose --redact --staged
+  entry: gitleaks git --pre-commit --redact --staged --verbose
   language: golang
   pass_filenames: false
 - id: gitleaks-docker
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: zricethezav/gitleaks protect --verbose --redact --staged
+  entry: zricethezav/gitleaks git --pre-commit --redact --staged --verbose
   language: docker_image
 - id: gitleaks-system
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks protect --verbose --redact --staged
+  entry: gitleaks git  --pre-commit --redact --staged --verbose
   language: system

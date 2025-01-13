@@ -9,6 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var simpleFinding = Finding{
+	Description: "",
+	RuleID:      "test-rule",
+	Match:       "line containing secret",
+	Secret:      "a secret",
+	StartLine:   1,
+	EndLine:     2,
+	StartColumn: 1,
+	EndColumn:   2,
+	Message:     "opps",
+	File:        "auth.py",
+	SymlinkFile: "",
+	Commit:      "0000000000000000",
+	Author:      "John Doe",
+	Email:       "johndoe@gmail.com",
+	Date:        "10-19-2003",
+	Tags:        []string{},
+}
+
 func TestWriteJSON(t *testing.T) {
 	tests := []struct {
 		findings       []Finding
@@ -20,25 +39,7 @@ func TestWriteJSON(t *testing.T) {
 			testReportName: "simple",
 			expected:       filepath.Join(expectPath, "report", "json_simple.json"),
 			findings: []Finding{
-				{
-
-					Description: "",
-					RuleID:      "test-rule",
-					Match:       "line containing secret",
-					Secret:      "a secret",
-					StartLine:   1,
-					EndLine:     2,
-					StartColumn: 1,
-					EndColumn:   2,
-					Message:     "opps",
-					File:        "auth.py",
-					SymlinkFile: "",
-					Commit:      "0000000000000000",
-					Author:      "John Doe",
-					Email:       "johndoe@gmail.com",
-					Date:        "10-19-2003",
-					Tags:        []string{},
-				},
+				simpleFinding,
 			}},
 		{
 
@@ -47,11 +48,12 @@ func TestWriteJSON(t *testing.T) {
 			findings:       []Finding{}},
 	}
 
+	reporter := JsonReporter{}
 	for _, test := range tests {
 		t.Run(test.testReportName, func(t *testing.T) {
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
 			require.NoError(t, err)
-			err = writeJson(test.findings, tmpfile)
+			err = reporter.Write(tmpfile, test.findings)
 			require.NoError(t, err)
 			assert.FileExists(t, tmpfile.Name())
 			got, err := os.ReadFile(tmpfile.Name())
@@ -62,7 +64,7 @@ func TestWriteJSON(t *testing.T) {
 			}
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, want, got)
+			assert.Equal(t, string(want), string(got))
 		})
 	}
 }

@@ -6,8 +6,9 @@ package utils
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	regexp "github.com/wasilibs/go-re2"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)`
+	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)`
 
 	// boundaries for the secret
 	// \x60 = `
@@ -48,6 +49,16 @@ func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseIn
 	sb.WriteString(secretRegex)
 	sb.WriteString(secretSuffix)
 	return regexp.MustCompile(sb.String())
+}
+
+func MergeRegexps(regexps ...*regexp.Regexp) *regexp.Regexp {
+	patterns := make([]string, len(regexps))
+
+	for i, r := range regexps {
+		patterns[i] = r.String()
+	}
+
+	return regexp.MustCompile(strings.Join(patterns, "|"))
 }
 
 func writeIdentifiers(sb *strings.Builder, identifiers []string) {
@@ -82,20 +93,20 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"ini - unquoted2": "{i}Token = {s}",
 		// JSON
 		"json - string": "{\n    \"{i}_token\": \"{s}\"\n}",
-		//TODO: "json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
-		//TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
+		// TODO: "json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
+		// TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
 		// XML
-		//TODO: "xml - element":           "<{i}Token>{s}</{i}Token>",
+		// TODO: "xml - element":           "<{i}Token>{s}</{i}Token>",
 		"xml - element multiline": "<{i}Token>\n    {s}\n</{i}Token>",
-		//TODO: "xml - attribute": "<entry name=\"{i}Token\" value=\"{s}\" />",
-		//TODO: "xml - key/value elements": "<entry>\n  <name=\"{i}Token\" />\n  <value=\"{s}\" />\n</entry>",
+		// TODO: "xml - attribute": "<entry name=\"{i}Token\" value=\"{s}\" />",
+		// TODO: "xml - key/value elements": "<entry>\n  <name=\"{i}Token\" />\n  <value=\"{s}\" />\n</entry>",
 		// YAML
 		"yaml - singleline - unquoted":     "{i}_token: {s}",
 		"yaml - singleline - single quote": "{i}_token: '{s}'",
 		"yaml - singleline - double quote": "{i}_token: \"{s}\"",
-		//TODO: "yaml - multiline - literal":       "{i}_token: |\n  {s}",
-		//TODO: "yaml - multiline - folding":       "{i}_token: >\n  {s}",
-		//"": "",
+		// TODO: "yaml - multiline - literal":       "{i}_token: |\n  {s}",
+		// TODO: "yaml - multiline - folding":       "{i}_token: >\n  {s}",
+		// "": "",
 
 		// Programming Languages
 		"C#":             `string {i}Token = "{s}";`,
@@ -103,26 +114,28 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"go - short":     `{i}Token := "{s}"`,
 		"go - backticks": "{i}Token := `{s}`",
 		"java":           "String {i}Token = \"{s}\";",
-		//TODO: "java - escaped quotes": `config.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"JDOE35\" {i}Token=\"{s}\""`,
-		//TODO:"kotlin - type":         "var {i}Token: string = \"{s}\"",
+		// TODO: "java - escaped quotes": `config.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"JDOE35\" {i}Token=\"{s}\""`,
+		// TODO:"kotlin - type":         "var {i}Token: string = \"{s}\"",
 		"kotlin - notype":     "var {i}Token = \"{s}\"",
 		"php - string concat": `${i}Token .= "{s}"`,
-		//TODO: "php - null coalesce":   `${i}Token ??= "{s}"`,
+		// TODO: "php - null coalesce":   `${i}Token ??= "{s}"`,
 		"python - single quote": "{i}Token = '{s}'",
 		"python - double quote": `{i}Token = "{s}"`,
-		//"": "",
+		// "": "",
 
 		// Miscellaneous
-		//TODO: "url - basic auth":      `https://{i}:{s}@example.com/`,
-		//TODO: "url - query parameter": "https://example.com?{i}Token={s}&fooBar=baz",
-		//TODO: "comment - slash": "//{s} is the password",
-		//TODO: "comment - slash multiline": "/*{s} is the password",
-		//TODO: "comment - hashtag":     "#{s} is the password",
-		//TODO: "comment - semicolon":     ";{s} is the password",
-		//TODO: "csv - unquoted": `{i}Token,{s},`,
+		// TODO: "url - basic auth":      `https://{i}:{s}@example.com/`,
+		// TODO: "url - query parameter": "https://example.com?{i}Token={s}&fooBar=baz",
+		// TODO: "comment - slash": "//{s} is the password",
+		// TODO: "comment - slash multiline": "/*{s} is the password",
+		// TODO: "comment - hashtag":     "#{s} is the password",
+		// TODO: "comment - semicolon":     ";{s} is the password",
+		// TODO: "csv - unquoted": `{i}Token,{s},`,
+		"misc - comma operator": `System.setProperty("{I}_TOKEN", "{s}")`,
+		// TODO: "misc - comma suffix": `environmentVariables = {PATH=/usr/local/bin, ENV=/etc/bashrc, {I}_PASSWORD={s}, LC_CTYPE=en_CA.UTF-8},`, // Spotted in `./Library/Logs/gradle-kotlin-dsl-resolver-xxxx.log`
 		"logstash": "  \"{i}Token\" => \"{s}\"",
-		//TODO: "sql - tabular":      "|{s}|",
-		//TODO: "sql":      "",
+		// TODO: "sql - tabular":      "|{s}|",
+		// TODO: "sql":      "",
 
 		// Makefile
 		// See: https://github.com/gitleaks/gitleaks/pull/1191
@@ -131,12 +144,16 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"make - shell assignment":           "{i}_TOKEN ::= \"{s}\"",
 		"make - evaluated shell assignment": "{i}_TOKEN :::= \"{s}\"",
 		"make - conditional assignment":     "{i}_TOKEN ?= \"{s}\"",
-		//TODO: "make - append":                     "{i}_TOKEN += \"{s}\"",
+		// TODO: "make - append":                     "{i}_TOKEN += \"{s}\"",
 
-		//"": "",
+		// "": "",
 	}
 
-	replacer := strings.NewReplacer("{i}", identifier, "{s}", secret)
+	replacer := strings.NewReplacer(
+		"{i}", identifier,
+		"{I}", strings.ToUpper(identifier),
+		"{s}", secret,
+	)
 	cases := make([]string, 0, len(samples))
 	for _, v := range samples {
 		cases = append(cases, replacer.Replace(v))

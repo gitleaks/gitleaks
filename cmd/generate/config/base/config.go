@@ -2,9 +2,10 @@ package base
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/config"
-	"regexp"
 	"strings"
+
+	regexp "github.com/wasilibs/go-re2"
+	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 func CreateGlobalConfig() config.Config {
@@ -64,7 +65,7 @@ func CreateGlobalConfig() config.Config {
 				// ----------- Golang files -----------
 				regexp.MustCompile(`go\.(mod|sum|work(\.sum)?)$`),
 				regexp.MustCompile(`(^|/)vendor/modules\.txt$`),
-				regexp.MustCompile(`(^|/)vendor/(github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)/.*$`),
+				regexp.MustCompile(`(^|/)vendor/(github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)(/.*)?$`),
 
 				// ----------- Java files -----------
 				// Gradle
@@ -75,30 +76,27 @@ func CreateGlobalConfig() config.Config {
 
 				// ----------- JavaScript files -----------
 				// Dependencies and lock files.
-				regexp.MustCompile(`(^|/)node_modules/.*?$`),
-				regexp.MustCompile(`(^|/)package-lock\.json$`),
-				regexp.MustCompile(`(^|/)yarn\.lock$`),
-				regexp.MustCompile(`(^|/)pnpm-lock\.yaml$`),
-				regexp.MustCompile(`(^|/)npm-shrinkwrap\.json$`),
-				regexp.MustCompile(`(^|/)bower_components/.*?$`),
+				regexp.MustCompile(`(^|/)node_modules(/.*)?$`),
+				regexp.MustCompile(`(^|/)(npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
+				regexp.MustCompile(`(^|/)bower_components(/.*)?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
-				regexp.MustCompile(`(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]+(\.min)?\.js(\.map)?$`),
+				regexp.MustCompile(`(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
 				regexp.MustCompile(`(^|/)(Pipfile|poetry)\.lock$`),
 				// Virtual environments
-				regexp.MustCompile(`(?i)/?(v?env|virtualenv)/lib(64)?/.+$`),
-				regexp.MustCompile(`(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+/|python/[23](\.\d{1,2})+/lib(64)?/).+$`),
+				regexp.MustCompile(`(?i)/?(v?env|virtualenv)/lib(64)?(/.*)?$`),
+				regexp.MustCompile(`(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+|python/[23](\.\d{1,2})+/lib(64)?)(/.*)?$`),
 				// dist-info directory (https://py-pkgs.org/04-package-structure.html#building-sdists-and-wheels)
-				regexp.MustCompile(`(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info/.+$`),
+				regexp.MustCompile(`(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info(/.+)?$`),
 
 				// ----------- Ruby files -----------
-				regexp.MustCompile(`(^|/)vendor/(bundle|ruby)/.*?$`),
+				regexp.MustCompile(`(^|/)vendor/(bundle|ruby)(/.*?)?$`),
 				regexp.MustCompile(`\.gem$`), // tar archive
 
 				// Misc
-				regexp.MustCompile(`verification-metadata.xml`),
+				regexp.MustCompile(`verification-metadata\.xml`),
 				regexp.MustCompile(`Database.refactorlog`),
 				//regexp.MustCompile(`vendor`),
 			},

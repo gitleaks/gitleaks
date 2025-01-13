@@ -2,15 +2,16 @@ package detect
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -789,7 +790,7 @@ func TestFromFiles(t *testing.T) {
 		err = detector.AddGitleaksIgnore(ignorePath)
 		require.NoError(t, err)
 		detector.FollowSymlinks = true
-		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
 		require.NoError(t, err)
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
@@ -840,7 +841,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
 		require.NoError(t, err)
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
