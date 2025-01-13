@@ -93,11 +93,11 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"api_key <= xxx",
 				"api_key => xxx",
 				"api_key ?= xxx",
+				"api_key, xxx",
 			},
 			invalidStrings: []string{
 				"api_keyxxx",
 				"api_key\txxx", // potentially valid in a tab-separated file
-				"api_key, xxx",
 				"api_key; xxx",
 				"api_key<xxx>",
 				"api_key&xxx",
