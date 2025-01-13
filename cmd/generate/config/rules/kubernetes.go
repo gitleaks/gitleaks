@@ -41,9 +41,13 @@ func KubernetesSecret() *config.Rule {
 					// variable: ""
 					// variable: ''
 					regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
-					// TODO: Requires multiple allowlists to target match.
-					// Avoid overreach between directives.
-					// regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
+				},
+			},
+			{
+				// Avoid overreach between directives.
+				RegexTarget: "match",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
 				},
 			},
 		},
@@ -245,21 +249,20 @@ metadata:
   namespace: kubernetes-dashboard
 type: Opaque
 `,
-		// TODO: Requires multiple allowlists.
-		//		"overly-permissive3.yaml": ` kind: Secret
-		//  target:
-		//    name: mysecret
-		//    creationPolicy: Owner
-		//
-		// ---
-		//
-		// kind: ConfigMap
-		//  data:
-		//        conversionStrategy: Default
-		//        decodingStrategy: None
-		//        key: secret/mysecret
-		//        property: foo
-		//      secretKey: foo`,
+		"overly-permissive3.yaml": ` kind: Secret
+ target:
+   name: mysecret
+   creationPolicy: Owner
+
+---
+
+kind: ConfigMap
+ data:
+       conversionStrategy: Default
+       decodingStrategy: None
+       key: secret/mysecret
+       property: foo
+     secretKey: foo`,
 		// https://github.com/gitleaks/gitleaks/issues/1644
 		"wrong-kind.yaml": `apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret

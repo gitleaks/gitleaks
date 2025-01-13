@@ -161,8 +161,7 @@ keywords = [
     "abia",
     "acca",
 ]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexes = [
     '''.+EXAMPLE$''',
 ]
@@ -288,8 +287,7 @@ description = "Discovered a potential basic authorization token provided in a cu
 regex = '''\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)'''
 entropy = 2
 keywords = ["curl"]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexes = [
     '''[^:]+:(change(it|me)|pass(word)?|pwd|test|token|\*+|x+)''',
     '''['"]?<[^>]+>['"]?:['"]?<[^>]+>|<[^:]+:[^>]+>['"]?''',
@@ -552,8 +550,7 @@ keywords = [
     "secret",
     "token",
 ]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexTarget = "match"
 regexes = [
     '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
@@ -2046,8 +2043,7 @@ keywords = [
     "ghu_",
     "ghs_",
 ]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 paths = [
     '''(^|/)@octokit/auth-token/README\.md$''',
 ]
@@ -2072,8 +2068,7 @@ description = "Uncovered a GitHub Personal Access Token, potentially leading to 
 regex = '''ghp_[0-9a-zA-Z]{36}'''
 entropy = 3
 keywords = ["ghp_"]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 paths = [
     '''(^|/)@octokit/auth-token/README\.md$''',
 ]
@@ -2344,10 +2339,14 @@ description = "Possible Kubernetes Secret detected, posing a risk of leaking cre
 regex = '''(?i)(?:\bkind:[ \t]*["']?\bsecret\b["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?\bsecret\b["']?)'''
 path = '''(?i)\.ya?ml$'''
 keywords = ["secret"]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexes = [
     '''[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')''',
+]
+[[rules.allowlists]]
+regexTarget = "match"
+regexes = [
+    '''(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)''',
 ]
 
 [[rules]]
@@ -2537,8 +2536,7 @@ regex = '''(?i)<add key=\"(?:(?:ClearText)?Password)\"\s*value=\"(.{8,})\"\s*/>'
 path = '''(?i)nuget\.config$'''
 entropy = 1
 keywords = ["<add key="]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexes = [
     '''33f!!lloppa''',
     '''hal\+9ooo_da!sY''',
@@ -3018,8 +3016,7 @@ keywords = [
     "hvs.",
     "s.",
 ]
-# NOTE: Gitleaks >= v8.21.0 should use [[rules.allowlists] instead.
-[rules.allowlist]
+[[rules.allowlists]]
 regexes = [
     '''s\.[A-Za-z]{24}''',
 ]
