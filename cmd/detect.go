@@ -22,9 +22,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
@@ -48,7 +48,7 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	source, err := cmd.Flags().GetString("source")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get source")
+		logging.Fatal().Err(err).Msg("could not get source")
 	}
 	initConfig(source)
 
@@ -64,12 +64,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		log.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Msg("")
 	}
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get exit code")
+		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
 	// determine what type of scan:
@@ -77,11 +77,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// - no-git: scan files by treating the repo as a plain directory
 	noGit, err := cmd.Flags().GetBool("no-git")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not call GetBool() for no-git")
+		logging.Fatal().Err(err).Msg("could not call GetBool() for no-git")
 	}
 	fromPipe, err := cmd.Flags().GetBool("pipe")
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not call GetBool() for pipe")
+		logging.Fatal().Err(err).Msg("could not call GetBool() for pipe")
 	}
 
 	// start the detector scan
@@ -94,20 +94,20 @@ func runDetect(cmd *cobra.Command, args []string) {
 			detector.Config.Allowlist.PathAllowed,
 		)
 		if err != nil {
-			log.Fatal().Err(err)
+			logging.Fatal().Err(err)
 		}
 
 		findings, err = detector.DetectFiles(paths)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err).Msg("failed scan directory")
+			logging.Error().Err(err).Msg("failed scan directory")
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectReader(os.Stdin, 10)
 		if err != nil {
 			// log fatal to exit, no need to continue since a report
 			// will not be generated when scanning from a pipe...for now
-			log.Fatal().Err(err).Msg("failed scan input from stdin")
+			logging.Fatal().Err(err).Msg("failed scan input from stdin")
 		}
 	} else {
 		var (
@@ -116,16 +116,16 @@ func runDetect(cmd *cobra.Command, args []string) {
 		)
 		logOpts, err = cmd.Flags().GetString("log-opts")
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not call GetString() for log-opts")
+			logging.Fatal().Err(err).Msg("could not call GetString() for log-opts")
 		}
 		gitCmd, err = sources.NewGitLogCmd(source, logOpts)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not create Git cmd")
+			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		findings, err = detector.DetectGit(gitCmd)
 		if err != nil {
 			// don't exit on error, just log it
-			log.Error().Err(err).Msg("failed to scan Git repository")
+			logging.Error().Err(err).Msg("failed to scan Git repository")
 		}
 	}
 

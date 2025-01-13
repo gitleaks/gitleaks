@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/semgroup"
-	"github.com/rs/zerolog/log"
+
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 type ScanTarget struct {
@@ -20,7 +21,7 @@ func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, sho
 		defer close(paths)
 		return filepath.Walk(source,
 			func(path string, fInfo os.FileInfo, err error) error {
-				logger := log.With().Str("path", path).Logger()
+				logger := logging.With().Str("path", path).Logger()
 
 				if err != nil {
 					if os.IsPermission(err) {

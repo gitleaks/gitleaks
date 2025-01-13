@@ -11,12 +11,12 @@ import (
 	"sync/atomic"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
 )
@@ -144,7 +144,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	log.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
+	logging.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
 	file, err := os.Open(gitleaksIgnorePath)
 
 	if err != nil {
@@ -154,7 +154,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	// https://github.com/securego/gosec/issues/512
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
+			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
 		}
 	}()
 	scanner := bufio.NewScanner(file)
@@ -256,7 +256,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
-			l := log.With().Str("rule-id", r.RuleID)
+			l := logging.With().Str("rule-id", r.RuleID)
 			if fragment.CommitSHA != "" {
 				l = l.Str("commit", fragment.CommitSHA)
 			}
@@ -335,7 +335,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	if d.MaxTargetMegaBytes > 0 {
 		rawLength := len(currentRaw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
-			log.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			logging.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
 			return findings
 		}
 	}
@@ -540,20 +540,20 @@ func (d *Detector) addFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		log.Debug().Msgf("ignoring finding with global Fingerprint %s",
+		logging.Debug().Msgf("ignoring finding with global Fingerprint %s",
 			finding.Fingerprint)
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			log.Debug().Msgf("ignoring finding with Fingerprint %s",
+			logging.Debug().Msgf("ignoring finding with Fingerprint %s",
 				finding.Fingerprint)
 			return
 		}
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.baseline) {
-		log.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
+		logging.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
 		return
 	}
 
