@@ -180,17 +180,6 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Println("")
 }
 
-func containsDigit(s string) bool {
-	for _, c := range s {
-		switch c {
-		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			return true
-		}
-
-	}
-	return false
-}
-
 func isWhitespace(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
