@@ -89,7 +89,7 @@ type Detector struct {
 	ReportPath string
 	Reporter   report.Reporter
 
-	TotalBytes uint64
+	TotalBytes atomic.Uint64
 }
 
 // Fragment contains the data to be scanned
@@ -184,9 +184,9 @@ func (d *Detector) DetectString(content string) []report.Finding {
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
-		atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Raw)))
+		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
-	atomic.AddUint64(&d.TotalBytes, uint64(len(fragment.Bytes)))
+	d.TotalBytes.Add(uint64(len(fragment.Bytes)))
 
 	var findings []report.Finding
 
