@@ -296,7 +296,7 @@ func (c *Config) extend(extensionConfig Config) {
 	disabledRuleIDs := map[string]struct{}{}
 	for _, id := range c.Extend.DisabledRules {
 		if _, ok := extensionConfig.Rules[id]; !ok {
-			log.Warn().
+			logging.Warn().
 				Str("rule-id", id).
 				Str("config", configName).
 				Msg("Disabled rule doesn't exist in extended config.")
@@ -307,7 +307,7 @@ func (c *Config) extend(extensionConfig Config) {
 	for ruleID, baseRule := range extensionConfig.Rules {
 		// Skip the rule.
 		if _, ok := disabledRuleIDs[ruleID]; ok {
-			log.Debug().
+			logging.Debug().
 				Str("rule-id", ruleID).
 				Str("config", configName).
 				Msg("Ignoring rule from extended config.")
