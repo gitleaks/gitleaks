@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -362,7 +361,7 @@ func bytesConvert(bytes uint64) string {
 }
 
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
-	totalBytes := atomic.LoadUint64(&detector.TotalBytes)
+	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
 		logging.Info().Msgf("%s in %s", bytesMsg, FormatDuration(time.Since(start)))
