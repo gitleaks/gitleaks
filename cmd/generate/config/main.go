@@ -147,6 +147,7 @@ func main() {
 		rules.MailGunSigningKey(),
 		rules.MapBox(),
 		rules.MattermostAccessToken(),
+		rules.Meraki(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
 		rules.NetlifyAccessToken(),
