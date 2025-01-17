@@ -13,7 +13,7 @@ func Meraki() *config.Rule {
 		Description: "Cisco Meraki is a cloud-managed IT solution that provides networking, security, and device management through an easy-to-use interface.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"meraki"},
 			`[0-9a-f]{40}`, false),
-		Keywords: []string{"meraki", "cisco_meraki"},
+		Keywords: []string{"meraki"},
 	}
 
 	// validate
