@@ -204,6 +204,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:bittrex)(?:[ \t\w.-]{0,20})[\s'"|]{0,3}(?:=|>|:{1
 keywords = ["bittrex"]
 
 [[rules]]
+id = "cisco-meraki-api-key"
+description = "Cisco Meraki is a cloud-managed IT solution that provides networking, security, and device management through an easy-to-use interface."
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:meraki)(?:[ \t\w.-]{0,20})[\s'"|]{0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)[`'"\s=]{0,5}([0-9a-f]{40})(?:[`'"\s;]|$)'''
+entropy = 3
+keywords = ["meraki"]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)CLOJARS_[a-z0-9]{60}'''
@@ -2480,15 +2487,6 @@ id = "mattermost-access-token"
 description = "Identified a Mattermost Access Token, which may compromise team communication channels and data privacy."
 regex = '''(?i)[\w.-]{0,50}?(?:mattermost)(?:[ \t\w.-]{0,20})[\s'"|]{0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)[`'"\s=]{0,5}([a-z0-9]{26})(?:[`'"\s;]|$)'''
 keywords = ["mattermost"]
-
-[[rules]]
-id = "meraki-api-key"
-description = "Cisco Meraki is a cloud-managed IT solution that provides networking, security, and device management through an easy-to-use interface."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:meraki)(?:[ \t\w.-]{0,20})[\s'"|]{0,3})(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)[`'"\s=]{0,5}([0-9a-f]{40})(?:[`'"\s;]|$)'''
-keywords = [
-    "meraki",
-    "cisco_meraki",
-]
 
 [[rules]]
 id = "messagebird-api-token"

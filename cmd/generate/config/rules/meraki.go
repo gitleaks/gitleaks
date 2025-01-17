@@ -13,15 +13,17 @@ func Meraki() *config.Rule {
 		Description: "Cisco Meraki is a cloud-managed IT solution that provides networking, security, and device management through an easy-to-use interface.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"meraki"},
 			`[0-9a-f]{40}`, false),
-		Entropy: 3,
+		Entropy:  3,
 		Keywords: []string{"meraki"},
 	}
 
 	// validate
 	tps := utils.GenerateSampleSecrets("meraki", secrets.NewSecret(utils.Hex("40")))
 	fps := []string{
-		`│e9e0f062f587b_423bb6cc6328eb786d75b45783e.bfu`,
-		`a1cdda32f587g423bb6cc6328Eb786d75b45783e`,
+		`meraki: aaaaaaaaaa1111111111bbbbbbbbbb2222222222`,                                   // low entropy
+		`meraki-api-key: acdeFf05b1a6d4c890237bf08c5e6e8d2b4d0f2e`,                           // invalid case
+		`meraki: abdefghjk0123456789mnopqrstuvwx12345678`,                                    // invalid character
+		`meraki_token = 5cb4a5f04cd412fe946667b17f0129ba17aeb2e0c7b5b7264efcebf7d022bfe2R21`, // invalid length
 	}
 	return utils.Validate(r, tps, fps)
 }
