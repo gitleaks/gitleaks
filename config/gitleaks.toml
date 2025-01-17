@@ -40,7 +40,7 @@ paths = [
     '''(^|/)node_modules(/.*)?$''',
     '''(^|/)(npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$''',
     '''(^|/)bower_components(/.*)?$''',
-    '''(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$''',
+    '''(^|/)(angular|bootstrap|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$''',
     '''(^|/)(Pipfile|poetry)\.lock$''',
     '''(?i)/?(v?env|virtualenv)/lib(64)?(/.*)?$''',
     '''(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+|python/[23](\.\d{1,2})+/lib(64)?)(/.*)?$''',
@@ -399,7 +399,7 @@ id = "dynatrace-api-token"
 description = "Detected a Dynatrace API token, potentially risking application performance monitoring and data exposure."
 regex = '''dt0c01\.(?i)[a-z0-9]{24}\.[a-z0-9]{64}'''
 entropy = 4
-keywords = ["dt0c01"]
+keywords = ["dt0c01."]
 
 [[rules]]
 id = "easypost-api-token"
@@ -576,7 +576,7 @@ regexes = [
 [[rules.allowlists]]
 regexTarget = "match"
 regexes = [
-    '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
+    '''(?i)(accessor|access[_.-]?id|api[_.-]?(version|id)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(credentials?[_.-]?id|withCredentials)|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key|key[_.-]?(alias|board|code|id|name|ring|selector|size|stone|storetype|word|up|down|left|right)|key[_.-]?vault[_.-]?(id|name)|keyVaultToStoreSecrets|key(store|tab)[_.-]?(file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(secret)[_.-]?name|UserSecretsId|(io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)|(api|credentials|token)[_.-]?(endpoint|ur[il])|public[_.-]?(key|token)|(key|token)[_.-]?file)''',
 ]
 stopwords = [
     "000000",
@@ -2055,6 +2055,7 @@ stopwords = [
     "zsh-",
     "zsh.",
     "zsh_",
+    "6fe4476ee5a1832882e326b506d14126",
 ]
 
 [[rules]]

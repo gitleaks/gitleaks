@@ -91,6 +91,7 @@ func TestConfigAllowlistPaths(t *testing.T) {
 	}{
 		"javascript - common static assets": {
 			invalid: []string{
+				`tests/e2e/nuget/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js`,
 				`src/main/static/lib/angular.1.2.16.min.js`,
 				`src/main/resources/static/jquery-ui-1.12.1/jquery-ui-min.js`,
 				`src/main/resources/static/js/jquery-ui-1.10.4.min.js`,

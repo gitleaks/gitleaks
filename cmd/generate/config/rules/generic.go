@@ -67,7 +67,9 @@ func GenericCredential() *config.Rule {
 						`|(credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
 						`|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(alias|board|code|ring|selector|size|stone|storetype|word|up|down|left|right)` +
+						`|key[_.-]?(alias|board|code|id|name|ring|selector|size|stone|storetype|word|up|down|left|right)` +
+						// Azure KeyVault
+						`|key[_.-]?vault[_.-]?(id|name)|keyVaultToStoreSecrets` +
 						`|key(store|tab)[_.-]?(file|path)` +
 						`|issuerkeyhash` + // part of ssl cert
 						`|(?-i:[DdMm]onkey|[DM]ONKEY)|keying` + // common words containing "key"
@@ -76,6 +78,7 @@ func GenericCredential() *config.Rule {
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
+						`|(io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
 						`|(api|credentials|token)[_.-]?(endpoint|ur[il])` +
@@ -83,7 +86,9 @@ func GenericCredential() *config.Rule {
 						`|(key|token)[_.-]?file` +
 						`)`),
 				},
-				StopWords: DefaultStopWords,
+				StopWords: append(DefaultStopWords,
+					"6fe4476ee5a1832882e326b506d14126", // https://github.com/yarnpkg/berry/issues/6201
+				),
 			},
 		},
 	}
@@ -116,8 +121,9 @@ func GenericCredential() *config.Rule {
 		`todo_secret_do_not_commit = `+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 
 		// Token
-		utils.GenerateSampleSecret("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443"), //gitleaks:allow
-		utils.GenerateSampleSecret("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB"),
+		` utils.GetEnvOrDefault("api_token", "dafa7817-e246-48f3-91a7-e87653d587b8")`,
+		//	`"env": {
+		//"API_TOKEN": "Lj2^5O%xi214"`,
 	)
 	fps := []string{
 		// Access
@@ -173,6 +179,11 @@ func GenericCredential() *config.Rule {
 		`	doc.Security.KeySize = PdfEncryptionKeySize.Key128Bit;`,
 		`o.keySelector=n,o.haKey=!1,`,
 		// TODO: Requires line-level allowlists.
+		`                                "key_name": "prod5zyxlmy-cmk",`,
+		`                                "kms_key_id": "555ea4a3-d53a-4412-9c66-3a7cb667b0d6",`,
+		`	"key_vault_name": "web21prqodx24021",`,
+		`  keyVaultToStoreSecrets: cmp2-qat-1208358310`, // e.g., https://github.com/2uasimojo/community-operators-prod/blob/9e51e4c8e0b5caaa3087e8e18e6fb918b2c36643/operators/azure-service-operator/1.0.59040/manifests/azure.microsoft.com_cosmosdbs.yaml#L50
+		`,apiKey:"6fe4476ee5a1832882e326b506d14126",`,
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//	`secret:
 		// secretName: app-decryption-secret
@@ -181,7 +192,7 @@ func GenericCredential() *config.Rule {
 		//	  path: app-k8s.yml`,
 
 		// TODO: https://learn.microsoft.com/en-us/windows/apps/design/style/xaml-theme-resources
-		// `<Color x:Key="NormalBrushGradient1">#FFBAE4FF</Color>`,
+		//`<Color x:Key="NormalBrushGradient1">#FFBAE4FF</Color>`,
 
 		// Password
 		`password combination.
@@ -197,10 +208,13 @@ R5: Regulatory--21`,
 		`    access_token_url='https://github.com/login/oauth/access_token',`,
 		`publicToken = "9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit"`,
 		`<SourceFile SourceLocation="F:\Extracts\" TokenFile="RTL_INST_CODE.cer">`,
+		`notes            = "Maven - io.jsonwebtoken:jjwt-jackson-0.11.2"`,
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
 		`clientId = "73082700-1f09-405b-80d0-3131bfd6272d"`,
+		//		`GITHUB_API_KEY=
+		//DYNATRACE_API_KEY=`,
 	}
 	return utils.Validate(r, tps, fps)
 }
