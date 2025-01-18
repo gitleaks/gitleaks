@@ -10,14 +10,17 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.22
+          go-version: 1.23
 
       - name: Build
         run: go build -v ./...
@@ -25,5 +28,7 @@ jobs:
       - name: Test
         run: make test
 
+      # Don't run for Windows, it will fail due to CRLF.
       - name: Validate Config
+        if: ${{ matrix.platform == 'ubuntu-latest' }}
         run: go generate ./... && git diff --exit-code
