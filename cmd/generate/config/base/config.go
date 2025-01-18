@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	regexp "github.com/wasilibs/go-re2"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
@@ -80,7 +81,7 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`(^|/)(npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
 				regexp.MustCompile(`(^|/)bower_components(/.*)?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
-				regexp.MustCompile(`(^|/)(angular|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
+				regexp.MustCompile(`(^|/)(angular|bootstrap|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
