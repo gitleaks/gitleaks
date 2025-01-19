@@ -1,5 +1,6 @@
 [
  {
+  "RuleID": "test-rule",
   "Description": "",
   "StartLine": 1,
   "EndLine": 2,
@@ -16,7 +17,6 @@
   "Date": "10-19-2003",
   "Message": "opps",
   "Tags": [],
-  "RuleID": "test-rule",
   "Fingerprint": ""
  }
 ]

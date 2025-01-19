@@ -17,8 +17,11 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		return nil
 	}
 
-	cw := csv.NewWriter(w)
-	err := cw.Write([]string{"RuleID",
+	var (
+		cw  = csv.NewWriter(w)
+		err error
+	)
+	columns := []string{"RuleID",
 		"Commit",
 		"File",
 		"SymlinkFile",
@@ -34,12 +37,17 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		"Email",
 		"Fingerprint",
 		"Tags",
-	})
-	if err != nil {
+	}
+	// A miserable attempt at "omitempty" so tests don't yell at me.
+	if findings[0].Link != "" {
+		columns = append(columns, "Link")
+	}
+
+	if err = cw.Write(columns); err != nil {
 		return err
 	}
 	for _, f := range findings {
-		err = cw.Write([]string{f.RuleID,
+		row := []string{f.RuleID,
 			f.Commit,
 			f.File,
 			f.SymlinkFile,
@@ -55,8 +63,12 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 			f.Email,
 			f.Fingerprint,
 			strings.Join(f.Tags, " "),
-		})
-		if err != nil {
+		}
+		if findings[0].Link != "" {
+			row = append(row, f.Link)
+		}
+
+		if err = cw.Write(row); err != nil {
 			return err
 		}
 	}

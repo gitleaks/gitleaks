@@ -4,20 +4,21 @@ import (
 	// "encoding/json"
 	"fmt"
 	"math"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
-
+	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 )
 
 // augmentGitFinding updates the start and end line numbers of a finding to include the
 // delta from the git diff
-func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
+func augmentGitFinding(scmPlatform scm.Platform, remoteUrl string, finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
 	if !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)
 		finding.EndLine += int(textFragment.NewPosition)
@@ -25,14 +26,62 @@ func augmentGitFinding(finding report.Finding, textFragment *gitdiff.TextFragmen
 
 	if f.PatchHeader != nil {
 		finding.Commit = f.PatchHeader.SHA
-		finding.Message = f.PatchHeader.Message()
 		if f.PatchHeader.Author != nil {
 			finding.Author = f.PatchHeader.Author.Name
 			finding.Email = f.PatchHeader.Author.Email
 		}
 		finding.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
+		finding.Message = f.PatchHeader.Message()
+		// Results from `git diff` shouldn't have a link.
+		if finding.Commit != "" {
+			finding.Link = createScmLink(scmPlatform, remoteUrl, finding)
+		}
 	}
 	return finding
+}
+
+var linkCleaner = strings.NewReplacer(
+	" ", "%20",
+	"%", "%25",
+)
+
+func createScmLink(scmPlatform scm.Platform, remoteUrl string, finding report.Finding) string {
+	if scmPlatform == scm.NoPlatform {
+		return ""
+	}
+
+	// Clean the path.
+	var (
+		filePath = linkCleaner.Replace(finding.File)
+		ext      = strings.ToLower(filepath.Ext(filePath))
+	)
+
+	switch scmPlatform {
+	case scm.GitHubPlatform:
+		link := fmt.Sprintf("%s/blob/%s/%s", remoteUrl, finding.Commit, filePath)
+		if ext == ".ipynb" || ext == ".md" {
+			link += "?plain=1"
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#L%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("-L%d", finding.EndLine)
+		}
+		return link
+	case scm.GitLabPlatform:
+		link := fmt.Sprintf("%s/blob/%s/%s", remoteUrl, finding.Commit, filePath)
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#L%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("-%d", finding.EndLine)
+		}
+		return link
+	default:
+		// This should never happen.
+		return ""
+	}
 }
 
 // shannonEntropy calculates the entropy of data using the formula defined here:
@@ -177,6 +226,9 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %s\n", "Email:", f.Email)
 	fmt.Printf("%-12s %s\n", "Date:", f.Date)
 	fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
+	if f.Link != "" {
+		fmt.Printf("%-12s %s\n", "Link:", f.Link)
+	}
 	fmt.Println("")
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	regexp "github.com/wasilibs/go-re2"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -503,9 +505,10 @@ func TestFromGit(t *testing.T) {
 	}{
 		{
 			source:  filepath.Join(repoBasePath, "small"),
-			cfgName: "simple",
+			cfgName: "simple", // the remote url is `git@github.com:gitleaks/test.git`
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					StartLine:   20,
 					EndLine:     20,
@@ -520,12 +523,13 @@ func TestFromGit(t *testing.T) {
 					Author:      "Zachary Rice",
 					Email:       "zricer@protonmail.com",
 					Message:     "Accidentally add a secret",
-					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "1b6da43b82b22e4eaa10bcf8ee591e91abbfc587:main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/1b6da43b82b22e4eaa10bcf8ee591e91abbfc587/main.go#L20",
 				},
 				{
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					StartLine:   9,
 					EndLine:     9,
@@ -540,10 +544,10 @@ func TestFromGit(t *testing.T) {
 					Author:      "Zach Rice",
 					Email:       "zricer@protonmail.com",
 					Message:     "adding foo package with secret",
-					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+					Link:        "https://github.com/gitleaks/test/blob/491504d5a31946ce75e22554cc34203d8e5ff3ca/foo/foo.go#L9",
 				},
 			},
 		},
@@ -553,6 +557,7 @@ func TestFromGit(t *testing.T) {
 			cfgName: "simple",
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					StartLine:   9,
 					EndLine:     9,
@@ -567,10 +572,10 @@ func TestFromGit(t *testing.T) {
 					Author:      "Zach Rice",
 					Email:       "zricer@protonmail.com",
 					Message:     "adding foo package with secret",
-					RuleID:      "aws-access-key",
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+					Link:        "https://github.com/gitleaks/test/blob/491504d5a31946ce75e22554cc34203d8e5ff3ca/foo/foo.go#L9",
 				},
 			},
 		},
@@ -580,41 +585,46 @@ func TestFromGit(t *testing.T) {
 	defer moveDotGit(t, ".git", "dotGit")
 
 	for _, tt := range tests {
+		t.Run(strings.Join([]string{tt.cfgName, tt.logOpts}, "/"), func(t *testing.T) {
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName("simple")
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
 
-		viper.AddConfigPath(configPath)
-		viper.SetConfigName("simple")
-		viper.SetConfigType("toml")
-		err := viper.ReadInConfig()
-		require.NoError(t, err)
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+			detector := NewDetector(cfg)
 
-		var vc config.ViperConfig
-		err = viper.Unmarshal(&vc)
-		require.NoError(t, err)
-		cfg, err := vc.Translate()
-		require.NoError(t, err)
-		detector := NewDetector(cfg)
+			var ignorePath string
+			info, err := os.Stat(tt.source)
+			require.NoError(t, err)
 
-		var ignorePath string
-		info, err := os.Stat(tt.source)
-		require.NoError(t, err)
+			if info.IsDir() {
+				ignorePath = filepath.Join(tt.source, ".gitleaksignore")
+			} else {
+				ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
+			}
+			err = detector.AddGitleaksIgnore(ignorePath)
+			require.NoError(t, err)
 
-		if info.IsDir() {
-			ignorePath = filepath.Join(tt.source, ".gitleaksignore")
-		} else {
-			ignorePath = filepath.Join(filepath.Dir(tt.source), ".gitleaksignore")
-		}
-		err = detector.AddGitleaksIgnore(ignorePath)
-		require.NoError(t, err)
+			gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
+			require.NoError(t, err)
 
-		gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
-		require.NoError(t, err)
-		findings, err := detector.DetectGit(gitCmd)
-		require.NoError(t, err)
+			remote, err := NewRemoteInfo(scm.NoPlatform, tt.source)
+			require.NoError(t, err)
 
-		for _, f := range findings {
-			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
-		}
-		assert.ElementsMatch(t, tt.expectedFindings, findings)
+			findings, err := detector.DetectGit(gitCmd, remote)
+			require.NoError(t, err)
+
+			for _, f := range findings {
+				f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+			}
+			assert.ElementsMatch(t, tt.expectedFindings, findings)
+		})
 	}
 }
 func TestFromGitStaged(t *testing.T) {
@@ -629,6 +639,7 @@ func TestFromGitStaged(t *testing.T) {
 			cfgName: "simple",
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "aws-access-key",
 					Description: "AWS Access Key",
 					StartLine:   7,
 					EndLine:     7,
@@ -649,8 +660,8 @@ func TestFromGitStaged(t *testing.T) {
 						"key",
 						"AWS",
 					},
-					RuleID:      "aws-access-key",
 					Fingerprint: "api/api.go:aws-access-key:7",
+					Link:        "",
 				},
 			},
 		},
@@ -677,7 +688,9 @@ func TestFromGitStaged(t *testing.T) {
 		require.NoError(t, err)
 		gitCmd, err := sources.NewGitDiffCmd(tt.source, true)
 		require.NoError(t, err)
-		findings, err := detector.DetectGit(gitCmd)
+		remote, err := NewRemoteInfo(scm.NoPlatform, tt.source)
+		require.NoError(t, err)
+		findings, err := detector.DetectGit(gitCmd, remote)
 		require.NoError(t, err)
 
 		for _, f := range findings {

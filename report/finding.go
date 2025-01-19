@@ -8,7 +8,10 @@ import (
 // Finding contains information about strings that
 // have been captured by a tree-sitter query.
 type Finding struct {
+	// Rule is the name of the rule that was matched
+	RuleID      string
 	Description string
+
 	StartLine   int
 	EndLine     int
 	StartColumn int
@@ -26,6 +29,7 @@ type Finding struct {
 	File        string
 	SymlinkFile string
 	Commit      string
+	Link        string `json:",omitempty"`
 
 	// Entropy is the shannon entropy of Value
 	Entropy float32
@@ -35,9 +39,6 @@ type Finding struct {
 	Date    string
 	Message string
 	Tags    []string
-
-	// Rule is the name of the rule that was matched
-	RuleID string
 
 	// unique identifier
 	Fingerprint string
