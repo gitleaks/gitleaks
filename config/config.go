@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 //go:embed gitleaks.toml

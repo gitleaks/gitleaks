@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	regexp "github.com/wasilibs/go-re2"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 const (

@@ -7,7 +7,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
-	regexp "github.com/wasilibs/go-re2"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func TestCommitAllowed(t *testing.T) {

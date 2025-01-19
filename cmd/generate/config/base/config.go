@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	regexp "github.com/wasilibs/go-re2"
-
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func CreateGlobalConfig() config.Config {

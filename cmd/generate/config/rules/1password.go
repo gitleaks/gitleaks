@@ -1,11 +1,10 @@
 package rules
 
 import (
-	regexp "github.com/wasilibs/go-re2"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // https://developer.1password.com/docs/service-accounts/security/?token-example=encoded
