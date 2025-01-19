@@ -90,11 +90,8 @@ type RemoteInfo struct {
 }
 
 func NewRemoteInfo(platform scm.Platform, source string) (*RemoteInfo, error) {
-	var (
-		remoteUrl string
-		err       error
-	)
-	if remoteUrl, err = getRemoteUrl(source); err != nil {
+	remoteUrl, err := getRemoteUrl(source)
+	if err != nil {
 		if strings.Contains(err.Error(), "No remote configured") {
 			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
 			platform = scm.NoPlatform
@@ -102,35 +99,35 @@ func NewRemoteInfo(platform scm.Platform, source string) (*RemoteInfo, error) {
 		}
 		return nil, fmt.Errorf("unable to get remote URL: %w", err)
 	}
-	if platform == scm.NoPlatform {
-		parsedUrl, err := url.Parse(remoteUrl)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse remote URL: %w", err)
-		}
 
-		platform = platformFromHost(parsedUrl)
+	if platform == scm.NoPlatform {
+		platform = platformFromHost(remoteUrl)
 		if platform == scm.NoPlatform {
 			logging.Info().
-				Str("host", parsedUrl.Hostname()).
+				Str("host", remoteUrl.Hostname()).
 				Msg("Unknown SCM platform. Use --platform to include links in findings.")
 		} else {
 			logging.Debug().
-				Str("host", parsedUrl.Hostname()).
+				Str("host", remoteUrl.Hostname()).
 				Str("platform", platform.String()).
 				Msg("SCM platform parsed from host")
 		}
 	}
 
 End:
+	var rUrl string
+	if remoteUrl != nil {
+		rUrl = remoteUrl.String()
+	}
 	return &RemoteInfo{
 		Platform: platform,
-		Url:      remoteUrl,
+		Url:      rUrl,
 	}, nil
 }
 
 var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
 
-func getRemoteUrl(source string) (string, error) {
+func getRemoteUrl(source string) (*url.URL, error) {
 	// This will return the first remote — typically, "origin".
 	cmd := exec.Command("git", "ls-remote", "--quiet", "--get-url")
 	if source != "." {
@@ -141,9 +138,9 @@ func getRemoteUrl(source string) (string, error) {
 	if err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
-			return "", fmt.Errorf("command failed (%d): %w, stderr: %s", exitError.ExitCode(), err, string(bytes.TrimSpace(exitError.Stderr)))
+			return nil, fmt.Errorf("command failed (%d): %w, stderr: %s", exitError.ExitCode(), err, string(bytes.TrimSpace(exitError.Stderr)))
 		}
-		return "", err
+		return nil, err
 	}
 
 	remoteUrl := string(bytes.TrimSpace(stdout))
@@ -152,7 +149,15 @@ func getRemoteUrl(source string) (string, error) {
 		repo := strings.TrimSuffix(matches[2], ".git")
 		remoteUrl = fmt.Sprintf("https://%s/%s", host, repo)
 	}
-	return remoteUrl, nil
+
+	parsedUrl, err := url.Parse(remoteUrl)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse remote URL: %w", err)
+	}
+
+	// Remove any user info.
+	parsedUrl.User = nil
+	return parsedUrl, nil
 }
 
 func platformFromHost(u *url.URL) scm.Platform {
