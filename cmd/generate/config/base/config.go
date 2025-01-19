@@ -102,6 +102,7 @@ func CreateGlobalConfig() config.Config {
 				//regexp.MustCompile(`vendor`),
 			},
 			StopWords: []string{
+				"abcdefghijklmnopqrstuvwxyz", // character range
 				// ----------- Secrets -----------
 				// Checkmarx client secret. (https://github.com/checkmarx-ts/checkmarx-python-sdk/blob/86560f6e2a3e46d16322101294da10d5d190312d/README.md?plain=1#L56)
 				"014df517-39d1-4453-b7b3-9930c563627c",

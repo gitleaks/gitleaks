@@ -21,7 +21,7 @@ func PrivateKey() *config.Rule {
 anything
 -----END PRIVATE KEY-----`,
 		`-----BEGIN RSA PRIVATE KEY-----
-abcdefghijklmnopqrstuvwxyz
+abcdefghijksmnopqrstuvwxyz
 -----END RSA PRIVATE KEY-----
 `,
 		`-----BEGIN PRIVATE KEY BLOCK-----

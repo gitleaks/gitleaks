@@ -55,6 +55,7 @@ func GenericCredential() *config.Rule {
 						// Access
 						`accessor` +
 						`|access[_.-]?id` +
+						`|random[_.-]?access` +
 						// API
 						`|api[_.-]?(version|id)` + // version/id -> not a secret
 						`|rapid|capital` + // common words containing "api"
@@ -66,15 +67,15 @@ func GenericCredential() *config.Rule {
 						// Credentials
 						`|(credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
-						`|(bucket|foreign|hot|natural|primary|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(alias|board|code|id|name|ring|selector|size|stone|storetype|word|up|down|left|right)` +
+						`|(bucket|foreign|hot|idx|natural|primary|pub(lic)?|schema|sequence)[_.-]?key` +
+						`|key[_.-]?(alias|board|code|frame|id|length|mesh|name|pair|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(id|name)|keyVaultToStoreSecrets` +
 						`|key(store|tab)[_.-]?(file|path)` +
 						`|issuerkeyhash` + // part of ssl cert
 						`|(?-i:[DdMm]onkey|[DM]ONKEY)|keying` + // common words containing "key"
 						// Secret
-						`|(secret)[_.-]?name` + // name of e.g. env variable
+						`|(secret)[_.-]?(length|name|size)` + // name of e.g. env variable
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
@@ -82,7 +83,7 @@ func GenericCredential() *config.Rule {
 
 						// General
 						`|(api|credentials|token)[_.-]?(endpoint|ur[il])` +
-						`|public[_.-]?(key|token)` + // public key -> not a secret
+						`|public[_.-]?token` +
 						`|(key|token)[_.-]?file` +
 						`)`),
 				},
@@ -129,6 +130,8 @@ func GenericCredential() *config.Rule {
 		// Access
 		`"accessor":"rA1wk0Y45YCufyfq",`,
 		`report_access_id: e8e4df51-2054-49b0-ab1c-516ac95c691d`,
+		`_RandomAccessIterator>
+_LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 
 		// API
 		`this.ultraPictureBox1.Name = "ultraPictureBox1";`,
@@ -160,6 +163,8 @@ func GenericCredential() *config.Rule {
 		// Key
 		`keyword: "Befaehigung_P2"`,
 		`public_key = "9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit"`,
+		`pub const X509_pubkey_st = struct_X509_pubkey_st;`,
+		`|| pIdxKey->default_rc==0`,
 		`monkeys-audio:mx64-uwp=fail`,
 		`primaryKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`foreignKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
@@ -184,6 +189,13 @@ func GenericCredential() *config.Rule {
 		`	"key_vault_name": "web21prqodx24021",`,
 		`  keyVaultToStoreSecrets: cmp2-qat-1208358310`, // e.g., https://github.com/2uasimojo/community-operators-prod/blob/9e51e4c8e0b5caaa3087e8e18e6fb918b2c36643/operators/azure-service-operator/1.0.59040/manifests/azure.microsoft.com_cosmosdbs.yaml#L50
 		`,apiKey:"6fe4476ee5a1832882e326b506d14126",`,
+		`const validKeyChars = "0123456789abcdefghijklmnopqrstuvwxyz_-."`,
+		`const keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"`,
+		`key_length = XSalsa20.key_length`,
+		`pub const SN_id_Gost28147_89_None_KeyMeshing = "id-Gost28147-89-None-KeyMeshing"`,
+		`KeyPair = X25519.KeyPair`,
+		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
+		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//	`secret:
 		// secretName: app-decryption-secret
@@ -203,6 +215,8 @@ R5: Regulatory--21`,
 		// Secret
 		`LLM_SECRET_NAME = "NEXUS-GPT4-API-KEY"`,
 		`  <UserSecretsId>79a3edd0-2092-40a2-a04d-dcb46d5ca9ed</UserSecretsId>`,
+		`secret_length = X25519.secret_length`,
+		`secretSize must be >= XXH3_SECRET_SIZE_MIN`,
 
 		// Token
 		`    access_token_url='https://github.com/login/oauth/access_token',`,
