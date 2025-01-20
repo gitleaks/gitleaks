@@ -2,11 +2,11 @@ package rules
 
 import (
 	"encoding/base64"
-	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func SentryAccessToken() *config.Rule {

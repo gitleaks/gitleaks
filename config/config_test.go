@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	regexp "github.com/wasilibs/go-re2"
-
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 const configPath = "../testdata/config/"

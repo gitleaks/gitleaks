@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	regexp "github.com/wasilibs/go-re2"
 	"golang.org/x/exp/maps"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 type AllowlistMatchCondition int

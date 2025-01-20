@@ -16,6 +16,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
@@ -109,6 +110,8 @@ func initConfig(source string) {
 	if !hideBanner {
 		_, _ = fmt.Fprint(os.Stderr, banner)
 	}
+
+	logging.Debug().Msgf("using %s regex engine", regexp.Version)
 
 	cfgPath, err := rootCmd.Flags().GetString("config")
 	if err != nil {

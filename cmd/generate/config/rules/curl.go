@@ -2,10 +2,10 @@ package rules
 
 import (
 	"fmt"
-	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // https://curl.se/docs/manpage.html#-u

@@ -6,8 +6,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// TODO: Should this be a pointer?
-// https://github.com/rs/zerolog/issues/1
 var Logger zerolog.Logger
 
 func init() {
