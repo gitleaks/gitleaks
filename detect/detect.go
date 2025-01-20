@@ -256,11 +256,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
-			l := logging.With().Str("rule-id", r.RuleID)
+			l := logging.With().Str("rule-id", r.RuleID).Str("path", fragment.FilePath)
 			if fragment.CommitSHA != "" {
 				l = l.Str("commit", fragment.CommitSHA)
 			}
-			l = l.Str("path", fragment.FilePath)
 			return l.Logger()
 		}()
 	)
@@ -295,11 +294,14 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			isAllowed = commitAllowed || pathAllowed
 		}
 		if isAllowed {
-			logger.Trace().
-				Str("condition", a.MatchCondition.String()).
-				Bool("commit-allowed", commitAllowed).
-				Bool("path-allowed", commitAllowed).
-				Msg("Skipping fragment due to rule allowlist")
+			event := logger.Trace().Str("condition", a.MatchCondition.String())
+			if commitAllowed {
+				event.Bool("allowed-commit", commitAllowed)
+			}
+			if pathAllowed {
+				event.Bool("allowed-path", pathAllowed)
+			}
+			event.Msg("skipping file: rule allowlist")
 			return findings
 		}
 	}
@@ -335,7 +337,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	if d.MaxTargetMegaBytes > 0 {
 		rawLength := len(currentRaw) / 1000000
 		if rawLength > d.MaxTargetMegaBytes {
-			logging.Debug().Msgf("skipping file: %s scan due to size: %d", fragment.FilePath, rawLength)
+			logger.Debug().
+				Int("size", rawLength).
+				Int("max-size", d.MaxTargetMegaBytes).
+				Msg("skipping fragment: size")
 			return findings
 		}
 	}
@@ -395,7 +400,7 @@ MatchLoop:
 			strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex], gitleaksAllowSignature) {
 			logger.Trace().
 				Str("finding", finding.Secret).
-				Msg("Skipping finding due to 'gitleaks:allow' signature")
+				Msg("skipping finding: 'gitleaks:allow' signature")
 			continue
 		}
 
@@ -424,11 +429,12 @@ MatchLoop:
 		entropy := shannonEntropy(finding.Secret)
 		finding.Entropy = float32(entropy)
 		if r.Entropy != 0.0 {
+			// entropy is too low, skip this finding
 			if entropy <= r.Entropy {
 				logger.Trace().
+					Str("finding", finding.Secret).
 					Float32("entropy", finding.Entropy).
-					Msg("Skipping finding due to low entropy")
-				// entropy is too low, skip this finding
+					Msg("skipping finding: low entropy")
 				continue
 			}
 		}
@@ -444,12 +450,12 @@ MatchLoop:
 		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
 			logger.Trace().
 				Str("finding", globalAllowlistTarget).
-				Msg("Skipping finding due to global allowlist regex")
+				Msg("skipping finding: global allowlist regex")
 			continue
 		} else if d.Config.Allowlist.ContainsStopWord(finding.Secret) {
 			logger.Trace().
 				Str("finding", finding.Secret).
-				Msg("Skipping finding due to global allowlist stopword")
+				Msg("skipping finding: global allowlist stopword")
 			continue
 		}
 
@@ -465,6 +471,8 @@ MatchLoop:
 
 			var (
 				isAllowed        bool
+				commitAllowed    bool
+				pathAllowed      bool
 				regexAllowed     = a.RegexAllowed(allowlistTarget)
 				containsStopword = a.ContainsStopWord(finding.Secret)
 			)
@@ -473,10 +481,12 @@ MatchLoop:
 				// Determine applicable checks.
 				var allowlistChecks []bool
 				if len(a.Commits) > 0 {
-					allowlistChecks = append(allowlistChecks, a.CommitAllowed(fragment.CommitSHA))
+					commitAllowed = a.CommitAllowed(fragment.CommitSHA)
+					allowlistChecks = append(allowlistChecks, commitAllowed)
 				}
 				if len(a.Paths) > 0 {
-					allowlistChecks = append(allowlistChecks, a.PathAllowed(fragment.FilePath))
+					pathAllowed = a.PathAllowed(fragment.FilePath)
+					allowlistChecks = append(allowlistChecks, pathAllowed)
 				}
 				if len(a.Regexes) > 0 {
 					allowlistChecks = append(allowlistChecks, regexAllowed)
@@ -492,12 +502,22 @@ MatchLoop:
 			}
 
 			if isAllowed {
-				logger.Trace().
+				event := logger.Trace().
 					Str("finding", finding.Secret).
-					Str("condition", a.MatchCondition.String()).
-					Bool("regex-allowed", regexAllowed).
-					Bool("contains-stopword", containsStopword).
-					Msg("Skipping finding due to rule allowlist")
+					Str("condition", a.MatchCondition.String())
+				if commitAllowed {
+					event.Bool("allowed-commit", commitAllowed)
+				}
+				if pathAllowed {
+					event.Bool("allowed-path", pathAllowed)
+				}
+				if regexAllowed {
+					event.Bool("allowed-regex", regexAllowed)
+				}
+				if containsStopword {
+					event.Bool("allowed-stopword", containsStopword)
+				}
+				event.Msg("skipping finding: rule allowlist")
 				continue MatchLoop
 			}
 		}
@@ -527,21 +547,26 @@ func (d *Detector) addFinding(finding report.Finding) {
 	}
 
 	// check if we should ignore this finding
+	logger := logging.With().Str("finding", finding.Secret).Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		logging.Debug().Msgf("ignoring finding with global Fingerprint %s",
-			finding.Fingerprint)
+		logger.Debug().
+			Str("fingerprint", globalFingerprint).
+			Msg("skipping finding: global fingerprint")
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logging.Debug().Msgf("ignoring finding with Fingerprint %s",
-				finding.Fingerprint)
+			logger.Debug().
+				Str("fingerprint", finding.Fingerprint).
+				Msgf("skipping finding: fingerprint")
 			return
 		}
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.baseline) {
-		logging.Debug().Msgf("baseline duplicate -- ignoring finding with Fingerprint %s", finding.Fingerprint)
+		logger.Debug().
+			Str("fingerprint", finding.Fingerprint).
+			Msgf("skipping finding: baseline")
 		return
 	}
 
