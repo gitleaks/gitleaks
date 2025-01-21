@@ -52,11 +52,11 @@ func GenericCredential() *config.Rule {
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)(` +
 						// Access
-						`accessor` +
+						`access(ibility|or)` +
 						`|access[_.-]?id` +
 						`|random[_.-]?access` +
 						// API
-						`|api[_.-]?(version|id)` + // version/id -> not a secret
+						`|api[_.-]?(id|name|version)` + // id/name/version -> not a secret
 						`|rapid|capital` + // common words containing "api"
 						`|[a-z0-9-]*?api[a-z0-9-]*?:jar:` + // Maven META-INF dependencies that contain "api" in the name.
 						// Auth
@@ -84,11 +84,21 @@ func GenericCredential() *config.Rule {
 						`|(api|credentials|token)[_.-]?(endpoint|ur[il])` +
 						`|public[_.-]?token` +
 						`|(key|token)[_.-]?file` +
+						// Empty variables capturing the next line (e.g., .env files)
+						`|(?-i:([A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(\n|\z))` +
+						`|(?-i:([A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(\n|\z))` +
 						`)`),
 				},
 				StopWords: append(DefaultStopWords,
 					"6fe4476ee5a1832882e326b506d14126", // https://github.com/yarnpkg/berry/issues/6201
 				),
+			},
+			{
+				RegexTarget: "line",
+				Regexes: []*regexp.Regexp{
+					// Docker build secrets (https://docs.docker.com/build/building/secrets/#using-build-secrets).
+					regexp.MustCompile(`--mount=type=secret,`),
+				},
 			},
 		},
 	}
@@ -129,6 +139,7 @@ func GenericCredential() *config.Rule {
 		// Access
 		`"accessor":"rA1wk0Y45YCufyfq",`,
 		`report_access_id: e8e4df51-2054-49b0-ab1c-516ac95c691d`,
+		`accessibilityYesOptionId = "0736f5ef-7e88-499a-80cc-90c85d2a5180"`,
 		`_RandomAccessIterator>
 _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 
@@ -141,6 +152,7 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`[DEBUG]		org.slf4j.slf4j-api:jar:1.7.8.:compile (version managed from default)`,
 		`[DEBUG]		org.neo4j.neo4j-graphdb-api:jar:3.5.12:test`,
 		`apiUrl=apigee.corpint.com`,
+		`X-API-Name": "NRG0-Hermes-INTERNAL-API",`,
 		// TODO: Jetbrains IML files (requires line-level allowlist).
 		// `<orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.directory.api:api-asn1-api:1.0.0-M20" level="projcet" />`
 
@@ -173,7 +185,6 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`minisat-master-keying:x64-uwp=fail`,
 		`IceSSL.KeyFile=s_rsa1024_priv.pem`,
 		`"bucket_key": "SalesResults-1.2"`,
-		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
 		`<key tag="SecurityIdentifier" name="SecurityIdentifier" type="STRING" />`,
 		// `packageKey":` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`schemaKey = 'DOC_Vector_5_32'`,
@@ -196,6 +207,8 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
 		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
+		//`    { key: '9df21e95-3848-409d-8f94-c675cdfee839', value: 'Americas' },`,
+		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
 		//	`secret:
 		// secretName: app-decryption-secret
 		// items:
@@ -216,6 +229,9 @@ R5: Regulatory--21`,
 		`  <UserSecretsId>79a3edd0-2092-40a2-a04d-dcb46d5ca9ed</UserSecretsId>`,
 		`secret_length = X25519.secret_length`,
 		`secretSize must be >= XXH3_SECRET_SIZE_MIN`,
+		`# get build time secret for authentication
+#RUN --mount=type=secret,id=jfrog_secret \
+#    JFROG_SECRET = $(cat /run/secrets/jfrog_secret) && \`,
 
 		// Token
 		`    access_token_url='https://github.com/login/oauth/access_token',`,
@@ -226,8 +242,10 @@ R5: Regulatory--21`,
 
 		// General
 		`clientId = "73082700-1f09-405b-80d0-3131bfd6272d"`,
-		//		`GITHUB_API_KEY=
-		//DYNATRACE_API_KEY=`,
+		`GITHUB_API_KEY=
+DYNATRACE_API_KEY=`,
+		`snowflake.password=
+jdbc.snowflake.url=`,
 	}
 	return utils.Validate(r, tps, fps)
 }
@@ -243,7 +261,7 @@ func newPlausibleSecret(regex string) string {
 		if !regexp.MustCompile(`[1-9]`).MatchString(secret) {
 			continue
 		}
-		if allowList.ContainsStopWord(secret) {
+		if ok, _ := allowList.ContainsStopWord(secret); ok {
 			continue
 		}
 		return secret
