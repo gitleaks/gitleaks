@@ -267,9 +267,9 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	// check if filepath or commit is allowed for this rule
 	for _, a := range r.Allowlists {
 		var (
-			isAllowed     bool
-			commitAllowed = a.CommitAllowed(fragment.CommitSHA)
-			pathAllowed   = a.PathAllowed(fragment.FilePath)
+			isAllowed             bool
+			commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
+			pathAllowed           = a.PathAllowed(fragment.FilePath)
 		)
 		if a.MatchCondition == config.AllowlistMatchAnd {
 			// Determine applicable checks.
@@ -296,7 +296,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		if isAllowed {
 			event := logger.Trace().Str("condition", a.MatchCondition.String())
 			if commitAllowed {
-				event.Bool("allowed-commit", commitAllowed)
+				event.Str("allowed-commit", commit)
 			}
 			if pathAllowed {
 				event.Bool("allowed-path", pathAllowed)
@@ -452,9 +452,10 @@ MatchLoop:
 				Str("finding", globalAllowlistTarget).
 				Msg("skipping finding: global allowlist regex")
 			continue
-		} else if d.Config.Allowlist.ContainsStopWord(finding.Secret) {
+		} else if ok, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); ok {
 			logger.Trace().
 				Str("finding", finding.Secret).
+				Str("allowed-stopword", word).
 				Msg("skipping finding: global allowlist stopword")
 			continue
 		}
@@ -470,18 +471,19 @@ MatchLoop:
 			}
 
 			var (
-				isAllowed        bool
-				commitAllowed    bool
-				pathAllowed      bool
-				regexAllowed     = a.RegexAllowed(allowlistTarget)
-				containsStopword = a.ContainsStopWord(finding.Secret)
+				isAllowed              bool
+				commitAllowed          bool
+				commit                 string
+				pathAllowed            bool
+				regexAllowed           = a.RegexAllowed(allowlistTarget)
+				containsStopword, word = a.ContainsStopWord(finding.Secret)
 			)
 			// check if the secret is in the list of stopwords
 			if a.MatchCondition == config.AllowlistMatchAnd {
 				// Determine applicable checks.
 				var allowlistChecks []bool
 				if len(a.Commits) > 0 {
-					commitAllowed = a.CommitAllowed(fragment.CommitSHA)
+					commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
 					allowlistChecks = append(allowlistChecks, commitAllowed)
 				}
 				if len(a.Paths) > 0 {
@@ -506,7 +508,7 @@ MatchLoop:
 					Str("finding", finding.Secret).
 					Str("condition", a.MatchCondition.String())
 				if commitAllowed {
-					event.Bool("allowed-commit", commitAllowed)
+					event.Str("allowed-commit", commit)
 				}
 				if pathAllowed {
 					event.Bool("allowed-path", pathAllowed)
@@ -515,7 +517,7 @@ MatchLoop:
 					event.Bool("allowed-regex", regexAllowed)
 				}
 				if containsStopword {
-					event.Bool("allowed-stopword", containsStopword)
+					event.Str("allowed-stopword", word)
 				}
 				event.Msg("skipping finding: rule allowlist")
 				continue MatchLoop

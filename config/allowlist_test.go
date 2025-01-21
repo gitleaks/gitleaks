@@ -40,7 +40,8 @@ func TestCommitAllowed(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.commitAllowed, tt.allowlist.CommitAllowed(tt.commit))
+		isAllowed, _ := tt.allowlist.CommitAllowed(tt.commit)
+		assert.Equal(t, tt.commitAllowed, isAllowed)
 	}
 }
 
