@@ -28,7 +28,7 @@ const (
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `[\x60'"\s=]{0,5}(`
-	secretSuffix       = `)(?:[\x60'"\s;\\n]|$)`
+	secretSuffix       = `)(?:[\x60'"\s;]|\\[nr]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
@@ -94,6 +94,7 @@ func GenerateSampleSecrets(identifier string, secret string) []string {
 		"json - string": "{\n    \"{i}_token\": \"{s}\"\n}",
 		// TODO: "json - escaped string": "\\{\n    \\\"{i}_token\\\": \\\"{s}\\\"\n\\}",
 		// TODO: "json - string key/value": "{\n    \"name\": \"{i}_token\",\n    \"value\": \"{s}\"\n}",
+		"json - escaped newline in string": `{"config.ini": "{I}_TOKEN={s}\nBACKUP_ENABLED=true"}`,
 		// XML
 		// TODO: "xml - element":           "<{i}Token>{s}</{i}Token>",
 		"xml - element multiline": "<{i}Token>\n    {s}\n</{i}Token>",
