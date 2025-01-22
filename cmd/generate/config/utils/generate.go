@@ -19,11 +19,11 @@ const (
 	identifierCaseInsensitivePrefix = `[\w.-]{0,50}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `[\w.-]{0,50}?(?:`
-	identifierSuffix                = `)(?:[ \t\w.-]{0,20})[\s'"|]{0,3}`
+	identifierSuffix                = `)(?:[ \t\w.-]{0,20})[\s'"]{0,3}`
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=|,)`
+	operator = `(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)`
 
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`
