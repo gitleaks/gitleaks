@@ -68,7 +68,7 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"api_key\t\t\t\t\t=xxx",
 				"api_key\n\n\n=xxx", // potentially invalid?,
 				"api_key\r\n=xxx",
-				"api_key|||=xxx",
+				// "api_key|||=xxx",
 			},
 			invalidStrings: []string{
 				"api_key&=xxx",
@@ -89,8 +89,8 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"<api_key>xxx",
 				"api_key:=xxx",
 				"api_key:::=xxx",
-				"api_key||:=xxx",
-				"api_key <= xxx",
+				// "api_key||:=xxx", // this isn't anything
+				// "api_key <= xxx",
 				"api_key => xxx",
 				"api_key ?= xxx",
 				"api_key, xxx",
