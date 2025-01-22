@@ -19,11 +19,10 @@ func GenericCredential() *config.Rule {
 			"credential",
 			"creds",
 			"key",
-			"passwd",
-			"password",
+			"passw(?:or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}`, true),
+		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -114,6 +113,8 @@ func GenericCredential() *config.Rule {
 		`some_api_token_123 = "`+newPlausibleSecret(`[a-zA-Z0-9]{60}`)+`"`,
 
 		// Auth
+		`"user_auth": "am9obmRvZTpkMDY5NGIxYi1jMTcxLTQ4ODYt+TMyYS0wMmUwOWQ1/mIwNjc="`,
+
 		// Credentials
 		`"credentials" : "0afae57f3ccfd9d7f5767067bc48b30f719e271ba470488056e37ab35d4b6506"`,
 		`creds = `+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
