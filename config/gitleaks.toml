@@ -1,7 +1,6 @@
-# This file has been auto-generated. Do not edit manually.
-# If you would like to contribute new rules, please use
-# cmd/generate/config/main.go and follow the contributing guidelines
-# at https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
+# This file has been auto-generated. DO NOT EDIT MANUALLY.
+# If you would like to contribute new rules, please follow
+# https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
 
 # This is the default gitleaks configuration file.
 # Rules and allowlists are defined within this file.
