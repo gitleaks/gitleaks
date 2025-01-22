@@ -1,33 +1,35 @@
-# This file has been auto-generated. Do not edit manually.
-# If you would like to contribute new rules, please use
-# cmd/generate/config/main.go and follow the contributing guidelines
-# at https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
-#
-# How the hell does secret scanning work? Read this:
-#   https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need
+# This file has been auto-generated. DO NOT EDIT MANUALLY.
+# If you would like to contribute new rules, please follow
+# https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
 #
 # This is the default gitleaks configuration file.
 # Rules and allowlists are defined within this file.
 # Rules instruct gitleaks on what should be considered a secret.
 # Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
+#
+# How the hell does secret scanning work? Read this:
+#   https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need
 
 title = "{{.Title}}"
-
-[allowlist]
-description = "{{.Allowlist.Description}}"
-{{- with .Allowlist.RegexTarget }}
+{{println}}
+{{- with $.Extend }}{{ if or .UseDefault .Path }}[extend]
+{{- with .UseDefault }}{{println}}useDefault = {{ . }}{{end}}
+{{ end }}{{ end }}
+{{- with $.Allowlist }}{{ if or .Regexes .Paths .Commits .StopWords }}[allowlist]
+description = "{{.Description}}"
+{{- with .RegexTarget }}
 regexTarget = "{{ . }}"{{ end -}}
-{{- with .Allowlist.Regexes }}
+{{- with .Regexes }}
 regexes = [{{ range $i, $regex := . }}
     '''{{ $regex }}''',{{ end }}
 ]{{ end }}
-{{- with .Allowlist.Paths }}
+{{- with .Paths }}
 paths = [{{ range $i, $path := . }}
     '''{{ $path }}''',{{ end }}
 ]{{ end }}
-{{- with .Allowlist.StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
+{{- with .StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
-]{{ end }}{{println}}
+]{{ end }}{{println}}{{end}}{{end -}}
 
 {{- range $i, $rule := .Rules }}{{println}}[[rules]]
 id = "{{$rule.RuleID}}"
@@ -43,9 +45,9 @@ entropy = {{ . }}{{ end -}}
 {{- with $rule.Keywords }}
 {{- if gt (len .) 1}}
 keywords = [{{ range $j, $keyword := . }}
-    "{{ $keyword }}",{{ end }}
+    {{ quote $keyword }},{{ end }}
 ]{{else}}
-keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end }}
+keywords = [{{ range $j, $keyword := . }}{{ quote $keyword }}{{ end }}]{{end}}{{ end }}
 {{- with $rule.Tags }}
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
