@@ -119,3 +119,12 @@ func CreateGlobalConfig() config.Config {
 		},
 	}
 }
+
+func NewExperimentalConfig() config.Config {
+	return config.Config{
+		Title: "gitleaks experimental config",
+		Extend: config.Extend{
+			UseDefault: true,
+		},
+	}
+}

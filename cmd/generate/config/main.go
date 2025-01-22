@@ -2,8 +2,12 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
+	"sync"
 	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
@@ -22,8 +26,9 @@ func main() {
 		_, _ = os.Stderr.WriteString("Specify path to the gitleaks.toml config\n")
 		os.Exit(2)
 	}
-	gitleaksConfigPath := os.Args[1]
 
+	// Default rules
+	configPath := os.Args[1]
 	configRules := []*config.Rule{
 		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
@@ -94,8 +99,6 @@ func main() {
 		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
-		// TODO figure out what makes sense for GCP
-		// rules.GCPServiceAccount(),
 		rules.GCPAPIKey(),
 		rules.GitHubPat(),
 		rules.GitHubFineGrainedPat(),
@@ -239,10 +242,37 @@ func main() {
 		rules.GenericCredential(),
 		rules.InfracostAPIToken(),
 	}
+	writeRules(base.CreateGlobalConfig(), configRules, configPath)
 
+	// Experimental rules
+	expConfigPath := filepath.Join(filepath.Dir(configPath), "gitleaks-experimental.toml")
+	expRules := []*config.Rule{
+		// TODO figure out what makes sense for GCP
+		rules.GCPServiceAccount(),
+	}
+	writeRules(base.NewExperimentalConfig(), expRules, expConfigPath)
+}
+
+var (
+	tmpl  *template.Template
+	tOnce sync.Once
+)
+
+func getTemplate() *template.Template {
+	tOnce.Do(func() {
+		var err error
+		tmpl = template.New("config.tmpl").Funcs(sprig.TxtFuncMap())
+		if tmpl, err = tmpl.ParseFiles(templatePath); err != nil {
+			logging.Fatal().Err(err).Msg("Failed to parse template")
+		}
+	})
+	return tmpl
+}
+
+func writeRules(cfg config.Config, rules []*config.Rule, configPath string) {
 	// ensure rules have unique ids
-	ruleLookUp := make(map[string]config.Rule, len(configRules))
-	for _, rule := range configRules {
+	ruleLookUp := make(map[string]config.Rule, len(rules))
+	for _, rule := range rules {
 		if err := rule.Validate(); err != nil {
 			logging.Fatal().Err(err).
 				Str("rule-id", rule.RuleID).
@@ -261,20 +291,14 @@ func main() {
 		ruleLookUp[rule.RuleID] = *rule
 	}
 
-	tmpl, err := template.ParseFiles(templatePath)
+	f, err := os.Create(configPath)
 	if err != nil {
-		logging.Fatal().Err(err).Msg("Failed to parse template")
-	}
-
-	f, err := os.Create(gitleaksConfigPath)
-	if err != nil {
-		logging.Fatal().Err(err).Msg("Failed to create rules.toml")
+		logging.Fatal().Err(err).Msgf("Failed to create %s", configPath)
 	}
 	defer f.Close()
 
-	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
-	if err = tmpl.Execute(f, cfg); err != nil {
+	if err = getTemplate().Execute(f, cfg); err != nil {
 		logging.Fatal().Err(err).Msg("could not execute template")
 	}
 }
