@@ -146,10 +146,9 @@ func getRemoteUrl(source string) (*url.URL, error) {
 
 	remoteUrl := string(bytes.TrimSpace(stdout))
 	if matches := sshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
-		host := matches[1]
-		repo := strings.TrimSuffix(matches[2], ".git")
-		remoteUrl = fmt.Sprintf("https://%s/%s", host, repo)
+		remoteUrl = fmt.Sprintf("https://%s/%s", matches[1], matches[2])
 	}
+	remoteUrl = strings.TrimSuffix(remoteUrl, ".git")
 
 	parsedUrl, err := url.Parse(remoteUrl)
 	if err != nil {
