@@ -436,6 +436,7 @@ id = "facebook-access-token"
 description = "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure."
 regex = '''(?i)\b(\d{15,16}(\||%)[0-9a-z\-_]{27,40})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 3
+keywords = ["facebook"]
 
 [[rules]]
 id = "facebook-page-access-token"

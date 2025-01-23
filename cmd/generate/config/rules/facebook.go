@@ -34,14 +34,15 @@ func FacebookAccessToken() *config.Rule {
 		RuleID:      "facebook-access-token",
 		Description: "Discovered a Facebook Access Token, posing a risk of unauthorized access to Facebook accounts and personal data exposure.",
 		Regex:       utils.GenerateUniqueTokenRegex(`\d{15,16}(\||%)[0-9a-z\-_]{27,40}`, true),
+		Keywords:    []string{"facebook"},
 		Entropy:     3,
 	}
 
 	// validate
 	tps := []string{
-		`{"access_token":"911602140448729|AY-lRJZq9BoDLobvAiP25L7RcMg","token_type":"bearer"}`, // gitleaks:allow
-		`1308742762612587|rhoK1cbv0DOU_RTX_87O4MkX7AI`,                                         // gitleaks:allow
-		`1477036645700765|wRPf2v3mt2JfMqCLK8n7oltrEmc`,                                         // gitleaks:allow
+		`{"facebook access_token":"911602140448729|AY-lRJZq9BoDLobvAiP25L7RcMg","token_type":"bearer"}`, // gitleaks:allow
+		`facebook 1308742762612587|rhoK1cbv0DOU_RTX_87O4MkX7AI`,                                         // gitleaks:allow
+		`facebook 1477036645700765|wRPf2v3mt2JfMqCLK8n7oltrEmc`,                                         // gitleaks:allow
 	}
 	return utils.Validate(r, tps, nil)
 }
