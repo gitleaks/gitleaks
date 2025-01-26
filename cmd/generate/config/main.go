@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"slices"
 	"text/template"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
@@ -241,6 +242,13 @@ func main() {
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
+
+		// Slices are de-duplicated with a map, every iteration has a different order.
+		// This is an awkward workaround.
+		for _, allowlist := range rule.Allowlists {
+			slices.Sort(allowlist.Commits)
+			slices.Sort(allowlist.StopWords)
+		}
 	}
 
 	tmpl, err := template.ParseFiles(templatePath)
@@ -255,6 +263,10 @@ func main() {
 
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
+	if cfg.Allowlist != nil {
+		slices.Sort(cfg.Allowlist.Commits)
+		slices.Sort(cfg.Allowlist.StopWords)
+	}
 	if err = tmpl.Execute(f, cfg); err != nil {
 		logging.Fatal().Err(err).Msg("could not execute template")
 	}

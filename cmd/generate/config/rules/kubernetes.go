@@ -31,7 +31,7 @@ func KubernetesSecret() *config.Rule {
 		},
 		// Kubernetes secrets are usually yaml files.
 		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// Ignore empty or placeholder values.

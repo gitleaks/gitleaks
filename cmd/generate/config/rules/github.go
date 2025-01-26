@@ -7,7 +7,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
-var githubAllowlist = []config.Allowlist{
+var githubAllowlist = []*config.Allowlist{
 	{
 		Paths: []*regexp.Regexp{
 			// https://github.com/octokit/auth-token.js/?tab=readme-ov-file#createtokenauthtoken-options

@@ -36,7 +36,7 @@ func GenericCredential() *config.Rule {
 			"token",
 		},
 		Entropy: 3.5,
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				// NOTE: this is a goofy hack to get around the fact there golang's regex engine does not support positive lookaheads.
 				// Ideally we would want to ensure the secret contains both numbers and alphabetical characters, not just alphabetical characters.
