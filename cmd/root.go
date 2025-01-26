@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -77,6 +78,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
+	rootCmd.PersistentFlags().BoolP("experimental-optimizations", "", false, "enables experimental allowlist optimizations, increasing performance at the cost of startup time")
 
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
@@ -218,6 +220,12 @@ func Execute() {
 }
 
 func Config(cmd *cobra.Command) config.Config {
+	// set experimental feature flag(s)
+	if mustGetBoolFlag(cmd, "experimental-optimizations") {
+		logging.Warn().Msgf("using experimental allowlist optimizations, updates may contain breaking changes!")
+		flags.EnableExperimentalAllowlistOptimizations.Store(true)
+	}
+
 	var vc config.ViperConfig
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
