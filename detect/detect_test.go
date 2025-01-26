@@ -1347,6 +1347,9 @@ func TestDetectRuleAllowlist(t *testing.T) {
 let password = 'Summer2024!';`
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			err := tc.allowlist.Validate()
+			require.NoError(t, err)
+
 			rule := config.Rule{
 				RuleID: "test-rule",
 				Regex:  regexp.MustCompile(`Summer2024!`),
