@@ -96,10 +96,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		var (
+			logOpts     = mustGetStringFlag(cmd, "log-opts")
 			gitCmd      *sources.GitCmd
 			scmPlatform scm.Platform
 			remote      *detect.RemoteInfo
-			logOpts     string
 		)
 		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
@@ -110,7 +110,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 		if remote, err = detect.NewRemoteInfo(scmPlatform, source); err != nil {
 			logging.Fatal().Err(err).Msg("failed to scan Git repository")
 		}
-		logOpts = mustGetStringFlag(cmd, "log-opts")
 
 		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
 			// don't exit on error, just log it
