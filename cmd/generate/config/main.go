@@ -205,6 +205,7 @@ func main() {
 		rules.SlackLegacyToken(),
 		rules.SlackWebHookUrl(),
 		rules.Snyk(),
+		rules.Sonar(),
 		rules.StripeAccessToken(),
 		rules.SquareAccessToken(),
 		rules.SquareSpaceAccessToken(),
