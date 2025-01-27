@@ -13,7 +13,7 @@ func CurlBasicAuth() *config.Rule {
 	r := config.Rule{
 		RuleID:      "curl-auth-user",
 		Description: "Discovered a potential basic authorization token provided in a curl command, which could compromise the curl accessed resource.",
-		Regex:       regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})(?:"([^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
+		Regex:       regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})("(:[^"]{3,}|[^:"]{3,}:|[^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
 		Keywords:    []string{"curl"},
 		Entropy:     2,
 		Allowlists: []config.Allowlist{
@@ -38,6 +38,8 @@ func CurlBasicAuth() *config.Rule {
   -H 'Content-type: text/plain' \
   -d 'world' \
   -u developer:yqDVtkqPECriaLRi`, // different line
+		`curl -u ":d2LkV78zLx!t" https://localhost:9200`, // empty username
+		`curl -u "d2LkV78zLx!t:" https://localhost:9200`, // empty password
 
 		// long
 		`curl -sw '%{http_code}' -X POST --user  'johns:h0pk1ns~21s' $GItHUB_API_URL/$GIT_COMMIT --data`,
@@ -65,6 +67,7 @@ func CurlBasicAuth() *config.Rule {
 		`curl -u "${_username}:${_password}"`,
 		`curl -u "${username}":"${password}"`,
 		`curl -k -X POST -I -u "SRVC_JENKINS:${APPID}"`,
+		`curl -u ":" https://localhost:9200`, // empty username and password
 
 		// long
 		`curl -sw '%{http_code}' -X POST --user '$USERNAME:$PASSWORD' $GItHUB_API_URL/$GIT_COMMIT --data`,
