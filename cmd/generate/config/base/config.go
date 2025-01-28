@@ -33,9 +33,9 @@ func CreateGlobalConfig() config.Config {
 				}(),
 
 				// ----------- Environment Variables -----------
-				regexp.MustCompile(`^\$(\d+|{\d+})$`),
-				regexp.MustCompile(`^\$([A-Z_]+|[a-z_]+)$`),
-				regexp.MustCompile(`^\${([A-Z_]+|[a-z_]+)}$`),
+				regexp.MustCompile(`^\$(?:\d+|{\d+})$`),
+				regexp.MustCompile(`^\$(?:[A-Z_]+|[a-z_]+)$`),
+				regexp.MustCompile(`^\${(?:[A-Z_]+|[a-z_]+)}$`),
 
 				// ----------- Interpolated Variables -----------
 				// Ansible (https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html)
@@ -43,14 +43,14 @@ func CreateGlobalConfig() config.Config {
 				// GitHub Actions
 				// https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
 				// https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions
-				regexp.MustCompile(`^\$\{\{[ \t]*((env|github|secrets|vars)(\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$`),
+				regexp.MustCompile(`^\$\{\{[ \t]*(?:(?:env|github|secrets|vars)(?:\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$`),
 				// NuGet (https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file#using-environment-variables)
-				regexp.MustCompile(`^%([A-Z_]+|[a-z_]+)%$`),
+				regexp.MustCompile(`^%(?:[A-Z_]+|[a-z_]+)%$`),
 				// String formatting.
 				regexp.MustCompile(`^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$`), // Golang (https://pkg.go.dev/fmt)
 				regexp.MustCompile(`^\{\d{0,2}}$`),                       // Python (https://docs.python.org/3/tutorial/inputoutput.html)
 				// Urban Code Deploy (https://www.ibm.com/support/pages/replace-token-step-replaces-replacement-values-windows-variables)
-				regexp.MustCompile(`^@([A-Z_]+|[a-z_]+)@$`),
+				regexp.MustCompile(`^@(?:[A-Z_]+|[a-z_]+)@$`),
 
 				// ----------- Miscellaneous -----------
 			},
@@ -58,42 +58,42 @@ func CreateGlobalConfig() config.Config {
 				regexp.MustCompile(`gitleaks\.toml`),
 
 				// ----------- Documents and media -----------
-				regexp.MustCompile(`(?i)\.(bmp|gif|jpe?g|svg|tiff?)$`), // Images
-				regexp.MustCompile(`\.(eot|[ot]tf|woff2?)$`),           // Fonts
-				regexp.MustCompile(`(.*?)(doc|docx|zip|xls|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$`),
+				regexp.MustCompile(`(?i)\.(?:bmp|gif|jpe?g|png|svg|tiff?)$`), // Images
+				regexp.MustCompile(`(?i)\.(?:eot|[ot]tf|woff2?)$`),           // Fonts
+				regexp.MustCompile(`(?i)\.(?:docx?|xlsx?|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf|zip)$`),
 
 				// ----------- Golang files -----------
-				regexp.MustCompile(`go\.(mod|sum|work(\.sum)?)$`),
-				regexp.MustCompile(`(^|/)vendor/modules\.txt$`),
-				regexp.MustCompile(`(^|/)vendor/(github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)(/.*)?$`),
+				regexp.MustCompile(`go\.(?:mod|sum|work(?:\.sum)?)$`),
+				regexp.MustCompile(`(?:^|/)vendor/modules\.txt$`),
+				regexp.MustCompile(`(?:^|/)vendor/(?:github\.com|golang\.org/x|google\.golang\.org|gopkg\.in|istio\.io|k8s\.io|sigs\.k8s\.io)(?:/.*)?$`),
 
 				// ----------- Java files -----------
 				// Gradle
-				regexp.MustCompile(`(^|/)gradlew(\.bat)?$`),
-				regexp.MustCompile(`(^|/)gradle\.lockfile$`),
-				regexp.MustCompile(`(^|/)mvnw(\.cmd)?$`),
-				regexp.MustCompile(`(^|/)\.mvn/wrapper/MavenWrapperDownloader\.java$`),
+				regexp.MustCompile(`(?:^|/)gradlew(?:\.bat)?$`),
+				regexp.MustCompile(`(?:^|/)gradle\.lockfile$`),
+				regexp.MustCompile(`(?:^|/)mvnw(?:\.cmd)?$`),
+				regexp.MustCompile(`(?:^|/)\.mvn/wrapper/MavenWrapperDownloader\.java$`),
 
 				// ----------- JavaScript files -----------
 				// Dependencies and lock files.
-				regexp.MustCompile(`(^|/)node_modules(/.*)?$`),
-				regexp.MustCompile(`(^|/)(npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
-				regexp.MustCompile(`(^|/)bower_components(/.*)?$`),
+				regexp.MustCompile(`(?:^|/)node_modules(?:/.*)?$`),
+				regexp.MustCompile(`(?:^|/)(?:npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
+				regexp.MustCompile(`(?:^|/)bower_components(?:/.*)?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
-				regexp.MustCompile(`(^|/)(angular|bootstrap|jquery(-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(\.min)?\.js(\.map)?$`),
-				regexp.MustCompile(`(^|/)javascript\.json$`),
+				regexp.MustCompile(`(?:^|/)(?:angular|bootstrap|jquery(?:-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(?:\.min)?\.js(?:\.map)?$`),
+				regexp.MustCompile(`(?:^|/)javascript\.json$`),
 
 				// ----------- Python files -----------
 				// Dependencies and lock files.
-				regexp.MustCompile(`(^|/)(Pipfile|poetry)\.lock$`),
+				regexp.MustCompile(`(?:^|/)(?:Pipfile|poetry)\.lock$`),
 				// Virtual environments
-				regexp.MustCompile(`(?i)/?(v?env|virtualenv)/lib(64)?(/.*)?$`),
-				regexp.MustCompile(`(?i)(^|/)(lib(64)?/python[23](\.\d{1,2})+|python/[23](\.\d{1,2})+/lib(64)?)(/.*)?$`),
+				regexp.MustCompile(`(?i)(?:^|/)(?:v?env|virtualenv)/lib(?:64)?(?:/.*)?$`),
+				regexp.MustCompile(`(?i)(?:^|/)(?:lib(?:64)?/python[23](?:\.\d{1,2})+|python/[23](?:\.\d{1,2})+/lib(?:64)?)(?:/.*)?$`),
 				// dist-info directory (https://py-pkgs.org/04-package-structure.html#building-sdists-and-wheels)
-				regexp.MustCompile(`(?i)(^|/)[a-z0-9_.]+-[0-9.]+\.dist-info(/.+)?$`),
+				regexp.MustCompile(`(?i)(?:^|/)[a-z0-9_.]+-[0-9.]+\.dist-info(?:/.+)?$`),
 
 				// ----------- Ruby files -----------
-				regexp.MustCompile(`(^|/)vendor/(bundle|ruby)(/.*?)?$`),
+				regexp.MustCompile(`(?:^|/)vendor/(?:bundle|ruby)(?:/.*?)?$`),
 				regexp.MustCompile(`\.gem$`), // tar archive
 
 				// Misc

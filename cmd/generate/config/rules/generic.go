@@ -49,13 +49,13 @@ func GenericCredential() *config.Rule {
 				MatchCondition: config.AllowlistMatchOr,
 				RegexTarget:    "match",
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`(?i)(` +
+					regexp.MustCompile(`(?i)(?:` +
 						// Access
-						`access(ibility|or)` +
+						`access(?:ibility|or)` +
 						`|access[_.-]?id` +
 						`|random[_.-]?access` +
 						// API
-						`|api[_.-]?(id|name|version)` + // id/name/version -> not a secret
+						`|api[_.-]?(?:id|name|version)` + // id/name/version -> not a secret
 						`|rapid|capital` + // common words containing "api"
 						`|[a-z0-9-]*?api[a-z0-9-]*?:jar:` + // Maven META-INF dependencies that contain "api" in the name.
 						// Auth
@@ -63,29 +63,29 @@ func GenericCredential() *config.Rule {
 						`|X-MS-Exchange-Organization-Auth` + // email header
 						`|Authentication-Results` + // email header
 						// Credentials
-						`|(credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
+						`|(?:credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
-						`|(bucket|foreign|hot|idx|natural|primary|pub(lic)?|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(alias|board|code|frame|id|length|mesh|name|pair|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
+						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
+						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
 						// Azure KeyVault
-						`|key[_.-]?vault[_.-]?(id|name)|keyVaultToStoreSecrets` +
-						`|key(store|tab)[_.-]?(file|path)` +
+						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
+						`|key(?:store|tab)[_.-]?(?:file|path)` +
 						`|issuerkeyhash` + // part of ssl cert
 						`|(?-i:[DdMm]onkey|[DM]ONKEY)|keying` + // common words containing "key"
 						// Secret
-						`|(secret)[_.-]?(length|name|size)` + // name of e.g. env variable
+						`|(?:secret)[_.-]?(?:length|name|size)` + // name of e.g. env variable
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
-						`|(io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
+						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
-						`|(api|credentials|token)[_.-]?(endpoint|ur[il])` +
+						`|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])` +
 						`|public[_.-]?token` +
-						`|(key|token)[_.-]?file` +
+						`|(?:key|token)[_.-]?file` +
 						// Empty variables capturing the next line (e.g., .env files)
-						`|(?-i:([A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(\n|\z))` +
-						`|(?-i:([A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(\n|\z))` +
+						`|(?-i:(?:[A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(?:\n|\z))` +
+						`|(?-i:(?:[A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(?:\n|\z))` +
 						`)`),
 				},
 				StopWords: append(DefaultStopWords,

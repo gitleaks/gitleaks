@@ -45,7 +45,7 @@ func KubernetesSecret() *config.Rule {
 				// Avoid overreach between directives.
 				RegexTarget: "match",
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`(kind:(.|\s)+\n---\n(.|\s)+\bdata:|data:(.|\s)+\n---\n(.|\s)+\bkind:)`),
+					regexp.MustCompile(`(kind:(?:.|\s)+\n---\n(?:.|\s)+\bdata:|data:(?:.|\s)+\n---\n(?:.|\s)+\bkind:)`),
 				},
 			},
 		},
