@@ -9,8 +9,8 @@ import (
 func PrivateKey() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
 		RuleID:      "private-key",
+		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
 		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?KEY(?: BLOCK)?-----`),
 		Keywords:    []string{"-----BEGIN"},
 	}
@@ -28,4 +28,25 @@ anything
 -----END PRIVATE KEY BLOCK-----`,
 	} // gitleaks:allow
 	return utils.Validate(r, tps, nil)
+}
+
+func PrivateKeyPKCS12File() *config.Rule {
+	// https://en.wikipedia.org/wiki/PKCS_12
+	r := config.Rule{
+		RuleID:      "pkcs12-file",
+		Description: "Found a PKCS #12 file, which commonly contain bundled private keys.",
+		Path:        regexp.MustCompile(`(?i)(?:^|\/)[^\/]+\.p(?:12|fx)$`),
+	}
+
+	// validate
+	tps := map[string]string{
+		"security/es_certificates/opensearch/es_kibana_client.p12": "",
+		"cagw_key.P12": "",
+		"ToDo/ToDo.UWP/ToDo.UWP_TemporaryKey.pfx": "",
+	}
+	fps := map[string]string{
+		"doc/typenum/type.P126.html":         "",
+		"scripts/keeneland/syntest.p1200.sh": "",
+	}
+	return utils.ValidateWithPaths(r, tps, fps)
 }
