@@ -2935,7 +2935,7 @@ regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(
 keywords = ["snyk"]
 
 [[rules]]
-id = "source-graph-token"
+id = "sourcegraph-access-token"
 description = "Sourcegraph is a code search and navigation engine."
 regex = '''(?i)\b(\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b)(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 3
