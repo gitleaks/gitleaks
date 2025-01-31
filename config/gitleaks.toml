@@ -38,7 +38,7 @@ paths = [
     '''(?:^|/)mvnw(?:\.cmd)?$''',
     '''(?:^|/)\.mvn/wrapper/MavenWrapperDownloader\.java$''',
     '''(?:^|/)node_modules(?:/.*)?$''',
-    '''(?:^|/)(?:npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$''',
+    '''(?:^|/)(?:deno\.lock|npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$''',
     '''(?:^|/)bower_components(?:/.*)?$''',
     '''(?:^|/)(?:angular|bootstrap|jquery(?:-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(?:\.min)?\.js(?:\.map)?$''',
     '''(?:^|/)javascript\.json$''',

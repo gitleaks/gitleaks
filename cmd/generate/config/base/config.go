@@ -77,7 +77,7 @@ func CreateGlobalConfig() config.Config {
 				// ----------- JavaScript files -----------
 				// Dependencies and lock files.
 				regexp.MustCompile(`(?:^|/)node_modules(?:/.*)?$`),
-				regexp.MustCompile(`(?:^|/)(?:npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
+				regexp.MustCompile(`(?:^|/)(?:deno\.lock|npm-shrinkwrap\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$`),
 				regexp.MustCompile(`(?:^|/)bower_components(?:/.*)?$`),
 				// TODO: Add more common static assets, such as swagger-ui.
 				regexp.MustCompile(`(?:^|/)(?:angular|bootstrap|jquery(?:-?ui)?|plotly|swagger-?ui)[a-zA-Z0-9.-]*(?:\.min)?\.js(?:\.map)?$`),
