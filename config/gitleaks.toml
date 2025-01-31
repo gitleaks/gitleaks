@@ -2940,6 +2940,16 @@ regex = '''(?i)[\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(
 keywords = ["snyk"]
 
 [[rules]]
+id = "sourcegraph-access-token"
+description = "Sourcegraph is a code search and navigation engine."
+regex = '''(?i)\b(\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = [
+    "sgp_",
+    "sourcegraph",
+]
+
+[[rules]]
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
 regex = '''\b((?:EAAA|sq0atp-)[\w-]{22,60})(?:[\x60'"\s;]|\\[nr]|$)'''
