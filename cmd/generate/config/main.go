@@ -172,6 +172,7 @@ func main() {
 		rules.Prefect(),
 		rules.PrivateAIToken(),
 		rules.PrivateKey(),
+		rules.PrivateKeyPKCS12File(),
 		rules.PulumiAPIToken(),
 		rules.PyPiUploadToken(),
 		rules.RapidAPIAccessToken(),

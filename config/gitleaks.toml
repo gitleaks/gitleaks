@@ -2621,6 +2621,11 @@ entropy = 3.5
 keywords = ["sha256~"]
 
 [[rules]]
+id = "pkcs12-file"
+description = "Found a PKCS #12 file, which commonly contain bundled private keys."
+path = '''(?i)(?:^|\/)[^\/]+\.p(?:12|fx)$'''
+
+[[rules]]
 id = "plaid-api-token"
 description = "Discovered a Plaid API Token, potentially compromising financial data aggregation and banking services."
 regex = '''(?i)[\w.-]{0,50}?(?:plaid)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''

@@ -29,7 +29,8 @@ paths = [{{ range $i, $path := . }}
 {{- range $i, $rule := .Rules }}{{println}}[[rules]]
 id = "{{$rule.RuleID}}"
 description = "{{$rule.Description}}"
-regex = '''{{$rule.Regex}}'''
+{{- with $rule.Regex }}
+regex = '''{{ . }}'''{{ end -}}
 {{- with $rule.Path }}
 path = '''{{ . }}'''{{ end -}}
 {{- with $rule.SecretGroup }}
