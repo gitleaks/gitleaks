@@ -12,7 +12,7 @@
 [badge-license]: https://img.shields.io/github/license/gitleaks/gitleaks.svg
 [go-docs-badge]: https://pkg.go.dev/badge/github.com/gitleaks/gitleaks/v8?status
 [go-docs]: https://pkg.go.dev/github.com/zricethezav/gitleaks/v8
-[badge-build]: https://img.shields.io/badge/protected%20by-gitleaks-blue
+[badge-build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg
 [build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml
 [go-report-card-badge]: https://goreportcard.com/badge/github.com/gitleaks/gitleaks/v8
 [go-report-card]: https://goreportcard.com/report/github.com/gitleaks/gitleaks/v8
