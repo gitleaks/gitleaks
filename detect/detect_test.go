@@ -468,6 +468,52 @@ func TestDetect(t *testing.T) {
 				},
 			},
 		},
+		{
+			cfgName: "database",
+			fragment: Fragment{
+				Raw:      `$DB_PASSWORD=12X?249x$@123`,
+				FilePath: "tmp.env",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Discovered a possible database credentials.",
+					Match:       "DB_PASSWORD=12X?249x$@123",
+					Secret:      "12X?249x$@123",
+					File:        "tmp.env",
+					Line:        "$DB_PASSWORD=12X?249x$@123",
+					RuleID:      "database-password",
+					Tags:        []string{},
+					Entropy:     3.180833,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 2,
+					EndColumn:   26,
+				},
+			},
+		},
+		{
+			cfgName: "database",
+			fragment: Fragment{
+				Raw:      `pwd: ?:123@@;:asdASD`,
+				FilePath: "tmp.md",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Discovered a possible database credentials.",
+					Match:       "pwd: ?:123@@;:asdASD",
+					Secret:      "?:123@@;:asdASD",
+					File:        "tmp.md",
+					Line:        "pwd: ?:123@@;:asdASD",
+					RuleID:      "database-password",
+					Tags:        []string{},
+					Entropy:     3.640224,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 1,
+					EndColumn:   20,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
