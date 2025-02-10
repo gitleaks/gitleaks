@@ -99,16 +99,13 @@ func runDetect(cmd *cobra.Command, args []string) {
 			logOpts     = mustGetStringFlag(cmd, "log-opts")
 			gitCmd      *sources.GitCmd
 			scmPlatform scm.Platform
-			remote      *detect.RemoteInfo
+			remote      = detect.NewRemoteInfo(scmPlatform, source)
 		)
 		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
 			logging.Fatal().Err(err).Send()
-		}
-		if remote, err = detect.NewRemoteInfo(scmPlatform, source); err != nil {
-			logging.Fatal().Err(err).Msg("failed to scan Git repository")
 		}
 
 		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {

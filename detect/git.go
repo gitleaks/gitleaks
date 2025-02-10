@@ -62,7 +62,7 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 					}
 
 					for _, finding := range d.Detect(fragment) {
-						d.addFinding(augmentGitFinding(remote.Platform, remote.Url, finding, textFragment, gitdiffFile))
+						d.addFinding(augmentGitFinding(remote, finding, textFragment, gitdiffFile))
 					}
 				}
 				return nil
@@ -90,20 +90,25 @@ type RemoteInfo struct {
 	Url      string
 }
 
-func NewRemoteInfo(platform scm.Platform, source string) (*RemoteInfo, error) {
+func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
+	if platform == scm.NoPlatform {
+		return &RemoteInfo{Platform: platform}
+	}
+
 	remoteUrl, err := getRemoteUrl(source)
 	if err != nil {
 		if strings.Contains(err.Error(), "No remote configured") {
 			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
 			platform = scm.NoPlatform
-			goto End
+		} else {
+			logging.Error().Err(err).Msg("skipping finding links: unable to parse remote URL")
 		}
-		return nil, fmt.Errorf("unable to get remote URL: %w", err)
+		goto End
 	}
 
-	if platform == scm.NoPlatform {
+	if platform == scm.UnknownPlatform {
 		platform = platformFromHost(remoteUrl)
-		if platform == scm.NoPlatform {
+		if platform == scm.UnknownPlatform {
 			logging.Info().
 				Str("host", remoteUrl.Hostname()).
 				Msg("Unknown SCM platform. Use --platform to include links in findings.")
@@ -123,7 +128,7 @@ End:
 	return &RemoteInfo{
 		Platform: platform,
 		Url:      rUrl,
-	}, nil
+	}
 }
 
 var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
@@ -167,6 +172,6 @@ func platformFromHost(u *url.URL) scm.Platform {
 	case "gitlab.com":
 		return scm.GitLabPlatform
 	default:
-		return scm.NoPlatform
+		return scm.UnknownPlatform
 	}
 }

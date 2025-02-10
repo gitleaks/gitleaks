@@ -614,9 +614,7 @@ func TestFromGit(t *testing.T) {
 			gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
 			require.NoError(t, err)
 
-			remote, err := NewRemoteInfo(scm.NoPlatform, tt.source)
-			require.NoError(t, err)
-
+			remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
 			findings, err := detector.DetectGit(gitCmd, remote)
 			require.NoError(t, err)
 
@@ -688,8 +686,7 @@ func TestFromGitStaged(t *testing.T) {
 		require.NoError(t, err)
 		gitCmd, err := sources.NewGitDiffCmd(tt.source, true)
 		require.NoError(t, err)
-		remote, err := NewRemoteInfo(scm.NoPlatform, tt.source)
-		require.NoError(t, err)
+		remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
 		findings, err := detector.DetectGit(gitCmd, remote)
 		require.NoError(t, err)
 
