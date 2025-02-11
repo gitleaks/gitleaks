@@ -59,7 +59,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	findingSummaryAndExit(detector, allFindings, exitCode, start, err)
 }
 
-func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *detect.Detector, error){
+func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *detect.Detector, error) {
 	initConfig(source)
 	var (
 		findings []report.Finding
