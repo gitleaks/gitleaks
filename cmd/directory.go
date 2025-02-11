@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -23,14 +24,42 @@ var directoryCmd = &cobra.Command{
 }
 
 func runDirectory(cmd *cobra.Command, args []string) {
-	// grab source
-	source := "."
-	if len(args) == 1 {
-		source = args[0]
-		if source == "" {
-			source = "."
-		}
+	if len(args) == 0 {
+		args = append(args, ".") // Default to current directory if no args are provided
 	}
+
+	var err error
+	var detector *detect.Detector
+	var allFindings []report.Finding
+
+	start := time.Now()
+	findingsMap := make(map[string]report.Finding)
+
+	for _, arg := range args {
+		findings, det, scanErr := runDirectoryScan(cmd, arg)
+		if scanErr != nil {
+			logging.Error().Err(scanErr).Msgf("failed scan directory %s", arg)
+			err = scanErr
+		}
+		for _, finding := range findings {
+			findingsMap[finding.Fingerprint] = finding
+		}
+		detector = det
+	}
+
+	for _, finding := range findingsMap {
+		allFindings = append(allFindings, finding)
+	}
+
+	exitCode, exitCodeErr := cmd.Flags().GetInt("exit-code")
+	if exitCodeErr != nil {
+		logging.Fatal().Err(exitCodeErr).Msg("could not get exit code")
+	}
+
+	findingSummaryAndExit(detector, allFindings, exitCode, start, err)
+}
+
+func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *detect.Detector, error){
 	initConfig(source)
 	var (
 		findings []report.Finding
@@ -40,19 +69,11 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
 
-	// start timer
-	start := time.Now()
-
 	detector := Detector(cmd, cfg, source)
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		logging.Fatal().Err(err).Msg("")
-	}
-	// set exit code
-	exitCode, err := cmd.Flags().GetInt("exit-code")
-	if err != nil {
-		logging.Fatal().Err(err).Msg("could not get exit code")
+		return nil, nil, err
 	}
 
 	var paths <-chan sources.ScanTarget
@@ -63,7 +84,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		detector.Config.Allowlist.PathAllowed,
 	)
 	if err != nil {
-		logging.Fatal().Err(err)
+		return nil, nil, err
 	}
 
 	findings, err = detector.DetectFiles(paths)
@@ -72,5 +93,5 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		logging.Error().Err(err).Msg("failed scan directory")
 	}
 
-	findingSummaryAndExit(detector, findings, exitCode, start, err)
+	return findings, detector, err
 }
