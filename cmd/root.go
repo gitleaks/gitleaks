@@ -102,13 +102,18 @@ func initLog() {
 	logging.Logger = logging.Logger.Level(logLevel)
 }
 
+var bannerPrinted bool
+
 func initConfig(source string) {
-	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
-	if err != nil {
-		logging.Fatal().Msg(err.Error())
-	}
-	if !hideBanner {
-		_, _ = fmt.Fprint(os.Stderr, banner)
+	if !bannerPrinted {
+		hideBanner, err := rootCmd.Flags().GetBool("no-banner")
+		if err != nil {
+			logging.Fatal().Msg(err.Error())
+		}
+		if !hideBanner {
+			_, _ = fmt.Fprint(os.Stderr, banner)
+		}
+		bannerPrinted = true
 	}
 
 	logging.Debug().Msgf("using %s regex engine", regexp.Version)
