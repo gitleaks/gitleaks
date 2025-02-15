@@ -74,9 +74,7 @@ func runGit(cmd *cobra.Command, args []string) {
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
 			logging.Fatal().Err(err).Send()
 		}
-		if remote, err = detect.NewRemoteInfo(scmPlatform, source); err != nil {
-			logging.Fatal().Err(err).Msg("failed to scan Git repository")
-		}
+		remote = detect.NewRemoteInfo(scmPlatform, source)
 	}
 
 	findings, err = detector.DetectGit(gitCmd, remote)

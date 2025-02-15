@@ -19,12 +19,12 @@ func CurlBasicAuth() *config.Rule {
 		Allowlists: []config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`[^:]+:(change(it|me)|pass(word)?|pwd|test|token|\*+|x+)`), // common placeholder passwords
-					regexp.MustCompile(`['"]?<[^>]+>['"]?:['"]?<[^>]+>|<[^:]+:[^>]+>['"]?`),       // <placeholder>
-					regexp.MustCompile(`[^:]+:\[[^]]+]`),                                          // [placeholder]
-					regexp.MustCompile(`['"]?[^:]+['"]?:['"]?\$(\d|\w+|\{(\d|\w+)})['"]?`),        // $1 or $VARIABLE
-					regexp.MustCompile(`\$\([^)]+\):\$\([^)]+\)`),                                 // $(cat login.txt)
-					regexp.MustCompile(`['"]?\$?{{[^}]+}}['"]?:['"]?\$?{{[^}]+}}['"]?`),           // ${{ secrets.FOO }} or {{ .Values.foo }}
+					regexp.MustCompile(`[^:]+:(?:change(?:it|me)|pass(?:word)?|pwd|test|token|\*+|x+)`), // common placeholder passwords
+					regexp.MustCompile(`['"]?<[^>]+>['"]?:['"]?<[^>]+>|<[^:]+:[^>]+>['"]?`),             // <placeholder>
+					regexp.MustCompile(`[^:]+:\[[^]]+]`),                                                // [placeholder]
+					regexp.MustCompile(`['"]?[^:]+['"]?:['"]?\$(?:\d|\w+|\{(?:\d|\w+)})['"]?`),          // $1 or $VARIABLE
+					regexp.MustCompile(`\$\([^)]+\):\$\([^)]+\)`),                                       // $(cat login.txt)
+					regexp.MustCompile(`['"]?\$?{{[^}]+}}['"]?:['"]?\$?{{[^}]+}}['"]?`),                 // ${{ secrets.FOO }} or {{ .Values.foo }}
 				},
 			},
 		},

@@ -11,7 +11,7 @@ var githubAllowlist = []config.Allowlist{
 	{
 		Paths: []*regexp.Regexp{
 			// https://github.com/octokit/auth-token.js/?tab=readme-ov-file#createtokenauthtoken-options
-			regexp.MustCompile(`(^|/)@octokit/auth-token/README\.md$`),
+			regexp.MustCompile(`(?:^|/)@octokit/auth-token/README\.md$`),
 		},
 	},
 }
