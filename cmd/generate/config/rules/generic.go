@@ -66,7 +66,7 @@ func GenericCredential() *config.Rule {
 						`|(?:credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
 						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
+						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
 						`|key(?:store|tab)[_.-]?(?:file|path)` +
@@ -207,6 +207,7 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`KeyPair = X25519.KeyPair`,
 		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
 		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
+		`            keyPressed = kVK_Return.u16`,
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//`    { key: '9df21e95-3848-409d-8f94-c675cdfee839', value: 'Americas' },`,
 		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
