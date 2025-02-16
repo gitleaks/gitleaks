@@ -11,23 +11,32 @@ func PrivateKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "private-key",
 		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?KEY(?: BLOCK)?-----`),
+		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]{64,}?KEY(?: BLOCK)?-----`),
 		Keywords:    []string{"-----BEGIN"},
 	}
 
 	// validate
 	tps := []string{`-----BEGIN PRIVATE KEY-----
-anything
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDAC4AWkdwKYSd8
+Ks14IReLcYgADhoXk56ZzXI=
 -----END PRIVATE KEY-----`,
 		`-----BEGIN RSA PRIVATE KEY-----
-abcdefghijksmnopqrstuvwxyz
+MIIEpQIBAAKCAQEAn6/O8li+SX4m98LLYt/PKSzEmQ++ZBD7Loh9P13f4yQ92EF3
+yxR5MsXFu9PRsrYQA7/4UTPHiC4y2sAVCBg4C2yyBpUEtMQjyCESi6Y=
 -----END RSA PRIVATE KEY-----
 `,
-		`-----BEGIN PRIVATE KEY BLOCK-----
-anything
------END PRIVATE KEY BLOCK-----`,
+		`-----BEGIN PGP PRIVATE KEY BLOCK-----
+lQWGBGSVV4YBDAClvRnxezIRy2Yv7SFlzC0iFiRF/O/jePSw+XYhvcrTaqSYTGic
+=8xQN
+-----END PGP PRIVATE KEY BLOCK-----`,
 	} // gitleaks:allow
-	return utils.Validate(r, tps, nil)
+	fps := []string{
+		`-----BEGIN PRIVATE KEY-----
+anything
+-----END PRIVATE KEY-----`,
+		`-----BEGIN OPENSSH PRIVATE KEY----------END OPENSSH PRIVATE KEY-----`,
+	}
+	return utils.Validate(r, tps, fps)
 }
 
 func PrivateKeyPKCS12File() *config.Rule {
