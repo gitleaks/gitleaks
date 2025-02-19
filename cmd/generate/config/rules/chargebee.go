@@ -19,7 +19,7 @@ func ChargebeeAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{"chargebeeToken := \"test_" + secrets.NewSecret(utils.alphaNumeric("32")) + "\""}
-	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.alphaNumeric("32")) + "\""}
+	tps := []string{"chargebeeToken := \"test_" + secrets.NewSecret(utils.AlphaNumeric("32")) + "\""}
+	fps := []string{"nonMatchingToken := \"" + secrets.NewSecret(utils.AlphaNumeric("32")) + "\""}
 	return utils.Validate(r, tps, fps)
 }
