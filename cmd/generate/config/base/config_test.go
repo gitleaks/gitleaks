@@ -62,6 +62,15 @@ var allowlistRegexTests = map[string]struct {
 		invalid: []string{`@password@`, `@LDAP_PASS@`},
 		valid:   []string{`@username@mastodon.example`},
 	},
+	"miscellaneous - file paths": {
+		invalid: []string{
+			// MacOS
+			`/Users/james/Projects/SwiftCode/build/Release`,
+			// Linux
+			`/tmp/screen-exchange`,
+		},
+		valid: []string{},
+	},
 }
 
 func TestConfigAllowlistRegexes(t *testing.T) {
