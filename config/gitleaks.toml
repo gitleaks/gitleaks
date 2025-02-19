@@ -213,6 +213,14 @@ entropy = 3
 keywords = ["meraki"]
 
 [[rules]]
+id = "chargebee-access-token"
+description = "Found a Chargebee Access Token, posing a risk to subscription management, payment processing services and sensitive financial data."
+regex = '''(?i)\b((test|live)_[0-9a-zA-Z]{32,34})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "test_","live_",
+]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)CLOJARS_[a-z0-9]{60}'''
@@ -780,6 +788,7 @@ stopwords = [
     "changelog",
     "channel",
     "chart",
+    "chargebee",
     "chat",
     "cheat",
     "check",
@@ -2802,6 +2811,24 @@ entropy = 3
 keywords = ["sm_sat"]
 
 [[rules]]
+id = "settlemint-application-access-token"
+description = "Found a Settlemint Application Access Token."
+regex = '''\b((sm_aat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_aat"]
+
+[[rules]]
+id = "settlemint-personal-access-token"
+description = "Found a Settlemint Personal Access Token."
+regex = '''\b((sm_pat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_pat"]
+
+[[rules]]
+id = "settlemint-service-access-token"
+description = "Found a Settlemint Service Access Token."
+regex = '''\b((sm_sat_)[a-zA-Z0-9]+)(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = ["sm_sat"]
+
+[[rules]]
 id = "shippo-api-token"
 description = "Discovered a Shippo API token, potentially compromising shipping services and customer order data."
 regex = '''\b(shippo_(?:live|test)_[a-fA-F0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2953,7 +2980,7 @@ keywords = ["squarespace"]
 [[rules]]
 id = "stripe-access-token"
 description = "Found a Stripe Access Token, posing a risk to payment processing services and sensitive financial data."
-regex = '''\b((?:sk|rk)_(?:test|live|prod)_[a-zA-Z0-9]{10,99})(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''\b((?:sk|pk|rk)_(?:test|live|prod)_[a-zA-Z0-9]{10,99})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 2
 keywords = [
     "sk_test",
@@ -2962,6 +2989,8 @@ keywords = [
     "rk_test",
     "rk_live",
     "rk_prod",
+    "pk_test",
+    "pk_live"
 ]
 
 [[rules]]

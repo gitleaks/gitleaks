@@ -1,7 +1,7 @@
 project_name: gitleaks
 
 builds:
-  - main: main.go
+  - main: ./main.go
     binary: gitleaks
     goos:
       - darwin
@@ -16,14 +16,11 @@ builds:
       - "6"
       - "7"
     ldflags:
-      - -s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version={{.Version}}
+      - -s -w -X=github.com/AikidoSec/gitleaks/cmd.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
 archives:
   - builds: [gitleaks]
     format_overrides:
       - goos: windows
         format: zip
-    replacements:
-      amd64: x64
-      386: x32
-release:
-  prerelease: true

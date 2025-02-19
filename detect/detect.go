@@ -380,6 +380,13 @@ MatchLoop:
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
+		
+		full_fragment := ""
+		if( len(fragment.Raw)  > 250 ){
+			full_fragment = strings.TrimSpace(fragment.Raw[0:250])
+		}else{
+			full_fragment = strings.TrimSpace(fragment.Raw[0:])
+		}
 
 		finding := report.Finding{
 			Description: r.Description,
@@ -394,6 +401,7 @@ MatchLoop:
 			Match:       secret,
 			Tags:        append(r.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			FullLine:    full_fragment,
 		}
 
 		if !d.IgnoreGitleaksAllow &&
