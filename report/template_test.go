@@ -74,6 +74,7 @@ func TestWriteTemplate(t *testing.T) {
 
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+filepath.Ext(test.expected)))
 			require.NoError(t, err)
+			defer tmpfile.Close()
 
 			err = reporter.Write(tmpfile, test.findings)
 			require.NoError(t, err)
@@ -88,7 +89,10 @@ func TestWriteTemplate(t *testing.T) {
 
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, string(want), string(got))
+
+			wantStr := lineEndingReplacer.Replace(string(want))
+			gotStr := lineEndingReplacer.Replace(string(got))
+			assert.Equal(t, wantStr, gotStr)
 		})
 	}
 }

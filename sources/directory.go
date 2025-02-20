@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/fatih/semgroup"
 
@@ -14,6 +15,8 @@ type ScanTarget struct {
 	Path    string
 	Symlink string
 }
+
+var isWindows = runtime.GOOS == "windows"
 
 func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, shouldSkip func(string) bool) (<-chan ScanTarget, error) {
 	paths := make(chan ScanTarget)
@@ -63,7 +66,10 @@ func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, sho
 				}
 
 				// TODO: Also run this check against the resolved symlink?
-				skip := shouldSkip(path)
+				skip := shouldSkip(path) ||
+					// TODO: Remove this in v9.
+					// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
+					(isWindows && shouldSkip(filepath.ToSlash(path)))
 				if fInfo.IsDir() {
 					// Directory
 					if skip {

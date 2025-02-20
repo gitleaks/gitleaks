@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
@@ -83,13 +84,20 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					linesInChunk := strings.Count(chunk, "\n")
 					totalLines += linesInChunk
 					fragment := Fragment{
-						Raw:      chunk,
-						Bytes:    peekBuf.Bytes(),
-						FilePath: pa.Path,
+						Raw:   chunk,
+						Bytes: peekBuf.Bytes(),
 					}
 					if pa.Symlink != "" {
 						fragment.SymlinkFile = pa.Symlink
 					}
+					if isWindows {
+						fragment.FilePath = filepath.ToSlash(pa.Path)
+						fragment.SymlinkFile = filepath.ToSlash(fragment.SymlinkFile)
+						fragment.WindowsFilePath = pa.Path
+					} else {
+						fragment.FilePath = pa.Path
+					}
+
 					for _, finding := range d.Detect(fragment) {
 						// need to add 1 since line counting starts at 1
 						finding.StartLine += (totalLines - linesInChunk) + 1

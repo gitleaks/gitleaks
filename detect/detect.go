@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -26,7 +27,10 @@ const (
 	chunkSize              = 100 * 1_000 // 100kb
 )
 
-var newLineRegexp = regexp.MustCompile("\n")
+var (
+	newLineRegexp = regexp.MustCompile("\n")
+	isWindows     = runtime.GOOS == "windows"
+)
 
 // Detector is the main detector struct
 type Detector struct {
@@ -80,7 +84,7 @@ type Detector struct {
 	baselinePath string
 
 	// gitleaksIgnore
-	gitleaksIgnore map[string]bool
+	gitleaksIgnore map[string]struct{}
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
@@ -99,9 +103,13 @@ type Fragment struct {
 
 	Bytes []byte
 
-	// FilePath is the path to the file if applicable
+	// FilePath is the path to the file, if applicable.
+	// The path separator MUST be normalized to `/`.
 	FilePath    string
 	SymlinkFile string
+	// WindowsFilePath is the path with the original separator.
+	// This provides a backwards-compatible solution to https://github.com/gitleaks/gitleaks/issues/1565.
+	WindowsFilePath string `json:"-"` // TODO: remove this in v9.
 
 	// CommitSHA is the SHA of the commit if applicable
 	CommitSHA string
@@ -115,7 +123,7 @@ type Fragment struct {
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
 		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]bool),
+		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
@@ -146,25 +154,41 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	logging.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
 	file, err := os.Open(gitleaksIgnorePath)
-
 	if err != nil {
 		return err
 	}
-
-	// https://github.com/securego/gosec/issues/512
 	defer func() {
+		// https://github.com/securego/gosec/issues/512
 		if err := file.Close(); err != nil {
 			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
 		}
 	}()
-	scanner := bufio.NewScanner(file)
 
+	scanner := bufio.NewScanner(file)
+	replacer := strings.NewReplacer("\\", "/")
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
-		if line != "" && !strings.HasPrefix(line, "#") {
-			d.gitleaksIgnore[line] = true
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
 		}
+
+		// Normalize the path.
+		// TODO: Make this a breaking change in v9.
+		s := strings.Split(line, ":")
+		switch len(s) {
+		case 3:
+			// Global fingerprint.
+			// `file:rule-id:start-line`
+			s[0] = replacer.Replace(s[0])
+		case 4:
+			// Commit fingerprint.
+			// `commit:file:rule-id:start-line`
+			s[1] = replacer.Replace(s[1])
+		default:
+			logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
+		}
+		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
 	}
 	return nil
 }
@@ -191,9 +215,13 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	var findings []report.Finding
 
 	// check if filepath is allowed
-	if fragment.FilePath != "" && (d.Config.Allowlist.PathAllowed(fragment.FilePath) ||
-		fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath)) {
-		return findings
+	if fragment.FilePath != "" {
+		// is the path our config or baseline file?
+		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) ||
+			// is the path excluded by the global allowlist?
+			(d.Config.Allowlist.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && d.Config.Allowlist.PathAllowed(fragment.WindowsFilePath))) {
+			return findings
+		}
 	}
 
 	// add newline indices for location calculation in detectRule
@@ -269,7 +297,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		var (
 			isAllowed             bool
 			commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
-			pathAllowed           = a.PathAllowed(fragment.FilePath)
+			pathAllowed           = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
 		)
 		if a.MatchCondition == config.AllowlistMatchAnd {
 			// Determine applicable checks.
@@ -306,25 +334,27 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 	}
 
-	if r.Path != nil && r.Regex == nil && len(encodedSegments) == 0 {
-		// Path _only_ rule
-		if r.Path.MatchString(fragment.FilePath) {
-			finding := report.Finding{
-				Description: r.Description,
-				File:        fragment.FilePath,
-				SymlinkFile: fragment.SymlinkFile,
-				RuleID:      r.RuleID,
-				Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-				Tags:        r.Tags,
+	if r.Path != nil {
+		if r.Regex == nil && len(encodedSegments) == 0 {
+			// Path _only_ rule
+			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
+				finding := report.Finding{
+					RuleID:      r.RuleID,
+					Description: r.Description,
+					File:        fragment.FilePath,
+					SymlinkFile: fragment.SymlinkFile,
+					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
+					Tags:        r.Tags,
+				}
+				return append(findings, finding)
 			}
-			return append(findings, finding)
-		}
-	} else if r.Path != nil {
-		// if path is set _and_ a regex is set, then we need to check both
-		// so if the path does not match, then we should return early and not
-		// consider the regex
-		if !r.Path.MatchString(fragment.FilePath) {
-			return findings
+		} else {
+			// if path is set _and_ a regex is set, then we need to check both
+			// so if the path does not match, then we should return early and not
+			// consider the regex
+			if !(r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath))) {
+				return findings
+			}
 		}
 	}
 
@@ -382,22 +412,21 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			Description: r.Description,
-			File:        fragment.FilePath,
-			SymlinkFile: fragment.SymlinkFile,
 			RuleID:      r.RuleID,
+			Description: r.Description,
 			StartLine:   loc.startLine,
 			EndLine:     loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
-			Secret:      secret,
-			Match:       secret,
-			Tags:        append(r.Tags, metaTags...),
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Match:       secret,
+			Secret:      secret,
+			File:        fragment.FilePath,
+			SymlinkFile: fragment.SymlinkFile,
+			Tags:        append(r.Tags, metaTags...),
 		}
 
-		if !d.IgnoreGitleaksAllow &&
-			strings.Contains(fragment.Raw[loc.startLineIndex:loc.endLineIndex], gitleaksAllowSignature) {
+		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
 				Str("finding", finding.Secret).
 				Msg("skipping finding: 'gitleaks:allow' signature")
@@ -487,7 +516,7 @@ MatchLoop:
 					allowlistChecks = append(allowlistChecks, commitAllowed)
 				}
 				if len(a.Paths) > 0 {
-					pathAllowed = a.PathAllowed(fragment.FilePath)
+					pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
 					allowlistChecks = append(allowlistChecks, pathAllowed)
 				}
 				if len(a.Regexes) > 0 {

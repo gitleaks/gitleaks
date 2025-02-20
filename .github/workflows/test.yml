@@ -10,20 +10,28 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.22
+          go-version: 1.23
 
       - name: Build
         run: go build -v ./...
 
+      - name: Set up gotestsum
+        run: |
+          go install gotest.tools/gotestsum@latest
+
       - name: Test
-        run: make test
+        run: |
+          gotestsum --raw-command -- go test -json ./... --race
 
       - name: Validate Config
         run: go generate ./... && git diff --exit-code
