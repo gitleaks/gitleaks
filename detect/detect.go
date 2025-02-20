@@ -49,7 +49,7 @@ type Detector struct {
 	MaxDecodeDepth int
 
 	// files larger than this will be skipped
-	MaxTargetMegaBytes int
+	MaxTargetMegaBytes int64
 
 	// followSymlinks is a flag to enable scanning symlink files
 	FollowSymlinks bool
@@ -59,6 +59,9 @@ type Detector struct {
 
 	// IgnoreGitleaksAllow is a flag to ignore gitleaks:allow comments.
 	IgnoreGitleaksAllow bool
+
+	// ScanBinaryFiles is a flag to enable scanning of binary files.
+	ScanBinaryFiles bool
 
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
@@ -365,11 +368,11 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 	// if flag configure and raw data size bigger then the flag
 	if d.MaxTargetMegaBytes > 0 {
-		rawLength := len(currentRaw) / 1000000
+		rawLength := int64(len(currentRaw) / 1000000)
 		if rawLength > d.MaxTargetMegaBytes {
 			logger.Debug().
-				Int("size", rawLength).
-				Int("max-size", d.MaxTargetMegaBytes).
+				Int64("size", rawLength).
+				Int64("max-size", d.MaxTargetMegaBytes).
 				Msg("skipping fragment: size")
 			return findings
 		}
