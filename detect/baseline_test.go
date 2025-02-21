@@ -133,7 +133,7 @@ func TestIgnoreIssuesInBaseline(t *testing.T) {
 		require.NoError(t, err)
 		d.baseline = test.baseline
 		for _, finding := range test.findings {
-			d.addFinding(finding)
+			d.AddFinding(finding)
 		}
 		assert.Len(t, d.findings, test.expectCount)
 	}
