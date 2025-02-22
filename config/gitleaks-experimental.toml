@@ -1,0 +1,20 @@
+# This file has been auto-generated. DO NOT EDIT MANUALLY.
+# If you would like to contribute new rules, please follow
+# https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
+
+# This is the default gitleaks configuration file.
+# Rules and allowlists are defined within this file.
+# Rules instruct gitleaks on what should be considered a secret.
+# Allowlists instruct gitleaks on what is allowed, i.e. not a secret.
+
+title = "gitleaks experimental config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "gcp-service-account"
+description = "Google (GCP) Service-account"
+regex = '''"type": "service_account"'''
+keywords = ["\"type\": \"service_account\""]
+
