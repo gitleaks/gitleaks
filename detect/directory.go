@@ -102,7 +102,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 						// need to add 1 since line counting starts at 1
 						finding.StartLine += (totalLines - linesInChunk) + 1
 						finding.EndLine += (totalLines - linesInChunk) + 1
-						d.addFinding(finding)
+						d.AddFinding(finding)
 					}
 				}
 

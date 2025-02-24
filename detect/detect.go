@@ -568,8 +568,8 @@ func allTrue(bools []bool) bool {
 	return allMatch
 }
 
-// addFinding synchronously adds a finding to the findings slice
-func (d *Detector) addFinding(finding report.Finding) {
+// AddFinding synchronously adds a finding to the findings slice
+func (d *Detector) AddFinding(finding report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
 	if finding.Commit != "" {
 		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
@@ -609,7 +609,12 @@ func (d *Detector) addFinding(finding report.Finding) {
 	d.findingMutex.Unlock()
 }
 
-// addCommit synchronously adds a commit to the commit slice
+// Findings returns the findings added to the detector
+func (d *Detector) Findings() []report.Finding {
+	return d.findings
+}
+
+// AddCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
 }
