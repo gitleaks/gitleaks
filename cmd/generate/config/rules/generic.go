@@ -77,7 +77,7 @@ func GenericCredential() *config.Rule {
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
-						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
+						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinates. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
 						`|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])` +
