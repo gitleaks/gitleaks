@@ -3,9 +3,12 @@ package config
 import (
 	"fmt"
 	"strings"
+	"sync"
 
+	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"golang.org/x/exp/maps"
 
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -29,10 +32,10 @@ type Allowlist struct {
 	// Short human readable description of the allowlist.
 	Description string
 
-	// MatchCondition determines whether all criteria must match.
+	// MatchCondition determines whether all criteria must match. Defaults to "OR".
 	MatchCondition AllowlistMatchCondition
 
-	// Commits is a slice of commit SHAs that are allowed to be ignored. Defaults to "OR".
+	// Commits is a slice of commit SHAs that are allowed to be ignored.
 	Commits []string
 
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
@@ -54,17 +57,34 @@ type Allowlist struct {
 	// This targets the _secret_, not the content of the regex match like the
 	// Regexes slice.
 	StopWords []string
+
+	// commitMap is a normalized version of Commits, used for efficiency purposes.
+	// TODO: possible optimizations so that both short and long hashes work.
+	commitMap    map[string]struct{}
+	regexPat     *regexp.Regexp
+	pathPat      *regexp.Regexp
+	stopwordTrie *ahocorasick.Trie
 }
+
+var (
+	flagOnce         sync.Once
+	useOptimizations bool
+)
 
 // CommitAllowed returns true if the commit is allowed to be ignored.
 func (a *Allowlist) CommitAllowed(c string) (bool, string) {
-	if c == "" {
+	if a == nil || c == "" || len(a.Commits) == 0 {
 		return false, ""
 	}
-
-	for _, commit := range a.Commits {
-		if commit == c {
-			return true, c
+	if useOptimizations {
+		if _, ok := a.commitMap[strings.ToLower(c)]; ok {
+			return true, ""
+		}
+	} else {
+		for _, commit := range a.Commits {
+			if commit == c {
+				return true, c
+			}
 		}
 	}
 	return false, ""
@@ -72,25 +92,61 @@ func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 
 // PathAllowed returns true if the path is allowed to be ignored.
 func (a *Allowlist) PathAllowed(path string) bool {
-	return anyRegexMatch(path, a.Paths)
+	if a == nil || path == "" {
+		return false
+	}
+
+	if useOptimizations {
+		if a.pathPat == nil {
+			return false
+		}
+		return a.pathPat.MatchString(path)
+	} else {
+		return anyRegexMatch(path, a.Paths)
+	}
 }
 
 // RegexAllowed returns true if the regex is allowed to be ignored.
 func (a *Allowlist) RegexAllowed(secret string) bool {
-	return anyRegexMatch(secret, a.Regexes)
+	if a == nil || secret == "" {
+		return false
+	}
+
+	if useOptimizations {
+		if a.regexPat == nil {
+			return false
+		}
+		return a.regexPat.MatchString(secret)
+	} else {
+		return anyRegexMatch(secret, a.Regexes)
+	}
 }
 
 func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
+	if a == nil || s == "" || len(a.StopWords) == 0 {
+		return false, ""
+	}
+
 	s = strings.ToLower(s)
-	for _, stopWord := range a.StopWords {
-		if strings.Contains(s, strings.ToLower(stopWord)) {
-			return true, stopWord
+	if useOptimizations {
+		if m := a.stopwordTrie.MatchFirstString(s); m != nil {
+			return true, m.MatchString()
+		}
+	} else {
+		for _, stopWord := range a.StopWords {
+			if strings.Contains(s, stopWord) {
+				return true, stopWord
+			}
 		}
 	}
 	return false, ""
 }
 
 func (a *Allowlist) Validate() error {
+	flagOnce.Do(func() {
+		useOptimizations = flags.EnableExperimentalAllowlistOptimizations.Load()
+	})
+
 	// Disallow empty allowlists.
 	if len(a.Commits) == 0 &&
 		len(a.Paths) == 0 &&
@@ -103,17 +159,54 @@ func (a *Allowlist) Validate() error {
 	if len(a.Commits) > 0 {
 		uniqueCommits := make(map[string]struct{})
 		for _, commit := range a.Commits {
-			uniqueCommits[commit] = struct{}{}
+			// Commits are case-insensitive.
+			uniqueCommits[strings.TrimSpace(strings.ToLower(commit))] = struct{}{}
 		}
-		a.Commits = maps.Keys(uniqueCommits)
+		if useOptimizations {
+			a.commitMap = uniqueCommits
+		} else {
+			a.Commits = maps.Keys(uniqueCommits)
+		}
+	}
+
+	if len(a.Paths) > 0 && useOptimizations {
+		var sb strings.Builder
+		sb.WriteString("(?:")
+		for i, path := range a.Paths {
+			sb.WriteString(path.String())
+			if i != len(a.Paths)-1 {
+				sb.WriteString("|")
+			}
+		}
+		sb.WriteString(")")
+		a.pathPat = regexp.MustCompile(sb.String())
+	}
+
+	if len(a.Regexes) > 0 && useOptimizations {
+		var sb strings.Builder
+		sb.WriteString("(?:")
+		for i, regex := range a.Regexes {
+			sb.WriteString(regex.String())
+			if i != len(a.Regexes)-1 {
+				sb.WriteString("|")
+			}
+		}
+		sb.WriteString(")")
+		a.regexPat = regexp.MustCompile(sb.String())
 	}
 
 	if len(a.StopWords) > 0 {
 		uniqueStopwords := make(map[string]struct{})
 		for _, stopWord := range a.StopWords {
-			uniqueStopwords[stopWord] = struct{}{}
+			uniqueStopwords[strings.ToLower(stopWord)] = struct{}{}
 		}
-		a.StopWords = maps.Keys(uniqueStopwords)
+
+		values := maps.Keys(uniqueStopwords)
+		if useOptimizations {
+			a.stopwordTrie = ahocorasick.NewTrieBuilder().AddStrings(values).Build()
+		} else {
+			a.StopWords = values
+		}
 	}
 
 	return nil

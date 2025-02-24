@@ -41,7 +41,7 @@ type ViperConfig struct {
 		AllowList  *viperRuleAllowlist
 		Allowlists []viperRuleAllowlist
 	}
-	Allowlist struct {
+	Allowlist *struct {
 		Commits     []string
 		Paths       []string
 		RegexTarget string
@@ -67,7 +67,7 @@ type Config struct {
 	Path        string
 	Description string
 	Rules       map[string]Rule
-	Allowlist   Allowlist
+	Allowlist   *Allowlist
 	Keywords    map[string]struct{}
 
 	// used to keep sarif results consistent
@@ -164,7 +164,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 			}
 
-			allowlist := Allowlist{
+			allowlist := &Allowlist{
 				MatchCondition: condition,
 				RegexTarget:    a.RegexTarget,
 				Regexes:        allowlistRegexes,
@@ -180,27 +180,35 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		orderedRules = append(orderedRules, cr.RuleID)
 		rulesMap[cr.RuleID] = cr
 	}
-	var allowlistRegexes []*regexp.Regexp
-	for _, a := range vc.Allowlist.Regexes {
-		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
-	}
-	var allowlistPaths []*regexp.Regexp
-	for _, a := range vc.Allowlist.Paths {
-		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
-	}
+
 	c := Config{
-		Description: vc.Description,
-		Extend:      vc.Extend,
-		Rules:       rulesMap,
-		Allowlist: Allowlist{
+		Description:  vc.Description,
+		Extend:       vc.Extend,
+		Rules:        rulesMap,
+		Keywords:     keywords,
+		OrderedRules: orderedRules,
+	}
+	if vc.Allowlist != nil {
+		var allowlistRegexes []*regexp.Regexp
+		for _, a := range vc.Allowlist.Regexes {
+			allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+		}
+		var allowlistPaths []*regexp.Regexp
+		for _, a := range vc.Allowlist.Paths {
+			allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+		}
+
+		allowlist := &Allowlist{
 			RegexTarget: vc.Allowlist.RegexTarget,
 			Regexes:     allowlistRegexes,
 			Paths:       allowlistPaths,
 			Commits:     vc.Allowlist.Commits,
 			StopWords:   vc.Allowlist.StopWords,
-		},
-		Keywords:     keywords,
-		OrderedRules: orderedRules,
+		}
+		if err := allowlist.Validate(); err != nil {
+			return Config{}, fmt.Errorf("invalid global allowlist: %w", err)
+		}
+		c.Allowlist = allowlist
 	}
 
 	if maxExtendDepth != extendDepth {
@@ -353,12 +361,17 @@ func (c *Config) extend(extensionConfig Config) {
 	}
 
 	// append allowlists, not attempting to merge
-	c.Allowlist.Commits = append(c.Allowlist.Commits,
-		extensionConfig.Allowlist.Commits...)
-	c.Allowlist.Paths = append(c.Allowlist.Paths,
-		extensionConfig.Allowlist.Paths...)
-	c.Allowlist.Regexes = append(c.Allowlist.Regexes,
-		extensionConfig.Allowlist.Regexes...)
+	if extensionConfig.Allowlist != nil {
+		if c.Allowlist == nil {
+			c.Allowlist = &Allowlist{}
+		}
+		c.Allowlist.Commits = append(c.Allowlist.Commits,
+			extensionConfig.Allowlist.Commits...)
+		c.Allowlist.Paths = append(c.Allowlist.Paths,
+			extensionConfig.Allowlist.Paths...)
+		c.Allowlist.Regexes = append(c.Allowlist.Regexes,
+			extensionConfig.Allowlist.Regexes...)
+	}
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
