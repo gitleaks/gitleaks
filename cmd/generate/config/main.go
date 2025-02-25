@@ -147,6 +147,7 @@ func main() {
 		rules.MailGunSigningKey(),
 		rules.MapBox(),
 		rules.MattermostAccessToken(),
+		rules.MaxMindLicenseKey(),
 		rules.Meraki(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
