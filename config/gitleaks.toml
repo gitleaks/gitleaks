@@ -2,7 +2,10 @@
 # If you would like to contribute new rules, please use
 # cmd/generate/config/main.go and follow the contributing guidelines
 # at https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
-
+#
+# How the hell does secret scanning work? Read this:
+#   https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need
+#
 # This is the default gitleaks configuration file.
 # Rules and allowlists are defined within this file.
 # Rules instruct gitleaks on what should be considered a secret.
