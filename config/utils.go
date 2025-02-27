@@ -1,7 +1,7 @@
 package config
 
 import (
-	"regexp"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func anyRegexMatch(f string, res []*regexp.Regexp) bool {

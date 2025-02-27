@@ -2,12 +2,13 @@ package config
 
 import (
 	"errors"
-	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func TestCommitAllowed(t *testing.T) {
@@ -39,7 +40,8 @@ func TestCommitAllowed(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.commitAllowed, tt.allowlist.CommitAllowed(tt.commit))
+		isAllowed, _ := tt.allowlist.CommitAllowed(tt.commit)
+		assert.Equal(t, tt.commitAllowed, isAllowed)
 	}
 }
 

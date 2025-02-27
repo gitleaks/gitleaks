@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"golang.org/x/exp/maps"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 type AllowlistMatchCondition int
@@ -56,16 +57,17 @@ type Allowlist struct {
 }
 
 // CommitAllowed returns true if the commit is allowed to be ignored.
-func (a *Allowlist) CommitAllowed(c string) bool {
+func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 	if c == "" {
-		return false
+		return false, ""
 	}
+
 	for _, commit := range a.Commits {
 		if commit == c {
-			return true
+			return true, c
 		}
 	}
-	return false
+	return false, ""
 }
 
 // PathAllowed returns true if the path is allowed to be ignored.
@@ -78,14 +80,14 @@ func (a *Allowlist) RegexAllowed(secret string) bool {
 	return anyRegexMatch(secret, a.Regexes)
 }
 
-func (a *Allowlist) ContainsStopWord(s string) bool {
+func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 	s = strings.ToLower(s)
 	for _, stopWord := range a.StopWords {
 		if strings.Contains(s, strings.ToLower(stopWord)) {
-			return true
+			return true, stopWord
 		}
 	}
-	return false
+	return false, ""
 }
 
 func (a *Allowlist) Validate() error {

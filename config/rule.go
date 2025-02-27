@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // Rules contain information that define details on how to detect secrets

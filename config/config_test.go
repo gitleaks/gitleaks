@@ -2,13 +2,14 @@ package config
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"regexp"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 const configPath = "../testdata/config/"
@@ -38,8 +39,7 @@ func TestTranslate(t *testing.T) {
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -72,8 +72,7 @@ func TestTranslate(t *testing.T) {
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -91,8 +90,7 @@ func TestTranslate(t *testing.T) {
 							Commits:        []string{"allowthiscommit"},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -110,8 +108,7 @@ func TestTranslate(t *testing.T) {
 							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
 						},
 					},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -121,12 +118,11 @@ func TestTranslate(t *testing.T) {
 					RuleID:      "discord-api-key",
 					Description: "Discord API key",
 					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
-					Keywords:    []string{},
 					Entropy:     3.5,
 					SecretGroup: 3,
+					Keywords:    []string{},
 					Tags:        []string{},
-				},
-				},
+				}},
 			},
 		},
 		{
@@ -349,6 +345,25 @@ func TestTranslate(t *testing.T) {
 				},
 			},
 		},
+		{
+			cfgName: "extend_disabled",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"aws-secret-key": {
+						RuleID:   "aws-secret-key",
+						Regex:    regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Tags:     []string{"key", "AWS"},
+						Keywords: []string{},
+					},
+					"pypi-upload-token": {
+						RuleID:   "pypi-upload-token",
+						Regex:    regexp.MustCompile(`pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}`),
+						Tags:     []string{},
+						Keywords: []string{},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -390,6 +405,48 @@ func TestTranslate(t *testing.T) {
 			if diff := cmp.Diff(tt.cfg.Rules, cfg.Rules, opts); diff != "" {
 				t.Errorf("%s diff: (-want +got)\n%s", tt.cfgName, diff)
 			}
+		})
+	}
+}
+
+func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
+	tests := []struct {
+		name             string
+		cfgName          string
+		expectedKeywords string
+	}{
+		{
+			name:             "Extend base rule that includes AWS keyword with new attribute",
+			cfgName:          "extend_base_rule_including_keysword_with_attribute",
+			expectedKeywords: "aws",
+		},
+		{
+			name:             "Extend base with a new rule with CMS keyword",
+			cfgName:          "extend_with_new_rule",
+			expectedKeywords: "cms",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Cleanup(func() {
+				viper.Reset()
+			})
+
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
+
+			var vc ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+
+			_, exists := cfg.Keywords[tt.expectedKeywords]
+			require.Truef(t, exists, "The expected keyword %s did not exist as a key of cfg.Keywords", tt.expectedKeywords)
 		})
 	}
 }

@@ -1,0 +1,25 @@
+[{{ $lastFinding := (sub (len . ) 1) }}
+{{- range $i, $finding := . }}{{with $finding}}
+    {
+        "Description": {{ quote .Description }},
+        "StartLine": {{ .StartLine }},
+        "EndLine": {{ .EndLine }},
+        "StartColumn": {{ .StartColumn }},
+        "EndColumn": {{ .EndColumn }},
+        "Line": {{ quote .Line }},
+        "Match": {{ quote .Match }},
+        "Secret": {{ quote .Secret }},
+        "File": "{{ .File }}",
+        "SymlinkFile": {{ quote .SymlinkFile }},
+        "Commit": {{ quote .Commit }},
+        "Entropy": {{ .Entropy }},
+        "Author": {{ quote .Author }},
+        "Email": {{ quote .Email }},
+        "Date": {{ quote .Date }},
+        "Message": {{ quote .Message }},
+        "Tags": [{{ $lastTag := (sub (len .Tags ) 1) }}{{ range $j, $tag := .Tags }}{{ quote . }}{{ if ne $j $lastTag }},{{ end }}{{ end }}],
+        "RuleID": {{ quote .RuleID }},
+        "Fingerprint": {{ quote .Fingerprint }}
+    }{{ if ne $i $lastFinding }},{{ end }}
+{{- end}}{{ end }}
+]

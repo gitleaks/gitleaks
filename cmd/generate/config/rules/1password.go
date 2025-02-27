@@ -4,7 +4,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
-	"regexp"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // https://developer.1password.com/docs/service-accounts/security/?token-example=encoded

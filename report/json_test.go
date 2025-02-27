@@ -13,7 +13,6 @@ var simpleFinding = Finding{
 	Description: "",
 	RuleID:      "test-rule",
 	Match:       "line containing secret",
-	Line:        "whole line containing secret",
 	Secret:      "a secret",
 	StartLine:   1,
 	EndLine:     2,
@@ -49,42 +48,30 @@ func TestWriteJSON(t *testing.T) {
 			findings:       []Finding{}},
 	}
 
+	reporter := JsonReporter{}
 	for _, test := range tests {
 		t.Run(test.testReportName, func(t *testing.T) {
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
 			require.NoError(t, err)
-			err = writeJson(test.findings, tmpfile)
+			defer tmpfile.Close()
+
+			err = reporter.Write(tmpfile, test.findings)
 			require.NoError(t, err)
 			assert.FileExists(t, tmpfile.Name())
+
 			got, err := os.ReadFile(tmpfile.Name())
 			require.NoError(t, err)
 			if test.wantEmpty {
 				assert.Empty(t, got)
 				return
 			}
+
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, want, got)
+
+			wantStr := lineEndingReplacer.Replace(string(want))
+			gotStr := lineEndingReplacer.Replace(string(got))
+			assert.Equal(t, wantStr, gotStr)
 		})
 	}
-}
-
-func TestWriteJSONExtra(t *testing.T) {
-	findings := []Finding{
-		simpleFinding,
-	}
-	expected := filepath.Join(expectPath, "report", "json_extra_simple.json")
-
-	tmpfile, err := os.Create(filepath.Join(t.TempDir(), "simple_extra.json"))
-	require.NoError(t, err)
-
-	err = writeJsonExtra(findings, tmpfile)
-	require.NoError(t, err)
-	assert.FileExists(t, tmpfile.Name())
-
-	got, err := os.ReadFile(tmpfile.Name())
-	require.NoError(t, err)
-	want, err := os.ReadFile(expected)
-	require.NoError(t, err)
-	assert.Equal(t, want, got)
 }
