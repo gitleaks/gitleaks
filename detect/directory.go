@@ -44,7 +44,6 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 
 			// Buffer to hold file chunks
 			buf := make([]byte, chunkSize)
-			pathOnlyFindings := make(map[string]bool, 64)
 			totalLines := 0
 			for {
 				n, err := f.Read(buf)
@@ -75,15 +74,6 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					fragment.SymlinkFile = pa.Symlink
 				}
 				for _, finding := range d.Detect(fragment) {
-
-					_, ruleMatched := pathOnlyFindings[finding.RuleID]
-					if finding.IsPathOnlyRule && !ruleMatched {
-						pathOnlyFindings[finding.RuleID] = finding.IsPathOnlyRule
-					}
-					if ruleMatched {
-						continue
-					}
-
 					// need to add 1 since line counting starts at 1
 					finding.StartLine += (totalLines - linesInChunk) + 1
 					finding.EndLine += (totalLines - linesInChunk) + 1

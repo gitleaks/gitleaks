@@ -39,9 +39,6 @@ type Finding struct {
 	// Rule is the name of the rule that was matched
 	RuleID string
 
-	// Whether finding is from path only rule
-	IsPathOnlyRule bool `json:"-"`
-
 	// unique identifier
 	Fingerprint string
 }

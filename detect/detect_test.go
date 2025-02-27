@@ -299,12 +299,11 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
-					Description:    "Python Files",
-					Match:          "file detected: tmp.py",
-					File:           "tmp.py",
-					RuleID:         "python-files-only",
-					IsPathOnlyRule: true,
-					Tags:           []string{},
+					Description: "Python Files",
+					Match:       "file detected: tmp.py",
+					File:        "tmp.py",
+					RuleID:      "python-files-only",
+					Tags:        []string{},
 				},
 			},
 		},
