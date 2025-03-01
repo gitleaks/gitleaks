@@ -77,6 +77,7 @@ func GenericCredential() *config.Rule {
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
+						`|(?:csrf)[_.-]?token` +
 						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
@@ -240,6 +241,7 @@ R5: Regulatory--21`,
 		`publicToken = "9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit"`,
 		`<SourceFile SourceLocation="F:\Extracts\" TokenFile="RTL_INST_CODE.cer">`,
 		`notes            = "Maven - io.jsonwebtoken:jjwt-jackson-0.11.2"`,
+		`csrf-token=Mj2qykJO5rELyHgezQ69nzUX0i3OH67V7+V4eUrLfpuyOuxmiW9rhROG/Whikle15syazJOkrjJa3U2AbhIvUw==`,
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
