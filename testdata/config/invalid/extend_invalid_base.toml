@@ -1,7 +1,7 @@
 title = "gitleaks extended 1"
 
 [extend]
-path="../testdata/config/extend_2.toml"
+path="../testdata/config/invalid/does_not_exist.toml"
 
 [[rules]]
     description = "AWS Access Key"

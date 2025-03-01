@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/semgroup"
 
+	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
@@ -18,7 +19,7 @@ type ScanTarget struct {
 
 var isWindows = runtime.GOOS == "windows"
 
-func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, shouldSkip func(string) bool) (<-chan ScanTarget, error) {
+func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, allowlists []*config.Allowlist) (<-chan ScanTarget, error) {
 	paths := make(chan ScanTarget)
 	s.Go(func() error {
 		defer close(paths)
@@ -66,10 +67,16 @@ func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, sho
 				}
 
 				// TODO: Also run this check against the resolved symlink?
-				skip := shouldSkip(path) ||
-					// TODO: Remove this in v9.
-					// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
-					(isWindows && shouldSkip(filepath.ToSlash(path)))
+				var skip bool
+				for _, a := range allowlists {
+					skip = a.PathAllowed(path) ||
+						// TODO: Remove this in v9.
+						// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
+						(isWindows && a.PathAllowed(filepath.ToSlash(path)))
+					if skip {
+						break
+					}
+				}
 				if fInfo.IsDir() {
 					// Directory
 					if skip {

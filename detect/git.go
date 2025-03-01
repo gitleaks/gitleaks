@@ -42,9 +42,11 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 			commitSHA := ""
 			if gitdiffFile.PatchHeader != nil {
 				commitSHA = gitdiffFile.PatchHeader.SHA
-				if ok, c := d.Config.Allowlist.CommitAllowed(gitdiffFile.PatchHeader.SHA); ok {
-					logging.Trace().Str("allowed-commit", c).Msg("skipping commit: global allowlist")
-					continue
+				for _, a := range d.Config.Allowlists {
+					if ok, c := a.CommitAllowed(gitdiffFile.PatchHeader.SHA); ok {
+						logging.Trace().Str("allowed-commit", c).Msg("skipping commit: global allowlist")
+						continue
+					}
 				}
 			}
 			d.addCommit(commitSHA)
