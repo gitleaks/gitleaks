@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -41,17 +42,23 @@ type ViperConfig struct {
 		AllowList  *viperRuleAllowlist
 		Allowlists []viperRuleAllowlist
 	}
-	Allowlist struct {
-		Commits     []string
-		Paths       []string
-		RegexTarget string
-		Regexes     []string
-		StopWords   []string
-	}
+	// Deprecated: this is a shim for backwards-compatibility. It should be removed in 9.x.
+	AllowList  *viperGlobalAllowlist
+	Allowlists []viperGlobalAllowlist
 }
 
 type viperRuleAllowlist struct {
 	Description string
+	Condition   string
+	Commits     []string
+	Paths       []string
+	RegexTarget string
+	Regexes     []string
+	StopWords   []string
+}
+
+type viperGlobalAllowlist struct {
+	RuleIDs     []string
 	Condition   string
 	Commits     []string
 	Paths       []string
@@ -67,9 +74,9 @@ type Config struct {
 	Path        string
 	Description string
 	Rules       map[string]Rule
-	Allowlist   Allowlist
-	Keywords    map[string]struct{}
+	Allowlists  []Allowlist
 
+	Keywords map[string]struct{}
 	// used to keep sarif results consistent
 	OrderedRules []string
 }
@@ -85,9 +92,10 @@ type Extend struct {
 
 func (vc *ViperConfig) Translate() (Config, error) {
 	var (
-		keywords     = make(map[string]struct{})
-		orderedRules []string
-		rulesMap     = make(map[string]Rule)
+		keywords       = make(map[string]struct{})
+		orderedRules   []string
+		rulesMap       = make(map[string]Rule)
+		ruleAllowlists = make(map[string][]Allowlist)
 	)
 
 	// Validate individual rules.
@@ -125,7 +133,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Keywords:    vr.Keywords,
 			Tags:        vr.Tags,
 		}
-		// Parse the allowlist, including the older format for backwards compatibility.
+		// Parse the rule allowlists, including the older format for backwards compatibility.
 		if vr.AllowList != nil {
 			if len(vr.Allowlists) > 0 {
 				return Config{}, fmt.Errorf("%s: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]", cr.RuleID)
@@ -133,44 +141,9 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			vr.Allowlists = append(vr.Allowlists, *vr.AllowList)
 		}
 		for _, a := range vr.Allowlists {
-			var condition AllowlistMatchCondition
-			c := strings.ToUpper(a.Condition)
-			switch c {
-			case "AND", "&&":
-				condition = AllowlistMatchAnd
-			case "", "OR", "||":
-				condition = AllowlistMatchOr
-			default:
-				return Config{}, fmt.Errorf("%s: unknown allowlist condition '%s' (expected 'and', 'or')", cr.RuleID, c)
-			}
-
-			// Validate the target.
-			if a.RegexTarget != "" {
-				switch a.RegexTarget {
-				case "secret":
-					a.RegexTarget = ""
-				case "match", "line":
-					// do nothing
-				default:
-					return Config{}, fmt.Errorf("%s: unknown allowlist |regexTarget| '%s' (expected 'match', 'line')", cr.RuleID, a.RegexTarget)
-				}
-			}
-			var allowlistRegexes []*regexp.Regexp
-			for _, a := range a.Regexes {
-				allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
-			}
-			var allowlistPaths []*regexp.Regexp
-			for _, a := range a.Paths {
-				allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
-			}
-
-			allowlist := Allowlist{
-				MatchCondition: condition,
-				RegexTarget:    a.RegexTarget,
-				Regexes:        allowlistRegexes,
-				Paths:          allowlistPaths,
-				Commits:        a.Commits,
-				StopWords:      a.StopWords,
+			allowlist, err := parseAllowlist(a)
+			if err != nil {
+				return Config{}, fmt.Errorf("%s: [[rules.allowlists]] %w", cr.RuleID, err)
 			}
 			if err := allowlist.Validate(); err != nil {
 				return Config{}, fmt.Errorf("%s: %w", cr.RuleID, err)
@@ -180,25 +153,47 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		orderedRules = append(orderedRules, cr.RuleID)
 		rulesMap[cr.RuleID] = cr
 	}
-	var allowlistRegexes []*regexp.Regexp
-	for _, a := range vc.Allowlist.Regexes {
-		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+	// Parse the config allowlists, including the older format for backwards compatibility.
+	if vc.AllowList != nil {
+		if len(vc.Allowlists) > 0 {
+			return Config{}, errors.New("[allowlist] is deprecated, it cannot be used alongside [[allowlists]]")
+		}
+		vc.Allowlists = append(vc.Allowlists, *vc.AllowList)
 	}
-	var allowlistPaths []*regexp.Regexp
-	for _, a := range vc.Allowlist.Paths {
-		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+	var globalAllowlists []Allowlist
+	for _, a := range vc.Allowlists {
+		allowlist, err := parseAllowlist(a)
+		if err != nil {
+			return Config{}, fmt.Errorf("[[allowlists]] %w", err)
+		}
+		if err := allowlist.Validate(); err != nil {
+			return Config{}, fmt.Errorf("[[allowlists]] %w", err)
+		}
+
+		// TODO: Change Info() -> Trace()
+		if len(a.RuleIDs) > 0 {
+			logging.Info().
+				Strs("rules", a.RuleIDs).
+				Msgf("Added global allowlist to target rules: %s", allowlist.Description)
+			for _, ruleID := range a.RuleIDs {
+				allowlists, ok := ruleAllowlists[ruleID]
+				if !ok {
+					allowlists = make([]Allowlist, 0)
+				}
+				ruleAllowlists[ruleID] = append(allowlists, allowlist)
+			}
+		} else {
+			logging.Info().Msgf("Added global allowlist: %s", allowlist.Description)
+			globalAllowlists = append(globalAllowlists, allowlist)
+		}
 	}
+
+	// Assemble the config.
 	c := Config{
-		Description: vc.Description,
-		Extend:      vc.Extend,
-		Rules:       rulesMap,
-		Allowlist: Allowlist{
-			RegexTarget: vc.Allowlist.RegexTarget,
-			Regexes:     allowlistRegexes,
-			Paths:       allowlistPaths,
-			Commits:     vc.Allowlist.Commits,
-			StopWords:   vc.Allowlist.StopWords,
-		},
+		Description:  vc.Description,
+		Extend:       vc.Extend,
+		Rules:        rulesMap,
+		Allowlists:   globalAllowlists,
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
 	}
@@ -222,9 +217,95 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				return Config{}, err
 			}
 		}
+
+		logging.Info().Msgf("RuleAllowlists: %v", ruleAllowlists)
+		for ruleID, allowlists := range ruleAllowlists {
+			r, ok := c.Rules[ruleID]
+			if !ok {
+				logging.Info().
+					Str("rule-id", ruleID).
+					Msg("[[allowlists]]: target rule ID does not exist")
+			}
+			ra := r.Allowlists
+			ra = append(ra, allowlists...)
+			r.Allowlists = ra
+			c.Rules[ruleID] = r
+			logging.Info().Msgf("TODO: Populate %d allowlists for %s", len(allowlists), ruleID)
+		}
 	}
 
 	return c, nil
+}
+
+func parseAllowlist(a any) (Allowlist, error) {
+	// This is a horrible hack because nested structs don't seem to deserialize proper.
+	// It's probably better to use an interface.
+	var (
+		condition   string
+		commits     []string
+		paths       []string
+		regexTarget string
+		regexes     []string
+		stopWords   []string
+	)
+	switch v := a.(type) {
+	case viperRuleAllowlist:
+		condition = v.Condition
+		commits = v.Commits
+		paths = v.Paths
+		regexTarget = v.RegexTarget
+		regexes = v.Regexes
+		stopWords = v.StopWords
+	case viperGlobalAllowlist:
+		condition = v.Condition
+		commits = v.Commits
+		paths = v.Paths
+		regexTarget = v.RegexTarget
+		regexes = v.Regexes
+		stopWords = v.StopWords
+	default:
+		panic("parseAllowlist only accepts viperRuleAllowlist or viperGlobalAllowlist")
+	}
+
+	var matchCondition AllowlistMatchCondition
+	c := strings.ToUpper(condition)
+	switch c {
+	case "AND", "&&":
+		matchCondition = AllowlistMatchAnd
+	case "", "OR", "||":
+		matchCondition = AllowlistMatchOr
+	default:
+		return Allowlist{}, fmt.Errorf("unknown allowlist |condition| '%s' (expected 'and', 'or')", c)
+	}
+
+	// Validate the target.
+	if regexTarget != "" {
+		switch regexTarget {
+		case "secret":
+			regexTarget = ""
+		case "match", "line":
+			// do nothing
+		default:
+			return Allowlist{}, fmt.Errorf("unknown allowlist |regexTarget| '%s' (expected 'match', 'line')", regexTarget)
+		}
+	}
+	var allowlistRegexes []*regexp.Regexp
+	for _, a := range regexes {
+		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+	}
+	var allowlistPaths []*regexp.Regexp
+	for _, a := range paths {
+		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+	}
+
+	return Allowlist{
+		MatchCondition: matchCondition,
+		RegexTarget:    regexTarget,
+		Regexes:        allowlistRegexes,
+		Paths:          allowlistPaths,
+		Commits:        commits,
+		StopWords:      stopWords,
+	}, nil
 }
 
 func (c *Config) GetOrderedRules() []Rule {
@@ -353,12 +434,9 @@ func (c *Config) extend(extensionConfig Config) {
 	}
 
 	// append allowlists, not attempting to merge
-	c.Allowlist.Commits = append(c.Allowlist.Commits,
-		extensionConfig.Allowlist.Commits...)
-	c.Allowlist.Paths = append(c.Allowlist.Paths,
-		extensionConfig.Allowlist.Paths...)
-	c.Allowlist.Regexes = append(c.Allowlist.Regexes,
-		extensionConfig.Allowlist.Regexes...)
+	for _, a := range extensionConfig.Allowlists {
+		c.Allowlists = append(c.Allowlists, a)
+	}
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
