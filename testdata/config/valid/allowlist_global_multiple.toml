@@ -1,0 +1,4 @@
+[[allowlists]]
+regexes = ["^changeit$"]
+[[allowlists]]
+paths = ["^node_modules/.*"]
