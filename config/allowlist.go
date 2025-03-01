@@ -56,6 +56,34 @@ type Allowlist struct {
 	StopWords []string
 }
 
+func (a *Allowlist) Validate() error {
+	// Disallow empty allowlists.
+	if len(a.Commits) == 0 &&
+		len(a.Paths) == 0 &&
+		len(a.Regexes) == 0 &&
+		len(a.StopWords) == 0 {
+		return fmt.Errorf("must contain at least one check for: commits, paths, regexes, or stopwords")
+	}
+
+	// Deduplicate commits and stopwords.
+	if len(a.Commits) > 0 {
+		uniqueCommits := make(map[string]struct{})
+		for _, commit := range a.Commits {
+			uniqueCommits[commit] = struct{}{}
+		}
+		a.Commits = maps.Keys(uniqueCommits)
+	}
+	if len(a.StopWords) > 0 {
+		uniqueStopwords := make(map[string]struct{})
+		for _, stopWord := range a.StopWords {
+			uniqueStopwords[stopWord] = struct{}{}
+		}
+		a.StopWords = maps.Keys(uniqueStopwords)
+	}
+
+	return nil
+}
+
 // CommitAllowed returns true if the commit is allowed to be ignored.
 func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 	if c == "" {
@@ -88,33 +116,4 @@ func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-func (a *Allowlist) Validate() error {
-	// Disallow empty allowlists.
-	if len(a.Commits) == 0 &&
-		len(a.Paths) == 0 &&
-		len(a.Regexes) == 0 &&
-		len(a.StopWords) == 0 {
-		return fmt.Errorf("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords")
-	}
-
-	// Deduplicate commits and stopwords.
-	if len(a.Commits) > 0 {
-		uniqueCommits := make(map[string]struct{})
-		for _, commit := range a.Commits {
-			uniqueCommits[commit] = struct{}{}
-		}
-		a.Commits = maps.Keys(uniqueCommits)
-	}
-
-	if len(a.StopWords) > 0 {
-		uniqueStopwords := make(map[string]struct{})
-		for _, stopWord := range a.StopWords {
-			uniqueStopwords[stopWord] = struct{}{}
-		}
-		a.StopWords = maps.Keys(uniqueStopwords)
-	}
-
-	return nil
 }

@@ -1,0 +1,7 @@
+[[rules]]
+id = "github-app-token"
+regex = '''(?:ghu|ghs)_[0-9a-zA-Z]{36}'''
+
+[[allowlists]]
+targetRules = ["github-app-token", "github-pat"]
+regexes = ['''.*fake.*''']
