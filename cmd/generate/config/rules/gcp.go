@@ -34,7 +34,7 @@ func GCPAPIKey() *config.Rule {
 		Keywords: []string{
 			"AIza",
 		},
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// example keys from https://github.com/firebase/firebase-android-sdk
