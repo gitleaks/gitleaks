@@ -217,10 +217,14 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
 		// is the path our config or baseline file?
-		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) ||
-			// is the path excluded by the global allowlist?
-			(d.Config.Allowlist.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && d.Config.Allowlist.PathAllowed(fragment.WindowsFilePath))) {
+		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) {
 			return findings
+		}
+		// is the path excluded by the global allowlist?
+		for _, a := range d.Config.Allowlists {
+			if a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath)) {
+				return findings
+			}
 		}
 	}
 
@@ -469,24 +473,26 @@ MatchLoop:
 		}
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		// or if the secret is in the list of stopwords
-		globalAllowlistTarget := finding.Secret
-		switch d.Config.Allowlist.RegexTarget {
-		case "match":
-			globalAllowlistTarget = finding.Match
-		case "line":
-			globalAllowlistTarget = finding.Line
-		}
-		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
-			logger.Trace().
-				Str("finding", globalAllowlistTarget).
-				Msg("skipping finding: global allowlist regex")
-			continue
-		} else if ok, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); ok {
-			logger.Trace().
-				Str("finding", finding.Secret).
-				Str("allowed-stopword", word).
-				Msg("skipping finding: global allowlist stopword")
-			continue
+		for _, a := range d.Config.Allowlists {
+			globalAllowlistTarget := finding.Secret
+			switch a.RegexTarget {
+			case "match":
+				globalAllowlistTarget = finding.Match
+			case "line":
+				globalAllowlistTarget = finding.Line
+			}
+			if a.RegexAllowed(globalAllowlistTarget) {
+				logger.Trace().
+					Str("finding", globalAllowlistTarget).
+					Msg("skipping finding: global allowlist regex")
+				continue
+			} else if ok, word := a.ContainsStopWord(finding.Secret); ok {
+				logger.Trace().
+					Str("finding", finding.Secret).
+					Str("allowed-stopword", word).
+					Msg("skipping finding: global allowlist stopword")
+				continue
+			}
 		}
 
 		// check if the result matches any of the rule allowlists.
