@@ -5,12 +5,12 @@ import (
 	"io"
 )
 
-func writeJson(findings []Finding, w io.WriteCloser) error {
-	if len(findings) == 0 {
-		findings = []Finding{}
-	}
-	defer w.Close()
+type JsonReporter struct {
+}
 
+var _ Reporter = (*JsonReporter)(nil)
+
+func (t *JsonReporter) Write(w io.WriteCloser, findings []Finding) error {
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", " ")
 	return encoder.Encode(findings)

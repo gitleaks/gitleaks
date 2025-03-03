@@ -5,19 +5,20 @@
 package utils
 
 import (
-	"github.com/rs/zerolog/log"
+	"strings"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect"
-	"strings"
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) != 1 {
-			log.Fatal().
+		if len(d.DetectString(tp)) < 1 {
+			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
 				Str("regex", r.Regex.String()).
@@ -25,8 +26,9 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		if len(d.DetectString(fp)) != 0 {
-			log.Fatal().
+		findings := d.DetectString(fp)
+		if len(findings) != 0 {
+			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
 				Str("regex", r.Regex.String()).
@@ -42,7 +44,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
 		if len(d.Detect(f)) != 1 {
-			log.Fatal().
+			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
 				Str("regex", r.Regex.String()).
@@ -53,7 +55,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	for path, fp := range falsePositives {
 		f := detect.Fragment{Raw: fp, FilePath: path}
 		if len(d.Detect(f)) != 0 {
-			log.Fatal().
+			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
 				Str("regex", r.Regex.String()).

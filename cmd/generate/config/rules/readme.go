@@ -11,16 +11,18 @@ func ReadMe() *config.Rule {
 	r := config.Rule{
 		RuleID:      "readme-api-token",
 		Description: "Detected a Readme API token, risking unauthorized documentation management and content exposure.",
-		Regex:       utils.GenerateUniqueTokenRegex(`rdme_[a-z0-9]{70}`, true),
-
+		Regex:       utils.GenerateUniqueTokenRegex(`rdme_[a-z0-9]{70}`, false),
+		Entropy:     2,
 		Keywords: []string{
 			"rdme_",
 		},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("api-token", "rdme_"+secrets.NewSecret(utils.AlphaNumeric("70"))),
+	tps := utils.GenerateSampleSecrets("api-token", "rdme_"+secrets.NewSecret(utils.AlphaNumeric("70")))
+
+	fps := []string{
+		`const API_KEY = 'rdme_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';`,
 	}
-	return utils.Validate(r, tps, nil)
+	return utils.Validate(r, tps, fps)
 }

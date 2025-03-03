@@ -1,11 +1,9 @@
 package rules
 
 import (
-	"regexp"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
-
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func NugetConfigPassword() *config.Rule {
@@ -16,13 +14,15 @@ func NugetConfigPassword() *config.Rule {
 		Path:        regexp.MustCompile(`(?i)nuget\.config$`),
 		Keywords:    []string{"<add key="},
 		Entropy:     1,
-		Allowlist: config.Allowlist{
-			Regexes: []*regexp.Regexp{
-				// samples from https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file
-				regexp.MustCompile(`33f!!lloppa`),
-				regexp.MustCompile(`hal\+9ooo_da!sY`),
-				// exclude environment variables
-				regexp.MustCompile(`^\%\S.*\%$`),
+		Allowlists: []config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					// samples from https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file
+					regexp.MustCompile(`33f!!lloppa`),
+					regexp.MustCompile(`hal\+9ooo_da!sY`),
+					// exclude environment variables
+					regexp.MustCompile(`^\%\S.*\%$`),
+				},
 			},
 		},
 	}

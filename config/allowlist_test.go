@@ -1,10 +1,14 @@
 package config
 
 import (
-	"regexp"
+	"errors"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func TestCommitAllowed(t *testing.T) {
@@ -36,7 +40,8 @@ func TestCommitAllowed(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.commitAllowed, tt.allowlist.CommitAllowed(tt.commit))
+		isAllowed, _ := tt.allowlist.CommitAllowed(tt.commit)
+		assert.Equal(t, tt.commitAllowed, isAllowed)
 	}
 }
 
@@ -89,5 +94,64 @@ func TestPathAllowed(t *testing.T) {
 	}
 	for _, tt := range tests {
 		assert.Equal(t, tt.pathAllowed, tt.allowlist.PathAllowed(tt.path))
+	}
+}
+
+func TestValidate(t *testing.T) {
+	tests := map[string]struct {
+		input    Allowlist
+		expected Allowlist
+		wantErr  error
+	}{
+		"empty conditions": {
+			input:   Allowlist{},
+			wantErr: errors.New("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+		},
+		"deduplicated commits and stopwords": {
+			input: Allowlist{
+				Commits:   []string{"commitA", "commitB", "commitA"},
+				StopWords: []string{"stopwordA", "stopwordB", "stopwordA"},
+			},
+			expected: Allowlist{
+				Commits:   []string{"commitA", "commitB"},
+				StopWords: []string{"stopwordA", "stopwordB"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		// Expected an error.
+		err := tt.input.Validate()
+		if err != nil {
+			if tt.wantErr == nil {
+				t.Fatalf("Received unexpected error: %v", err)
+			} else if !assert.EqualError(t, err, tt.wantErr.Error()) {
+				t.Fatalf("Received unexpected error, expected '%v', got '%v'", tt.wantErr, err)
+			}
+		} else {
+			if tt.wantErr != nil {
+				t.Fatalf("Did not receive expected error: %v", tt.wantErr)
+			}
+		}
+
+		var (
+			regexComparer = func(x, y *regexp.Regexp) bool {
+				// Compare the string representation of the regex patterns.
+				if x == nil || y == nil {
+					return x == y
+				}
+				return x.String() == y.String()
+			}
+			arrayComparer = func(a, b string) bool {
+				return a < b
+			}
+			opts = cmp.Options{
+				cmp.Comparer(regexComparer),
+				cmpopts.SortSlices(arrayComparer),
+			}
+		)
+		if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {
+			t.Errorf("diff: (-want +got)\n%s", diff)
+		}
 	}
 }

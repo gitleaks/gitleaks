@@ -2,8 +2,8 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -22,9 +22,7 @@ func PlaidAccessID() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("plaid", secrets.NewSecret(utils.AlphaNumeric("24"))),
-	}
+	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(`[a-zA-Z0-9]{24}`))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -42,9 +40,7 @@ func PlaidSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("plaid", secrets.NewSecret(utils.AlphaNumeric("30"))),
-	}
+	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(utils.AlphaNumeric("30")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -62,8 +58,6 @@ func PlaidAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("plaid", secrets.NewSecret(fmt.Sprintf("access-(?:sandbox|development|production)-%s", utils.Hex8_4_4_4_12()))),
-	}
+	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(fmt.Sprintf("access-(?:sandbox|development|production)-%s", utils.Hex8_4_4_4_12())))
 	return utils.Validate(r, tps, nil)
 }

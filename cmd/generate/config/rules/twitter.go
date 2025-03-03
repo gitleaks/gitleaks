@@ -16,9 +16,7 @@ func TwitterAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitter", secrets.NewSecret(utils.AlphaNumeric("25"))),
-	}
+	tps := utils.GenerateSampleSecrets("twitter", secrets.NewSecret(utils.AlphaNumeric("25")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -32,9 +30,7 @@ func TwitterAPISecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitter", secrets.NewSecret(utils.AlphaNumeric("50"))),
-	}
+	tps := utils.GenerateSampleSecrets("twitter", secrets.NewSecret(utils.AlphaNumeric("50")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -49,9 +45,7 @@ func TwitterBearerToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitter", secrets.NewSecret("A{22}[a-zA-Z0-9%]{80,100}")),
-	}
+	tps := utils.GenerateSampleSecrets("twitter", secrets.NewSecret("A{22}[a-zA-Z0-9%]{80,100}"))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -65,9 +59,7 @@ func TwitterAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitter", secrets.NewSecret("[0-9]{15,25}-[a-zA-Z0-9]{20,40}")),
-	}
+	tps := utils.GenerateSampleSecrets("twitter", secrets.NewSecret("[0-9]{15,25}-[a-zA-Z0-9]{20,40}"))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -81,8 +73,6 @@ func TwitterAccessSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("twitter", secrets.NewSecret(utils.AlphaNumeric("45"))),
-	}
+	tps := utils.GenerateSampleSecrets("twitter", secrets.NewSecret(utils.AlphaNumeric("45")))
 	return utils.Validate(r, tps, nil)
 }

@@ -7,14 +7,21 @@ import (
 	"strings"
 )
 
-// writeCsv writes the list of findings to a writeCloser.
-func writeCsv(f []Finding, w io.WriteCloser) error {
-	if len(f) == 0 {
+type CsvReporter struct {
+}
+
+var _ Reporter = (*CsvReporter)(nil)
+
+func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
+	if len(findings) == 0 {
 		return nil
 	}
-	defer w.Close()
-	cw := csv.NewWriter(w)
-	err := cw.Write([]string{"RuleID",
+
+	var (
+		cw  = csv.NewWriter(w)
+		err error
+	)
+	columns := []string{"RuleID",
 		"Commit",
 		"File",
 		"SymlinkFile",
@@ -30,12 +37,17 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 		"Email",
 		"Fingerprint",
 		"Tags",
-	})
-	if err != nil {
+	}
+	// A miserable attempt at "omitempty" so tests don't yell at me.
+	if findings[0].Link != "" {
+		columns = append(columns, "Link")
+	}
+
+	if err = cw.Write(columns); err != nil {
 		return err
 	}
-	for _, f := range f {
-		err = cw.Write([]string{f.RuleID,
+	for _, f := range findings {
+		row := []string{f.RuleID,
 			f.Commit,
 			f.File,
 			f.SymlinkFile,
@@ -51,8 +63,12 @@ func writeCsv(f []Finding, w io.WriteCloser) error {
 			f.Email,
 			f.Fingerprint,
 			strings.Join(f.Tags, " "),
-		})
-		if err != nil {
+		}
+		if findings[0].Link != "" {
+			row = append(row, f.Link)
+		}
+
+		if err = cw.Write(row); err != nil {
 			return err
 		}
 	}

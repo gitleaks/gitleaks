@@ -2,8 +2,8 @@ package rules
 
 import (
 	"fmt"
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -55,11 +55,10 @@ func JFrogIdentityToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("jfrog", secrets.NewSecret(utils.AlphaNumeric("64"))),
-		utils.GenerateSampleSecret("artifactory", secrets.NewSecret(utils.AlphaNumeric("64"))),
-		utils.GenerateSampleSecret("bintray", secrets.NewSecret(utils.AlphaNumeric("64"))),
-		utils.GenerateSampleSecret("xray", secrets.NewSecret(utils.AlphaNumeric("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("jfrog", secrets.NewSecret(utils.AlphaNumeric("64")))
+	tps = append(tps, utils.GenerateSampleSecrets("artifactory", secrets.NewSecret(utils.AlphaNumeric("64")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("bintray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("xray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
+	tps = append(tps, fmt.Sprintf("\"artifactory\", \"%s\"", secrets.NewSecret(utils.AlphaNumeric("64"))))
 	return utils.Validate(r, tps, nil)
 }

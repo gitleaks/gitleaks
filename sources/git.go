@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
-	"github.com/rs/zerolog/log"
+
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
@@ -41,7 +42,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 			}
 		}
 		if len(quotedOpts) > 0 {
-			log.Warn().Msgf("the following `--log-opts` values may not work as expected: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
+			logging.Warn().Msgf("the following `--log-opts` values may not work as expected: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
 		}
 
 		args = append(args, userArgs...)
@@ -51,7 +52,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 			"--full-history", "--all")
 	}
 
-	log.Debug().Msgf("executing: %s", cmd.String())
+	logging.Debug().Msgf("executing: %s", cmd.String())
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -91,7 +92,7 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
 	}
-	log.Debug().Msgf("executing: %s", cmd.String())
+	logging.Debug().Msgf("executing: %s", cmd.String())
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -157,6 +158,9 @@ func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
 		//  you may want to set your diff.renameLimit variable to at least
 		//  (some large number) and retry the command.
 		//
+		//  Auto packing the repository in background for optimum performance.
+		//  See "git help gc" for manual housekeeping.
+		//
 		// we skip exiting the program as git log -p/git diff will continue
 		// to send data to stdout and finish executing. This next bit of
 		// code prevents gitleaks from stopping mid scan if this error is
@@ -166,10 +170,14 @@ func listenForStdErr(stderr io.ReadCloser, errCh chan<- error) {
 			strings.Contains(scanner.Text(),
 				"inexact rename detection was skipped") ||
 			strings.Contains(scanner.Text(),
-				"you may want to set your diff.renameLimit") {
-			log.Warn().Msg(scanner.Text())
+				"you may want to set your diff.renameLimit") ||
+			strings.Contains(scanner.Text(),
+				"See \"git help gc\" for manual housekeeping") ||
+			strings.Contains(scanner.Text(),
+				"Auto packing the repository in background for optimum performance") {
+			logging.Warn().Msg(scanner.Text())
 		} else {
-			log.Error().Msgf("[git] %s", scanner.Text())
+			logging.Error().Msgf("[git] %s", scanner.Text())
 			errEncountered = true
 		}
 	}

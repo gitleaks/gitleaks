@@ -4,9 +4,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/fatih/semgroup"
-	"github.com/rs/zerolog/log"
+
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 type ScanTarget struct {
@@ -14,41 +16,80 @@ type ScanTarget struct {
 	Symlink string
 }
 
-func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool) (<-chan ScanTarget, error) {
+var isWindows = runtime.GOOS == "windows"
+
+func DirectoryTargets(source string, s *semgroup.Group, followSymlinks bool, shouldSkip func(string) bool) (<-chan ScanTarget, error) {
 	paths := make(chan ScanTarget)
 	s.Go(func() error {
 		defer close(paths)
 		return filepath.Walk(source,
 			func(path string, fInfo os.FileInfo, err error) error {
+				logger := logging.With().Str("path", path).Logger()
+
 				if err != nil {
+					if os.IsPermission(err) {
+						// This seems to only fail on directories at this stage.
+						logger.Warn().Msg("Skipping directory: permission denied")
+						return filepath.SkipDir
+					}
 					return err
 				}
-				if fInfo.Name() == ".git" && fInfo.IsDir() {
-					return filepath.SkipDir
-				}
+
+				// Empty; nothing to do here.
 				if fInfo.Size() == 0 {
 					return nil
 				}
-				if fInfo.Mode().IsRegular() {
-					paths <- ScanTarget{
-						Path:    path,
-						Symlink: "",
-					}
+
+				// Unwrap symlinks, if |followSymlinks| is set.
+				scanTarget := ScanTarget{
+					Path: path,
 				}
-				if fInfo.Mode().Type() == fs.ModeSymlink && followSymlinks {
+				if fInfo.Mode().Type() == fs.ModeSymlink {
+					if !followSymlinks {
+						logger.Debug().Msg("Skipping symlink")
+						return nil
+					}
+
 					realPath, err := filepath.EvalSymlinks(path)
 					if err != nil {
 						return err
 					}
+
 					realPathFileInfo, _ := os.Stat(realPath)
 					if realPathFileInfo.IsDir() {
-						log.Debug().Msgf("found symlinked directory: %s -> %s [skipping]", path, realPath)
+						logger.Warn().Str("target", realPath).Msg("Skipping symlinked directory")
 						return nil
 					}
-					paths <- ScanTarget{
-						Path:    realPath,
-						Symlink: path,
+
+					scanTarget.Path = realPath
+					scanTarget.Symlink = path
+				}
+
+				// TODO: Also run this check against the resolved symlink?
+				skip := shouldSkip(path) ||
+					// TODO: Remove this in v9.
+					// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
+					(isWindows && shouldSkip(filepath.ToSlash(path)))
+				if fInfo.IsDir() {
+					// Directory
+					if skip {
+						logger.Debug().Msg("Skipping directory due to global allowlist")
+						return filepath.SkipDir
 					}
+
+					if fInfo.Name() == ".git" {
+						// Don't scan .git directories.
+						// TODO: Add this to the config allowlist, instead of hard-coding it.
+						return filepath.SkipDir
+					}
+				} else {
+					// File
+					if skip {
+						logger.Debug().Msg("Skipping file due to global allowlist")
+						return nil
+					}
+
+					paths <- scanTarget
 				}
 				return nil
 			})

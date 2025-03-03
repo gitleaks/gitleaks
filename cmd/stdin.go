@@ -4,10 +4,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
 func init() {
@@ -20,32 +19,26 @@ var stdInCmd = &cobra.Command{
 	Run:   runStdIn,
 }
 
-func runStdIn(cmd *cobra.Command, args []string) {
-	initConfig(".")
-	var (
-		findings []report.Finding
-		err      error
-	)
-
-	// setup config (aka, the thing that defines rules)
-	cfg := Config(cmd)
-
+func runStdIn(cmd *cobra.Command, _ []string) {
 	// start timer
 	start := time.Now()
+
+	// setup config (aka, the thing that defines rules)
+	initConfig(".")
+	cfg := Config(cmd)
+
+	// create detector
 	detector := Detector(cmd, cfg, "")
 
-	// set exit code
-	exitCode, err := cmd.Flags().GetInt("exit-code")
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not get exit code")
-	}
+	// parse flag(s)
+	exitCode := mustGetIntFlag(cmd, "exit-code")
 
-	findings, err = detector.DetectReader(os.Stdin, 10)
+	findings, err := detector.DetectReader(os.Stdin, 10)
 	if err != nil {
 		// log fatal to exit, no need to continue since a report
 		// will not be generated when scanning from a pipe...for now
-		log.Fatal().Err(err).Msg("failed scan input from stdin")
+		logging.Fatal().Err(err).Msg("failed scan input from stdin")
 	}
 
-	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
+	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }

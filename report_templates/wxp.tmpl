@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gitleaks Security Findings Report</title>
+    <style>
+        :root {
+          --primary-color: #2c5fb2;
+          --primary-color-rgb: 44, 95, 178;
+          --primary-dark: #224486;
+          --primary-light: #356bc9;
+          --secondary-color: #eef3ff;
+          --surface-color: #ffffff;
+          --border-color: #7da2ce;
+          --text-color: #000000;
+          --text-light: #3a6ea5;
+          --text-inverse: #ffffff;
+          --error-color: #cc0000;
+          --warning-color: #ffaa00;
+          --success-color: #50c878;
+          --highlight-color: rgba(44, 95, 178, 0.2);
+          --highlight-secret: rgba(204, 0, 0, 0.2);
+          --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          --radius: 8px;
+          --font-mono: 'Lucida Console', monospace;
+          --font-main: 'Tahoma', 'Segoe UI', sans-serif;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        html, body {
+          height: 100%;
+          font-family: var(--font-main);
+          font-size: 16px;
+          line-height: 1.5;
+          color: var(--text-color);
+          background-color: var(--surface-color);
+          background: linear-gradient(to bottom, #a1c8e9, #2573d1);
+          background-attachment: fixed;
+        }
+
+        .app-container {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          max-width: 100%;
+          overflow: hidden;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          border: 1px solid #7da2ce;
+        }
+
+        .app-header {
+          height: 36px;
+          background: linear-gradient(to bottom, #3689de, #2c5fb2, #2151a3);
+          color: var(--text-inverse);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 12px;
+          flex-shrink: 0;
+          box-shadow: var(--shadow);
+          z-index: 10;
+          border-bottom: 1px solid #1a3c71;
+        }
+
+        .logo h1 {
+          font-size: 16px;
+          font-weight: bold;
+          margin: 0;
+          padding: 0;
+          text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(to bottom, #f1f8fe, #d8e6f6);
+          color: #000000;
+          border: 1px solid #7da2ce;
+          border-radius: 3px;
+          font-size: 12px;
+          padding: 4px 8px;
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+          cursor: pointer;
+          transition: background-color 0.2s, color 0.2s;
+          font-family: var(--font-main);
+        }
+
+        .btn:hover {
+          background: linear-gradient(to bottom, #e5f1fd, #c7ddfa);
+        }
+
+        .btn:active {
+          background: linear-gradient(to bottom, #c7ddfa, #e5f1fd);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) inset;
+        }
+
+        .btn-primary {
+          background: linear-gradient(to bottom, #3689de, #2c5fb2);
+          color: white;
+          border: 1px solid #1a3c71;
+        }
+
+        .btn-primary:hover {
+          background: linear-gradient(to bottom, #4397e9, #3670c3);
+        }
+
+        .btn-primary:active {
+          background: linear-gradient(to bottom, #2151a3, #3689de);
+        }
+
+        .btn-sm {
+          padding: 2px 5px;
+          font-size: 0.75rem;
+        }
+
+        .app-main {
+          flex: 1;
+          overflow: auto;
+          padding: 1.5rem;
+        }
+
+        .report-info {
+          background-color: #eef3ff;
+          border: 1px solid #7da2ce;
+          border-radius: 5px;
+          padding: 12px;
+          margin-bottom: 15px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-info h2 {
+          color: #2c5fb2;
+          margin-top: 0;
+          font-size: 18px;
+        }
+
+        .report-date {
+          color: #3a6ea5;
+          font-size: 12px;
+        }
+
+        .report-stats {
+          display: flex;
+          gap: 1.5rem;
+          margin-top: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .stat-value {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #2c5fb2;
+        }
+
+        .stat-label {
+          font-size: 0.875rem;
+          color: var(--text-light);
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+          border: 1px solid #7da2ce;
+          border-radius: 5px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .findings-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.875rem;
+        }
+
+        .findings-table th {
+          background: linear-gradient(to bottom, #e5f1fd, #c7ddfa);
+          color: #2c5fb2;
+          font-weight: bold;
+          font-size: 13px;
+          padding: 8px;
+          border: 1px solid #7da2ce;
+          text-align: left;
+          position: sticky;
+          top: 0;
+          z-index: 1;
+        }
+
+        /* Ensure table cells don't expand too much */
+        .findings-table td {
+          background-color: #ffffff;
+          border: 1px solid #d9e6f7;
+          font-size: 12px;
+          padding: 8px;
+          vertical-align: top;
+          max-width: 300px; /* Limit width of all cells */
+          overflow-wrap: break-word;
+        }
+
+        .findings-table tr:nth-child(even) td {
+          background-color: #f5f9ff;
+        }
+
+        .findings-table tr:hover td {
+          background-color: #e5f1fd;
+        }
+
+        .findings-table th:nth-child(1) { width: 12%; } /* Rule */
+        .findings-table th:nth-child(2) { width: 20%; } /* File */
+        .findings-table th:nth-child(3) { width: 25%; } /* Description */
+        .findings-table th:nth-child(4) { width: 20%; } /* Secret */
+        .findings-table th:nth-child(5) { width: 23%; } /* Metadata */
+
+        .secret-container {
+          position: relative;
+        }
+
+        .match-toggle {
+          display: inline-block;
+          margin-top: 0.5rem;
+          background: linear-gradient(to bottom, #f1f8fe, #d8e6f6);
+          border: 1px solid #7da2ce;
+          color: #2c5fb2;
+          font-size: 11px;
+          border-radius: 3px;
+          padding: 2px 5px;
+          cursor: pointer;
+        }
+
+        .match-toggle:hover {
+          background: linear-gradient(to bottom, #e5f1fd, #c7ddfa);
+        }
+
+        .hidden {
+          display: none !important;
+        }
+
+        .secret-match {
+          font-family: var(--font-mono);
+          font-size: 0.875rem;
+          word-break: break-all;
+          white-space: pre-wrap;
+          display: block;
+          background-color: #f9f2f2;
+          border: 1px solid #e0c0c0;
+          border-radius: 3px;
+          padding: 0.5rem;
+          overflow-x: auto;
+        }
+
+        .tag-list {
+          display: flex;
+          gap: 0.25rem;
+          flex-wrap: wrap;
+        }
+
+        .tag {
+          display: inline-block;
+          padding: 2px 5px;
+          background-color: #3689de;
+          color: var(--text-inverse);
+          border-radius: 3px;
+          font-size: 10px;
+          margin: 2px;
+        }
+
+        .meta-row {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+          font-size: 0.75rem;
+          color: var(--text-light);
+        }
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .meta-label {
+          font-weight: 500;
+          color: #2c5fb2;
+        }
+
+        .meta-value {
+          font-family: var(--font-mono);
+          word-break: break-all;
+        }
+
+        .code-preview {
+          position: relative;
+          font-family: var(--font-mono);
+          font-size: 0.875rem;
+          background-color: var(--secondary-color);
+          padding: 0.5rem;
+          border-radius: var(--radius);
+          overflow-x: auto;
+          margin-top: 0.5rem;
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+
+        .filters {
+          margin-bottom: 15px;
+          background-color: #eef3ff;
+          padding: 10px;
+          border: 1px solid #7da2ce;
+          border-radius: 5px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-right: 15px;
+        }
+
+        .filter-label {
+          font-size: 12px;
+          font-weight: bold;
+          color: #2c5fb2;
+        }
+
+        .filter-input {
+          background-color: white;
+          border: 1px solid #7da2ce;
+          border-radius: 3px;
+          padding: 3px 6px;
+          font-size: 12px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) inset;
+          font-family: var(--font-main);
+        }
+
+        .app-footer {
+          background: linear-gradient(to bottom, #eef3ff, #d8e6f6);
+          border-top: 1px solid #7da2ce;
+          font-size: 11px;
+          padding: 8px 12px;
+          color: #2c5fb2;
+          height: auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-shrink: 0;
+        }
+
+        .description-toggle {
+          cursor: pointer;
+          color: #2c5fb2;
+          font-size: 0.875rem;
+          margin-left: 0.5rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: linear-gradient(to bottom, #f1f8fe, #d8e6f6);
+          border: 1px solid #7da2ce;
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+          vertical-align: middle;
+        }
+
+        .description-toggle:hover {
+          background-color: var(--primary-light);
+          color: var(--text-inverse);
+        }
+
+        .description-expanded {
+          white-space: normal;
+        }
+
+        .description-collapsed {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 250px;
+          display: inline-block;
+        }
+
+        .commit-link {
+          color: #2c5fb2;
+          text-decoration: none;
+        }
+
+        .commit-link:hover {
+          text-decoration: underline;
+        }
+        
+        /* File path styling */
+        .file-path-container {
+          max-width: 100%;
+        }
+        
+        .file-path {
+          display: inline-block;
+          max-width: 100%;
+          word-wrap: break-word;
+          word-break: break-all;
+        }
+
+        .match-content {
+          font-family: var(--font-mono);
+          font-size: 0.875rem;
+          word-break: break-all;
+          white-space: pre-wrap;
+          display: block;
+          background-color: #f9f9f9;
+          border: 1px solid #d0d0d0;
+          border-radius: 3px;
+          padding: 0.5rem;
+          margin-top: 0.5rem;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+          .app-header {
+            padding: 0 1rem;
+          }
+
+          .app-main {
+            padding: 1rem;
+          }
+
+          .report-stats {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .filters {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .app-footer {
+            flex-direction: column;
+            height: auto;
+            padding: 0.75rem 1rem;
+            gap: 0.5rem;
+            justify-content: center;
+            text-align: center;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <h1>Gitleaks Security Findings</h1>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="report-info">
+                <h2>Security Scan Report</h2>
+                <p class="report-date">Generated on {{now | date "Jan 02, 2006 15:04:05 MST"}}</p>
+
+                <div class="report-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{len .}}</span>
+                        <span class="stat-label">Total Findings</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-value" id="filesCount">-</span>
+                        <span class="stat-label">Files Affected</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-value" id="rulesCount">-</span>
+                        <span class="stat-label">Unique Rules Triggered</span>
+                    </div>
+
+                    <div class="stat-item" id="scanModeContainer">
+                        <span class="stat-value" id="scanMode">-</span>
+                        <span class="stat-label">Scan Mode</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label" for="filterRule">Filter by Rule:</label>
+                    <select class="filter-input" id="filterRule">
+                        <option value="all">All Rules</option>
+                        <!-- Rule options will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filterFile">Filter by File:</label>
+                    <input type="text" class="filter-input" id="filterFile" placeholder="Enter filename...">
+                </div>
+
+                <div class="filter-group">
+                    <button class="btn btn-primary btn-sm" id="resetFilters">Reset Filters</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="findings-table" id="findingsTable">
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>File</th>
+                            <th>Description</th>
+                            <th>Secret</th>
+                            <th>Metadata</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{- range . }}
+                        <tr data-rule="{{.RuleID}}" data-file="{{.File}}">
+                            <td>{{.RuleID}}</td>
+                            <td>
+                                <div class="file-path-container">
+                                    <span class="file-path" title="{{.File}}">{{.File}}</span>
+                                </div>
+                                <div class="tag-list">
+                                    {{- range .Tags }}
+                                    <span class="tag">{{.}}</span>
+                                    {{- end}}
+                                </div>
+                                <div class="meta-row">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Line:</span>
+                                        <span class="meta-value">{{.StartLine}}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="description-text">{{.Description}}</span>
+                                <span class="description-toggle" title="Expand/Collapse">↕</span>
+                            </td>
+                            <td>
+                                <div class="secret-container" data-secret="{{.Secret}}" data-match="{{.Match}}">
+                                    <div class="secret-match">{{.Secret}}</div>
+                                    <button type="button" class="match-toggle" title="Show/Hide Full Match Context">Show Context</button>
+                                    <div class="match-content hidden" data-raw-match="{{.Match}}">{{.Match}}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="meta-row">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Entropy:</span>
+                                        <span class="meta-value">{{printf "%.2f" .Entropy}}</span>
+                                    </div>
+                                {{- if .Commit}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Commit:</span>
+                                        <span class="meta-value">{{if gt (len .Commit) 7}}{{printf "%.7s" .Commit}}{{else}}{{.Commit}}{{end}}</span>
+                                    </div>
+                                    {{- if .Author}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Author:</span>
+                                        <span class="meta-value">{{.Author}}</span>
+                                    </div>
+                                    {{- end}}
+                                    {{- if .Date}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Date:</span>
+                                        <span class="meta-value">{{.Date}}</span>
+                                    </div>
+                                    {{- end}}
+                                    {{- if .Link}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Link:</span>
+                                        <span class="meta-value"><a href="{{.Link}}" target="_blank" class="commit-link">View Commit</a></span>
+                                    </div>
+                                    {{- end}}
+                                {{- else}}
+                                    {{- if .Author}}
+                                    <div class="meta-item">
+                                        <span class="meta-label">Author:</span>
+                                        <span class="meta-value">{{.Author}}</span>
+                                    </div>
+                                    {{- end}}
+                                {{- end}}
+                                </div>
+
+                                {{- if not .Match}}
+                                <div class="match-content" data-raw-match="">-</div>
+                                {{- end}}
+                            </td>
+                        </tr>
+                        {{- end }}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div>Generated by Gitleaks</div>
+            <div>Total Findings: <strong>{{len .}}</strong></div>
+        </footer>
+    </div>
+
+    <script>
+        // Process data to collect unique files and rules
+        function processData() {
+            const rows = document.querySelectorAll('#findingsTable tbody tr');
+            const uniqueRules = new Set();
+            const uniqueFiles = new Set();
+            let isGitMode = false;
+
+            if (rows.length > 0) {
+                // Check if first finding has commit data to determine mode
+                const firstRow = rows[0];
+                const commitCells = firstRow.querySelectorAll('.commit-info');
+                isGitMode = commitCells.length > 0 && commitCells[0].textContent.trim() !== '';
+            }
+
+            // Set scan mode
+            document.getElementById('scanMode').textContent = isGitMode ? 'Git' : 'Directory';
+
+            // Adjust UI based on mode
+            if (isGitMode) {
+                // Ensure commit info columns are visible for git mode
+                document.querySelectorAll('.commit-info').forEach(el => {
+                    el.style.display = 'block';
+                });
+            } else {
+                // Hide commit-specific UI elements for directory mode
+                document.querySelectorAll('.commit-info').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+
+            rows.forEach(row => {
+                uniqueRules.add(row.dataset.rule);
+                uniqueFiles.add(row.dataset.file);
+            });
+
+            // Update stats
+            document.getElementById('filesCount').textContent = uniqueFiles.size;
+            document.getElementById('rulesCount').textContent = uniqueRules.size;
+
+            // Populate rule filter dropdown
+            const ruleFilter = document.getElementById('filterRule');
+            const sortedRules = Array.from(uniqueRules).sort();
+            sortedRules.forEach(rule => {
+                const option = document.createElement('option');
+                option.value = rule;
+                option.textContent = rule;
+                ruleFilter.appendChild(option);
+            });
+        }
+
+        // Hide toggle button if match is same as secret
+        function hideRedundantToggleButtons() {
+            document.querySelectorAll('.secret-container').forEach(container => {
+                const secret = container.getAttribute('data-secret');
+                const match = container.getAttribute('data-match');
+                const toggleButton = container.querySelector('.match-toggle');
+                
+                // If secret and match are the same, or if match is empty, hide the toggle button
+                if ((secret && match && secret.trim() === match.trim()) || !match) {
+                    if (toggleButton) {
+                        toggleButton.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Setup toggle buttons
+        function setupToggleButtons() {
+            document.querySelectorAll('.match-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const matchContent = this.nextElementSibling;
+                    if (matchContent.classList.contains('hidden')) {
+                        matchContent.classList.remove('hidden');
+                        this.textContent = 'Hide Context';
+                    } else {
+                        matchContent.classList.add('hidden');
+                        this.textContent = 'Show Context';
+                    }
+                });
+            });
+
+            // Setup description toggle
+            document.querySelectorAll('.description-text').forEach(descriptionText => {
+                const toggleBtn = descriptionText.nextElementSibling;
+                if (!toggleBtn || !toggleBtn.classList.contains('description-toggle')) return;
+
+                // Initial state: collapsed
+                descriptionText.classList.add('description-collapsed');
+
+                toggleBtn.addEventListener('click', () => {
+                    if (descriptionText.classList.contains('description-collapsed')) {
+                        descriptionText.classList.remove('description-collapsed');
+                        descriptionText.classList.add('description-expanded');
+                        toggleBtn.textContent = '↑';
+                    } else {
+                        descriptionText.classList.remove('description-expanded');
+                        descriptionText.classList.add('description-collapsed');
+                        toggleBtn.textContent = '↕';
+                    }
+                });
+            });
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            const ruleFilter = document.getElementById('filterRule').value;
+            const fileFilter = document.getElementById('filterFile').value.toLowerCase();
+
+            const rows = document.querySelectorAll('#findingsTable tbody tr');
+
+            rows.forEach(row => {
+                const ruleMatch = ruleFilter === 'all' || row.dataset.rule === ruleFilter;
+                const fileMatch = fileFilter === '' || row.dataset.file.toLowerCase().includes(fileFilter);
+
+                if (ruleMatch && fileMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update visible count
+            const visibleFindings = document.querySelectorAll('#findingsTable tbody tr:not([style*="display: none"])').length;
+            document.querySelector('.app-footer strong').textContent = visibleFindings;
+        }
+
+        document.getElementById('filterRule').addEventListener('change', applyFilters);
+        document.getElementById('filterFile').addEventListener('input', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            document.getElementById('filterRule').value = 'all';
+            document.getElementById('filterFile').value = '';
+            applyFilters();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            processData();
+            hideRedundantToggleButtons(); // Hide toggle buttons for matching secrets
+            setupToggleButtons();
+        });
+    </script>
+</body>
+</html>

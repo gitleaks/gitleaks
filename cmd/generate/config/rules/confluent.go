@@ -18,9 +18,7 @@ func ConfluentSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("confluent", secrets.NewSecret(utils.AlphaNumeric("64"))),
-	}
+	tps := utils.GenerateSampleSecrets("confluent", secrets.NewSecret(utils.AlphaNumeric("64")))
 	return utils.Validate(r, tps, nil)
 }
 
@@ -37,8 +35,6 @@ func ConfluentAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("confluent", secrets.NewSecret(utils.AlphaNumeric("16"))),
-	}
+	tps := utils.GenerateSampleSecrets("confluent", secrets.NewSecret(utils.AlphaNumeric("16")))
 	return utils.Validate(r, tps, nil)
 }

@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -20,11 +21,9 @@ func EtsyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("ETSY", secrets.NewSecret(utils.AlphaNumeric("24"))),
-		utils.GenerateSampleSecret("etsy", secrets.NewSecret(utils.AlphaNumeric("24"))),
-		utils.GenerateSampleSecret("Etsy", secrets.NewSecret(utils.AlphaNumeric("24"))),
-	}
+	tps := utils.GenerateSampleSecrets("ETSY", secrets.NewSecret(utils.AlphaNumeric("24")))
+	tps = append(tps, utils.GenerateSampleSecrets("etsy", secrets.NewSecret(utils.AlphaNumeric("24")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("Etsy", secrets.NewSecret(utils.AlphaNumeric("24")))...)
 	fps := []string{
 		fmt.Sprintf(`SetSysctl = "%s"`, secrets.NewSecret(utils.AlphaNumeric("24"))),
 		`	if err := sysctl.SetSysctl(sysctlBridgeCallIPTables); err != nil {`,

@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // Rules contain information that define details on how to detect secrets
@@ -39,9 +40,8 @@ type Rule struct {
 	// keyword(s) are in the content being scanned.
 	Keywords []string
 
-	// Allowlist allows a rule to be ignored for specific
-	// regexes, paths, and/or commits
-	Allowlist Allowlist
+	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
+	Allowlists []Allowlist
 }
 
 // Validate guards against common misconfigurations.

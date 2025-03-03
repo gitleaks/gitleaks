@@ -9,25 +9,25 @@ import (
 func AdobeClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Detected a pattern that resembles an Adobe OAuth Web Client ID, posing a risk of compromised Adobe integrations and data breaches.",
 		RuleID:      "adobe-client-id",
+		Description: "Detected a pattern that resembles an Adobe OAuth Web Client ID, posing a risk of compromised Adobe integrations and data breaches.",
 		Regex:       utils.GenerateSemiGenericRegex([]string{"adobe"}, utils.Hex("32"), true),
+		Entropy:     2,
 		Keywords:    []string{"adobe"},
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("adobe", secrets.NewSecret(utils.Hex("32"))),
-	}
+	tps := utils.GenerateSampleSecrets("adobe", secrets.NewSecret(utils.Hex("32")))
 	return utils.Validate(r, tps, nil)
 }
 
 func AdobeClientSecret() *config.Rule {
 	// define rule
 	r := config.Rule{
-		Description: "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation.",
 		RuleID:      "adobe-client-secret",
-		Regex:       utils.GenerateUniqueTokenRegex(`(p8e-)(?i)[a-z0-9]{32}`, true),
+		Description: "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation.",
+		Regex:       utils.GenerateUniqueTokenRegex(`p8e-(?i)[a-z0-9]{32}`, false),
+		Entropy:     2,
 		Keywords:    []string{"p8e-"},
 	}
 
