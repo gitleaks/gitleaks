@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gitleaks Security Findings Report</title>
+    <style>
+        :root {
+          --primary-color: #00ff00;
+          --primary-color-rgb: 0, 255, 0;
+          --primary-dark: #00cc00;
+          --primary-light: #66ff66;
+          --secondary-color: #111111;
+          --surface-color: #000000;
+          --border-color: #00ff00;
+          --text-color: #00ff00;
+          --text-light: #00cc00;
+          --text-inverse: #000000;
+          --error-color: #ff0000;
+          --warning-color: #ffff00;
+          --success-color: #00ff00;
+          --highlight-color: rgba(0, 255, 0, 0.2);
+          --highlight-secret: rgba(255, 0, 0, 0.2);
+          --shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+          --radius: 0;
+          --font-mono: 'Courier New', monospace;
+          --font-main: 'Courier New', monospace;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        html, body {
+          height: 100%;
+          font-family: var(--font-main);
+          font-size: 16px;
+          line-height: 1.5;
+          color: var(--text-color);
+          background-color: #000000;
+          background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 10a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z' fill='%23003300' fill-opacity='0.5' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        .app-container {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          max-width: 100%;
+          overflow: hidden;
+          border: 1px solid #00ff00;
+          box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+          position: relative;
+        }
+
+        .app-container::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 5px;
+          background: repeating-linear-gradient(
+            90deg,
+            #00ff00,
+            #00ff00 10px,
+            #000000 10px,
+            #000000 20px
+          );
+          z-index: 10;
+        }
+
+        .app-container::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 5px;
+          background: repeating-linear-gradient(
+            90deg,
+            #00ff00,
+            #00ff00 10px,
+            #000000 10px,
+            #000000 20px
+          );
+          z-index: 10;
+        }
+
+        .app-header {
+          background-color: #111111;
+          border-bottom: 1px solid #00ff00;
+          height: auto;
+          padding: 10px 15px;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-shrink: 0;
+          box-shadow: var(--shadow);
+          z-index: 10;
+        }
+
+        .logo h1 {
+          font-size: 20px;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          margin: 0;
+          padding: 0;
+          text-shadow: 0 0 5px #00ff00;
+        }
+
+        .logo h1::before {
+          content: "[ ";
+        }
+
+        .logo h1::after {
+          content: " ]_";
+          animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #000000;
+          color: #00ff00;
+          border: 1px solid #00ff00;
+          font-family: 'Courier New', monospace;
+          text-transform: lowercase;
+          letter-spacing: 1px;
+          transition: all 0.2s;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 0.5rem 1rem;
+        }
+
+        .btn::before {
+          content: "[ ";
+        }
+
+        .btn::after {
+          content: " ]";
+        }
+
+        .btn:hover {
+          background-color: #00ff00;
+          color: #000000;
+          box-shadow: 0 0 10px #00ff00;
+        }
+
+        .btn-primary {
+          background-color: #000000;
+          color: #00ff00;
+        }
+
+        .btn-primary:hover {
+          background-color: #00ff00;
+          color: #000000;
+        }
+
+        .btn-sm {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+        }
+
+        .app-main {
+          flex: 1;
+          overflow: auto;
+          padding: 1.5rem;
+          position: relative;
+        }
+
+        .report-info {
+          background-color: #111111;
+          border: 1px solid #00ff00;
+          padding: 15px;
+          margin-bottom: 20px;
+          position: relative;
+          box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .report-info h2 {
+          color: #00ff00;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-top: 0;
+          text-shadow: 0 0 5px #00ff00;
+        }
+
+        .report-info h2::before {
+          content: "//";
+          margin-right: 10px;
+        }
+
+        .report-date {
+          color: #00cc00;
+          font-style: italic;
+          font-size: 0.875rem;
+        }
+
+        .report-stats {
+          display: flex;
+          gap: 1.5rem;
+          margin-top: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .stat-value {
+          color: #00ff00;
+          font-weight: bold;
+          text-shadow: 0 0 5px #00ff00;
+          font-size: 1.25rem;
+        }
+
+        .stat-label {
+          text-transform: uppercase;
+          font-size: 10px;
+          letter-spacing: 1px;
+          color: var(--text-light);
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+          border: 1px solid #00ff00;
+          box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .findings-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.875rem;
+        }
+
+        .findings-table th {
+          background-color: #111111;
+          color: #00ff00;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          padding: 10px;
+          border: 1px solid #004400;
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          text-align: left;
+        }
+
+        .findings-table td {
+          background-color: #000000;
+          border: 1px solid #004400;
+          padding: 10px;
+          font-size: 13px;
+          vertical-align: top;
+          max-width: 300px; /* Limit width of all cells */
+          overflow-wrap: break-word;
+        }
+
+        .findings-table tr:hover td {
+          background-color: #001100;
+        }
+
+        .findings-table th:nth-child(1) { width: 12%; } /* Rule */
+        .findings-table th:nth-child(2) { width: 20%; } /* File */
+        .findings-table th:nth-child(3) { width: 25%; } /* Description */
+        .findings-table th:nth-child(4) { width: 20%; } /* Secret */
+        .findings-table th:nth-child(5) { width: 23%; } /* Metadata */
+
+        .filters {
+          background-color: #111111;
+          padding: 15px;
+          border: 1px solid #00ff00;
+          margin-bottom: 20px;
+          box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .filter-group {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .filter-label {
+          color: #00ff00;
+          font-weight: bold;
+          text-transform: uppercase;
+          font-size: 12px;
+          letter-spacing: 1px;
+        }
+
+        .filter-input {
+          background-color: #000000;
+          border: 1px solid #00ff00;
+          color: #00ff00;
+          padding: 8px 10px;
+          font-family: 'Courier New', monospace;
+          font-size: 0.875rem;
+        }
+
+        .filter-input:focus {
+          outline: none;
+          box-shadow: 0 0 10px #00ff00;
+        }
+
+        .secret-container {
+          position: relative;
+        }
+
+        .match-toggle {
+          display: inline-block;
+          margin-top: 0.5rem;
+          background-color: #000000;
+          color: #00ff00;
+          border: 1px solid #00ff00;
+          font-family: 'Courier New', monospace;
+          text-transform: lowercase;
+          font-size: 11px;
+          letter-spacing: 1px;
+          transition: all 0.2s;
+          cursor: pointer;
+          padding: 0.25rem 0.5rem;
+        }
+
+        .match-toggle:hover {
+          background-color: #00ff00;
+          color: #000000;
+        }
+
+        .hidden {
+          display: none !important;
+        }
+
+        .secret-match {
+          font-family: var(--font-mono);
+          font-size: 0.875rem;
+          word-break: break-all;
+          white-space: pre-wrap;
+          display: block;
+          background-color: #110000;
+          border: 1px solid #ff0000;
+          color: #ff0000;
+          font-weight: bold;
+          padding: 8px;
+          overflow-x: auto;
+        }
+
+        .tag-list {
+          display: flex;
+          gap: 0.25rem;
+          flex-wrap: wrap;
+        }
+
+        .tag {
+          display: inline-block;
+          background-color: #001100;
+          color: #00ff00;
+          border: 1px solid #00ff00;
+          text-transform: lowercase;
+          font-size: 10px;
+          letter-spacing: 1px;
+          padding: 2px 5px;
+        }
+
+        .meta-row {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+          font-size: 0.75rem;
+          color: var(--text-light);
+        }
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+        }
+
+        .meta-label {
+          font-weight: 500;
+        }
+
+        .meta-value {
+          font-family: var(--font-mono);
+          word-break: break-all;
+          color: #00ffff;
+        }
+
+        .description-toggle {
+          cursor: pointer;
+          color: #00ff00;
+          font-size: 0.875rem;
+          margin-left: 0.5rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          background-color: #000000;
+          border: 1px solid #00ff00;
+          vertical-align: middle;
+        }
+
+        .description-toggle:hover {
+          background-color: #00ff00;
+          color: #000000;
+        }
+
+        .description-expanded {
+          white-space: normal;
+        }
+
+        .description-collapsed {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 250px;
+          display: inline-block;
+        }
+
+        .commit-link {
+          color: #00ffff;
+          text-decoration: underline;
+        }
+
+        .commit-link:hover {
+          text-decoration: none;
+          text-shadow: 0 0 5px #00ffff;
+        }
+        
+        /* File path styling */
+        .file-path-container {
+          max-width: 100%;
+        }
+        
+        .file-path {
+          display: inline-block;
+          max-width: 100%;
+          word-wrap: break-word;
+          word-break: break-all;
+        }
+
+        .match-content {
+          font-family: var(--font-mono);
+          font-size: 0.875rem;
+          word-break: break-all;
+          white-space: pre-wrap;
+          display: block;
+          background-color: #001100;
+          border: 1px solid #00ff00;
+          padding: 8px;
+          color: #00ff00;
+          margin-top: 0.5rem;
+          max-height: 300px;
+          overflow-y: auto;
+        }
+
+        .app-footer {
+          background-color: #111111;
+          color: #00ff00;
+          border-top: 1px solid #00ff00;
+          padding: 10px 15px;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-shrink: 0;
+        }
+
+        /* Random binary background */
+        .app-main::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.9);
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='%23003300' fill-opacity='0.1'%3E%3Ctext x='0' y='10' font-family='monospace' font-size='10'%3E01001010111001010101%3C/text%3E%3Ctext x='0' y='20' font-family='monospace' font-size='10'%3E10010111001010101010%3C/text%3E%3Ctext x='0' y='30' font-family='monospace' font-size='10'%3E01011100101010101001%3C/text%3E%3Ctext x='0' y='40' font-family='monospace' font-size='10'%3E10110010101010100101%3C/text%3E%3Ctext x='0' y='50' font-family='monospace' font-size='10'%3E01100101010101001011%3C/text%3E%3Ctext x='0' y='60' font-family='monospace' font-size='10'%3E11001010101010010110%3C/text%3E%3Ctext x='0' y='70' font-family='monospace' font-size='10'%3E10010101010100101100%3C/text%3E%3Ctext x='0' y='80' font-family='monospace' font-size='10'%3E00101010101001011001%3C/text%3E%3Ctext x='0' y='90' font-family='monospace' font-size='10'%3E01010101010010110010%3C/text%3E%3Ctext x='0' y='100' font-family='monospace' font-size='10'%3E10101010100101100101%3C/text%3E%3Ctext x='0' y='110' font-family='monospace' font-size='10'%3E01010101001011001010%3C/text%3E%3Ctext x='0' y='120' font-family='monospace' font-size='10'%3E10101010010110010101%3C/text%3E%3Ctext x='0' y='130' font-family='monospace' font-size='10'%3E01010100101100101010%3C/text%3E%3Ctext x='0' y='140' font-family='monospace' font-size='10'%3E10101001011001010101%3C/text%3E%3Ctext x='0' y='150' font-family='monospace' font-size='10'%3E01010010110010101010%3C/text%3E%3Ctext x='0' y='160' font-family='monospace' font-size='10'%3E10100101100101010101%3C/text%3E%3Ctext x='0' y='170' font-family='monospace' font-size='10'%3E01001011001010101010%3C/text%3E%3Ctext x='0' y='180' font-family='monospace' font-size='10'%3E10010110010101010101%3C/text%3E%3Ctext x='0' y='190' font-family='monospace' font-size='10'%3E00101100101010101010%3C/text%3E%3Ctext x='0' y='200' font-family='monospace' font-size='10'%3E01011001010101010101%3C/text%3E%3C/g%3E%3C/svg%3E");
+          pointer-events: none;
+          opacity: 0.3;
+          z-index: -1;
+        }
+
+        @media (max-width: 768px) {
+          .app-header {
+            padding: 8px 10px;
+          }
+
+          .app-main {
+            padding: 1rem;
+          }
+
+          .report-stats {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .filters {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+
+          .app-footer {
+            flex-direction: column;
+            height: auto;
+            padding: 0.75rem 1rem;
+            gap: 0.5rem;
+            justify-content: center;
+            text-align: center;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <h1>Gitleaks Security Findings</h1>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="report-info">
+                <h2>Security Scan Report</h2>
+                <p class="report-date">Generated on {{now | date "Jan 02, 2006 15:04:05 MST"}}</p>
+
+                <div class="report-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{len .}}</span>
+                        <span class="stat-label">Total Findings</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-value" id="filesCount">-</span>
+                        <span class="stat-label">Files Affected</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-value" id="rulesCount">-</span>
+                        <span class="stat-label">Unique Rules Triggered</span>
+                    </div>
+
+                    <div class="stat-item" id="scanModeContainer">
+                        <span class="stat-value" id="scanMode">-</span>
+                        <span class="stat-label">Scan Mode</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label" for="filterRule">Filter by Rule:</label>
+                    <select class="filter-input" id="filterRule">
+                        <option value="all">All Rules</option>
+                        <!-- Rule options will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filterFile">Filter by File:</label>
+                    <input type="text" class="filter-input" id="filterFile" placeholder="Enter filename...">
+                </div>
+
+                <div class="filter-group">
+                    <button class="btn btn-primary btn-sm" id="resetFilters">Reset Filters</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="findings-table" id="findingsTable">
+                    <thead>
+                        <tr>
+                            <th>Rule</th>
+                            <th>File</th>
+                            <th>Description</th>
+                            <th>Secret</th>
+                            <th>Metadata</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{- range . }}
+                        <tr data-rule="{{.RuleID}}" data-file="{{.File}}">
+                            <td>{{.RuleID}}</td>
+                            <td>
+                                <div class="file-path-container">
+                                    <span class="file-path" title="{{.File}}">{{.File}}</span>
+                                </div>
+                                <div class="tag-list">
+                                    {{- range .Tags }}
+                                    <span class="tag">{{.}}</span>
+                                    {{- end}}
+                                </div>
+                                <div class="meta-row">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Line:</span>
+                                        <span class="meta-value">{{.StartLine}}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="description-text">{{.Description}}</span>
+                                <span class="description-toggle" title="Expand/Collapse">↕</span>
+                            </td>
+                            <td>
+                                <div class="secret-container" data-secret="{{.Secret}}" data-match="{{.Match}}">
+                                    <div class="secret-match">{{.Secret}}</div>
+                                    <button type="button" class="match-toggle" title="Show/Hide Full Match Context">Show Context</button>
+                                    <div class="match-content hidden" data-raw-match="{{.Match}}">{{.Match}}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="meta-row">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Entropy:</span>
+                                        <span class="meta-value">{{printf "%.2f" .Entropy}}</span>
+                                    </div>
+                                {{- if .Commit}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Commit:</span>
+                                        <span class="meta-value">{{if gt (len .Commit) 7}}{{printf "%.7s" .Commit}}{{else}}{{.Commit}}{{end}}</span>
+                                    </div>
+                                    {{- if .Author}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Author:</span>
+                                        <span class="meta-value">{{.Author}}</span>
+                                    </div>
+                                    {{- end}}
+                                    {{- if .Date}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Date:</span>
+                                        <span class="meta-value">{{.Date}}</span>
+                                    </div>
+                                    {{- end}}
+                                    {{- if .Link}}
+                                    <div class="meta-item commit-info">
+                                        <span class="meta-label">Link:</span>
+                                        <span class="meta-value"><a href="{{.Link}}" target="_blank" class="commit-link">View Commit</a></span>
+                                    </div>
+                                    {{- end}}
+                                {{- else}}
+                                    {{- if .Author}}
+                                    <div class="meta-item">
+                                        <span class="meta-label">Author:</span>
+                                        <span class="meta-value">{{.Author}}</span>
+                                    </div>
+                                    {{- end}}
+                                {{- end}}
+                                </div>
+
+                                {{- if not .Match}}
+                                <div class="match-content" data-raw-match="">-</div>
+                                {{- end}}
+                            </td>
+                        </tr>
+                        {{- end }}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div>Generated by Gitleaks</div>
+            <div>Total Findings: <strong>{{len .}}</strong></div>
+        </footer>
+    </div>
+
+    <script>
+        // Process data to collect unique files and rules
+        function processData() {
+            const rows = document.querySelectorAll('#findingsTable tbody tr');
+            const uniqueRules = new Set();
+            const uniqueFiles = new Set();
+            let isGitMode = false;
+
+            if (rows.length > 0) {
+                // Check if first finding has commit data to determine mode
+                const firstRow = rows[0];
+                const commitCells = firstRow.querySelectorAll('.commit-info');
+                isGitMode = commitCells.length > 0 && commitCells[0].textContent.trim() !== '';
+            }
+
+            // Set scan mode
+            document.getElementById('scanMode').textContent = isGitMode ? 'Git' : 'Directory';
+
+            // Adjust UI based on mode
+            if (isGitMode) {
+                // Ensure commit info columns are visible for git mode
+                document.querySelectorAll('.commit-info').forEach(el => {
+                    el.style.display = 'block';
+                });
+            } else {
+                // Hide commit-specific UI elements for directory mode
+                document.querySelectorAll('.commit-info').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+
+            rows.forEach(row => {
+                uniqueRules.add(row.dataset.rule);
+                uniqueFiles.add(row.dataset.file);
+            });
+
+            // Update stats
+            document.getElementById('filesCount').textContent = uniqueFiles.size;
+            document.getElementById('rulesCount').textContent = uniqueRules.size;
+
+            // Populate rule filter dropdown
+            const ruleFilter = document.getElementById('filterRule');
+            const sortedRules = Array.from(uniqueRules).sort();
+            sortedRules.forEach(rule => {
+                const option = document.createElement('option');
+                option.value = rule;
+                option.textContent = rule;
+                ruleFilter.appendChild(option);
+            });
+        }
+
+        // Hide toggle button if match is same as secret
+        function hideRedundantToggleButtons() {
+            document.querySelectorAll('.secret-container').forEach(container => {
+                const secret = container.getAttribute('data-secret');
+                const match = container.getAttribute('data-match');
+                const toggleButton = container.querySelector('.match-toggle');
+                
+                // If secret and match are the same, or if match is empty, hide the toggle button
+                if ((secret && match && secret.trim() === match.trim()) || !match) {
+                    if (toggleButton) {
+                        toggleButton.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Setup toggle buttons
+        function setupToggleButtons() {
+            document.querySelectorAll('.match-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const matchContent = this.nextElementSibling;
+                    if (matchContent.classList.contains('hidden')) {
+                        matchContent.classList.remove('hidden');
+                        this.textContent = 'Hide Context';
+                    } else {
+                        matchContent.classList.add('hidden');
+                        this.textContent = 'Show Context';
+                    }
+                });
+            });
+
+            // Setup description toggle
+            document.querySelectorAll('.description-text').forEach(descriptionText => {
+                const toggleBtn = descriptionText.nextElementSibling;
+                if (!toggleBtn || !toggleBtn.classList.contains('description-toggle')) return;
+
+                // Initial state: collapsed
+                descriptionText.classList.add('description-collapsed');
+
+                toggleBtn.addEventListener('click', () => {
+                    if (descriptionText.classList.contains('description-collapsed')) {
+                        descriptionText.classList.remove('description-collapsed');
+                        descriptionText.classList.add('description-expanded');
+                        toggleBtn.textContent = '↑';
+                    } else {
+                        descriptionText.classList.remove('description-expanded');
+                        descriptionText.classList.add('description-collapsed');
+                        toggleBtn.textContent = '↕';
+                    }
+                });
+            });
+        }
+
+        // Type effect for headers (optional)
+        function typeEffect() {
+            const headers = document.querySelectorAll('h2');
+            headers.forEach(header => {
+                const text = header.textContent;
+                header.textContent = '';
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        header.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 50);
+            });
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            const ruleFilter = document.getElementById('filterRule').value;
+            const fileFilter = document.getElementById('filterFile').value.toLowerCase();
+
+            const rows = document.querySelectorAll('#findingsTable tbody tr');
+
+            rows.forEach(row => {
+                const ruleMatch = ruleFilter === 'all' || row.dataset.rule === ruleFilter;
+                const fileMatch = fileFilter === '' || row.dataset.file.toLowerCase().includes(fileFilter);
+
+                if (ruleMatch && fileMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update visible count
+            const visibleFindings = document.querySelectorAll('#findingsTable tbody tr:not([style*="display: none"])').length;
+            document.querySelector('.app-footer strong').textContent = visibleFindings;
+        }
+
+        document.getElementById('filterRule').addEventListener('change', applyFilters);
+        document.getElementById('filterFile').addEventListener('input', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            document.getElementById('filterRule').value = 'all';
+            document.getElementById('filterFile').value = '';
+            applyFilters();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            processData();
+            hideRedundantToggleButtons(); // Hide toggle buttons for matching secrets
+            setupToggleButtons();
+            typeEffect(); // Add the typing effect
+        });
+    </script>
+</body>
+</html>
