@@ -52,6 +52,8 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 			}
 
 			var (
+				firstFragment = true
+
 				// Buffer to hold file chunks
 				reader     = bufio.NewReaderSize(f, chunkSize)
 				buf        = make([]byte, chunkSize)
@@ -84,9 +86,14 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					linesInChunk := strings.Count(chunk, "\n")
 					totalLines += linesInChunk
 					fragment := Fragment{
-						Raw:   chunk,
-						Bytes: peekBuf.Bytes(),
+						Raw:                   chunk,
+						Bytes:                 peekBuf.Bytes(),
+						FilePath:              pa.Path,
+						firstFragmentFilePath: firstFragment,
 					}
+
+					// Reset firstFragment after the first chunk
+					firstFragment = false
 					if pa.Symlink != "" {
 						fragment.SymlinkFile = pa.Symlink
 					}
