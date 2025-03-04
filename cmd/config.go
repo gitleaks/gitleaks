@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/zricethezav/gitleaks/v8/manage"
+	"github.com/zricethezav/gitleaks/v8/config"
 	"path/filepath"
 )
 
@@ -35,12 +35,9 @@ func runFetch(cmd *cobra.Command, args []string, localConfigPaths LocalConfigPat
 	targetPath := filepath.Join(localConfigPaths.ConfigDir, localConfigPaths.GitleaksFile)
 
 	// Setup config handler
-	configManager := manage.NewConfigManager()
-
-	// fetch config and write to target
-	err := configManager.FetchTo(rawURL, targetPath)
-	if err != nil {
-		log.Fatal().Err(err).Msg("unable to fetch config")
+	remoteConfig := config.NewRemoteConfig()
+	if err := remoteConfig.WriteTo(rawURL, targetPath); err != nil {
+		log.Fatal().Err(err).Msg("unable to fetch remote config")
 	}
 
 	log.Info().Msgf("config written to %s", targetPath)

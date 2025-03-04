@@ -1,4 +1,4 @@
-package manage
+package config
 
 import (
 	"bufio"
@@ -8,12 +8,13 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 )
 
-type ConfigManager struct{}
+type RemoteConfig struct{}
 
-func NewConfigManager() *ConfigManager {
-	return &ConfigManager{}
+func NewRemoteConfig() *RemoteConfig {
+	return &RemoteConfig{}
 }
 
 func isValidURL(rawURL string) bool {
@@ -35,12 +36,16 @@ func isValidURL(rawURL string) bool {
 	return true
 }
 
-func (c *ConfigManager) fetch(rawURL string) ([]byte, error) {
+func (c *RemoteConfig) fetch(rawURL string) ([]byte, error) {
 	if !isValidURL(rawURL) {
 		return nil, fmt.Errorf("invalid URL")
 	}
 
-	resp, err := http.Get(rawURL)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, err := client.Get(rawURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download config from URL: %v", err)
 	}
@@ -62,7 +67,7 @@ func (c *ConfigManager) fetch(rawURL string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error) {
+func (c *RemoteConfig) writeToDisk(content []byte, filePath string) (int, error) {
 	// create directory path if not already created
 	dirPath := filepath.Dir(filePath)
 	if err := os.MkdirAll(dirPath, 0700); err != nil {
@@ -105,7 +110,7 @@ func (c *ConfigManager) writeToDisk(content []byte, filePath string) (int, error
 	return bytesWritten, nil
 }
 
-func (c *ConfigManager) FetchTo(rawURL, targetPath string) error {
+func (c *RemoteConfig) WriteTo(rawURL, targetPath string) error {
 	var (
 		resp []byte
 		err  error

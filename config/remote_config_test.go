@@ -1,4 +1,4 @@
-package manage
+package config
 
 import (
 	"bytes"
@@ -80,7 +80,7 @@ func TestFetchConfig(t *testing.T) {
 		},
 	}
 
-	ctgMgr := NewConfigManager()
+	ctgMgr := NewRemoteConfig()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -109,7 +109,7 @@ func TestFetchConfig(t *testing.T) {
 }
 
 func TestFetchConfigError(t *testing.T) {
-	ctgMgr := NewConfigManager()
+	ctgMgr := NewRemoteConfig()
 	_, err := ctgMgr.fetch("invalid://url")
 	if err == nil {
 		t.Errorf("Expected an error for invalid URL, got nil")
@@ -123,7 +123,7 @@ func TestFetchConfigBodyReadError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	ctgMgr := NewConfigManager()
+	ctgMgr := NewRemoteConfig()
 	_, err := ctgMgr.fetch(ts.URL)
 	if err == nil {
 		t.Errorf("Expected an error for body read failure, got nil")
