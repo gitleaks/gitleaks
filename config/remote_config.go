@@ -2,10 +2,14 @@ package config
 
 import (
 	"bufio"
+	"context"
+	"crypto/rand"
 	"fmt"
 	"io"
+	"math"
+	"math/big"
+	m "math/rand"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -17,30 +21,7 @@ func NewRemoteConfig() *RemoteConfig {
 	return &RemoteConfig{}
 }
 
-func isValidURL(rawURL string) bool {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return false
-	}
-
-	// Check if the scheme is HTTP or HTTPS
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return false
-	}
-
-	// Check if the host is present
-	if u.Host == "" {
-		return false
-	}
-
-	return true
-}
-
 func (c *RemoteConfig) fetch(rawURL string) ([]byte, error) {
-	if !isValidURL(rawURL) {
-		return nil, fmt.Errorf("invalid URL")
-	}
-
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -116,9 +97,12 @@ func (c *RemoteConfig) WriteTo(rawURL, targetPath string) error {
 		err  error
 	)
 
-	resp, err = c.fetch(rawURL)
+	resp, err = retry(context.Background(), 3, func(ctx context.Context) ([]byte, error) {
+		return c.fetch(rawURL)
+	})
+
 	if err != nil {
-		return fmt.Errorf("could not download config from remote url: %w", err)
+		return fmt.Errorf("failed to download config from remote url: %v", err)
 	}
 
 	// write downloaded config to target path
@@ -128,4 +112,42 @@ func (c *RemoteConfig) WriteTo(rawURL, targetPath string) error {
 	}
 
 	return nil
+}
+
+func retry[T any](ctx context.Context, maxAttempts int, fn func(ctx context.Context) (T, error)) (T, error) {
+	var result T
+	var err error
+
+	initialDelay := 1 * time.Second
+	maxDelay := 30 * time.Second // Added maxDelay
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		result, err = fn(ctx)
+
+		if err == nil {
+			return result, nil
+		}
+
+		// Calculate exponential backoff with jitter.
+		delay := initialDelay * time.Duration(math.Pow(2, float64(attempt)))
+		// Add some jitter (using crypto/rand for security).
+		jitter, randErr := rand.Int(rand.Reader, big.NewInt(int64(delay/4)))
+		if randErr != nil {
+			// Fallback to a less secure random number if crypto/rand fails.
+			jitter = big.NewInt(m.Int63n(int64(delay / 4)))
+		}
+		delay += time.Duration(jitter.Int64())
+
+		if delay > maxDelay {
+			delay = maxDelay
+		}
+
+		select {
+		case <-time.After(delay): // Wait for the delay.
+		case <-ctx.Done(): // Check for context cancellation.
+			return result, ctx.Err() // Return context error if cancelled.
+		}
+	}
+
+	return result, fmt.Errorf("failed after %d attempts: %w", maxAttempts, err) // Wrap the final error.
 }

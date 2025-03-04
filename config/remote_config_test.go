@@ -2,53 +2,13 @@ package config
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 )
-
-func TestIsValidURL(t *testing.T) {
-	testCases := []struct {
-		name        string
-		rawURL      string
-		expectValid bool
-	}{
-		{
-			name:        "Valid URL",
-			rawURL:      "https://www.example.com",
-			expectValid: true,
-		},
-		{
-			name:        "Invalid URL (missing scheme)",
-			rawURL:      "www.example.com",
-			expectValid: false,
-		},
-		{
-			name:        "Invalid URL (invalid scheme)",
-			rawURL:      "htt://www.example.com",
-			expectValid: false,
-		},
-		{
-			name:        "Invalid URL (missing domain)",
-			rawURL:      "https://",
-			expectValid: false,
-		},
-		{
-			name:        "Invalid URL (empty string)",
-			rawURL:      "",
-			expectValid: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			isValid := isValidURL(tc.rawURL)
-			if isValid != tc.expectValid {
-				t.Errorf("Expected isValidURL(%q) to be %v, but got %v", tc.rawURL, tc.expectValid, isValid)
-			}
-		})
-	}
-}
 
 func TestFetchConfig(t *testing.T) {
 	tests := []struct {
@@ -127,5 +87,71 @@ func TestFetchConfigBodyReadError(t *testing.T) {
 	_, err := ctgMgr.fetch(ts.URL)
 	if err == nil {
 		t.Errorf("Expected an error for body read failure, got nil")
+	}
+}
+
+func TestRetry_Success(t *testing.T) {
+	var attempts int32
+	fn := func(ctx context.Context) (int, error) {
+		atomic.AddInt32(&attempts, 1)
+		return 42, nil
+	}
+
+	result, err := retry(context.Background(), 3, fn)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result != 42 {
+		t.Fatalf("unexpected result: %d", result)
+	}
+	if atomic.LoadInt32(&attempts) != 1 {
+		t.Fatalf("expected 1 attempt, got %d", atomic.LoadInt32(&attempts))
+	}
+}
+
+func TestRetry_FailureThenSuccess(t *testing.T) {
+	var attempts int32
+	fn := func(ctx context.Context) (int, error) {
+		currentAttempts := atomic.AddInt32(&attempts, 1)
+		if currentAttempts < 3 {
+			return 0, errors.New("temporary failure")
+		}
+		return 42, nil
+	}
+
+	result, err := retry(context.Background(), 5, fn)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result != 42 {
+		t.Fatalf("unexpected result: %d", result)
+	}
+	if atomic.LoadInt32(&attempts) != 3 {
+		t.Fatalf("expected 3 attempts, got %d", atomic.LoadInt32(&attempts))
+	}
+}
+
+func TestRetry_ContextCancellation(t *testing.T) {
+	var attempts int32
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fn := func(ctx context.Context) (int, error) {
+		atomic.AddInt32(&attempts, 1)
+		if atomic.LoadInt32(&attempts) == 2 {
+			cancel()
+		}
+		return 0, errors.New("temporary failure")
+	}
+
+	_, err := retry(ctx, 5, fn)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled error, got: %v", err)
+	}
+	if atomic.LoadInt32(&attempts) != 2 {
+		t.Fatalf("expected 2 attempts, got: %d", atomic.LoadInt32(&attempts))
 	}
 }
