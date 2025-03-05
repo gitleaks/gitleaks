@@ -89,7 +89,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 						Raw:                   chunk,
 						Bytes:                 peekBuf.Bytes(),
 						FilePath:              pa.Path,
-						firstFragmentFilePath: firstFragment,
+						FirstFragmentFilePath: firstFragment,
 					}
 
 					// Reset firstFragment after the first chunk
