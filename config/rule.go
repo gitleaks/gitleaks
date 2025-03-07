@@ -41,7 +41,7 @@ type Rule struct {
 	Keywords []string
 
 	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
-	Allowlists []Allowlist
+	Allowlists []*Allowlist
 }
 
 // Validate guards against common misconfigurations.
