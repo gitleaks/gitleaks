@@ -1,0 +1,2 @@
+[allowlist]
+regexes = ['''123''']
