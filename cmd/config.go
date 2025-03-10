@@ -10,6 +10,7 @@ import (
 func init() {
 	rootCmd.AddCommand(configCmd)
 	configCmd.AddCommand(configFetchCmd)
+	configCmd.AddCommand(configResetCmd)
 }
 
 var configCmd = &cobra.Command{
@@ -27,6 +28,15 @@ var configFetchCmd = &cobra.Command{
 	},
 }
 
+var configResetCmd = &cobra.Command{
+	Use:   "reset",
+	Short: "removes the fetched config file",
+	Long:  "removes the fetched config file from ${XDG_CONFIG_HOME}/gitleaks/config.toml, ensuring gitleaks reverts back to the default ruleset",
+	Run: func(cmd *cobra.Command, args []string) {
+		runReset(cmd, args, localConfigPaths)
+	},
+}
+
 func runFetch(cmd *cobra.Command, args []string, localConfigPaths LocalConfigPaths) {
 	// check if URL flag is set
 	rawURL := args[0]
@@ -41,4 +51,26 @@ func runFetch(cmd *cobra.Command, args []string, localConfigPaths LocalConfigPat
 	}
 
 	log.Info().Msgf("config written to %s", targetPath)
+}
+
+func runReset(cmd *cobra.Command, args []string, localConfigPaths LocalConfigPaths) {
+	targetPath := filepath.Join(localConfigPaths.ConfigDir, localConfigPaths.GitleaksFile)
+
+	remoteConfig := config.NewRemoteConfig()
+
+	status, err := remoteConfig.Reset(targetPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("unable to reset config")
+		return
+	}
+
+	switch status {
+	case config.FileNotFound:
+		log.Info().Msgf("No config file at %s found", targetPath)
+	case config.FileRemoved:
+		log.Info().Msgf("Config file at %s removed", targetPath)
+	default:
+		log.Warn().Msgf("Unexpected status: %d", status)
+	}
+
 }
