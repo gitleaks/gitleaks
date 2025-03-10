@@ -100,6 +100,21 @@ func GenericCredential() *config.Rule {
 					regexp.MustCompile(`--mount=type=secret,`),
 				},
 			},
+			{
+				MatchCondition: config.AllowlistMatchAnd,
+				RegexTarget:    "line",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`LICENSE[^=]*=\s*"[^"]+`),
+					regexp.MustCompile(`LIC_FILES_CHKSUM[^=]*=\s*"[^"]+`),
+					regexp.MustCompile(`SRC[^=]*=\s*"[a-zA-Z0-9]+`),
+				},
+				Paths: []*regexp.Regexp{
+					regexp.MustCompile(`\.bb$`),
+					regexp.MustCompile(`\.bbappend$`),
+					regexp.MustCompile(`\.bbclass$`),
+					regexp.MustCompile(`\.inc$`),
+				},
+			},
 		},
 	}
 
@@ -250,6 +265,10 @@ R5: Regulatory--21`,
 DYNATRACE_API_KEY=`,
 		`snowflake.password=
 jdbc.snowflake.url=`,
+
+		// Yocto/BitBake
+		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
+		`LIC_FILES_CHKSUM = "file://${WORKDIR}/license.html;md5=5c94767cedb5d6987c902ac850ded2c6"`,
 	}
 	return utils.Validate(r, tps, fps)
 }
