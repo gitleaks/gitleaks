@@ -51,7 +51,7 @@ tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
 {{- with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}{{println}}[[rules.allowlists]]
-{{- with .MatchCondition }}{{println}}condition = "{{ .MatchCondition.String }}"{{ end }}
+{{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
 {{- with .Commits -}}{{println}}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
