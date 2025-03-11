@@ -1961,6 +1961,11 @@ stopwords = [
     "zsh_",
 ]
 
+regexTarget = "line"
+regexes = [
+    '''arn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+'''
+]
+
 [[rules]]
 id = "github-app-token"
 description = "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security."
