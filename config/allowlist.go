@@ -96,7 +96,7 @@ func (a *Allowlist) Validate() error {
 		len(a.Paths) == 0 &&
 		len(a.Regexes) == 0 &&
 		len(a.StopWords) == 0 {
-		return fmt.Errorf("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords")
+		return fmt.Errorf("must contain at least one check for: commits, paths, regexes, or stopwords")
 	}
 
 	// Deduplicate commits and stopwords.
