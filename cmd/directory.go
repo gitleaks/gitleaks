@@ -28,27 +28,27 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		args = append(args, ".") // Default to current directory if no args are provided
 	}
 
-	var err error
-	var detector *detect.Detector
-	var allFindings []report.Finding
+	var (
+		start = time.Now()
 
-	start := time.Now()
-	findingsMap := make(map[string]report.Finding)
-
+		detector    *detect.Detector
+		err         error
+		allFindings []report.Finding
+	)
 	for _, arg := range args {
-		findings, det, scanErr := runDirectoryScan(cmd, arg)
+		findings, d, scanErr := runDirectoryScan(cmd, arg)
 		if scanErr != nil {
-			logging.Error().Err(scanErr).Msgf("failed scan directory %s", arg)
+			logging.Err(scanErr).
+				Str("path", arg).
+				Msg("failed scan path")
 			err = scanErr
 		}
-		for _, finding := range findings {
-			findingsMap[finding.Fingerprint] = finding
+		if detector == nil {
+			detector = d
 		}
-		detector = det
-	}
 
-	for _, finding := range findingsMap {
-		allFindings = append(allFindings, finding)
+		allFindings = append(allFindings, findings...)
+
 	}
 
 	exitCode, exitCodeErr := cmd.Flags().GetInt("exit-code")
@@ -60,15 +60,16 @@ func runDirectory(cmd *cobra.Command, args []string) {
 }
 
 func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *detect.Detector, error) {
-	initConfig(source)
 	var (
 		findings []report.Finding
 		err      error
 	)
+	if err = initConfig(source); err != nil {
+		return findings, nil, err
+	}
 
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
-
 	detector := Detector(cmd, cfg, source)
 
 	// set follow symlinks flag
