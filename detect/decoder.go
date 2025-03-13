@@ -279,3 +279,25 @@ func segmentWithDecodedOverlap(encodedSegments []EncodedSegment, start, end int)
 
 	return nil
 }
+
+func (s EncodedSegment) lineStartIndex(currentRaw string) int {
+	for i := s.decodedStart; i > -1; i-- {
+		c := currentRaw[i]
+		if c == '\n' {
+			return i
+		}
+	}
+
+	return 0
+}
+
+func (s EncodedSegment) lineEndIndex(currentRaw string, matchLen int) int {
+	for i := s.decodedStart; i < s.decodedStart+matchLen; i++ {
+		c := currentRaw[i]
+		if c == '\n' {
+			return i
+		}
+	}
+
+	return len(currentRaw) - 1
+}

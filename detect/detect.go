@@ -384,6 +384,7 @@ MatchLoop:
 
 		// For any meta data from decoding
 		var metaTags []string
+		currentLine := ""
 
 		// Check if the decoded portions of the segment overlap with the match
 		// to see if its potentially a new match
@@ -391,6 +392,7 @@ MatchLoop:
 			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
 				matchIndex = segment.adjustMatchIndex(matchIndex)
 				metaTags = append(metaTags, segment.tags()...)
+				currentLine = currentRaw[segment.lineStartIndex(currentRaw):segment.lineEndIndex(currentRaw, matchIndex[1]-matchIndex[0])]
 			} else {
 				// This item has already been added to a finding
 				continue
@@ -431,6 +433,10 @@ MatchLoop:
 				Str("finding", finding.Secret).
 				Msg("skipping finding: 'gitleaks:allow' signature")
 			continue
+		}
+
+		if currentLine == "" {
+			currentLine = finding.Line
 		}
 
 		// Set the value of |secret|, if the pattern contains at least one capture group.
@@ -474,7 +480,7 @@ MatchLoop:
 		case "match":
 			globalAllowlistTarget = finding.Match
 		case "line":
-			globalAllowlistTarget = finding.Line
+			globalAllowlistTarget = currentLine
 		}
 		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
 			logger.Trace().
@@ -496,7 +502,7 @@ MatchLoop:
 			case "match":
 				allowlistTarget = finding.Match
 			case "line":
-				allowlistTarget = finding.Line
+				allowlistTarget = currentLine
 			}
 
 			var (

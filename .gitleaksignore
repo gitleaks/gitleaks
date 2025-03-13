@@ -938,3 +938,4 @@ e56870aecf8ac2733affc82e1ac25e3be9092db3:cmd/generate/config/rules/curl.go:gener
 239e6323639b18ba8a1081f17788a658da075dd7:cmd/generate/config/rules/prefect.go:prefect-api-token:26
 239e6323639b18ba8a1081f17788a658da075dd7:cmd/generate/config/rules/databricks.go:databricks-api-token:25
 239e6323639b18ba8a1081f17788a658da075dd7:cmd/generate/config/rules/databricks.go:generic-api-key:22
+c24a3a654b18d689732ec3199f0a19a254505b04:detect/detect_test.go:generic-api-key:52

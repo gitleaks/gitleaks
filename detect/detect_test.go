@@ -47,6 +47,9 @@ c21hbGwtc2VjcmV0
 secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=
 # The above encoded again
 c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=
+
+# Confirm you can ignore on the decoded value
+password="bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw=="
 `
 
 func TestDetect(t *testing.T) {
@@ -468,6 +471,20 @@ func TestDetect(t *testing.T) {
 					StartColumn: 2,
 					EndColumn:   49,
 					Entropy:     3.3037016,
+				},
+				{ // This just confirms that with no allowlist the pattern is detected (i.e. the regex is good)
+					Description: "Make sure this would be detected with no allowlist",
+					Secret:      "lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw",
+					Match:       "password=\"lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw\"",
+					File:        "tmp.go",
+					Line:        "\npassword=\"bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==\"",
+					RuleID:      "decoded-password-dont-ignore",
+					Tags:        []string{"decode-ignore", "decoded:base64", "decode-depth:1"},
+					StartLine:   23,
+					EndLine:     23,
+					StartColumn: 2,
+					EndColumn:   68,
+					Entropy:     4.5841837,
 				},
 			},
 		},
