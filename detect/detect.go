@@ -600,7 +600,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		}
 	}
 
-	if d.baseline != nil && !IsNew(finding, d.baseline) {
+	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
