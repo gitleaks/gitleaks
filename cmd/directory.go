@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -22,6 +23,10 @@ var directoryCmd = &cobra.Command{
 	Short:   "scan directories or files for secrets",
 	Run:     runDirectory,
 }
+
+var (
+	initConfigOnce sync.Once
+)
 
 func runDirectory(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
@@ -64,19 +69,34 @@ func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *det
 		findings []report.Finding
 		err      error
 	)
-	if err = initConfig(source); err != nil {
+
+	logging.Debug().Msg("Initializing configuration")
+	initConfigOnce.Do(func() {
+		if initErr := initConfig(source); initErr != nil {
+			findings = nil
+			err = initErr
+		}
+	})
+
+	if err != nil {
+		logging.Error().Err(err).Msg("Failed to initialize configuration")
 		return findings, nil, err
 	}
 
 	// setup config (aka, the thing that defines rules)
+	logging.Debug().Msgf("Initializing detector for source: %s", source)
 	cfg := Config(cmd)
 	detector := Detector(cmd, cfg, source)
 
 	// set follow symlinks flag
-	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
+	logging.Debug().Msg("Setting follow symlinks flag")
+	detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks")
+	if err != nil {
+		logging.Error().Err(err).Msg("Failed to get follow-symlinks flag")
 		return nil, nil, err
 	}
 
+	logging.Debug().Msg("Getting directory targets")
 	var paths <-chan sources.ScanTarget
 	paths, err = sources.DirectoryTargets(
 		source,
@@ -85,13 +105,15 @@ func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *det
 		detector.Config.Allowlist.PathAllowed,
 	)
 	if err != nil {
+		logging.Error().Err(err).Msg("Failed to get directory targets")
 		return nil, nil, err
 	}
 
+	logging.Debug().Msg("Detecting files")
 	findings, err = detector.DetectFiles(paths)
 	if err != nil {
 		// don't exit on error, just log it
-		logging.Error().Err(err).Msg("failed scan directory")
+		logging.Error().Err(err).Msg("Failed to detect files in directory")
 	}
 
 	return findings, detector, err
