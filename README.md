@@ -8,19 +8,26 @@
 └─░───┘
 ```
 
-<p align="left">
-  <p align="left">
-	  <a href="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml">
-		  <img alt="Github Test" src="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg">
-	  </a>
-	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
-		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
-	  </a>
-	  <a href="https://github.com/gitleaks/gitleaks-action">
-        	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
-    	 </a>
-  </p>
-</p>
+[license]: ./LICENSE
+[badge-license]: https://img.shields.io/github/license/gitleaks/gitleaks.svg
+[go-docs-badge]: https://pkg.go.dev/badge/github.com/gitleaks/gitleaks/v8?status
+[go-docs]: https://pkg.go.dev/github.com/zricethezav/gitleaks/v8
+[badge-build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg
+[build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml
+[go-report-card-badge]: https://goreportcard.com/badge/github.com/gitleaks/gitleaks/v8
+[go-report-card]: https://goreportcard.com/report/github.com/gitleaks/gitleaks/v8
+[dockerhub]: https://hub.docker.com/r/zricethezav/gitleaks
+[dockerhub-badge]: https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg
+[gitleaks-action]: https://github.com/gitleaks/gitleaks-action
+[gitleaks-badge]: https://img.shields.io/badge/protected%20by-gitleaks-blue
+
+[![Github Action Test][badge-build]][build]
+[![Docker Hub][dockerhub-badge]][dockerhub]
+[![Gitleaks Action][gitleaks-badge]][gitleaks-action]
+[![GoDoc][go-docs-badge]][go-docs]
+[![GoReportCard][go-report-card-badge]][go-report-card]
+[![License][badge-license]][license]
+
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
