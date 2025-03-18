@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -102,14 +103,14 @@ func initLog() {
 	logging.Logger = logging.Logger.Level(logLevel)
 }
 
-func initConfig(source string) {
-	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
-	if err != nil {
-		logging.Fatal().Msg(err.Error())
-	}
-	if !hideBanner {
-		_, _ = fmt.Fprint(os.Stderr, banner)
-	}
+var bannerOnce sync.Once
+
+func initConfig(source string) error {
+	bannerOnce.Do(func() {
+		if !mustGetBoolFlag(rootCmd, "no-banner") {
+			_, _ = fmt.Fprint(os.Stderr, banner)
+		}
+	})
 
 	logging.Debug().Msgf("using %s regex engine", regexp.Version)
 
@@ -127,7 +128,7 @@ func initConfig(source string) {
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
-			logging.Fatal().Msg(err.Error())
+			return err
 		}
 
 		if !fileInfo.IsDir() {
@@ -137,7 +138,7 @@ func initConfig(source string) {
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading toml %s", err.Error())
 			}
-			return
+			return nil
 		}
 
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
@@ -146,7 +147,7 @@ func initConfig(source string) {
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading default config toml %s", err.Error())
 			}
-			return
+			return nil
 		} else {
 			logging.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
 		}
@@ -158,6 +159,7 @@ func initConfig(source string) {
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
+	return nil
 }
 
 func Execute() {
