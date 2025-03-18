@@ -20,9 +20,13 @@
 [dockerhub-badge]: https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg
 [gitleaks-action]: https://github.com/gitleaks/gitleaks-action
 [gitleaks-badge]: https://img.shields.io/badge/protected%20by-gitleaks-blue
+[gitleaks-playground-badge]: https://img.shields.io/badge/gitleaks%20-playground-blue
+[gitleaks-playground]: https://gitleaks.io/playground
+
 
 [![Github Action Test][badge-build]][build]
 [![Docker Hub][dockerhub-badge]][dockerhub]
+[![Gitleaks Playground][gitleaks-playground-badge]][gitleaks-playground]
 [![Gitleaks Action][gitleaks-badge]][gitleaks-action]
 [![GoDoc][go-docs-badge]][go-docs]
 [![GoReportCard][go-report-card-badge]][go-report-card]
