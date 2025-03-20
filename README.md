@@ -84,31 +84,6 @@ cd gitleaks
 make build
 ```
 
-### Load Configuration
-
-The order of precedence is:
-
-1. `--config/-c` option:
-  ```bash
-  gitleaks git --config /home/dev/customgitleaks.toml .
-  ```
-1. Environment variable `GITLEAKS_CONFIG` with the file path:
-  ```bash
-  export GITLEAKS_CONFIG="/home/dev/customgitleaks.toml"
-  gitleaks git .
-  ```
-1. Environment variable `GITLEAKS_CONFIG_TOML` with the file content:
-  ```bash
-  export GITLEAKS_CONFIG_TOML=`cat customgitleaks.toml`
-  gitleaks git .
-  ```
-1. A `.gitleaks.toml` file within the target path:
-  ```bash
-  gitleaks git .
-  ```
-
-If none of the four options are used, then gitleaks will use the default config.
-
 ### GitHub Action
 
 Check out the official [Gitleaks GitHub Action](https://github.com/gitleaks/gitleaks-action)
@@ -248,6 +223,31 @@ After running the detect command with the --baseline-path parameter, report outp
 
 You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into
 your `.git/hooks/` directory.
+
+## Load Configuration
+
+The order of precedence is:
+
+1. `--config/-c` option:
+  ```bash
+  gitleaks git --config /home/dev/customgitleaks.toml .
+  ```
+1. Environment variable `GITLEAKS_CONFIG` with the file path:
+  ```bash
+  export GITLEAKS_CONFIG="/home/dev/customgitleaks.toml"
+  gitleaks git .
+  ```
+1. Environment variable `GITLEAKS_CONFIG_TOML` with the file content:
+  ```bash
+  export GITLEAKS_CONFIG_TOML=`cat customgitleaks.toml`
+  gitleaks git .
+  ```
+1. A `.gitleaks.toml` file within the target path:
+  ```bash
+  gitleaks git .
+  ```
+
+If none of the four options are used, then gitleaks will use the default config.
 
 ## Configuration
 
