@@ -131,9 +131,9 @@ func initConfig(source string) {
 	} else if os.Getenv("GITLEAKS_CONFIG_TOML") != "" {
 		configContent := []byte(os.Getenv("GITLEAKS_CONFIG_TOML"))
 		if err := viper.ReadConfig(bytes.NewBuffer(configContent)); err != nil {
-			logging.Fatal().Msgf("unable to load gitleaks config from GITLEAKS_CONFIG_TOML env var content(%s), err: %s", configContent, err)
+			logging.Fatal().Err(err).Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("unable to load gitleaks config from GITLEAKS_CONFIG_TOML env var")
 		}
-		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG_TOML env var content: %s", configContent)
+		logging.Debug().Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
 		return
 	} else {
 		fileInfo, err := os.Stat(source)
