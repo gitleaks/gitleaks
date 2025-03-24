@@ -173,8 +173,6 @@ func SlackLegacyBotToken() *config.Rule {
 		`"bot_token2": "xoxb-282029623751-BVtmnS3BQitmjZvjpQL7PSGP"`, // gitleaks:allow
 		// https://github.com/praetorian-inc/noseyparker/blob/16e0e5768fd14ea54f6c9a058566184d88343bb4/crates/noseyparker/data/default/rules/slack.yml#L15
 		`"bot_token3": "xoxb-47834520726-N3otsrwj8Cf99cs8GhiRZsX1"`, // gitleaks:allow
-		// https://github.com/pulumi/examples/blob/32d9047c19c2a9380c04e57a764321c25eef45b0/aws-js-sqs-slack/README.md?plain=1#L39
-		`"bot_token4": "xoxb-123456789012-Xw937qtWSXJss1lFaKe"`, // gitleaks:allow
 		// https://github.com/ilyasProgrammer/Odoo-eBay-Amazon/blob/a9c4a8a7548b19027bc0fd904f8ae9249248a293/custom_logging/models.py#LL9C24-L9C66
 		`"bot_token5": "xoxb-312554961652-uSmliU84rFhnUSBq9YdKh6lS"`, // gitleaks:allow
 		// https://github.com/jay-johnson/sci-pype/blob/6bff42ea4eb32d35b9f223db312e4cd0d3911100/src/pycore.py#L37
@@ -191,7 +189,9 @@ func SlackLegacyBotToken() *config.Rule {
 		"xoxb-xxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx", // gitleaks:allow
 		"xoxb-Slack_BOT_TOKEN",
 		"xoxb-abcdef-abcdef",
-		// "xoxb-0000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // gitleaks:allow
+		"xoxb-0000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // gitleaks:allow
+		// https://github.com/pulumi/examples/blob/32d9047c19c2a9380c04e57a764321c25eef45b0/aws-js-sqs-slack/README.md?plain=1#L39
+		`"bot_token4": "xoxb-123456789012-Xw937qtWSXJss1lFaKe"`, // gitleaks:allow
 	}
 	return utils.Validate(r, tps, fps)
 }
