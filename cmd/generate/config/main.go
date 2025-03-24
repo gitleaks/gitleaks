@@ -237,6 +237,12 @@ func main() {
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
+		if err := rule.Validate(); err != nil {
+			logging.Fatal().
+				Err(err).
+				Str("rule-id", rule.RuleID).
+				Msg("Failed to validate rule")
+		}
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
 			logging.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
