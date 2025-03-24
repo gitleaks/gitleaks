@@ -73,3 +73,54 @@
   regex = '''secret=(decoded-secret-value)'''
   tags = ['overlapping']
   secretGroup = 1
+
+# -----BEGIN REGEX TARGET DECODED MATCH PATTERNS-----
+[[rules]]
+  id = 'decoded-password-dont-ignore'
+  description = 'Make sure this would be detected with no allowlist'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+[[rules]]
+  id = 'decoded-password-ignore-secret'
+  description = 'Test ignore on decoded secrets: regexTarget = "secret"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'secret'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+
+[[rules]]
+  id = 'decoded-password-ignore-match'
+  description = 'Test ignore on decoded secrets: regexTarget = "match"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'match'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+
+[[rules]]
+  id = 'decoded-password-ignore-line'
+  description = 'Test ignore on decoded secrets: regexTarget = "line"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'line'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+# -----END REGEX TARGET DECODED MATCH PATTERNS-----

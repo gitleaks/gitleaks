@@ -2077,6 +2077,17 @@ regexTarget = "line"
 regexes = [
     '''--mount=type=secret,''',
 ]
+[[rules.allowlists]]
+condition = "AND"
+paths = [
+    '''\.bb$''','''\.bbappend$''','''\.bbclass$''','''\.inc$''',
+]
+regexTarget = "line"
+regexes = [
+    '''LICENSE[^=]*=\s*"[^"]+''',
+    '''LIC_FILES_CHKSUM[^=]*=\s*"[^"]+''',
+    '''SRC[^=]*=\s*"[a-zA-Z0-9]+''',
+]
 
 [[rules]]
 id = "github-app-token"
