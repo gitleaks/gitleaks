@@ -36,6 +36,8 @@ type ViperConfig struct {
 		Keywords    []string
 		Path        string
 		Tags        []string
+		IsSubRule   bool
+		SubRules    []string
 
 		// Deprecated: this is a shim for backwards-compatibility. It should be removed in 9.x.
 		AllowList  *viperRuleAllowlist
@@ -124,6 +126,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Path:        configPathRegex,
 			Keywords:    vr.Keywords,
 			Tags:        vr.Tags,
+			IsSubRule:   vr.IsSubRule,
+			SubRules:    vr.SubRules,
 		}
 		// Parse the allowlist, including the older format for backwards compatibility.
 		if vr.AllowList != nil {

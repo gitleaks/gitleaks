@@ -15,6 +15,16 @@ import (
 
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
 	r := &rule
+
+	// We temporarily set the SubRule status to false to make its
+	// matches present in the Findings list. Otherwise, they would
+	// need a main rule to be matched against.
+	wasSubRule := false
+	if r.IsSubRule {
+		r.IsSubRule = false
+		wasSubRule = true
+	}
+
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) < 1 {
@@ -35,6 +45,9 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 				Msg("Failed to Validate. False positive was detected by regex.")
 		}
 	}
+
+	r.IsSubRule = wasSubRule
+
 	return r
 }
 

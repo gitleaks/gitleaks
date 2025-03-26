@@ -32,6 +32,10 @@ paths = [{{ range $i, $path := . }}
 {{- range $i, $rule := .Rules }}{{println}}[[rules]]
 id = "{{$rule.RuleID}}"
 description = "{{$rule.Description}}"
+isSubRule = {{$rule.IsSubRule}}
+{{- with $rule.SubRules }}{{ if gt (len .) 0 }}
+subRules = [{{ range $j, $subRule := . }}"{{ $subRule }}",{{ end }}]
+{{- end }}{{ end }}
 {{- with $rule.Regex }}
 regex = '''{{ . }}'''{{ end -}}
 {{- with $rule.Path }}

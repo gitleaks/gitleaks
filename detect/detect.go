@@ -205,6 +205,25 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
+// Associates sub findings with their main findings, returns the modified list of findings
+func (d *Detector) MapFindings(findings []report.Finding, subFindings []report.Finding) []report.Finding {
+	for i := range findings {
+		subRules := d.Config.Rules[findings[i].RuleID].SubRules
+
+		subFinding:
+		for _, subFinding := range subFindings {
+			for _, subRule := range subRules {
+				if subFinding.RuleID == subRule {
+					findings[i].SubFindings = append(findings[i].SubFindings, subFinding)
+					continue subFinding
+				}
+			}
+		}
+	}
+
+	return findings
+}
+
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
@@ -213,6 +232,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	d.TotalBytes.Add(uint64(len(fragment.Bytes)))
 
 	var findings []report.Finding
+	var subFindings []report.Finding
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
@@ -246,14 +266,26 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				for _, finding := range d.detectRule(fragment, currentRaw, rule, encodedSegments) {
+					if finding.IsSubFinding {
+						subFindings = append(subFindings, finding)
+					} else {
+						findings = append(findings, finding)
+					}
+				}
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					for _, finding := range d.detectRule(fragment, currentRaw, rule, encodedSegments) {
+						if finding.IsSubFinding {
+							subFindings = append(subFindings, finding)
+						} else {
+							findings = append(findings, finding)
+						}
+					}
 					break
 				}
 			}
@@ -275,6 +307,8 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			break
 		}
 	}
+
+	findings = d.MapFindings(findings, subFindings)
 
 	return filter(findings, d.Redact)
 }
@@ -339,12 +373,14 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			// Path _only_ rule
 			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
 				finding := report.Finding{
-					RuleID:      r.RuleID,
-					Description: r.Description,
-					File:        fragment.FilePath,
-					SymlinkFile: fragment.SymlinkFile,
-					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-					Tags:        r.Tags,
+					RuleID:       r.RuleID,
+					Description:  r.Description,
+					File:         fragment.FilePath,
+					SymlinkFile:  fragment.SymlinkFile,
+					Match:        fmt.Sprintf("file detected: %s", fragment.FilePath),
+					Tags:         r.Tags,
+					IsSubFinding: r.IsSubRule,
+					SubFindings:  []report.Finding{},
 				}
 				return append(findings, finding)
 			}
@@ -412,18 +448,20 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			RuleID:      r.RuleID,
-			Description: r.Description,
-			StartLine:   loc.startLine,
-			EndLine:     loc.endLine,
-			StartColumn: loc.startColumn,
-			EndColumn:   loc.endColumn,
-			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			Match:       secret,
-			Secret:      secret,
-			File:        fragment.FilePath,
-			SymlinkFile: fragment.SymlinkFile,
-			Tags:        append(r.Tags, metaTags...),
+			RuleID:       r.RuleID,
+			Description:  r.Description,
+			StartLine:    loc.startLine,
+			EndLine:      loc.endLine,
+			StartColumn:  loc.startColumn,
+			EndColumn:    loc.endColumn,
+			Line:         fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Match:        secret,
+			Secret:       secret,
+			File:         fragment.FilePath,
+			SymlinkFile:  fragment.SymlinkFile,
+			Tags:         append(r.Tags, metaTags...),
+			IsSubFinding: r.IsSubRule,
+			SubFindings:  []report.Finding{},
 		}
 
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
