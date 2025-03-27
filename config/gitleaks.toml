@@ -2947,7 +2947,7 @@ keywords = [
 [[rules]]
 id = "slack-webhook-url"
 description = "Discovered a Slack Webhook, which could lead to unauthorized message posting and data leakage in Slack channels."
-regex = '''(?:https?://)?hooks.slack.com/(?:services|workflows)/[A-Za-z0-9+/]{43,46}'''
+regex = '''(?:https?://)?hooks.slack.com/(?:services|workflows|triggers)/[A-Za-z0-9+/]{43,56}'''
 keywords = ["hooks.slack.com"]
 
 [[rules]]
