@@ -11,7 +11,8 @@ func MaxMindLicenseKey() *config.Rule {
 		RuleID:      "maxmind-license-key",
 		Description: "Discovered a potential MaxMind license key.",
 		Regex:       utils.GenerateUniqueTokenRegex(`[A-Za-z0-9]{6}_[A-Za-z0-9]{29}_mmk`, false),
-		Keywords:    []string{"mmk"},
+		Entropy:     4,
+		Keywords:    []string{"_mmk"},
 	}
 
 	// validate

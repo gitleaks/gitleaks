@@ -2518,7 +2518,8 @@ keywords = ["mattermost"]
 id = "maxmind-license-key"
 description = "Discovered a potential MaxMind license key."
 regex = '''\b([A-Za-z0-9]{6}_[A-Za-z0-9]{29}_mmk)(?:[\x60'"\s;]|\\[nr]|$)'''
-keywords = ["mmk"]
+entropy = 4
+keywords = ["_mmk"]
 
 [[rules]]
 id = "messagebird-api-token"
