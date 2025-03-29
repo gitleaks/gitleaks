@@ -12,6 +12,7 @@ const (
 	NoPlatform               // Explicitly disable the feature
 	GitHubPlatform
 	GitLabPlatform
+	AzureDevOpsPlatform
 	// TODO: Add others.
 )
 
@@ -21,6 +22,7 @@ func (p Platform) String() string {
 		"none",
 		"github",
 		"gitlab",
+		"azuredevops",
 	}[p]
 }
 
@@ -34,6 +36,8 @@ func PlatformFromString(s string) (Platform, error) {
 		return GitHubPlatform, nil
 	case "gitlab":
 		return GitLabPlatform, nil
+	case "azuredevops":
+		return AzureDevOpsPlatform, nil
 	default:
 		return UnknownPlatform, fmt.Errorf("invalid scm platform value: %s", s)
 	}
