@@ -13,23 +13,7 @@
 
 title = "gitleaks config"
 
-[allowlist]
-description = "global allow lists"
-regexes = [
-    '''(?i)^true|false|null$''',
-    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
-    '''^\$(?:\d+|{\d+})$''',
-    '''^\$(?:[A-Z_]+|[a-z_]+)$''',
-    '''^\${(?:[A-Z_]+|[a-z_]+)}$''',
-    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
-    '''^\$\{\{[ \t]*(?:(?:env|github|secrets|vars)(?:\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
-    '''^%(?:[A-Z_]+|[a-z_]+)%$''',
-    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
-    '''^\{\d{0,2}}$''',
-    '''^@(?:[A-Z_]+|[a-z_]+)@$''',
-    '''^/Users/(?i)[a-z0-9]+/[\w .-/]+$''',
-    '''^/(?:bin|etc|home|opt|tmp|usr|var)/[\w ./-]+$''',
-]
+[[allowlists]]
 paths = [
     '''gitleaks\.toml''',
     '''(?i)\.(?:bmp|gif|jpe?g|png|svg|tiff?)$''',
@@ -55,6 +39,21 @@ paths = [
     '''\.gem$''',
     '''verification-metadata\.xml''',
     '''Database.refactorlog''',
+]
+regexes = [
+    '''(?i)^true|false|null$''',
+    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
+    '''^\$(?:\d+|{\d+})$''',
+    '''^\$(?:[A-Z_]+|[a-z_]+)$''',
+    '''^\${(?:[A-Z_]+|[a-z_]+)}$''',
+    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
+    '''^\$\{\{[ \t]*(?:(?:env|github|secrets|vars)(?:\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
+    '''^%(?:[A-Z_]+|[a-z_]+)%$''',
+    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
+    '''^\{\d{0,2}}$''',
+    '''^@(?:[A-Z_]+|[a-z_]+)@$''',
+    '''^/Users/(?i)[a-z0-9]+/[\w .-/]+$''',
+    '''^/(?:bin|etc|home|opt|tmp|usr|var)/[\w ./-]+$''',
 ]
 stopwords = [
     "abcdefghijklmnopqrstuvwxyz",

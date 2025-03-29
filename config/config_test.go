@@ -25,8 +25,67 @@ func TestTranslate(t *testing.T) {
 		// Error to expect.
 		wantError error
 	}{
+		// Global
 		{
-			cfgName: "allowlist_old_compat",
+			cfgName:   "allowlist_global_invalid_empty",
+			cfg:       Config{},
+			wantError: fmt.Errorf("[[allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+		},
+		{
+			cfgName:   "allowlist_global_invalid_old_and_new",
+			cfg:       Config{},
+			wantError: fmt.Errorf("[allowlist] is deprecated, it cannot be used alongside [[allowlists]]"),
+		},
+		{
+			cfgName:   "allowlist_global_invalid_regextarget",
+			cfg:       Config{},
+			wantError: fmt.Errorf("[[allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+		},
+		{
+			cfgName: "allowlist_global_rule_ids",
+			cfg: Config{
+				Rules: map[string]Rule{
+					"github-app-token": {
+						RuleID:   "github-app-token",
+						Regex:    regexp.MustCompile(`(?:ghu|ghs)_[0-9a-zA-Z]{36}`),
+						Tags:     []string{},
+						Keywords: []string{},
+						Allowlists: []Allowlist{
+							{
+								Paths: []*regexp.Regexp{regexp.MustCompile(`(?:^|/)@octokit/auth-token/README\.md$`)},
+							},
+						},
+					},
+					"github-oauth": {
+						RuleID:     "github-oauth",
+						Regex:      regexp.MustCompile(`gho_[0-9a-zA-Z]{36}`),
+						Tags:       []string{},
+						Keywords:   []string{},
+						Allowlists: nil,
+					},
+					"github-pat": {
+						RuleID:   "github-pat",
+						Regex:    regexp.MustCompile(`ghp_[0-9a-zA-Z]{36}`),
+						Tags:     []string{},
+						Keywords: []string{},
+						Allowlists: []Allowlist{
+							{
+								Paths: []*regexp.Regexp{regexp.MustCompile(`(?:^|/)@octokit/auth-token/README\.md$`)},
+							},
+						},
+					},
+				},
+				Allowlists: []Allowlist{
+					{
+						Regexes: []*regexp.Regexp{regexp.MustCompile(".*fake.*")},
+					},
+				},
+			},
+		},
+
+		// Rule
+		{
+			cfgName: "allowlist_rule_old_compat",
 			cfg: Config{
 				Rules: map[string]Rule{"example": {
 					RuleID:   "example",
@@ -43,22 +102,22 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
-			cfgName:   "allowlist_invalid_empty",
+			cfgName:   "allowlist_rule_invalid_empty",
 			cfg:       Config{},
-			wantError: fmt.Errorf("example: [[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+			wantError: fmt.Errorf("example: must contain at least one check for: commits, paths, regexes, or stopwords"),
 		},
 		{
-			cfgName:   "allowlist_invalid_old_and_new",
+			cfgName:   "allowlist_rule_invalid_old_and_new",
 			cfg:       Config{},
 			wantError: fmt.Errorf("example: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]"),
 		},
 		{
-			cfgName:   "allowlist_invalid_regextarget",
+			cfgName:   "allowlist_rule_invalid_regextarget",
 			cfg:       Config{},
-			wantError: fmt.Errorf("example: unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+			wantError: fmt.Errorf("example: [[rules.allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
 		},
 		{
-			cfgName: "allow_aws_re",
+			cfgName: "allowlist_rule_aws_re",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
@@ -76,7 +135,7 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
-			cfgName: "allow_commit",
+			cfgName: "allowlist_rule_commit",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
@@ -94,7 +153,7 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 		{
-			cfgName: "allow_path",
+			cfgName: "allowlist_rule_path",
 			cfg: Config{
 				Rules: map[string]Rule{"aws-access-key": {
 					RuleID:      "aws-access-key",
@@ -383,7 +442,7 @@ func TestTranslate(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 			cfg, err := vc.Translate()
-			if err != nil && !assert.EqualError(t, tt.wantError, err.Error()) {
+			if err != nil && !assert.EqualError(t, err, tt.wantError.Error()) {
 				return
 			}
 

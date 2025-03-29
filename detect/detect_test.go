@@ -226,21 +226,21 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
-			cfgName: "allow_aws_re",
+			cfgName: "allowlist_rule_aws_re",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
 		},
 		{
-			cfgName: "allow_path",
+			cfgName: "allowlist_rule_path",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
 		},
 		{
-			cfgName: "allow_commit",
+			cfgName: "allowlist_rule_commit",
 			fragment: Fragment{
 				Raw:       `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath:  "tmp.go",
@@ -332,7 +332,7 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
-			cfgName: "allow_global_aws_re",
+			cfgName: "allowlist_global_aws_re",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
@@ -829,7 +829,7 @@ func TestFromFiles(t *testing.T) {
 			require.NoError(t, err)
 
 			detector.FollowSymlinks = true
-			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
+			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 			require.NoError(t, err)
 
 			findings, err := detector.DetectFiles(paths)
@@ -903,7 +903,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 		require.NoError(t, err)
 
 		findings, err := detector.DetectFiles(paths)
