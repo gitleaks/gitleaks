@@ -91,6 +91,32 @@ func Test_createScmLink(t *testing.T) {
 			},
 			want: "https://gitlab.com/example-org/example-group/gitleaks/blob/63410f74e23a4e51e1f60b9feb073b5d325af878/.vscode/launchSettings.json#L6-8",
 		},
+
+		// Azure DevOps
+		"azuredevops - single line": {
+			platform: scm.AzureDevOpsPlatform,
+			url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   25,
+			},
+			want: "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository/commit/20553ad96a4a080c94a54d677db97eed8ce2560d?path=/examplefile.json&line=25&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files",
+		},
+
+		// Azure DevOps
+		"azuredevops - multi line": {
+			platform: scm.AzureDevOpsPlatform,
+			url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   30,
+			},
+			want: "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository/commit/20553ad96a4a080c94a54d677db97eed8ce2560d?path=/examplefile.json&line=25&lineEnd=30&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

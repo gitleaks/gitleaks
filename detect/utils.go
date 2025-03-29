@@ -78,6 +78,18 @@ func createScmLink(scmPlatform scm.Platform, remoteUrl string, finding report.Fi
 			link += fmt.Sprintf("-%d", finding.EndLine)
 		}
 		return link
+	case scm.AzureDevOpsPlatform:
+		link := fmt.Sprintf("%s/commit/%s?path=/%s", remoteUrl, finding.Commit, filePath)
+		// Add line information if applicable
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("&line=%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("&lineEnd=%d", finding.EndLine)
+		}
+		// This is a bit dirty, but Azure DevOps does not highlight the line when the lineStartColumn and lineEndColumn are not provided
+		link += "&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files"
+		return link
 	default:
 		// This should never happen.
 		return ""
