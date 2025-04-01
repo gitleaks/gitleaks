@@ -154,7 +154,6 @@ func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
 
 	remoteUrl := string(bytes.TrimSpace(stdout))
 
-	
 	if platform == scm.UnknownPlatform {
 		return nil, fmt.Errorf("unable to detect platform: %w", err)
 	}
