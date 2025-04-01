@@ -98,6 +98,7 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 	if platform == scm.UnknownPlatform {
 		platform = platformFromHost(source)
 	}
+	
 	remoteUrl, err := getRemoteUrl(platform, source)
 
 	if platform == scm.UnknownPlatform {
