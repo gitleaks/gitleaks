@@ -134,7 +134,7 @@ End:
 
 var (
 	sshUrlpat            = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
-	azureDevOpsSshUrlpat = regexp.MustCompile(`^git@ssh\.dev\.azure\.com:v3/([^/]+)/([^/]+)/([^/]+)$`)
+	azureDevOpsSshUrlpat = regexp.MustCompile(`^git@(?:ssh\.)((?:dev\.azure\.com|visualstudio\.com)):v3/([^/]+)/([^/]+)/([^/]+)$`)
 )
 
 func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
@@ -164,13 +164,14 @@ func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
 		if matches := sshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
 			remoteUrl = fmt.Sprintf("https://%s/%s", matches[1], matches[2])
 		}
-		// Handle Azure DevOps SSH URLs
+	// Handle Azure DevOps SSH URLs
 	} else if platform == scm.AzureDevOpsPlatform {
 		if matches := azureDevOpsSshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
-			organization := matches[1]
-			project := matches[2]
-			repository := matches[3]
-			remoteUrl = fmt.Sprintf("https://dev.azure.com/%s/%s/_git/%s", organization, project, repository)
+			hostname:= matches[1]
+			organization := matches[2]
+			project := matches[3]
+			repository := matches[4]
+			remoteUrl = fmt.Sprintf("https://%s/%s/%s/_git/%s", hostname, organization, project, repository)
 		}
 	}
 
