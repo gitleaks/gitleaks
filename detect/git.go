@@ -96,20 +96,21 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 	}
 
 	if platform == scm.UnknownPlatform {
-		platform = platformFromHost(platform, remoteUrl)
-		if platform == scm.UnknownPlatform {
-			logging.Info().
-				Str("host", remoteUrl.Hostname()).
-				Msg("Unknown SCM platform. Use --platform to include links in findings.")
-		} else {
-			logging.Debug().
-				Str("host", remoteUrl.Hostname()).
-				Str("platform", platform.String()).
-				Msg("SCM platform parsed from host")
-		}
+		platform = platformFromHost(source)
 	}
-	
-	remoteUrl, err := getRemoteUrl(source)
+	remoteUrl, err := getRemoteUrl(platform, source)
+
+	if platform == scm.UnknownPlatform {
+		logging.Info().
+			Str("host", remoteUrl.Hostname()).
+			Msg("Unknown SCM platform. Use --platform to include links in findings.")
+	} else {
+		logging.Debug().
+			Str("host", remoteUrl.Hostname()).
+			Str("platform", platform.String()).
+			Msg("SCM platform parsed from host")
+	}
+
 	if err != nil {
 		if strings.Contains(err.Error(), "No remote configured") {
 			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
@@ -158,13 +159,14 @@ func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
 		return nil, fmt.Errorf("unable to detect platform: %w", err)
 	}
 
+	// Handle SSH URLs for GitHub and GitLab
 	if platform == scm.GitHubPlatform || platform == scm.GitLabPlatform {
 		if matches := sshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
 			remoteUrl = fmt.Sprintf("https://%s/%s", matches[1], matches[2])
 		}
+		// Handle Azure DevOps SSH URLs
 	} else if platform == scm.AzureDevOpsPlatform {
 		if matches := azureDevOpsSshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
-	// matches[1] = organization, matches[2] = project, matches[3] = repository
 			organization := matches[1]
 			project := matches[2]
 			repository := matches[3]
@@ -172,16 +174,7 @@ func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
 		}
 	}
 
-
-
-	// Handle Azure DevOps SSH URLs
-	
-	
-	} else
-	}
-
 	remoteUrl = strings.TrimSuffix(remoteUrl, ".git")
-
 	parsedUrl, err := url.Parse(remoteUrl)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse remote URL: %w", err)
@@ -194,15 +187,15 @@ func getRemoteUrl(platform scm.Platform, source string) (*url.URL, error) {
 
 func platformFromHost(url string) scm.Platform {
 	switch {
-		case strings.Contains(url, "github.com"):
-			return scm.GitHubPlatform
-		case strings.Contains(url, "gitlab.com"):
-			return scm.GitLabPlatform
-		case strings.Contains(url, "dev.azure.com"):
-			return scm.AzureDevOpsPlatform
-		case strings.Contains(url, "visualstiudio.com"):
-			return scm.AzureDevOpsPlatform
-		default:
-			return scm.UnknownPlatform
+	case strings.Contains(url, "github.com"):
+		return scm.GitHubPlatform
+	case strings.Contains(url, "gitlab.com"):
+		return scm.GitLabPlatform
+	case strings.Contains(url, "dev.azure.com"):
+		return scm.AzureDevOpsPlatform
+	case strings.Contains(url, "visualstiudio.com"):
+		return scm.AzureDevOpsPlatform
+	default:
+		return scm.UnknownPlatform
 	}
 }
