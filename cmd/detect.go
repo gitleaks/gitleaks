@@ -38,7 +38,7 @@ func init() {
 	detectCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 	detectCmd.Flags().StringP("source", "s", ".", "path to source")
 	detectCmd.Flags().String("log-opts", "", "git log options")
-	detectCmd.Flags().String("platform", "", "the target platform used to generate links (github, gitlab)")
+	detectCmd.Flags().String("platform", "", "the target platform used to generate links (github, gitlab, azuredevops)")
 }
 
 var detectCmd = &cobra.Command{
