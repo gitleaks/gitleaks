@@ -13,7 +13,6 @@ import (
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
 	buf := make([]byte, 1000*bufSize)
-	findings := []report.Finding{}
 
 	for {
 		n, err := reader.Read(buf)
@@ -24,29 +23,28 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 			// Try to split chunks across large areas of whitespace, if possible.
 			peekBuf := bytes.NewBuffer(buf[:n])
 			if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
-				return findings, readErr
+				return d.Findings(), readErr
 			}
 
 			fragment := Fragment{
 				Raw: peekBuf.String(),
 			}
-			for _, finding := range d.Detect(fragment) {
-				findings = append(findings, finding)
-				if d.Verbose {
-					printFinding(finding, d.NoColor)
-				}
-			}
+
+			findings, subFindings := d.Detect(fragment)
+			d.AddFindings(findings, subFindings)
 		}
 
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-			return findings, err
+			return d.Findings(), err
 		}
 	}
 
-	return findings, nil
+	d.MapFindings()
+
+	return d.Findings(), nil
 }
 
 // StreamDetectReader streams the detection results from the provided io.Reader.
@@ -104,12 +102,14 @@ func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.F
 				}
 
 				fragment := Fragment{Raw: peekBuf.String()}
-				for _, finding := range d.Detect(fragment) {
-					findingsCh <- finding
-					if d.Verbose {
-						printFinding(finding, d.NoColor)
-					}
-				}
+				findings, subFindings := d.Detect(fragment)
+				d.AddFindings(findings, subFindings)
+			}
+
+			d.MapFindings()
+
+			for _, finding := range d.Findings() {
+				findingsCh <- finding
 			}
 
 			if err != nil {
