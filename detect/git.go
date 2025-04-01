@@ -98,8 +98,17 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 	if platform == scm.UnknownPlatform {
 		platform = platformFromHost(source)
 	}
-	
+
 	remoteUrl, err := getRemoteUrl(platform, source)
+	if err != nil {
+		if strings.Contains(err.Error(), "No remote configured") {
+			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
+			platform = scm.NoPlatform
+		} else {
+			logging.Error().Err(err).Msg("skipping finding links: unable to parse remote URL")
+		}
+		goto End
+	}
 
 	if platform == scm.UnknownPlatform {
 		logging.Info().
@@ -110,16 +119,6 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 			Str("host", remoteUrl.Hostname()).
 			Str("platform", platform.String()).
 			Msg("SCM platform parsed from host")
-	}
-
-	if err != nil {
-		if strings.Contains(err.Error(), "No remote configured") {
-			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
-			platform = scm.NoPlatform
-		} else {
-			logging.Error().Err(err).Msg("skipping finding links: unable to parse remote URL")
-		}
-		goto End
 	}
 
 End:
