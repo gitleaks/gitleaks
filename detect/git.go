@@ -191,7 +191,7 @@ func platformFromHost(url string) scm.Platform {
 		return scm.GitLabPlatform
 	case strings.Contains(url, "dev.azure.com"):
 		return scm.AzureDevOpsPlatform
-	case strings.Contains(url, "visualstiudio.com"):
+	case strings.Contains(url, "visualstudio.com"):
 		return scm.AzureDevOpsPlatform
 	default:
 		return scm.UnknownPlatform
