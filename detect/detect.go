@@ -392,7 +392,7 @@ MatchLoop:
 			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
 				matchIndex = segment.adjustMatchIndex(matchIndex)
 				metaTags = append(metaTags, segment.tags()...)
-				currentLine = currentRaw[segment.lineStartIndex(currentRaw):segment.lineEndIndex(currentRaw, matchIndex[1]-matchIndex[0])]
+				currentLine = segment.currentLine(currentRaw)
 			} else {
 				// This item has already been added to a finding
 				continue
