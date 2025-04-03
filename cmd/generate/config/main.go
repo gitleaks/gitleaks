@@ -132,6 +132,7 @@ func main() {
 		rules.JWTBase64(),
 		rules.KrakenAccessToken(),
 		rules.KubernetesSecret(),
+		rules.KubernetesSecretStringData(),
 		rules.KucoinAccessToken(),
 		rules.KucoinSecretKey(),
 		rules.LaunchDarklyAccessToken(),
