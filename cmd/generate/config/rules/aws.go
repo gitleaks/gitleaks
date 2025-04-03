@@ -22,6 +22,9 @@ func AWS() *config.Rule {
 			"ABIA", // AWS STS service bearer token
 			"ACCA", // Context-specific credential
 		},
+		SubRules: []string {
+			"aws-secret-access-key",
+		},
 		Allowlists: []config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{

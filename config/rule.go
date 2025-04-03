@@ -42,6 +42,16 @@ type Rule struct {
 
 	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
 	Allowlists []Allowlist
+
+	// SubRules defines a list of RuleIDs that this rule takes as
+	// SubRules. SubRules are used to make associations between
+	// secrets. Since some secrets need others to be actually usable,
+	// a SubRule can be used to relate them, and have an easier time
+	// verifying their validity.
+	SubRules []string
+
+	// IsSubRule marks this rule as a SubRule.
+	IsSubRule bool
 }
 
 // Validate guards against common misconfigurations.

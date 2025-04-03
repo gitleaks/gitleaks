@@ -17,7 +17,8 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) < 1 {
+		findings, subFindings := d.DetectString(tp)
+		if (!r.IsSubRule && len(findings) < 1) || (r.IsSubRule && len(subFindings) < 1) {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -26,8 +27,8 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		findings := d.DetectString(fp)
-		if len(findings) != 0 {
+		findings, subFindings := d.DetectString(fp)
+		if (!r.IsSubRule && len(findings) != 0) || (r.IsSubRule && len(subFindings) != 0) {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
@@ -35,6 +36,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 				Msg("Failed to Validate. False positive was detected by regex.")
 		}
 	}
+
 	return r
 }
 
@@ -43,7 +45,8 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	d := createSingleRuleDetector(r)
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
-		if len(d.Detect(f)) != 1 {
+		findings, _ := d.Detect(f)
+		if len(findings) != 1 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -54,7 +57,8 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	}
 	for path, fp := range falsePositives {
 		f := detect.Fragment{Raw: fp, FilePath: path}
-		if len(d.Detect(f)) != 0 {
+		findings, _ := d.Detect(f)
+		if len(findings) != 0 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).

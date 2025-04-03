@@ -159,6 +159,7 @@ keywords = [
 [[rules]]
 id = "aws-access-token"
 description = "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms."
+subRules = ["aws-secret-access-key"]
 regex = '''\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})\b'''
 entropy = 3
 keywords = [
@@ -168,6 +169,17 @@ keywords = [
     "abia",
     "acca",
 ]
+[[rules.allowlists]]
+regexes = [
+    '''.+EXAMPLE$''',
+]
+
+[[rules]]
+id = "aws-secret-access-key"
+description = "TODO: write proper description"
+isSubRule = true
+regex = '''\b([A-Za-z0-9/+=]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
 [[rules.allowlists]]
 regexes = [
     '''.+EXAMPLE$''',

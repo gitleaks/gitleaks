@@ -61,9 +61,8 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 						FilePath:  gitdiffFile.NewName,
 					}
 
-					for _, finding := range d.Detect(fragment) {
-						d.AddFinding(augmentGitFinding(remote, finding, textFragment, gitdiffFile))
-					}
+					findings, subFindings := d.Detect(fragment)
+					d.AddFindings(findings, subFindings)
 				}
 				return nil
 			})
@@ -82,6 +81,9 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 	}
 	logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
 	logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
+
+	d.MapFindings()
+
 	return d.findings, nil
 }
 
