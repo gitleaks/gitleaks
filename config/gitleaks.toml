@@ -2221,6 +2221,13 @@ entropy = 3
 keywords = ["glrt-"]
 
 [[rules]]
+id = "gitlab-runner-authentication-token-routable"
+description = "Discovered a GitLab Runner Authentication Token (Routable), posing a risk to CI/CD pipeline integrity and unauthorized access."
+regex = '''\bglrt-t\d_[0-9a-zA-Z_\-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b'''
+entropy = 4
+keywords = ["glrt-"]
+
+[[rules]]
 id = "gitlab-scim-token"
 description = "Discovered a GitLab SCIM Token, posing a risk to unauthorized access for a organization or instance."
 regex = '''glsoat-[0-9a-zA-Z_\-]{20}'''

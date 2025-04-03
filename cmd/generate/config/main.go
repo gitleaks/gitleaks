@@ -111,6 +111,7 @@ func main() {
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
 		rules.GitlabRunnerAuthenticationToken(),
+		rules.GitlabRunnerAuthenticationTokenRoutable(),
 		rules.GitlabScimToken(),
 		rules.GitlabSessionCookie(),
 		rules.GitterAccessToken(),
