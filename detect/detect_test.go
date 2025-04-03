@@ -492,7 +492,7 @@ func TestDetect(t *testing.T) {
 			d.MaxDecodeDepth = maxDecodeDepth
 			d.baselinePath = tt.baselinePath
 
-			findings := d.Detect(tt.fragment)
+			findings, _ := d.Detect(tt.fragment)
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}

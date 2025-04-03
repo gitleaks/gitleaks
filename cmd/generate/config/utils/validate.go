@@ -56,7 +56,8 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	d := createSingleRuleDetector(r)
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
-		if len(d.Detect(f)) != 1 {
+		findings, _ := d.Detect(f)
+		if len(findings) != 1 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -67,7 +68,8 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	}
 	for path, fp := range falsePositives {
 		f := detect.Fragment{Raw: fp, FilePath: path}
-		if len(d.Detect(f)) != 0 {
+		findings, _ := d.Detect(f)
+		if len(findings) != 0 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
