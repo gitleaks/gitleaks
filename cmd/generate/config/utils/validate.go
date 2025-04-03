@@ -15,19 +15,10 @@ import (
 
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
 	r := &rule
-
-	// We temporarily set the SubRule status to false to make its
-	// matches present in the Findings list. Otherwise, they would
-	// need a main rule to be matched against.
-	wasSubRule := false
-	if r.IsSubRule {
-		r.IsSubRule = false
-		wasSubRule = true
-	}
-
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) < 1 {
+		findings, subFindings := d.DetectString(tp)
+		if (!r.IsSubRule && len(findings) < 1) || (r.IsSubRule && len(subFindings) < 1) {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -36,8 +27,8 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		findings := d.DetectString(fp)
-		if len(findings) != 0 {
+		findings, subFindings := d.DetectString(fp)
+		if (!r.IsSubRule && len(findings) != 0) || (r.IsSubRule && len(subFindings) != 0) {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).
@@ -45,8 +36,6 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 				Msg("Failed to Validate. False positive was detected by regex.")
 		}
 	}
-
-	r.IsSubRule = wasSubRule
 
 	return r
 }

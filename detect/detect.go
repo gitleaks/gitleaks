@@ -205,16 +205,16 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
-func (d *Detector) DetectBytes(content []byte) []report.Finding {
+func (d *Detector) DetectBytes(content []byte) ([]report.Finding, []report.Finding) {
 	return d.DetectString(string(content))
 }
 
 // DetectString scans the given string and returns a list of findings
-func (d *Detector) DetectString(content string) []report.Finding {
-	mainFindings, _ := d.Detect(Fragment{
+func (d *Detector) DetectString(content string) ([]report.Finding, []report.Finding) {
+	findings, subFindings := d.Detect(Fragment{
 		Raw: content,
 	})
-	return mainFindings
+	return findings, subFindings
 }
 
 // Associates sub findings with their main findings
