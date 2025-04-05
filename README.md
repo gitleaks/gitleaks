@@ -113,7 +113,7 @@ jobs:
    ```
    repos:
      - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.23.1
+       rev: v8.24.2
        hooks:
          - id: gitleaks
    ```
