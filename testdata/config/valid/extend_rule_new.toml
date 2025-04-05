@@ -1,7 +1,7 @@
 title = "gitleaks extended 3"
 
 [extend]
-path="../testdata/config/extend_rule_keywords_base.toml"
+path="../testdata/config/valid/extend_rule_keywords_base.toml"
 
 [[rules]]
     id = "aws-rule-that-is-not-in-base"
