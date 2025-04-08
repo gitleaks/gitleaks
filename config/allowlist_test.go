@@ -148,6 +148,7 @@ func TestValidate(t *testing.T) {
 			opts = cmp.Options{
 				cmp.Comparer(regexComparer),
 				cmpopts.SortSlices(arrayComparer),
+				cmpopts.IgnoreUnexported(Allowlist{}),
 			}
 		)
 		if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {

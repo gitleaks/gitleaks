@@ -41,11 +41,18 @@ type Rule struct {
 	Keywords []string
 
 	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
-	Allowlists []Allowlist
+	Allowlists []*Allowlist
+
+	// validated is an internal flag to track whether `Validate()` has been called.
+	validated bool
 }
 
 // Validate guards against common misconfigurations.
-func (r Rule) Validate() error {
+func (r *Rule) Validate() error {
+	if r.validated {
+		return nil
+	}
+
 	// Ensure |id| is present.
 	if strings.TrimSpace(r.RuleID) == "" {
 		// Try to provide helpful context, since |id| is empty.
@@ -70,5 +77,16 @@ func (r Rule) Validate() error {
 		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
 	}
 
+	for _, allowlist := range r.Allowlists {
+		// This will probably never happen.
+		if allowlist == nil {
+			continue
+		}
+		if err := allowlist.Validate(); err != nil {
+			return fmt.Errorf("%s: %w", r.RuleID, err)
+		}
+	}
+
+	r.validated = true
 	return nil
 }
