@@ -33,10 +33,38 @@ export OP_SERVICE_ACCOUNT_TOKEN=ops_eyJzaWduSW5BZGRyZXNzIjoibXkuMXBhc3N3b3JkLmNv
           serviceAccountToken:
             fn::secret: ops_eyJzaWduSW5B..[Redacted]`,
 		`: To start using this service account, run the following command:
-: 
+:
 : export OP_SERVICE_ACCOUNT_TOKEN=ops_eyJzaWduSW5BZGRyZXNzIjoiaHR0cHM6...`,
 		// Low entropy.
 		`ops_eyJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
+	}
+	return utils.Validate(r, tps, fps)
+}
+
+// Reference:
+// - https://1passwordstatic.com/files/security/1password-white-paper.pdf
+func OnePasswordSecretKey() *config.Rule {
+	// Define Rule
+	r := config.Rule{
+		Description: "Uncovered a possible 1Password secret key, potentially compromising access to secrets in vaults.",
+		RuleID:      "1password-secret-key",
+		Regex:       regexp.MustCompile(`A3-[A-Z0-9]{6}-(?:(?:[A-Z0-9]{11})|(?:[A-Z0-9]{6}-[A-Z0-9]{5}))-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`),
+		Entropy:     4.0,
+		Keywords:    []string{"A3-"},
+	}
+
+	// validate
+	tps := []string{
+		utils.GenerateSampleSecret("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{11}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`)),
+		utils.GenerateSampleSecret("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`)),
+		// from whitepaper
+		`A3-ASWWYB-798JRYLJVD4-23DC2-86TVM-H43EB`,
+		`A3-ASWWYB-798JRY-LJVD4-23DC2-86TVM-H43EB`,
+	}
+	fps := []string{
+		// low entropy
+		`A3-XXXXXX-XXXXXXXXXXX-XXXXX-XXXXX-XXXXX`,
+		`A3-xXXXXX-XXXXXX-XXXXX-XXXXX-XXXXX-XXXXX`,
 	}
 	return utils.Validate(r, tps, fps)
 }
