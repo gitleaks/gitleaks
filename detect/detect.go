@@ -475,24 +475,26 @@ MatchLoop:
 		}
 		// check if the regexTarget is defined in the allowlist "regexes" entry
 		// or if the secret is in the list of stopwords
-		globalAllowlistTarget := finding.Secret
-		switch d.Config.Allowlist.RegexTarget {
-		case "match":
-			globalAllowlistTarget = finding.Match
-		case "line":
-			globalAllowlistTarget = currentLine
-		}
-		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
-			logger.Trace().
-				Str("finding", globalAllowlistTarget).
-				Msg("skipping finding: global allowlist regex")
-			continue
-		} else if ok, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); ok {
-			logger.Trace().
-				Str("finding", finding.Secret).
-				Str("allowed-stopword", word).
-				Msg("skipping finding: global allowlist stopword")
-			continue
+		if d.Config.Allowlist != nil {
+			globalAllowlistTarget := finding.Secret
+			switch d.Config.Allowlist.RegexTarget {
+			case "match":
+				globalAllowlistTarget = finding.Match
+			case "line":
+				globalAllowlistTarget = currentLine
+			}
+			if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
+				logger.Trace().
+					Str("finding", globalAllowlistTarget).
+					Msg("skipping finding: global allowlist regex")
+				continue
+			} else if ok, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); ok {
+				logger.Trace().
+					Str("finding", finding.Secret).
+					Str("allowed-stopword", word).
+					Msg("skipping finding: global allowlist stopword")
+				continue
+			}
 		}
 
 		// check if the result matches any of the rule allowlists.
