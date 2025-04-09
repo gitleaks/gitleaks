@@ -73,6 +73,15 @@ type Detector struct {
 	// report.
 	findings []report.Finding
 
+	// subFindingsMutex is to prevent concurrent access to the
+	// subFindings slice when adding subFindings.
+	subFindingsMutex *sync.Mutex
+
+	// subFindings is a slice of report.Findings. This is the result
+	// of the detector's subFinding scan which can then be used to
+	// merge with the main findings slice.
+	subFindings []report.Finding
+
 	// prefilter is a ahocorasick struct used for doing efficient string
 	// matching given a set of words (keywords from the rules in the config)
 	prefilter ahocorasick.Trie
@@ -122,13 +131,15 @@ type Fragment struct {
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(context.Background(), 40),
+		commitMap:        make(map[string]bool),
+		gitleaksIgnore:   make(map[string]struct{}),
+		findingMutex:     &sync.Mutex{},
+		subFindingsMutex: &sync.Mutex{},
+		findings:         make([]report.Finding, 0),
+		subFindings:      make([]report.Finding, 0),
+		Config:           cfg,
+		prefilter:        *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:             semgroup.NewGroup(context.Background(), 40),
 	}
 }
 
@@ -194,25 +205,44 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
-func (d *Detector) DetectBytes(content []byte) []report.Finding {
+func (d *Detector) DetectBytes(content []byte) ([]report.Finding, []report.Finding) {
 	return d.DetectString(string(content))
 }
 
 // DetectString scans the given string and returns a list of findings
-func (d *Detector) DetectString(content string) []report.Finding {
-	return d.Detect(Fragment{
+func (d *Detector) DetectString(content string) ([]report.Finding, []report.Finding) {
+	findings, subFindings := d.Detect(Fragment{
 		Raw: content,
 	})
+	return findings, subFindings
 }
 
-// Detect scans the given fragment and returns a list of findings
-func (d *Detector) Detect(fragment Fragment) []report.Finding {
+// Associates sub findings with their main findings
+func (d *Detector) MapFindings() {
+	for i := range d.findings {
+		subRules := d.Config.Rules[d.findings[i].RuleID].SubRules
+
+		subFinding:
+		for _, subFinding := range d.subFindings {
+			for _, subRule := range subRules {
+				if subFinding.RuleID == subRule {
+					d.findings[i].SubFindings = append(d.findings[i].SubFindings, subFinding)
+					continue subFinding
+				}
+			}
+		}
+	}
+}
+
+// Detect scans the given fragment and returns a list of findings and subFindings
+func (d *Detector) Detect(fragment Fragment) ([]report.Finding, []report.Finding) {
 	if fragment.Bytes == nil {
 		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
 	d.TotalBytes.Add(uint64(len(fragment.Bytes)))
 
 	var findings []report.Finding
+	var subFindings []report.Finding
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
@@ -220,7 +250,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) ||
 			// is the path excluded by the global allowlist?
 			(d.Config.Allowlist.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && d.Config.Allowlist.PathAllowed(fragment.WindowsFilePath))) {
-			return findings
+			return findings, subFindings
 		}
 	}
 
@@ -246,14 +276,26 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				for _, finding := range d.detectRule(fragment, currentRaw, rule, encodedSegments) {
+					if finding.IsSubFinding {
+						subFindings = append(subFindings, finding)
+					} else {
+						findings = append(findings, finding)
+					}
+				}
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					for _, finding := range d.detectRule(fragment, currentRaw, rule, encodedSegments) {
+						if finding.IsSubFinding {
+							subFindings = append(subFindings, finding)
+						} else {
+							findings = append(findings, finding)
+						}
+					}
 					break
 				}
 			}
@@ -276,7 +318,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		}
 	}
 
-	return filter(findings, d.Redact)
+	return filter(findings, d.Redact), filter(subFindings, d.Redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -339,12 +381,14 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			// Path _only_ rule
 			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
 				finding := report.Finding{
-					RuleID:      r.RuleID,
-					Description: r.Description,
-					File:        fragment.FilePath,
-					SymlinkFile: fragment.SymlinkFile,
-					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
-					Tags:        r.Tags,
+					RuleID:       r.RuleID,
+					Description:  r.Description,
+					File:         fragment.FilePath,
+					SymlinkFile:  fragment.SymlinkFile,
+					Match:        fmt.Sprintf("file detected: %s", fragment.FilePath),
+					Tags:         r.Tags,
+					IsSubFinding: r.IsSubRule,
+					SubFindings:  []report.Finding{},
 				}
 				return append(findings, finding)
 			}
@@ -414,18 +458,20 @@ MatchLoop:
 		}
 
 		finding := report.Finding{
-			RuleID:      r.RuleID,
-			Description: r.Description,
-			StartLine:   loc.startLine,
-			EndLine:     loc.endLine,
-			StartColumn: loc.startColumn,
-			EndColumn:   loc.endColumn,
-			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
-			Match:       secret,
-			Secret:      secret,
-			File:        fragment.FilePath,
-			SymlinkFile: fragment.SymlinkFile,
-			Tags:        append(r.Tags, metaTags...),
+			RuleID:       r.RuleID,
+			Description:  r.Description,
+			StartLine:    loc.startLine,
+			EndLine:      loc.endLine,
+			StartColumn:  loc.startColumn,
+			EndColumn:    loc.endColumn,
+			Line:         fragment.Raw[loc.startLineIndex:loc.endLineIndex],
+			Match:        secret,
+			Secret:       secret,
+			File:         fragment.FilePath,
+			SymlinkFile:  fragment.SymlinkFile,
+			Tags:         append(r.Tags, metaTags...),
+			IsSubFinding: r.IsSubRule,
+			SubFindings:  []report.Finding{},
 		}
 
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
@@ -575,7 +621,7 @@ func allTrue(bools []bool) bool {
 }
 
 // AddFinding synchronously adds a finding to the findings slice
-func (d *Detector) AddFinding(finding report.Finding) {
+func (d *Detector) ShouldAddFinding(finding report.Finding) (report.Finding, bool) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
 	if finding.Commit != "" {
 		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
@@ -589,14 +635,14 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
 			Msg("skipping finding: global fingerprint")
-		return
+		return report.Finding{}, false
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
 				Msgf("skipping finding: fingerprint")
-			return
+			return report.Finding{}, false
 		}
 	}
 
@@ -604,6 +650,25 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
+		return report.Finding{}, false
+	}
+
+	return finding, true
+}
+
+func (d *Detector) AddFindings(mainFindings []report.Finding, subFindings []report.Finding) {
+	for _, finding := range mainFindings {
+		d.AddMainFinding(finding)
+	}
+
+	for _, subFinding := range subFindings {
+		d.AddSubFinding(subFinding)
+	}
+}
+
+func (d *Detector) AddMainFinding(finding report.Finding) {
+	finding, ok := d.ShouldAddFinding(finding)
+	if !ok {
 		return
 	}
 
@@ -613,6 +678,20 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
+}
+
+func (d *Detector) AddSubFinding(finding report.Finding) {
+	finding, ok := d.ShouldAddFinding(finding)
+	if !ok {
+		return
+	}
+
+	d.subFindingsMutex.Lock()
+	d.subFindings = append(d.subFindings, finding)
+	if d.Verbose {
+		printFinding(finding, d.NoColor)
+	}
+	d.subFindingsMutex.Unlock()
 }
 
 // Findings returns the findings added to the detector

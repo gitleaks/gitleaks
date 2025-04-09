@@ -98,11 +98,19 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 						fragment.FilePath = pa.Path
 					}
 
-					for _, finding := range d.Detect(fragment) {
+					findings, subFindings := d.Detect(fragment)
+					for _, finding := range findings {
 						// need to add 1 since line counting starts at 1
 						finding.StartLine += (totalLines - linesInChunk) + 1
 						finding.EndLine += (totalLines - linesInChunk) + 1
-						d.AddFinding(finding)
+						d.AddMainFinding(finding)
+					}
+
+					for _, subFinding := range subFindings {
+						// need to add 1 since line counting starts at 1
+						subFinding.StartLine += (totalLines - linesInChunk) + 1
+						subFinding.EndLine += (totalLines - linesInChunk) + 1
+						d.AddSubFinding(subFinding)
 					}
 				}
 
@@ -119,6 +127,8 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 	if err := d.Sema.Wait(); err != nil {
 		return d.findings, err
 	}
+
+	d.MapFindings()
 
 	return d.findings, nil
 }

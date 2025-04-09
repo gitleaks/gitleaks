@@ -29,7 +29,8 @@ func IsNew(finding report.Finding, baseline []report.Finding) bool {
 			finding.RuleID == b.RuleID &&
 			finding.Secret == b.Secret &&
 			finding.StartColumn == b.StartColumn &&
-			finding.StartLine == b.StartLine {
+			finding.StartLine == b.StartLine &&
+			finding.IsSubFinding == b.IsSubFinding {
 			return false
 		}
 	}

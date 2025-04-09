@@ -21,7 +21,8 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		cw  = csv.NewWriter(w)
 		err error
 	)
-	columns := []string{"RuleID",
+	columns := []string{"ID",
+		"RuleID",
 		"Commit",
 		"File",
 		"SymlinkFile",
@@ -37,6 +38,8 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		"Email",
 		"Fingerprint",
 		"Tags",
+		"IsSubFinding",
+		"SubFindings",
 	}
 	// A miserable attempt at "omitempty" so tests don't yell at me.
 	if findings[0].Link != "" {
@@ -46,8 +49,15 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 	if err = cw.Write(columns); err != nil {
 		return err
 	}
+
+	findingId := 0
 	for _, f := range findings {
-		row := []string{f.RuleID,
+		var subFindings [][]string
+		var subFindingIds []string
+		findingId += 1
+
+		row := []string{strconv.Itoa(findingId),
+			f.RuleID,
 			f.Commit,
 			f.File,
 			f.SymlinkFile,
@@ -63,13 +73,52 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 			f.Email,
 			f.Fingerprint,
 			strings.Join(f.Tags, " "),
+			strconv.FormatBool(f.IsSubFinding),
 		}
+
+		for _, sf := range f.SubFindings {
+			findingId += 1
+			row := []string{strconv.Itoa(findingId),
+				sf.RuleID,
+				sf.Commit,
+				sf.File,
+				sf.SymlinkFile,
+				sf.Secret,
+				sf.Match,
+				strconv.Itoa(sf.StartLine),
+				strconv.Itoa(sf.EndLine),
+				strconv.Itoa(sf.StartColumn),
+				strconv.Itoa(sf.EndColumn),
+				sf.Author,
+				sf.Message,
+				sf.Date,
+				sf.Email,
+				sf.Fingerprint,
+				strings.Join(sf.Tags, " "),
+				strconv.FormatBool(sf.IsSubFinding),
+				"",
+			}
+			if findings[0].Link != "" {
+				row = append(row, sf.Link)
+			}
+
+			subFindings = append(subFindings, row)
+			subFindingIds = append(subFindingIds, strconv.Itoa(findingId))
+		}
+
+		row = append(row, strings.Join(subFindingIds, " "))
 		if findings[0].Link != "" {
 			row = append(row, f.Link)
 		}
 
 		if err = cw.Write(row); err != nil {
 			return err
+		}
+
+		for _, subFinding := range subFindings {
+			if err = cw.Write(subFinding); err != nil {
+				return err
+			}
 		}
 	}
 

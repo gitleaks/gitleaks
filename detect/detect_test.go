@@ -509,7 +509,7 @@ func TestDetect(t *testing.T) {
 			d.MaxDecodeDepth = maxDecodeDepth
 			d.baselinePath = tt.baselinePath
 
-			findings := d.Detect(tt.fragment)
+			findings, _ := d.Detect(tt.fragment)
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}
@@ -1298,6 +1298,55 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []EncodedSegment{})
+			if diff := cmp.Diff(test.expected, actual); diff != "" {
+				t.Errorf("diff: (-want +got)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestSubFindingDetection(t *testing.T) {
+	tests := map[string]struct {
+		fragment Fragment
+		expected []report.Finding
+	}{
+		"AWS access token is found alongside its secret key": {
+			fragment: Fragment{
+				Raw: `AKIALALEMEL33243OLIA
+                      lbqlNh3FW5/3AwnBoWsYIJam9w2Us4ZOH5Un8RyR`,
+				FilePath: "someScript.py",
+			},
+			expected: []report.Finding{
+				{
+					RuleID: "aws-access-token",
+					StartLine: 0,
+					EndLine: 0,
+					StartColumn: 0,
+					Match: "AKIALALEMEL33243OLIA",
+					IsSubFinding: false,
+					SubFindings: []report.Finding{
+						{
+							RuleID: "aws-secret-access-key",
+							StartLine: 1,
+							EndLine: 1,
+							Match: "lbqlNh3FW5/3AwnBoWsYIJam9w2Us4ZOH5Un8RyR",
+							IsSubFinding: true,
+							SubFindings: []report.Finding{},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			findings, subFindings := d.Detect(test.fragment)
+			d.AddFindings(findings, subFindings)
+			d.MapFindings()
+			actual := d.findings
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
