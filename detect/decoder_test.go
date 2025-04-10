@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -66,8 +67,8 @@ func TestDecode(t *testing.T) {
 		},
 		{
 			name:     "b64-url-safe: hyphen url b64",
-			chunk:    `dHJ1ZmZsZWhvZz4-ZmluZHMtc2VjcmV0cw`,
-			expected: `trufflehog>>finds-secrets`,
+			chunk:    `Z2l0bGVha3M-PmZpbmRzLXNlY3JldHM`,
+			expected: `gitleaks>>finds-secrets`,
 		},
 		{
 			name:     "b64-url-safe: underscore url b64",
@@ -79,13 +80,40 @@ func TestDecode(t *testing.T) {
 			chunk:    `a3d3fa7c2bb99e469ba55e5834ce79ee4853a8a3`,
 			expected: `a3d3fa7c2bb99e469ba55e5834ce79ee4853a8a3`,
 		},
+		{
+			name:     "url encoded value",
+			chunk:    `secret%3D%22q%24%21%40%23%24%25%5E%26%2A%28%20asdf%22`,
+			expected: `secret="q$!@#$%^&*( asdf"`,
+		},
 	}
 
 	decoder := NewDecoder()
+
+	// A helper to confirm a full decode
+	fullDecode := func(data string) string {
+		segments := []EncodedSegment{}
+
+		for {
+			data, segments = decoder.decode(data, segments)
+
+			if len(segments) == 0 {
+				return data
+			}
+		}
+	}
+
+	// Test base64 decoding
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoded, _ := decoder.decode(tt.chunk, []EncodedSegment{})
-			assert.Equal(t, tt.expected, decoded)
+			assert.Equal(t, tt.expected, fullDecode(tt.chunk))
+		})
+	}
+
+	// URL Encode the values to test URL decoding
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			percentEncodedChunk := url.PathEscape(tt.chunk)
+			assert.Equal(t, tt.expected, fullDecode(percentEncodedChunk))
 		})
 	}
 }

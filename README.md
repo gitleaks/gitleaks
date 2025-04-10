@@ -440,7 +440,8 @@ ways:
 
 Currently supported encodings:
 
-- `base64` (both standard and base64url)
+- **base64** - This includes both standard and base64url with or without padding
+- **percent** - Any percent-encoded (aka URL encoded) values
 
 #### Reporting
 
