@@ -84,7 +84,7 @@ keywords = ["adobe"]
 [[rules]]
 id = "adobe-client-secret"
 description = "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation."
-regex = '''\b(p8e-(?i)[a-z0-9]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''\b(p8e-(?i)[a-z0-9-]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 2
 keywords = ["p8e-"]
 
