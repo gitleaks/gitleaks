@@ -26,7 +26,7 @@ func AdobeClientSecret() *config.Rule {
 	r := config.Rule{
 		RuleID:      "adobe-client-secret",
 		Description: "Discovered a potential Adobe Client Secret, which, if exposed, could allow unauthorized Adobe service access and data manipulation.",
-		Regex:       utils.GenerateUniqueTokenRegex(`p8e-(?i)[a-z0-9]{32}`, false),
+		Regex:       utils.GenerateUniqueTokenRegex(`p8e-(?i)[a-z0-9-]{32}`, false),
 		Entropy:     2,
 		Keywords:    []string{"p8e-"},
 	}
