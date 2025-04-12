@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,7 +34,7 @@ func TestTranslate(t *testing.T) {
 					Regex:    regexp.MustCompile(`example\d+`),
 					Tags:     []string{},
 					Keywords: []string{},
-					Allowlists: []Allowlist{
+					Allowlists: []*Allowlist{
 						{
 							MatchCondition: AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("123")},
@@ -66,7 +67,7 @@ func TestTranslate(t *testing.T) {
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []*Allowlist{
 						{
 							MatchCondition: AllowlistMatchOr,
 							Regexes:        []*regexp.Regexp{regexp.MustCompile("AKIALALEMEL33243OLIA")},
@@ -84,7 +85,7 @@ func TestTranslate(t *testing.T) {
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []*Allowlist{
 						{
 							MatchCondition: AllowlistMatchOr,
 							Commits:        []string{"allowthiscommit"},
@@ -102,7 +103,7 @@ func TestTranslate(t *testing.T) {
 					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
 					Keywords:    []string{},
 					Tags:        []string{"key", "AWS"},
-					Allowlists: []Allowlist{
+					Allowlists: []*Allowlist{
 						{
 							MatchCondition: AllowlistMatchOr,
 							Paths:          []*regexp.Regexp{regexp.MustCompile(".go")},
@@ -178,7 +179,7 @@ func TestTranslate(t *testing.T) {
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []*Allowlist{
 							{
 								MatchCondition: AllowlistMatchOr,
 								StopWords:      []string{"fake"},
@@ -206,7 +207,7 @@ func TestTranslate(t *testing.T) {
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []*Allowlist{
 							{
 								MatchCondition: AllowlistMatchOr,
 								StopWords:      []string{"fake"},
@@ -234,8 +235,9 @@ func TestTranslate(t *testing.T) {
 						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
-						Allowlists: []Allowlist{
+						Allowlists: []*Allowlist{
 							{
+								Description:    "False positive. Keys used for colors match the rule, and should be excluded.",
 								MatchCondition: AllowlistMatchOr,
 								Paths:          []*regexp.Regexp{regexp.MustCompile(`something.py`)},
 							},
@@ -401,7 +403,10 @@ func TestTranslate(t *testing.T) {
 				}
 				return x.String() == y.String()
 			}
-			opts := cmp.Options{cmp.Comparer(regexComparer)}
+			opts := cmp.Options{
+				cmp.Comparer(regexComparer),
+				cmpopts.IgnoreUnexported(Rule{}, Allowlist{}),
+			}
 			if diff := cmp.Diff(tt.cfg.Rules, cfg.Rules, opts); diff != "" {
 				t.Errorf("%s diff: (-want +got)\n%s", tt.cfgName, diff)
 			}

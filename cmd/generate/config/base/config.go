@@ -11,7 +11,7 @@ import (
 func CreateGlobalConfig() config.Config {
 	return config.Config{
 		Title: "gitleaks config",
-		Allowlist: config.Allowlist{
+		Allowlist: &config.Allowlist{
 			Description: "global allow lists",
 			Regexes: []*regexp.Regexp{
 				// ----------- General placeholders -----------

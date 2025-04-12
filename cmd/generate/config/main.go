@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang.org/x/exp/slices"
 	"os"
 	"text/template"
 
@@ -18,7 +19,7 @@ const (
 
 func main() {
 	if len(os.Args) < 2 {
-		os.Stderr.WriteString("Specify path to the gitleaks.toml config\n")
+		_, _ = os.Stderr.WriteString("Specify path to the gitleaks.toml config\n")
 		os.Exit(2)
 	}
 	gitleaksConfigPath := os.Args[1]
@@ -239,9 +240,18 @@ func main() {
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
+		if err := rule.Validate(); err != nil {
+			logging.Fatal().Err(err).
+				Str("rule-id", rule.RuleID).
+				Msg("Failed to validate rule")
+		}
+		sortRule(rule)
+
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
-			logging.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
+			logging.Fatal().
+				Str("rule-id", rule.RuleID).
+				Msg("rule id is not unique")
 		}
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
@@ -257,10 +267,18 @@ func main() {
 	if err != nil {
 		logging.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
+	defer f.Close()
 
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
 	if err = tmpl.Execute(f, cfg); err != nil {
 		logging.Fatal().Err(err).Msg("could not execute template")
+	}
+}
+
+// sortRule makes the generated config deterministic.
+func sortRule(r *config.Rule) {
+	for _, a := range r.Allowlists {
+		slices.Sort(a.StopWords)
 	}
 }
