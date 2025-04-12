@@ -14,7 +14,7 @@ func NugetConfigPassword() *config.Rule {
 		Path:        regexp.MustCompile(`(?i)nuget\.config$`),
 		Keywords:    []string{"<add key="},
 		Entropy:     1,
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// samples from https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file

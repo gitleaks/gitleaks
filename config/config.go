@@ -67,7 +67,7 @@ type Config struct {
 	Path        string
 	Description string
 	Rules       map[string]Rule
-	Allowlist   Allowlist
+	Allowlist   *Allowlist
 	Keywords    map[string]struct{}
 
 	// used to keep sarif results consistent
@@ -164,16 +164,14 @@ func (vc *ViperConfig) Translate() (Config, error) {
 				allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
 			}
 
-			allowlist := Allowlist{
+			allowlist := &Allowlist{
+				Description:    a.Description,
 				MatchCondition: condition,
+				Commits:        a.Commits,
+				Paths:          allowlistPaths,
 				RegexTarget:    a.RegexTarget,
 				Regexes:        allowlistRegexes,
-				Paths:          allowlistPaths,
-				Commits:        a.Commits,
 				StopWords:      a.StopWords,
-			}
-			if err := allowlist.Validate(); err != nil {
-				return Config{}, fmt.Errorf("%s: %w", cr.RuleID, err)
 			}
 			cr.Allowlists = append(cr.Allowlists, allowlist)
 		}
@@ -192,7 +190,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Description: vc.Description,
 		Extend:      vc.Extend,
 		Rules:       rulesMap,
-		Allowlist: Allowlist{
+		Allowlist: &Allowlist{
 			RegexTarget: vc.Allowlist.RegexTarget,
 			Regexes:     allowlistRegexes,
 			Paths:       allowlistPaths,
