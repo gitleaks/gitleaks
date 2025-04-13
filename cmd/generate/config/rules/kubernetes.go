@@ -8,16 +8,24 @@ import (
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
+// Ignore empty or placeholder values.
+// variable: {{ .Values.Example }} (https://helm.sh/docs/chart_template_guide/variables/)
+// variabe: ${.secrets.bar}
+// variable: ""
+// variable: ”
+var k8sIgnorePat = regexp.MustCompile(
+	`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|""|'')`)
+
 // KubernetesSecret validates if we detected a kubernetes secret which contains data!
 func KubernetesSecret() *config.Rule {
 	// Only match basic variations of `kind: secret`, we don't want things like `kind: ExternalSecret`.
 	//language=regexp
-	kindPat := `\bkind:[ \t]*["']?\bsecret\b["']?`
+	kindPat := `\bkind:[ \t]*["']?\b(?i:secret)\b["']?`
 	// Only matches values (`key: value`) under `data:` that are:
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
 	//language=regexp
-	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
+	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-zA-Z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
 
 	// define rule
 	r := config.Rule{
@@ -25,7 +33,7 @@ func KubernetesSecret() *config.Rule {
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		Regex: regexp.MustCompile(fmt.Sprintf(
 			//language=regexp
-			`(?i)(?:%s(?:.|\s){0,200}?%s|%s(?:.|\s){0,200}?%s)`, kindPat, dataPat, dataPat, kindPat)),
+			`(?:%s(?:.|\s){0,200}?%s|%s(?:.|\s){0,200}?%s)`, kindPat, dataPat, dataPat, kindPat)),
 		Keywords: []string{
 			"secret",
 		},
@@ -33,13 +41,8 @@ func KubernetesSecret() *config.Rule {
 		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
 		Allowlists: []*config.Allowlist{
 			{
-				Regexes: []*regexp.Regexp{
-					// Ignore empty or placeholder values.
-					// variable: {{ .Values.Example }} (https://helm.sh/docs/chart_template_guide/variables/)
-					// variable: ""
-					// variable: ''
-					regexp.MustCompile(`[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:\{\{[ \t\w"|$:=,.-]+}}|""|'')`),
-				},
+				// Ignore empty or placeholder values.
+				Regexes: []*regexp.Regexp{k8sIgnorePat},
 			},
 			{
 				// Avoid overreach between directives.
@@ -459,5 +462,39 @@ data:
   csrf: ""
 `,
 	}
+	return utils.ValidateWithPaths(r, tps, fps)
+}
+
+func KubernetesSecretStringData() *config.Rule {
+	// Only match basic variations of `kind: secret`, we don't want things like `kind: ExternalSecret`.
+	//language=regexp
+	kindPat := `\bkind:[ \t]*["']?(?i:secret)["']?`
+	// Only matches values (`key: value`) under `data:` that are:
+	// - valid base64 characters
+	// - longer than 10 characters (no "YmFyCg==")
+	//language=regexp
+	dataPat := `\bstringData:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\|[-+]?|>[-+]?)\s+)?[ \t]*(?:["']?\{\{[ \t\w"|$:=,.-]+}}["']?|["']?\$\{[ \t\w".-]+}["']?|["']?[[:graph:]]{5,}["']?|""|''))`
+
+	// define rule
+	r := config.Rule{
+		RuleID:      "kubernetes-secret-stringdata-yaml",
+		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
+		Regex: regexp.MustCompile(fmt.Sprintf(
+			//language=regexp
+			`(?:%s(?:.|\s){0,200}?%s|%s(?:.|\s){0,200}?%s)`, kindPat, dataPat, dataPat, kindPat)),
+		Keywords: []string{
+			"secret",
+		},
+		// Kubernetes secrets are usually yaml files.
+		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
+		Allowlists: []config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{k8sIgnorePat},
+			},
+		},
+	}
+
+	tps := map[string]string{}
+	fps := map[string]string{}
 	return utils.ValidateWithPaths(r, tps, fps)
 }
