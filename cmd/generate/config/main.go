@@ -1,9 +1,10 @@
 package main
 
 import (
-	"golang.org/x/exp/slices"
 	"os"
 	"text/template"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
@@ -165,6 +166,7 @@ func main() {
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
+		rules.PerplexityAPIKey(),
 		rules.PlaidAccessID(),
 		rules.PlaidSecretKey(),
 		rules.PlaidAccessToken(),
