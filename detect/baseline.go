@@ -9,27 +9,25 @@ import (
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
-func IsNew(finding report.Finding, baseline []report.Finding) bool {
+func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool {
 	// Explicitly testing each property as it gives significantly better performance in comparison to cmp.Equal(). Drawback is that
 	// the code requires maintenance if/when the Finding struct changes
 	for _, b := range baseline {
-
-		if finding.Author == b.Author &&
-			finding.Commit == b.Commit &&
-			finding.Date == b.Date &&
+		if finding.RuleID == b.RuleID &&
 			finding.Description == b.Description &&
-			finding.Email == b.Email &&
-			finding.EndColumn == b.EndColumn &&
+			finding.StartLine == b.StartLine &&
 			finding.EndLine == b.EndLine &&
-			finding.Entropy == b.Entropy &&
-			finding.File == b.File &&
-			// Omit checking finding.Fingerprint - if the format of the fingerprint changes, the users will see unexpected behaviour
-			finding.Match == b.Match &&
-			finding.Message == b.Message &&
-			finding.RuleID == b.RuleID &&
-			finding.Secret == b.Secret &&
 			finding.StartColumn == b.StartColumn &&
-			finding.StartLine == b.StartLine {
+			finding.EndColumn == b.EndColumn &&
+			(redact > 0 || (finding.Match == b.Match && finding.Secret == b.Secret)) &&
+			finding.File == b.File &&
+			finding.Commit == b.Commit &&
+			finding.Author == b.Author &&
+			finding.Email == b.Email &&
+			finding.Date == b.Date &&
+			finding.Message == b.Message &&
+			// Omit checking finding.Fingerprint - if the format of the fingerprint changes, the users will see unexpected behaviour
+			finding.Entropy == b.Entropy {
 			return false
 		}
 	}
