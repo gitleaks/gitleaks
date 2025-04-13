@@ -11,6 +11,8 @@ import (
 	"sync/atomic"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
+	"github.com/zricethezav/gitleaks/v8/detect/fingerprint"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -86,6 +88,8 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	fingerprinter fingerprint.Fingerprint
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -121,7 +125,7 @@ type Fragment struct {
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
-	return &Detector{
+	d := &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
@@ -130,6 +134,12 @@ func NewDetector(cfg config.Config) *Detector {
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
 	}
+	if flags.EnableExperimentalFingerprint.Load() {
+		d.fingerprinter = fingerprint.NewV2(d.gitleaksIgnore)
+	} else {
+		d.fingerprinter = fingerprint.NewV1(d.gitleaksIgnore)
+	}
+	return d
 }
 
 // NewDetectorDefaultConfig creates a new detector with the default config
@@ -148,7 +158,14 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDetector(cfg), nil
+
+	d := NewDetector(cfg)
+	if flags.EnableExperimentalFingerprint.Load() {
+		d.fingerprinter = fingerprint.NewV2(d.gitleaksIgnore)
+	} else {
+		d.fingerprinter = fingerprint.NewV1(d.gitleaksIgnore)
+	}
+	return d, nil
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
@@ -171,6 +188,9 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		// Skip lines that start with a comment
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
+		}
+		if flags.EnableExperimentalFingerprint.Load() && !strings.HasPrefix(line, "sha1_") {
+			return fmt.Errorf(".gitleaksignore v1 format is not compatible with --experimental-fingerprint")
 		}
 
 		// Normalize the path.
@@ -579,29 +599,17 @@ func allTrue(bools []bool) bool {
 
 // AddFinding synchronously adds a finding to the findings slice
 func (d *Detector) AddFinding(finding report.Finding) {
-	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
-	if finding.Commit != "" {
-		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
-	} else {
-		finding.Fingerprint = globalFingerprint
-	}
+	finding.Fingerprint = d.fingerprinter.GetFingerprint(finding)
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+	if d.fingerprinter.IsIgnored(finding) {
 		logger.Debug().
-			Str("fingerprint", globalFingerprint).
+			Str("fingerprint", finding.Fingerprint).
 			Msg("skipping finding: global fingerprint")
 		return
-	} else if finding.Commit != "" {
-		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logger.Debug().
-				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint")
-			return
-		}
 	}
+	logger.Info().Msgf("Finding is not ignored: %s", finding.Fingerprint)
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
 		logger.Debug().

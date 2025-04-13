@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -70,7 +71,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
-
+	rootCmd.PersistentFlags().BoolP("experimental-fingerprint", "", false, "enables the experimental fingerprint feature")
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		logging.Fatal().Msgf("err binding config %s", err.Error())
@@ -195,6 +196,12 @@ func Config(cmd *cobra.Command) config.Config {
 
 func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Detector {
 	var err error
+
+	// set experimental feature flag
+	if enabled := mustGetBoolFlag(cmd, "experimental-fingerprint"); enabled {
+		flags.EnableExperimentalFingerprint.Store(true)
+		log.Warn().Msgf("using experimental fingerprint feature, updates may contain breaking changes!")
+	}
 
 	// Setup common detector
 	detector := detect.NewDetector(cfg)
