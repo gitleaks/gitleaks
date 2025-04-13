@@ -2621,6 +2621,13 @@ entropy = 3.5
 keywords = ["sha256~"]
 
 [[rules]]
+id = "perplexity-api-key"
+description = "Found a Perplexity api key."
+regex = '''\b(pplx-[\w]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
+entropy = 2
+keywords = ["pplx"]
+
+[[rules]]
 id = "pkcs12-file"
 description = "Found a PKCS #12 file, which commonly contain bundled private keys."
 path = '''(?i)(?:^|\/)[^\/]+\.p(?:12|fx)$'''
