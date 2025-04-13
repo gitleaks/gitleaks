@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -62,13 +63,13 @@ func runGit(cmd *cobra.Command, args []string) {
 		remote      *detect.RemoteInfo
 	)
 	if preCommit || staged {
-		if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
+		if gitCmd, err = sources.NewGitDiffCmd(context.Background(), source, staged); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 		}
 		// Remote info + links are irrelevant for staged changes.
 		remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
 	} else {
-		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
+		if gitCmd, err = sources.NewGitLogCmd(context.Background(), source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git log cmd")
 		}
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
@@ -77,7 +78,7 @@ func runGit(cmd *cobra.Command, args []string) {
 		remote = detect.NewRemoteInfo(scmPlatform, source)
 	}
 
-	findings, err = detector.DetectGit(gitCmd, remote)
+	findings, err = detector.DetectGit(context.Background(), gitCmd, remote)
 	if err != nil {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")

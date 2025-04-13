@@ -2,6 +2,7 @@ package detect
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -17,7 +18,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
-func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
+func (d *Detector) DetectGit(ctx context.Context, cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
 	defer cmd.Wait()
 	var (
 		diffFilesCh = cmd.DiffFilesCh()
@@ -27,6 +28,10 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
 	for diffFilesCh != nil || errCh != nil {
 		select {
+		case <-ctx.Done():
+			// Return context error if context is cancelled
+			return d.findings, ctx.Err()
+
 		case gitdiffFile, open := <-diffFilesCh:
 			if !open {
 				diffFilesCh = nil
@@ -50,6 +55,13 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 			d.addCommit(commitSHA)
 
 			d.Sema.Go(func() error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err() // Exit goroutine if context is cancelled
+				default:
+					// Continue processing
+				}
+
 				for _, textFragment := range gitdiffFile.TextFragments {
 					if textFragment == nil {
 						return nil
@@ -77,9 +89,21 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 		}
 	}
 
-	if err := d.Sema.Wait(); err != nil {
-		return d.findings, err
+	// Wait for semaphore group, respecting context
+	waitChan := make(chan error, 1)
+	go func() {
+		waitChan <- d.Sema.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return d.findings, ctx.Err()
+	case err := <-waitChan:
+		if err != nil {
+			return d.findings, err
+		}
 	}
+
 	logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
 	logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	return d.findings, nil
