@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/adrg/xdg"
 	"io"
@@ -41,8 +42,9 @@ const (
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. ${XDG_CONFIG_HOME}/gitleaks/config.toml
-4. (target path)/.gitleaks.toml
+3. env var GITLEAKS_CONFIG_TOML with the file content
+4. ${XDG_CONFIG_HOME}/gitleaks/config.toml
+5. (target path)/.gitleaks.toml
 If none of the four options are used, then gitleaks will use the default config`
 )
 
@@ -119,6 +121,8 @@ func initLog() {
 
 func initConfig(source string) {
 	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
+	viper.SetConfigType("toml")
+
 	if err != nil {
 		logging.Fatal().Msg(err.Error())
 	}
@@ -142,6 +146,13 @@ func initConfig(source string) {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
 		viper.SetConfigFile(envPath)
 		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+	} else if os.Getenv("GITLEAKS_CONFIG_TOML") != "" {
+		configContent := []byte(os.Getenv("GITLEAKS_CONFIG_TOML"))
+		if err := viper.ReadConfig(bytes.NewBuffer(configContent)); err != nil {
+			logging.Fatal().Err(err).Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("unable to load gitleaks config from GITLEAKS_CONFIG_TOML env var")
+		}
+		logging.Debug().Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
+		return
 	} else if _, err := os.Stat(homeDirConfigPath); err == nil {
 		viper.SetConfigFile(homeDirConfigPath)
 		logging.Debug().Msgf("using gitleaks config from %s", homeDirConfigPath)
@@ -154,7 +165,6 @@ func initConfig(source string) {
 		if !fileInfo.IsDir() {
 			logging.Debug().Msgf("unable to load gitleaks config from %s since --source=%s is a file, using default config",
 				filepath.Join(source, ".gitleaks.toml"), source)
-			viper.SetConfigType("toml")
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading toml %s", err.Error())
 			}
@@ -163,7 +173,7 @@ func initConfig(source string) {
 
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
 			logging.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
-			viper.SetConfigType("toml")
+
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading default config toml %s", err.Error())
 			}
@@ -174,7 +184,6 @@ func initConfig(source string) {
 
 		viper.AddConfigPath(source)
 		viper.SetConfigName(".gitleaks")
-		viper.SetConfigType("toml")
 	}
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)

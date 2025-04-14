@@ -177,6 +177,23 @@ func GitlabRunnerAuthenticationToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
+func GitlabRunnerAuthenticationTokenRoutable() *config.Rule {
+	r := config.Rule{
+		RuleID:      "gitlab-runner-authentication-token-routable",
+		Description: "Discovered a GitLab Runner Authentication Token (Routable), posing a risk to CI/CD pipeline integrity and unauthorized access.",
+		Regex:       regexp.MustCompile(`\bglrt-t\d_[0-9a-zA-Z_\-]{27,300}\.[0-9a-z]{2}[0-9a-z]{7}\b`),
+		Entropy:     4,
+		Keywords:    []string{"glrt-"},
+	}
+
+	tps := utils.GenerateSampleSecrets("gitlab", "glrt-t"+secrets.NewSecret(utils.Numeric("1"))+"_"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
+	fps := []string{
+		"glrt-tx_xxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxx",
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
 func GitlabScimToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "gitlab-scim-token",

@@ -66,6 +66,7 @@ func GenericCredential() *config.Rule {
 						`|(?:credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
 						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
+						`|(?:turkey)` +
 						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
@@ -98,6 +99,8 @@ func GenericCredential() *config.Rule {
 				Regexes: []*regexp.Regexp{
 					// Docker build secrets (https://docs.docker.com/build/building/secrets/#using-build-secrets).
 					regexp.MustCompile(`--mount=type=secret,`),
+					//  https://github.com/gitleaks/gitleaks/issues/1800
+					regexp.MustCompile(`import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]`),
 				},
 			},
 			{
@@ -224,6 +227,9 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
 		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
 		`            keyPressed = kVK_Return.u16`,
+		`timezone_mapping = {
+    "Turkey Standard Time": "Europe/Istanbul",
+}`, // https://github.com/gitleaks/gitleaks/issues/1799
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//`    { key: '9df21e95-3848-409d-8f94-c675cdfee839', value: 'Americas' },`,
 		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
@@ -265,6 +271,7 @@ R5: Regulatory--21`,
 DYNATRACE_API_KEY=`,
 		`snowflake.password=
 jdbc.snowflake.url=`,
+		`import { chain_Anvil1_Key, chain_Anvil2_Key } from '../blockchain-tests/pallets/supported-chains/consts';`,
 
 		// Yocto/BitBake
 		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
