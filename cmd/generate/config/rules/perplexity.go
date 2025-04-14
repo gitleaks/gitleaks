@@ -13,7 +13,7 @@ func PerplexityAPIKey() *config.Rule {
 		Description: "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure.",
 		Regex:       regexp.MustCompile(`\b(pplx-[\w]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)`),
 		Keywords:    []string{"pplx"},
-		Entropy:     2.0,
+		Entropy:     4.0,
 	}
 
 	return &r
