@@ -2623,9 +2623,9 @@ keywords = ["sha256~"]
 [[rules]]
 id = "perplexity-api-key"
 description = "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure."
-regex = '''\b(pplx-[\w]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
-entropy = 2
-keywords = ["pplx"]
+regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
+entropy = 4
+keywords = ["pplx-"]
 
 [[rules]]
 id = "pkcs12-file"
