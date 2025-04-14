@@ -20,8 +20,7 @@ func ClickHouseCloud() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("ClickHouse", "4b1dbRdW3rOcB7xLthrM4BTBGK1qPLkHigpN1bXD6z") // gitleaks:allow
-	// current AWS tokens cannot contain [0,1,8,9], so their entropy is slightly lower than expected.
+	tps := utils.GenerateSampleSecrets("ClickHouse", "4b1dbRdW3rOcB7xLthrM4BTBGK1qPLkHigpN1bXD6z")
 	tps = append(tps, utils.GenerateSampleSecrets("ClickHouse", "4b1d"+secrets.NewSecret("[A-Za-z0-9]{38}"))...)
 	fps := []string{
 		`key = 4b1dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,    // Low entropy
