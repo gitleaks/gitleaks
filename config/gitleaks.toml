@@ -218,6 +218,13 @@ entropy = 3
 keywords = ["meraki"]
 
 [[rules]]
+id = "clickhouse-cloud-api-secret-key"
+description = "Identified a pattern that may indicate clickhouse cloud API secret key, risking unauthorized clickhouse cloud api access and data breaches on ClickHouse Cloud platforms."
+regex = '''\b(4b1d[A-Za-z0-9]{38})\b'''
+entropy = 3
+keywords = ["4b1d"]
+
+[[rules]]
 id = "clojars-api-token"
 description = "Uncovered a possible Clojars API token, risking unauthorized access to Clojure libraries and potential code manipulation."
 regex = '''(?i)CLOJARS_[a-z0-9]{60}'''
