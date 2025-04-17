@@ -26,6 +26,7 @@ func main() {
 	gitleaksConfigPath := os.Args[1]
 
 	configRules := []*config.Rule{
+		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
