@@ -64,13 +64,13 @@ func OnePasswordSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
-		utils.GenerateSampleSecret("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{11}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`)),
-		utils.GenerateSampleSecret("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`)),
+	tps := utils.GenerateSampleSecrets("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{11}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`))
+	tps = append(tps, utils.GenerateSampleSecrets("1password", secrets.NewSecret(`A3-[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}`))...)
+	tps = append(tps,
 		// from whitepaper
 		`A3-ASWWYB-798JRYLJVD4-23DC2-86TVM-H43EB`,
 		`A3-ASWWYB-798JRY-LJVD4-23DC2-86TVM-H43EB`,
-	}
+	)
 	fps := []string{
 		// low entropy
 		`A3-XXXXXX-XXXXXXXXXXX-XXXXX-XXXXX-XXXXX`,
