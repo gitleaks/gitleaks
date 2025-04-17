@@ -1,5 +1,5 @@
 [extend]
-path="../testdata/config/extend_3.toml"
+path="../testdata/config/valid/extend_base_3.toml"
 
 [[rules]]
 id = "aws-secret-key-again-again"
