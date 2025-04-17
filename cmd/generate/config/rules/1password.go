@@ -74,6 +74,7 @@ func OnePasswordSecretKey() *config.Rule {
 	fps := []string{
 		// low entropy
 		`A3-XXXXXX-XXXXXXXXXXX-XXXXX-XXXXX-XXXXX`,
+		// lowercase
 		`A3-xXXXXX-XXXXXX-XXXXX-XXXXX-XXXXX-XXXXX`,
 	}
 	return utils.Validate(r, tps, fps)
