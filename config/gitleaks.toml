@@ -2081,7 +2081,8 @@ stopwords = [
 regexTarget = "line"
 regexes = [
     '''--mount=type=secret,''',
-    '''arn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+'''
+    '''arn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+''',
+    '''amazonaws\.com/hrapi:'''
 ]
 
 [[rules]]
