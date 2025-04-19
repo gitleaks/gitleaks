@@ -17,6 +17,7 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/detect/codec"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -1135,7 +1136,7 @@ let password = 'Summer2024!';`
 
 			f := tc.fragment
 			f.Raw = raw
-			actual := d.detectRule(f, raw, rule, []EncodedSegment{})
+			actual := d.detectRule(f, raw, rule, []codec.EncodedSegment{})
 			if diff := cmp.Diff(tc.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -1297,7 +1298,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -1483,7 +1484,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}

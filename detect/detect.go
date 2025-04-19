@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/detect/codec"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -229,9 +230,9 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
-	encodedSegments := []EncodedSegment{}
+	encodedSegments := []codec.EncodedSegment{}
 	currentDecodeDepth := 0
-	decoder := NewDecoder()
+	decoder := codec.NewDecoder()
 
 	for {
 		// build keyword map for prefiltering rules
@@ -268,7 +269,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		}
 
 		// decode the currentRaw for the next pass
-		currentRaw, encodedSegments = decoder.decode(currentRaw, encodedSegments)
+		currentRaw, encodedSegments = decoder.Decode(currentRaw, encodedSegments)
 
 		// stop the loop when there's nothing else to decode
 		if len(encodedSegments) == 0 {
@@ -280,7 +281,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -389,10 +390,10 @@ MatchLoop:
 		// Check if the decoded portions of the segment overlap with the match
 		// to see if its potentially a new match
 		if len(encodedSegments) > 0 {
-			if segment := segmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
-				matchIndex = segment.adjustMatchIndex(matchIndex)
-				metaTags = append(metaTags, segment.tags()...)
-				currentLine = segment.currentLine(currentRaw)
+			if segment := codec.SegmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
+				matchIndex = segment.AdjustMatchIndex(matchIndex)
+				metaTags = append(metaTags, segment.Tags()...)
+				currentLine = segment.CurrentLine(currentRaw)
 			} else {
 				// This item has already been added to a finding
 				continue
