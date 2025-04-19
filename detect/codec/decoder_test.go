@@ -1,10 +1,10 @@
-package detect
+package codec
 
 import (
+	"encoding/hex"
+	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDecode(t *testing.T) {
@@ -85,35 +85,44 @@ func TestDecode(t *testing.T) {
 			chunk:    `secret%3D%22q%24%21%40%23%24%25%5E%26%2A%28%20asdf%22`,
 			expected: `secret="q$!@#$%^&*( asdf"`,
 		},
+		{
+			name:     "hex encoded value",
+			chunk:    `secret="466973684D617048756E6B79212121363334"`,
+			expected: `secret="FishMapHunky!!!634"`,
+		},
 	}
 
 	decoder := NewDecoder()
-
-	// A helper to confirm a full decode
 	fullDecode := func(data string) string {
 		segments := []EncodedSegment{}
-
 		for {
-			data, segments = decoder.decode(data, segments)
-
+			data, segments = decoder.Decode(data, segments)
 			if len(segments) == 0 {
 				return data
 			}
 		}
 	}
 
-	// Test base64 decoding
+	// Test value decoding
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.expected, fullDecode(tt.chunk))
 		})
 	}
 
-	// URL Encode the values to test URL decoding
+	// Percent encode the values to test percent decoding
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			percentEncodedChunk := url.PathEscape(tt.chunk)
-			assert.Equal(t, tt.expected, fullDecode(percentEncodedChunk))
+			encodedChunk := url.PathEscape(tt.chunk)
+			assert.Equal(t, tt.expected, fullDecode(encodedChunk))
+		})
+	}
+
+	// Hex encode the values to test hex decoding
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			encodedChunk := hex.EncodeToString([]byte(tt.chunk))
+			assert.Equal(t, tt.expected, fullDecode(encodedChunk))
 		})
 	}
 }
