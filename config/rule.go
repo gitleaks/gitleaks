@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zricethezav/gitleaks/v8/config/checks"
 	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -58,15 +59,15 @@ func (r *Rule) Validate() error {
 	// Ensure |id| is present.
 	if strings.TrimSpace(r.RuleID) == "" {
 		// Try to provide helpful context, since |id| is empty.
-		var context string
-		if r.Regex != nil {
-			context = ", regex: " + r.Regex.String()
-		} else if r.Path != nil {
-			context = ", path: " + r.Path.String()
-		} else if r.Description != "" {
-			context = ", description: " + r.Description
-		}
-		return fmt.Errorf("rule |id| is missing or empty" + context)
+		//var context string
+		//if r.Regex != nil {
+		//	context = ", regex: " + r.Regex.String()
+		//} else if r.Path != nil {
+		//	context = ", path: " + r.Path.String()
+		//} else if r.Description != "" {
+		//	context = ", description: " + r.Description
+		//}
+		//return fmt.Errorf("rule |id| is missing or empty" + context)
 	}
 
 	if r.Regex == nil {
@@ -82,7 +83,7 @@ func (r *Rule) Validate() error {
 
 		if flags.EnableExperimentalPatternChecks.Load() {
 			// Ensure the pattern works as expected.
-			if err := CheckPattern(r.Regex.String()); err != nil {
+			if err := checks.CheckPattern(r.Regex.String()); err != nil {
 				logging.Error().
 					Str("rule-id", r.RuleID).
 					Msgf("Rule contains pattern issue: %s", err)
