@@ -27,7 +27,7 @@ import (
 const maxDecodeDepth = 8
 const configPath = "../testdata/config/"
 const repoBasePath = "../testdata/repos/"
-const b64TestValues = `
+const encodedTestValues = `
 # Decoded
 -----BEGIN PRIVATE KEY-----
 135f/bRUBHrbHqLY/xS3I7Oth+8rgG+0tBwfMcbk05Sgxq6QUzSYIQAop+WvsTwk2sR+C38g0Mnb
@@ -45,12 +45,43 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY29uZmlnIjoiVzJ
 c21hbGwtc2VjcmV0
 
 # This tests how it handles when the match bounds go outside the decoded value
-secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=
+secret=ZGVjb2RlZC1zZWNyZXQtdmFsdWUwMA==
 # The above encoded again
 c2VjcmV0PVpHVmpiMlJsWkMxelpXTnlaWFF0ZG1Gc2RXVT0=
 
 # Confirm you can ignore on the decoded value
 password="bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw=="
+
+# This tests that it can do hex encoded data
+secret=6465636F6465642D7365637265742D76616C756576484558
+
+# This tests that it can do percent encoded data
+## partial encoded data
+secret=decoded-%73%65%63%72%65%74-valuev2
+## scattered encoded
+secret=%64%65coded-%73%65%63%72%65%74-valuev3
+
+# Test multi levels of encoding where the source is a partal encoding
+# it is important that the bounds of the predecessors are properly
+# considered
+## single percent encoding in the middle of multi layer b64
+c2VjcmV0PVpHVmpiMl%4AsWkMxelpXTnlaWFF0ZG1Gc2RXVjJOQT09
+## single percent encoding at the beginning of hex
+secret%3d6465636F6465642D7365637265742D76616C75657635
+## multiple percent encodings in a single layer base64
+secret=ZGVjb2%52lZC1zZWNyZXQtdm%46sdWV4ODY=  # ends in x86
+## base64 encoded partially percent encoded value
+secret=ZGVjb2RlZC0lNzMlNjUlNjMlNzIlNjUlNzQtdmFsdWU=
+## one of the lines above that went through... a lot
+## and there's surrounding text around it
+Look at this value: %4EjMzMjU2NkE2MzZENTYzMDUwNTY3MDQ4%4eTY2RDcwNjk0RDY5NTUzMTRENkQ3ODYx%25%34%65TE3QTQ2MzY1NzZDNjQ0RjY1NTY3MDU5NTU1ODUyNkI2MjUzNTUzMDRFNkU0RTZCNTYzMTU1MzkwQQ== # isn't it crazy?
+## Multi percent encode two random characters close to the bounds of the base64
+## encoded data to make sure that the bounds are still correctly calculated
+secret=ZG%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%36%25%33%31%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%33%25%33%322RlZC1zZWNyZXQtd%25%36%64%25%34%36%25%37%33dWU=
+## The similar to the above but also touching the edge of the base64
+secret=%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34
+## The similar to the above but also touching and overlapping the base64
+secret%3D%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34
 `
 
 func TestDetect(t *testing.T) {
@@ -355,9 +386,9 @@ func TestDetect(t *testing.T) {
 			},
 		},
 		{
-			cfgName: "base64_encoded",
+			cfgName: "encoded",
 			fragment: Fragment{
-				Raw:      b64TestValues,
+				Raw:      encodedTestValues,
 				FilePath: "tmp.go",
 			},
 			expectedFindings: []report.Finding{
@@ -403,6 +434,90 @@ func TestDetect(t *testing.T) {
 					EndColumn:   207,
 					Entropy:     5.350665,
 				},
+				{ // Encoded Small secret at the end to make sure it's picked up by the decoding
+					Description: "Small Secret",
+					Secret:      "small-secret",
+					Match:       "small-secret",
+					File:        "tmp.go",
+					Line:        "\nc21hbGwtc2VjcmV0",
+					RuleID:      "small-secret",
+					Tags:        []string{"small", "secret", "decoded:base64", "decode-depth:1"},
+					StartLine:   15,
+					EndLine:     15,
+					StartColumn: 2,
+					EndColumn:   17,
+					Entropy:     3.0849626,
+				},
+				{ // Secret where the decoded match goes outside the encoded value
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value00",
+					Match:       "secret=decoded-secret-value00",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZGVjb2RlZC1zZWNyZXQtdmFsdWUwMA==",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:base64", "decode-depth:1"},
+					StartLine:   18,
+					EndLine:     18,
+					StartColumn: 2,
+					EndColumn:   40,
+					Entropy:     3.4428623,
+				},
+				{ // This just confirms that with no allowlist the pattern is detected (i.e. the regex is good)
+					Description: "Make sure this would be detected with no allowlist",
+					Secret:      "lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw",
+					Match:       "password=\"lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw\"",
+					File:        "tmp.go",
+					Line:        "\npassword=\"bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==\"",
+					RuleID:      "decoded-password-dont-ignore",
+					Tags:        []string{"decode-ignore", "decoded:base64", "decode-depth:1"},
+					StartLine:   23,
+					EndLine:     23,
+					StartColumn: 2,
+					EndColumn:   68,
+					Entropy:     4.5841837,
+				},
+				{ // Hex encoded data check
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuevHEX",
+					Match:       "secret=decoded-secret-valuevHEX",
+					File:        "tmp.go",
+					Line:        "\nsecret=6465636F6465642D7365637265742D76616C756576484558",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:hex", "decode-depth:1"},
+					StartLine:   26,
+					EndLine:     26,
+					StartColumn: 2,
+					EndColumn:   56,
+					Entropy:     3.6531072,
+				},
+				{ // handle partial encoded percent data
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuev2",
+					Match:       "secret=decoded-secret-valuev2",
+					File:        "tmp.go",
+					Line:        "\nsecret=decoded-%73%65%63%72%65%74-valuev2",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decode-depth:1"},
+					StartLine:   30,
+					EndLine:     30,
+					StartColumn: 2,
+					EndColumn:   42,
+					Entropy:     3.4428623,
+				},
+				{ // handle partial encoded percent data
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuev3",
+					Match:       "secret=decoded-secret-valuev3",
+					File:        "tmp.go",
+					Line:        "\nsecret=%64%65coded-%73%65%63%72%65%74-valuev3",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decode-depth:1"},
+					StartLine:   32,
+					EndLine:     32,
+					StartColumn: 2,
+					EndColumn:   46,
+					Entropy:     3.4428623,
+				},
 				{ // Encoded AWS config with a access key id inside a JWT
 					Description: "AWS IAM Unique Identifier",
 					Secret:      "ASIAIOSFODNN7LXM10JI",
@@ -431,34 +546,6 @@ func TestDetect(t *testing.T) {
 					EndColumn:   344,
 					Entropy:     4.721928,
 				},
-				{ // Encoded Small secret at the end to make sure it's picked up by the decoding
-					Description: "Small Secret",
-					Secret:      "small-secret",
-					Match:       "small-secret",
-					File:        "tmp.go",
-					Line:        "\nc21hbGwtc2VjcmV0",
-					RuleID:      "small-secret",
-					Tags:        []string{"small", "secret", "decoded:base64", "decode-depth:1"},
-					StartLine:   15,
-					EndLine:     15,
-					StartColumn: 2,
-					EndColumn:   17,
-					Entropy:     3.0849626,
-				},
-				{ // Secret where the decoded match goes outside the encoded value
-					Description: "Overlapping",
-					Secret:      "decoded-secret-value",
-					Match:       "secret=decoded-secret-value",
-					File:        "tmp.go",
-					Line:        "\nsecret=ZGVjb2RlZC1zZWNyZXQtdmFsdWU=",
-					RuleID:      "overlapping",
-					Tags:        []string{"overlapping", "decoded:base64", "decode-depth:1"},
-					StartLine:   18,
-					EndLine:     18,
-					StartColumn: 2,
-					EndColumn:   36,
-					Entropy:     3.3037016,
-				},
 				{ // Secret where the decoded match goes outside the encoded value and then encoded again
 					Description: "Overlapping",
 					Secret:      "decoded-secret-value",
@@ -473,19 +560,117 @@ func TestDetect(t *testing.T) {
 					EndColumn:   49,
 					Entropy:     3.3037016,
 				},
-				{ // This just confirms that with no allowlist the pattern is detected (i.e. the regex is good)
-					Description: "Make sure this would be detected with no allowlist",
-					Secret:      "lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw",
-					Match:       "password=\"lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw\"",
+				{ // handle encodings that touch eachother
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuev5",
+					Match:       "secret=decoded-secret-valuev5",
 					File:        "tmp.go",
-					Line:        "\npassword=\"bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==\"",
-					RuleID:      "decoded-password-dont-ignore",
-					Tags:        []string{"decode-ignore", "decoded:base64", "decode-depth:1"},
-					StartLine:   23,
-					EndLine:     23,
+					Line:        "\nsecret%3d6465636F6465642D7365637265742D76616C75657635",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:hex", "decode-depth:2"},
+					StartLine:   40,
+					EndLine:     40,
 					StartColumn: 2,
-					EndColumn:   68,
-					Entropy:     4.5841837,
+					EndColumn:   54,
+					Entropy:     3.4428623,
+				},
+				{ // handle partial encoded percent data465642D7365637265742D76616C75657635
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuev4",
+					Match:       "secret=decoded-secret-valuev4",
+					File:        "tmp.go",
+					Line:        "\nc2VjcmV0PVpHVmpiMl%4AsWkMxelpXTnlaWFF0ZG1Gc2RXVjJOQT09",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:3"},
+					StartLine:   38,
+					EndLine:     38,
+					StartColumn: 2,
+					EndColumn:   55,
+					Entropy:     3.4428623,
+				},
+				{ // multiple percent encodings in a single layer base64
+					Description: "Overlapping",
+					Secret:      "decoded-secret-valuex86",
+					Match:       "secret=decoded-secret-valuex86",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZGVjb2%52lZC1zZWNyZXQtdm%46sdWV4ODY=  # ends in x86",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:2"},
+					StartLine:   42,
+					EndLine:     42,
+					StartColumn: 2,
+					EndColumn:   44,
+					Entropy:     3.6381476,
+				},
+				{ // base64 encoded partially percent encoded value
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZGVjb2RlZC0lNzMlNjUlNjMlNzIlNjUlNzQtdmFsdWU=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:2"},
+					StartLine:   44,
+					EndLine:     44,
+					StartColumn: 2,
+					EndColumn:   52,
+					Entropy:     3.3037016,
+				},
+				{ // one of the lines above that went through... a lot
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nLook at this value: %4EjMzMjU2NkE2MzZENTYzMDUwNTY3MDQ4%4eTY2RDcwNjk0RDY5NTUzMTRENkQ3ODYx%25%34%65TE3QTQ2MzY1NzZDNjQ0RjY1NTY3MDU5NTU1ODUyNkI2MjUzNTUzMDRFNkU0RTZCNTYzMTU1MzkwQQ== # isn't it crazy?",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:hex", "decoded:base64", "decode-depth:7"},
+					StartLine:   47,
+					EndLine:     47,
+					StartColumn: 22,
+					EndColumn:   177,
+					Entropy:     3.3037016,
+				},
+				{ // Multi percent encode two random characters close to the bounds of the base64
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret=ZG%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%36%25%33%31%25%32%35%25%33%32%25%33%35%25%32%35%25%33%33%25%33%36%25%32%35%25%33%33%25%33%322RlZC1zZWNyZXQtd%25%36%64%25%34%36%25%37%33dWU=",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:5"},
+					StartLine:   50,
+					EndLine:     50,
+					StartColumn: 2,
+					EndColumn:   300,
+					Entropy:     3.3037016,
+				},
+				{ // The similar to the above but also touching the edge of the base64
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret=%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:4"},
+					StartLine:   52,
+					EndLine:     52,
+					StartColumn: 2,
+					EndColumn:   86,
+					Entropy:     3.3037016,
+				},
+				{ // The similar to the above but also touching and overlapping the base64
+					Description: "Overlapping",
+					Secret:      "decoded-secret-value",
+					Match:       "secret=decoded-secret-value",
+					File:        "tmp.go",
+					Line:        "\nsecret%3D%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34",
+					RuleID:      "overlapping",
+					Tags:        []string{"overlapping", "decoded:percent", "decoded:base64", "decode-depth:4"},
+					StartLine:   54,
+					EndLine:     54,
+					StartColumn: 2,
+					EndColumn:   88,
+					Entropy:     3.3037016,
 				},
 			},
 		},
@@ -1136,7 +1321,7 @@ let password = 'Summer2024!';`
 
 			f := tc.fragment
 			f.Raw = raw
-			actual := d.detectRule(f, raw, rule, []codec.EncodedSegment{})
+			actual := d.detectRule(f, raw, rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(tc.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -1298,7 +1483,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []codec.EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -1484,7 +1669,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []codec.EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}

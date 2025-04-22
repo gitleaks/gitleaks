@@ -2,6 +2,7 @@ package codec
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -21,27 +22,66 @@ var (
 	// each encoding will be passed to its decode function.
 	encodings = []*encoding{
 		&encoding{
-			kind:    "percent",
+			kind:    percentKind,
 			pattern: `(?:%[0-9A-Fa-f]{2})+`,
 			decode:  decodePercent,
 		},
 		&encoding{
-			kind:    "hex",
+			kind:    hexKind,
 			pattern: `[0-9A-Fa-f]{32,}`,
 			decode:  decodeHex,
 		},
 		&encoding{
-			kind:    "base64",
+			kind:    base64Kind,
 			pattern: `[\w\/+-]{16,}={0,3}`,
 			decode:  decodeBase64,
 		},
 	}
 )
 
+// encodingNames is used to map the encodingKinds to their name
+var encodingNames = []string{
+	"percent",
+	"hex",
+	"base64",
+}
+
+// encodingKind can be or'd together to capture all of the unique encodings
+// that were present in a segment
+type encodingKind int
+
+var (
+	// make sure these go up by powers of 2
+	percentKind = encodingKind(1)
+	hexKind     = encodingKind(2)
+	base64Kind  = encodingKind(4)
+)
+
+func (e encodingKind) String() string {
+	i := int(math.Log2(float64(e)))
+	if i >= len(encodingNames) {
+		return ""
+	}
+	return encodingNames[i]
+}
+
+// kinds returns a list of encodingKinds combined in this one
+func (e encodingKind) kinds() []encodingKind {
+	kinds := []encodingKind{}
+
+	for i := 0; i < len(encodingNames); i++ {
+		if kind := int(e) & int(math.Pow(2, float64(i))); kind != 0 {
+			kinds = append(kinds, encodingKind(kind))
+		}
+	}
+
+	return kinds
+}
+
 // encoding represent a type of coding supported by the decoder.
 type encoding struct {
 	// the kind of decoding (e.g. base64, etc)
-	kind string
+	kind encodingKind
 	// the regex pattern that _only_ matches the encoding format
 	pattern string
 	// take the match and return the decoded value

@@ -70,7 +70,7 @@
   # goes outside the bounds of the encoded value
   id = 'overlapping'
   description = 'Overlapping'
-  regex = '''secret=(decoded-secret-value)'''
+  regex = '''secret=(decoded-secret-value\w*)'''
   tags = ['overlapping']
   secretGroup = 1
 

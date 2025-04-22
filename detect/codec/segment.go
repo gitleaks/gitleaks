@@ -1,120 +1,84 @@
 package codec
 
 import (
-	"strconv"
+	"fmt"
 )
 
 // EncodedSegment represents a portion of text that is encoded in some way.
-// `decode` supports recusive decoding and can result in "segment trees".
-// There can be multiple segments in the original text, so each can be thought
-// of as its own tree with the root being the original segment.
+// The encoded segments are strung together to form a digraph
 type EncodedSegment struct {
-	// The parent segment in a segment tree. If nil, it is a root segment
-	parent *EncodedSegment
+	// predecessors are all of the segments from the previous decoding pass
+	predecessors []*EncodedSegment
 
-	// Relative start/end are the bounds of the encoded value in the current pass.
-	relativeStart int
-	relativeEnd   int
+	// original start/end indices before decoding
+	original startEnd
 
-	// Absolute start/end refer to the bounds of the root segment in this segment
-	// tree
-	absoluteStart int
-	absoluteEnd   int
+	// encoded start/end indices relative to the previous decoding pass.
+	// If it's a top level segment, original and encoded will be the
+	// same.
+	encoded startEnd
 
-	// Decoded start/end refer to the bounds of the decoded value in the current
-	// pass. These can differ from relative values because decoding can shrink
-	// or grow the size of the segment.
-	decodedStart int
-	decodedEnd   int
+	// decoded start/end indices in this pass after decoding
+	decoded startEnd
 
-	// This is the actual decoded content in the segment
+	// decodedValue contains the decoded string for this segment
 	decodedValue string
 
-	// This is the kind of encoding
-	encoding string
-}
+	// encodings is the encodings that make up this segment. encodingKind
+	// can be or'd together to hold multiple encodings
+	encodings encodingKind
 
-// isChildOf inspects the bounds of two segments to determine
-// if one should be the child of another
-func (s EncodedSegment) isChildOf(parent EncodedSegment) bool {
-	return parent.decodedStart <= s.relativeStart && parent.decodedEnd >= s.relativeEnd
-}
-
-// decodedOverlaps checks if the decoded bounds of the segment overlaps a range
-func (s EncodedSegment) decodedOverlaps(start, end int) bool {
-	return start <= s.decodedEnd && end >= s.decodedStart
-}
-
-// AdjustMatchIndex takes the matchIndex from the current decoding pass and
-// updates it to match the absolute matchIndex in the original text.
-func (s EncodedSegment) AdjustMatchIndex(matchIndex []int) []int {
-	// The match is within the bounds of the segment so we just return
-	// the absolute start and end of the root segment.
-	if s.decodedStart <= matchIndex[0] && matchIndex[1] <= s.decodedEnd {
-		return []int{
-			s.absoluteStart,
-			s.absoluteEnd,
-		}
-	}
-
-	// Since it overlaps one side and/or the other, we're going to have to adjust
-	// and climb parents until we're either at the root or we've determined
-	// we're fully inside one of the parent segments.
-	adjustedMatchIndex := make([]int, 2)
-	if matchIndex[0] < s.decodedStart {
-		// It starts before the encoded segment so adjust the start to match
-		// the location before it was decoded
-		matchStartDelta := s.decodedStart - matchIndex[0]
-		adjustedMatchIndex[0] = s.relativeStart - matchStartDelta
-	} else {
-		// It starts within the encoded segment so set the bound to the
-		// relative start
-		adjustedMatchIndex[0] = s.relativeStart
-	}
-
-	if matchIndex[1] > s.decodedEnd {
-		// It ends after the encoded segment so adjust the end to match
-		// the location before it was decoded
-		matchEndDelta := matchIndex[1] - s.decodedEnd
-		adjustedMatchIndex[1] = s.relativeEnd + matchEndDelta
-	} else {
-		// It ends within the encoded segment so set the bound to the relative end
-		adjustedMatchIndex[1] = s.relativeEnd
-	}
-
-	// We're still not at a root segment so we'll need to keep on adjusting
-	if s.parent != nil {
-		return s.parent.AdjustMatchIndex(adjustedMatchIndex)
-	}
-
-	return adjustedMatchIndex
+	// depth is how many decoding passes it took to decode this segment
+	depth int
 }
 
 // Tags returns additional meta data tags related to the types of segments
-func (s EncodedSegment) Tags() []string {
-	// Find the depth of this item and all the unique encodings
-	depth, encodings := 0, make(map[string]bool)
-	for current := &s; current != nil; current = current.parent {
-		depth++
-		encodings[current.encoding] = true
+func Tags(segments []*EncodedSegment) []string {
+	// Return an empty list if we don't have any segments
+	if len(segments) == 0 {
+		return []string{}
 	}
 
-	// Generate tags
-	tags := make([]string, 0, len(encodings)+1)
-	for encoding := range encodings {
-		tags = append(tags, "decoded:"+encoding)
+	// Since decoding is done in passes, the depth of all the segments
+	// should be the same
+	depth := segments[0].depth
+
+	// Collect the encodings from the segments
+	encodings := segments[0].encodings
+	for i := 0; i < len(segments); i++ {
+		encodings |= segments[i].encodings
 	}
-	return append(tags, "decode-depth:"+strconv.Itoa(depth))
+
+	kinds := encodings.kinds()
+	tags := make([]string, len(kinds)+1)
+
+	tags[len(tags)-1] = fmt.Sprintf("decode-depth:%d", depth)
+	for i, kind := range kinds {
+		tags[i] = fmt.Sprintf("decoded:%s", kind)
+	}
+
+	return tags
 }
 
-// CurrentLine returns from the start of the line containing the segment
+// CurrentLine returns from the start of the line containing the segments
 // to the end of the line where the segment ends.
-func (s EncodedSegment) CurrentLine(currentRaw string) string {
+func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
+	// Return the whole thing if no segments are provided
+	if len(segments) == 0 {
+		return currentRaw
+	}
+
 	start := 0
 	end := len(currentRaw)
 
+	// Merge the ranges together into a single decoded value
+	decoded := segments[0].decoded
+	for i := 1; i < len(segments); i++ {
+		decoded = decoded.merge(segments[i].decoded)
+	}
+
 	// Find the start of the range
-	for i := s.decodedStart; i > -1; i-- {
+	for i := decoded.start; i > -1; i-- {
 		c := currentRaw[i]
 		if c == '\n' {
 			start = i
@@ -123,7 +87,7 @@ func (s EncodedSegment) CurrentLine(currentRaw string) string {
 	}
 
 	// Find the end of the range
-	for i := s.decodedEnd; i < end; i++ {
+	for i := decoded.end; i < end; i++ {
 		c := currentRaw[i]
 		if c == '\n' {
 			end = i
@@ -134,13 +98,80 @@ func (s EncodedSegment) CurrentLine(currentRaw string) string {
 	return currentRaw[start:end]
 }
 
-// SegmentWithDecodedOverlap finds a segment where the decoded bounds overlaps
-// a range
-func SegmentWithDecodedOverlap(encodedSegments []EncodedSegment, start, end int) *EncodedSegment {
-	for _, segment := range encodedSegments {
-		if segment.decodedOverlaps(start, end) {
-			return &segment
+// toOriginal maps a start/end to its start/end in the original text
+// the provided start/end should be relative to the segment's decoded value
+func (s *EncodedSegment) toOriginal(se startEnd) startEnd {
+	// If fully contained, return the segments original start/end
+	if s.decoded.contains(se) {
+		return s.original
+	}
+
+	// It falls outside the segment so we need to traverse up the predecessors
+	// to map it to its original location
+	original := startEnd{}
+
+	// Map the value to be relative to the predecessors's decoded values
+	relative := s.encoded.add(s.decoded.overflow(se))
+
+	for _, p := range s.predecessors {
+		if !p.decoded.overlaps(relative) {
+			continue // Not in scope
+		}
+
+		if original.end == 0 {
+			// Start the original based off the first predecessor that overlaps
+			original = p.toOriginal(relative)
+		} else {
+			// Adjust the bounds of the original based on other overlaps
+			original = original.merge(p.toOriginal(relative))
 		}
 	}
-	return nil
+
+	// The predecessors didn't overlap with the relative so this is the original
+	if original.end == 0 {
+		return relative
+	}
+
+	return original
+}
+
+// AdjustMatchIndex maps a match index from the current decode pass back to
+// its location in the original text
+func AdjustMatchIndex(segments []*EncodedSegment, matchIndex []int) []int {
+	// Don't adjust if we're not provided any segments
+	if len(segments) == 0 {
+		return matchIndex
+	}
+
+	// Map the match to the location in the original text
+	match := startEnd{matchIndex[0], matchIndex[1]}
+
+	// Adjust the match based on the first segment
+	adjusted := segments[0].toOriginal(match)
+
+	// Merge adjustments from the other segments
+	for i := 1; i < len(segments); i++ {
+		adjusted = adjusted.merge(segments[i].toOriginal(match))
+	}
+
+	// Return the adjusted match index
+	return []int{
+		adjusted.start,
+		adjusted.end,
+	}
+}
+
+// SegmentsWithDecodedOverlap the segments where the start and end overlap its
+// decoded range
+func SegmentsWithDecodedOverlap(segments []*EncodedSegment, start, end int) []*EncodedSegment {
+	se := startEnd{start, end}
+	overlaps := []*EncodedSegment{}
+
+	for _, segment := range segments {
+		if segment.decoded.overlaps(se) {
+			overlaps = append(overlaps, segment)
+		}
+	}
+
+	return overlaps
 }

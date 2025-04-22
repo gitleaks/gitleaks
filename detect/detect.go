@@ -230,7 +230,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
-	encodedSegments := []codec.EncodedSegment{}
+	encodedSegments := []*codec.EncodedSegment{}
 	currentDecodeDepth := 0
 	decoder := codec.NewDecoder()
 
@@ -281,7 +281,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -390,14 +390,15 @@ MatchLoop:
 		// Check if the decoded portions of the segment overlap with the match
 		// to see if its potentially a new match
 		if len(encodedSegments) > 0 {
-			if segment := codec.SegmentWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1]); segment != nil {
-				matchIndex = segment.AdjustMatchIndex(matchIndex)
-				metaTags = append(metaTags, segment.Tags()...)
-				currentLine = segment.CurrentLine(currentRaw)
-			} else {
+			segments := codec.SegmentsWithDecodedOverlap(encodedSegments, matchIndex[0], matchIndex[1])
+			if len(segments) == 0 {
 				// This item has already been added to a finding
 				continue
 			}
+
+			matchIndex = codec.AdjustMatchIndex(segments, matchIndex)
+			metaTags = append(metaTags, codec.Tags(segments)...)
+			currentLine = codec.CurrentLine(segments, currentRaw)
 		} else {
 			// Fixes: https://github.com/gitleaks/gitleaks/issues/1352
 			// removes the incorrectly following line that was detected by regex expression '\n'

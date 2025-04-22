@@ -22,11 +22,11 @@ func isPrintableASCII(b []byte) bool {
 }
 
 // hasByte can be used to check if a string has at least one of the provided
-// bytes. Note: make sure bs is long enough to handle the largest byte in
+// bytes. Note: make sure byteset is long enough to handle the largest byte in
 // the string.
-func hasByte(data string, bs []bool) bool {
+func hasByte(data string, byteset []bool) bool {
 	for i := 0; i < len(data); i++ {
-		if bs[data[i]] {
+		if byteset[data[i]] {
 			return true
 		}
 	}

@@ -94,7 +94,7 @@ func TestDecode(t *testing.T) {
 
 	decoder := NewDecoder()
 	fullDecode := func(data string) string {
-		segments := []EncodedSegment{}
+		segments := []*EncodedSegment{}
 		for {
 			data, segments = decoder.Decode(data, segments)
 			if len(segments) == 0 {

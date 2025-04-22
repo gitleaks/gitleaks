@@ -19,38 +19,36 @@ func NewDecoder() *Decoder {
 
 // Decode returns the data with the values decoded in place along with the
 // encoded segment meta data for the next pass of decoding
-func (d *Decoder) Decode(data string, parentSegments []EncodedSegment) (string, []EncodedSegment) {
-	segments := d.findEncodedSegments(data, parentSegments)
+func (d *Decoder) Decode(data string, predecessors []*EncodedSegment) (string, []*EncodedSegment) {
+	segments := d.findEncodedSegments(data, predecessors)
 
 	if len(segments) > 0 {
 		result := bytes.NewBuffer(make([]byte, 0, len(data)))
-		relativeStart := 0
+		encodedStart := 0
 		for _, segment := range segments {
-			result.WriteString(data[relativeStart:segment.relativeStart])
+			result.WriteString(data[encodedStart:segment.encoded.start])
 			result.WriteString(segment.decodedValue)
-			relativeStart = segment.relativeEnd
+			encodedStart = segment.encoded.end
 		}
 
-		result.WriteString(data[relativeStart:])
+		result.WriteString(data[encodedStart:])
 		return result.String(), segments
 	}
 
 	return data, segments
 }
 
-// findEncodedSegments finds the encoded segments in the data and updates the
-// segment tree for this pass
-func (d *Decoder) findEncodedSegments(data string, parentSegments []EncodedSegment) []EncodedSegment {
+// findEncodedSegments finds the encoded segments in the data and updates the segment digraph for this pass
+func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegment) []*EncodedSegment {
 	if len(data) == 0 {
-		return []EncodedSegment{}
+		return []*EncodedSegment{}
 	}
 
 	decodedShift := 0
 	matchEncodings, matchIndices := findEncodingMatches(data)
-	segments := make([]EncodedSegment, 0, len(matchIndices))
+	segments := make([]*EncodedSegment, 0, len(matchIndices))
 	for i, matchIndex := range matchIndices {
 		encoding := matchEncodings[i]
-
 		if encoding == nil {
 			logging.Error().Msg("could not determine encoding")
 			continue
@@ -71,45 +69,62 @@ func (d *Decoder) findEncodedSegments(data string, parentSegments []EncodedSegme
 			continue
 		}
 
-		segment := EncodedSegment{
-			relativeStart: matchIndex[0],
-			relativeEnd:   matchIndex[1],
-			absoluteStart: matchIndex[0],
-			absoluteEnd:   matchIndex[1],
-			decodedStart:  matchIndex[0] + decodedShift,
-			decodedEnd:    matchIndex[0] + decodedShift + len(decodedValue),
-			decodedValue:  decodedValue,
-			encoding:      encoding.kind,
+		segment := &EncodedSegment{
+			predecessors: predecessors,
+			encoded:      startEnd{matchIndex[0], matchIndex[1]},
+			decoded: startEnd{
+				matchIndex[0] + decodedShift,
+				matchIndex[0] + decodedShift + len(decodedValue),
+			},
+			decodedValue: decodedValue,
+			encodings:    encoding.kind,
+			depth:        1,
 		}
 
 		// Shift decoded start and ends based on size changes
 		decodedShift += len(decodedValue) - len(encodedValue)
 
-		// Adjust the absolute position of segments contained in parent segments
-		for _, parentSegment := range parentSegments {
-			if segment.isChildOf(parentSegment) {
-				segment.absoluteStart = parentSegment.absoluteStart
-				segment.absoluteEnd = parentSegment.absoluteEnd
-				segment.parent = &parentSegment
-				break
+		// Set the predecessors and adjust values if applicable
+		if len(segment.predecessors) == 0 {
+			// We're at the top level so the encoded is the original
+			segment.original = segment.encoded
+		} else {
+			// Set the depth based on the predecessors' depth in the previous pass
+			segment.depth = 1 + segment.predecessors[0].depth
+
+			// Associate predecessors, adjust encodings, and original start/end
+			for _, p := range segment.predecessors {
+				if segment.encoded.overlaps(p.decoded) {
+					segment.encodings |= p.encodings
+
+					// Calcualte the original start/end range
+					if segment.original.end == 0 {
+						// Set it for the first one
+						// instead of merging
+						segment.original = p.toOriginal(
+							segment.encoded,
+						)
+					} else {
+						// Merge the start/end ranges to get the full range for this segment
+						segment.original = segment.original.merge(
+							p.toOriginal(segment.encoded),
+						)
+					}
+				}
 			}
 		}
 
 		segments = append(segments, segment)
 		logging.Debug().Msgf(
-			"segment found: enc=%q abs=[%d,%d] rel=[%d,%d]: %q -> %q",
-			segment.encoding,
-			segment.absoluteStart,
-			segment.absoluteEnd,
-			segment.relativeStart,
-			segment.relativeEnd,
+			"segment found: original=%s pos=%s: %q -> %q",
+			segment.original,
+			segment.encoded,
 			encodedValue,
 			segment.decodedValue,
 		)
 	}
 
 	return segments
-
 }
 
 // skipDecode checks to see if this match touches any neigbors that are
