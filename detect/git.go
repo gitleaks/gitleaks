@@ -62,6 +62,13 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 					}
 
 					findings, subFindings := d.Detect(fragment)
+					for findingIndex := range findings {
+						findings[findingIndex] = augmentGitFinding(remote, findings[findingIndex], textFragment, gitdiffFile)
+					}
+					for subFindingIndex := range subFindings {
+						subFindings[subFindingIndex] = augmentGitFinding(remote, subFindings[subFindingIndex], textFragment, gitdiffFile)
+					}
+
 					d.AddFindings(findings, subFindings)
 				}
 				return nil
