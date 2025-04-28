@@ -12,8 +12,19 @@ import (
 )
 
 type ScanTarget struct {
-	Path    string
-	Symlink string
+	Path        string
+	Symlink     string
+	VirtualPath string
+
+	Source string
+
+	// The following items are only used for git archive scans
+	// (since we have to treat them like regular dir scans)
+	GitInfo GitInfo
+
+	// TODO one day use a single Metadata map
+	// instead of git fields
+	// Metadata map[string]string
 }
 
 var isWindows = runtime.GOOS == "windows"

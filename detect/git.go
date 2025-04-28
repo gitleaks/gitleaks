@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gitleaks/go-gitdiff/gitdiff"
 
@@ -32,13 +35,6 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 				diffFilesCh = nil
 				break
 			}
-
-			// skip binary files
-			if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
-				continue
-			}
-
-			// Check if commit is allowed
 			commitSHA := ""
 			if gitdiffFile.PatchHeader != nil {
 				commitSHA = gitdiffFile.PatchHeader.SHA
@@ -47,6 +43,60 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 					continue
 				}
 			}
+
+			if IsArchive(gitdiffFile.NewName) {
+				// Check if commit is allowed
+				d.Sema.Go(func() error {
+					// Check out the archive blob to disk
+					archivePath, err := cmd.CheckoutBlob(commitSHA, gitdiffFile.NewName)
+					if err != nil {
+						logging.Warn().Err(err).Str("file", gitdiffFile.NewName).Msg("failed to checkout blob")
+						return nil
+					}
+					defer os.Remove(archivePath)
+
+					targets, tmpDir, err := ExtractArchive(archivePath)
+					if err != nil {
+						os.RemoveAll(tmpDir)
+						logging.Warn().Err(err).Msg("failed to extract archive")
+						return nil
+					}
+
+					// Scan each extracted file just as you would in directory mode
+					for _, t := range targets {
+						// build the “inside-archive” path
+						rel, _ := filepath.Rel(tmpDir, t.Path)
+						rel = filepath.ToSlash(rel)
+						// chain onto any existing VirtualPath (nested archives)
+						if t.VirtualPath != "" {
+							t.VirtualPath = t.VirtualPath + "/" + rel
+						} else {
+							t.VirtualPath = filepath.Base(gitdiffFile.NewName) + "/" + rel
+						}
+
+						// TODO this isn't a great solution, and it would be nice to
+						// have a better way to handle this.
+						// update taget to include git information:
+						t.Source = "github-archive"
+						t.GitInfo.Author = gitdiffFile.PatchHeader.Author.Name
+						t.GitInfo.Commit = commitSHA
+
+						t.GitInfo.Date = gitdiffFile.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
+						t.GitInfo.Message = gitdiffFile.PatchHeader.Message()
+						t.GitInfo.Email = gitdiffFile.PatchHeader.Author.Email
+
+						d.DetectScanTarget(t)
+					}
+					os.RemoveAll(tmpDir)
+					return nil
+				})
+			}
+
+			// skip binary files
+			if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
+				continue
+			}
+
 			d.addCommit(commitSHA)
 
 			d.Sema.Go(func() error {

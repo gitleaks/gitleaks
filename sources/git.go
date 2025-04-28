@@ -3,7 +3,9 @@ package sources
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -18,9 +20,20 @@ var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
 // GitCmd helps to work with Git's output.
 type GitCmd struct {
+	repoPath    string
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
+}
+
+type GitInfo struct {
+	Source  string
+	Commit  string
+	Link    string
+	Author  string
+	Email   string
+	Date    string
+	Message string
 }
 
 // NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
@@ -75,6 +88,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 	}
 
 	return &GitCmd{
+		repoPath:    sourceClean,
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
@@ -115,10 +129,40 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 	}
 
 	return &GitCmd{
+		repoPath:    sourceClean,
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
 	}, nil
+}
+
+// CheckoutBlob writes the contents of the blob at commit:filepath into a temp file
+// and returns its path.
+func (g *GitCmd) CheckoutBlob(commit, filepathInRepo string) (string, error) {
+	// Create a temp file with the same extension as the blob, if possible
+	ext := filepath.Ext(filepathInRepo)
+	tmpFile, err := os.CreateTemp("", "gitleaks-blob-*"+ext)
+	if err != nil {
+		return "", fmt.Errorf("creating temp file for blob: %w", err)
+	}
+	tmpFilePath := tmpFile.Name()
+	tmpFile.Close()
+
+	// git show <commit>:<path>
+	gitArgs := []string{"-C", g.repoPath, "show", fmt.Sprintf("%s:%s", commit, filepathInRepo)}
+	cmd := exec.Command("git", gitArgs...)
+	cmd.Stdout, err = os.OpenFile(tmpFilePath, os.O_WRONLY, 0o644)
+	if err != nil {
+		os.Remove(tmpFilePath)
+		return "", fmt.Errorf("opening temp file for write: %w", err)
+	}
+
+	if err := cmd.Run(); err != nil {
+		os.Remove(tmpFilePath)
+		return "", fmt.Errorf("git show failed: %w", err)
+	}
+
+	return tmpFilePath, nil
 }
 
 // DiffFilesCh returns a channel with *gitdiff.File.
