@@ -28,13 +28,11 @@ func IsArchive(path string) bool {
 // ExtractArchive extracts all files from archivePath into a temp dir.
 // Returns the list of ScanTargets (with real file paths) and the temp dir for cleanup.
 func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
-	// 1. Create a temp dir
 	tmpDir, err := os.MkdirTemp("", "gitleaks-archive-")
 	if err != nil {
 		return nil, "", err
 	}
 
-	// 2. Open the archive
 	f, err := os.Open(archivePath)
 	if err != nil {
 		os.RemoveAll(tmpDir)
@@ -42,7 +40,6 @@ func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
 	}
 	defer f.Close()
 
-	// 3. Identify format (name-based + header peek)
 	ctx := context.Background()
 	format, stream, err := archives.Identify(ctx, archivePath, f)
 	if err != nil {
@@ -50,14 +47,13 @@ func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
 		return nil, "", err
 	}
 
-	// 4. Ensure it's extractable
 	extractor, ok := format.(archives.Extractor)
 	if !ok {
 		os.RemoveAll(tmpDir)
 		return nil, "", fmt.Errorf("format %T is not extractable", format)
 	}
 
-	// 5. Walk and extract
+	// Walk and extract
 	var targets []sources.ScanTarget
 	err = extractor.Extract(ctx, stream, func(ctx context.Context, file archives.FileInfo) error {
 		name := file.Name()
