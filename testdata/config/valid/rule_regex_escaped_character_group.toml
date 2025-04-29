@@ -1,6 +1,3 @@
-title = "gitleaks config"
-# https://learnxinyminutes.com/docs/toml/ for toml reference
-
 [[rules]]
     id = "pypi-upload-token"
     description = "PyPI upload token"
