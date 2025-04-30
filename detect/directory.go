@@ -3,12 +3,14 @@ package detect
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/h2non/filetype"
+	"github.com/mholt/archives"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -18,12 +20,17 @@ import (
 const maxPeekSize = 25 * 1_000 // 10kb
 
 func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
-	for pa := range paths {
-		d.Sema.Go(func() error {
-			logger := logging.With().Str("path", pa.Path).Logger()
-			logger.Trace().Msg("Scanning path")
+	for p := range paths {
+		logger := logging.With().Str("path", p.Path).Logger()
+		// Check if the file is worth scanning.
+		if ok, reason := shouldScanBinaryFile(p.Path); !ok {
+			logger.Trace().Str("reason", reason).Msg("Skipping binary file.")
+			continue
+		}
+		logger.Trace().Msg("Scanning path")
 
-			f, err := os.Open(pa.Path)
+		d.Sema.Go(func() error {
+			f, err := os.Open(p.Path)
 			if err != nil {
 				if os.IsPermission(err) {
 					logger.Warn().Msg("Skipping file: permission denied")
@@ -43,20 +50,38 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 			fileSize := fileInfo.Size()
 			if d.MaxTargetMegaBytes > 0 {
 				rawLength := fileSize / 1000000
-				if rawLength > int64(d.MaxTargetMegaBytes) {
+				if rawLength > d.MaxTargetMegaBytes {
 					logger.Debug().
 						Int64("size", rawLength).
-						Msg("Skipping file: exceeds --max-target-megabytes")
+						Int64("limit", d.MaxTargetMegaBytes).
+						Str("reason", "size").
+						Msg("Skipping binary file.")
 					return nil
 				}
 			}
 
 			var (
 				// Buffer to hold file chunks
-				reader     = bufio.NewReaderSize(f, chunkSize)
+				reader = bufio.NewReader(f)
+				//reader     = bufio.NewReaderSize(f, chunkSize)
 				buf        = make([]byte, chunkSize)
 				totalLines = 0
 			)
+			ctx := logging.WithContext(context.Background())
+			if findings, err := d.handleFile(ctx, p.Path, reader, false); err != nil {
+				if !errors.Is(err, archives.NoMatch) {
+					logging.Error().Err(err).
+						Str("path", p.Path).
+						Msgf("Failed to identify file")
+				}
+			} else {
+				for _, finding := range findings {
+					d.AddFinding(finding)
+				}
+				return nil
+			}
+
+			// TODO
 			for {
 				n, err := reader.Read(buf)
 
@@ -64,14 +89,28 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 				// https://pkg.go.dev/io#Reader
 				if n > 0 {
 					// Only check the filetype at the start of file.
-					if totalLines == 0 {
-						// TODO: could other optimizations be introduced here?
-						if mimetype, err := filetype.Match(buf[:n]); err != nil {
-							return nil
-						} else if mimetype.MIME.Type == "application" {
-							return nil // skip binary files
-						}
-					}
+					//if totalLines == 0 {
+					//	// TODO: could other optimizations be introduced here?
+					//	if mimetype, err := filetype.Match(buf[:n]); err != nil {
+					//		return nil
+					//	} else if mimetype.MIME.Type == "application" {
+					//		if !d.ScanBinaryFiles {
+					//			logger.Trace().
+					//				Str("reason", "binary scanning not enabled").
+					//				Msg("Skipping binary file.")
+					//			return nil // skip binary files
+					//		}
+					//	} else if mimetype.Extension != "unknown" {
+					//		logger.Info().
+					//			Str("type", mimetype.MIME.Type).
+					//			Str("value", mimetype.MIME.Value).
+					//			Str("subtype", mimetype.MIME.Subtype).
+					//			Str("extension", mimetype.Extension).
+					//			Msg("mimetype info")
+					//	} else {
+					//		logger.Info().Msgf("Mimetype: %s", mimetype.MIME.Type)
+					//	}
+					//}
 
 					// Try to split chunks across large areas of whitespace, if possible.
 					peekBuf := bytes.NewBuffer(buf[:n])
@@ -81,21 +120,30 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 
 					// Count the number of newlines in this chunk
 					chunk := peekBuf.String()
+					//if strings.Contains(chunk, "STORAGE_ACCESS_KEY_SECRET") {
+					//	fmt.Printf(">>>>SECRET IN CHUNK\n")
+					//
+					//	b := peekBuf.Bytes()
+					//	if i := bytes.Index(b, []byte("STORAGE_ACCESS_KEY_SECRET")); i != -1 {
+					//		fmt.Printf("Bytes are: %v\n", b[i:i+100])
+					//	}
+					//}
 					linesInChunk := strings.Count(chunk, "\n")
 					totalLines += linesInChunk
 					fragment := Fragment{
 						Raw:   chunk,
 						Bytes: peekBuf.Bytes(),
 					}
-					if pa.Symlink != "" {
-						fragment.SymlinkFile = pa.Symlink
+					//logging.Info().Str("chunk", fragment.Raw).Msg("found chunk")
+					if p.Symlink != "" {
+						fragment.SymlinkFile = p.Symlink
 					}
 					if isWindows {
-						fragment.FilePath = filepath.ToSlash(pa.Path)
+						fragment.FilePath = filepath.ToSlash(p.Path)
 						fragment.SymlinkFile = filepath.ToSlash(fragment.SymlinkFile)
-						fragment.WindowsFilePath = pa.Path
+						fragment.WindowsFilePath = p.Path
 					} else {
-						fragment.FilePath = pa.Path
+						fragment.FilePath = p.Path
 					}
 
 					for _, finding := range d.Detect(fragment) {

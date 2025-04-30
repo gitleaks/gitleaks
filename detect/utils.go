@@ -18,8 +18,8 @@ import (
 
 // augmentGitFinding updates the start and end line numbers of a finding to include the
 // delta from the git diff
-func augmentGitFinding(remote *RemoteInfo, finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
-	if !strings.HasPrefix(finding.Match, "file detected") {
+func augmentGitFinding(remote *RemoteInfo, finding report.Finding, f *gitdiff.File, textFragment *gitdiff.TextFragment) report.Finding {
+	if textFragment != nil && !strings.HasPrefix(finding.Match, "file detected") {
 		finding.StartLine += int(textFragment.NewPosition)
 		finding.EndLine += int(textFragment.NewPosition)
 	}
