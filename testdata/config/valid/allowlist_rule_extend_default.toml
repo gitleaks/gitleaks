@@ -1,0 +1,11 @@
+# https://github.com/gitleaks/gitleaks/issues/1844
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Exclude a specific file from generic-api-key rule"
+paths = [
+    '''^path/to/your/problematic/file\.js$'''
+]

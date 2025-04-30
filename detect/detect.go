@@ -547,10 +547,10 @@ func checkCommitOrPathAllowed(
 			}
 			// These will be checked later.
 			if len(a.Regexes) > 0 {
-				return false, nil
+				continue
 			}
 			if len(a.StopWords) > 0 {
-				return false, nil
+				continue
 			}
 
 			isAllowed = allTrue(allowlistChecks)

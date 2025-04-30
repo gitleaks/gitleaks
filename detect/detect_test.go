@@ -376,6 +376,13 @@ const token = "mockSecret";
 				FilePath: "tmp.go",
 			},
 		},
+		"allowlist - ignore path when extending": {
+			cfgName: "valid/allowlist_rule_extend_default",
+			fragment: Fragment{
+				Raw:      `token = "aebfab88-7596-481d-82e8-c60c8f7de0c0"`,
+				FilePath: "path/to/your/problematic/file.js",
+			},
+		},
 		"allowlist - ignore regex": {
 			cfgName: "valid/allowlist_rule_regex",
 			fragment: Fragment{
