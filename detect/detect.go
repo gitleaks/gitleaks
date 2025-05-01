@@ -38,6 +38,7 @@ var (
 )
 
 // Detector is the main detector struct
+// TODO: Remove non-context detect methods in v9.
 type Detector struct {
 	// Config is the configuration for the detector
 	Config config.Config
@@ -200,18 +201,33 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 
 // DetectBytes scans the given bytes and returns a list of findings
 func (d *Detector) DetectBytes(content []byte) []report.Finding {
-	return d.DetectString(string(content))
+	return d.DetectBytesContext(context.Background(), content)
+}
+
+// DetectBytesContext scans the given bytes and returns a list of findings
+func (d *Detector) DetectBytesContext(ctx context.Context, content []byte) []report.Finding {
+	return d.DetectStringContext(ctx, string(content))
 }
 
 // DetectString scans the given string and returns a list of findings
 func (d *Detector) DetectString(content string) []report.Finding {
-	return d.Detect(Fragment{
+	return d.DetectStringContext(context.Background(), content)
+}
+
+// DetectStringContext scans the given string and returns a list of findings
+func (d *Detector) DetectStringContext(ctx context.Context, content string) []report.Finding {
+	return d.DetectContext(ctx, Fragment{
 		Raw: content,
 	})
 }
 
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	return d.DetectContext(context.Background(), fragment)
+}
+
+// Detect scans the given fragment and returns a list of findings
+func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
 		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
@@ -252,6 +268,13 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	decoder := NewDecoder()
 
 	for {
+		select {
+		case <-ctx.Done():
+			return findings
+		default:
+			// Continue
+		}
+
 		// build keyword map for prefiltering rules
 		keywords := make(map[string]bool)
 		normalizedRaw := strings.ToLower(currentRaw)

@@ -5,6 +5,7 @@
 package utils
 
 import (
+	"context"
 	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
@@ -14,10 +15,11 @@ import (
 )
 
 func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+	ctx := context.Background()
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for _, tp := range truePositives {
-		if len(d.DetectString(tp)) < 1 {
+		if len(d.DetectStringContext(ctx, tp)) < 1 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -26,7 +28,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 		}
 	}
 	for _, fp := range falsePositives {
-		findings := d.DetectString(fp)
+		findings := d.DetectStringContext(ctx, fp)
 		if len(findings) != 0 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
@@ -39,11 +41,12 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 }
 
 func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
+	ctx := context.Background()
 	r := &rule
 	d := createSingleRuleDetector(r)
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
-		if len(d.Detect(f)) != 1 {
+		if len(d.DetectContext(ctx, f)) != 1 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", tp).
@@ -54,7 +57,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	}
 	for path, fp := range falsePositives {
 		f := detect.Fragment{Raw: fp, FilePath: path}
-		if len(d.Detect(f)) != 0 {
+		if len(d.DetectContext(ctx, f)) != 0 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
 				Str("value", fp).

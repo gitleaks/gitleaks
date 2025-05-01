@@ -2,6 +2,7 @@ package detect
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/zricethezav/gitleaks/v8/report"
 )
 
@@ -67,7 +69,8 @@ func TestDetectReader(t *testing.T) {
 			detector, err := NewDetectorDefaultConfig()
 			require.NoError(t, err)
 
-			findings, err := detector.DetectReader(test.reader, test.bufSize)
+			ctx := context.Background()
+			findings, err := detector.DetectReaderContext(ctx, test.reader, test.bufSize)
 			require.NoError(t, err)
 
 			assert.Equal(t, test.findingsCount, len(findings))
@@ -144,7 +147,8 @@ func TestStreamDetectReader(t *testing.T) {
 			detector, err := NewDetectorDefaultConfig()
 			require.NoError(t, err)
 
-			findingsCh, errCh := detector.StreamDetectReader(test.reader, test.bufSize)
+			ctx := context.Background()
+			findingsCh, errCh := detector.StreamDetectReaderContext(ctx, test.reader, test.bufSize)
 			var findings []report.Finding
 			for f := range findingsCh {
 				findings = append(findings, f)

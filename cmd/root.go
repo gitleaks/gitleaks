@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -169,8 +170,8 @@ func initConfig(source string) {
 	}
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+func Execute(ctx context.Context) {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		if strings.Contains(err.Error(), "unknown flag") {
 			// exit code 126: Command invoked cannot execute
 			os.Exit(126)
