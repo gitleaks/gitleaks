@@ -13,3 +13,7 @@ type Regexp = re.Regexp
 func MustCompile(str string) *re.Regexp {
 	return re.MustCompile(str)
 }
+
+func Compile(str string) (*re.Regexp, error) {
+	return re.Compile(str)
+}
