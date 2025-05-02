@@ -105,6 +105,11 @@ func TestTranslate(t *testing.T) {
 			cfg:       Config{},
 			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
+		{
+			cfgName:   "invalid/allowlist_global_bad_regex",
+			cfg:       Config{},
+			wantError: fmt.Errorf("[[allowlists]] failed to compile allowlist path regex '*.test.js', err: error parsing regexp: missing argument to repetition operator: `*`"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
@@ -400,13 +405,14 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's description",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "Puppy Doggy",
-					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "Puppy Doggy",
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -415,14 +421,15 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's path",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Path:        regexp.MustCompile("(?:puppy)"),
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+						Path:        regexp.MustCompile("(?:puppy)"),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -431,13 +438,14 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's regex",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:a)"),
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:a)"),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -446,14 +454,15 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's secretGroup",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:a)(?:a)"),
-					SecretGroup: 2,
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:a)(?:a)"),
+						SecretGroup: 2,
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -462,14 +471,15 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's entropy",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Entropy:     999.0,
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+						Entropy:     999.0,
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -478,13 +488,14 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's keywords",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Keywords:    []string{"puppy"},
-					Tags:        []string{"key", "AWS"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+						Keywords:    []string{"puppy"},
+						Tags:        []string{"key", "AWS"},
+					},
 				},
 			},
 		},
@@ -493,13 +504,14 @@ func TestTranslateExtend(t *testing.T) {
 			rules:   []string{"aws-access-key"},
 			cfg: Config{
 				Title: "override a built-in rule's tags",
-				Rules: map[string]Rule{"aws-access-key": {
-					RuleID:      "aws-access-key",
-					Description: "AWS Access Key",
-					Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
-					Keywords:    []string{},
-					Tags:        []string{"key", "AWS", "puppy"},
-				},
+				Rules: map[string]Rule{
+					"aws-access-key": {
+						RuleID:      "aws-access-key",
+						Description: "AWS Access Key",
+						Regex:       regexp.MustCompile("(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}"),
+						Keywords:    []string{},
+						Tags:        []string{"key", "AWS", "puppy"},
+					},
 				},
 			},
 		},
