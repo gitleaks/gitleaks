@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zricethezav/gitleaks/v8/config/checks"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -56,25 +59,36 @@ func (r *Rule) Validate() error {
 	// Ensure |id| is present.
 	if strings.TrimSpace(r.RuleID) == "" {
 		// Try to provide helpful context, since |id| is empty.
-		var context string
-		if r.Regex != nil {
-			context = ", regex: " + r.Regex.String()
-		} else if r.Path != nil {
-			context = ", path: " + r.Path.String()
-		} else if r.Description != "" {
-			context = ", description: " + r.Description
+		//var context string
+		//if r.Regex != nil {
+		//	context = ", regex: " + r.Regex.String()
+		//} else if r.Path != nil {
+		//	context = ", path: " + r.Path.String()
+		//} else if r.Description != "" {
+		//	context = ", description: " + r.Description
+		//}
+		//return fmt.Errorf("rule |id| is missing or empty" + context)
+	}
+
+	if r.Regex == nil {
+		// Ensure the rule actually matches something.
+		if r.Path == nil {
+			return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
 		}
-		return fmt.Errorf("rule |id| is missing or empty" + context)
-	}
+	} else {
+		// Ensure |secretGroup| works.
+		if r.SecretGroup > r.Regex.NumSubexp() {
+			return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+		}
 
-	// Ensure the rule actually matches something.
-	if r.Regex == nil && r.Path == nil {
-		return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
-	}
-
-	// Ensure |secretGroup| works.
-	if r.Regex != nil && r.SecretGroup > r.Regex.NumSubexp() {
-		return fmt.Errorf("%s: invalid regex secret group %d, max regex secret group %d", r.RuleID, r.SecretGroup, r.Regex.NumSubexp())
+		if flags.EnableExperimentalPatternChecks.Load() {
+			// Ensure the pattern works as expected.
+			if err := checks.CheckPattern(r.Regex.String()); err != nil {
+				logging.Error().
+					Str("rule-id", r.RuleID).
+					Msgf("Rule contains pattern issue: %s", err)
+			}
+		}
 	}
 
 	for _, allowlist := range r.Allowlists {

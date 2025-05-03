@@ -48,7 +48,7 @@
 [[rules]]
   id = 'aws-secret-access-key'
   description = 'AWS Secret Access Key'
-  regex = '''(?i)aws[\w\-]{0,32}[\'\"]?\s*?[:=\(]\s*?[\'\"]?([a-z0-9\/+]{40})\b'''
+  regex = '''(?i)aws[\w\-]{0,32}[\'\"]?\s*?[:=\(]\s*?[\'\"]?([a-z0-9\/+]{40})'''
   tags = ['aws', 'secret']
   entropy = 4
   secretGroup = 1
