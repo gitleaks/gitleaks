@@ -85,7 +85,8 @@ secret%3D%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%2
 `
 
 func TestDetect(t *testing.T) {
-	tests := []struct {
+	logging.Logger = logging.Logger.Level(zerolog.TraceLevel)
+	tests := map[string]struct {
 		cfgName      string
 		baselinePath string
 		fragment     Fragment
@@ -97,14 +98,15 @@ func TestDetect(t *testing.T) {
 		expectedFindings []report.Finding
 		wantError        error
 	}{
-		{
+		// General
+		"valid allow comment (1)": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OKIA\ // gitleaks:allow"`,
 				FilePath: "tmp.go",
 			},
 		},
-		{
+		"valid allow comment (2)": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw: `awsToken := \
@@ -115,7 +117,7 @@ func TestDetect(t *testing.T) {
 				FilePath: "tmp.go",
 			},
 		},
-		{
+		"invalid allow comment": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw: `awsToken := \"AKIALALEMEL33243OKIA\"
@@ -142,30 +144,7 @@ func TestDetect(t *testing.T) {
 				},
 			},
 		},
-		{
-			cfgName: "escaped_character_group",
-			fragment: Fragment{
-				Raw:      `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
-				FilePath: "tmp.go",
-			},
-			expectedFindings: []report.Finding{
-				{
-					Description: "PyPI upload token",
-					Secret:      "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
-					Match:       "pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB",
-					Line:        `pypi-AgEIcHlwaS5vcmcAAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAA-AAAAAAAAAAB`,
-					File:        "tmp.go",
-					RuleID:      "pypi-upload-token",
-					Tags:        []string{"key", "pypi"},
-					StartLine:   0,
-					EndLine:     0,
-					StartColumn: 1,
-					EndColumn:   86,
-					Entropy:     1.9606875,
-				},
-			},
-		},
-		{
+		"detect finding - aws": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
@@ -173,22 +152,22 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
-					Description: "AWS Access Key",
-					Secret:      "AKIALALEMEL33243OLIA",
-					Match:       "AKIALALEMEL33243OLIA",
-					Line:        `awsToken := \"AKIALALEMEL33243OLIA\"`,
-					File:        "tmp.go",
 					RuleID:      "aws-access-key",
-					Tags:        []string{"key", "AWS"},
+					Description: "AWS Access Key",
+					File:        "tmp.go",
+					Line:        `awsToken := \"AKIALALEMEL33243OLIA\"`,
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					Entropy:     3.0841837,
 					StartLine:   0,
 					EndLine:     0,
 					StartColumn: 15,
 					EndColumn:   34,
-					Entropy:     3.0841837,
+					Tags:        []string{"key", "AWS"},
 				},
 			},
 		},
-		{
+		"detect finding - sidekiq env var": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw:      `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
@@ -196,22 +175,22 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "sidekiq-secret",
 					Description: "Sidekiq Secret",
+					File:        "tmp.sh",
+					Line:        `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
 					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
 					Secret:      "cafebabe:deadbeef",
-					Line:        `export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;`,
-					File:        "tmp.sh",
-					RuleID:      "sidekiq-secret",
-					Tags:        []string{},
 					Entropy:     2.6098502,
 					StartLine:   0,
 					EndLine:     0,
 					StartColumn: 8,
 					EndColumn:   60,
+					Tags:        []string{},
 				},
 			},
 		},
-		{
+		"detect finding - sidekiq env var, semicolon": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw:      `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
@@ -219,22 +198,22 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "sidekiq-secret",
 					Description: "Sidekiq Secret",
-					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=\"cafebabe:deadbeef\"",
-					Secret:      "cafebabe:deadbeef",
 					File:        "tmp.sh",
 					Line:        `echo hello1; export BUNDLE_ENTERPRISE__CONTRIBSYS__COM="cafebabe:deadbeef" && echo hello2`,
-					RuleID:      "sidekiq-secret",
-					Tags:        []string{},
+					Match:       "BUNDLE_ENTERPRISE__CONTRIBSYS__COM=\"cafebabe:deadbeef\"",
+					Secret:      "cafebabe:deadbeef",
 					Entropy:     2.6098502,
 					StartLine:   0,
 					EndLine:     0,
 					StartColumn: 21,
 					EndColumn:   74,
+					Tags:        []string{},
 				},
 			},
 		},
-		{
+		"detect finding - sidekiq url": {
 			cfgName: "simple",
 			fragment: Fragment{
 				Raw:      `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
@@ -242,74 +221,36 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "sidekiq-sensitive-url",
 					Description: "Sidekiq Sensitive URL",
-					Match:       "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:",
-					Secret:      "cafeb4b3:d3adb33f",
 					File:        "tmp.sh",
 					Line:        `url = "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1"`,
-					RuleID:      "sidekiq-sensitive-url",
-					Tags:        []string{},
+					Match:       "http://cafeb4b3:d3adb33f@enterprise.contribsys.com:",
+					Secret:      "cafeb4b3:d3adb33f",
 					Entropy:     2.984234,
 					StartLine:   0,
 					EndLine:     0,
 					StartColumn: 8,
 					EndColumn:   58,
-				},
-			},
-		},
-		{
-			cfgName: "allow_aws_re",
-			fragment: Fragment{
-				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
-				FilePath: "tmp.go",
-			},
-		},
-		{
-			cfgName: "allow_path",
-			fragment: Fragment{
-				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
-				FilePath: "tmp.go",
-			},
-		},
-		{
-			cfgName: "allow_commit",
-			fragment: Fragment{
-				Raw:       `awsToken := \"AKIALALEMEL33243OLIA\"`,
-				FilePath:  "tmp.go",
-				CommitSHA: "allowthiscommit",
-			},
-		},
-		{
-			cfgName: "entropy_group",
-			fragment: Fragment{
-				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
-				FilePath: "tmp.go",
-			},
-			expectedFindings: []report.Finding{
-				{
-					Description: "Discord API key",
-					Match:       "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
-					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
-					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
-					File:        "tmp.go",
-					RuleID:      "discord-api-key",
 					Tags:        []string{},
-					Entropy:     3.7906237,
-					StartLine:   0,
-					EndLine:     0,
-					StartColumn: 7,
-					EndColumn:   93,
 				},
 			},
 		},
-		{
+		"ignore finding - our config file": {
+			cfgName: "simple",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: filepath.Join(configPath, "simple.toml"),
+			},
+		},
+		"ignore finding - doesn't match path": {
 			cfgName: "generic_with_py_path",
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.go",
 			},
 		},
-		{
+		"detect finding - matches path,regex,entropy": {
 			cfgName: "generic_with_py_path",
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
@@ -317,23 +258,40 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{
 				{
+					RuleID:      "generic-api-key",
 					Description: "Generic API Key",
+					File:        "tmp.py",
+					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 					Match:       "Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
 					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
-					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
-					File:        "tmp.py",
-					RuleID:      "generic-api-key",
-					Tags:        []string{},
 					Entropy:     3.7906237,
 					StartLine:   0,
 					EndLine:     0,
 					StartColumn: 22,
 					EndColumn:   93,
+					Tags:        []string{},
 				},
 			},
 		},
-		{
-			cfgName: "path_only",
+		"ignore finding - allowlist regex": {
+			cfgName: "generic_with_py_path",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "load2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: "tmp.py",
+			},
+		},
+
+		// Rule
+		"rule - ignore path": {
+			cfgName:      "valid/rule_path_only",
+			baselinePath: ".baseline.json",
+			fragment: Fragment{
+				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				FilePath: ".baseline.json",
+			},
+		},
+		"rule - detect path ": {
+			cfgName: "valid/rule_path_only",
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.py",
@@ -348,44 +306,124 @@ func TestDetect(t *testing.T) {
 				},
 			},
 		},
-		{
-			cfgName: "bad_entropy_group",
+		"rule - match based on entropy": {
+			cfgName: "valid/rule_entropy_group",
 			fragment: Fragment{
-				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+				Raw: `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"
+//const Discord_Public_Key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+`,
 				FilePath: "tmp.go",
 			},
-			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
-		},
-		{
-			cfgName: "simple",
-			fragment: Fragment{
-				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
-				FilePath: filepath.Join(configPath, "simple.toml"),
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "discord-api-key",
+					Description: "Discord API key",
+					File:        "tmp.go",
+					Line:        `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
+					Match:       "Discord_Public_Key = \"e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5\"",
+					Secret:      "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5",
+					Entropy:     3.7906237,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 7,
+					EndColumn:   93,
+					Tags:        []string{},
+				},
 			},
 		},
-		{
-			cfgName: "allow_global_aws_re",
+
+		// Allowlists
+		"global allowlist - ignore regex": {
+			cfgName: "valid/allowlist_global_regex",
 			fragment: Fragment{
 				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
 				FilePath: "tmp.go",
 			},
 		},
-		{
-			cfgName: "generic_with_py_path",
+		"global allowlist - detect, doesn't match all conditions": {
+			cfgName: "valid/allowlist_global_multiple",
 			fragment: Fragment{
-				Raw:      `const Discord_Public_Key = "load2523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
-				FilePath: "tmp.py",
+				Raw: `
+const token = "mockSecret";
+// const token = "changeit";`,
+				FilePath: "config.txt",
+			},
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "test",
+					File:        "config.txt",
+					Line:        "\nconst token = \"mockSecret\";",
+					Match:       `token = "mockSecret"`,
+					Secret:      "mockSecret",
+					Entropy:     2.9219282,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 8,
+					EndColumn:   27,
+					Tags:        []string{},
+				},
 			},
 		},
-		{
-			cfgName:      "path_only",
-			baselinePath: ".baseline.json",
+		"global allowlist - ignore, matches all conditions": {
+			cfgName: "valid/allowlist_global_multiple",
 			fragment: Fragment{
-				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
-				FilePath: ".baseline.json",
+				Raw:      `token := "mockSecret";`,
+				FilePath: "node_modules/config.txt",
 			},
 		},
-		{
+		"global allowlist - detect path, doesn't match all conditions": {
+			cfgName: "valid/allowlist_global_multiple",
+			fragment: Fragment{
+				Raw:      `var token = "fakeSecret";`,
+				FilePath: "node_modules/config.txt",
+			},
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "test",
+					File:        "node_modules/config.txt",
+					Line:        "var token = \"fakeSecret\";",
+					Match:       `token = "fakeSecret"`,
+					Secret:      "fakeSecret",
+					Entropy:     2.8464394,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 5,
+					EndColumn:   24,
+					Tags:        []string{},
+				},
+			},
+		},
+		"allowlist - ignore commit": {
+			cfgName: "valid/allowlist_rule_commit",
+			fragment: Fragment{
+				Raw:       `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath:  "tmp.go",
+				CommitSHA: "allowthiscommit",
+			},
+		},
+		"allowlist - ignore path": {
+			cfgName: "valid/allowlist_rule_path",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
+		},
+		"allowlist - ignore path when extending": {
+			cfgName: "valid/allowlist_rule_extend_default",
+			fragment: Fragment{
+				Raw:      `token = "aebfab88-7596-481d-82e8-c60c8f7de0c0"`,
+				FilePath: "path/to/your/problematic/file.js",
+			},
+		},
+		"allowlist - ignore regex": {
+			cfgName: "valid/allowlist_rule_regex",
+			fragment: Fragment{
+				Raw:      `awsToken := \"AKIALALEMEL33243OLIA\"`,
+				FilePath: "tmp.go",
+			},
+		},
+		// Decoding
+		"detect encoded": {
 			cfgName: "encoded",
 			fragment: Fragment{
 				Raw:      encodedTestValues,
@@ -676,8 +714,8 @@ func TestDetect(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(fmt.Sprintf("%s - %s", tt.cfgName, tt.fragment.FilePath), func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			viper.Reset()
 			viper.AddConfigPath(configPath)
 			viper.SetConfigName(tt.cfgName)
@@ -1015,7 +1053,7 @@ func TestFromFiles(t *testing.T) {
 			require.NoError(t, err)
 
 			detector.FollowSymlinks = true
-			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
+			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 			require.NoError(t, err)
 
 			findings, err := detector.DetectFiles(paths)
@@ -1089,7 +1127,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 		cfg, _ := vc.Translate()
 		detector := NewDetector(cfg)
 		detector.FollowSymlinks = true
-		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlist.PathAllowed)
+		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 		require.NoError(t, err)
 
 		findings, err := detector.DetectFiles(paths)
@@ -1101,7 +1139,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 func TestDetectRuleAllowlist(t *testing.T) {
 	cases := map[string]struct {
 		fragment  Fragment
-		allowlist config.Allowlist
+		allowlist *config.Allowlist
 		expected  []report.Finding
 	}{
 		// Commit / path
@@ -1109,7 +1147,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				Commits: []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 			},
 		},
@@ -1117,7 +1155,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				FilePath: "package-lock.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				Paths: []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
 			},
 		},
@@ -1126,7 +1164,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
@@ -1137,7 +1175,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
@@ -1160,7 +1198,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
@@ -1184,7 +1222,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "package-lock.json",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchOr,
 				Commits:        []string{"704178e7dca77ff143778a31cff0fc192d59b030"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
@@ -1194,19 +1232,19 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		// Regex / stopwords
 		"regex allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				Regexes: []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 			},
 		},
 		"stopwords allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				StopWords: []string{"summer"},
 			},
 		},
 		"regex AND stopword allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 				StopWords:      []string{"2024"},
@@ -1217,7 +1255,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 				FilePath:  "config.js",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
@@ -1229,7 +1267,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			fragment: Fragment{
 				FilePath: "config.js",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`config.js`)},
@@ -1251,7 +1289,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		},
 		"regex AND stopword NOT allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)winter.+`),
@@ -1275,7 +1313,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 				CommitSHA: "a060c9d2d5e90c992763f1bd4c3cd2a6f121241b",
 				FilePath:  "config.js",
 			},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
 				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
@@ -1297,7 +1335,7 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		},
 		"regex OR stopword allowed": {
 			fragment: Fragment{},
-			allowlist: config.Allowlist{
+			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchOr,
 				Regexes:        []*regexp.Regexp{regexp.MustCompile(`(?i)summer.+`)},
 				StopWords:      []string{"winter"},
@@ -1312,7 +1350,7 @@ let password = 'Summer2024!';`
 			rule := config.Rule{
 				RuleID: "test-rule",
 				Regex:  regexp.MustCompile(`Summer2024!`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					tc.allowlist,
 				},
 			}
@@ -1375,7 +1413,6 @@ func TestNormalizeGitleaksIgnorePaths(t *testing.T) {
 }
 
 func TestWindowsFileSeparator_RulePath(t *testing.T) {
-	logging.Logger = logging.Logger.Level(zerolog.TraceLevel)
 	unixRule := config.Rule{
 		RuleID: "test-rule",
 		Path:   regexp.MustCompile(`(^|/)\.m2/settings\.xml`),
@@ -1506,7 +1543,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "unix-rule",
 				Regex:  regexp.MustCompile(`s3cr3t`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						Paths: []*regexp.Regexp{regexp.MustCompile(`(^|/)ignoreme(/.*)?$`)},
 					},
@@ -1522,7 +1559,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "windows-rule",
 				Regex:  regexp.MustCompile(`s3cr3t`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						Paths: []*regexp.Regexp{regexp.MustCompile(`(^|\\)ignoreme(\\.*)?$`)},
 					},
@@ -1550,7 +1587,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "unix-rule",
 				Regex:  regexp.MustCompile(`value: "[^"]+"`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						MatchCondition: config.AllowlistMatchAnd,
 						Paths:          []*regexp.Regexp{regexp.MustCompile(`(^|/)ignoreme(/.*)?$`)},
@@ -1568,7 +1605,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "windows-rule",
 				Regex:  regexp.MustCompile(`value: "[^"]+"`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						MatchCondition: config.AllowlistMatchAnd,
 						Paths:          []*regexp.Regexp{regexp.MustCompile(`(^|\\)ignoreme(\\.*)?$`)},
@@ -1600,7 +1637,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "unix-rule",
 				Regex:  regexp.MustCompile(`s3cr3t`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						Paths: []*regexp.Regexp{regexp.MustCompile(`(^|/)ignoreme(/.*)?$`)},
 					},
@@ -1617,7 +1654,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "windows-rule",
 				Regex:  regexp.MustCompile(`s3cr3t`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						Paths: []*regexp.Regexp{regexp.MustCompile(`(^|\\)ignoreme(\\.*)?$`)},
 					},
@@ -1634,7 +1671,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "unix-rule",
 				Regex:  regexp.MustCompile(`value: "[^"]+"`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						MatchCondition: config.AllowlistMatchAnd,
 						Paths:          []*regexp.Regexp{regexp.MustCompile(`(^|/)ignoreme(/.*)?$`)},
@@ -1653,7 +1690,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			rule: config.Rule{
 				RuleID: "windows-rule",
 				Regex:  regexp.MustCompile(`value: "[^"]+"`),
-				Allowlists: []config.Allowlist{
+				Allowlists: []*config.Allowlist{
 					{
 						MatchCondition: config.AllowlistMatchAnd,
 						Paths:          []*regexp.Regexp{regexp.MustCompile(`(^|\\)ignoreme(\\.*)?$`)},

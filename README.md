@@ -290,11 +290,10 @@ disabledRules = [ "generic-api-key"]
 # An array of tables that contain information that define instructions
 # on how to detect secrets
 [[rules]]
-
 # Unique identifier for this rule
 id = "awesome-rule-1"
 
-# Short human readable description of the rule.
+# Short human-readable description of the rule.
 description = "awesome rule 1"
 
 # Golang regular expression used to detect secrets. Note Golang's regex engine
@@ -368,19 +367,20 @@ id = "gitlab-pat"
     regexTarget = "line"
     regexes = [ '''MY-glpat-''' ]
 
-# This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
+
+# ⚠️ In v8.25.0 `[allowlist]` was replaced with `[[allowlists]]`.
+# 
+# Global allowlists have a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
 # secrets will be detected for said commit. The same logic applies for regexes and paths.
-[allowlist]
+[[allowlists]]
 description = "global allow list"
 commits = [ "commit-A", "commit-B", "commit-C"]
 paths = [
   '''gitleaks\.toml''',
   '''(.*?)(jpg|gif|doc)'''
 ]
-
 # note: (global) regexTarget defaults to check the _Secret_ in the finding.
-# if regexTarget is not specified then _Secret_ will be used.
 # Acceptable values for regexTarget are "match" and "line"
 regexTarget = "match"
 regexes = [
@@ -394,6 +394,15 @@ stopwords = [
   '''client''',
   '''endpoint''',
 ]
+
+# ⚠️ In v8.25.0, `[[allowlists]]` have a new field called |targetRules|.
+#
+# Common allowlists can be defined once and assigned to multiple rules using |targetRules|.
+# This will only run on the specified rules, not globally.
+[[allowlists]]
+targetRules = ["awesome-rule-1", "awesome-rule-2"]
+description = "Our test assets trigger false-positives in a couple rules."
+paths = ['''tests/expected/._\.json$''']
 ```
 
 Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.

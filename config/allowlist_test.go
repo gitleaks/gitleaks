@@ -105,7 +105,7 @@ func TestValidate(t *testing.T) {
 	}{
 		"empty conditions": {
 			input:   Allowlist{},
-			wantErr: errors.New("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+			wantErr: errors.New("must contain at least one check for: commits, paths, regexes, or stopwords"),
 		},
 		"deduplicated commits and stopwords": {
 			input: Allowlist{
@@ -148,6 +148,7 @@ func TestValidate(t *testing.T) {
 			opts = cmp.Options{
 				cmp.Comparer(regexComparer),
 				cmpopts.SortSlices(arrayComparer),
+				cmpopts.IgnoreUnexported(Allowlist{}),
 			}
 		)
 		if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {

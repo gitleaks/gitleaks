@@ -17,7 +17,7 @@ func KubernetesSecret() *config.Rule {
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
 	//language=regexp
-	dataPat := `\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
+	dataPat := `\bdata:(?s:.){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
 
 	// define rule
 	r := config.Rule{
@@ -25,13 +25,13 @@ func KubernetesSecret() *config.Rule {
 		Description: "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments",
 		Regex: regexp.MustCompile(fmt.Sprintf(
 			//language=regexp
-			`(?i)(?:%s(?:.|\s){0,200}?%s|%s(?:.|\s){0,200}?%s)`, kindPat, dataPat, dataPat, kindPat)),
+			`(?i)(?:%s(?s:.){0,200}?%s|%s(?s:.){0,200}?%s)`, kindPat, dataPat, dataPat, kindPat)),
 		Keywords: []string{
 			"secret",
 		},
 		// Kubernetes secrets are usually yaml files.
 		Path: regexp.MustCompile(`(?i)\.ya?ml$`),
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					// Ignore empty or placeholder values.
@@ -45,7 +45,7 @@ func KubernetesSecret() *config.Rule {
 				// Avoid overreach between directives.
 				RegexTarget: "match",
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`(kind:(?:.|\s)+\n---\n(?:.|\s)+\bdata:|data:(?:.|\s)+\n---\n(?:.|\s)+\bkind:)`),
+					regexp.MustCompile(`(kind:(?s:.)+\n---\n(?s:.)+\bdata:|data:(?s:.)+\n---\n(?s:.)+\bkind:)`),
 				},
 			},
 		},

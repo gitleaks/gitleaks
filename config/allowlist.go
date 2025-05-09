@@ -38,9 +38,6 @@ type Allowlist struct {
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
 	Paths []*regexp.Regexp
 
-	// Regexes is slice of content regular expressions that are allowed to be ignored.
-	Regexes []*regexp.Regexp
-
 	// Can be `match` or `line`.
 	//
 	// If `match` the _Regexes_ will be tested against the match of the _Rule.Regex_.
@@ -50,15 +47,54 @@ type Allowlist struct {
 	// If RegexTarget is empty, it will be tested against the found secret.
 	RegexTarget string
 
+	// Regexes is slice of content regular expressions that are allowed to be ignored.
+	Regexes []*regexp.Regexp
+
 	// StopWords is a slice of stop words that are allowed to be ignored.
 	// This targets the _secret_, not the content of the regex match like the
 	// Regexes slice.
 	StopWords []string
+
+	// validated is an internal flag to track whether `Validate()` has been called.
+	validated bool
+}
+
+func (a *Allowlist) Validate() error {
+	if a.validated {
+		return nil
+	}
+
+	// Disallow empty allowlists.
+	if len(a.Commits) == 0 &&
+		len(a.Paths) == 0 &&
+		len(a.Regexes) == 0 &&
+		len(a.StopWords) == 0 {
+		return fmt.Errorf("must contain at least one check for: commits, paths, regexes, or stopwords")
+	}
+
+	// Deduplicate commits and stopwords.
+	if len(a.Commits) > 0 {
+		uniqueCommits := make(map[string]struct{})
+		for _, commit := range a.Commits {
+			uniqueCommits[commit] = struct{}{}
+		}
+		a.Commits = maps.Keys(uniqueCommits)
+	}
+	if len(a.StopWords) > 0 {
+		uniqueStopwords := make(map[string]struct{})
+		for _, stopWord := range a.StopWords {
+			uniqueStopwords[stopWord] = struct{}{}
+		}
+		a.StopWords = maps.Keys(uniqueStopwords)
+	}
+
+	a.validated = true
+	return nil
 }
 
 // CommitAllowed returns true if the commit is allowed to be ignored.
 func (a *Allowlist) CommitAllowed(c string) (bool, string) {
-	if c == "" {
+	if a == nil || c == "" {
 		return false, ""
 	}
 
@@ -72,15 +108,25 @@ func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 
 // PathAllowed returns true if the path is allowed to be ignored.
 func (a *Allowlist) PathAllowed(path string) bool {
+	if a == nil || path == "" {
+		return false
+	}
 	return anyRegexMatch(path, a.Paths)
 }
 
 // RegexAllowed returns true if the regex is allowed to be ignored.
 func (a *Allowlist) RegexAllowed(secret string) bool {
+	if a == nil || secret == "" {
+		return false
+	}
 	return anyRegexMatch(secret, a.Regexes)
 }
 
 func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
+	if a == nil || s == "" {
+		return false, ""
+	}
+
 	s = strings.ToLower(s)
 	for _, stopWord := range a.StopWords {
 		if strings.Contains(s, strings.ToLower(stopWord)) {
@@ -88,33 +134,4 @@ func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-func (a *Allowlist) Validate() error {
-	// Disallow empty allowlists.
-	if len(a.Commits) == 0 &&
-		len(a.Paths) == 0 &&
-		len(a.Regexes) == 0 &&
-		len(a.StopWords) == 0 {
-		return fmt.Errorf("[[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords")
-	}
-
-	// Deduplicate commits and stopwords.
-	if len(a.Commits) > 0 {
-		uniqueCommits := make(map[string]struct{})
-		for _, commit := range a.Commits {
-			uniqueCommits[commit] = struct{}{}
-		}
-		a.Commits = maps.Keys(uniqueCommits)
-	}
-
-	if len(a.StopWords) > 0 {
-		uniqueStopwords := make(map[string]struct{})
-		for _, stopWord := range a.StopWords {
-			uniqueStopwords[stopWord] = struct{}{}
-		}
-		a.StopWords = maps.Keys(uniqueStopwords)
-	}
-
-	return nil
 }

@@ -22,7 +22,7 @@ func AWS() *config.Rule {
 			"ABIA", // AWS STS service bearer token
 			"ACCA", // Context-specific credential
 		},
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`.+EXAMPLE$`),

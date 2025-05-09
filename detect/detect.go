@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/codec"
@@ -26,6 +27,10 @@ import (
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
 	chunkSize              = 100 * 1_000 // 100kb
+
+	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
+	// This is useful for identifying problematic files and tuning the allowlist.
+	SlowWarningThreshold = 5 * time.Second
 )
 
 var (
@@ -213,16 +218,29 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 	d.TotalBytes.Add(uint64(len(fragment.Bytes)))
 
-	var findings []report.Finding
+	var (
+		findings []report.Finding
+		logger   = func() zerolog.Logger {
+			l := logging.With().Str("path", fragment.FilePath)
+			if fragment.CommitSHA != "" {
+				l = l.Str("commit", fragment.CommitSHA)
+			}
+			return l.Logger()
+		}()
+	)
 
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
 		// is the path our config or baseline file?
-		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) ||
-			// is the path excluded by the global allowlist?
-			(d.Config.Allowlist.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && d.Config.Allowlist.PathAllowed(fragment.WindowsFilePath))) {
+		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) {
+			logging.Trace().Msg("skipping file: matches config or baseline path")
 			return findings
 		}
+	}
+	// check if commit or filepath is allowed.
+	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, d.Config.Allowlists); isAllowed {
+		event.Msg("skipping file: global allowlist")
+		return findings
 	}
 
 	// add newline indices for location calculation in detectRule
@@ -293,46 +311,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}()
 	)
 
-	// check if filepath or commit is allowed for this rule
-	for _, a := range r.Allowlists {
-		var (
-			isAllowed             bool
-			commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
-			pathAllowed           = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
-		)
-		if a.MatchCondition == config.AllowlistMatchAnd {
-			// Determine applicable checks.
-			var allowlistChecks []bool
-			if len(a.Commits) > 0 {
-				allowlistChecks = append(allowlistChecks, commitAllowed)
-			}
-			if len(a.Paths) > 0 {
-				allowlistChecks = append(allowlistChecks, pathAllowed)
-			}
-			// These will be checked later.
-			if len(a.Regexes) > 0 {
-				allowlistChecks = append(allowlistChecks, false)
-			}
-			if len(a.StopWords) > 0 {
-				allowlistChecks = append(allowlistChecks, false)
-			}
-
-			// Check if allowed.
-			isAllowed = allTrue(allowlistChecks)
-		} else {
-			isAllowed = commitAllowed || pathAllowed
-		}
-		if isAllowed {
-			event := logger.Trace().Str("condition", a.MatchCondition.String())
-			if commitAllowed {
-				event.Str("allowed-commit", commit)
-			}
-			if pathAllowed {
-				event.Bool("allowed-path", pathAllowed)
-			}
-			event.Msg("skipping file: rule allowlist")
-			return findings
-		}
+	// check if commit or file is allowed for this rule.
+	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
+		event.Msg("skipping file: rule allowlist")
+		return findings
 	}
 
 	if r.Path != nil {
@@ -378,7 +360,6 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
-MatchLoop:
 	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
@@ -475,105 +456,21 @@ MatchLoop:
 				continue
 			}
 		}
-		// check if the regexTarget is defined in the allowlist "regexes" entry
-		// or if the secret is in the list of stopwords
-		globalAllowlistTarget := finding.Secret
-		switch d.Config.Allowlist.RegexTarget {
-		case "match":
-			globalAllowlistTarget = finding.Match
-		case "line":
-			globalAllowlistTarget = currentLine
-		}
-		if d.Config.Allowlist.RegexAllowed(globalAllowlistTarget) {
-			logger.Trace().
-				Str("finding", globalAllowlistTarget).
-				Msg("skipping finding: global allowlist regex")
-			continue
-		} else if ok, word := d.Config.Allowlist.ContainsStopWord(finding.Secret); ok {
-			logger.Trace().
-				Str("finding", finding.Secret).
-				Str("allowed-stopword", word).
-				Msg("skipping finding: global allowlist stopword")
+
+		// check if the result matches any of the global allowlists.
+		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
+			event.Msg("skipping finding: global allowlist")
 			continue
 		}
 
 		// check if the result matches any of the rule allowlists.
-		for _, a := range r.Allowlists {
-			allowlistTarget := finding.Secret
-			switch a.RegexTarget {
-			case "match":
-				allowlistTarget = finding.Match
-			case "line":
-				allowlistTarget = currentLine
-			}
-
-			var (
-				isAllowed              bool
-				commitAllowed          bool
-				commit                 string
-				pathAllowed            bool
-				regexAllowed           = a.RegexAllowed(allowlistTarget)
-				containsStopword, word = a.ContainsStopWord(finding.Secret)
-			)
-			// check if the secret is in the list of stopwords
-			if a.MatchCondition == config.AllowlistMatchAnd {
-				// Determine applicable checks.
-				var allowlistChecks []bool
-				if len(a.Commits) > 0 {
-					commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
-					allowlistChecks = append(allowlistChecks, commitAllowed)
-				}
-				if len(a.Paths) > 0 {
-					pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
-					allowlistChecks = append(allowlistChecks, pathAllowed)
-				}
-				if len(a.Regexes) > 0 {
-					allowlistChecks = append(allowlistChecks, regexAllowed)
-				}
-				if len(a.StopWords) > 0 {
-					allowlistChecks = append(allowlistChecks, containsStopword)
-				}
-
-				// Check if allowed.
-				isAllowed = allTrue(allowlistChecks)
-			} else {
-				isAllowed = regexAllowed || containsStopword
-			}
-
-			if isAllowed {
-				event := logger.Trace().
-					Str("finding", finding.Secret).
-					Str("condition", a.MatchCondition.String())
-				if commitAllowed {
-					event.Str("allowed-commit", commit)
-				}
-				if pathAllowed {
-					event.Bool("allowed-path", pathAllowed)
-				}
-				if regexAllowed {
-					event.Bool("allowed-regex", regexAllowed)
-				}
-				if containsStopword {
-					event.Str("allowed-stopword", word)
-				}
-				event.Msg("skipping finding: rule allowlist")
-				continue MatchLoop
-			}
+		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, r.Allowlists); isAllowed {
+			event.Msg("skipping finding: rule allowlist")
+			continue
 		}
 		findings = append(findings, finding)
 	}
 	return findings
-}
-
-func allTrue(bools []bool) bool {
-	allMatch := true
-	for _, check := range bools {
-		if !check {
-			allMatch = false
-			break
-		}
-	}
-	return allMatch
 }
 
 // AddFinding synchronously adds a finding to the findings slice
@@ -602,7 +499,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		}
 	}
 
-	if d.baseline != nil && !IsNew(finding, d.baseline) {
+	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
@@ -625,4 +522,143 @@ func (d *Detector) Findings() []report.Finding {
 // AddCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
+}
+
+// checkCommitOrPathAllowed evaluates |fragment| against all provided |allowlists|.
+//
+// If the match condition is "OR", only commit and path are checked.
+// Otherwise, if regexes or stopwords are defined this will fail.
+func checkCommitOrPathAllowed(
+	logger zerolog.Logger,
+	fragment Fragment,
+	allowlists []*config.Allowlist,
+) (bool, *zerolog.Event) {
+	if fragment.FilePath == "" && fragment.CommitSHA == "" {
+		return false, nil
+	}
+
+	for _, a := range allowlists {
+		var (
+			isAllowed        bool
+			allowlistChecks  []bool
+			commitAllowed, _ = a.CommitAllowed(fragment.CommitSHA)
+			pathAllowed      = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
+		)
+		// If the condition is "AND" we need to check all conditions.
+		if a.MatchCondition == config.AllowlistMatchAnd {
+			if len(a.Commits) > 0 {
+				allowlistChecks = append(allowlistChecks, commitAllowed)
+			}
+			if len(a.Paths) > 0 {
+				allowlistChecks = append(allowlistChecks, pathAllowed)
+			}
+			// These will be checked later.
+			if len(a.Regexes) > 0 {
+				continue
+			}
+			if len(a.StopWords) > 0 {
+				continue
+			}
+
+			isAllowed = allTrue(allowlistChecks)
+		} else {
+			isAllowed = commitAllowed || pathAllowed
+		}
+		if isAllowed {
+			event := logger.Trace().Str("condition", a.MatchCondition.String())
+			if commitAllowed {
+				event.Bool("allowed-commit", commitAllowed)
+			}
+			if pathAllowed {
+				event.Bool("allowed-path", pathAllowed)
+			}
+			return true, event
+		}
+	}
+	return false, nil
+}
+
+// checkFindingAllowed evaluates |finding| against all provided |allowlists|.
+//
+// If the match condition is "OR", only regex and stopwords are run. (Commit and path should be handled separately).
+// Otherwise, all conditions are checked.
+//
+// TODO: The method signature is awkward. I can't think of a better way to log helpful info.
+func checkFindingAllowed(
+	logger zerolog.Logger,
+	finding report.Finding,
+	fragment Fragment,
+	currentLine string,
+	allowlists []*config.Allowlist,
+) (bool, *zerolog.Event) {
+	for _, a := range allowlists {
+		allowlistTarget := finding.Secret
+		switch a.RegexTarget {
+		case "match":
+			allowlistTarget = finding.Match
+		case "line":
+			allowlistTarget = currentLine
+		}
+
+		var (
+			checks                 []bool
+			isAllowed              bool
+			commitAllowed          bool
+			commit                 string
+			pathAllowed            bool
+			regexAllowed           = a.RegexAllowed(allowlistTarget)
+			containsStopword, word = a.ContainsStopWord(finding.Secret)
+		)
+		// If the condition is "AND" we need to check all conditions.
+		if a.MatchCondition == config.AllowlistMatchAnd {
+			// Determine applicable checks.
+			if len(a.Commits) > 0 {
+				commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
+				checks = append(checks, commitAllowed)
+			}
+			if len(a.Paths) > 0 {
+				pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
+				checks = append(checks, pathAllowed)
+			}
+			if len(a.Regexes) > 0 {
+				checks = append(checks, regexAllowed)
+			}
+			if len(a.StopWords) > 0 {
+				checks = append(checks, containsStopword)
+			}
+
+			isAllowed = allTrue(checks)
+		} else {
+			isAllowed = regexAllowed || containsStopword
+		}
+
+		if isAllowed {
+			event := logger.Trace().
+				Str("finding", finding.Secret).
+				Str("condition", a.MatchCondition.String())
+			if commitAllowed {
+				event.Str("allowed-commit", commit)
+			}
+			if pathAllowed {
+				event.Bool("allowed-path", pathAllowed)
+			}
+			if regexAllowed {
+				event.Bool("allowed-regex", regexAllowed)
+			}
+			if containsStopword {
+				event.Str("allowed-stopword", word)
+			}
+			return true, event
+		}
+	}
+	return false, nil
+}
+
+func allTrue(bools []bool) bool {
+	for _, check := range bools {
+		if !check {
+			return false
+		}
+	}
+	return true
 }

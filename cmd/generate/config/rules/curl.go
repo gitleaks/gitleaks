@@ -16,7 +16,7 @@ func CurlBasicAuth() *config.Rule {
 		Regex:       regexp.MustCompile(`\bcurl\b(?:.*|.*(?:[\r\n]{1,2}.*){1,5})[ \t\n\r](?:-u|--user)(?:=|[ \t]{0,5})("(:[^"]{3,}|[^:"]{3,}:|[^:"]{3,}:[^"]{3,})"|'([^:']{3,}:[^']{3,})'|((?:"[^"]{3,}"|'[^']{3,}'|[\w$@.-]+):(?:"[^"]{3,}"|'[^']{3,}'|[\w${}@.-]+)))(?:\s|\z)`),
 		Keywords:    []string{"curl"},
 		Entropy:     2,
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`[^:]+:(?:change(?:it|me)|pass(?:word)?|pwd|test|token|\*+|x+)`), // common placeholder passwords
@@ -109,7 +109,7 @@ func CurlHeaderAuth() *config.Rule {
 			fmt.Sprintf(`\bcurl\b(?:.*?|.*?(?:[\r\n]{1,2}.*?){1,5})[ \t\n\r](?:-H|--header)(?:=|[ \t]{0,5})(?:"%s"|'%s')(?:\B|\s|\z)`, authPat, authPat)),
 		Entropy:  2.75,
 		Keywords: []string{"curl"},
-		//Allowlists: []config.Allowlist{
+		//Allowlists: []*config.Allowlist{
 		//	{
 		//		Regexes: []*regexp.Regexp{},
 		//	},
