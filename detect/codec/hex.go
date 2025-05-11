@@ -36,11 +36,13 @@ func decodeHex(encodedValue string) string {
 	for i := 0; i < size; i += 2 {
 		n1 := encodedValue[i]
 		n2 := encodedValue[i+1]
-		decodedValue[i/2] = byte(hexMap[n1]<<4 | hexMap[n2])
-	}
+		b := byte(hexMap[n1]<<4 | hexMap[n2])
 
-	if !isPrintableASCII(decodedValue) {
-		return ""
+		if !printableASCII[b] {
+			return ""
+		}
+
+		decodedValue[i/2] = b
 	}
 
 	return string(decodedValue)

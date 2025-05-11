@@ -33,7 +33,7 @@ var (
 		},
 		&encoding{
 			kind:    base64Kind,
-			pattern: `[\w\/+-]{16,}={0,3}`,
+			pattern: `[\w\/+-]{16,}={0,2}`,
 			decode:  decodeBase64,
 		},
 	}

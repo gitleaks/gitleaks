@@ -98,43 +98,6 @@ func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
 	return currentRaw[start:end]
 }
 
-// toOriginal maps a start/end to its start/end in the original text
-// the provided start/end should be relative to the segment's decoded value
-func (s *EncodedSegment) toOriginal(se startEnd) startEnd {
-	// If fully contained, return the segments original start/end
-	if s.decoded.contains(se) {
-		return s.original
-	}
-
-	// It falls outside the segment so we need to traverse up the predecessors
-	// to map it to its original location
-	original := startEnd{}
-
-	// Map the value to be relative to the predecessors's decoded values
-	relative := s.encoded.add(s.decoded.overflow(se))
-
-	for _, p := range s.predecessors {
-		if !p.decoded.overlaps(relative) {
-			continue // Not in scope
-		}
-
-		if original.end == 0 {
-			// Start the original based off the first predecessor that overlaps
-			original = p.toOriginal(relative)
-		} else {
-			// Adjust the bounds of the original based on other overlaps
-			original = original.merge(p.toOriginal(relative))
-		}
-	}
-
-	// The predecessors didn't overlap with the relative so this is the original
-	if original.end == 0 {
-		return relative
-	}
-
-	return original
-}
-
 // AdjustMatchIndex maps a match index from the current decode pass back to
 // its location in the original text
 func AdjustMatchIndex(segments []*EncodedSegment, matchIndex []int) []int {
@@ -146,13 +109,8 @@ func AdjustMatchIndex(segments []*EncodedSegment, matchIndex []int) []int {
 	// Map the match to the location in the original text
 	match := startEnd{matchIndex[0], matchIndex[1]}
 
-	// Adjust the match based on the first segment
-	adjusted := segments[0].toOriginal(match)
-
-	// Merge adjustments from the other segments
-	for i := 1; i < len(segments); i++ {
-		adjusted = adjusted.merge(segments[i].toOriginal(match))
-	}
+	// Map the match to its orignal location
+	adjusted := toOriginal(segments, match)
 
 	// Return the adjusted match index
 	return []int{
@@ -174,4 +132,43 @@ func SegmentsWithDecodedOverlap(segments []*EncodedSegment, start, end int) []*E
 	}
 
 	return overlaps
+}
+
+// toOriginal maps a start/end to its start/end in the original text
+// the provided start/end should be relative to the segment's decoded value
+func toOriginal(predecessors []*EncodedSegment, decoded startEnd) startEnd {
+	if len(predecessors) == 0 {
+		return decoded
+	}
+
+	// Map the decoded value one level up where it was encoded
+	encoded := startEnd{}
+
+	for _, p := range predecessors {
+		if !p.decoded.overlaps(decoded) {
+			continue // Not in scope
+		}
+
+		// If fully contained, return the segments original start/end
+		if p.decoded.contains(decoded) {
+			return p.original
+		}
+
+		// Map the value to be relative to the predecessors's decoded values
+		if encoded.end == 0 {
+			encoded = p.encoded.add(p.decoded.overflow(decoded))
+		} else {
+			encoded = encoded.merge(p.encoded.add(p.decoded.overflow(decoded)))
+		}
+	}
+
+	// Should only get here if the thing passed in wasn't in a decoded
+	// value. This shouldn't be the case
+	if encoded.end == 0 {
+		return decoded
+	}
+
+	// Climb up another level
+	// (NOTE: each segment references all the predecessors)
+	return toOriginal(predecessors[0].predecessors, encoded)
 }

@@ -71,6 +71,7 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 
 		segment := &EncodedSegment{
 			predecessors: predecessors,
+			original:     toOriginal(predecessors, startEnd{matchIndex[0], matchIndex[1]}),
 			encoded:      startEnd{matchIndex[0], matchIndex[1]},
 			decoded: startEnd{
 				matchIndex[0] + decodedShift,
@@ -85,31 +86,13 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 		decodedShift += len(decodedValue) - len(encodedValue)
 
 		// Set the predecessors and adjust values if applicable
-		if len(segment.predecessors) == 0 {
-			// We're at the top level so the encoded is the original
-			segment.original = segment.encoded
-		} else {
+		if len(segment.predecessors) != 0 {
 			// Set the depth based on the predecessors' depth in the previous pass
 			segment.depth = 1 + segment.predecessors[0].depth
-
-			// Associate predecessors, adjust encodings, and original start/end
+			// Adjust encodings
 			for _, p := range segment.predecessors {
 				if segment.encoded.overlaps(p.decoded) {
 					segment.encodings |= p.encodings
-
-					// Calcualte the original start/end range
-					if segment.original.end == 0 {
-						// Set it for the first one
-						// instead of merging
-						segment.original = p.toOriginal(
-							segment.encoded,
-						)
-					} else {
-						// Merge the start/end ranges to get the full range for this segment
-						segment.original = segment.original.merge(
-							p.toOriginal(segment.encoded),
-						)
-					}
 				}
 			}
 		}

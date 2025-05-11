@@ -14,11 +14,13 @@ func decodePercent(encodedValue string) string {
 	for i := 0; i < size; i += 3 {
 		n1 := encodedValue[i+1]
 		n2 := encodedValue[i+2]
-		decodedValue[i/3] = byte(hexMap[n1]<<4 | hexMap[n2])
-	}
+		b := byte(hexMap[n1]<<4 | hexMap[n2])
 
-	if !isPrintableASCII(decodedValue) {
-		return ""
+		if !printableASCII[b] {
+			return ""
+		}
+
+		decodedValue[i/3] = b
 	}
 
 	return string(decodedValue)
