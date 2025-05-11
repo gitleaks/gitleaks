@@ -3,25 +3,33 @@ package codec
 // decodePercent decodes percent encoded strings consisting of ONLY percent
 // encoded characters
 func decodePercent(encodedValue string) string {
-	size := len(encodedValue)
+	encLen := len(encodedValue)
+	decodedValue := make([]byte, encLen)
+	decIndex := 0
+	encIndex := 0
 
-	// percent encoded values should be multiples of three characters
-	if size%3 != 0 {
-		return ""
-	}
+	for encIndex < encLen {
+		if encodedValue[encIndex] == '%' && encIndex+2 < encLen {
+			n1 := hexMap[encodedValue[encIndex+1]]
+			n2 := hexMap[encodedValue[encIndex+2]]
+			// Make sure they're hex characters
+			if n1|n2 != '\xff' {
+				b := byte(n1<<4 | n2)
+				if !printableASCII[b] {
+					return ""
+				}
 
-	decodedValue := make([]byte, size/3)
-	for i := 0; i < size; i += 3 {
-		n1 := encodedValue[i+1]
-		n2 := encodedValue[i+2]
-		b := byte(hexMap[n1]<<4 | hexMap[n2])
-
-		if !printableASCII[b] {
-			return ""
+				decodedValue[decIndex] = b
+				encIndex += 3
+				decIndex += 1
+				continue
+			}
 		}
 
-		decodedValue[i/3] = b
+		decodedValue[decIndex] = encodedValue[encIndex]
+		encIndex += 1
+		decIndex += 1
 	}
 
-	return string(decodedValue)
+	return string(decodedValue[:decIndex])
 }

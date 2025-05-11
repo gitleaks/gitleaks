@@ -45,23 +45,14 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 	}
 
 	decodedShift := 0
-	matchEncodings, matchIndices := findEncodingMatches(data)
-	segments := make([]*EncodedSegment, 0, len(matchIndices))
-	for i, matchIndex := range matchIndices {
-		encoding := matchEncodings[i]
-		if encoding == nil {
-			logging.Error().Msg("could not determine encoding")
-			continue
-		}
-		if d.skipDecode(i, matchEncodings, matchIndices) {
-			continue
-		}
-
-		encodedValue := data[matchIndex[0]:matchIndex[1]]
+	encodingMatches := findEncodingMatches(data)
+	segments := make([]*EncodedSegment, 0, len(encodingMatches))
+	for _, m := range encodingMatches {
+		encodedValue := data[m.start:m.end]
 		decodedValue, alreadyDecoded := d.decodedMap[encodedValue]
 
 		if !alreadyDecoded {
-			decodedValue = encoding.decode(encodedValue)
+			decodedValue = m.encoding.decode(encodedValue)
 			d.decodedMap[encodedValue] = decodedValue
 		}
 
@@ -71,14 +62,14 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 
 		segment := &EncodedSegment{
 			predecessors: predecessors,
-			original:     toOriginal(predecessors, startEnd{matchIndex[0], matchIndex[1]}),
-			encoded:      startEnd{matchIndex[0], matchIndex[1]},
+			original:     toOriginal(predecessors, m.startEnd),
+			encoded:      m.startEnd,
 			decoded: startEnd{
-				matchIndex[0] + decodedShift,
-				matchIndex[0] + decodedShift + len(decodedValue),
+				m.start + decodedShift,
+				m.start + decodedShift + len(decodedValue),
 			},
 			decodedValue: decodedValue,
-			encodings:    encoding.kind,
+			encodings:    m.encoding.kind,
 			depth:        1,
 		}
 
@@ -108,41 +99,4 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 	}
 
 	return segments
-}
-
-// skipDecode checks to see if this match touches any neigbors that are
-// higher precedence. If so it returns true handle the lower precedence encoding
-// on the next pass to avoid decoding issues.
-func (d *Decoder) skipDecode(i int, encodings []*encoding, matchIndices [][]int) bool {
-	count := len(matchIndices)
-	if count == 1 {
-		return false
-	}
-
-	thisMatch := matchIndices[i]
-	thisEncoding := encodings[i]
-	hasPrev := i > 0 && encodings[i-1] != nil
-	hasNext := i+1 < count && encodings[i+1] != nil
-
-	if hasPrev {
-		prevMatch := matchIndices[i-1]
-		prevEncoding := encodings[i-1]
-		theyTouch := prevMatch[1] == thisMatch[0]
-		prevIsHigherPrecedence := prevEncoding.precedence > thisEncoding.precedence
-		if theyTouch && prevIsHigherPrecedence {
-			return true
-		}
-	}
-
-	if hasNext {
-		nextMatch := matchIndices[i+1]
-		nextEncoding := encodings[i+1]
-		theyTouch := thisMatch[1] == nextMatch[0]
-		nextIsHigherPrecedence := nextEncoding.precedence > thisEncoding.precedence
-		if theyTouch && nextIsHigherPrecedence {
-			return true
-		}
-	}
-
-	return false
 }
