@@ -19,6 +19,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -101,7 +102,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			scmPlatform scm.Platform
 			remote      *detect.RemoteInfo
 		)
-		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
+		if gitCmd, err = sources.NewGitLogCmd(context.Background(), source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
@@ -109,7 +110,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 		remote = detect.NewRemoteInfo(scmPlatform, source)
 
-		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
+		if findings, err = detector.DetectGit(context.Background(), gitCmd, remote); err != nil {
 			// don't exit on error, just log it
 			logging.Error().Err(err).Msg("failed to scan Git repository")
 		}
