@@ -1,12 +1,17 @@
 package codec
 
 import (
+	"fmt"
 	"math"
 	"regexp"
-	"sort"
+	"strings"
 )
 
 var (
+	// encodingsRe is a regex built by combining all the encoding patterns
+	// into named capture groups so that a single pass can detect multiple
+	// encodings
+	encodingsRe *regexp.Regexp
 	// encodings contains all the encoding configurations for the detector.
 	// The precedence is important. You want more specific encodings to
 	// have a higher precedence or encodings that partially encode the
@@ -15,22 +20,19 @@ var (
 	// this order to determine which encoding should wait till the next pass.
 	encodings = []*encoding{
 		&encoding{
-			kind:       percentKind,
-			pattern:    regexp.MustCompile(`%[0-9A-Fa-f]{2}(?:.*%[0-9A-Fa-f]{2})?`),
-			decode:     decodePercent,
-			precedence: 3,
+			kind:    percentKind,
+			pattern: `%[0-9A-Fa-f]{2}(?:.*%[0-9A-Fa-f]{2})?`,
+			decode:  decodePercent,
 		},
 		&encoding{
-			kind:       hexKind,
-			pattern:    regexp.MustCompile(`[0-9A-Fa-f]{32,}`),
-			decode:     decodeHex,
-			precedence: 2,
+			kind:    hexKind,
+			pattern: `[0-9A-Fa-f]{32,}`,
+			decode:  decodeHex,
 		},
 		&encoding{
-			kind:       base64Kind,
-			pattern:    regexp.MustCompile(`[\w\/+-]{16,}={0,2}`),
-			decode:     decodeBase64,
-			precedence: 1,
+			kind:    base64Kind,
+			pattern: `[\w\/+-]{16,}={0,2}`,
+			decode:  decodeBase64,
 		},
 	}
 )
@@ -74,6 +76,7 @@ func (e encodingKind) kinds() []encodingKind {
 	return kinds
 }
 
+// encodingMatch represents a match of an encoding in the text
 type encodingMatch struct {
 	encoding *encoding
 	startEnd
@@ -84,33 +87,44 @@ type encoding struct {
 	// the kind of decoding (e.g. base64, etc)
 	kind encodingKind
 	// the regex pattern that matches the encoding format
-	pattern *regexp.Regexp
+	pattern string
 	// take the match and return the decoded value
 	decode func(string) string
 	// determine which encoding should win out when two overlap
 	precedence int
 }
 
-// findEncodingMatches finds as many encodings can for this pass
+func init() {
+	count := len(encodings)
+	namedPatterns := make([]string, count)
+	for i, encoding := range encodings {
+		encoding.precedence = count - i
+		namedPatterns[i] = fmt.Sprintf(
+			"(?P<%s>%s)",
+			encoding.kind,
+			encoding.pattern,
+		)
+	}
+	encodingsRe = regexp.MustCompile(strings.Join(namedPatterns, "|"))
+}
+
+// findEncodingMatches finds as many encodings as it can for this pass
 func findEncodingMatches(data string) []encodingMatch {
 	var all []encodingMatch
-	for _, e := range encodings {
-		for _, matchIndex := range e.pattern.FindAllStringIndex(data, -1) {
-			all = append(all, encodingMatch{
-				encoding: e,
-				startEnd: startEnd{
-					start: matchIndex[0],
-					end:   matchIndex[1],
-				},
-			})
+	for _, matchIndex := range encodingsRe.FindAllStringSubmatchIndex(data, -1) {
+		// Add the encodingMatch with its proper encoding
+		for i, j := 2, 0; i < len(matchIndex); i, j = i+2, j+1 {
+			if matchIndex[i] > -1 {
+				all = append(all, encodingMatch{
+					encoding: encodings[j],
+					startEnd: startEnd{
+						start: matchIndex[i],
+						end:   matchIndex[i+1],
+					},
+				})
+			}
 		}
 	}
-
-	// The rest of the code (both below and outside this function) expects
-	// that these are sorted
-	sort.Slice(all, func(i, j int) bool {
-		return all[i].start < all[j].start
-	})
 
 	totalMatches := len(all)
 	if totalMatches == 1 {

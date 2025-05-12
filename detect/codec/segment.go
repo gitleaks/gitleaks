@@ -5,7 +5,6 @@ import (
 )
 
 // EncodedSegment represents a portion of text that is encoded in some way.
-// The encoded segments are strung together to form a digraph
 type EncodedSegment struct {
 	// predecessors are all of the segments from the previous decoding pass
 	predecessors []*EncodedSegment
@@ -45,7 +44,7 @@ func Tags(segments []*EncodedSegment) []string {
 
 	// Collect the encodings from the segments
 	encodings := segments[0].encodings
-	for i := 0; i < len(segments); i++ {
+	for i := 1; i < len(segments); i++ {
 		encodings |= segments[i].encodings
 	}
 

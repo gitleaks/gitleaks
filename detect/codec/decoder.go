@@ -38,7 +38,7 @@ func (d *Decoder) Decode(data string, predecessors []*EncodedSegment) (string, [
 	return data, segments
 }
 
-// findEncodedSegments finds the encoded segments in the data and updates the segment digraph for this pass
+// findEncodedSegments finds the encoded segments in the data
 func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegment) []*EncodedSegment {
 	if len(data) == 0 {
 		return []*EncodedSegment{}
@@ -76,7 +76,7 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 		// Shift decoded start and ends based on size changes
 		decodedShift += len(decodedValue) - len(encodedValue)
 
-		// Set the predecessors and adjust values if applicable
+		// Adjust depth and encoding if applicable
 		if len(segment.predecessors) != 0 {
 			// Set the depth based on the predecessors' depth in the previous pass
 			segment.depth = 1 + segment.predecessors[0].depth
