@@ -449,7 +449,9 @@ ways:
 
 Currently supported encodings:
 
-- `base64` (both standard and base64url)
+- **percent** - Any printable ASCII percent encoded values
+- **hex** - Any printable ASCII hex encoded values >= 32 characters 
+- **base64** - Any printable ASCII base64 encoded values >= 16 characters 
 
 #### Reporting
 
