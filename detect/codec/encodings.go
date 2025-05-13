@@ -19,17 +19,22 @@ var (
 	// (e.g. base64). If two encoding matches overlap the decoder will use
 	// this order to determine which encoding should wait till the next pass.
 	encodings = []*encoding{
-		&encoding{
+		{
 			kind:    percentKind,
 			pattern: `%[0-9A-Fa-f]{2}(?:.*%[0-9A-Fa-f]{2})?`,
 			decode:  decodePercent,
 		},
-		&encoding{
+		{
+			kind:    unicodeKind,
+			pattern: `(?:(?:U\+[a-fA-F0-9]{4}(?:\s|$))+|(?i)(?:\\{1,2}u[a-fA-F0-9]{4})+)`,
+			decode:  decodeUnicode,
+		},
+		{
 			kind:    hexKind,
 			pattern: `[0-9A-Fa-f]{32,}`,
 			decode:  decodeHex,
 		},
-		&encoding{
+		{
 			kind:    base64Kind,
 			pattern: `[\w\/+-]{16,}={0,2}`,
 			decode:  decodeBase64,
@@ -40,6 +45,7 @@ var (
 // encodingNames is used to map the encodingKinds to their name
 var encodingNames = []string{
 	"percent",
+	"unicode",
 	"hex",
 	"base64",
 }
@@ -51,8 +57,9 @@ type encodingKind int
 var (
 	// make sure these go up by powers of 2
 	percentKind = encodingKind(1)
-	hexKind     = encodingKind(2)
-	base64Kind  = encodingKind(4)
+	unicodeKind = encodingKind(2)
+	hexKind     = encodingKind(4)
+	base64Kind  = encodingKind(8)
 )
 
 func (e encodingKind) String() string {

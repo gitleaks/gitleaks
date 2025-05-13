@@ -2,9 +2,10 @@ package codec
 
 import (
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDecode(t *testing.T) {
@@ -89,6 +90,21 @@ func TestDecode(t *testing.T) {
 			name:     "hex encoded value",
 			chunk:    `secret="466973684D617048756E6B79212121363334"`,
 			expected: `secret="FishMapHunky!!!634"`,
+		},
+		{
+			name:     "unicode encoded value",
+			chunk:    `secret=U+0061 U+0062 U+0063 U+0064 U+0065 U+0066`,
+			expected: "secret=abcdef",
+		},
+		{
+			name:     "unicode encoded value backslashed",
+			chunk:    `secret=\\u0068\\u0065\\u006c\\u006c\\u006f\\u0020\\u0077\\u006f\\u0072\\u006c\\u0064\\u0020\\u0064\\u0075\\u0064\\u0065`,
+			expected: "secret=hello world dude",
+		},
+		{
+			name:     "unicode encoded value backslashed mixed w/ hex",
+			chunk:    `secret=\u0068\u0065\u006c\u006c\u006f\u0020\u0077\u006f\u0072\u006c\u0064 6C6F76656C792070656F706C65206F66206561727468`,
+			expected: "secret=hello world lovely people of earth",
 		},
 	}
 
