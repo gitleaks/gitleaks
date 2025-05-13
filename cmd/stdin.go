@@ -25,6 +25,8 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 
 	// setup config (aka, the thing that defines rules)
 	initConfig(".")
+	initDiagnostics()
+
 	cfg := Config(cmd)
 
 	// create detector

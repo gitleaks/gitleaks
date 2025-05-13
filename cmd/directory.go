@@ -31,7 +31,10 @@ func runDirectory(cmd *cobra.Command, args []string) {
 			source = "."
 		}
 	}
+
 	initConfig(source)
+	initDiagnostics()
+
 	var (
 		findings []report.Finding
 		err      error
