@@ -2,6 +2,7 @@ package detect
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -19,6 +20,10 @@ import (
 )
 
 func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
+	return d.DetectGitContext(context.Background(), cmd, remote)
+}
+
+func (d *Detector) DetectGitContext(ctx context.Context, cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
 	defer cmd.Wait()
 	var (
 		diffFilesCh = cmd.DiffFilesCh()
@@ -28,6 +33,9 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
 	for diffFilesCh != nil || errCh != nil {
 		select {
+		case <-ctx.Done():
+			// Return context error if context is cancelled
+			return d.findings, ctx.Err()
 		case gitdiffFile, open := <-diffFilesCh:
 			if !open {
 				diffFilesCh = nil
@@ -53,6 +61,13 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 			d.addCommit(commitSHA)
 
 			d.Sema.Go(func() error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+					// Continue processing
+				}
+
 				for _, textFragment := range gitdiffFile.TextFragments {
 					if textFragment == nil {
 						return nil
@@ -70,7 +85,7 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 							Str("path", fragment.FilePath).
 							Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
 					})
-					for _, finding := range d.Detect(fragment) {
+					for _, finding := range d.DetectContext(ctx, fragment) {
 						d.AddFinding(augmentGitFinding(remote, finding, textFragment, gitdiffFile))
 					}
 					if timer != nil {

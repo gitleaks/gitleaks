@@ -3,6 +3,7 @@ package detect
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"io"
 
@@ -11,6 +12,11 @@ import (
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
+	return d.DetectReaderContext(context.Background(), r, bufSize)
+}
+
+// DetectReader accepts an io.Reader and a buffer size for the reader in KB
+func (d *Detector) DetectReaderContext(ctx context.Context, r io.Reader, bufSize int) ([]report.Finding, error) {
 	reader := bufio.NewReader(r)
 	buf := make([]byte, 1000*bufSize)
 	findings := []report.Finding{}
@@ -30,7 +36,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 			fragment := Fragment{
 				Raw: peekBuf.String(),
 			}
-			for _, finding := range d.Detect(fragment) {
+			for _, finding := range d.DetectContext(ctx, fragment) {
 				findings = append(findings, finding)
 				if d.Verbose {
 					printFinding(finding, d.NoColor)
@@ -47,6 +53,10 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 	}
 
 	return findings, nil
+}
+
+func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
+	return d.StreamDetectReaderContext(context.Background(), r, bufSize)
 }
 
 // StreamDetectReader streams the detection results from the provided io.Reader.
@@ -82,7 +92,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 //	} else {
 //	    fmt.Println("Scanning completed successfully.")
 //	}
-func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
+func (d *Detector) StreamDetectReaderContext(ctx context.Context, r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
 	findingsCh := make(chan report.Finding, 1)
 	errCh := make(chan error, 1)
 
@@ -104,7 +114,7 @@ func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.F
 				}
 
 				fragment := Fragment{Raw: peekBuf.String()}
-				for _, finding := range d.Detect(fragment) {
+				for _, finding := range d.DetectContext(ctx, fragment) {
 					findingsCh <- finding
 					if d.Verbose {
 						printFinding(finding, d.NoColor)

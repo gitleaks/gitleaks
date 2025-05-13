@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -733,7 +734,8 @@ const token = "mockSecret";
 			d.MaxDecodeDepth = maxDecodeDepth
 			d.baselinePath = tt.baselinePath
 
-			findings := d.Detect(tt.fragment)
+			ctx := context.Background()
+			findings := d.DetectContext(ctx, tt.fragment)
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}
@@ -861,11 +863,12 @@ func TestFromGit(t *testing.T) {
 			err = detector.AddGitleaksIgnore(ignorePath)
 			require.NoError(t, err)
 
-			gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
+			ctx := context.Background()
+			gitCmd, err := sources.NewGitLogCmd(ctx, tt.source, tt.logOpts)
 			require.NoError(t, err)
 
 			remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
-			findings, err := detector.DetectGit(gitCmd, remote)
+			findings, err := detector.DetectGitContext(ctx, gitCmd, remote)
 			require.NoError(t, err)
 
 			for _, f := range findings {
@@ -934,10 +937,12 @@ func TestFromGitStaged(t *testing.T) {
 		detector := NewDetector(cfg)
 		err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
 		require.NoError(t, err)
-		gitCmd, err := sources.NewGitDiffCmd(tt.source, true)
+
+		ctx := context.Background()
+		gitCmd, err := sources.NewGitDiffCmd(ctx, tt.source, true)
 		require.NoError(t, err)
 		remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
-		findings, err := detector.DetectGit(gitCmd, remote)
+		findings, err := detector.DetectGitContext(ctx, gitCmd, remote)
 		require.NoError(t, err)
 
 		for _, f := range findings {
@@ -1056,7 +1061,8 @@ func TestFromFiles(t *testing.T) {
 			paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 			require.NoError(t, err)
 
-			findings, err := detector.DetectFiles(paths)
+			ctx := context.Background()
+			findings, err := detector.DetectFilesContext(ctx, paths)
 			require.NoError(t, err)
 
 			// TODO: Temporary mitigation.
@@ -1130,7 +1136,8 @@ func TestDetectWithSymlinks(t *testing.T) {
 		paths, err := sources.DirectoryTargets(tt.source, detector.Sema, true, cfg.Allowlists)
 		require.NoError(t, err)
 
-		findings, err := detector.DetectFiles(paths)
+		ctx := context.Background()
+		findings, err := detector.DetectFilesContext(ctx, paths)
 		require.NoError(t, err)
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}

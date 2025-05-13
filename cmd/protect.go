@@ -51,12 +51,12 @@ func runProtect(cmd *cobra.Command, args []string) {
 		remote *detect.RemoteInfo
 	)
 
-	if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
+	if gitCmd, err = sources.NewGitDiffCmd(cmd.Context(), source, staged); err != nil {
 		logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 	}
 	remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
 
-	if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
+	if findings, err = detector.DetectGitContext(cmd.Context(), gitCmd, remote); err != nil {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")
 	}

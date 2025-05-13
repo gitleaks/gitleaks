@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
 	"os/exec"
@@ -21,14 +22,20 @@ type GitCmd struct {
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
+	cancel      context.CancelFunc
 }
 
 // NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
-func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
-	sourceClean := filepath.Clean(source)
-	var cmd *exec.Cmd
+func NewGitLogCmd(ctx context.Context, source string, logOpts string) (*GitCmd, error) {
+	var (
+		sourceClean = filepath.Clean(source)
+		cmd         *exec.Cmd
+		// Create a cancellable context derived from the parent
+		cmdCtx, cmdCancel = context.WithCancel(ctx)
+	)
+
 	if logOpts != "" {
 		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
 
@@ -46,9 +53,9 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		}
 
 		args = append(args, userArgs...)
-		cmd = exec.Command("git", args...)
+		cmd = exec.CommandContext(cmdCtx, "git", args...)
 	} else {
-		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
+		cmd = exec.CommandContext(cmdCtx, "git", "-C", sourceClean, "log", "-p", "-U0",
 			"--full-history", "--all")
 	}
 
@@ -56,13 +63,16 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
+		cmdCancel()
 		return nil, err
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
+		cmdCancel()
 		return nil, err
 	}
 	if err := cmd.Start(); err != nil {
+		cmdCancel()
 		return nil, err
 	}
 
@@ -71,6 +81,8 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 
 	gitdiffFiles, err := gitdiff.Parse(stdout)
 	if err != nil {
+		cmdCancel()
+		cmd.Wait()
 		return nil, err
 	}
 
@@ -78,31 +90,41 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		cancel:      cmdCancel,
 	}, nil
 }
 
 // NewGitDiffCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
-func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
-	sourceClean := filepath.Clean(source)
-	var cmd *exec.Cmd
-	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
+func NewGitDiffCmd(ctx context.Context, source string, staged bool) (*GitCmd, error) {
+	var (
+		sourceClean = filepath.Clean(source)
+		// Create a cancellable context derived from the parent
+		cmdCtx, cmdCancel = context.WithCancel(ctx)
+		cmd               *exec.Cmd
+	)
+
 	if staged {
-		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
+		cmd = exec.CommandContext(cmdCtx, "git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
+	} else {
+		cmd = exec.CommandContext(cmdCtx, "git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
 	}
 	logging.Debug().Msgf("executing: %s", cmd.String())
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
+		cmdCancel()
 		return nil, err
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
+		cmdCancel()
 		return nil, err
 	}
 	if err := cmd.Start(); err != nil {
+		cmdCancel()
 		return nil, err
 	}
 
@@ -111,6 +133,8 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 
 	gitdiffFiles, err := gitdiff.Parse(stdout)
 	if err != nil {
+		cmdCancel()
+		cmd.Wait()
 		return nil, err
 	}
 
@@ -118,6 +142,7 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		cancel:      cmdCancel,
 	}, nil
 }
 
@@ -136,6 +161,9 @@ func (c *GitCmd) ErrCh() <-chan error {
 //
 // Wait also closes underlying stdout and stderr.
 func (c *GitCmd) Wait() (err error) {
+	if c.cancel != nil {
+		defer c.cancel()
+	}
 	return c.cmd.Wait()
 }
 

@@ -3,6 +3,7 @@ package detect
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,7 +20,18 @@ import (
 const maxPeekSize = 25 * 1_000 // 10kb
 
 func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
+	return d.DetectFilesContext(context.Background(), paths)
+}
+
+func (d *Detector) DetectFilesContext(ctx context.Context, paths <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for pa := range paths {
+		select {
+		case <-ctx.Done():
+			break
+		default:
+			// Continue
+		}
+
 		d.Sema.Go(func() error {
 			logger := logging.With().Str("path", pa.Path).Logger()
 			logger.Trace().Msg("Scanning path")
@@ -103,7 +115,7 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 					timer := time.AfterFunc(SlowWarningThreshold, func() {
 						logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
 					})
-					for _, finding := range d.Detect(fragment) {
+					for _, finding := range d.DetectContext(ctx, fragment) {
 						// need to add 1 since line counting starts at 1
 						finding.StartLine += (totalLines - linesInChunk) + 1
 						finding.EndLine += (totalLines - linesInChunk) + 1

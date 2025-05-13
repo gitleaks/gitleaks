@@ -70,6 +70,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// - git: scan the history of the repo
 	// - no-git: scan files by treating the repo as a plain directory
 	var (
+		ctx      = cmd.Context()
 		findings []report.Finding
 		err      error
 	)
@@ -84,12 +85,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 			logging.Fatal().Err(err).Send()
 		}
 
-		if findings, err = detector.DetectFiles(paths); err != nil {
+		if findings, err = detector.DetectFilesContext(ctx, paths); err != nil {
 			// don't exit on error, just log it
 			logging.Error().Err(err).Msg("failed scan directory")
 		}
 	} else if fromPipe {
-		if findings, err = detector.DetectReader(os.Stdin, 10); err != nil {
+		if findings, err = detector.DetectReaderContext(ctx, os.Stdin, 10); err != nil {
 			// log fatal to exit, no need to continue since a report
 			// will not be generated when scanning from a pipe...for now
 			logging.Fatal().Err(err).Msg("failed scan input from stdin")
@@ -101,7 +102,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			scmPlatform scm.Platform
 			remote      *detect.RemoteInfo
 		)
-		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
+		if gitCmd, err = sources.NewGitLogCmd(ctx, source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
@@ -109,7 +110,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 		remote = detect.NewRemoteInfo(scmPlatform, source)
 
-		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
+		if findings, err = detector.DetectGitContext(ctx, gitCmd, remote); err != nil {
 			// don't exit on error, just log it
 			logging.Error().Err(err).Msg("failed to scan Git repository")
 		}
