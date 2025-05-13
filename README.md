@@ -144,7 +144,6 @@ Usage:
   gitleaks [command]
 
 Available Commands:
-  completion  generate the autocompletion script for the specified shell
   dir         scan directories or files for secrets
   git         scan git repositories for secrets
   help        Help about any command
@@ -160,6 +159,8 @@ Flags:
                                       3. env var GITLEAKS_CONFIG_TOML with the file content
                                       4. (target path)/.gitleaks.toml
                                       If none of the four options are used, then gitleaks will use the default config
+      --diagnostics string            enable diagnostics (comma-separated list: cpu,mem,trace). cpu=CPU profiling, mem=memory profiling, trace=execution tracing
+      --diagnostics-dir string        directory to store diagnostics output files (defaults to current directory)
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
   -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
@@ -171,7 +172,7 @@ Flags:
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
+  -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
   -v, --verbose                       show verbose output from scan
