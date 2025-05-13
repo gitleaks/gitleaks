@@ -2,6 +2,7 @@ package codec
 
 import (
 	"bytes"
+
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
@@ -89,13 +90,15 @@ func (d *Decoder) findEncodedSegments(data string, predecessors []*EncodedSegmen
 		}
 
 		segments = append(segments, segment)
-		logging.Debug().Msgf(
-			"segment found: original=%s pos=%s: %q -> %q",
-			segment.original,
-			segment.encoded,
-			encodedValue,
-			segment.decodedValue,
-		)
+		logging.Debug().
+			Str("decoder", m.encoding.kind.String()).
+			Msgf(
+				"segment found: original=%s pos=%s: %q -> %q",
+				segment.original,
+				segment.encoded,
+				encodedValue,
+				segment.decodedValue,
+			)
 	}
 
 	return segments
