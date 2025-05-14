@@ -86,6 +86,22 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	}
 	defer f.Close()
 
+	// Get file size
+	fileInfo, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	fileSize := fileInfo.Size()
+	if d.MaxTargetMegaBytes > 0 {
+		rawLength := fileSize / 1000000
+		if rawLength > int64(d.MaxTargetMegaBytes) {
+			logger.Debug().
+				Int64("size", rawLength).
+				Msg("Skipping file: exceeds --max-target-megabytes")
+			return nil
+		}
+	}
+
 	// Skip binary files by sniffing header
 	head := make([]byte, 261)
 	if n, _ := io.ReadFull(f, head); n > 0 {
@@ -105,6 +121,16 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	for {
 		n, err := reader.Read(buf)
 		if n > 0 {
+			// Only check the filetype at the start of file.
+			if totalLines == 0 {
+				// TODO: could other optimizations be introduced here?
+				if mimetype, err := filetype.Match(buf[:n]); err != nil {
+					return nil
+				} else if mimetype.MIME.Type == "application" {
+					return nil // skip binary files
+				}
+			}
+
 			peekBuf := bytes.NewBuffer(buf[:n])
 			if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
 				return readErr
