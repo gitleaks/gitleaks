@@ -43,10 +43,10 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	logger.Trace().Msg("Scanning path")
 
 	// --- Archive branch: extract and reschedule children ---
-	if IsArchive(scanTarget.Path) {
-		logger.Info().Msg("Found archive")
+	if isArchive(scanTarget.Path) {
+		logger.Debug().Msg("Found archive")
 
-		targets, tmpdir, err := ExtractArchive(scanTarget.Path)
+		targets, tmpArchiveDir, err := extractArchive(scanTarget.Path)
 		if err != nil {
 			logger.Warn().Err(err).Msg("Failed to extract archive")
 			return nil
@@ -55,7 +55,7 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 		for _, t := range targets {
 			t := t
 			// compute path INSIDE this archive
-			rel, rerr := filepath.Rel(tmpdir, t.Path)
+			rel, rerr := filepath.Rel(tmpArchiveDir, t.Path)
 			if rerr != nil {
 				rel = filepath.Base(t.Path)
 			}
@@ -73,10 +73,6 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 			})
 		}
 
-		// cleanup extraction directory
-		// if err := os.RemoveAll(tmpdir); err != nil {
-		// 	logger.Warn().Err(err).Msg("Failed to remove tempdir")
-		// }
 		return nil
 	}
 

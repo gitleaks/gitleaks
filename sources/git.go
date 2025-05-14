@@ -141,6 +141,7 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 func (g *GitCmd) CheckoutBlob(commit, filepathInRepo string) (string, error) {
 	// Create a temp file with the same extension as the blob, if possible
 	ext := filepath.Ext(filepathInRepo)
+	// tmpDir, err := os.MkdirTemp("gitleaks", "archive-*")
 	tmpFile, err := os.CreateTemp("", "gitleaks-blob-*"+ext)
 	if err != nil {
 		return "", fmt.Errorf("creating temp file for blob: %w", err)

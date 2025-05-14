@@ -46,7 +46,7 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 				}
 			}
 
-			if IsArchive(gitdiffFile.NewName) {
+			if isArchive(gitdiffFile.NewName) {
 				// Check if commit is allowed
 				d.Sema.Go(func() error {
 					// Check out the archive blob to disk
@@ -57,7 +57,7 @@ func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.
 					}
 					defer os.Remove(archivePath)
 
-					targets, tmpDir, err := ExtractArchive(archivePath)
+					targets, tmpDir, err := extractArchive(archivePath)
 					if err != nil {
 						os.RemoveAll(tmpDir)
 						logging.Warn().Err(err).Msg("failed to extract archive")

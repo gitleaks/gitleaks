@@ -12,10 +12,10 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
-// IsArchive asks archives.Identify (with a nil stream, so only the filename)
+// isArchive asks archives.Identify (with a nil stream, so only the filename)
 // whether this file would be handled by an Extractor. If Identify returns
 // a Format implementing archives.Extractor, we treat it as an archive.
-func IsArchive(path string) bool {
+func isArchive(path string) bool {
 	format, _, err := archives.Identify(context.Background(), path, nil)
 	if err != nil {
 		// no matching format at all
@@ -27,15 +27,15 @@ func IsArchive(path string) bool {
 
 // ExtractArchive extracts all files from archivePath into a temp dir.
 // Returns the list of ScanTargets (with real file paths) and the temp dir for cleanup.
-func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
-	tmpDir, err := os.MkdirTemp("", "gitleaks-archive-")
+func extractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
+	tmpArchiveDir, err := os.MkdirTemp(tmpDir, "archive-*")
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("creating temp dir for archive: %w", err)
 	}
 
 	f, err := os.Open(archivePath)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		os.RemoveAll(tmpArchiveDir)
 		return nil, "", err
 	}
 	defer f.Close()
@@ -43,13 +43,13 @@ func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
 	ctx := context.Background()
 	format, stream, err := archives.Identify(ctx, archivePath, f)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		os.RemoveAll(tmpArchiveDir)
 		return nil, "", err
 	}
 
 	extractor, ok := format.(archives.Extractor)
 	if !ok {
-		os.RemoveAll(tmpDir)
+		os.RemoveAll(tmpArchiveDir)
 		return nil, "", fmt.Errorf("format %T is not extractable", format)
 	}
 
@@ -74,7 +74,7 @@ func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
 		}
 		defer r.Close()
 
-		outPath := filepath.Join(tmpDir, file.Name())
+		outPath := filepath.Join(tmpArchiveDir, file.Name())
 		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 			return err
 		}
@@ -92,5 +92,5 @@ func ExtractArchive(archivePath string) ([]sources.ScanTarget, string, error) {
 		return nil
 	})
 
-	return targets, tmpDir, err
+	return targets, tmpArchiveDir, err
 }
