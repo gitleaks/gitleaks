@@ -1,5 +1,3 @@
-title = "gitleaks config"
-
 [[rules]]
 description = "Python Files"
 id = "python-files-only"

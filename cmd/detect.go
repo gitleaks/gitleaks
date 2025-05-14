@@ -55,6 +55,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// setup config (aka, the thing that defines rules)
 	initConfig(source)
+	initDiagnostics()
 	cfg := Config(cmd)
 
 	// create detector
@@ -78,7 +79,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			source,
 			detector.Sema,
 			detector.FollowSymlinks,
-			detector.Config.Allowlist.PathAllowed,
+			detector.Config.Allowlists,
 		)
 		if err != nil {
 			logging.Fatal().Err(err).Send()

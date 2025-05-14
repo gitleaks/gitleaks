@@ -38,11 +38,17 @@ order of precedence:
 4. (target path)/.gitleaks.toml
 If none of the four options are used, then gitleaks will use the default config`
 
-var rootCmd = &cobra.Command{
-	Use:     "gitleaks",
-	Short:   "Gitleaks scans code, past or present, for secrets",
-	Version: Version,
-}
+var (
+	rootCmd = &cobra.Command{
+		Use:     "gitleaks",
+		Short:   "Gitleaks scans code, past or present, for secrets",
+		Version: Version,
+	}
+
+	// diagnostics manager is global to ensure it can be started before a scan begins
+	// and stopped after a scan completes
+	diagnosticsManager *DiagnosticsManager
+)
 
 const (
 	BYTE     = 1.0
@@ -70,6 +76,10 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+
+	// Add diagnostics flags
+	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (comma-separated list: cpu,mem,trace). cpu=CPU profiling, mem=memory profiling, trace=execution tracing")
+	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files (defaults to current directory)")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -167,6 +177,33 @@ func initConfig(source string) {
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
+}
+
+func initDiagnostics() {
+	// Initialize diagnostics manager
+	diagnosticsFlag, err := rootCmd.PersistentFlags().GetString("diagnostics")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics flag")
+	}
+
+	diagnosticsDir, err := rootCmd.PersistentFlags().GetString("diagnostics-dir")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics-dir flag")
+	}
+
+	var diagErr error
+	diagnosticsManager, diagErr = NewDiagnosticsManager(diagnosticsFlag, diagnosticsDir)
+	if diagErr != nil {
+		logging.Fatal().Err(diagErr).Msg("Error initializing diagnostics")
+	}
+
+	if diagnosticsManager.Enabled {
+		logging.Info().Msg("Starting diagnostics...")
+		if diagErr := diagnosticsManager.StartDiagnostics(); diagErr != nil {
+			logging.Fatal().Err(diagErr).Msg("Failed to start diagnostics")
+		}
+	}
+
 }
 
 func Execute() {
@@ -379,6 +416,11 @@ func bytesConvert(bytes uint64) string {
 }
 
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+	if diagnosticsManager.Enabled {
+		logging.Debug().Msg("Finalizing diagnostics...")
+		diagnosticsManager.StopDiagnostics()
+	}
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {

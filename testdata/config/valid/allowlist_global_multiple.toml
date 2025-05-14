@@ -1,0 +1,10 @@
+[[rules]]
+id = "test"
+regex = '''token = "(.+)"'''
+
+[[allowlists]]
+regexes = ["^changeit$"]
+[[allowlists]]
+condition = "AND"
+paths = ["^node_modules/.*"]
+stopwords = ["mock"]

@@ -31,7 +31,10 @@ func runDirectory(cmd *cobra.Command, args []string) {
 			source = "."
 		}
 	}
+
 	initConfig(source)
+	initDiagnostics()
+
 	var (
 		findings []report.Finding
 		err      error
@@ -60,7 +63,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		source,
 		detector.Sema,
 		detector.FollowSymlinks,
-		detector.Config.Allowlist.PathAllowed,
+		detector.Config.Allowlists,
 	)
 	if err != nil {
 		logging.Fatal().Err(err)

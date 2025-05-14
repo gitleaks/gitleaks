@@ -42,6 +42,8 @@ func runGit(cmd *cobra.Command, args []string) {
 
 	// setup config (aka, the thing that defines rules)
 	initConfig(source)
+	initDiagnostics()
+
 	cfg := Config(cmd)
 
 	// create detector

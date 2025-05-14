@@ -13,23 +13,9 @@
 
 title = "gitleaks config"
 
+# TODO: change to [[allowlists]]
 [allowlist]
 description = "global allow lists"
-regexes = [
-    '''(?i)^true|false|null$''',
-    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
-    '''^\$(?:\d+|{\d+})$''',
-    '''^\$(?:[A-Z_]+|[a-z_]+)$''',
-    '''^\${(?:[A-Z_]+|[a-z_]+)}$''',
-    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
-    '''^\$\{\{[ \t]*(?:(?:env|github|secrets|vars)(?:\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
-    '''^%(?:[A-Z_]+|[a-z_]+)%$''',
-    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
-    '''^\{\d{0,2}}$''',
-    '''^@(?:[A-Z_]+|[a-z_]+)@$''',
-    '''^/Users/(?i)[a-z0-9]+/[\w .-/]+$''',
-    '''^/(?:bin|etc|home|opt|tmp|usr|var)/[\w ./-]+$''',
-]
 paths = [
     '''gitleaks\.toml''',
     '''(?i)\.(?:bmp|gif|jpe?g|png|svg|tiff?)$''',
@@ -56,10 +42,32 @@ paths = [
     '''verification-metadata\.xml''',
     '''Database.refactorlog''',
 ]
+regexes = [
+    '''(?i)^true|false|null$''',
+    '''^(?i:a+|b+|c+|d+|e+|f+|g+|h+|i+|j+|k+|l+|m+|n+|o+|p+|q+|r+|s+|t+|u+|v+|w+|x+|y+|z+|\*+|\.+)$''',
+    '''^\$(?:\d+|{\d+})$''',
+    '''^\$(?:[A-Z_]+|[a-z_]+)$''',
+    '''^\${(?:[A-Z_]+|[a-z_]+)}$''',
+    '''^\{\{[ \t]*[\w ().|]+[ \t]*}}$''',
+    '''^\$\{\{[ \t]*(?:(?:env|github|secrets|vars)(?:\.[A-Za-z]\w+)+[\w "'&./=|]*)[ \t]*}}$''',
+    '''^%(?:[A-Z_]+|[a-z_]+)%$''',
+    '''^%[+\-# 0]?[bcdeEfFgGoOpqstTUvxX]$''',
+    '''^\{\d{0,2}}$''',
+    '''^@(?:[A-Z_]+|[a-z_]+)@$''',
+    '''^/Users/(?i)[a-z0-9]+/[\w .-/]+$''',
+    '''^/(?:bin|etc|home|opt|tmp|usr|var)/[\w ./-]+$''',
+]
 stopwords = [
     "abcdefghijklmnopqrstuvwxyz",
     "014df517-39d1-4453-b7b3-9930c563627c",
 ]
+
+[[rules]]
+id = "1password-secret-key"
+description = "Uncovered a possible 1Password secret key, potentially compromising access to secrets in vaults."
+regex = '''\bA3-[A-Z0-9]{6}-(?:(?:[A-Z0-9]{11})|(?:[A-Z0-9]{6}-[A-Z0-9]{5}))-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}\b'''
+entropy = 3.8
+keywords = ["a3-"]
 
 [[rules]]
 id = "1password-service-account-token"
@@ -216,6 +224,13 @@ description = "Cisco Meraki is a cloud-managed IT solution that provides network
 regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:(?-i:[Mm]eraki|MERAKI))(?:[ \t\w.-]{0,20})[\s'"]{0,3})(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 3
 keywords = ["meraki"]
+
+[[rules]]
+id = "clickhouse-cloud-api-secret-key"
+description = "Identified a pattern that may indicate clickhouse cloud API secret key, risking unauthorized clickhouse cloud api access and data breaches on ClickHouse Cloud platforms."
+regex = '''\b(4b1d[A-Za-z0-9]{38})\b'''
+entropy = 3
+keywords = ["4b1d"]
 
 [[rules]]
 id = "clojars-api-token"
@@ -545,7 +560,7 @@ keywords = ["freshbooks"]
 id = "gcp-api-key"
 description = "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches."
 regex = '''\b(AIza[\w-]{35})(?:[\x60'"\s;]|\\[nr]|$)'''
-entropy = 3
+entropy = 4
 keywords = ["aiza"]
 [[rules.allowlists]]
 regexes = [
@@ -589,6 +604,7 @@ regexes = [
     '''^[a-zA-Z_.-]+$''',
 ]
 [[rules.allowlists]]
+description = "Allowlist for Generic API Keys"
 regexTarget = "match"
 regexes = [
     '''(?i)(?:access(?:ibility|or)|access[_.-]?id|random[_.-]?access|api[_.-]?(?:id|name|version)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(?:credentials?[_.-]?id|withCredentials)|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key|(?:turkey)|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets|key(?:store|tab)[_.-]?(?:file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(?:secret)[_.-]?(?:length|name|size)|UserSecretsId|(?:csrf)[_.-]?token|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])|public[_.-]?token|(?:key|token)[_.-]?file|(?-i:(?:[A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(?:\n|\z))|(?-i:(?:[A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(?:\n|\z)))''',
@@ -2368,7 +2384,7 @@ keywords = ["kraken"]
 [[rules]]
 id = "kubernetes-secret-yaml"
 description = "Possible Kubernetes Secret detected, posing a risk of leaking credentials/tokens from your deployments"
-regex = '''(?i)(?:\bkind:[ \t]*["']?\bsecret\b["']?(?:.|\s){0,200}?\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?:.|\s){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?:.|\s){0,200}?\bkind:[ \t]*["']?\bsecret\b["']?)'''
+regex = '''(?i)(?:\bkind:[ \t]*["']?\bsecret\b["']?(?s:.){0,200}?\bdata:(?s:.){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))|\bdata:(?s:.){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))(?s:.){0,200}?\bkind:[ \t]*["']?\bsecret\b["']?)'''
 path = '''(?i)\.ya?ml$'''
 keywords = ["secret"]
 [[rules.allowlists]]
@@ -2378,7 +2394,7 @@ regexes = [
 [[rules.allowlists]]
 regexTarget = "match"
 regexes = [
-    '''(kind:(?:.|\s)+\n---\n(?:.|\s)+\bdata:|data:(?:.|\s)+\n---\n(?:.|\s)+\bkind:)''',
+    '''(kind:(?s:.)+\n---\n(?s:.)+\bdata:|data:(?s:.)+\n---\n(?s:.)+\bkind:)''',
 ]
 
 [[rules]]
@@ -2619,6 +2635,13 @@ description = "Found an OpenShift user token, potentially compromising an OpenSh
 regex = '''\b(sha256~[\w-]{43})(?:[^\w-]|\z)'''
 entropy = 3.5
 keywords = ["sha256~"]
+
+[[rules]]
+id = "perplexity-api-key"
+description = "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure."
+regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
+entropy = 4
+keywords = ["pplx-"]
 
 [[rules]]
 id = "pkcs12-file"

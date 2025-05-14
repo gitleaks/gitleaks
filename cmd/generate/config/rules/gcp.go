@@ -30,10 +30,8 @@ func GCPAPIKey() *config.Rule {
 		RuleID:      "gcp-api-key",
 		Description: "Uncovered a GCP API key, which could lead to unauthorized access to Google Cloud services and data breaches.",
 		Regex:       utils.GenerateUniqueTokenRegex(`AIza[\w-]{35}`, false),
-		Entropy:     3.0,
-		Keywords: []string{
-			"AIza",
-		},
+		Entropy:     4,
+		Keywords:    []string{"AIza"},
 		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{

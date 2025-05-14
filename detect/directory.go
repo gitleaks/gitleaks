@@ -20,9 +20,8 @@ const maxPeekSize = 25 * 1_000 // 10kb
 // DetectFiles schedules each ScanTarget—file or archive—for concurrent scanning.
 func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for pa := range paths {
-		pa := pa // capture
 		d.Sema.Go(func() error {
-			return d.DetectScanTarget(pa)
+			return d.detectScanTarget(pa)
 		})
 	}
 
@@ -32,10 +31,9 @@ func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Findin
 	return d.findings, nil
 }
 
-// DetectScanTarget handles one ScanTarget: it unpacks archives recursively
+// detectScanTarget handles one ScanTarget: it unpacks archives recursively
 // or scans a regular file, always using VirtualPath for reporting.
-// TODO maybe find a better solution for this? relying on `scanTarget` seems off.
-func (d *Detector) DetectScanTarget(scanTarget sources.ScanTarget) error {
+func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	// Choose display path: either VirtualPath (archive chain) or on-disk path.
 	display := scanTarget.Path
 	if scanTarget.VirtualPath != "" {
@@ -71,7 +69,7 @@ func (d *Detector) DetectScanTarget(scanTarget sources.ScanTarget) error {
 			}
 
 			d.Sema.Go(func() error {
-				return d.DetectScanTarget(t)
+				return d.detectScanTarget(t)
 			})
 		}
 

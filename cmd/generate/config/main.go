@@ -1,9 +1,10 @@
 package main
 
 import (
-	"golang.org/x/exp/slices"
 	"os"
 	"text/template"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
@@ -25,6 +26,7 @@ func main() {
 	gitleaksConfigPath := os.Args[1]
 
 	configRules := []*config.Rule{
+		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
@@ -47,6 +49,7 @@ func main() {
 		rules.Beamer(),
 		rules.CodecovAccessToken(),
 		rules.CoinbaseAccessToken(),
+		rules.ClickHouseCloud(),
 		rules.Clojars(),
 		rules.CloudflareAPIKey(),
 		rules.CloudflareGlobalAPIKey(),
@@ -165,6 +168,7 @@ func main() {
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
+		rules.PerplexityAPIKey(),
 		rules.PlaidAccessID(),
 		rules.PlaidSecretKey(),
 		rules.PlaidAccessToken(),
