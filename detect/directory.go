@@ -42,8 +42,8 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	logger := logging.With().Str("path", display).Logger()
 	logger.Trace().Msg("Scanning path")
 
-	// --- Archive branch: extract and reschedule children ---
-	if isArchive(scanTarget.Path) {
+	// skipping windows archives for now
+	if isArchive(scanTarget.Path) && !isWindows {
 		logger.Debug().Msg("Found archive")
 
 		targets, tmpArchiveDir, err := extractArchive(scanTarget.Path)
