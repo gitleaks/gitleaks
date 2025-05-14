@@ -42,7 +42,6 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	logger := logging.With().Str("path", display).Logger()
 	logger.Trace().Msg("Scanning path")
 
-	// skipping windows archives for now
 	if isArchive(scanTarget.Path) {
 		logger.Debug().Msg("Found archive")
 
