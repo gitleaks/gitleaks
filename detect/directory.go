@@ -43,7 +43,7 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 	logger.Trace().Msg("Scanning path")
 
 	// skipping windows archives for now
-	if isArchive(scanTarget.Path) && !isWindows {
+	if isArchive(scanTarget.Path) {
 		logger.Debug().Msg("Found archive")
 
 		targets, tmpArchiveDir, err := extractArchive(scanTarget.Path)
@@ -125,7 +125,10 @@ func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
 			if scanTarget.Symlink != "" {
 				fragment.SymlinkFile = scanTarget.Symlink
 			}
+
 			if isWindows {
+				fragment.FilePath = filepath.ToSlash(scanTarget.Path)
+				fragment.SymlinkFile = filepath.ToSlash(fragment.SymlinkFile)
 				fragment.WindowsFilePath = scanTarget.Path
 			}
 
