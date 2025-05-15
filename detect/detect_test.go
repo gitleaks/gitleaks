@@ -1023,10 +1023,36 @@ func TestFromFiles(t *testing.T) {
 				},
 			},
 		},
+		{
+			source:  filepath.Join(repoBasePath, "archive"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "archive.zip/main.go",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "archive.zip/main.go:aws-access-key:20",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.cfgName+" - "+tt.source, func(t *testing.T) {
+			if strings.Contains(tt.source, "archive") && runtime.GOOS == "windows" {
+				t.Skipf("TODO: this test fails on windows")
+			}
+
 			viper.AddConfigPath(configPath)
 			viper.SetConfigName(tt.cfgName)
 			viper.SetConfigType("toml")

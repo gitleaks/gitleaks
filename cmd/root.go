@@ -421,6 +421,8 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		diagnosticsManager.StopDiagnostics()
 	}
 
+	detector.Cleanup()
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {

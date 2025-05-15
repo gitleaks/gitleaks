@@ -66,7 +66,7 @@ func CreateGlobalConfig() config.Config {
 					// ----------- Documents and media -----------
 					regexp.MustCompile(`(?i)\.(?:bmp|gif|jpe?g|png|svg|tiff?)$`), // Images
 					regexp.MustCompile(`(?i)\.(?:eot|[ot]tf|woff2?)$`),           // Fonts
-					regexp.MustCompile(`(?i)\.(?:docx?|xlsx?|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf|zip)$`),
+					regexp.MustCompile(`(?i)\.(?:docx?|xlsx?|pdf|bin|socket|vsidx|v2|suo|wsuo|.dll|pdb|exe|gltf)$`),
 
 					// ----------- Golang files -----------
 					regexp.MustCompile(`go\.(?:mod|sum|work(?:\.sum)?)$`),
