@@ -108,7 +108,8 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 		return &RemoteInfo{Platform: platform}
 	}
 
-	remoteUrl, err := getRemoteUrl(source)
+	remoteUrl, platform, err := getRemoteUrl(platform, source)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "No remote configured") {
 			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
@@ -120,17 +121,14 @@ func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 	}
 
 	if platform == scm.UnknownPlatform {
-		platform = platformFromHost(remoteUrl)
-		if platform == scm.UnknownPlatform {
-			logging.Info().
-				Str("host", remoteUrl.Hostname()).
-				Msg("Unknown SCM platform. Use --platform to include links in findings.")
-		} else {
-			logging.Debug().
-				Str("host", remoteUrl.Hostname()).
-				Str("platform", platform.String()).
-				Msg("SCM platform parsed from host")
-		}
+		logging.Info().
+			Str("host", remoteUrl.Hostname()).
+			Msg("Unknown SCM platform. Use --platform to include links in findings.")
+	} else {
+		logging.Debug().
+			Str("host", remoteUrl.Hostname()).
+			Str("platform", platform.String()).
+			Msg("SCM platform parsed from host")
 	}
 
 End:
@@ -144,9 +142,12 @@ End:
 	}
 }
 
-var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
+var (
+	sshUrlpat            = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
+	azureDevOpsSshUrlpat = regexp.MustCompile(`^git@(?:ssh\.)((?:dev\.azure\.com|visualstudio\.com)):v3/([^/]+)/([^/]+)/([^/]+)$`)
+)
 
-func getRemoteUrl(source string) (*url.URL, error) {
+func getRemoteUrl(platform scm.Platform, source string) (*url.URL, scm.Platform, error) {
 	// This will return the first remote — typically, "origin".
 	cmd := exec.Command("git", "ls-remote", "--quiet", "--get-url")
 	if source != "." {
@@ -157,34 +158,53 @@ func getRemoteUrl(source string) (*url.URL, error) {
 	if err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
-			return nil, fmt.Errorf("command failed (%d): %w, stderr: %s", exitError.ExitCode(), err, string(bytes.TrimSpace(exitError.Stderr)))
+			return nil, platform, fmt.Errorf("command failed (%d): %w, stderr: %s", exitError.ExitCode(), err, string(bytes.TrimSpace(exitError.Stderr)))
 		}
-		return nil, err
+		return nil, platform, err
 	}
 
 	remoteUrl := string(bytes.TrimSpace(stdout))
-	if matches := sshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
-		remoteUrl = fmt.Sprintf("https://%s/%s", matches[1], matches[2])
-	}
-	remoteUrl = strings.TrimSuffix(remoteUrl, ".git")
 
+	if platform == scm.UnknownPlatform {
+		platform = platformFromHost(remoteUrl)
+	}
+
+	// Handle SSH URLs for GitHub and GitLab
+	if platform == scm.GitHubPlatform || platform == scm.GitLabPlatform {
+		if matches := sshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
+			remoteUrl = fmt.Sprintf("https://%s/%s", matches[1], matches[2])
+		}
+		// Handle Azure DevOps SSH URLs
+	} else if platform == scm.AzureDevOpsPlatform {
+		if matches := azureDevOpsSshUrlpat.FindStringSubmatch(remoteUrl); matches != nil {
+			hostname := matches[1]
+			organization := matches[2]
+			project := matches[3]
+			repository := matches[4]
+			remoteUrl = fmt.Sprintf("https://%s/%s/%s/_git/%s", hostname, organization, project, repository)
+		}
+	}
+
+	remoteUrl = strings.TrimSuffix(remoteUrl, ".git")
 	parsedUrl, err := url.Parse(remoteUrl)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse remote URL: %w", err)
+		return nil, platform, fmt.Errorf("unable to parse remote URL: %w", err)
 	}
 
 	// Remove any user info.
 	parsedUrl.User = nil
-	return parsedUrl, nil
+	return parsedUrl, platform, nil
 }
 
-func platformFromHost(u *url.URL) scm.Platform {
-	switch strings.ToLower(u.Hostname()) {
-	case "github.com":
+func platformFromHost(url string) scm.Platform {
+	switch {
+	case strings.Contains(url, "github.com"):
 		return scm.GitHubPlatform
-	case "gitlab.com":
+	case strings.Contains(url, "gitlab.com"):
 		return scm.GitLabPlatform
-	case "dev.azure.com", "visualstudio.com":
+	case strings.Contains(url, "dev.azure.com"):
+		return scm.AzureDevOpsPlatform
+	case strings.Contains(url, "visualstudio.com"):
 		return scm.AzureDevOpsPlatform
 	default:
 		return scm.UnknownPlatform
