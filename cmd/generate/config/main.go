@@ -182,6 +182,8 @@ func main() {
 		rules.PrivateKeyPKCS12File(),
 		rules.PulumiAPIToken(),
 		rules.PyPiUploadToken(),
+		rules.PythonJoseJwtEncodeHardcodedKey(),
+		rules.PythonJoseJwtDecodeHardcodedKey(),
 		rules.RapidAPIAccessToken(),
 		rules.ReadMe(),
 		rules.RubyGemsAPIToken(),
