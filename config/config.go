@@ -247,11 +247,19 @@ func parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
 	}
 	var allowlistRegexes []*regexp.Regexp
 	for _, a := range a.Regexes {
-		allowlistRegexes = append(allowlistRegexes, regexp.MustCompile(a))
+		exp, err := regexp.Compile(a)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile allowlist regex '%s', err: %w", a, err)
+		}
+		allowlistRegexes = append(allowlistRegexes, exp)
 	}
 	var allowlistPaths []*regexp.Regexp
 	for _, a := range a.Paths {
-		allowlistPaths = append(allowlistPaths, regexp.MustCompile(a))
+		exp, err := regexp.Compile(a)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile allowlist path regex '%s', err: %w", a, err)
+		}
+		allowlistPaths = append(allowlistPaths, exp)
 	}
 
 	allowlist := &Allowlist{
@@ -292,7 +300,6 @@ func (c *Config) extendDefault() error {
 	cfg, err := defaultViperConfig.Translate()
 	if err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
-
 	}
 	logging.Debug().Msg("extending config with default config")
 	c.extend(cfg)
