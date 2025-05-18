@@ -1,52 +1,38 @@
 package detect
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
+	"fmt"
 	"io"
 
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
-	reader := bufio.NewReader(r)
-	buf := make([]byte, 1000*bufSize)
-	findings := []report.Finding{}
-
-	for {
-		n, err := reader.Read(buf)
-
-		// "Callers should always process the n > 0 bytes returned before considering the error err."
-		// https://pkg.go.dev/io#Reader
-		if n > 0 {
-			// Try to split chunks across large areas of whitespace, if possible.
-			peekBuf := bytes.NewBuffer(buf[:n])
-			if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
-				return findings, readErr
-			}
-
-			fragment := Fragment{
-				Raw: peekBuf.String(),
-			}
-			for _, finding := range d.Detect(fragment) {
-				findings = append(findings, finding)
-				if d.Verbose {
-					printFinding(finding, d.NoColor)
-				}
-			}
-		}
-
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return findings, err
-		}
+	var findings []report.Finding
+	file := sources.File{
+		Content:   r,
+		ChunkSize: 1000 * bufSize,
 	}
 
-	return findings, nil
+	err := file.Fragments(func(fragment sources.Fragment, err error) error {
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("here", fragment, r)
+		for _, finding := range d.Detect(Fragment(fragment)) {
+			findings = append(findings, finding)
+			if d.Verbose {
+				printFinding(finding, d.NoColor)
+			}
+		}
+
+		return nil
+	})
+
+	return findings, err
 }
 
 // StreamDetectReader streams the detection results from the provided io.Reader.
@@ -85,42 +71,30 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
 	findingsCh := make(chan report.Finding, 1)
 	errCh := make(chan error, 1)
+	file := sources.File{
+		Content:   r,
+		ChunkSize: 1000 * bufSize,
+	}
 
 	go func() {
 		defer close(findingsCh)
 		defer close(errCh)
 
-		reader := bufio.NewReader(r)
-		buf := make([]byte, 1000*bufSize)
-
-		for {
-			n, err := reader.Read(buf)
-
-			if n > 0 {
-				peekBuf := bytes.NewBuffer(buf[:n])
-				if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
-					errCh <- readErr
-					return
-				}
-
-				fragment := Fragment{Raw: peekBuf.String()}
-				for _, finding := range d.Detect(fragment) {
-					findingsCh <- finding
-					if d.Verbose {
-						printFinding(finding, d.NoColor)
-					}
-				}
-			}
-
+		errCh <- file.Fragments(func(fragment sources.Fragment, err error) error {
 			if err != nil {
-				if errors.Is(err, io.EOF) {
-					errCh <- nil
-					return
-				}
-				errCh <- err
-				return
+				return err
 			}
-		}
+
+			for _, finding := range d.Detect(Fragment(fragment)) {
+				findingsCh <- finding
+				if d.Verbose {
+					printFinding(finding, d.NoColor)
+				}
+			}
+
+			return nil
+		})
+
 	}()
 
 	return findingsCh, errCh

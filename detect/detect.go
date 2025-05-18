@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"iter"
 	"os"
 	"runtime"
 	"strings"
@@ -104,7 +103,6 @@ type Detector struct {
 
 type Fragment sources.Fragment
 
-
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
@@ -191,25 +189,6 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
-// DetectFragments takes an iter of fragments and runs Detect on them
-func DetectFragments(fragments iter.Seq[Fragment]) []report.Finding {
-		var findings []report.Finding
-		for _, fragment := range fragments {
-			timer := time.AfterFunc(SlowWarningThreshold, func() {
-				logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
-			})
-
-			findings = append(findings, Detect(fragment)...)
-
-			if timer != nil {
-				timer.Stop()
-				timer = nil
-			}
-		}
-
-		return findings
-}
-
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
@@ -243,7 +222,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 
 	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
+	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
@@ -264,14 +243,14 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 					break
 				}
 			}
@@ -298,7 +277,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -389,7 +368,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		// in the finding will be the line/column numbers of the _match_
 		// not the _secret_, which will be different if the secretGroup
 		// value is set for this rule
-		loc := location(fragment, matchIndex)
+		loc := location(newlineIndices, fragment.Raw, matchIndex)
 
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]

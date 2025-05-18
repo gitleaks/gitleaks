@@ -20,8 +20,4 @@ type Fragment struct {
 
 	// StartLine is the line number this fragment starts on
 	StartLine int
-
-	// newlineIndices is a list of indices of newlines in the raw content.
-	// This is used to calculate the line location of a finding
-	newlineIndices [][]int
 }

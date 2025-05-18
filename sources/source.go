@@ -1,11 +1,10 @@
 package sources
 
-import (
-	"iter"
-)
+type FragmentsFunc func(Fragment, error) error
 
 // Source represents a thing that can be scanned
 type Source interface {
-	// Fragments returns an iterator of fragments to scan
-	func Fragments() iter.Seq[Fragment]
+	// Fragments provides a filepath.WalkDir like interface for scanning the
+	// fragments in the source
+	Fragments(FragmentsFunc) error
 }
