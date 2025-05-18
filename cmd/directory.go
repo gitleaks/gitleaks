@@ -58,7 +58,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
-	var paths <-chan sources.Source
+	var paths <-chan sources.ScanTarget
 	paths, err = sources.DirectoryTargets(
 		source,
 		detector.Sema,
