@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"iter"
 	"os"
 	"runtime"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
@@ -26,8 +28,6 @@ import (
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
-	chunkSize              = 100 * 1_000 // 100kb
-
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
@@ -102,28 +102,8 @@ type Detector struct {
 	TotalBytes atomic.Uint64
 }
 
-// Fragment contains the data to be scanned
-type Fragment struct {
-	// Raw is the raw content of the fragment
-	Raw string
+type Fragment sources.Fragment
 
-	Bytes []byte
-
-	// FilePath is the path to the file, if applicable.
-	// The path separator MUST be normalized to `/`.
-	FilePath    string
-	SymlinkFile string
-	// WindowsFilePath is the path with the original separator.
-	// This provides a backwards-compatible solution to https://github.com/gitleaks/gitleaks/issues/1565.
-	WindowsFilePath string `json:"-"` // TODO: remove this in v9.
-
-	// CommitSHA is the SHA of the commit if applicable
-	CommitSHA string
-
-	// newlineIndices is a list of indices of newlines in the raw content.
-	// This is used to calculate the line location of a finding
-	newlineIndices [][]int
-}
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
@@ -209,6 +189,25 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	return d.Detect(Fragment{
 		Raw: content,
 	})
+}
+
+// DetectFragments takes an iter of fragments and runs Detect on them
+func DetectFragments(fragments iter.Seq[Fragment]) []report.Finding {
+		var findings []report.Finding
+		for _, fragment := range fragments {
+			timer := time.AfterFunc(SlowWarningThreshold, func() {
+				logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+			})
+
+			findings = append(findings, Detect(fragment)...)
+
+			if timer != nil {
+				timer.Stop()
+				timer = nil
+			}
+		}
+
+		return findings
 }
 
 // Detect scans the given fragment and returns a list of findings
@@ -399,8 +398,8 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		finding := report.Finding{
 			RuleID:      r.RuleID,
 			Description: r.Description,
-			StartLine:   loc.startLine,
-			EndLine:     loc.endLine,
+			StartLine:   fragment.StartLine + loc.startLine,
+			EndLine:     fragment.StartLine + loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
