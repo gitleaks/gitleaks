@@ -473,6 +473,21 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	return findings
 }
 
+// isIgnored checks the ignored list for a global match, then checks the list for a commit-based match
+func (d *Detector) isIgnored(commit string, file string, ruleId string, startLine int) (ignored bool, reason string) {
+	globalFingerprint := fmt.Sprintf("%s:%s:%d", file, ruleId, startLine)
+	commitFingerprint := fmt.Sprintf("%s:%s:%s:%d", commit, file, ruleId, startLine)
+	if _, globalIgnored := d.gitleaksIgnore[globalFingerprint]; globalIgnored {
+		return true, "global"
+	} else if commit != "" {
+		if _, commitIgnored := d.gitleaksIgnore[commitFingerprint]; commitIgnored {
+			return true, "commit"
+		}
+	}
+
+	return false, ""
+}
+
 // AddFinding synchronously adds a finding to the findings slice
 func (d *Detector) AddFinding(finding report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
@@ -484,19 +499,17 @@ func (d *Detector) AddFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		logger.Debug().
-			Str("fingerprint", globalFingerprint).
-			Msg("skipping finding: global fingerprint")
-		return
-	} else if finding.Commit != "" {
-		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logger.Debug().
-				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint")
-			return
+	ignored, reason := d.isIgnored(finding.Commit, finding.File, finding.RuleID, finding.StartLine)
+	if ignored {
+		evt := logger.Debug().Str("fingerprint", globalFingerprint)
+		if reason == "global" {
+			evt.Msg("skipping finding: global fingerprint")
+		} else if reason == "commit" {
+			evt.Msgf("skipping finding: fingerprint")
+		} else {
+			evt.Msgf("skipping finding: other reason")
 		}
+		return
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
