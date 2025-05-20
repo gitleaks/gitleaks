@@ -90,7 +90,8 @@ type Detector struct {
 	baselinePath string
 
 	// gitleaksIgnore
-	gitleaksIgnore map[string]struct{}
+	gitleaksIgnore     map[string]struct{}
+	gitleaksGlobIgnore []globIgnoreEntry
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
@@ -128,13 +129,14 @@ type Fragment struct {
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(context.Background(), 40),
+		commitMap:          make(map[string]bool),
+		gitleaksIgnore:     make(map[string]struct{}),
+		gitleaksGlobIgnore: make([]globIgnoreEntry, 0),
+		findingMutex:       &sync.Mutex{},
+		findings:           make([]report.Finding, 0),
+		Config:             cfg,
+		prefilter:          *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:               semgroup.NewGroup(context.Background(), 40),
 	}
 }
 
@@ -194,7 +196,47 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		default:
 			logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
 		}
-		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+
+		// If glob, add entry
+		if strings.Contains(line, "*") {
+			entry := globIgnoreEntry{}
+			if len(s) == 3 {
+				// Global fingerprint.
+				// `file:rule-id:start-line`
+				entry.Commit = "*"
+				entry.File = s[0]
+				entry.Rule = s[1]
+				entry.Line = s[2]
+
+			} else {
+				// Commit fingerprint.
+				// `commit:file:rule-id:start-line`
+				entry.Commit = s[0]
+				entry.File = s[1]
+				entry.Rule = s[2]
+				entry.Line = s[3]
+			}
+
+			// Determine which fields are globs
+			if entry.Commit == "*" {
+				entry.CommitIsGlob = true
+			}
+			if entry.File == "*" {
+				entry.FileIsGlob = true
+			}
+			if entry.Rule == "*" {
+				entry.RuleIsGlob = true
+			}
+			if entry.Line == "*" {
+				entry.LineIsGlob = true
+			}
+
+			d.gitleaksGlobIgnore = append(d.gitleaksGlobIgnore, entry)
+		} else {
+			// Non-glob ignore match
+			d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+		}
+
 	}
 	return nil
 }
@@ -475,13 +517,25 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 // isIgnored checks the ignored list for a global match, then checks the list for a commit-based match
 func (d *Detector) isIgnored(commit string, file string, ruleId string, startLine int) (ignored bool, reason string) {
+
+	// exact global
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", file, ruleId, startLine)
-	commitFingerprint := fmt.Sprintf("%s:%s:%s:%d", commit, file, ruleId, startLine)
 	if _, globalIgnored := d.gitleaksIgnore[globalFingerprint]; globalIgnored {
 		return true, "global"
-	} else if commit != "" {
+	}
+
+	// exact commit
+	if commit != "" {
+		commitFingerprint := fmt.Sprintf("%s:%s", commit, globalFingerprint)
 		if _, commitIgnored := d.gitleaksIgnore[commitFingerprint]; commitIgnored {
 			return true, "commit"
+		}
+	}
+
+	// glob match
+	for _, glob := range d.gitleaksGlobIgnore {
+		if glob.Matches(commit, file, ruleId, startLine) {
+			return true, "glob"
 		}
 	}
 
