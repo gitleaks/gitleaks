@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -861,11 +862,11 @@ func TestFromGit(t *testing.T) {
 			err = detector.AddGitleaksIgnore(ignorePath)
 			require.NoError(t, err)
 
-			gitCmd, err := sources.NewGitLogCmd(tt.source, tt.logOpts)
+			gitCmd, err := sources.NewGitLogCmd(context.Background(), tt.source, tt.logOpts)
 			require.NoError(t, err)
 
 			remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
-			findings, err := detector.DetectGit(gitCmd, remote)
+			findings, err := detector.DetectGit(context.Background(), gitCmd, remote)
 			require.NoError(t, err)
 
 			for _, f := range findings {
@@ -934,10 +935,11 @@ func TestFromGitStaged(t *testing.T) {
 		detector := NewDetector(cfg)
 		err = detector.AddGitleaksIgnore(filepath.Join(tt.source, ".gitleaksignore"))
 		require.NoError(t, err)
-		gitCmd, err := sources.NewGitDiffCmd(tt.source, true)
+		gitCmd, err := sources.NewGitDiffCmd(context.Background(), tt.source, true)
 		require.NoError(t, err)
 		remote := NewRemoteInfo(scm.UnknownPlatform, tt.source)
-		findings, err := detector.DetectGit(gitCmd, remote)
+
+		findings, err := detector.DetectGit(context.Background(), gitCmd, remote)
 		require.NoError(t, err)
 
 		for _, f := range findings {
