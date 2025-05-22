@@ -2,6 +2,7 @@ package detect
 
 import (
 	"os"
+	"sync"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -12,8 +13,14 @@ import (
 //
 // Deprecated: Use sources.Files.Fragments() and Detector.DetectSource() instead
 func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.Finding, error) {
+	var wg sync.WaitGroup
+
 	for scanTarget := range scanTargets {
+		wg.Add(1)
+
 		d.Sema.Go(func() error {
+			defer wg.Done()
+
 			logger := logging.With().Str("path", scanTarget.Path).Logger()
 			logger.Trace().Msg("scanning path:")
 
@@ -71,6 +78,6 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 		})
 	}
 
-	err := d.Sema.Wait()
-	return d.findings, err
+	wg.Wait()
+	return d.findings, nil
 }
