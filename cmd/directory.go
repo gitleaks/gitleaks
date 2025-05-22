@@ -50,9 +50,10 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	files := &sources.Files{
 		Config:         &cfg,
-		Path:           source,
 		FollowSymlinks: detector.FollowSymlinks,
 		MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
+		Path:           source,
+		Sema:           detector.Sema,
 	}
 
 	// set exit code

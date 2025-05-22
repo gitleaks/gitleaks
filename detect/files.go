@@ -10,17 +10,17 @@ import (
 
 // DetectFiles runs detections against a chanel of scan targets
 //
-// Deprecated: Use sources.Files.Fragments() and Detector.DetectFragments() instead
+// Deprecated: Use sources.Files.Fragments() and Detector.DetectSource() instead
 func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for scanTarget := range scanTargets {
 		d.Sema.Go(func() error {
 			logger := logging.With().Str("path", scanTarget.Path).Logger()
-			logger.Trace().Msg("scanning path")
+			logger.Trace().Msg("scanning path:")
 
 			f, err := os.Open(scanTarget.Path)
 			if err != nil {
 				if os.IsPermission(err) {
-					logger.Warn().Msg("skipping file: permission denied")
+					logger.Warn().Msg("skipping file: permission denied:")
 				}
 				return nil
 			}
@@ -28,7 +28,7 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 
 			info, err := f.Stat()
 			if err != nil {
-				logger.Error().Msgf("skipping file: could not get info: %s", err)
+				logger.Error().Msgf("skipping file: could not get info: %s: ", err)
 				return nil
 			}
 

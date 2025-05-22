@@ -1,7 +1,6 @@
 package detect
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -21,7 +20,6 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 			return err
 		}
 
-		fmt.Println("here", fragment, r)
 		for _, finding := range d.Detect(Fragment(fragment)) {
 			findings = append(findings, finding)
 			if d.Verbose {
