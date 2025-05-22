@@ -26,7 +26,7 @@ type File struct {
 	ChunkSize int
 }
 
-func (s *File) Fragments(yield func(Fragment, error) error) error {
+func (s *File) Fragments(yield FragmentsFunc) error {
 	if s.ChunkSize == 0 {
 		s.ChunkSize = chunkSize
 	}

@@ -42,10 +42,10 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 
 // Files implements Source for scanning file systems
 type Files struct {
-	Config             *config.Config
-	FollowSymlinks     bool
-	MaxTargetMegaBytes int
-	Path               string
+	Config         *config.Config
+	FollowSymlinks bool
+	MaxFileSize    int
+	Path           string
 }
 
 func (s *Files) shouldSkip(path string) bool {
@@ -93,16 +93,14 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 				logger.Debug().Msg("skipping file: size=0")
 				return nil
 			}
+
 			// Too large; nothing to do here.
-			if s.MaxTargetMegaBytes > 0 {
-				rawLength := info.Size() / 1000000
-				if rawLength > int64(s.MaxTargetMegaBytes) {
-					logger.Warn().Msgf(
-						"skipping file: too large: max_size=%dMiB, size=%dMiB",
-						s.MaxTargetMegaBytes, rawLength,
-					)
-					return nil
-				}
+			if s.MaxFileSize > 0 && info.Size() > int64(s.MaxFileSize) {
+				logger.Warn().Msgf(
+					"skipping file: too large: max_size=%dMiB, size=%dMiB",
+					s.MaxFileSize/1000000, info.Size()/1000000,
+				)
+				return nil
 			}
 		}
 

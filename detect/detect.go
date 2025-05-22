@@ -189,6 +189,24 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
+// DetectSource scans a source's fragments for findings
+func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
+	err := source.Fragments(func(fragment sources.Fragment, err error) error {
+		if err != nil {
+			// don't exit on error, just log it
+			logging.Error().Err(err).Msgf("scan directory issue: %s", err)
+		}
+
+		for _, finding := range d.Detect(Fragment(fragment)) {
+			d.AddFinding(finding)
+		}
+
+		return nil
+	})
+
+	return d.Findings(), err
+}
+
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {

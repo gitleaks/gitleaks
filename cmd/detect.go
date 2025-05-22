@@ -51,15 +51,15 @@ var detectCmd = &cobra.Command{
 func runDetect(cmd *cobra.Command, args []string) {
 	// start timer
 	start := time.Now()
-	source := mustGetStringFlag(cmd, "source")
+	sourcePath := mustGetStringFlag(cmd, "source")
 
 	// setup config (aka, the thing that defines rules)
-	initConfig(source)
+	initConfig(sourcePath)
 	initDiagnostics()
 	cfg := Config(cmd)
 
 	// create detector
-	detector := Detector(cmd, cfg, source)
+	detector := Detector(cmd, cfg, sourcePath)
 
 	// parse flags
 	detector.FollowSymlinks = mustGetBoolFlag(cmd, "follow-symlinks")
@@ -71,44 +71,46 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// - git: scan the history of the repo
 	// - no-git: scan files by treating the repo as a plain directory
 	var (
-		findings []report.Finding
 		err      error
+		findings []report.Finding
 	)
 	if noGit {
-		paths, err := sources.DirectoryTargets(
-			source,
-			detector.Sema,
-			detector.FollowSymlinks,
-			detector.Config.Allowlists,
-		)
-		if err != nil {
-			logging.Fatal().Err(err).Send()
+		source := &sources.Files{
+			Config:         &cfg,
+			Path:           sourcePath,
+			FollowSymlinks: detector.FollowSymlinks,
+			MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
 		}
 
-		if findings, err = detector.DetectFiles(paths); err != nil {
-			// don't exit on error, just log it
-			logging.Error().Err(err).Msg("failed scan directory")
+		findings, err = detector.DetectSource(source)
+		if err != nil {
+			logging.Fatal().Err(err)
 		}
 	} else if fromPipe {
-		if findings, err = detector.DetectReader(os.Stdin, 10); err != nil {
-			// log fatal to exit, no need to continue since a report
-			// will not be generated when scanning from a pipe...for now
-			logging.Fatal().Err(err).Msg("failed scan input from stdin")
+		source := &sources.File{
+			Content:   os.Stdin,
+			ChunkSize: 10000,
+		}
+
+		findings, err = detector.DetectSource(source)
+		if err != nil {
+			logging.Fatal().Err(err)
 		}
 	} else {
+		// TODO: replace this with a source := Git{...}
 		var (
 			logOpts     = mustGetStringFlag(cmd, "log-opts")
 			gitCmd      *sources.GitCmd
 			scmPlatform scm.Platform
 			remote      *detect.RemoteInfo
 		)
-		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
+		if gitCmd, err = sources.NewGitLogCmd(sourcePath, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
 			logging.Fatal().Err(err).Send()
 		}
-		remote = detect.NewRemoteInfo(scmPlatform, source)
+		remote = detect.NewRemoteInfo(scmPlatform, sourcePath)
 
 		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
 			// don't exit on error, just log it
