@@ -12,7 +12,16 @@ const (
 	chunkSize   = 100 * 1_000 // 100kb
 )
 
+var isWhitespace [256]bool
 var isWindows = runtime.GOOS == "windows"
+
+func init() {
+	// define whitespace characters
+	isWhitespace[' '] = true
+	isWhitespace['\t'] = true
+	isWhitespace['\n'] = true
+	isWhitespace['\r'] = true
+}
 
 // readUntilSafeBoundary consumes |f| until it finds two consecutive `\n` characters, up to |maxPeekSize|.
 // This hopefully avoids splitting. (https://github.com/gitleaks/gitleaks/issues/1651)
@@ -27,7 +36,8 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 		lastChar     = data[len(data)-1]
 		newlineCount = 0 // Tracks consecutive newlines
 	)
-	if isWhitespace(lastChar) {
+
+	if isWhitespace[lastChar] {
 		for i := len(data) - 1; i >= 0; i-- {
 			lastChar = data[i]
 			if lastChar == '\n' {
@@ -37,7 +47,7 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 				if newlineCount >= 2 {
 					return nil
 				}
-			} else if lastChar == '\r' || lastChar == ' ' || lastChar == '\t' {
+			} else if isWhitespace[lastChar] {
 				// The presence of other whitespace characters (`\r`, ` `, `\t`) shouldn't reset the count.
 				// (Intentionally do nothing.)
 			} else {
@@ -59,7 +69,7 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 			if newlineCount >= 2 {
 				break
 			}
-		} else if lastChar == '\r' || lastChar == ' ' || lastChar == '\t' {
+		} else if isWhitespace[lastChar] {
 			// The presence of other whitespace characters (`\r`, ` `, `\t`) shouldn't reset the count.
 			// (Intentionally do nothing.)
 		} else {
@@ -82,8 +92,4 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 		peekBuf.WriteByte(b)
 	}
 	return nil
-}
-
-func isWhitespace(ch byte) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }

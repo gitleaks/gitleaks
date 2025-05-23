@@ -159,11 +159,9 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 func (s *Files) Fragments(yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
-	return s.scanTargets(func(scanTarget ScanTarget, err error) error {
+	err := s.scanTargets(func(scanTarget ScanTarget, err error) error {
 		wg.Add(1)
-
 		s.Sema.Go(func() error {
-			defer wg.Done()
 			logger := logging.With().Str("path", scanTarget.Path).Logger()
 			logger.Trace().Msg("scanning path")
 
@@ -172,9 +170,9 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 				if os.IsPermission(err) {
 					logger.Warn().Msg("skipping file: permission denied")
 				}
+				wg.Done()
 				return nil
 			}
-			defer f.Close()
 
 			// Convert this to a file source
 			file := File{
@@ -183,10 +181,16 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 				Symlink: scanTarget.Symlink,
 			}
 
-			return file.Fragments(yield)
+			err = file.Fragments(yield)
+			// Avoiding a defer in a hot loop
+			f.Close()
+			wg.Done()
+			return err
 		})
 
-		wg.Wait()
 		return nil
 	})
+
+	wg.Wait()
+	return err
 }
