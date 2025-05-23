@@ -48,21 +48,22 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		logging.Fatal().Err(err).Msg("")
 	}
 
-	files := &sources.Files{
-		Config:         &cfg,
-		FollowSymlinks: detector.FollowSymlinks,
-		MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
-		Path:           source,
-		Sema:           detector.Sema,
-	}
-
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
 		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
-	findings, err := detector.DetectSource(files)
+	findings, err := detector.DetectSource(
+		&sources.Files{
+			Config:         &cfg,
+			FollowSymlinks: detector.FollowSymlinks,
+			MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
+			Path:           source,
+			Sema:           detector.Sema,
+		},
+	)
+
 	if err != nil {
 		logging.Error().Err(err).Msg("failed scan directory")
 	}

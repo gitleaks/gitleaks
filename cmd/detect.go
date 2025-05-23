@@ -75,27 +75,30 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings []report.Finding
 	)
 	if noGit {
-		source := &sources.Files{
-			Config:         &cfg,
-			FollowSymlinks: detector.FollowSymlinks,
-			MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
-			Path:           sourcePath,
-			Sema:           detector.Sema,
-		}
+		findings, err = detector.DetectSource(
+			&sources.Files{
+				Config:         &cfg,
+				FollowSymlinks: detector.FollowSymlinks,
+				MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
+				Path:           sourcePath,
+				Sema:           detector.Sema,
+			},
+		)
 
-		findings, err = detector.DetectSource(source)
 		if err != nil {
-			logging.Fatal().Err(err)
+			logging.Fatal().Err(err).Msg("failed to scan directory")
 		}
 	} else if fromPipe {
-		source := &sources.File{
-			Content:   os.Stdin,
-			ChunkSize: 10000,
-		}
+		findings, err = detector.DetectSource(
+			&sources.File{
+				Content: os.Stdin,
+			},
+		)
 
-		findings, err = detector.DetectSource(source)
 		if err != nil {
-			logging.Fatal().Err(err)
+			// log fatal to exit, no need to continue sinca a report
+			// will not be generated with scanning from a pipe...for now
+			logging.Fatal().Err(err).Msg("failed scan input from stdin")
 		}
 	} else {
 		// TODO: replace this with a source := Git{...}

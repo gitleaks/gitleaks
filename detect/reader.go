@@ -8,11 +8,13 @@ import (
 )
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
+//
+// Deprecated: Use sources.File with no path defined and Detector.DetectSource() instead
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	var findings []report.Finding
 	file := sources.File{
-		Content:   r,
-		ChunkSize: 1000 * bufSize,
+		Content: r,
+		Buffer:  make([]byte, 1000*bufSize),
 	}
 
 	err := file.Fragments(func(fragment sources.Fragment, err error) error {
@@ -66,12 +68,14 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 //	} else {
 //	    fmt.Println("Scanning completed successfully.")
 //	}
+//
+// Deprecated: Use sources.File.Fragments(yield FragmentsFunc) instead
 func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
 	findingsCh := make(chan report.Finding, 1)
 	errCh := make(chan error, 1)
 	file := sources.File{
-		Content:   r,
-		ChunkSize: 1000 * bufSize,
+		Content: r,
+		Buffer:  make([]byte, 1000*bufSize),
 	}
 
 	go func() {

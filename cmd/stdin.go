@@ -36,13 +36,15 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 	// parse flag(s)
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 
-	stdin := &sources.File{
-		Content:   os.Stdin,
-		ChunkSize: 10000,
-	}
+	findings, err := detector.DetectSource(
+		&sources.File{
+			Content: os.Stdin,
+		},
+	)
 
-	findings, err := detector.DetectSource(stdin)
 	if err != nil {
+		// log fatal to exit, no need to continue sinca a report will not be
+		// generated with scanning from a pipe...for now
 		logging.Fatal().Err(err).Msg("failed scan input from stdin")
 	}
 

@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -16,12 +17,12 @@ type ScanTarget struct {
 	Symlink string
 }
 
-// Deprecated: Use Files.Fragments() instead
+// Deprecated: Use Files and detector.DetectSource instead
 func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool, allowlists []*config.Allowlist) (<-chan ScanTarget, error) {
 	paths := make(chan ScanTarget)
 
 	// create a Files source
-	source := &Files{
+	files := Files{
 		FollowSymlinks: followSymlinks,
 		Path:           sourcePath,
 		Sema:           s,
@@ -31,7 +32,7 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 	}
 
 	s.Go(func() error {
-		source.scanTargets(func(scanTarget ScanTarget, err error) error {
+		files.scanTargets(func(scanTarget ScanTarget, err error) error {
 			paths <- scanTarget
 			return nil
 		})
@@ -51,19 +52,6 @@ type Files struct {
 	Sema           *semgroup.Group
 }
 
-func (s *Files) shouldSkip(path string) bool {
-	for _, a := range s.Config.Allowlists {
-		if a.PathAllowed(path) ||
-			// TODO: Remove this in v9.
-			// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
-			(isWindows && a.PathAllowed(filepath.ToSlash(path))) {
-			return true
-		}
-	}
-
-	return false
-}
-
 // scanTargets yields scan targets to a callback func
 func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 	return filepath.WalkDir(s.Path, func(path string, d fs.DirEntry, err error) error {
@@ -73,27 +61,27 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 		if err != nil {
 			if os.IsPermission(err) {
 				// This seems to only fail on directories at this stage.
-				logger.Warn().Msgf("skipping directory: permission denied")
+				err = errors.New("permission denied")
 				return filepath.SkipDir
 			}
-			logger.Error().Msgf("skipping directory: %s", err)
+			logger.Error().Err(err).Msg("skipping directory")
 			return nil
 		}
 
 		info, err := d.Info()
 		if err != nil {
 			if d.IsDir() {
-				logger.Error().Msgf("skipping directory: could not get info: %s", err)
+				logger.Error().Err(err).Msg("skipping directory: could not get info")
 				return filepath.SkipDir
 			}
-			logger.Error().Msgf("skipping file: could not get info: %s", err)
+			logger.Error().Err(err).Msg("skipping file: could not get info")
 			return nil
 		}
 
 		if !d.IsDir() {
 			// Empty; nothing to do here.
 			if info.Size() == 0 {
-				logger.Debug().Msg("skipping file: size=0")
+				logger.Debug().Msg("skipping empty file")
 				return nil
 			}
 
@@ -131,20 +119,15 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 
 		// handle dir cases (mainly just see if it should be skipped
 		if info.IsDir() {
-			if s.shouldSkip(path) {
-				logger.Debug().Msg("skipping directory: global allowlist item:")
-				return filepath.SkipDir
-			}
-			if info.Name() == ".git" {
-				// TODO: Add this to the config allowlist, instead of hard-coding it.
-				logger.Debug().Msg("skipping directory: .git directory always skipped")
+			if shouldSkipPath(s.Config, path) {
+				logger.Debug().Msg("skipping directory: global allowlist item")
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		if s.shouldSkip(path) {
-			logger.Debug().Msg("skipping file: global allowlist item:")
+		if shouldSkipPath(s.Config, path) {
+			logger.Debug().Msg("skipping file: global allowlist item")
 			return nil
 		}
 
@@ -179,6 +162,7 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 				Content: f,
 				Path:    scanTarget.Path,
 				Symlink: scanTarget.Symlink,
+				Config:  s.Config,
 			}
 
 			err = file.Fragments(yield)

@@ -3,15 +3,27 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/mholt/archives"
 
+	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
+
+const defaultBufferSize = 100 * 1_000 // 100kb
+const InnerPathSeparator = "!"
+
+type seekReaderAt interface {
+	io.ReaderAt
+	io.Seeker
+}
 
 // File implements Source for scanning a reader with a path
 type File struct {
@@ -21,25 +33,118 @@ type File struct {
 	Path string
 	// Symlink represents a symlink to the file if that's how it was discovered
 	Symlink string
-	// ChunkSize allows you to set the size of the chunks processed for this file
-	// the default is the 'chunkSize' constant in the sources.go file
-	ChunkSize int
+	// Buffer is used for reading the content in chunks
+	Buffer []byte
+	// Config is the scanner config used for shouldSkipPath. If not set, then
+	// shouldSkipPath is ignored
+	Config *config.Config
+	// outerPaths is the list of container paths (e.g. archives) that lead to
+	// this file
+	outerPaths []string
 }
 
+// Fragments yields fragments for the this source
 func (s *File) Fragments(yield FragmentsFunc) error {
-	if s.ChunkSize == 0 {
-		s.ChunkSize = chunkSize
+	ctx := context.Background()
+	format, _, err := archives.Identify(ctx, s.Path, nil)
+
+	if err == nil && format != nil {
+		if extractor, ok := format.(archives.Extractor); ok {
+			return s.extractorFragments(ctx, extractor, s.Content, yield)
+		}
+		if decompressor, ok := format.(archives.Decompressor); ok {
+			return s.decompressorFragments(decompressor, s.Content, yield)
+		}
+		logging.Warn().Str("path", s.Path).Msg("skipping unkown archive type")
 	}
 
-	var (
-		// Buffer to hold file chunks
-		reader     = bufio.NewReaderSize(s.Content, s.ChunkSize)
-		buf        = make([]byte, s.ChunkSize)
-		totalLines = 0
-	)
+	return s.fileFragments(bufio.NewReader(s.Content), yield)
+}
 
+// extractorFragments recursively crawls archives and yields fragments
+func (s *File) extractorFragments(ctx context.Context, extractor archives.Extractor, reader io.Reader, yield FragmentsFunc) error {
+	if _, isSeekReaderAt := reader.(seekReaderAt); !isSeekReaderAt {
+		switch extractor.(type) {
+		case archives.SevenZip, archives.Zip:
+			tmpfile, err := os.CreateTemp("", "gitleaks-archive-")
+			if err != nil {
+				logging.Error().Str("path", s.Path).Msg("could not create tmp file")
+				return nil
+			}
+			defer os.Remove(tmpfile.Name())
+			defer tmpfile.Close()
+
+			_, err = io.Copy(tmpfile, reader)
+			if err != nil {
+				logging.Error().Str("path", s.Path).Msg("could not copy archive file")
+				return nil
+			}
+
+			reader = tmpfile
+		}
+	}
+
+	return extractor.Extract(ctx, reader, func(ctx context.Context, d archives.FileInfo) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		innerReader, err := d.Open()
+		if err != nil {
+			logging.Error().Str("path", s.Path).Err(err).Msg("could not open archive inner file")
+			return nil
+		}
+		path := filepath.Clean(d.NameInArchive)
+
+		if shouldSkipPath(s.Config, path) {
+			logging.Debug().Str("path", s.Path).Msg("skipping file: global allowlist item")
+			return nil
+		}
+
+		file := &File{
+			Content:    innerReader,
+			Path:       path,
+			Symlink:    s.Symlink,
+			outerPaths: append(s.outerPaths, filepath.ToSlash(s.Path)),
+		}
+
+		if err := file.Fragments(yield); err != nil {
+			innerReader.Close()
+			return err
+		}
+
+		innerReader.Close()
+		return nil
+	})
+}
+
+// decompressorFragments recursively crawls archives and yields fragments
+func (s *File) decompressorFragments(decompressor archives.Decompressor, reader io.Reader, yield FragmentsFunc) error {
+	innerReader, err := decompressor.OpenReader(reader)
+	if err != nil {
+		logging.Error().Str("path", s.Path).Msg("could read compressed file")
+		return nil
+	}
+
+	if err := s.fileFragments(bufio.NewReader(innerReader), yield); err != nil {
+		innerReader.Close()
+		return err
+	}
+
+	innerReader.Close()
+	return nil
+}
+
+// fileFragments reads the file into fragments to scan
+func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
+	// Create a buffer if the caller hasn't provided one
+	if s.Buffer == nil {
+		s.Buffer = make([]byte, defaultBufferSize)
+	}
+
+	totalLines := 0
 	for {
-		n, err := reader.Read(buf)
+		n, err := reader.Read(s.Buffer)
 		if n == 0 {
 			if err != nil && err != io.EOF {
 				return yield(Fragment{}, fmt.Errorf("could not read file: %w", err))
@@ -51,22 +156,25 @@ func (s *File) Fragments(yield FragmentsFunc) error {
 		// Only check the filetype at the start of file.
 		if totalLines == 0 {
 			// TODO: could other optimizations be introduced here?
-			if mimetype, err := filetype.Match(buf[:n]); err != nil {
+			if mimetype, err := filetype.Match(s.Buffer[:n]); err != nil {
 				return yield(
 					Fragment{},
 					fmt.Errorf("could not read file: could not determine type: %w", err),
 				)
 			} else if mimetype.MIME.Type == "application" {
-				logging.Debug().Msgf(
-					"skipping file: binary file: mime_type=%q",
-					mimetype.MIME.Value,
+				logging.Debug().Str(
+					"mime_type", mimetype.MIME.Value,
+				).Str(
+					"path", s.Path,
+				).Msgf(
+					"skipping binary file",
 				)
 				return nil
 			}
 		}
 
 		// Try to split chunks across large areas of whitespace, if possible.
-		peekBuf := bytes.NewBuffer(buf[:n])
+		peekBuf := bytes.NewBuffer(s.Buffer[:n])
 		if err := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); err != nil {
 			return yield(
 				Fragment{},
@@ -95,9 +203,17 @@ func (s *File) Fragments(yield FragmentsFunc) error {
 			fragment.FilePath = s.Path
 		}
 
+		if len(s.outerPaths) > 0 {
+			fragment.FilePath = strings.Join(
+				// outerPaths have already been normalized to slash
+				append(s.outerPaths, fragment.FilePath),
+				InnerPathSeparator,
+			)
+		}
+
 		// log errors but still scan since there's content
 		if err != nil && err != io.EOF {
-			logging.Warn().Msgf("issue reading file: %s", err)
+			logging.Warn().Err(err).Msgf("issue reading file")
 		}
 
 		// Done with the file!

@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"errors"
 	"os"
 	"sync"
 
@@ -11,7 +12,7 @@ import (
 
 // DetectFiles runs detections against a chanel of scan targets
 //
-// Deprecated: Use sources.Files.Fragments() and Detector.DetectSource() instead
+// Deprecated: Use sources.Files and Detector.DetectSource() instead
 func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.Finding, error) {
 	var wg sync.WaitGroup
 
@@ -22,26 +23,28 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 			defer wg.Done()
 
 			logger := logging.With().Str("path", scanTarget.Path).Logger()
-			logger.Trace().Msg("scanning path:")
+			logger.Trace().Msg("scanning path")
 
 			f, err := os.Open(scanTarget.Path)
 			if err != nil {
 				if os.IsPermission(err) {
-					logger.Warn().Msg("skipping file: permission denied:")
+					err = errors.New("permission denied")
 				}
+
+				logger.Warn().Err(err).Msg("skipping file")
 				return nil
 			}
 			defer f.Close()
 
 			info, err := f.Stat()
 			if err != nil {
-				logger.Error().Msgf("skipping file: could not get info: %s: ", err)
+				logger.Error().Err(err).Msg("skipping file: could not get info")
 				return nil
 			}
 
 			// Empty; nothing to do here.
 			if info.Size() == 0 {
-				logger.Debug().Msg("skipping file: size=0")
+				logger.Debug().Msg("skipping empty file")
 				return nil
 			}
 
@@ -62,11 +65,12 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				Content: f,
 				Path:    scanTarget.Path,
 				Symlink: scanTarget.Symlink,
+				Config:  &d.Config,
 			}
 
 			return file.Fragments(func(fragment sources.Fragment, err error) error {
 				if err != nil {
-					logging.Error().Msg(err.Error())
+					logging.Error().Err(err).Send()
 					return nil
 				}
 

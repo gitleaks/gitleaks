@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"path/filepath"
 	"runtime"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
-const (
-	maxPeekSize = 25 * 1_000  // 10kb
-	chunkSize   = 100 * 1_000 // 100kb
-)
-
+const maxPeekSize = 25 * 1_000 // 10kb
 var isWhitespace [256]bool
 var isWindows = runtime.GOOS == "windows"
 
@@ -21,6 +21,26 @@ func init() {
 	isWhitespace['\t'] = true
 	isWhitespace['\n'] = true
 	isWhitespace['\r'] = true
+}
+
+// shouldSkipPath checks a path against all the allowlists to see if it can
+// be skipped
+func shouldSkipPath(cfg *config.Config, path string) bool {
+	if cfg == nil {
+		logging.Trace().Str("path", path).Msg("not skipping path because config is nil")
+		return false
+	}
+
+	for _, a := range cfg.Allowlists {
+		if a.PathAllowed(path) ||
+			// TODO: Remove this in v9.
+			// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
+			(isWindows && a.PathAllowed(filepath.ToSlash(path))) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // readUntilSafeBoundary consumes |f| until it finds two consecutive `\n` characters, up to |maxPeekSize|.
