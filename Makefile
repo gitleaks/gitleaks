@@ -20,5 +20,9 @@ build: format
 	go build $(LDFLAGS)
 
 clean:
+	rm -rf profile
 	find . -type f -name '*.got.*' -delete
 	find . -type f -name '*.out' -delete
+
+profile: build
+	./scripts/profile.sh './gitleaks' '.'

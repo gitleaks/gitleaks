@@ -9,6 +9,7 @@
 *.got
 gitleaks
 build
+profile
 
 # configs
 .gitleaks.toml
