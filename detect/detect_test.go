@@ -27,6 +27,7 @@ import (
 const maxDecodeDepth = 8
 const configPath = "../testdata/config/"
 const repoBasePath = "../testdata/repos/"
+const archivesBasePath = "../testdata/archives/"
 const encodedTestValues = `
 # Decoded
 -----BEGIN PRIVATE KEY-----
@@ -1075,6 +1076,114 @@ func TestFromFiles(t *testing.T) {
 			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
 		})
 	}
+}
+
+func TestDetectWithArchives(t *testing.T) {
+	tests := []struct {
+		cfgName          string
+		source           string
+		expectedFindings []report.Finding
+	}{
+		{
+			source:  filepath.Join(archivesBasePath, "files"),
+			cfgName: "simple",
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files/main.go",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files/main.go:aws-access-key:20",
+				},
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files/main.go.gz",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files/main.go.gz:aws-access-key:20",
+				},
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files/main.go.xz",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files/main.go.xz:aws-access-key:20",
+				},
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files/main.go.zst",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files/main.go.zst:aws-access-key:20",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.cfgName+" - "+tt.source, func(t *testing.T) {
+			viper.AddConfigPath(configPath)
+			viper.SetConfigName(tt.cfgName)
+			viper.SetConfigType("toml")
+			err := viper.ReadInConfig()
+			require.NoError(t, err)
+
+			var vc config.ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+
+			cfg, _ := vc.Translate()
+			detector := NewDetector(cfg)
+
+			findings, err := detector.DetectSource(
+				&sources.Files{
+					Path:   tt.source,
+					Sema:   detector.Sema,
+					Config: &cfg,
+				},
+			)
+
+			require.NoError(t, err)
+			assert.ElementsMatch(t, tt.expectedFindings, findings)
+		})
+	}
+
 }
 
 func TestDetectWithSymlinks(t *testing.T) {

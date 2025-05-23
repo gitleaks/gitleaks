@@ -1,4 +1,4 @@
-.PHONY: test test-cover
+.PHONY: test test-cover failfast profile clean format build
 
 PKG=github.com/zricethezav/gitleaks
 VERSION := `git fetch --tags && git tag | sort -V | tail -1`
@@ -14,6 +14,9 @@ format:
 
 test: format
 	go test -v ./... --race $(PKG)
+
+failfast: format
+	go test -failfast ./...
 
 build: format
 	go mod tidy

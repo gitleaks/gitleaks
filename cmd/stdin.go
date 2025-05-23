@@ -37,8 +37,7 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 
 	stdin := &sources.File{
-		Content:   os.Stdin,
-		ChunkSize: 10000,
+		Content: os.Stdin,
 	}
 
 	findings, err := detector.DetectSource(stdin)

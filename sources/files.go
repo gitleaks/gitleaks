@@ -135,11 +135,6 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 				logger.Debug().Msg("skipping directory: global allowlist item:")
 				return filepath.SkipDir
 			}
-			if info.Name() == ".git" {
-				// TODO: Add this to the config allowlist, instead of hard-coding it.
-				logger.Debug().Msg("skipping directory: .git directory always skipped")
-				return filepath.SkipDir
-			}
 			return nil
 		}
 

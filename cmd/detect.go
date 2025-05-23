@@ -89,8 +89,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	} else if fromPipe {
 		source := &sources.File{
-			Content:   os.Stdin,
-			ChunkSize: 10000,
+			Content: os.Stdin,
 		}
 
 		findings, err = detector.DetectSource(source)

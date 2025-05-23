@@ -11,8 +11,8 @@ import (
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	var findings []report.Finding
 	file := sources.File{
-		Content:   r,
-		ChunkSize: 1000 * bufSize,
+		Content: r,
+		Buffer:  make([]byte, 1000*bufSize),
 	}
 
 	err := file.Fragments(func(fragment sources.Fragment, err error) error {
@@ -70,8 +70,8 @@ func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.F
 	findingsCh := make(chan report.Finding, 1)
 	errCh := make(chan error, 1)
 	file := sources.File{
-		Content:   r,
-		ChunkSize: 1000 * bufSize,
+		Content: r,
+		Buffer:  make([]byte, 1000*bufSize),
 	}
 
 	go func() {

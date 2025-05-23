@@ -136,7 +136,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	logging.Debug().Msgf("found .gitleaksignore file: path=%s", gitleaksIgnorePath)
+	logging.Debug().Str("path", gitleaksIgnorePath).Msgf("found .gitleaksignore file")
 	file, err := os.Open(gitleaksIgnorePath)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	defer func() {
 		// https://github.com/securego/gosec/issues/512
 		if err := file.Close(); err != nil {
-			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
+			logging.Warn().Err(err).Msgf("Error closing .gitleaksignore file")
 		}
 	}()
 

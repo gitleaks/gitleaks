@@ -7,11 +7,7 @@ import (
 	"runtime"
 )
 
-const (
-	maxPeekSize = 25 * 1_000  // 10kb
-	chunkSize   = 100 * 1_000 // 100kb
-)
-
+const maxPeekSize = 25 * 1_000 // 10kb
 var isWhitespace [256]bool
 var isWindows = runtime.GOOS == "windows"
 
