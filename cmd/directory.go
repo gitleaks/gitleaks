@@ -64,7 +64,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	findings, err := detector.DetectSource(files)
 	if err != nil {
-		logging.Fatal().Err(err).Msg("failed scan directory")
+		logging.Error().Err(err).Msg("failed scan directory")
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

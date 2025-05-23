@@ -235,7 +235,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 	// check if commit or filepath is allowed.
 	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, d.Config.Allowlists); isAllowed {
-		event.Msg("skipping file: global allowlist:")
+		event.Msg("skipping file: global allowlist")
 		return findings
 	}
 
@@ -309,7 +309,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 
 	// check if commit or file is allowed for this rule.
 	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
-		event.Msg("skipping file: rule allowlist:")
+		event.Msg("skipping file: rule allowlist")
 		return findings
 	}
 
@@ -349,7 +349,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			logger.Debug().
 				Int("size", rawLength).
 				Int("max-size", d.MaxTargetMegaBytes).
-				Msg("skipping fragment: size:")
+				Msg("skipping fragment: size")
 			return findings
 		}
 	}
@@ -410,7 +410,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
 				Str("finding", finding.Secret).
-				Msg("skipping finding: 'gitleaks:allow' signature:")
+				Msg("skipping finding: 'gitleaks:allow' signature")
 			continue
 		}
 
@@ -448,20 +448,20 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 				logger.Trace().
 					Str("finding", finding.Secret).
 					Float32("entropy", finding.Entropy).
-					Msg("skipping finding: low entropy:")
+					Msg("skipping finding: low entropy")
 				continue
 			}
 		}
 
 		// check if the result matches any of the global allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
-			event.Msg("skipping finding: global allowlist item:")
+			event.Msg("skipping finding: global allowlist item")
 			continue
 		}
 
 		// check if the result matches any of the rule allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, r.Allowlists); isAllowed {
-			event.Msg("skipping finding: rule allowlist:")
+			event.Msg("skipping finding: rule allowlist")
 			continue
 		}
 		findings = append(findings, finding)
@@ -483,14 +483,14 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
-			Msg("skipping finding: global fingerprint:")
+			Msg("skipping finding: global fingerprint")
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint:")
+				Msgf("skipping finding: fingerprint")
 			return
 		}
 	}
@@ -498,7 +498,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
-			Msgf("skipping finding: baseline:")
+			Msgf("skipping finding: baseline")
 		return
 	}
 
