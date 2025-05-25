@@ -82,6 +82,10 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 	}
 	r.Keywords = keywords
 
+	if err := r.Validate(); err != nil {
+		logging.Fatal().Err(err).Str("rule-id", r.RuleID).Msg("Failed to validate rule")
+	}
+
 	rules := map[string]config.Rule{
 		r.RuleID: *r,
 	}

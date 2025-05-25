@@ -13,9 +13,10 @@
 
 title = "{{.Title}}"
 
-{{ with .Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}# TODO: change to [[allowlists]]{{println}}[allowlist]
+{{ with .Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords $allowlist.Expression }}# TODO: change to [[allowlists]]{{println}}[allowlist]
 {{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
 {{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
+{{- with .Expression }}{{println}}expression = '''{{ . }}'''{{ end }}
 {{- with .Commits -}}{{println}}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
@@ -51,9 +52,10 @@ keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
-{{- with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}{{println}}[[rules.allowlists]]
+{{- with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords $allowlist.Expression }}{{println}}[[rules.allowlists]]
 {{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
 {{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
+{{- with .Expression }}{{println}}expression = '''{{ . }}'''{{ end }}
 {{- with .Commits -}}{{println}}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
