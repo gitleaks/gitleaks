@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash/crc32"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -155,6 +156,27 @@ func (a *Allowlist) Validate() error {
 						}
 						sum := crc32.ChecksumIEEE([]byte(s))
 						return types.String(fmt.Sprintf("%08x", sum))
+					}),
+				),
+			),
+			cel.Function("base62encode",
+				cel.Overload("base62encode_string",
+					[]*cel.Type{cel.StringType},
+					cel.StringType,
+					cel.UnaryBinding(func(val ref.Val) ref.Val {
+						s, ok := val.Value().(string)
+						if !ok {
+							return types.NewErr("invalid input to base62encode: expected string")
+						}
+
+						// Parse hex string to uint32
+						value, err := strconv.ParseUint(s, 16, 32)
+						if err != nil {
+							return types.NewErr("invalid hex string: %v", err)
+						}
+
+						// Convert to Base62 with 6-character padding
+						return types.String(EncodeBase62(uint32(value), 6))
 					}),
 				),
 			),
