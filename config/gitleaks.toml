@@ -2122,6 +2122,8 @@ regex = '''ghp_[0-9a-zA-Z]{36}'''
 entropy = 3
 keywords = ["ghp_"]
 [[rules.allowlists]]
+expression = '''secret.substring(34) != base62encode(crc32(secret.substring(4, 34)))'''
+[[rules.allowlists]]
 paths = [
     '''(?:^|/)@octokit/auth-token/README\.md$''',
 ]
