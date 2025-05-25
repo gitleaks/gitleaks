@@ -55,6 +55,7 @@ type ViperConfig struct {
 type viperRuleAllowlist struct {
 	Description string
 	Condition   string
+	Expression  string
 	Commits     []string
 	Paths       []string
 	RegexTarget string
@@ -257,6 +258,7 @@ func parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
 	allowlist := &Allowlist{
 		Description:    a.Description,
 		MatchCondition: matchCondition,
+		Expression:     a.Expression,
 		Commits:        a.Commits,
 		Paths:          allowlistPaths,
 		RegexTarget:    regexTarget,
