@@ -45,17 +45,28 @@ func GenericCredential() *config.Rule {
 				},
 			},
 			{
+				Description:    "Allowlist for Generic API Keys matching the `access` keyword",
+				MatchCondition: config.AllowlistMatchAnd,
+				Expression:     `"access" in keywords`,
+				RegexTarget:    "match",
+				Regexes: []*regexp.Regexp{
+					// Access
+					regexp.MustCompile(`(?i)(?:` +
+						`access(?:ibility|or)` +
+						`|access[_.-]?id` +
+						`|random[_.-]?access` +
+						`)`,
+					),
+				},
+			},
+			{
 				Description:    "Allowlist for Generic API Keys",
 				MatchCondition: config.AllowlistMatchOr,
 				RegexTarget:    "match",
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`(?i)(?:` +
-						// Access
-						`access(?:ibility|or)` +
-						`|access[_.-]?id` +
-						`|random[_.-]?access` +
 						// API
-						`|api[_.-]?(?:id|name|version)` + // id/name/version -> not a secret
+						`api[_.-]?(?:id|name|version)` + // id/name/version -> not a secret
 						`|rapid|capital` + // common words containing "api"
 						`|[a-z0-9-]*?api[a-z0-9-]*?:jar:` + // Maven META-INF dependencies that contain "api" in the name.
 						// Auth

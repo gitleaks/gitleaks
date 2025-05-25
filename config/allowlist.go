@@ -1,11 +1,22 @@
 package config
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"hash/crc32"
 	"strings"
+	"sync"
 
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/cel-go/ext"
 	"golang.org/x/exp/maps"
 
+	"github.com/zricethezav/gitleaks/v8/config/flags"
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -55,20 +66,31 @@ type Allowlist struct {
 	// Regexes slice.
 	StopWords []string
 
+	Expression string
+
 	// validated is an internal flag to track whether `Validate()` has been called.
-	validated bool
+	validated     bool
+	celExpression cel.Program
 }
+
+var (
+	expressionOnce sync.Once
+	useExpression  bool
+)
 
 func (a *Allowlist) Validate() error {
 	if a.validated {
 		return nil
 	}
+	expressionOnce.Do(func() {
+		useExpression = flags.EnableExperimentalAllowlistExpression.Load()
+	})
 
 	// Disallow empty allowlists.
 	if len(a.Commits) == 0 &&
 		len(a.Paths) == 0 &&
 		len(a.Regexes) == 0 &&
-		len(a.StopWords) == 0 {
+		len(a.StopWords) == 0 && a.Expression == "" {
 		return errors.New("must contain at least one check for: commits, paths, regexes, or stopwords")
 	}
 
@@ -86,6 +108,80 @@ func (a *Allowlist) Validate() error {
 			uniqueStopwords[stopWord] = struct{}{}
 		}
 		a.StopWords = maps.Keys(uniqueStopwords)
+	}
+
+	// Compile the expression
+	if useExpression && a.Expression != "" {
+		// Build the environment: variables and functions available to the users.
+		// TODO: Is it safe to reuse this across multiple expressions?
+		env, err := cel.NewEnv(
+			// General fields.
+			cel.Variable("ruleId", cel.StringType),
+			cel.Variable("keywords", cel.ListType(cel.StringType)),
+			cel.Variable("file", cel.StringType),
+			cel.Variable("line", cel.StringType),
+			cel.Variable("match", cel.StringType),
+			cel.Variable("secret", cel.StringType),
+			cel.Variable("entropy", cel.DoubleType),
+			// Git-specific fields.
+			cel.Variable("commit", cel.StringType),
+			cel.Variable("author", cel.StringType),
+			cel.Variable("email", cel.StringType),
+			cel.Variable("date", cel.TimestampType),
+			cel.Variable("message", cel.StringType),
+			// Functions
+			ext.Strings(),
+			cel.Function("md5", // https://en.wikipedia.org/wiki/MD5
+				cel.Overload("md5_string",
+					[]*cel.Type{cel.StringType},
+					cel.StringType,
+					cel.UnaryBinding(func(val ref.Val) ref.Val {
+						s, ok := val.Value().(string)
+						if !ok {
+							return types.NewErr("invalid input to md5: expected string")
+						}
+						sum := md5.Sum([]byte(s))
+						return types.String(hex.EncodeToString(sum[:]))
+					}),
+				),
+			),
+			cel.Function("crc32", // https://wiki.osdev.org/CRC32#:~:text=4.1%20External%20Links-,The%20Basic%20Algorithm,is%20the%20final%20CRC32%20result.
+				cel.Overload("crc32_string",
+					[]*cel.Type{cel.StringType},
+					cel.StringType,
+					cel.UnaryBinding(func(val ref.Val) ref.Val {
+						s, ok := val.Value().(string)
+						if !ok {
+							return types.NewErr("invalid input to crc32: expected string")
+						}
+						sum := crc32.ChecksumIEEE([]byte(s))
+						return types.String(fmt.Sprintf("%08x", sum))
+					}),
+				),
+			),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to initialize CEL environment: %w", err)
+		}
+
+		// Parse the user-provided expression. (For some reason `Compile` and `Check` are two steps.)
+		ast, issues := env.Compile(a.Expression)
+		if issues != nil && issues.Err() != nil {
+			return fmt.Errorf("failed to compile expression: %w", issues.Err())
+		}
+		checked, issues := env.Check(ast)
+		if issues != nil && issues.Err() != nil {
+			return fmt.Errorf("failed to compile expression: %w", issues.Err())
+		}
+
+		if checked.OutputType() != cel.BoolType {
+			return fmt.Errorf("invalid expression: return type must be bool, not %s", checked.OutputType().String())
+		}
+		prg, err := env.Program(checked)
+		if err != nil {
+			return fmt.Errorf("failed to build expression: %w", err)
+		}
+		a.celExpression = prg
 	}
 
 	a.validated = true
@@ -134,4 +230,47 @@ func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// ExpressionAllowed returns the result of the predicate expression.
+func (a *Allowlist) ExpressionAllowed(
+// Miserable workaround to import-cycles.
+	ruleId string,
+	keywords []string,
+	file string,
+	line string,
+	match string,
+	secret string,
+	entropy float32,
+	commit string,
+	author string,
+	email string,
+	date string,
+	message string,
+) bool {
+	if a == nil || a.celExpression == nil {
+		return false
+	}
+
+	out, _, err := a.celExpression.Eval(map[string]any{
+		// General
+		"ruleId":   ruleId,
+		"keywords": keywords,
+		"file":     file,
+		"line":     line,
+		"match":    match,
+		"secret":   secret,
+		"entropy":  entropy,
+		// Git
+		"commit":  commit,
+		"author":  author,
+		"email":   email,
+		"date":    date,
+		"message": message,
+	})
+	if err != nil {
+		logging.Err(err).Msg("Failed to evaluate allowlist expression")
+		return false
+	}
+	return out.Value().(bool)
 }
