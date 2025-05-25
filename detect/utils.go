@@ -243,7 +243,3 @@ func printFinding(f report.Finding, noColor bool) {
 	}
 	fmt.Println("")
 }
-
-func isWhitespace(ch byte) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
-}

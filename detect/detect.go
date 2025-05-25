@@ -16,6 +16,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
@@ -26,8 +27,6 @@ import (
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
-	chunkSize              = 100 * 1_000 // 100kb
-
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
@@ -102,28 +101,7 @@ type Detector struct {
 	TotalBytes atomic.Uint64
 }
 
-// Fragment contains the data to be scanned
-type Fragment struct {
-	// Raw is the raw content of the fragment
-	Raw string
-
-	Bytes []byte
-
-	// FilePath is the path to the file, if applicable.
-	// The path separator MUST be normalized to `/`.
-	FilePath    string
-	SymlinkFile string
-	// WindowsFilePath is the path with the original separator.
-	// This provides a backwards-compatible solution to https://github.com/gitleaks/gitleaks/issues/1565.
-	WindowsFilePath string `json:"-"` // TODO: remove this in v9.
-
-	// CommitSHA is the SHA of the commit if applicable
-	CommitSHA string
-
-	// newlineIndices is a list of indices of newlines in the raw content.
-	// This is used to calculate the line location of a finding
-	newlineIndices [][]int
-}
+type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
@@ -158,7 +136,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	logging.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
+	logging.Debug().Str("path", gitleaksIgnorePath).Msgf("found .gitleaksignore file")
 	file, err := os.Open(gitleaksIgnorePath)
 	if err != nil {
 		return err
@@ -166,7 +144,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	defer func() {
 		// https://github.com/securego/gosec/issues/512
 		if err := file.Close(); err != nil {
-			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
+			logging.Warn().Err(err).Msgf("Error closing .gitleaksignore file")
 		}
 	}()
 
@@ -211,6 +189,24 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
+// DetectSource scans a source's fragments for findings
+func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
+	err := source.Fragments(func(fragment sources.Fragment, err error) error {
+		if err != nil {
+			// don't exit on error, just log it
+			logging.Error().Err(err).Msgf("scan directory issue: %s", err)
+		}
+
+		for _, finding := range d.Detect(Fragment(fragment)) {
+			d.AddFinding(finding)
+		}
+
+		return nil
+	})
+
+	return d.Findings(), err
+}
+
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
@@ -244,7 +240,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 
 	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
+	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
@@ -265,14 +261,14 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 					break
 				}
 			}
@@ -299,7 +295,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -390,7 +386,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		// in the finding will be the line/column numbers of the _match_
 		// not the _secret_, which will be different if the secretGroup
 		// value is set for this rule
-		loc := location(fragment, matchIndex)
+		loc := location(newlineIndices, fragment.Raw, matchIndex)
 
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
@@ -399,8 +395,8 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		finding := report.Finding{
 			RuleID:      r.RuleID,
 			Description: r.Description,
-			StartLine:   loc.startLine,
-			EndLine:     loc.endLine,
+			StartLine:   fragment.StartLine + loc.startLine,
+			EndLine:     fragment.StartLine + loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
@@ -459,7 +455,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 		// check if the result matches any of the global allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
-			event.Msg("skipping finding: global allowlist")
+			event.Msg("skipping finding: global allowlist item")
 			continue
 		}
 

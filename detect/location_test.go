@@ -51,7 +51,7 @@ func TestGetLocation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		loc := location(Fragment{newlineIndices: test.linePairs}, []int{test.start, test.end})
+		loc := location(test.linePairs, "", []int{test.start, test.end})
 		assert.Equal(t, test.wantLocation, loc)
 	}
 }
