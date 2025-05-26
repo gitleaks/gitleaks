@@ -77,45 +77,10 @@ type Allowlist struct {
 var (
 	expressionOnce sync.Once
 	useExpression  bool
-)
 
-func (a *Allowlist) Validate() error {
-	if a.validated {
-		return nil
-	}
-	expressionOnce.Do(func() {
-		useExpression = flags.EnableExperimentalAllowlistExpression.Load()
-	})
-
-	// Disallow empty allowlists.
-	if len(a.Commits) == 0 &&
-		len(a.Paths) == 0 &&
-		len(a.Regexes) == 0 &&
-		len(a.StopWords) == 0 && a.Expression == "" {
-		return errors.New("must contain at least one check for: commits, paths, regexes, or stopwords")
-	}
-
-	// Deduplicate commits and stopwords.
-	if len(a.Commits) > 0 {
-		uniqueCommits := make(map[string]struct{})
-		for _, commit := range a.Commits {
-			uniqueCommits[commit] = struct{}{}
-		}
-		a.Commits = maps.Keys(uniqueCommits)
-	}
-	if len(a.StopWords) > 0 {
-		uniqueStopwords := make(map[string]struct{})
-		for _, stopWord := range a.StopWords {
-			uniqueStopwords[stopWord] = struct{}{}
-		}
-		a.StopWords = maps.Keys(uniqueStopwords)
-	}
-
-	// Compile the expression
-	if useExpression && a.Expression != "" {
-		// Build the environment: variables and functions available to the users.
-		// TODO: Is it safe to reuse this across multiple expressions?
-		env, err := cel.NewEnv(
+	// TODO: Double-check if it's safe to reuse this across multiple expressions.
+	celEnv = sync.OnceValues(func() (*cel.Env, error) {
+		return cel.NewEnv(
 			// General fields.
 			cel.Variable("ruleId", cel.StringType),
 			cel.Variable("keywords", cel.ListType(cel.StringType)),
@@ -182,6 +147,45 @@ func (a *Allowlist) Validate() error {
 				),
 			),
 		)
+	})
+)
+
+func (a *Allowlist) Validate() error {
+	if a.validated {
+		return nil
+	}
+	expressionOnce.Do(func() {
+		useExpression = flags.EnableExperimentalAllowlistExpression.Load()
+	})
+
+	// Disallow empty allowlists.
+	if len(a.Commits) == 0 &&
+		len(a.Paths) == 0 &&
+		len(a.Regexes) == 0 &&
+		len(a.StopWords) == 0 && a.Expression == "" {
+		return errors.New("must contain at least one check for: commits, paths, regexes, or stopwords")
+	}
+
+	// Deduplicate commits and stopwords.
+	if len(a.Commits) > 0 {
+		uniqueCommits := make(map[string]struct{})
+		for _, commit := range a.Commits {
+			uniqueCommits[commit] = struct{}{}
+		}
+		a.Commits = maps.Keys(uniqueCommits)
+	}
+	if len(a.StopWords) > 0 {
+		uniqueStopwords := make(map[string]struct{})
+		for _, stopWord := range a.StopWords {
+			uniqueStopwords[stopWord] = struct{}{}
+		}
+		a.StopWords = maps.Keys(uniqueStopwords)
+	}
+
+	// Compile the expression
+	if useExpression && a.Expression != "" {
+		// Build the environment: variables and functions available to the users.
+		env, err := celEnv()
 		if err != nil {
 			return fmt.Errorf("failed to initialize CEL environment: %w", err)
 		}

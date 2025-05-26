@@ -141,7 +141,7 @@ func TestValidate(t *testing.T) {
 	}{
 		"empty conditions": {
 			input:   Allowlist{},
-			wantErr: errors.New("must contain at least one check for: commits, paths, regexes, stopwords, or expression"),
+			wantErr: errors.New("must contain at least one check for: commits, paths, regexes, or stopwords"),
 		},
 		"deduplicated commits and stopwords": {
 			input: Allowlist{
