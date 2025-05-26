@@ -65,6 +65,10 @@ type Detector struct {
 	// IgnoreGitleaksAllow is a flag to ignore gitleaks:allow comments.
 	IgnoreGitleaksAllow bool
 
+	// commitMutex is to prevent concurrent access to the
+	// commit map when adding commits
+	commitMutex *sync.Mutex
+
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
 	commitMap map[string]bool
@@ -109,6 +113,7 @@ func NewDetector(cfg config.Config) *Detector {
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
+		commitMutex:    &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
@@ -191,18 +196,60 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // DetectSource scans a source's fragments for findings
 func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
+	_, isGit := source.(*sources.Git)
+
 	err := source.Fragments(func(fragment sources.Fragment, err error) error {
+		logContext := logging.With()
+
+		if len(fragment.FilePath) > 0 {
+			logContext = logContext.Str("path", fragment.FilePath)
+		}
+
+		if isGit {
+			logContext = logContext.Str("commit", fragment.CommitSHA)
+			d.addCommit(fragment.CommitSHA)
+		}
+
+		logger := logContext.Logger()
+
 		if err != nil {
-			// don't exit on error, just log it
-			logging.Error().Err(err).Msgf("scan directory issue")
+			// don't exit on error, just log it. If there is any content in the
+			// fragment, go ahead and scan it
+			logger.Error().Err(err).Send()
+
+			if len(fragment.Raw) == 0 {
+				return nil
+			}
+		} else if len(fragment.Raw) == 0 {
+			logger.Trace().Msg("skipping empty fragment")
+			return nil
+		}
+
+		var timer *time.Timer
+		// Only start the timer in debug mode
+		if logger.GetLevel() <= zerolog.DebugLevel {
+			timer = time.AfterFunc(SlowWarningThreshold, func() {
+				logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+			})
 		}
 
 		for _, finding := range d.Detect(Fragment(fragment)) {
 			d.AddFinding(finding)
 		}
 
+		// Stop the timer if it was created
+		if timer != nil {
+			timer.Stop()
+			timer = nil
+		}
+
 		return nil
 	})
+
+	if isGit {
+		logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
+		logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
+	}
 
 	return d.Findings(), err
 }
@@ -318,12 +365,20 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			// Path _only_ rule
 			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
 				finding := report.Finding{
+					Commit:      fragment.CommitSHA,
 					RuleID:      r.RuleID,
 					Description: r.Description,
 					File:        fragment.FilePath,
 					SymlinkFile: fragment.SymlinkFile,
 					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
 					Tags:        r.Tags,
+				}
+				if fragment.CommitInfo != nil {
+					finding.Author = fragment.CommitInfo.AuthorName
+					finding.Date = fragment.CommitInfo.Date
+					finding.Email = fragment.CommitInfo.AuthorEmail
+					finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
+					finding.Message = fragment.CommitInfo.Message
 				}
 				return append(findings, finding)
 			}
@@ -393,6 +448,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 		}
 
 		finding := report.Finding{
+			Commit:      fragment.CommitSHA,
 			RuleID:      r.RuleID,
 			Description: r.Description,
 			StartLine:   fragment.StartLine + loc.startLine,
@@ -406,7 +462,13 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			SymlinkFile: fragment.SymlinkFile,
 			Tags:        append(r.Tags, metaTags...),
 		}
-
+		if fragment.CommitInfo != nil {
+			finding.Author = fragment.CommitInfo.AuthorName
+			finding.Date = fragment.CommitInfo.Date
+			finding.Email = fragment.CommitInfo.AuthorEmail
+			finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
+			finding.Message = fragment.CommitInfo.Message
+		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
 				Str("finding", finding.Secret).
@@ -517,7 +579,9 @@ func (d *Detector) Findings() []report.Finding {
 
 // AddCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
+	d.commitMutex.Lock()
 	d.commitMap[commit] = true
+	d.commitMutex.Unlock()
 }
 
 // checkCommitOrPathAllowed evaluates |fragment| against all provided |allowlists|.

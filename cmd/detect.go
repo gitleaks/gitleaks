@@ -25,7 +25,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
-	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -101,22 +100,30 @@ func runDetect(cmd *cobra.Command, args []string) {
 			logging.Fatal().Err(err).Msg("failed scan input from stdin")
 		}
 	} else {
-		// TODO: replace this with a source := Git{...}
 		var (
-			logOpts     = mustGetStringFlag(cmd, "log-opts")
 			gitCmd      *sources.GitCmd
 			scmPlatform scm.Platform
-			remote      *detect.RemoteInfo
 		)
+
+		logOpts := mustGetStringFlag(cmd, "log-opts")
 		if gitCmd, err = sources.NewGitLogCmd(sourcePath, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
+
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
 			logging.Fatal().Err(err).Send()
 		}
-		remote = detect.NewRemoteInfo(scmPlatform, sourcePath)
 
-		if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
+		findings, err = detector.DetectSource(
+			&sources.Git{
+				Cmd:    gitCmd,
+				Remote: sources.NewRemoteInfo(scmPlatform, sourcePath),
+				Config: &detector.Config,
+				Sema:   detector.Sema,
+			},
+		)
+
+		if err != nil {
 			// don't exit on error, just log it
 			logging.Error().Err(err).Msg("failed to scan Git repository")
 		}

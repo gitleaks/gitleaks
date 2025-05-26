@@ -20,4 +20,7 @@ type Fragment struct {
 
 	// StartLine is the line number this fragment starts on
 	StartLine int
+
+	// CommitInfo captures additional information about the git commit
+	CommitInfo *CommitInfo
 }
