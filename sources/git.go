@@ -3,6 +3,7 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +30,27 @@ type GitCmd struct {
 	cmd         *exec.Cmd
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
+	repoPath    string
+}
+
+// blobReader provides a ReadCloser interface git cat-file blob to fetch
+// a blob from a repo
+type blobReader struct {
+	io.ReadCloser
+	cmd *exec.Cmd
+}
+
+// Close closes the underlying reader and then waits for the command to complete,
+// releasing its resources.
+func (br *blobReader) Close() error {
+	// Close the pipe (should signal the command to stop if it hasn't already)
+	closeErr := br.ReadCloser.Close()
+	// Wait to prevent zombie processes.
+	waitErr := br.cmd.Wait()
+	if closeErr != nil {
+		return closeErr
+	}
+	return waitErr
 }
 
 // NewGitLogCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
@@ -86,6 +108,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		repoPath:    sourceClean,
 	}, nil
 }
 
@@ -126,6 +149,7 @@ func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
 		cmd:         cmd,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
+		repoPath:    sourceClean,
 	}, nil
 }
 
@@ -145,6 +169,27 @@ func (c *GitCmd) ErrCh() <-chan error {
 // Wait also closes underlying stdout and stderr.
 func (c *GitCmd) Wait() (err error) {
 	return c.cmd.Wait()
+}
+
+// NewBlobReader returns an io.ReadCloser that can be used to read a blob
+// within the git repo used to create the GitCmd.
+//
+// The caller is responsible for closing the reader.
+func (c *GitCmd) NewBlobReader(commit, path string) (io.ReadCloser, error) {
+	gitArgs := []string{"-C", c.repoPath, "cat-file", "blob", commit + ":" + path}
+	cmd := exec.Command("git", gitArgs...)
+	cmd.Stderr = io.Discard
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stdout pipe: %w", err)
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start git command: %w", err)
+	}
+	return &blobReader{
+		ReadCloser: stdout,
+		cmd:        cmd,
+	}, nil
 }
 
 // listenForStdErr listens for stderr output from git, prints it to stdout,
@@ -229,6 +274,7 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 	)
 
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
+	ctx := context.Background()
 	for diffFilesCh != nil || errCh != nil {
 		select {
 		case gitdiffFile, open := <-diffFilesCh:
@@ -237,9 +283,17 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 				break
 			}
 
-			// skip binary files
-			if gitdiffFile.IsBinary || gitdiffFile.IsDelete {
+			if gitdiffFile.IsDelete {
 				continue
+			}
+
+			// skip non-archive binary files
+			scanAsArchive := false
+			if gitdiffFile.IsBinary {
+				if !isArchive(ctx, gitdiffFile.NewName) {
+					continue
+				}
+				scanAsArchive = true
 			}
 
 			// Check if commit is allowed
@@ -270,6 +324,33 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 			wg.Add(1)
 			s.Sema.Go(func() error {
 				defer wg.Done()
+
+				if scanAsArchive {
+					blob, err := s.Cmd.NewBlobReader(commitSHA, gitdiffFile.NewName)
+					if err != nil {
+						logging.Error().Err(err).Msg("could not open archive blob")
+						return nil
+					}
+
+					file := File{
+						Content: blob,
+						Path:    gitdiffFile.NewName,
+					}
+
+					// enrich and yield fragments
+					err = file.Fragments(func(fragment Fragment, err error) error {
+						fragment.CommitSHA = commitSHA
+						fragment.CommitInfo = commitInfo
+						return yield(fragment, err)
+					})
+
+					// Close the blob reader and log any issues
+					if err := blob.Close(); err != nil {
+						logging.Warn().Err(err).Msg("there were issues closing the blob reader")
+					}
+
+					return err
+				}
 
 				for _, textFragment := range gitdiffFile.TextFragments {
 					if textFragment == nil {

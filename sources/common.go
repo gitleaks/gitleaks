@@ -3,10 +3,12 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"path/filepath"
 	"runtime"
 
+	"github.com/mholt/archives"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
@@ -21,6 +23,14 @@ func init() {
 	isWhitespace['\t'] = true
 	isWhitespace['\n'] = true
 	isWhitespace['\r'] = true
+}
+
+// isArchive does a light check to see if the provided path is an archive or
+// compressed file. The File source already does this, so this exists mainly
+// to avoid expensive calls before sending things to the File source
+func isArchive(ctx context.Context, path string) bool {
+	format, _, err := archives.Identify(ctx, path, nil)
+	return err == nil && format != nil
 }
 
 // shouldSkipPath checks a path against all the allowlists to see if it can
