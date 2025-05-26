@@ -71,8 +71,10 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 				logging.Error().Str("path", s.Path).Msg("could not create tmp file")
 				return nil
 			}
-			defer os.Remove(tmpfile.Name())
-			defer tmpfile.Close()
+			defer func() {
+				_ = tmpfile.Close()
+				_ = os.Remove(tmpfile.Name())
+			}()
 
 			_, err = io.Copy(tmpfile, reader)
 			if err != nil {
@@ -84,7 +86,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		}
 	}
 
-	return extractor.Extract(ctx, reader, func(ctx context.Context, d archives.FileInfo) error {
+	return extractor.Extract(ctx, reader, func(_ context.Context, d archives.FileInfo) error {
 		if d.IsDir() {
 			return nil
 		}
@@ -109,11 +111,11 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		}
 
 		if err := file.Fragments(yield); err != nil {
-			innerReader.Close()
+			_ = innerReader.Close()
 			return err
 		}
 
-		innerReader.Close()
+		_ = innerReader.Close()
 		return nil
 	})
 }
@@ -127,11 +129,11 @@ func (s *File) decompressorFragments(decompressor archives.Decompressor, reader 
 	}
 
 	if err := s.fileFragments(bufio.NewReader(innerReader), yield); err != nil {
-		innerReader.Close()
+		_ = innerReader.Close()
 		return err
 	}
 
-	innerReader.Close()
+	_ = innerReader.Close()
 	return nil
 }
 

@@ -1961,7 +1961,7 @@ func moveDotGit(t *testing.T, from, to string) {
 				// dont want to delete the only copy of .git accidentally
 				continue
 			}
-			os.RemoveAll(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), ".git"))
+			_ = os.RemoveAll(fmt.Sprintf("%s/%s/%s", repoBasePath, dir.Name(), ".git"))
 		}
 		if !dir.IsDir() {
 			continue

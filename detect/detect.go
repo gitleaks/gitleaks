@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -34,7 +33,6 @@ const (
 
 var (
 	newLineRegexp = regexp.MustCompile("\n")
-	isWindows     = runtime.GOOS == "windows"
 )
 
 // Detector is the main detector struct
@@ -386,7 +384,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			// if path is set _and_ a regex is set, then we need to check both
 			// so if the path does not match, then we should return early and not
 			// consider the regex
-			if !(r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath))) {
+			if !r.Path.MatchString(fragment.FilePath) && (fragment.WindowsFilePath == "" || !r.Path.MatchString(fragment.WindowsFilePath)) {
 				return findings
 			}
 		}

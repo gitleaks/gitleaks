@@ -110,8 +110,8 @@ func filter(findings []report.Finding, redact uint) []report.Finding {
 					strings.Contains(fPrime.Secret, f.Secret) &&
 					!strings.Contains(strings.ToLower(fPrime.RuleID), "generic") {
 
-					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
-					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
+					genericMatch := strings.ReplaceAll(f.Match, f.Secret, "REDACTED")
+					betterMatch := strings.ReplaceAll(fPrime.Match, fPrime.Secret, "REDACTED")
 					logging.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
 					include = false
 					break

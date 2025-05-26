@@ -265,8 +265,12 @@ type CommitInfo struct {
 	SHA         string
 }
 
+// Fragments yields fragments from a git repo
 func (s *Git) Fragments(yield FragmentsFunc) error {
-	defer s.Cmd.Wait()
+	defer func() {
+		_ = s.Cmd.Wait()
+	}()
+
 	var (
 		diffFilesCh = s.Cmd.DiffFilesCh()
 		errCh       = s.Cmd.ErrCh()
@@ -386,6 +390,7 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 	return nil
 }
 
+// NewRemoteInfo builds a new RemoteInfo for generating finding links
 func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
 	if platform == scm.NoPlatform {
 		return &RemoteInfo{Platform: platform}

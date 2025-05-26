@@ -1,5 +1,7 @@
 package sources
 
+// FragmentsFunc is the type of function called by Fragments to yield the next
+// fragment
 type FragmentsFunc func(Fragment, error) error
 
 // Source represents a thing that can be scanned

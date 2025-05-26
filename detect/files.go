@@ -34,7 +34,9 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				logger.Warn().Err(err).Msg("skipping file")
 				return nil
 			}
-			defer f.Close()
+			defer func() {
+				_ = f.Close()
+			}()
 
 			info, err := f.Stat()
 			if err != nil {

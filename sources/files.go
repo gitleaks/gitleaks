@@ -32,12 +32,12 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 	}
 
 	s.Go(func() error {
-		files.scanTargets(func(scanTarget ScanTarget, err error) error {
+		err := files.scanTargets(func(scanTarget ScanTarget, err error) error {
 			paths <- scanTarget
 			return nil
 		})
 		close(paths)
-		return nil
+		return err
 	})
 
 	return paths, nil
@@ -61,7 +61,7 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 		if err != nil {
 			if os.IsPermission(err) {
 				// This seems to only fail on directories at this stage.
-				err = errors.New("permission denied")
+				logger.Error().Err(errors.New("permission denied")).Msg("skipping directory")
 				return filepath.SkipDir
 			}
 			logger.Error().Err(err).Msg("skipping directory")
@@ -131,14 +131,11 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 			return nil
 		}
 
-		if err := yield(scanTarget, nil); err != nil {
-			return err
-		}
-
-		return nil
+		return yield(scanTarget, nil)
 	})
 }
 
+// Fragments yields fragments from files discovered under the path
 func (s *Files) Fragments(yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
@@ -167,7 +164,7 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 
 			err = file.Fragments(yield)
 			// Avoiding a defer in a hot loop
-			f.Close()
+			_ = f.Close()
 			wg.Done()
 			return err
 		})

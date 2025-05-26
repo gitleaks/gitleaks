@@ -8,6 +8,8 @@ import (
 
 type RemoteInfo sources.RemoteInfo
 
+// DetectGit runs detections against a GitCmd with its remote info
+//
 // Deprecated: Use sources.Git and detector.DetectSource instead
 func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
 	return d.DetectSource(
