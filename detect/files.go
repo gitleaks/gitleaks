@@ -55,7 +55,7 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				rawLength := info.Size() / 1_000_000
 				if rawLength > int64(d.MaxTargetMegaBytes) {
 					logger.Warn().Msgf(
-						"skipping file: too large: max_size=%dMiB, size=%dMiB",
+						"skipping file: too large: max_size=%dMB, size=%dMB",
 						d.MaxTargetMegaBytes, rawLength,
 					)
 					return nil
