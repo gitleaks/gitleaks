@@ -41,14 +41,21 @@ type File struct {
 	// outerPaths is the list of container paths (e.g. archives) that lead to
 	// this file
 	outerPaths []string
+
+	MaxArchiveDepth int
+
+	archiveDepth int
 }
 
 // Fragments yields fragments for the this source
 func (s *File) Fragments(yield FragmentsFunc) error {
 	ctx := context.Background()
 	format, _, err := archives.Identify(ctx, s.Path, nil)
-
 	if err == nil && format != nil {
+		if s.archiveDepth+1 > s.MaxArchiveDepth {
+			logging.Warn().Str("path", s.Path).Int("max archive depth", s.MaxArchiveDepth).Msg("max archive depth exceeded")
+			return nil
+		}
 		if extractor, ok := format.(archives.Extractor); ok {
 			return s.extractorFragments(ctx, extractor, s.Content, yield)
 		}
@@ -104,10 +111,12 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		}
 
 		file := &File{
-			Content:    innerReader,
-			Path:       path,
-			Symlink:    s.Symlink,
-			outerPaths: append(s.outerPaths, filepath.ToSlash(s.Path)),
+			Content:         innerReader,
+			Path:            path,
+			Symlink:         s.Symlink,
+			outerPaths:      append(s.outerPaths, filepath.ToSlash(s.Path)),
+			MaxArchiveDepth: s.MaxArchiveDepth,
+			archiveDepth:    s.archiveDepth + 1,
 		}
 
 		if err := file.Fragments(yield); err != nil {

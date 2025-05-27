@@ -1191,6 +1191,7 @@ func TestFromGit(t *testing.T) {
 			cfg, err := vc.Translate()
 			require.NoError(t, err)
 			detector := NewDetector(cfg)
+			detector.MaxArchiveDepth = 8
 
 			var ignorePath string
 			info, err := os.Stat(tt.source)

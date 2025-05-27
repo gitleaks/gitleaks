@@ -51,6 +51,8 @@ type Detector struct {
 	// MaxDecodeDepths limits how many recursive decoding passes are allowed
 	MaxDecodeDepth int
 
+	MaxArchiveDepth int
+
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 

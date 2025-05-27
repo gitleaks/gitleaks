@@ -14,10 +14,11 @@ type RemoteInfo sources.RemoteInfo
 func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
 	return d.DetectSource(
 		&sources.Git{
-			Cmd:    cmd,
-			Config: &d.Config,
-			Remote: (*sources.RemoteInfo)(remote),
-			Sema:   d.Sema,
+			Cmd:             cmd,
+			Config:          &d.Config,
+			Remote:          (*sources.RemoteInfo)(remote),
+			Sema:            d.Sema,
+			MaxArchiveDepth: d.MaxArchiveDepth,
 		},
 	)
 }
