@@ -125,7 +125,7 @@ func (dm *DiagnosticsManager) StartCPUProfile() error {
 	}
 
 	if err := pprof.StartCPUProfile(f); err != nil {
-		f.Close()
+		_ = f.Close()
 		return fmt.Errorf("could not start CPU profile: %w", err)
 	}
 
@@ -188,7 +188,7 @@ func (dm *DiagnosticsManager) StartTraceProfile() error {
 	}
 
 	if err := trace.Start(f); err != nil {
-		f.Close()
+		_ = f.Close()
 		return fmt.Errorf("could not start trace profile: %w", err)
 	}
 
