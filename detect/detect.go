@@ -194,8 +194,6 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // DetectSource scans a source's fragments for findings
 func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
-	_, isGit := source.(*sources.Git)
-
 	err := source.Fragments(func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
 
@@ -203,9 +201,14 @@ func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error)
 			logContext = logContext.Str("path", fragment.FilePath)
 		}
 
-		if isGit {
+		if len(fragment.CommitSHA) > 6 {
+			logContext = logContext.Str("commit", fragment.CommitSHA[:7])
+			d.addCommit(fragment.CommitSHA)
+		} else if len(fragment.CommitSHA) > 0 {
 			logContext = logContext.Str("commit", fragment.CommitSHA)
 			d.addCommit(fragment.CommitSHA)
+			logger := logContext.Logger()
+			logger.Warn().Msg("commit SHAs should be >= 7 characters long")
 		}
 
 		logger := logContext.Logger()
@@ -244,7 +247,7 @@ func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error)
 		return nil
 	})
 
-	if isGit {
+	if _, isGit := source.(*sources.Git); isGit {
 		logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
 		logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
 	}
