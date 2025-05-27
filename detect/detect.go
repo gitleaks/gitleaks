@@ -397,7 +397,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 
 	// if flag configure and raw data size bigger then the flag
 	if d.MaxTargetMegaBytes > 0 {
-		rawLength := len(currentRaw) / 1000000
+		rawLength := len(currentRaw) / 1_000_000
 		if rawLength > d.MaxTargetMegaBytes {
 			logger.Debug().
 				Int("size", rawLength).

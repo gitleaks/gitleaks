@@ -90,7 +90,7 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 			if s.MaxFileSize > 0 && info.Size() > int64(s.MaxFileSize) {
 				logger.Warn().Msgf(
 					"skipping file: too large: max_size=%dMiB, size=%dMiB",
-					s.MaxFileSize/1000000, info.Size()/1000000,
+					s.MaxFileSize/1_000_000, info.Size()/1_000_000,
 				)
 				return nil
 			}
