@@ -12,13 +12,16 @@ test-cover:
 format:
 	go fmt ./...
 
-test: format
+test: config/gitleaks.toml format
 	go test -v ./... --race $(PKG)
 
-build: format
+build: config/gitleaks.toml format
 	go mod tidy
 	go build $(LDFLAGS)
 
 clean:
 	find . -type f -name '*.got.*' -delete
 	find . -type f -name '*.out' -delete
+
+config/gitleaks.toml: $(wildcard cmd/generate/config/**/*)
+	go generate ./...
