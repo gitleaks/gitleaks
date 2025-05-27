@@ -85,7 +85,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		)
 
 		if err != nil {
-			logging.Fatal().Err(err).Msg("failed to scan directory")
+			logging.Error().Err(err).Msg("failed to scan directory")
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectSource(
