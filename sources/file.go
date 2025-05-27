@@ -25,7 +25,7 @@ type seekReaderAt interface {
 	io.Seeker
 }
 
-// File implements Source for scanning a reader with a path
+// File is a source for yielding fragments from a file or other reader
 type File struct {
 	// Content provides a reader to the file's content
 	Content io.Reader
@@ -35,7 +35,7 @@ type File struct {
 	Symlink string
 	// Buffer is used for reading the content in chunks
 	Buffer []byte
-	// Config is the scanner config used for shouldSkipPath. If not set, then
+	// Config is the gitleaks config used for shouldSkipPath. If not set, then
 	// shouldSkipPath is ignored
 	Config *config.Config
 	// outerPaths is the list of container paths (e.g. archives) that lead to
@@ -98,7 +98,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		}
 		path := filepath.Clean(d.NameInArchive)
 
-		if shouldSkipPath(s.Config, path) {
+		if s.Config != nil && shouldSkipPath(s.Config, path) {
 			logging.Debug().Str("path", s.Path).Msg("skipping file: global allowlist item")
 			return nil
 		}
@@ -137,7 +137,7 @@ func (s *File) decompressorFragments(decompressor archives.Decompressor, reader 
 	return nil
 }
 
-// fileFragments reads the file into fragments to scan
+// fileFragments reads the file into fragments to yield
 func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 	// Create a buffer if the caller hasn't provided one
 	if s.Buffer == nil {
@@ -213,7 +213,7 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 			)
 		}
 
-		// log errors but still scan since there's content
+		// log errors but continue since there's content
 		if err != nil && err != io.EOF {
 			logging.Warn().Err(err).Msgf("issue reading file")
 		}

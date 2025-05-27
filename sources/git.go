@@ -247,7 +247,7 @@ type RemoteInfo struct {
 	Url      string
 }
 
-// Git implements the Source interface for git repos
+// Git is a source for yielding fragments from a git repo
 type Git struct {
 	Cmd    *GitCmd
 	Config *config.Config
@@ -292,12 +292,12 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 			}
 
 			// skip non-archive binary files
-			scanAsArchive := false
+			yieldAsArchive := false
 			if gitdiffFile.IsBinary {
 				if !isArchive(ctx, gitdiffFile.NewName) {
 					continue
 				}
-				scanAsArchive = true
+				yieldAsArchive = true
 			}
 
 			// Check if commit is allowed
@@ -329,7 +329,7 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 			s.Sema.Go(func() error {
 				defer wg.Done()
 
-				if scanAsArchive {
+				if yieldAsArchive {
 					blob, err := s.Cmd.NewBlobReader(commitSHA, gitdiffFile.NewName)
 					if err != nil {
 						logging.Error().Err(err).Msg("could not open archive blob")

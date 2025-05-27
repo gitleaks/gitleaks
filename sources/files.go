@@ -12,6 +12,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
+// TODO: remove this in v9 and have scanTargets yield file sources
 type ScanTarget struct {
 	Path    string
 	Symlink string
@@ -43,7 +44,7 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 	return paths, nil
 }
 
-// Files implements Source for scanning file systems
+// Files is a source for yielding fragments from a collection of files
 type Files struct {
 	Config         *config.Config
 	FollowSymlinks bool

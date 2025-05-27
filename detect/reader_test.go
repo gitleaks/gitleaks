@@ -66,6 +66,7 @@ func TestDetectReader(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			detector, err := NewDetectorDefaultConfig()
 			require.NoError(t, err)
+
 			findings, err := detector.DetectReader(test.reader, test.bufSize)
 			require.NoError(t, err)
 

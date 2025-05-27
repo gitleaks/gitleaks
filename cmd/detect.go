@@ -78,7 +78,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			&sources.Files{
 				Config:         &cfg,
 				FollowSymlinks: detector.FollowSymlinks,
-				MaxFileSize:    detector.MaxTargetMegaBytes * 1000000,
+				MaxFileSize:    detector.MaxTargetMegaBytes * 1_000_000,
 				Path:           sourcePath,
 				Sema:           detector.Sema,
 			},
@@ -95,8 +95,8 @@ func runDetect(cmd *cobra.Command, args []string) {
 		)
 
 		if err != nil {
-			// log fatal to exit, no need to continue sinca a report
-			// will not be generated with scanning from a pipe...for now
+			// log fatal to exit, no need to continue since a report
+			// will not be generated when scanning from a pipe...for now
 			logging.Fatal().Err(err).Msg("failed scan input from stdin")
 		}
 	} else {
