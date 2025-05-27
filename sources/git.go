@@ -79,7 +79,7 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		cmd = exec.Command("git", args...)
 	} else {
 		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
-			"--full-history", "--all")
+			"--full-history", "--all", "--diff-filter=tuxdb")
 	}
 
 	logging.Debug().Msgf("executing: %s", cmd.String())
