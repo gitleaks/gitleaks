@@ -117,8 +117,8 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings, err = detector.DetectSource(
 			&sources.Git{
 				Cmd:    gitCmd,
-				Remote: sources.NewRemoteInfo(scmPlatform, sourcePath),
 				Config: &detector.Config,
+				Remote: sources.NewRemoteInfo(scmPlatform, sourcePath),
 				Sema:   detector.Sema,
 			},
 		)
