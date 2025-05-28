@@ -197,7 +197,6 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // DetectSource scans a source's fragments for findings
 func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
-	fmt.Println("test")
 	err := source.Fragments(func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
 
