@@ -747,7 +747,6 @@ func TestFromGit(t *testing.T) {
 		t.Skipf("TODO: this fails on Windows: [git] fatal: bad object refs/remotes/origin/main?")
 		return
 	}
-
 	tests := []struct {
 		cfgName          string
 		source           string
@@ -1191,6 +1190,7 @@ func TestFromGit(t *testing.T) {
 			cfg, err := vc.Translate()
 			require.NoError(t, err)
 			detector := NewDetector(cfg)
+			detector.MaxArchiveDepth = 8
 
 			var ignorePath string
 			info, err := os.Stat(tt.source)
@@ -1969,12 +1969,14 @@ func TestDetectWithArchives(t *testing.T) {
 
 			cfg, _ := vc.Translate()
 			detector := NewDetector(cfg)
+			detector.MaxArchiveDepth = 8
 
 			findings, err := detector.DetectSource(
 				&sources.Files{
-					Path:   tt.source,
-					Sema:   detector.Sema,
-					Config: &cfg,
+					Path:            tt.source,
+					Sema:            detector.Sema,
+					Config:          &cfg,
+					MaxArchiveDepth: detector.MaxArchiveDepth,
 				},
 			)
 

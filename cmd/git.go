@@ -78,10 +78,11 @@ func runGit(cmd *cobra.Command, args []string) {
 
 	findings, err = detector.DetectSource(
 		&sources.Git{
-			Cmd:    gitCmd,
-			Config: &detector.Config,
-			Remote: sources.NewRemoteInfo(scmPlatform, source),
-			Sema:   detector.Sema,
+			Cmd:             gitCmd,
+			Config:          &detector.Config,
+			Remote:          sources.NewRemoteInfo(scmPlatform, source),
+			Sema:            detector.Sema,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
 		},
 	)
 

@@ -56,11 +56,12 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	findings, err := detector.DetectSource(
 		&sources.Files{
-			Config:         &cfg,
-			FollowSymlinks: detector.FollowSymlinks,
-			MaxFileSize:    detector.MaxTargetMegaBytes * 1_000_000,
-			Path:           source,
-			Sema:           detector.Sema,
+			Config:          &cfg,
+			FollowSymlinks:  detector.FollowSymlinks,
+			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
+			Path:            source,
+			Sema:            detector.Sema,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
 		},
 	)
 

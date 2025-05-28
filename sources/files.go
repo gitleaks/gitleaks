@@ -46,11 +46,12 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 
 // Files is a source for yielding fragments from a collection of files
 type Files struct {
-	Config         *config.Config
-	FollowSymlinks bool
-	MaxFileSize    int
-	Path           string
-	Sema           *semgroup.Group
+	Config          *config.Config
+	FollowSymlinks  bool
+	MaxFileSize     int
+	Path            string
+	Sema            *semgroup.Group
+	MaxArchiveDepth int
 }
 
 // scanTargets yields scan targets to a callback func
@@ -157,10 +158,11 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 
 			// Convert this to a file source
 			file := File{
-				Content: f,
-				Path:    scanTarget.Path,
-				Symlink: scanTarget.Symlink,
-				Config:  s.Config,
+				Content:         f,
+				Path:            scanTarget.Path,
+				Symlink:         scanTarget.Symlink,
+				Config:          s.Config,
+				MaxArchiveDepth: s.MaxArchiveDepth,
 			}
 
 			err = file.Fragments(yield)

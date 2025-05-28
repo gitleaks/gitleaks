@@ -249,10 +249,11 @@ type RemoteInfo struct {
 
 // Git is a source for yielding fragments from a git repo
 type Git struct {
-	Cmd    *GitCmd
-	Config *config.Config
-	Remote *RemoteInfo
-	Sema   *semgroup.Group
+	Cmd             *GitCmd
+	Config          *config.Config
+	Remote          *RemoteInfo
+	Sema            *semgroup.Group
+	MaxArchiveDepth int
 }
 
 // CommitInfo captures metadata about the commit
@@ -337,8 +338,9 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 					}
 
 					file := File{
-						Content: blob,
-						Path:    gitdiffFile.NewName,
+						Content:         blob,
+						Path:            gitdiffFile.NewName,
+						MaxArchiveDepth: s.MaxArchiveDepth,
 					}
 
 					// enrich and yield fragments

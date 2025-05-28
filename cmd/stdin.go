@@ -38,7 +38,8 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 
 	findings, err := detector.DetectSource(
 		&sources.File{
-			Content: os.Stdin,
+			Content:         os.Stdin,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
 		},
 	)
 

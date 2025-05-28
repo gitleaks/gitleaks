@@ -76,11 +76,12 @@ func runDetect(cmd *cobra.Command, args []string) {
 	if noGit {
 		findings, err = detector.DetectSource(
 			&sources.Files{
-				Config:         &cfg,
-				FollowSymlinks: detector.FollowSymlinks,
-				MaxFileSize:    detector.MaxTargetMegaBytes * 1_000_000,
-				Path:           sourcePath,
-				Sema:           detector.Sema,
+				Config:          &cfg,
+				FollowSymlinks:  detector.FollowSymlinks,
+				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
+				Path:            sourcePath,
+				Sema:            detector.Sema,
+				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
 		)
 
@@ -90,7 +91,8 @@ func runDetect(cmd *cobra.Command, args []string) {
 	} else if fromPipe {
 		findings, err = detector.DetectSource(
 			&sources.File{
-				Content: os.Stdin,
+				Content:         os.Stdin,
+				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
 		)
 
@@ -116,10 +118,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 		findings, err = detector.DetectSource(
 			&sources.Git{
-				Cmd:    gitCmd,
-				Config: &detector.Config,
-				Remote: sources.NewRemoteInfo(scmPlatform, sourcePath),
-				Sema:   detector.Sema,
+				Cmd:             gitCmd,
+				Config:          &detector.Config,
+				Remote:          sources.NewRemoteInfo(scmPlatform, sourcePath),
+				Sema:            detector.Sema,
+				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
 		)
 
