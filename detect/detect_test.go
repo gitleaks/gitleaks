@@ -295,6 +295,7 @@ func TestDetect(t *testing.T) {
 			fragment: Fragment{
 				Raw:      `const Discord_Public_Key = "e7322523fb86ed64c836a979cf8465fbd436378c653c1db38f9ae87bc62a6fd5"`,
 				FilePath: "tmp.py",
+                FirstFragmentFilePath: true,
 			},
 			expectedFindings: []report.Finding{
 				{
@@ -1437,12 +1438,14 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 		"unix rule - unix path separator": {
 			fragment: Fragment{
 				FilePath: `.m2/settings.xml`,
+                FirstFragmentFilePath: true,
 			},
 			rule:     unixRule,
 			expected: expected,
 		},
 		"unix rule - windows path separator": {
 			fragment: Fragment{
+                FirstFragmentFilePath: true,
 				FilePath:        `.m2/settings.xml`,
 				WindowsFilePath: `.m2\settings.xml`,
 			},
@@ -1477,6 +1480,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 		"windows rule - unix path separator": {
 			fragment: Fragment{
 				FilePath: `.m2/settings.xml`,
+                FirstFragmentFilePath: true,
 			},
 			rule: windowsRule,
 			// This never worked, and continues not to work.
@@ -1487,6 +1491,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 			fragment: Fragment{
 				FilePath:        `.m2/settings.xml`,
 				WindowsFilePath: `.m2\settings.xml`,
+                FirstFragmentFilePath: true,
 			},
 			rule:     windowsRule,
 			expected: expected,

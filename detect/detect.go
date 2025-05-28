@@ -123,6 +123,10 @@ type Fragment struct {
 	// newlineIndices is a list of indices of newlines in the raw content.
 	// This is used to calculate the line location of a finding
 	newlineIndices [][]int
+
+	// FirstFragmentFilePath can be used to prevent duplicate findings
+	// for rules that are meant to be matched once per file
+	FirstFragmentFilePath bool
 }
 
 // NewDetector creates a new detector with the given config
@@ -320,7 +324,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	if r.Path != nil {
 		if r.Regex == nil && len(encodedSegments) == 0 {
 			// Path _only_ rule
-			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
+			if fragment.FirstFragmentFilePath && (r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath))) {
 				finding := report.Finding{
 					RuleID:      r.RuleID,
 					Description: r.Description,
