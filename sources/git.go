@@ -333,7 +333,7 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 				if yieldAsArchive {
 					blob, err := s.Cmd.NewBlobReader(commitSHA, gitdiffFile.NewName)
 					if err != nil {
-						logging.Error().Err(err).Msg("could not open archive blob")
+						logging.Error().Err(err).Msg("could not read archive blob")
 						return nil
 					}
 
@@ -352,7 +352,7 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 
 					// Close the blob reader and log any issues
 					if err := blob.Close(); err != nil {
-						logging.Warn().Err(err).Msg("there were issues closing the blob reader")
+						logging.Debug().Err(err).Msg("blobReader.Close() returned an error")
 					}
 
 					return err

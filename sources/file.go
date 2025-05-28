@@ -53,7 +53,11 @@ func (s *File) Fragments(yield FragmentsFunc) error {
 	format, _, err := archives.Identify(ctx, s.Path, nil)
 	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
-			logging.Warn().Str("path", s.Path).Int("max_archive_depth", s.archiveDepth).Msg("max archive depth exceeded")
+			logging.Warn().Str(
+				"path", s.FullPath(),
+			).Int(
+				"max_archive_depth", s.MaxArchiveDepth,
+			).Msg("skipping archive: exceeds max archive depth")
 			return nil
 		}
 		if extractor, ok := format.(archives.Extractor); ok {
@@ -62,7 +66,7 @@ func (s *File) Fragments(yield FragmentsFunc) error {
 		if decompressor, ok := format.(archives.Decompressor); ok {
 			return s.decompressorFragments(decompressor, s.Content, yield)
 		}
-		logging.Warn().Str("path", s.Path).Msg("skipping unkown archive type")
+		logging.Warn().Str("path", s.FullPath()).Msg("skipping unkown archive type")
 	}
 
 	return s.fileFragments(bufio.NewReader(s.Content), yield)
@@ -75,7 +79,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		case archives.SevenZip, archives.Zip:
 			tmpfile, err := os.CreateTemp("", "gitleaks-archive-")
 			if err != nil {
-				logging.Error().Str("path", s.Path).Msg("could not create tmp file")
+				logging.Error().Str("path", s.FullPath()).Msg("could not create tmp file")
 				return nil
 			}
 			defer func() {
@@ -85,7 +89,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 
 			_, err = io.Copy(tmpfile, reader)
 			if err != nil {
-				logging.Error().Str("path", s.Path).Msg("could not copy archive file")
+				logging.Error().Str("path", s.FullPath()).Msg("could not copy archive file")
 				return nil
 			}
 
@@ -100,13 +104,13 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 
 		innerReader, err := d.Open()
 		if err != nil {
-			logging.Error().Str("path", s.Path).Err(err).Msg("could not open archive inner file")
+			logging.Error().Str("path", s.FullPath()).Err(err).Msg("could not open archive inner file")
 			return nil
 		}
 		path := filepath.Clean(d.NameInArchive)
 
 		if s.Config != nil && shouldSkipPath(s.Config, path) {
-			logging.Debug().Str("path", s.Path).Msg("skipping file: global allowlist")
+			logging.Debug().Str("path", s.FullPath()).Msg("skipping file: global allowlist")
 			return nil
 		}
 
@@ -133,7 +137,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 func (s *File) decompressorFragments(decompressor archives.Decompressor, reader io.Reader, yield FragmentsFunc) error {
 	innerReader, err := decompressor.OpenReader(reader)
 	if err != nil {
-		logging.Error().Str("path", s.Path).Msg("could read compressed file")
+		logging.Error().Str("path", s.FullPath()).Msg("could read compressed file")
 		return nil
 	}
 
@@ -176,7 +180,7 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 				logging.Debug().Str(
 					"mime_type", mimetype.MIME.Value,
 				).Str(
-					"path", s.Path,
+					"path", s.FullPath(),
 				).Msgf(
 					"skipping binary file",
 				)
@@ -207,19 +211,11 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 		}
 
 		if isWindows {
-			fragment.FilePath = filepath.ToSlash(s.Path)
+			fragment.FilePath = filepath.ToSlash(s.FullPath())
 			fragment.SymlinkFile = filepath.ToSlash(s.Symlink)
-			fragment.WindowsFilePath = s.Path
+			fragment.WindowsFilePath = s.FullPath()
 		} else {
-			fragment.FilePath = s.Path
-		}
-
-		if len(s.outerPaths) > 0 {
-			fragment.FilePath = strings.Join(
-				// outerPaths have already been normalized to slash
-				append(s.outerPaths, fragment.FilePath),
-				InnerPathSeparator,
-			)
+			fragment.FilePath = s.FullPath()
 		}
 
 		// log errors but continue since there's content
@@ -236,4 +232,17 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 			return err
 		}
 	}
+}
+
+// FullPath returns the File.Path with any preceeding outer paths
+func (s *File) FullPath() string {
+	if len(s.outerPaths) > 0 {
+		return strings.Join(
+			// outerPaths have already been normalized to slash
+			append(s.outerPaths, s.Path),
+			InnerPathSeparator,
+		)
+	}
+
+	return s.Path
 }

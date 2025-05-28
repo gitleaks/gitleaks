@@ -63,10 +63,10 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 		if err != nil {
 			if os.IsPermission(err) {
 				// This seems to only fail on directories at this stage.
-				logger.Error().Err(errors.New("permission denied")).Msg("skipping directory")
+				logger.Warn().Err(errors.New("permission denied")).Msg("skipping directory")
 				return filepath.SkipDir
 			}
-			logger.Error().Err(err).Msg("skipping directory")
+			logger.Warn().Err(err).Msg("skipping")
 			return nil
 		}
 
@@ -90,7 +90,7 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 			// Too large; nothing to do here.
 			if s.MaxFileSize > 0 && info.Size() > int64(s.MaxFileSize) {
 				logger.Warn().Msgf(
-					"skipping file: too large: max_size=%dMB, size=%dMB",
+					"skipping file: too large max_size=%dMB, size=%dMB",
 					s.MaxFileSize/1_000_000, info.Size()/1_000_000,
 				)
 				return nil
@@ -105,12 +105,11 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 			}
 			realPath, err := filepath.EvalSymlinks(path)
 			if err != nil {
-				logger.Error().Msgf("skipping symlink: could not evaluate: %s", err)
+				logger.Error().Err(err).Msg("skipping symlink: could not evaluate")
 				return nil
 			}
-			realPathFileInfo, _ := os.Stat(realPath)
-			if realPathFileInfo.IsDir() {
-				logger.Debug().Msgf("skipping symlink: target is directory: target=%q", realPath)
+			if realPathFileInfo, _ := os.Stat(realPath); realPathFileInfo.IsDir() {
+				logger.Debug().Str("target", realPath).Msgf("skipping symlink: target is directory")
 				return nil
 			}
 			scanTarget = ScanTarget{
