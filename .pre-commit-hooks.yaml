@@ -1,15 +1,18 @@
 - id: gitleaks
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks dir --redact --verbose
+  entry: gitleaks dir
+  args: [--redact, --verbose]
   language: golang
 - id: gitleaks-docker
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: zricethezav/gitleaks dir --redact --verbose
+  entry: zricethezav/gitleaks dir
+  args: [--redact, --verbose]
   language: docker_image
 - id: gitleaks-system
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks dir --redact --verbose
+  entry: gitleaks dir
+  args: [--redact, --verbose]
   language: system
