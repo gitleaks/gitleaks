@@ -41,9 +41,9 @@ type File struct {
 	// outerPaths is the list of container paths (e.g. archives) that lead to
 	// this file
 	outerPaths []string
-
+	// MaxArchiveDepth limits how deep the sources will explore nested archives
 	MaxArchiveDepth int
-
+	// archiveDepth is the current archive nesting depth
 	archiveDepth int
 }
 
@@ -53,7 +53,7 @@ func (s *File) Fragments(yield FragmentsFunc) error {
 	format, _, err := archives.Identify(ctx, s.Path, nil)
 	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
-			logging.Warn().Str("path", s.Path).Int("max archive depth", s.MaxArchiveDepth).Msg("max archive depth exceeded")
+			logging.Warn().Str("path", s.Path).Int("max_archive_depth", s.archiveDepth).Msg("max archive depth exceeded")
 			return nil
 		}
 		if extractor, ok := format.(archives.Extractor); ok {

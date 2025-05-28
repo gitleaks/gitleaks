@@ -233,7 +233,6 @@ func Config(cmd *cobra.Command) config.Config {
 
 func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Detector {
 	var err error
-
 	// Setup common detector
 	detector := detect.NewDetector(cfg)
 

@@ -51,6 +51,7 @@ type Detector struct {
 	// MaxDecodeDepths limits how many recursive decoding passes are allowed
 	MaxDecodeDepth int
 
+	// MaxArchiveDepth limits how deep the sources will explore nested archives
 	MaxArchiveDepth int
 
 	// files larger than this will be skipped
@@ -196,6 +197,7 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // DetectSource scans a source's fragments for findings
 func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
+	fmt.Println("test")
 	err := source.Fragments(func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
 
