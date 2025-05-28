@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"context"
 	"errors"
 	"io/fs"
 	"os"
@@ -137,7 +138,7 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 }
 
 // Fragments yields fragments from files discovered under the path
-func (s *Files) Fragments(yield FragmentsFunc) error {
+func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
 	err := s.scanTargets(func(scanTarget ScanTarget, err error) error {
@@ -164,7 +165,7 @@ func (s *Files) Fragments(yield FragmentsFunc) error {
 				MaxArchiveDepth: s.MaxArchiveDepth,
 			}
 
-			err = file.Fragments(yield)
+			err = file.Fragments(ctx, yield)
 			// Avoiding a defer in a hot loop
 			_ = f.Close()
 			wg.Done()

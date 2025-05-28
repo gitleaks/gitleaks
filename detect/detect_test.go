@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -1972,6 +1973,7 @@ func TestDetectWithArchives(t *testing.T) {
 			detector.MaxArchiveDepth = 8
 
 			findings, err := detector.DetectSource(
+				context.Background(),
 				&sources.Files{
 					Path:            tt.source,
 					Sema:            detector.Sema,

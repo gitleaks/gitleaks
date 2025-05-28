@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -77,6 +78,7 @@ func runGit(cmd *cobra.Command, args []string) {
 	}
 
 	findings, err = detector.DetectSource(
+		context.Background(),
 		&sources.Git{
 			Cmd:             gitCmd,
 			Config:          &detector.Config,

@@ -48,8 +48,7 @@ type File struct {
 }
 
 // Fragments yields fragments for the this source
-func (s *File) Fragments(yield FragmentsFunc) error {
-	ctx := context.Background()
+func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	format, _, err := archives.Identify(ctx, s.Path, nil)
 	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
@@ -123,7 +122,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 			archiveDepth:    s.archiveDepth + 1,
 		}
 
-		if err := file.Fragments(yield); err != nil {
+		if err := file.Fragments(ctx, yield); err != nil {
 			_ = innerReader.Close()
 			return err
 		}

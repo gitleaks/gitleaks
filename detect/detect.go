@@ -196,8 +196,8 @@ func (d *Detector) DetectString(content string) []report.Finding {
 }
 
 // DetectSource scans the given source and returns a list of findings
-func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
-	err := source.Fragments(func(fragment sources.Fragment, err error) error {
+func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]report.Finding, error) {
+	err := source.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
 
 		if len(fragment.FilePath) > 0 {

@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"context"
 	"io"
 
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -18,7 +19,8 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 		MaxArchiveDepth: d.MaxArchiveDepth,
 	}
 
-	err := file.Fragments(func(fragment sources.Fragment, err error) error {
+	ctx := context.Background()
+	err := file.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 		if err != nil {
 			return err
 		}
@@ -70,7 +72,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 //	    fmt.Println("Scanning completed successfully.")
 //	}
 //
-// Deprecated: Use sources.File.Fragments(yield FragmentsFunc) instead
+// Deprecated: Use sources.File.Fragments(context.Context, FragmentsFunc) instead
 func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.Finding, <-chan error) {
 	findingsCh := make(chan report.Finding, 1)
 	errCh := make(chan error, 1)
@@ -84,7 +86,8 @@ func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.F
 		defer close(findingsCh)
 		defer close(errCh)
 
-		errCh <- file.Fragments(func(fragment sources.Fragment, err error) error {
+		ctx := context.Background()
+		errCh <- file.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 			if err != nil {
 				return err
 			}

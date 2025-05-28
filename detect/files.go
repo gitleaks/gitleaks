@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"context"
 	"errors"
 	"os"
 	"sync"
@@ -71,7 +72,8 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				MaxArchiveDepth: d.MaxArchiveDepth,
 			}
 
-			return file.Fragments(func(fragment sources.Fragment, err error) error {
+			ctx := context.Background()
+			return file.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 				if err != nil {
 					logging.Error().Err(err).Send()
 					return nil

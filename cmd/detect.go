@@ -19,6 +19,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -72,10 +73,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 	var (
 		err      error
 		findings []report.Finding
+		ctx      = context.Background()
 	)
 	if noGit {
 		findings, err = detector.DetectSource(
-			&sources.Files{
+			ctx, &sources.Files{
 				Config:          &cfg,
 				FollowSymlinks:  detector.FollowSymlinks,
 				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
@@ -90,7 +92,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectSource(
-			&sources.File{
+			ctx, &sources.File{
 				Content:         os.Stdin,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
@@ -117,7 +119,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 
 		findings, err = detector.DetectSource(
-			&sources.Git{
+			ctx, &sources.Git{
 				Cmd:             gitCmd,
 				Config:          &detector.Config,
 				Remote:          sources.NewRemoteInfo(scmPlatform, sourcePath),

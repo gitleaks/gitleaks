@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -37,6 +38,7 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 
 	findings, err := detector.DetectSource(
+		context.Background(),
 		&sources.File{
 			Content:         os.Stdin,
 			MaxArchiveDepth: detector.MaxArchiveDepth,

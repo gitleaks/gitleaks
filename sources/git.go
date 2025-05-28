@@ -267,7 +267,7 @@ type CommitInfo struct {
 }
 
 // Fragments yields fragments from a git repo
-func (s *Git) Fragments(yield FragmentsFunc) error {
+func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	defer func() {
 		_ = s.Cmd.Wait()
 	}()
@@ -279,7 +279,6 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 	)
 
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
-	ctx := context.Background()
 	for diffFilesCh != nil || errCh != nil {
 		select {
 		case gitdiffFile, open := <-diffFilesCh:
@@ -341,10 +340,11 @@ func (s *Git) Fragments(yield FragmentsFunc) error {
 						Content:         blob,
 						Path:            gitdiffFile.NewName,
 						MaxArchiveDepth: s.MaxArchiveDepth,
+						Config:          s.Config,
 					}
 
 					// enrich and yield fragments
-					err = file.Fragments(func(fragment Fragment, err error) error {
+					err = file.Fragments(ctx, func(fragment Fragment, err error) error {
 						fragment.CommitSHA = commitSHA
 						fragment.CommitInfo = commitInfo
 						return yield(fragment, err)

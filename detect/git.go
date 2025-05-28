@@ -1,6 +1,8 @@
 package detect
 
 import (
+	"context"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -13,6 +15,7 @@ type RemoteInfo sources.RemoteInfo
 // Deprecated: Use sources.Git and detector.DetectSource instead
 func (d *Detector) DetectGit(cmd *sources.GitCmd, remote *RemoteInfo) ([]report.Finding, error) {
 	return d.DetectSource(
+		context.Background(),
 		&sources.Git{
 			Cmd:             cmd,
 			Config:          &d.Config,
