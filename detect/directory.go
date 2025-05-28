@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/h2non/filetype"
 
@@ -18,118 +17,173 @@ import (
 
 const maxPeekSize = 25 * 1_000 // 10kb
 
+// DetectFiles schedules each ScanTarget—file or archive—for concurrent scanning.
 func (d *Detector) DetectFiles(paths <-chan sources.ScanTarget) ([]report.Finding, error) {
 	for pa := range paths {
 		d.Sema.Go(func() error {
-			logger := logging.With().Str("path", pa.Path).Logger()
-			logger.Trace().Msg("Scanning path")
-
-			f, err := os.Open(pa.Path)
-			if err != nil {
-				if os.IsPermission(err) {
-					logger.Warn().Msg("Skipping file: permission denied")
-					return nil
-				}
-				return err
-			}
-			defer func() {
-				_ = f.Close()
-			}()
-
-			// Get file size
-			fileInfo, err := f.Stat()
-			if err != nil {
-				return err
-			}
-			fileSize := fileInfo.Size()
-			if d.MaxTargetMegaBytes > 0 {
-				rawLength := fileSize / 1000000
-				if rawLength > int64(d.MaxTargetMegaBytes) {
-					logger.Debug().
-						Int64("size", rawLength).
-						Msg("Skipping file: exceeds --max-target-megabytes")
-					return nil
-				}
-			}
-
-			var (
-				// Buffer to hold file chunks
-				reader     = bufio.NewReaderSize(f, chunkSize)
-				buf        = make([]byte, chunkSize)
-				totalLines = 0
-			)
-			for {
-				n, err := reader.Read(buf)
-
-				// "Callers should always process the n > 0 bytes returned before considering the error err."
-				// https://pkg.go.dev/io#Reader
-				if n > 0 {
-					// Only check the filetype at the start of file.
-					if totalLines == 0 {
-						// TODO: could other optimizations be introduced here?
-						if mimetype, err := filetype.Match(buf[:n]); err != nil {
-							return nil
-						} else if mimetype.MIME.Type == "application" {
-							return nil // skip binary files
-						}
-					}
-
-					// Try to split chunks across large areas of whitespace, if possible.
-					peekBuf := bytes.NewBuffer(buf[:n])
-					if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
-						return readErr
-					}
-
-					// Count the number of newlines in this chunk
-					chunk := peekBuf.String()
-					linesInChunk := strings.Count(chunk, "\n")
-					totalLines += linesInChunk
-					fragment := Fragment{
-						Raw:   chunk,
-						Bytes: peekBuf.Bytes(),
-					}
-					if pa.Symlink != "" {
-						fragment.SymlinkFile = pa.Symlink
-					}
-
-					if isWindows {
-						fragment.FilePath = filepath.ToSlash(pa.Path)
-						fragment.SymlinkFile = filepath.ToSlash(fragment.SymlinkFile)
-						fragment.WindowsFilePath = pa.Path
-					} else {
-						fragment.FilePath = pa.Path
-					}
-
-					timer := time.AfterFunc(SlowWarningThreshold, func() {
-						logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
-					})
-					for _, finding := range d.Detect(fragment) {
-						// need to add 1 since line counting starts at 1
-						finding.StartLine += (totalLines - linesInChunk) + 1
-						finding.EndLine += (totalLines - linesInChunk) + 1
-						d.AddFinding(finding)
-					}
-					if timer != nil {
-						timer.Stop()
-						timer = nil
-					}
-				}
-
-				if err != nil {
-					if err == io.EOF {
-						return nil
-					}
-					return err
-				}
-			}
+			return d.detectScanTarget(pa)
 		})
 	}
 
 	if err := d.Sema.Wait(); err != nil {
 		return d.findings, err
 	}
-
 	return d.findings, nil
+}
+
+// detectScanTarget handles one ScanTarget: it unpacks archives recursively
+// or scans a regular file, always using VirtualPath for reporting.
+func (d *Detector) detectScanTarget(scanTarget sources.ScanTarget) error {
+	// Choose display path: either VirtualPath (archive chain) or on-disk path.
+	display := scanTarget.Path
+	if scanTarget.VirtualPath != "" {
+		display = scanTarget.VirtualPath
+	}
+	logger := logging.With().Str("path", display).Logger()
+	logger.Trace().Msg("Scanning path")
+
+	if isArchive(scanTarget.Path) {
+		logger.Debug().Msg("Found archive")
+
+		targets, tmpArchiveDir, err := extractArchive(scanTarget.Path)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to extract archive")
+			return nil
+		}
+		// Schedule each extracted file for its own scan, carrying forward VirtualPath.
+		for _, t := range targets {
+			t := t
+			// compute path INSIDE this archive
+			rel, rerr := filepath.Rel(tmpArchiveDir, t.Path)
+			if rerr != nil {
+				rel = filepath.Base(t.Path)
+			}
+			rel = filepath.ToSlash(rel)
+
+			// prepend existing chain or archive base name
+			if scanTarget.VirtualPath != "" {
+				t.VirtualPath = scanTarget.VirtualPath + "/" + rel
+			} else {
+				t.VirtualPath = filepath.Base(scanTarget.Path) + "/" + rel
+			}
+
+			d.Sema.Go(func() error {
+				return d.detectScanTarget(t)
+			})
+		}
+
+		return nil
+	}
+
+	// --- Regular file branch ---
+	f, err := os.Open(scanTarget.Path)
+	if err != nil {
+		if os.IsPermission(err) {
+			logger.Warn().Msg("Skipping file: permission denied")
+			return nil
+		}
+		return err
+	}
+	defer f.Close()
+
+	// Get file size
+	fileInfo, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	fileSize := fileInfo.Size()
+	if d.MaxTargetMegaBytes > 0 {
+		rawLength := fileSize / 1000000
+		if rawLength > int64(d.MaxTargetMegaBytes) {
+			logger.Debug().
+				Int64("size", rawLength).
+				Msg("Skipping file: exceeds --max-target-megabytes")
+			return nil
+		}
+	}
+
+	// Skip binary files by sniffing header
+	head := make([]byte, 261)
+	if n, _ := io.ReadFull(f, head); n > 0 {
+		if kind, _ := filetype.Match(head[:n]); kind != filetype.Unknown {
+			logger.Debug().Str("kind", kind.Extension).Msg("Skipping binary")
+			return nil
+		}
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(f)
+	buf := make([]byte, chunkSize)
+	totalLines := 0
+
+	for {
+		n, err := reader.Read(buf)
+		if n > 0 {
+			// Only check the filetype at the start of file.
+			if totalLines == 0 {
+				// TODO: could other optimizations be introduced here?
+				if mimetype, err := filetype.Match(buf[:n]); err != nil {
+					return nil
+				} else if mimetype.MIME.Type == "application" {
+					return nil // skip binary files
+				}
+			}
+
+			peekBuf := bytes.NewBuffer(buf[:n])
+			if readErr := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); readErr != nil {
+				return readErr
+			}
+
+			chunk := peekBuf.String()
+			linesInChunk := strings.Count(chunk, "\n")
+
+			// build fragment and set FilePath to our display chain
+			fragment := Fragment{
+				Raw:   chunk,
+				Bytes: peekBuf.Bytes(),
+			}
+			fragment.FilePath = display
+
+			// if this file was itself a symlink
+			if scanTarget.Symlink != "" {
+				fragment.SymlinkFile = scanTarget.Symlink
+			}
+
+			if isWindows {
+				fragment.FilePath = filepath.ToSlash(scanTarget.Path)
+				fragment.SymlinkFile = filepath.ToSlash(fragment.SymlinkFile)
+				fragment.WindowsFilePath = scanTarget.Path
+			}
+
+			// run detection and adjust line numbers
+			for _, finding := range d.Detect(fragment) {
+				finding.StartLine += totalLines + 1
+				finding.EndLine += totalLines + 1
+
+				// We have to augment the finding if the source is coming
+				// from a archive committed in Git
+				if scanTarget.Source == "github-archive" {
+					finding.Author = scanTarget.GitInfo.Author
+					finding.Commit = scanTarget.GitInfo.Commit
+					finding.Email = scanTarget.GitInfo.Email
+					finding.Date = scanTarget.GitInfo.Date
+					finding.Message = scanTarget.GitInfo.Message
+				}
+
+				d.AddFinding(finding)
+			}
+			totalLines += linesInChunk
+		}
+
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+	}
 }
 
 // readUntilSafeBoundary consumes |f| until it finds two consecutive `\n` characters, up to |maxPeekSize|.
