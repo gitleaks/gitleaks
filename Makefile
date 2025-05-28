@@ -12,13 +12,13 @@ test-cover:
 format:
 	go fmt ./...
 
-test: format
+test: config/gitleaks.toml format
 	go test -v ./... --race $(PKG)
 
 failfast: format
 	go test -failfast ./...
 
-build: format
+build: config/gitleaks.toml format
 	go mod tidy
 	go build $(LDFLAGS)
 
@@ -29,3 +29,6 @@ clean:
 
 profile: build
 	./scripts/profile.sh './gitleaks' '.'
+
+config/gitleaks.toml: $(wildcard cmd/generate/config/**/*)
+	go generate ./...
