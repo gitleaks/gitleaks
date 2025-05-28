@@ -12,7 +12,7 @@ import (
 
 // DetectFiles runs detections against a chanel of scan targets
 //
-// Deprecated: Use sources.Files and Detector.DetectSource() instead
+// Deprecated: Use sources.Files and Detector.DetectSource instead
 func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.Finding, error) {
 	var wg sync.WaitGroup
 
@@ -55,7 +55,7 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				rawLength := info.Size() / 1_000_000
 				if rawLength > int64(d.MaxTargetMegaBytes) {
 					logger.Warn().Msgf(
-						"skipping file: too large: max_size=%dMB, size=%dMB",
+						"skipping file: too large max_size=%dMB, size=%dMB",
 						d.MaxTargetMegaBytes, rawLength,
 					)
 					return nil
@@ -64,10 +64,11 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 
 			// Convert this to a file source
 			file := sources.File{
-				Content: f,
-				Path:    scanTarget.Path,
-				Symlink: scanTarget.Symlink,
-				Config:  &d.Config,
+				Content:         f,
+				Path:            scanTarget.Path,
+				Symlink:         scanTarget.Symlink,
+				Config:          &d.Config,
+				MaxArchiveDepth: d.MaxArchiveDepth,
 			}
 
 			return file.Fragments(func(fragment sources.Fragment, err error) error {

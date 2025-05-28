@@ -106,7 +106,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		path := filepath.Clean(d.NameInArchive)
 
 		if s.Config != nil && shouldSkipPath(s.Config, path) {
-			logging.Debug().Str("path", s.Path).Msg("skipping file: global allowlist item")
+			logging.Debug().Str("path", s.Path).Msg("skipping file: global allowlist")
 			return nil
 		}
 

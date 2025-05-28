@@ -9,7 +9,7 @@ import (
 
 // DetectReader accepts an io.Reader and a buffer size for the reader in KB
 //
-// Deprecated: Use sources.File with no path defined and Detector.DetectSource() instead
+// Deprecated: Use sources.File with no path defined and Detector.DetectSource instead
 func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, error) {
 	var findings []report.Finding
 	file := sources.File{

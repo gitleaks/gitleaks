@@ -195,7 +195,7 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
-// DetectSource scans a source's fragments for findings
+// DetectSource scans the given source and returns a list of findings
 func (d *Detector) DetectSource(source sources.Source) ([]report.Finding, error) {
 	err := source.Fragments(func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
@@ -521,7 +521,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 
 		// check if the result matches any of the global allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
-			event.Msg("skipping finding: global allowlist item")
+			event.Msg("skipping finding: global allowlist")
 			continue
 		}
 

@@ -122,14 +122,14 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 		// handle dir cases (mainly just see if it should be skipped
 		if info.IsDir() {
 			if shouldSkipPath(s.Config, path) {
-				logger.Debug().Msg("skipping directory: global allowlist item")
+				logger.Debug().Msg("skipping directory: global allowlist")
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
 		if shouldSkipPath(s.Config, path) {
-			logger.Debug().Msg("skipping file: global allowlist item")
+			logger.Debug().Msg("skipping file: global allowlist")
 			return nil
 		}
 
