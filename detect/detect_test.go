@@ -853,6 +853,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "db8789716fc664dbce0ed2d492570e92abf717a5:main.go.zst:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/db8789716fc664dbce0ed2d492570e92abf717a5/main.go.zst#L20",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -873,6 +874,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar!files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -893,6 +895,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar!files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -913,6 +916,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.zip!files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -933,6 +937,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.zip!files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -953,6 +958,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.7z!files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -973,6 +979,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.7z!files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -993,6 +1000,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar.zst!files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1013,6 +1021,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar.zst!files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1033,6 +1042,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1053,6 +1063,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1073,6 +1084,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files/main.go.xz:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1093,6 +1105,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files/main.go.zst:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1113,6 +1126,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files/main.go.gz:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1133,6 +1147,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar.xz!files/api.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 				{
 					RuleID:      "aws-access-key",
@@ -1153,6 +1168,7 @@ func TestFromGit(t *testing.T) {
 					Tags:        []string{"key", "AWS"},
 					Entropy:     3.0841837,
 					Fingerprint: "07d2bd71800f1abf0421abe9bc4a83a6fdca1f68:nested.tar.gz!archives/files.tar.xz!files/main.go:aws-access-key:20",
+					Link:        "https://github.com/gitleaks/test/blob/07d2bd71800f1abf0421abe9bc4a83a6fdca1f68/nested.tar.gz",
 				},
 			},
 		},

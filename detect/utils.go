@@ -28,14 +28,16 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 	}
 
 	// Clean the path.
-	var (
-		filePath = linkCleaner.Replace(finding.File)
-		ext      = strings.ToLower(filepath.Ext(filePath))
-	)
+	filePath, _, hasInnerPath := strings.Cut(finding.File, sources.InnerPathSeparator)
+	filePath = linkCleaner.Replace(filePath)
 
 	switch remote.Platform {
 	case scm.GitHubPlatform:
 		link := fmt.Sprintf("%s/blob/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		ext := strings.ToLower(filepath.Ext(filePath))
 		if ext == ".ipynb" || ext == ".md" {
 			link += "?plain=1"
 		}
@@ -48,6 +50,9 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 		return link
 	case scm.GitLabPlatform:
 		link := fmt.Sprintf("%s/blob/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
 		if finding.StartLine != 0 {
 			link += fmt.Sprintf("#L%d", finding.StartLine)
 		}
@@ -58,6 +63,9 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 	case scm.AzureDevOpsPlatform:
 		link := fmt.Sprintf("%s/commit/%s?path=/%s", remote.Url, finding.Commit, filePath)
 		// Add line information if applicable
+		if hasInnerPath {
+			return link
+		}
 		if finding.StartLine != 0 {
 			link += fmt.Sprintf("&line=%d", finding.StartLine)
 		}
