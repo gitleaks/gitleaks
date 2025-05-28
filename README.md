@@ -24,7 +24,7 @@
 [gitleaks-playground]: https://gitleaks.io/playground
 
 
-[![Github Action Test][badge-build]][build]
+[![GitHub Action Test][badge-build]][build]
 [![Docker Hub][dockerhub-badge]][dockerhub]
 [![Gitleaks Playground][gitleaks-playground-badge]][gitleaks-playground]
 [![Gitleaks Action][gitleaks-badge]][gitleaks-action]
@@ -118,7 +118,7 @@ jobs:
          - id: gitleaks
    ```
 
-   for a [native execution of GitLeaks](https://github.com/gitleaks/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
+   for a [native execution of gitleaks](https://github.com/gitleaks/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing gitleaks using the [official Docker images](#docker)
 
 3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
 4. Install with `pre-commit install`
@@ -167,8 +167,8 @@ Flags:
   -h, --help                          help for gitleaks
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
-      --max-decode-depth int          allow recursive decoding upto this depth (default "0", no decoding is done)
-      --max-archive-depth int         allow scanning into nested archives up to this depth (default "0")
+      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
+      --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
       --max-target-megabytes int      files larger than this will be skipped
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
@@ -191,6 +191,7 @@ If you find v8.19.0 broke an existing command (`detect`/`protect`), please open 
 There are three scanning modes: `git`, `dir`, and `stdin`.
 
 #### Git
+
 The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
 You can configure the behavior of `git log -p` with the `log-opts` option.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
@@ -198,10 +199,12 @@ command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir
+
 The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
 If there is no target specified as a positional argument, then gitleaks will scan the current working directory.
 
 #### Stdin
+
 You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
 
 ### Creating a baseline
@@ -371,7 +374,7 @@ id = "gitlab-pat"
 
 
 # ⚠️ In v8.25.0 `[allowlist]` was replaced with `[[allowlists]]`.
-# 
+#
 # Global allowlists have a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
 # secrets will be detected for said commit. The same logic applies for regexes and paths.
@@ -452,8 +455,47 @@ ways:
 Currently supported encodings:
 
 - **percent** - Any printable ASCII percent encoded values
-- **hex** - Any printable ASCII hex encoded values >= 32 characters 
-- **base64** - Any printable ASCII base64 encoded values >= 16 characters 
+- **hex** - Any printable ASCII hex encoded values >= 32 characters
+- **base64** - Any printable ASCII base64 encoded values >= 16 characters
+
+#### Archive Scanning
+
+Sometimes secrets are packaged within archive files like zip files or tarballs,
+making them difficult to discover. Now you can tell gitleaks to automatically
+extract and scan the contents of archives. The flag `--max-archive-depth`
+enables this feature for both `dir` and `git` scan types. The default value of
+"0" means this feature is disabled by default.
+
+Recursive scanning is supported since archives can also contain other archives.
+The `--max-archive-depth` flag sets the recursion limit. Recursion stops when
+there are no new archives to extract, so setting a very high max depth just
+sets the potential to go that deep. It will only go as deep as it needs to.
+
+The findings for secrets located within an archive will include the path to the
+file inside the archive. Inner paths are separated with `!`.
+
+Example finding (shortened for brevity):
+
+```
+Finding:     DB_PASSWORD=8ae31cacf141669ddfb5da
+...
+File:        testdata/archives/nested.tar.gz!archives/files.tar!files/.env.prod
+Line:        4
+Commit:      6e6ee6596d337bb656496425fb98644eb62b4a82
+...
+Fingerprint: 6e6ee6596d337bb656496425fb98644eb62b4a82:testdata/archives/nested.tar.gz!archives/files.tar!files/.env.prod:generic-api-key:4
+Link:        https://github.com/leaktk/gitleaks/blob/6e6ee6596d337bb656496425fb98644eb62b4a82/testdata/archives/nested.tar.gz
+```
+
+This means a secret was detected on line 4 of `files/.env.prod.` which is in
+`archives/files.tar` which is in `testdata/archives/nested.tar.gz`.
+
+Currently supported formats:
+
+The [compression](https://github.com/mholt/archives?tab=readme-ov-file#supported-compression-formats)
+and [archive](https://github.com/mholt/archives?tab=readme-ov-file#supported-archive-formats)
+formats supported by mholt's [archives package](https://github.com/mholt/archives)
+are supported.
 
 #### Reporting
 
