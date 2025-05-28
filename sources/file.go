@@ -65,7 +65,7 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		if decompressor, ok := format.(archives.Decompressor); ok {
 			return s.decompressorFragments(decompressor, s.Content, yield)
 		}
-		logging.Warn().Str("path", s.FullPath()).Msg("skipping unkown archive type")
+		logging.Warn().Str("path", s.FullPath()).Msg("skipping unknown archive type")
 	}
 
 	return s.fileFragments(bufio.NewReader(s.Content), yield)
@@ -192,7 +192,7 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 		if err := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); err != nil {
 			return yield(
 				Fragment{},
-				fmt.Errorf("could not read file: could not read until safe boundry: %w", err),
+				fmt.Errorf("could not read file: could not read until safe boundary: %w", err),
 			)
 		}
 
@@ -233,7 +233,7 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 	}
 }
 
-// FullPath returns the File.Path with any preceeding outer paths
+// FullPath returns the File.Path with any preceding outer paths
 func (s *File) FullPath() string {
 	if len(s.outerPaths) > 0 {
 		return strings.Join(

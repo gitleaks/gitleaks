@@ -244,7 +244,6 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		// Stop the timer if it was created
 		if timer != nil {
 			timer.Stop()
-			timer = nil
 		}
 
 		return nil
@@ -374,7 +373,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 					Description: r.Description,
 					File:        fragment.FilePath,
 					SymlinkFile: fragment.SymlinkFile,
-					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
+					Match:       "file detected: " + fragment.FilePath,
 					Tags:        r.Tags,
 				}
 				if fragment.CommitInfo != nil {

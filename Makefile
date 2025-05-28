@@ -22,6 +22,9 @@ build: config/gitleaks.toml format
 	go mod tidy
 	go build $(LDFLAGS)
 
+lint:
+	golangci-lint run
+
 clean:
 	rm -rf profile
 	find . -type f -name '*.got.*' -delete

@@ -167,7 +167,7 @@ func (c *GitCmd) ErrCh() <-chan error {
 // stdin or copying from stdout or stderr to complete.
 //
 // Wait also closes underlying stdout and stderr.
-func (c *GitCmd) Wait() (err error) {
+func (c *GitCmd) Wait() error {
 	return c.cmd.Wait()
 }
 

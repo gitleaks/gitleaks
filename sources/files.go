@@ -98,7 +98,7 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 			}
 		}
 
-		// set the inital scan target values
+		// set the initial scan target values
 		if d.Type() == fs.ModeSymlink {
 			if !s.FollowSymlinks {
 				logger.Debug().Msg("skipping symlink: follow symlinks disabled")

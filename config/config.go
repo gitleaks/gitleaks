@@ -379,9 +379,7 @@ func (c *Config) extend(extensionConfig Config) {
 			}
 			baseRule.Tags = append(baseRule.Tags, currentRule.Tags...)
 			baseRule.Keywords = append(baseRule.Keywords, currentRule.Keywords...)
-			for _, a := range currentRule.Allowlists {
-				baseRule.Allowlists = append(baseRule.Allowlists, a)
-			}
+			baseRule.Allowlists = append(baseRule.Allowlists, currentRule.Allowlists...)
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
 				c.Keywords[k] = struct{}{}
@@ -391,9 +389,7 @@ func (c *Config) extend(extensionConfig Config) {
 	}
 
 	// append allowlists, not attempting to merge
-	for _, a := range extensionConfig.Allowlists {
-		c.Allowlists = append(c.Allowlists, a)
-	}
+	c.Allowlists = append(c.Allowlists, extensionConfig.Allowlists...)
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
