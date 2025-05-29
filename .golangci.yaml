@@ -11,6 +11,7 @@ linters:
     - dupl
     - err113
     - errcheck
+    - exhaustive
     - exhaustruct
     - exptostd
     - forbidigo
