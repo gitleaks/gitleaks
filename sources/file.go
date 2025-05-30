@@ -158,10 +158,14 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 
 	totalLines := 0
 	for {
+		fragment := Fragment{
+			FilePath: s.FullPath(),
+		}
+
 		n, err := reader.Read(s.Buffer)
 		if n == 0 {
 			if err != nil && err != io.EOF {
-				return yield(Fragment{}, fmt.Errorf("could not read file: %w", err))
+				return yield(fragment, fmt.Errorf("could not read file: %w", err))
 			}
 
 			return nil
@@ -172,7 +176,7 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 			// TODO: could other optimizations be introduced here?
 			if mimetype, err := filetype.Match(s.Buffer[:n]); err != nil {
 				return yield(
-					Fragment{},
+					fragment,
 					fmt.Errorf("could not read file: could not determine type: %w", err),
 				)
 			} else if mimetype.MIME.Type == "application" {
@@ -191,16 +195,14 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 		peekBuf := bytes.NewBuffer(s.Buffer[:n])
 		if err := readUntilSafeBoundary(reader, n, maxPeekSize, peekBuf); err != nil {
 			return yield(
-				Fragment{},
+				fragment,
 				fmt.Errorf("could not read file: could not read until safe boundary: %w", err),
 			)
 		}
 
-		fragment := Fragment{
-			Raw:       peekBuf.String(),
-			Bytes:     peekBuf.Bytes(),
-			StartLine: totalLines + 1,
-		}
+		fragment.Raw = peekBuf.String()
+		fragment.Bytes = peekBuf.Bytes()
+		fragment.StartLine = totalLines + 1
 
 		// Count the number of newlines in this chunk
 		totalLines += strings.Count(fragment.Raw, "\n")
@@ -210,11 +212,9 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 		}
 
 		if isWindows {
-			fragment.FilePath = filepath.ToSlash(s.FullPath())
+			fragment.FilePath = filepath.ToSlash(fragment.FilePath)
 			fragment.SymlinkFile = filepath.ToSlash(s.Symlink)
 			fragment.WindowsFilePath = s.FullPath()
-		} else {
-			fragment.FilePath = s.FullPath()
 		}
 
 		// log errors but continue since there's content

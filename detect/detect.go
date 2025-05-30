@@ -217,13 +217,13 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// don't stop on error, just log it. If there is any content in the
-			// fragment, go ahead and scan it
+			// Log the error and move on to the next fragment
 			logger.Error().Err(err).Send()
+			return nil
 		}
 
 		// both the fragment's content and path should be empty for it to be
-		// considered empty
+		// considered empty at this point because of path based matches
 		if len(fragment.Raw) == 0 && len(fragment.FilePath) == 0 {
 			logger.Trace().Msg("skipping empty fragment")
 			return nil
