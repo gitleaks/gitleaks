@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -64,12 +65,12 @@ func (r *Rule) Validate() error {
 		} else if r.Description != "" {
 			context = ", description: " + r.Description
 		}
-		return fmt.Errorf("rule |id| is missing or empty" + context)
+		return errors.New("rule |id| is missing or empty" + context)
 	}
 
 	// Ensure the rule actually matches something.
 	if r.Regex == nil && r.Path == nil {
-		return fmt.Errorf("%s: both |regex| and |path| are empty, this rule will have no effect", r.RuleID)
+		return errors.New(r.RuleID + ": both |regex| and |path| are empty, this rule will have no effect")
 	}
 
 	// Ensure |secretGroup| works.

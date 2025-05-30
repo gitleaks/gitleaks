@@ -2,9 +2,8 @@ package main
 
 import (
 	"os"
+	"slices"
 	"text/template"
-
-	"golang.org/x/exp/slices"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"

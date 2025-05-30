@@ -1,6 +1,7 @@
 package report
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -17,7 +18,7 @@ var _ Reporter = (*TemplateReporter)(nil)
 
 func NewTemplateReporter(templatePath string) (*TemplateReporter, error) {
 	if templatePath == "" {
-		return nil, fmt.Errorf("template path cannot be empty")
+		return nil, errors.New("template path cannot be empty")
 	}
 
 	file, err := os.ReadFile(templatePath)

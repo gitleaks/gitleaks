@@ -1,0 +1,21 @@
+title = "gitleaks config"
+# https://learnxinyminutes.com/docs/toml/ for toml reference
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+tags = ["key", "AWS"]
+
+# Here to confirm that allowlists work in archives
+[[rules]]
+id = 'password'
+description = "Find the DB password in .env.prod"
+path = '''\.env\.prod$'''
+regex = '''(?i)password=([^\s]+)'''
+
+# Now ignore it to confirm allowlists work
+[[allowlists]]
+paths = [
+  '''\.env\.prod$''',
+]

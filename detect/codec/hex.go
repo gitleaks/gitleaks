@@ -49,7 +49,7 @@ func decodeHex(encodedValue string) string {
 		if n1|n2 == '\xff' {
 			return ""
 		}
-		b := byte(n1<<4 | n2)
+		b := n1<<4 | n2
 		if !printableASCII[b] {
 			return ""
 		}

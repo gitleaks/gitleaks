@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 func init() {
@@ -35,10 +37,17 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 	// parse flag(s)
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 
-	findings, err := detector.DetectReader(os.Stdin, 10)
+	findings, err := detector.DetectSource(
+		context.Background(),
+		&sources.File{
+			Content:         os.Stdin,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
+		},
+	)
+
 	if err != nil {
-		// log fatal to exit, no need to continue since a report
-		// will not be generated when scanning from a pipe...for now
+		// log fatal to exit, no need to continue since a report will not be
+		// generated when scanning from a pipe...for now
 		logging.Fatal().Err(err).Msg("failed scan input from stdin")
 	}
 

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -93,17 +93,17 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName:   "invalid/rule_missing_id",
 			cfg:       Config{},
-			wantError: fmt.Errorf("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+			wantError: errors.New("rule |id| is missing or empty, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
 		},
 		{
 			cfgName:   "invalid/rule_no_regex_or_path",
 			cfg:       Config{},
-			wantError: fmt.Errorf("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
+			wantError: errors.New("discord-api-key: both |regex| and |path| are empty, this rule will have no effect"),
 		},
 		{
 			cfgName:   "invalid/rule_bad_entropy_group",
 			cfg:       Config{},
-			wantError: fmt.Errorf("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
+			wantError: errors.New("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
 	}
 	for _, tt := range tests {
@@ -206,22 +206,22 @@ func TestTranslateAllowlists(t *testing.T) {
 		{
 			cfgName:   "invalid/allowlist_global_empty",
 			cfg:       Config{},
-			wantError: fmt.Errorf("[[allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+			wantError: errors.New("[[allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
 		},
 		{
 			cfgName:   "invalid/allowlist_global_old_and_new",
 			cfg:       Config{},
-			wantError: fmt.Errorf("[allowlist] is deprecated, it cannot be used alongside [[allowlists]]"),
+			wantError: errors.New("[allowlist] is deprecated, it cannot be used alongside [[allowlists]]"),
 		},
 		{
 			cfgName:   "invalid/allowlist_global_target_rule_id",
 			cfg:       Config{},
-			wantError: fmt.Errorf("[[allowlists]] target rule ID 'github-pat' does not exist"),
+			wantError: errors.New("[[allowlists]] target rule ID 'github-pat' does not exist"),
 		},
 		{
 			cfgName:   "invalid/allowlist_global_regextarget",
 			cfg:       Config{},
-			wantError: fmt.Errorf("[[allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+			wantError: errors.New("[[allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
 		},
 
 		// Rule
@@ -302,17 +302,17 @@ func TestTranslateAllowlists(t *testing.T) {
 		{
 			cfgName:   "invalid/allowlist_rule_empty",
 			cfg:       Config{},
-			wantError: fmt.Errorf("example: [[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
+			wantError: errors.New("example: [[rules.allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"),
 		},
 		{
 			cfgName:   "invalid/allowlist_rule_old_and_new",
 			cfg:       Config{},
-			wantError: fmt.Errorf("example: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]"),
+			wantError: errors.New("example: [rules.allowlist] is deprecated, it cannot be used alongside [[rules.allowlist]]"),
 		},
 		{
 			cfgName:   "invalid/allowlist_rule_regextarget",
 			cfg:       Config{},
-			wantError: fmt.Errorf("example: [[rules.allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+			wantError: errors.New("example: [[rules.allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
 		},
 	}
 

@@ -1,4 +1,4 @@
-package detect
+package sources
 
 import (
 	"bufio"
@@ -65,8 +65,8 @@ func Test_readUntilSafeBoundary(t *testing.T) {
 			require.NoError(t, err)
 
 			// Assert
-			t.Logf(peekBuf.String())
-			require.Equal(t, c.expected, string(peekBuf.Bytes()))
+			t.Log(peekBuf.String())
+			require.Equal(t, c.expected, peekBuf.String())
 		})
 	}
 }

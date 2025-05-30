@@ -13,7 +13,7 @@ func decodePercent(encodedValue string) string {
 			n2 := hexMap[encodedValue[encIndex+2]]
 			// Make sure they're hex characters
 			if n1|n2 != '\xff' {
-				b := byte(n1<<4 | n2)
+				b := n1<<4 | n2
 				if !printableASCII[b] {
 					return ""
 				}
