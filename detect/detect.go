@@ -90,7 +90,8 @@ type Detector struct {
 	baselinePath string
 
 	// gitleaksIgnore
-	gitleaksIgnore map[string]struct{}
+	gitleaksIgnore     map[string]struct{}
+	gitleaksGlobIgnore []globIgnoreEntry
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
@@ -128,13 +129,14 @@ type Fragment struct {
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(context.Background(), 40),
+		commitMap:          make(map[string]bool),
+		gitleaksIgnore:     make(map[string]struct{}),
+		gitleaksGlobIgnore: make([]globIgnoreEntry, 0),
+		findingMutex:       &sync.Mutex{},
+		findings:           make([]report.Finding, 0),
+		Config:             cfg,
+		prefilter:          *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:               semgroup.NewGroup(context.Background(), 40),
 	}
 }
 
@@ -194,7 +196,47 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		default:
 			logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
 		}
-		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+
+		// If glob, add entry
+		if strings.Contains(line, "*") {
+			entry := globIgnoreEntry{}
+			if len(s) == 3 {
+				// Global fingerprint.
+				// `file:rule-id:start-line`
+				entry.Commit = "*"
+				entry.File = s[0]
+				entry.Rule = s[1]
+				entry.Line = s[2]
+
+			} else {
+				// Commit fingerprint.
+				// `commit:file:rule-id:start-line`
+				entry.Commit = s[0]
+				entry.File = s[1]
+				entry.Rule = s[2]
+				entry.Line = s[3]
+			}
+
+			// Determine which fields are globs
+			if entry.Commit == "*" {
+				entry.CommitIsGlob = true
+			}
+			if entry.File == "*" {
+				entry.FileIsGlob = true
+			}
+			if entry.Rule == "*" {
+				entry.RuleIsGlob = true
+			}
+			if entry.Line == "*" {
+				entry.LineIsGlob = true
+			}
+
+			d.gitleaksGlobIgnore = append(d.gitleaksGlobIgnore, entry)
+		} else {
+			// Non-glob ignore match
+			d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+		}
+
 	}
 	return nil
 }
@@ -473,6 +515,33 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	return findings
 }
 
+// isIgnored checks the ignored list for a global match, then checks the list for a commit-based match
+func (d *Detector) isIgnored(commit string, file string, ruleId string, startLine int) (ignored bool, reason string) {
+
+	// exact global
+	globalFingerprint := fmt.Sprintf("%s:%s:%d", file, ruleId, startLine)
+	if _, globalIgnored := d.gitleaksIgnore[globalFingerprint]; globalIgnored {
+		return true, "global"
+	}
+
+	// exact commit
+	if commit != "" {
+		commitFingerprint := fmt.Sprintf("%s:%s", commit, globalFingerprint)
+		if _, commitIgnored := d.gitleaksIgnore[commitFingerprint]; commitIgnored {
+			return true, "commit"
+		}
+	}
+
+	// glob match
+	for _, glob := range d.gitleaksGlobIgnore {
+		if glob.Matches(commit, file, ruleId, startLine) {
+			return true, "glob"
+		}
+	}
+
+	return false, ""
+}
+
 // AddFinding synchronously adds a finding to the findings slice
 func (d *Detector) AddFinding(finding report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
@@ -484,19 +553,17 @@ func (d *Detector) AddFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		logger.Debug().
-			Str("fingerprint", globalFingerprint).
-			Msg("skipping finding: global fingerprint")
-		return
-	} else if finding.Commit != "" {
-		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logger.Debug().
-				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint")
-			return
+	ignored, reason := d.isIgnored(finding.Commit, finding.File, finding.RuleID, finding.StartLine)
+	if ignored {
+		evt := logger.Debug().Str("fingerprint", globalFingerprint)
+		if reason == "global" {
+			evt.Msg("skipping finding: global fingerprint")
+		} else if reason == "commit" {
+			evt.Msgf("skipping finding: fingerprint")
+		} else {
+			evt.Msgf("skipping finding: other reason")
 		}
+		return
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
