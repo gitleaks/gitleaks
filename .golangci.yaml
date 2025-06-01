@@ -1,0 +1,86 @@
+version: '2'
+linters:
+  default: none
+  # It might be worth going through some of the disabled linters and enabling
+  # them and fixing the items they call out e.g.: cyclop, prealloc,
+  # paralleltest, prealloc, errcheck, dupl, unused, testifylint, gosec,
+  # gocritic, perfsprint, exptostd, intrange, perfsprint (maybe others?)
+  disable:
+    - cyclop
+    - depguard
+    - dupl
+    - err113
+    - errcheck
+    - exhaustive
+    - exhaustruct
+    - exptostd
+    - forbidigo
+    - funcorder
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gosec
+    - gosmopolitan
+    - intrange
+    - lll
+    - maintidx
+    - mnd
+    - musttag
+    - nestif
+    - nilerr
+    - nlreturn
+    - nonamedreturns
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - tagliatelle
+    - testifylint
+    - testpackage
+    - tparallel
+    - unparam
+    - unused
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl
+    - zerologlint  # doesn't seem to catch gitleaks/v8/logging mistakes
+  enable:
+    - inamedparam
+    - misspell
+    - revive
+    - misspell
+    - inamedparam
+    - exhaustruct
+    - inamedparam
+    - misspell
+    - nonamedreturns
+    - staticcheck
+    - unconvert
+  exclusions:
+    rules:
+      - linters:
+          - staticcheck
+        source: 'detector\.Detect\w+\(|sources\.DirectoryTargets\(|detect\.(?:Fragment|RemoteInfo)'
+      - linters:
+          - misspell
+        source: '"(?:addres|busines|clas)",'
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - '-QF1001'
+        - '-ST1000'
+        - '-ST1003'
+        - '-ST1018'
+        - '-ST1020'
+        - '-ST1021'
+    revive:
+      severity: error

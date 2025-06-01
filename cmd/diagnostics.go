@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -32,6 +35,14 @@ func NewDiagnosticsManager(diagnosticsFlag string, diagnosticsDir string) (*Diag
 		Enabled:   true,
 		DiagTypes: strings.Split(diagnosticsFlag, ","),
 		OutputDir: diagnosticsDir,
+	}
+
+	if diagnosticsFlag == "http" {
+		if len(diagnosticsDir) != 0 {
+			return nil, errors.New("the diagnostics directory should not be set in http mode")
+		}
+
+		return dm, nil
 	}
 
 	// If no output directory is specified, use the current directory
@@ -87,6 +98,10 @@ func (dm *DiagnosticsManager) StartDiagnostics() error {
 			if err = dm.StartTraceProfile(); err != nil {
 				return err
 			}
+		case "http":
+			if err = dm.StartHttpHandler(); err != nil {
+				return err
+			}
 		default:
 			logging.Warn().Msgf("Unknown diagnostics type: %s", diagType)
 		}
@@ -112,8 +127,23 @@ func (dm *DiagnosticsManager) StopDiagnostics() {
 			dm.WriteMemoryProfile()
 		case "trace":
 			dm.StopTraceProfile()
+		case "http":
+			// No need to stop the http one
 		}
 	}
+}
+
+func (dm *DiagnosticsManager) StartHttpHandler() error {
+	if len(dm.DiagTypes) > 1 {
+		return errors.New("other diagnostics modes should not be enabled when http mode is enabled")
+	}
+
+	go func() {
+		logging.Error().Err(http.ListenAndServe("localhost:6060", nil)).Send()
+	}()
+
+	logging.Info().Str("url", "http://localhost:6060/debug/pprof/").Msg("Diagnostics server started")
+	return nil
 }
 
 // StartCPUProfile starts CPU profiling

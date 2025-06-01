@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
-	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -56,19 +56,18 @@ func runGit(cmd *cobra.Command, args []string) {
 	preCommit := mustGetBoolFlag(cmd, "pre-commit")
 
 	var (
-		findings []report.Finding
-		err      error
-
+		findings    []report.Finding
+		err         error
 		gitCmd      *sources.GitCmd
 		scmPlatform scm.Platform
-		remote      *detect.RemoteInfo
 	)
+
 	if preCommit || staged {
 		if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 		}
 		// Remote info + links are irrelevant for staged changes.
-		remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
+		scmPlatform = scm.NoPlatform
 	} else {
 		if gitCmd, err = sources.NewGitLogCmd(source, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git log cmd")
@@ -76,10 +75,19 @@ func runGit(cmd *cobra.Command, args []string) {
 		if scmPlatform, err = scm.PlatformFromString(mustGetStringFlag(cmd, "platform")); err != nil {
 			logging.Fatal().Err(err).Send()
 		}
-		remote = detect.NewRemoteInfo(scmPlatform, source)
 	}
 
-	findings, err = detector.DetectGit(gitCmd, remote)
+	findings, err = detector.DetectSource(
+		context.Background(),
+		&sources.Git{
+			Cmd:             gitCmd,
+			Config:          &detector.Config,
+			Remote:          sources.NewRemoteInfo(scmPlatform, source),
+			Sema:            detector.Sema,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
+		},
+	)
+
 	if err != nil {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")

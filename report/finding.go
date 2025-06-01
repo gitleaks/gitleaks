@@ -50,8 +50,8 @@ func (f *Finding) Redact(percent uint) {
 	if percent >= 100 {
 		secret = "REDACTED"
 	}
-	f.Line = strings.Replace(f.Line, f.Secret, secret, -1)
-	f.Match = strings.Replace(f.Match, f.Secret, secret, -1)
+	f.Line = strings.ReplaceAll(f.Line, f.Secret, secret)
+	f.Match = strings.ReplaceAll(f.Match, f.Secret, secret)
 	f.Secret = secret
 }
 

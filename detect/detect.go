@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -16,6 +15,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"github.com/fatih/semgroup"
@@ -26,8 +26,6 @@ import (
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
-	chunkSize              = 100 * 1_000 // 100kb
-
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
@@ -35,7 +33,6 @@ const (
 
 var (
 	newLineRegexp = regexp.MustCompile("\n")
-	isWindows     = runtime.GOOS == "windows"
 )
 
 // Detector is the main detector struct
@@ -54,6 +51,9 @@ type Detector struct {
 	// MaxDecodeDepths limits how many recursive decoding passes are allowed
 	MaxDecodeDepth int
 
+	// MaxArchiveDepth limits how deep the sources will explore nested archives
+	MaxArchiveDepth int
+
 	// files larger than this will be skipped
 	MaxTargetMegaBytes int
 
@@ -65,6 +65,10 @@ type Detector struct {
 
 	// IgnoreGitleaksAllow is a flag to ignore gitleaks:allow comments.
 	IgnoreGitleaksAllow bool
+
+	// commitMutex is to prevent concurrent access to the
+	// commit map when adding commits
+	commitMutex *sync.Mutex
 
 	// commitMap is used to keep track of commits that have been scanned.
 	// This is only used for logging purposes and git scans.
@@ -102,28 +106,10 @@ type Detector struct {
 	TotalBytes atomic.Uint64
 }
 
-// Fragment contains the data to be scanned
-type Fragment struct {
-	// Raw is the raw content of the fragment
-	Raw string
-
-	Bytes []byte
-
-	// FilePath is the path to the file, if applicable.
-	// The path separator MUST be normalized to `/`.
-	FilePath    string
-	SymlinkFile string
-	// WindowsFilePath is the path with the original separator.
-	// This provides a backwards-compatible solution to https://github.com/gitleaks/gitleaks/issues/1565.
-	WindowsFilePath string `json:"-"` // TODO: remove this in v9.
-
-	// CommitSHA is the SHA of the commit if applicable
-	CommitSHA string
-
-	// newlineIndices is a list of indices of newlines in the raw content.
-	// This is used to calculate the line location of a finding
-	newlineIndices [][]int
-}
+// Fragment is an alias for sources.Fragment for backwards compatibility
+//
+// Deprecated: This will be replaced with sources.Fragment in v9
+type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
@@ -131,6 +117,7 @@ func NewDetector(cfg config.Config) *Detector {
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
+		commitMutex:    &sync.Mutex{},
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
@@ -158,7 +145,7 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 }
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
-	logging.Debug().Msgf("found .gitleaksignore file: %s", gitleaksIgnorePath)
+	logging.Debug().Str("path", gitleaksIgnorePath).Msgf("found .gitleaksignore file")
 	file, err := os.Open(gitleaksIgnorePath)
 	if err != nil {
 		return err
@@ -166,7 +153,7 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	defer func() {
 		// https://github.com/securego/gosec/issues/512
 		if err := file.Close(); err != nil {
-			logging.Warn().Msgf("Error closing .gitleaksignore file: %s\n", err)
+			logging.Warn().Err(err).Msgf("Error closing .gitleaksignore file")
 		}
 	}()
 
@@ -211,6 +198,68 @@ func (d *Detector) DetectString(content string) []report.Finding {
 	})
 }
 
+// DetectSource scans the given source and returns a list of findings
+func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]report.Finding, error) {
+	err := source.Fragments(ctx, func(fragment sources.Fragment, err error) error {
+		logContext := logging.With()
+
+		if len(fragment.FilePath) > 0 {
+			logContext = logContext.Str("path", fragment.FilePath)
+		}
+
+		if len(fragment.CommitSHA) > 6 {
+			logContext = logContext.Str("commit", fragment.CommitSHA[:7])
+			d.addCommit(fragment.CommitSHA)
+		} else if len(fragment.CommitSHA) > 0 {
+			logContext = logContext.Str("commit", fragment.CommitSHA)
+			d.addCommit(fragment.CommitSHA)
+			logger := logContext.Logger()
+			logger.Warn().Msg("commit SHAs should be >= 7 characters long")
+		}
+
+		logger := logContext.Logger()
+
+		if err != nil {
+			// Log the error and move on to the next fragment
+			logger.Error().Err(err).Send()
+			return nil
+		}
+
+		// both the fragment's content and path should be empty for it to be
+		// considered empty at this point because of path based matches
+		if len(fragment.Raw) == 0 && len(fragment.FilePath) == 0 {
+			logger.Trace().Msg("skipping empty fragment")
+			return nil
+		}
+
+		var timer *time.Timer
+		// Only start the timer in debug mode
+		if logger.GetLevel() <= zerolog.DebugLevel {
+			timer = time.AfterFunc(SlowWarningThreshold, func() {
+				logger.Debug().Msgf("Taking longer than %s to inspect fragment", SlowWarningThreshold.String())
+			})
+		}
+
+		for _, finding := range d.Detect(Fragment(fragment)) {
+			d.AddFinding(finding)
+		}
+
+		// Stop the timer if it was created
+		if timer != nil {
+			timer.Stop()
+		}
+
+		return nil
+	})
+
+	if _, isGit := source.(*sources.Git); isGit {
+		logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
+		logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
+	}
+
+	return d.Findings(), err
+}
+
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
@@ -244,7 +293,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	}
 
 	// add newline indices for location calculation in detectRule
-	fragment.newlineIndices = newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
+	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
@@ -265,14 +314,14 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
 					break
 				}
 			}
@@ -299,7 +348,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -322,12 +371,20 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			// Path _only_ rule
 			if r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath)) {
 				finding := report.Finding{
+					Commit:      fragment.CommitSHA,
 					RuleID:      r.RuleID,
 					Description: r.Description,
 					File:        fragment.FilePath,
 					SymlinkFile: fragment.SymlinkFile,
-					Match:       fmt.Sprintf("file detected: %s", fragment.FilePath),
+					Match:       "file detected: " + fragment.FilePath,
 					Tags:        r.Tags,
+				}
+				if fragment.CommitInfo != nil {
+					finding.Author = fragment.CommitInfo.AuthorName
+					finding.Date = fragment.CommitInfo.Date
+					finding.Email = fragment.CommitInfo.AuthorEmail
+					finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
+					finding.Message = fragment.CommitInfo.Message
 				}
 				return append(findings, finding)
 			}
@@ -348,7 +405,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 	// if flag configure and raw data size bigger then the flag
 	if d.MaxTargetMegaBytes > 0 {
-		rawLength := len(currentRaw) / 1000000
+		rawLength := len(currentRaw) / 1_000_000
 		if rawLength > d.MaxTargetMegaBytes {
 			logger.Debug().
 				Int("size", rawLength).
@@ -390,17 +447,18 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		// in the finding will be the line/column numbers of the _match_
 		// not the _secret_, which will be different if the secretGroup
 		// value is set for this rule
-		loc := location(fragment, matchIndex)
+		loc := location(newlineIndices, fragment.Raw, matchIndex)
 
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
 
 		finding := report.Finding{
+			Commit:      fragment.CommitSHA,
 			RuleID:      r.RuleID,
 			Description: r.Description,
-			StartLine:   loc.startLine,
-			EndLine:     loc.endLine,
+			StartLine:   fragment.StartLine + loc.startLine,
+			EndLine:     fragment.StartLine + loc.endLine,
 			StartColumn: loc.startColumn,
 			EndColumn:   loc.endColumn,
 			Line:        fragment.Raw[loc.startLineIndex:loc.endLineIndex],
@@ -410,7 +468,13 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			SymlinkFile: fragment.SymlinkFile,
 			Tags:        append(r.Tags, metaTags...),
 		}
-
+		if fragment.CommitInfo != nil {
+			finding.Author = fragment.CommitInfo.AuthorName
+			finding.Date = fragment.CommitInfo.Date
+			finding.Email = fragment.CommitInfo.AuthorEmail
+			finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
+			finding.Message = fragment.CommitInfo.Message
+		}
 		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
 			logger.Trace().
 				Str("finding", finding.Secret).
@@ -521,7 +585,9 @@ func (d *Detector) Findings() []report.Finding {
 
 // AddCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
+	d.commitMutex.Lock()
 	d.commitMap[commit] = true
+	d.commitMutex.Unlock()
 }
 
 // checkCommitOrPathAllowed evaluates |fragment| against all provided |allowlists|.

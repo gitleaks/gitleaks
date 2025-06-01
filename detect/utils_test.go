@@ -7,25 +7,30 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 func Test_createScmLink(t *testing.T) {
 	tests := map[string]struct {
-		platform scm.Platform
-		url      string
-		finding  report.Finding
-		want     string
+		remote  *sources.RemoteInfo
+		finding report.Finding
+		want    string
 	}{
 		// None
 		"no platform": {
-			platform: scm.NoPlatform,
-			want:     "",
+			remote: &sources.RemoteInfo{
+				Platform: scm.NoPlatform,
+				Url:      "",
+			},
+			want: "",
 		},
 
 		// GitHub
 		"github - single line": {
-			platform: scm.GitHubPlatform,
-			url:      "https://github.com/gitleaks/test",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitHubPlatform,
+				Url:      "https://github.com/gitleaks/test",
+			},
 			finding: report.Finding{
 				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
 				File:      "metrics/% of sales/.env",
@@ -35,8 +40,10 @@ func Test_createScmLink(t *testing.T) {
 			want: "https://github.com/gitleaks/test/blob/20553ad96a4a080c94a54d677db97eed8ce2560d/metrics/%25%20of%20sales/.env#L25",
 		},
 		"github - multi line": {
-			platform: scm.GitHubPlatform,
-			url:      "https://github.com/gitleaks/test",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitHubPlatform,
+				Url:      "https://github.com/gitleaks/test",
+			},
 			finding: report.Finding{
 				Commit:    "7bad9f7654cf9701b62400281748c0e8efd97666",
 				File:      "config.json",
@@ -46,8 +53,10 @@ func Test_createScmLink(t *testing.T) {
 			want: "https://github.com/gitleaks/test/blob/7bad9f7654cf9701b62400281748c0e8efd97666/config.json#L235-L238",
 		},
 		"github - markdown": {
-			platform: scm.GitHubPlatform,
-			url:      "https://github.com/gitleaks/test",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitHubPlatform,
+				Url:      "https://github.com/gitleaks/test",
+			},
 			finding: report.Finding{
 				Commit:    "1fc8961d172f39ffb671766e472aa76f8d713e87",
 				File:      "docs/guides/ecosystem/discordjs.MD",
@@ -57,8 +66,10 @@ func Test_createScmLink(t *testing.T) {
 			want: "https://github.com/gitleaks/test/blob/1fc8961d172f39ffb671766e472aa76f8d713e87/docs/guides/ecosystem/discordjs.MD?plain=1#L34",
 		},
 		"github - jupyter notebook": {
-			platform: scm.GitHubPlatform,
-			url:      "https://github.com/gitleaks/test",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitHubPlatform,
+				Url:      "https://github.com/gitleaks/test",
+			},
 			finding: report.Finding{
 				Commit:    "8f56bd2369595bcadbb007e88ba294630fb05c7b",
 				File:      "Cloud/IPYNB/Overlapping Recommendation algorithm _OCuLaR_.ipynb",
@@ -70,8 +81,10 @@ func Test_createScmLink(t *testing.T) {
 
 		// GitLab
 		"gitlab - single line": {
-			platform: scm.GitLabPlatform,
-			url:      "https://gitlab.com/example-org/example-group/gitleaks",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitLabPlatform,
+				Url:      "https://gitlab.com/example-org/example-group/gitleaks",
+			},
 			finding: report.Finding{
 				Commit:    "213ffd1c9bfa906eb4c7731771132c58a4ca0139",
 				File:      ".gitlab-ci.yml",
@@ -81,8 +94,10 @@ func Test_createScmLink(t *testing.T) {
 			want: "https://gitlab.com/example-org/example-group/gitleaks/blob/213ffd1c9bfa906eb4c7731771132c58a4ca0139/.gitlab-ci.yml#L41",
 		},
 		"gitlab - multi line": {
-			platform: scm.GitLabPlatform,
-			url:      "https://gitlab.com/example-org/example-group/gitleaks",
+			remote: &sources.RemoteInfo{
+				Platform: scm.GitLabPlatform,
+				Url:      "https://gitlab.com/example-org/example-group/gitleaks",
+			},
 			finding: report.Finding{
 				Commit:    "63410f74e23a4e51e1f60b9feb073b5d325af878",
 				File:      ".vscode/launchSettings.json",
@@ -94,8 +109,10 @@ func Test_createScmLink(t *testing.T) {
 
 		// Azure DevOps
 		"azuredevops - single line": {
-			platform: scm.AzureDevOpsPlatform,
-			url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			remote: &sources.RemoteInfo{
+				Platform: scm.AzureDevOpsPlatform,
+				Url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			},
 			finding: report.Finding{
 				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
 				File:      "examplefile.json",
@@ -107,8 +124,10 @@ func Test_createScmLink(t *testing.T) {
 
 		// Azure DevOps
 		"azuredevops - multi line": {
-			platform: scm.AzureDevOpsPlatform,
-			url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			remote: &sources.RemoteInfo{
+				Platform: scm.AzureDevOpsPlatform,
+				Url:      "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository",
+			},
 			finding: report.Finding{
 				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
 				File:      "examplefile.json",
@@ -120,7 +139,7 @@ func Test_createScmLink(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := createScmLink(tt.platform, tt.url, tt.finding)
+			actual := createScmLink(tt.remote, tt.finding)
 			assert.Equal(t, tt.want, actual)
 		})
 	}

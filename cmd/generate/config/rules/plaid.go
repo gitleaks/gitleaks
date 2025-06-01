@@ -1,8 +1,6 @@
 package rules
 
 import (
-	"fmt"
-
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -50,7 +48,7 @@ func PlaidAccessToken() *config.Rule {
 		RuleID:      "plaid-api-token",
 		Description: "Discovered a Plaid API Token, potentially compromising financial data aggregation and banking services.",
 		Regex: utils.GenerateSemiGenericRegex([]string{"plaid"},
-			fmt.Sprintf("access-(?:sandbox|development|production)-%s", utils.Hex8_4_4_4_12()), true),
+			"access-(?:sandbox|development|production)-"+utils.Hex8_4_4_4_12(), true),
 
 		Keywords: []string{
 			"plaid",
@@ -58,6 +56,6 @@ func PlaidAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(fmt.Sprintf("access-(?:sandbox|development|production)-%s", utils.Hex8_4_4_4_12())))
+	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret("access-(?:sandbox|development|production)-"+utils.Hex8_4_4_4_12()))
 	return utils.Validate(r, tps, nil)
 }

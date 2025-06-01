@@ -43,7 +43,7 @@ func (s startEnd) overflow(o startEnd) startEnd {
 	return s.merge(o).sub(s)
 }
 
-// merge takes two start/ends and returns a single one that encompases both
+// merge takes two start/ends and returns a single one that encompasses both
 func (s startEnd) merge(o startEnd) startEnd {
 	return startEnd{
 		min(s.start, o.start),
