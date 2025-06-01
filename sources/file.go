@@ -55,7 +55,7 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	// and fall back on treating it like a normal file and let fileFragments
 	// decide what to do with it.
 	if err == nil && format != nil {
-		if s.archiveDepth+1 > s.MaxArchiveDepth {
+		if (s.archiveDepth+1 > s.MaxArchiveDepth) && s.MaxArchiveDepth != 0 {
 			logging.Warn().Str(
 				"path", s.FullPath(),
 			).Int(
