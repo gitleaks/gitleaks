@@ -75,7 +75,7 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 			ctx := context.Background()
 			return file.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 				if err != nil {
-					logging.Error().Err(err).Send()
+					logging.Error().Err(err)
 					return nil
 				}
 

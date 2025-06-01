@@ -238,16 +238,16 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	detector := detect.NewDetector(cfg)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	if detector.MaxArchiveDepth, err = cmd.Flags().GetInt("max-archive-depth"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	// set color flag at first
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// also init logger again without color
 	if detector.NoColor {
@@ -258,7 +258,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
@@ -268,18 +268,18 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")

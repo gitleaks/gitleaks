@@ -50,6 +50,10 @@ type File struct {
 // Fragments yields fragments for the this source
 func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	format, _, err := archives.Identify(ctx, s.Path, nil)
+	// Process the file as an archive if there's no error && Identify returns
+	// a format; but if there's an error or no format, just swallow the error
+	// and fall back on treating it like a normal file and let fileFragments
+	// decide what to do with it.
 	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
 			logging.Warn().Str(
@@ -103,9 +107,10 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 
 		innerReader, err := d.Open()
 		if err != nil {
-			logging.Error().Str("path", s.FullPath()).Err(err).Msg("could not open archive inner file")
+			logging.Error().Err(err).Str("path", s.FullPath()).Msg("could not open archive inner file")
 			return nil
 		}
+		defer innerReader.Close()
 		path := filepath.Clean(d.NameInArchive)
 
 		if s.Config != nil && shouldSkipPath(s.Config, path) {
@@ -123,11 +128,9 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 		}
 
 		if err := file.Fragments(ctx, yield); err != nil {
-			_ = innerReader.Close()
 			return err
 		}
 
-		_ = innerReader.Close()
 		return nil
 	})
 }
@@ -180,13 +183,11 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 					fmt.Errorf("could not read file: could not determine type: %w", err),
 				)
 			} else if mimetype.MIME.Type == "application" {
-				logging.Debug().Str(
-					"mime_type", mimetype.MIME.Value,
-				).Str(
-					"path", s.FullPath(),
-				).Msgf(
-					"skipping binary file",
-				)
+				logging.Debug().
+					Str("mime_type", mimetype.MIME.Value).
+					Str("path", s.FullPath()).
+					Msgf("skipping binary file")
+
 				return nil
 			}
 		}

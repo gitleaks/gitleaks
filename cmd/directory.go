@@ -46,7 +46,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	// set exit code

@@ -43,10 +43,16 @@ type blobReader struct {
 // Close closes the underlying reader and then waits for the command to complete,
 // releasing its resources.
 func (br *blobReader) Close() error {
+	// Discard the remaining data from the pipe to avoid blocking
+	_, drainErr := io.Copy(io.Discard, br)
 	// Close the pipe (should signal the command to stop if it hasn't already)
 	closeErr := br.ReadCloser.Close()
 	// Wait to prevent zombie processes.
 	waitErr := br.cmd.Wait()
+	// Return the first error encountered
+	if drainErr != nil {
+		return drainErr
+	}
 	if closeErr != nil {
 		return closeErr
 	}

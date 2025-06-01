@@ -8,6 +8,9 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
+// RemoteInfo is an alias for sources.RemoteInfo for backwards compatibility
+//
+// Deprecated: This will be replaced with sources.RemoteInfo in v9
 type RemoteInfo sources.RemoteInfo
 
 // DetectGit runs detections against a GitCmd with its remote info

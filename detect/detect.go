@@ -106,6 +106,9 @@ type Detector struct {
 	TotalBytes atomic.Uint64
 }
 
+// Fragment is an alias for sources.Fragment for backwards compatibility
+//
+// Deprecated: This will be replaced with sources.Fragment in v9
 type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
@@ -389,7 +392,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			// if path is set _and_ a regex is set, then we need to check both
 			// so if the path does not match, then we should return early and not
 			// consider the regex
-			if !r.Path.MatchString(fragment.FilePath) && (fragment.WindowsFilePath == "" || !r.Path.MatchString(fragment.WindowsFilePath)) {
+			if !(r.Path.MatchString(fragment.FilePath) || (fragment.WindowsFilePath != "" && r.Path.MatchString(fragment.WindowsFilePath))) {
 				return findings
 			}
 		}
