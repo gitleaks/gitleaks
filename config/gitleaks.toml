@@ -2299,7 +2299,8 @@ keywords = ["heroku"]
 [[rules]]
 id = "heroku-api-key-v2"
 description = "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security."
-regex = '''(?i)\b(\b(HRKU-AA[0-9a-zA-Z_-]{58})\b)(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''\b((HRKU-AA[0-9a-zA-Z_-]{58}))(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 4
 keywords = ["hrku-aa"]
 
 [[rules]]
