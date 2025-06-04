@@ -125,6 +125,7 @@ func main() {
 		rules.HashiCorpTerraform(),
 		rules.HashicorpField(),
 		rules.Heroku(),
+		rules.HerokuV2(),
 		rules.HubSpot(),
 		rules.HuggingFaceAccessToken(),
 		rules.HuggingFaceOrganizationApiToken(),
