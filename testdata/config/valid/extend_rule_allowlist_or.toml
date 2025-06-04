@@ -1,0 +1,13 @@
+title = "gitleaks extended 3"
+
+[extend]
+path="../testdata/config/valid/extend_rule_allowlist_base.toml"
+
+[[rules]]
+    id = "aws-secret-key-again-again"
+[[rules.allowlists]]
+    commits = ['''abcdefg1''']
+    regexes = ['''foo.+bar''']
+    regexTarget = "line"
+    paths = ['''ignore\.xaml''']
+    stopwords = ['''example''']

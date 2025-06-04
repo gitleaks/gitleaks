@@ -2,6 +2,12 @@ title = "gitleaks config"
 # https://learnxinyminutes.com/docs/toml/ for toml reference
 
 [[rules]]
+    description = "1Password Secret Key"
+    id = "1password-secret-key"
+    regex = '''A3-[A-Z0-9]{6}-(?:(?:[A-Z0-9]{11})|(?:[A-Z0-9]{6}-[A-Z0-9]{5}))-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}'''
+    tags = ["1Password"]
+
+[[rules]]
     description = "AWS Access Key"
     id = "aws-access-key"
     regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
@@ -219,4 +225,3 @@ title = "gitleaks config"
     description = "PyPI upload token"
     regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9-_]{50,1000}'''
     tags = ["key", "pypi"]
-

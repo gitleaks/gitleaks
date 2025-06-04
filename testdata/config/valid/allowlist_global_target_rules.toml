@@ -1,0 +1,20 @@
+[[rules]]
+id = "github-app-token"
+regex = '''(?:ghu|ghs)_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id = "github-oauth"
+regex = '''gho_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id = "github-pat"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+
+
+[[allowlists]]
+regexes = ['''.*fake.*''']
+[[allowlists]]
+targetRules = ["github-app-token", "github-pat"]
+paths = [
+    '''(?:^|/)@octokit/auth-token/README\.md$''',
+]

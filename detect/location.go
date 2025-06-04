@@ -10,7 +10,7 @@ type Location struct {
 	endLineIndex   int
 }
 
-func location(fragment Fragment, matchIndex []int) Location {
+func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 	var (
 		prevNewLine int
 		location    Location
@@ -28,13 +28,13 @@ func location(fragment Fragment, matchIndex []int) Location {
 	// When a fragment does NOT have any newlines, a default "newline"
 	// will be counted to make the subsequent location calculation logic work
 	// for fragments will no newlines.
-	if len(fragment.newlineIndices) == 0 {
-		fragment.newlineIndices = [][]int{
-			{len(fragment.Raw), len(fragment.Raw) + 1},
+	if len(newlineIndices) == 0 {
+		newlineIndices = [][]int{
+			{len(raw), len(raw) + 1},
 		}
 	}
 
-	for lineNum, pair := range fragment.newlineIndices {
+	for lineNum, pair := range newlineIndices {
 		_lineNum = lineNum
 		newLineByteIndex := pair[0]
 		if prevNewLine <= start && start < newLineByteIndex {
@@ -65,11 +65,11 @@ func location(fragment Fragment, matchIndex []int) Location {
 
 		// search for new line byte index
 		i := 0
-		for end+i < len(fragment.Raw) {
-			if fragment.Raw[end+i] == '\n' {
+		for end+i < len(raw) {
+			if raw[end+i] == '\n' {
 				break
 			}
-			if fragment.Raw[end+i] == '\r' {
+			if raw[end+i] == '\r' {
 				break
 			}
 			i++

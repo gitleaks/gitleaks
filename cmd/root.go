@@ -48,11 +48,17 @@ order of precedence:
 If none of the four options are used, then gitleaks will use the default config`
 )
 
-var rootCmd = &cobra.Command{
-	Use:     "gitleaks",
-	Short:   "Gitleaks scans code, past or present, for secrets",
-	Version: Version,
-}
+var (
+	rootCmd = &cobra.Command{
+		Use:     "gitleaks",
+		Short:   "Gitleaks scans code, past or present, for secrets",
+		Version: Version,
+	}
+
+	// diagnostics manager is global to ensure it can be started before a scan begins
+	// and stopped after a scan completes
+	diagnosticsManager *DiagnosticsManager
+)
 
 const (
 	BYTE     = 1.0
@@ -85,6 +91,11 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
+
+	// Add diagnostics flags
+	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
+	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files when not using http mode (defaults to current directory)")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -190,6 +201,33 @@ func initConfig(source string) {
 	}
 }
 
+func initDiagnostics() {
+	// Initialize diagnostics manager
+	diagnosticsFlag, err := rootCmd.PersistentFlags().GetString("diagnostics")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics flag")
+	}
+
+	diagnosticsDir, err := rootCmd.PersistentFlags().GetString("diagnostics-dir")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics-dir flag")
+	}
+
+	var diagErr error
+	diagnosticsManager, diagErr = NewDiagnosticsManager(diagnosticsFlag, diagnosticsDir)
+	if diagErr != nil {
+		logging.Fatal().Err(diagErr).Msg("Error initializing diagnostics")
+	}
+
+	if diagnosticsManager.Enabled {
+		logging.Info().Msg("Starting diagnostics...")
+		if diagErr := diagnosticsManager.StartDiagnostics(); diagErr != nil {
+			logging.Fatal().Err(diagErr).Msg("Failed to start diagnostics")
+		}
+	}
+
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		if strings.Contains(err.Error(), "unknown flag") {
@@ -221,12 +259,16 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	detector := detect.NewDetector(cfg)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
+	}
+
+	if detector.MaxArchiveDepth, err = cmd.Flags().GetInt("max-archive-depth"); err != nil {
+		logging.Fatal().Err(err).Send()
 	}
 
 	// set color flag at first
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// also init logger again without color
 	if detector.NoColor {
@@ -237,7 +279,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
@@ -247,18 +289,18 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
@@ -400,6 +442,11 @@ func bytesConvert(bytes uint64) string {
 }
 
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+	if diagnosticsManager.Enabled {
+		logging.Debug().Msg("Finalizing diagnostics...")
+		diagnosticsManager.StopDiagnostics()
+	}
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
