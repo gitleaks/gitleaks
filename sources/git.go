@@ -482,6 +482,8 @@ func platformFromHost(u *url.URL) scm.Platform {
 		return scm.GitLabPlatform
 	case "dev.azure.com", "visualstudio.com":
 		return scm.AzureDevOpsPlatform
+	case "gitea.com", "code.forgejo.org", "codeberg.org":
+		return scm.GiteaPlatform
 	default:
 		return scm.UnknownPlatform
 	}

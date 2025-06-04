@@ -75,6 +75,22 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 		// This is a bit dirty, but Azure DevOps does not highlight the line when the lineStartColumn and lineEndColumn are not provided
 		link += "&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files"
 		return link
+	case scm.GiteaPlatform:
+		link := fmt.Sprintf("%s/src/commit/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		ext := strings.ToLower(filepath.Ext(filePath))
+		if ext == ".ipynb" || ext == ".md" {
+			link += "?display=source"
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#L%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("-L%d", finding.EndLine)
+		}
+		return link
 	default:
 		// This should never happen.
 		return ""
