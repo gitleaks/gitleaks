@@ -136,6 +136,47 @@ func Test_createScmLink(t *testing.T) {
 			},
 			want: "https://dev.azure.com/exampleorganisation/exampleproject/_git/exampleRepository/commit/20553ad96a4a080c94a54d677db97eed8ce2560d?path=/examplefile.json&line=25&lineEnd=30&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files",
 		},
+
+		// Gitea
+		"gitea - single line": {
+			remote: &sources.RemoteInfo{
+				Platform: scm.GiteaPlatform,
+				Url:      "https://gitea.com/exampleorganisation/exampleproject",
+			},
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   25,
+			},
+			want: "https://gitea.com/exampleorganisation/exampleproject/src/commit/20553ad96a4a080c94a54d677db97eed8ce2560d/examplefile.json#L25",
+		},
+		"gitea- multi line": {
+			remote: &sources.RemoteInfo{
+				Platform: scm.GiteaPlatform,
+				Url:      "https://gitea.com/exampleorganisation/exampleproject",
+			},
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   30,
+			},
+			want: "https://gitea.com/exampleorganisation/exampleproject/src/commit/20553ad96a4a080c94a54d677db97eed8ce2560d/examplefile.json#L25-L30",
+		},
+		"gitea - markdown": {
+			remote: &sources.RemoteInfo{
+				Platform: scm.GiteaPlatform,
+				Url:      "https://gitea.com/exampleorganisation/exampleproject",
+			},
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "Readme.md",
+				StartLine: 34,
+				EndLine:   34,
+			},
+			want: "https://gitea.com/exampleorganisation/exampleproject/src/commit/20553ad96a4a080c94a54d677db97eed8ce2560d/Readme.md?display=source#L34",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

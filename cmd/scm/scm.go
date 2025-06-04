@@ -13,6 +13,7 @@ const (
 	GitHubPlatform
 	GitLabPlatform
 	AzureDevOpsPlatform
+	GiteaPlatform
 	// TODO: Add others.
 )
 
@@ -23,6 +24,7 @@ func (p Platform) String() string {
 		"github",
 		"gitlab",
 		"azuredevops",
+		"gitea",
 	}[p]
 }
 
@@ -38,6 +40,8 @@ func PlatformFromString(s string) (Platform, error) {
 		return GitLabPlatform, nil
 	case "azuredevops":
 		return AzureDevOpsPlatform, nil
+	case "gitea":
+		return GiteaPlatform, nil
 	default:
 		return UnknownPlatform, fmt.Errorf("invalid scm platform value: %s", s)
 	}
