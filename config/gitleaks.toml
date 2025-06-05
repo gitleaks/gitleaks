@@ -2586,6 +2586,16 @@ regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \t\w.-]{0,20})[
 keywords = ["nrak"]
 
 [[rules]]
+id = "notion-api-token"
+description = "Notion API token"
+regex = '''\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = [
+    "ntn",
+    "ntn_",
+    "notion",
+]
+
+[[rules]]
 id = "npm-access-token"
 description = "Uncovered an npm access token, potentially compromising package management and code repository access."
 regex = '''(?i)\b(npm_[a-z0-9]{36})(?:[\x60'"\s;]|\\[nr]|$)'''
