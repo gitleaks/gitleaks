@@ -91,6 +91,18 @@ func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
 			link += fmt.Sprintf("-L%d", finding.EndLine)
 		}
 		return link
+	case scm.BitbucketPlatform:
+		link := fmt.Sprintf("%s/src/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#lines-%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf(":%d", finding.EndLine)
+		}
+		return link
 	default:
 		// This should never happen.
 		return ""

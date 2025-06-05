@@ -177,6 +177,33 @@ func Test_createScmLink(t *testing.T) {
 			},
 			want: "https://gitea.com/exampleorganisation/exampleproject/src/commit/20553ad96a4a080c94a54d677db97eed8ce2560d/Readme.md?display=source#L34",
 		},
+		// bitbucket
+		"bitbucket - single line": {
+			remote: &sources.RemoteInfo{
+				Platform: scm.BitbucketPlatform,
+				Url:      "https://bitbucket.org/exampleorganisation/exampleproject",
+			},
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   25,
+			},
+			want: "https://bitbucket.org/exampleorganisation/exampleproject/src/20553ad96a4a080c94a54d677db97eed8ce2560d/examplefile.json#lines-25",
+		},
+		"bitbucket- multi line": {
+			remote: &sources.RemoteInfo{
+				Platform: scm.BitbucketPlatform,
+				Url:      "https://bitbucket.org/exampleorganisation/exampleproject",
+			},
+			finding: report.Finding{
+				Commit:    "20553ad96a4a080c94a54d677db97eed8ce2560d",
+				File:      "examplefile.json",
+				StartLine: 25,
+				EndLine:   30,
+			},
+			want: "https://bitbucket.org/exampleorganisation/exampleproject/src/20553ad96a4a080c94a54d677db97eed8ce2560d/examplefile.json#lines-25:30",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
