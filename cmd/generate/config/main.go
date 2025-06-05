@@ -161,6 +161,7 @@ func main() {
 		rules.NewRelicUserKey(),
 		rules.NewRelicBrowserAPIKey(),
 		rules.NewRelicInsertKey(),
+		rules.Notion(),
 		rules.NPM(),
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
