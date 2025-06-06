@@ -13,8 +13,8 @@ func GCPServiceAccount() *config.Rule {
 	r := config.Rule{
 		Description: "Google (GCP) Service-account",
 		RuleID:      "gcp-service-account",
-		Regex:       regexp.MustCompile(`\"type\": \"service_account\"`),
-		Keywords:    []string{`\"type\": \"service_account\"`},
+		Regex:       regexp.MustCompile(`"type": "service_account"`),
+		Keywords:    []string{`"type": "service_account"`},
 	}
 
 	// validate
