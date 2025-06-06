@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -97,7 +98,42 @@ func TestPathAllowed(t *testing.T) {
 	}
 }
 
+//TODO
+//func TestExpressionAllowed(t *testing.T) {
+//	tests := []struct {
+//		allowlist Allowlist
+//		finding   any
+//		want      bool
+//	}{
+//		{
+//			allowlist: Allowlist{
+//				Paths: []*regexp.Regexp{regexp.MustCompile("path")},
+//			},
+//			//path:        "a path",
+//			want: true,
+//		},
+//		{
+//			allowlist: Allowlist{
+//				Paths: []*regexp.Regexp{regexp.MustCompile("path")},
+//			},
+//			//path:        "a ???",
+//			want: false,
+//		},
+//	}
+//	for _, tt := range tests {
+//		assert.Equal(t, tt.want, tt.allowlist.ExpressionAllowed)
+//		//assert.Equal(t, tt.pathAllowed, tt.allowlist.PathAllowed(tt.path))
+//	}
+//}
+
 func TestValidate(t *testing.T) {
+	flags.EnableExperimentalAllowlistExpression.Store(true)
+	useExpression = true
+	defer func() {
+		flags.EnableExperimentalAllowlistExpression.Store(false)
+		useExpression = false
+	}()
+
 	tests := map[string]struct {
 		input    Allowlist
 		expected Allowlist
@@ -117,42 +153,51 @@ func TestValidate(t *testing.T) {
 				StopWords: []string{"stopwordA", "stopwordB"},
 			},
 		},
+		"validate expression returns bool": {
+			input: Allowlist{
+				Expression: `"hello".substring(0,2)`,
+			},
+			wantErr: errors.New("invalid expression: return type must be bool, not string"),
+		},
 	}
 
-	for _, tt := range tests {
-		// Expected an error.
-		err := tt.input.Validate()
-		if err != nil {
-			if tt.wantErr == nil {
-				t.Fatalf("Received unexpected error: %v", err)
-			} else if !assert.EqualError(t, err, tt.wantErr.Error()) {
-				t.Fatalf("Received unexpected error, expected '%v', got '%v'", tt.wantErr, err)
-			}
-		} else {
-			if tt.wantErr != nil {
-				t.Fatalf("Did not receive expected error: %v", tt.wantErr)
-			}
-		}
-
-		var (
-			regexComparer = func(x, y *regexp.Regexp) bool {
-				// Compare the string representation of the regex patterns.
-				if x == nil || y == nil {
-					return x == y
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Expected an error.
+			err := tt.input.Validate()
+			if err != nil {
+				if tt.wantErr == nil {
+					t.Fatalf("Received unexpected error: %v", err)
+				} else if !assert.EqualError(t, err, tt.wantErr.Error()) {
+					t.Fatalf("Received unexpected error, expected '%v', got '%v'", tt.wantErr, err)
 				}
-				return x.String() == y.String()
+				return
+			} else {
+				if tt.wantErr != nil {
+					t.Fatalf("Did not receive expected error: %v", tt.wantErr)
+				}
 			}
-			arrayComparer = func(a, b string) bool {
-				return a < b
+
+			var (
+				regexComparer = func(x, y *regexp.Regexp) bool {
+					// Compare the string representation of the regex patterns.
+					if x == nil || y == nil {
+						return x == y
+					}
+					return x.String() == y.String()
+				}
+				arrayComparer = func(a, b string) bool {
+					return a < b
+				}
+				opts = cmp.Options{
+					cmp.Comparer(regexComparer),
+					cmpopts.SortSlices(arrayComparer),
+					cmpopts.IgnoreUnexported(Allowlist{}),
+				}
+			)
+			if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {
+				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
-			opts = cmp.Options{
-				cmp.Comparer(regexComparer),
-				cmpopts.SortSlices(arrayComparer),
-				cmpopts.IgnoreUnexported(Allowlist{}),
-			}
-		)
-		if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {
-			t.Errorf("diff: (-want +got)\n%s", diff)
-		}
+		})
 	}
 }

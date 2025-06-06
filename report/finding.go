@@ -11,6 +11,7 @@ type Finding struct {
 	// Rule is the name of the rule that was matched
 	RuleID      string
 	Description string
+	Keywords    []string `json:"-"`
 
 	StartLine   int
 	EndLine     int

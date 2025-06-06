@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -81,6 +82,9 @@ func init() {
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
 	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files when not using http mode (defaults to current directory)")
+
+	// Experimental flags.
+	rootCmd.PersistentFlags().BoolP("experimental-expressions", "", false, "enables experimental allowlist expressions")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -218,6 +222,12 @@ func Execute() {
 }
 
 func Config(cmd *cobra.Command) config.Config {
+	// set experimental feature flag(s)
+	if mustGetBoolFlag(cmd, "experimental-expressions") {
+		logging.Warn().Msgf("using experimental allowlist expressions, updates may contain breaking changes!")
+		flags.EnableExperimentalAllowlistExpression.Store(true)
+	}
+
 	var vc config.ViperConfig
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")

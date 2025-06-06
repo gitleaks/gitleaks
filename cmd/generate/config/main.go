@@ -8,6 +8,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
@@ -24,6 +25,7 @@ func main() {
 	}
 	gitleaksConfigPath := os.Args[1]
 
+	flags.EnableExperimentalAllowlistExpression.Store(true)
 	configRules := []*config.Rule{
 		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),

@@ -314,16 +314,20 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
+				findings = append(findings, d.detectRule(rule, nil, fragment, newlineIndices, currentRaw, encodedSegments)...)
 				continue
 			}
 
 			// check if keywords are in the fragment
+			var matchedKeywords []string
 			for _, k := range rule.Keywords {
-				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
-					break
+				k = strings.ToLower(k)
+				if keywords[k] {
+					matchedKeywords = append(matchedKeywords, k)
 				}
+			}
+			if len(matchedKeywords) > 0 {
+				findings = append(findings, d.detectRule(rule, matchedKeywords, fragment, newlineIndices, currentRaw, encodedSegments)...)
 			}
 		}
 
@@ -348,7 +352,8 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+// func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(r config.Rule, keywords []string, fragment Fragment, newlineIndices [][]int, currentRaw string, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -374,6 +379,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 					Commit:      fragment.CommitSHA,
 					RuleID:      r.RuleID,
 					Description: r.Description,
+					Keywords:    keywords,
 					File:        fragment.FilePath,
 					SymlinkFile: fragment.SymlinkFile,
 					Match:       "file detected: " + fragment.FilePath,
@@ -457,6 +463,7 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			Commit:      fragment.CommitSHA,
 			RuleID:      r.RuleID,
 			Description: r.Description,
+			Keywords:    keywords,
 			StartLine:   fragment.StartLine + loc.startLine,
 			EndLine:     fragment.StartLine + loc.endLine,
 			StartColumn: loc.startColumn,
@@ -605,19 +612,14 @@ func checkCommitOrPathAllowed(
 
 	for _, a := range allowlists {
 		var (
-			isAllowed        bool
-			allowlistChecks  []bool
-			commitAllowed, _ = a.CommitAllowed(fragment.CommitSHA)
-			pathAllowed      = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
+			isAllowed       bool
+			allowlistChecks []bool
+			commitAllowed   bool
+			commit          string
+			pathAllowed     bool
 		)
 		// If the condition is "AND" we need to check all conditions.
 		if a.MatchCondition == config.AllowlistMatchAnd {
-			if len(a.Commits) > 0 {
-				allowlistChecks = append(allowlistChecks, commitAllowed)
-			}
-			if len(a.Paths) > 0 {
-				allowlistChecks = append(allowlistChecks, pathAllowed)
-			}
 			// These will be checked later.
 			if len(a.Regexes) > 0 {
 				continue
@@ -625,18 +627,32 @@ func checkCommitOrPathAllowed(
 			if len(a.StopWords) > 0 {
 				continue
 			}
+			if a.Expression != "" {
+				continue
+			}
+
+			if len(a.Commits) > 0 {
+				commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
+				allowlistChecks = append(allowlistChecks, commitAllowed)
+			}
+			if len(a.Paths) > 0 {
+				pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
+				allowlistChecks = append(allowlistChecks, pathAllowed)
+			}
 
 			isAllowed = allTrue(allowlistChecks)
 		} else {
+			commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
+			pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
 			isAllowed = commitAllowed || pathAllowed
 		}
 		if isAllowed {
 			event := logger.Trace().Str("condition", a.MatchCondition.String())
 			if commitAllowed {
-				event.Bool("allowed-commit", commitAllowed)
+				event.Str("allowed-commit", commit)
 			}
 			if pathAllowed {
-				event.Bool("allowed-path", pathAllowed)
+				event.Bool("allowed-path", true)
 			}
 			return true, event
 		}
@@ -667,35 +683,99 @@ func checkFindingAllowed(
 		}
 
 		var (
-			checks                 []bool
-			isAllowed              bool
-			commitAllowed          bool
-			commit                 string
-			pathAllowed            bool
-			regexAllowed           = a.RegexAllowed(allowlistTarget)
-			containsStopword, word = a.ContainsStopWord(finding.Secret)
+			isAllowed         bool
+			commitAllowed     bool
+			commit            string
+			pathAllowed       bool
+			regexAllowed      bool
+			containsStopword  bool
+			word              string
+			expressionAllowed bool
 		)
 		// If the condition is "AND" we need to check all conditions.
 		if a.MatchCondition == config.AllowlistMatchAnd {
 			// Determine applicable checks.
 			if len(a.Commits) > 0 {
-				commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA)
-				checks = append(checks, commitAllowed)
+				if commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA); !commitAllowed {
+					continue
+				}
 			}
 			if len(a.Paths) > 0 {
-				pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
-				checks = append(checks, pathAllowed)
+				if pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath)); !pathAllowed {
+					continue
+				}
+			}
+			if a.Expression != "" {
+				expressionAllowed = a.ExpressionAllowed(
+					finding.RuleID,
+					finding.Keywords,
+					finding.File,
+					finding.Line,
+					finding.Match,
+					finding.Secret,
+					finding.Entropy,
+					finding.Commit,
+					finding.Author,
+					finding.Email,
+					finding.Date,
+					finding.Message,
+				)
+				if !expressionAllowed {
+					continue
+				}
 			}
 			if len(a.Regexes) > 0 {
-				checks = append(checks, regexAllowed)
+				if regexAllowed = a.RegexAllowed(allowlistTarget); !regexAllowed {
+					continue
+				}
 			}
 			if len(a.StopWords) > 0 {
-				checks = append(checks, containsStopword)
+				if containsStopword, word = a.ContainsStopWord(finding.Secret); !containsStopword {
+					continue
+				}
 			}
 
-			isAllowed = allTrue(checks)
+			isAllowed = true
 		} else {
-			isAllowed = regexAllowed || containsStopword
+			if len(a.Commits) > 0 {
+				if commitAllowed, commit = a.CommitAllowed(fragment.CommitSHA); commitAllowed {
+					isAllowed = true
+				}
+			}
+			if !isAllowed && len(a.Paths) > 0 {
+				if pathAllowed = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath)); pathAllowed {
+					isAllowed = true
+				}
+			}
+			if !isAllowed && a.Expression != "" {
+				expressionAllowed = a.ExpressionAllowed(
+					finding.RuleID,
+					finding.Keywords,
+					finding.File,
+					finding.Line,
+					finding.Match,
+					finding.Secret,
+					finding.Entropy,
+					finding.Commit,
+					finding.Author,
+					finding.Email,
+					finding.Date,
+					finding.Message,
+				)
+				if expressionAllowed {
+					isAllowed = true
+				}
+			}
+			if !isAllowed && len(a.Regexes) > 0 {
+				if regexAllowed = a.RegexAllowed(allowlistTarget); regexAllowed {
+					isAllowed = true
+				}
+			}
+			if !isAllowed && len(a.StopWords) > 0 {
+				if containsStopword, word = a.ContainsStopWord(finding.Secret); containsStopword {
+					isAllowed = true
+				}
+			}
 		}
 
 		if isAllowed {
@@ -706,13 +786,16 @@ func checkFindingAllowed(
 				event.Str("allowed-commit", commit)
 			}
 			if pathAllowed {
-				event.Bool("allowed-path", pathAllowed)
+				event.Bool("allowed-path", true)
 			}
 			if regexAllowed {
-				event.Bool("allowed-regex", regexAllowed)
+				event.Bool("allowed-regex", true)
 			}
 			if containsStopword {
 				event.Str("allowed-stopword", word)
+			}
+			if expressionAllowed {
+				event.Bool("allowed-expression", true)
 			}
 			return true, event
 		}

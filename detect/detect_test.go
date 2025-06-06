@@ -736,6 +736,9 @@ const token = "mockSecret";
 			d.baselinePath = tt.baselinePath
 
 			findings := d.Detect(tt.fragment)
+			for i, _ := range findings {
+				findings[i].Keywords = nil
+			}
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}
@@ -1414,6 +1417,7 @@ func TestFromFiles(t *testing.T) {
 					f.EndColumn = f.EndColumn - 1
 					f.Match = strings.ReplaceAll(f.Match, "\r", "")
 				}
+				f.Keywords = nil
 				normalizedFindings[i] = f
 			}
 			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
@@ -2122,25 +2126,25 @@ func TestDetectRuleAllowlist(t *testing.T) {
 		"commit AND path NOT allowed - other conditions": {
 			fragment: Fragment{
 				CommitSHA: "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
-				FilePath:  "package-lock.json",
+				FilePath:  "server.js",
 			},
 			allowlist: &config.Allowlist{
 				MatchCondition: config.AllowlistMatchAnd,
 				Commits:        []string{"41edf1f7f612199f401ccfc3144c2ebd0d7aeb48"},
-				Paths:          []*regexp.Regexp{regexp.MustCompile(`package-lock.json`)},
+				Paths:          []*regexp.Regexp{regexp.MustCompile(`server.js`)},
 				Regexes:        []*regexp.Regexp{regexp.MustCompile("password")},
 			},
 			expected: []report.Finding{
 				{
+					RuleID:      "test-rule",
+					File:        "server.js",
 					StartColumn: 50,
 					EndColumn:   60,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
-					File:        "package-lock.json",
 					Commit:      "41edf1f7f612199f401ccfc3144c2ebd0d7aeb48",
 					Entropy:     3.095795154571533,
-					RuleID:      "test-rule",
 				},
 			},
 		},
@@ -2287,7 +2291,7 @@ let password = 'Summer2024!';`
 
 			f := tc.fragment
 			f.Raw = raw
-			actual := d.detectRule(f, [][]int{}, raw, rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(rule, nil, f, [][]int{}, raw, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(tc.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -2448,7 +2452,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(test.rule, nil, test.fragment, [][]int{}, test.fragment.Raw, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -2634,7 +2638,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(test.rule, nil, test.fragment, [][]int{}, test.fragment.Raw, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}

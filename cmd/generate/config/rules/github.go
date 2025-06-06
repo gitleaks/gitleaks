@@ -1,9 +1,14 @@
 package rules
 
 import (
+	"fmt"
+	"hash/crc32"
+	"strconv"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -24,11 +29,25 @@ func GitHubPat() *config.Rule {
 		Regex:       regexp.MustCompile(`ghp_[0-9a-zA-Z]{36}`),
 		Entropy:     3,
 		Keywords:    []string{"ghp_"},
-		Allowlists:  githubAllowlist,
+		Allowlists: []*config.Allowlist{
+			{
+				Expression: `secret.substring(34) != base62encode(crc32(secret.substring(4, 34)))`,
+			},
+		},
 	}
+	r.Allowlists = append(r.Allowlists, githubAllowlist...)
 
-	// validate
-	tps := utils.GenerateSampleSecrets("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	//validate
+	secret := func() string {
+		s := secrets.NewSecret(utils.AlphaNumeric("30"))
+		checksum := crc32.ChecksumIEEE([]byte(s))
+		value, err := strconv.ParseUint(fmt.Sprintf("%08x", checksum), 16, 32)
+		if err != nil {
+			logging.Fatal().Err(err).Msg("invalid hex string")
+		}
+		return "ghp_" + s + config.EncodeBase62(uint32(value), 6)
+	}()
+	tps := utils.GenerateSampleSecrets("github", secret)
 	fps := []string{
 		"ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
