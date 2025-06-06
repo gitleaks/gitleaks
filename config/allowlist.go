@@ -95,33 +95,6 @@ func (a *Allowlist) Validate() error {
 			a.Commits = maps.Keys(uniqueCommits)
 		}
 	}
-
-	if len(a.Paths) > 0 && useOptimizations {
-		var sb strings.Builder
-		sb.WriteString("(?:")
-		for i, path := range a.Paths {
-			sb.WriteString(path.String())
-			if i != len(a.Paths)-1 {
-				sb.WriteString("|")
-			}
-		}
-		sb.WriteString(")")
-		a.pathPat = regexp.MustCompile(sb.String())
-	}
-
-	if len(a.Regexes) > 0 && useOptimizations {
-		var sb strings.Builder
-		sb.WriteString("(?:")
-		for i, regex := range a.Regexes {
-			sb.WriteString(regex.String())
-			if i != len(a.Regexes)-1 {
-				sb.WriteString("|")
-			}
-		}
-		sb.WriteString(")")
-		a.regexPat = regexp.MustCompile(sb.String())
-	}
-
 	if len(a.StopWords) > 0 {
 		uniqueStopwords := make(map[string]struct{})
 		for _, stopWord := range a.StopWords {
@@ -134,6 +107,14 @@ func (a *Allowlist) Validate() error {
 		} else {
 			a.StopWords = values
 		}
+	}
+
+	// Combine patterns into a single expression.
+	if len(a.Paths) > 0 && useOptimizations {
+		a.pathPat = joinRegexOr(a.Paths)
+	}
+	if len(a.Regexes) > 0 && useOptimizations {
+		a.regexPat = joinRegexOr(a.Regexes)
 	}
 
 	a.validated = true
