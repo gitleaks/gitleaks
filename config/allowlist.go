@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"strings"
-	"sync"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"golang.org/x/exp/maps"
@@ -68,18 +67,10 @@ type Allowlist struct {
 	stopwordTrie *ahocorasick.Trie
 }
 
-var (
-	flagOnce         sync.Once
-	useOptimizations bool
-)
-
 func (a *Allowlist) Validate() error {
 	if a.validated {
 		return nil
 	}
-	flagOnce.Do(func() {
-		useOptimizations = flags.EnableExperimentalAllowlistOptimizations.Load()
-	})
 
 	// Disallow empty allowlists.
 	if len(a.Commits) == 0 &&
@@ -88,6 +79,8 @@ func (a *Allowlist) Validate() error {
 		len(a.StopWords) == 0 {
 		return errors.New("must contain at least one check for: commits, paths, regexes, or stopwords")
 	}
+
+	useOptimizations := flags.EnableExperimentalAllowlistOptimizations.Load()
 
 	// Deduplicate commits and stopwords.
 	if len(a.Commits) > 0 {
@@ -152,14 +145,11 @@ func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 	if a == nil || c == "" {
 		return false, ""
 	}
-	if useOptimizations {
-		if a.commitMap == nil {
-			return false, ""
-		}
+	if a.commitMap != nil {
 		if _, ok := a.commitMap[strings.ToLower(c)]; ok {
 			return true, ""
 		}
-	} else {
+	} else if len(a.Commits) > 0 {
 		for _, commit := range a.Commits {
 			if commit == c {
 				return true, c
@@ -174,15 +164,12 @@ func (a *Allowlist) PathAllowed(path string) bool {
 	if a == nil || path == "" {
 		return false
 	}
-
-	if useOptimizations {
-		if a.pathPat == nil {
-			return false
-		}
+	if a.pathPat != nil {
 		return a.pathPat.MatchString(path)
-	} else {
+	} else if len(a.Paths) > 0 {
 		return anyRegexMatch(path, a.Paths)
 	}
+	return false
 }
 
 // RegexAllowed returns true if the regex is allowed to be ignored.
@@ -190,15 +177,12 @@ func (a *Allowlist) RegexAllowed(secret string) bool {
 	if a == nil || secret == "" {
 		return false
 	}
-
-	if useOptimizations {
-		if a.regexPat == nil {
-			return false
-		}
+	if a.regexPat != nil {
 		return a.regexPat.MatchString(secret)
-	} else {
+	} else if len(a.Regexes) > 0 {
 		return anyRegexMatch(secret, a.Regexes)
 	}
+	return false
 }
 
 func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
@@ -207,14 +191,11 @@ func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 	}
 
 	s = strings.ToLower(s)
-	if useOptimizations {
-		if a.stopwordTrie == nil {
-			return false, ""
-		}
+	if a.stopwordTrie != nil {
 		if m := a.stopwordTrie.MatchFirstString(s); m != nil {
 			return true, m.MatchString()
 		}
-	} else {
+	} else if len(a.StopWords) > 0 {
 		for _, stopWord := range a.StopWords {
 			if strings.Contains(s, stopWord) {
 				return true, stopWord
