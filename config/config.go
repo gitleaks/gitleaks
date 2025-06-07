@@ -50,6 +50,12 @@ type ViperConfig struct {
 	// TODO: Remove this in 9.x.
 	AllowList  *viperGlobalAllowlist
 	Allowlists []*viperGlobalAllowlist
+
+	// EnableExperimentalAllowlistOptimizations enables a preview feature.
+	// See: https://github.com/gitleaks/gitleaks/pull/1731
+	//
+	// NOTE: This flag may be removed in the future.
+	EnableExperimentalAllowlistOptimizations bool
 }
 
 type viperRuleAllowlist struct {
@@ -141,7 +147,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			vr.Allowlists = append(vr.Allowlists, vr.AllowList)
 		}
 		for _, a := range vr.Allowlists {
-			allowlist, err := parseAllowlist(a)
+			allowlist, err := vc.parseAllowlist(a)
 			if err != nil {
 				return Config{}, fmt.Errorf("%s: [[rules.allowlists]] %w", cr.RuleID, err)
 			}
@@ -169,7 +175,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		vc.Allowlists = append(vc.Allowlists, vc.AllowList)
 	}
 	for _, a := range vc.Allowlists {
-		allowlist, err := parseAllowlist(&a.viperRuleAllowlist)
+		allowlist, err := vc.parseAllowlist(&a.viperRuleAllowlist)
 		if err != nil {
 			return Config{}, fmt.Errorf("[[allowlists]] %w", err)
 		}
@@ -190,11 +196,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			return Config{}, errors.New("unable to load config due to extend.path and extend.useDefault being set")
 		}
 		if c.Extend.UseDefault {
-			if err := c.extendDefault(); err != nil {
+			if err := c.extendDefault(vc); err != nil {
 				return Config{}, err
 			}
 		} else if c.Extend.Path != "" {
-			if err := c.extendPath(); err != nil {
+			if err := c.extendPath(vc); err != nil {
 				return Config{}, err
 			}
 		}
@@ -222,7 +228,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	return c, nil
 }
 
-func parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
+func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
 	var matchCondition AllowlistMatchCondition
 	switch strings.ToUpper(a.Condition) {
 	case "AND", "&&":
@@ -255,13 +261,14 @@ func parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
 	}
 
 	allowlist := &Allowlist{
-		Description:    a.Description,
-		MatchCondition: matchCondition,
-		Commits:        a.Commits,
-		Paths:          allowlistPaths,
-		RegexTarget:    regexTarget,
-		Regexes:        allowlistRegexes,
-		StopWords:      a.StopWords,
+		Description:                     a.Description,
+		MatchCondition:                  matchCondition,
+		Commits:                         a.Commits,
+		Paths:                           allowlistPaths,
+		RegexTarget:                     regexTarget,
+		Regexes:                         allowlistRegexes,
+		StopWords:                       a.StopWords,
+		EnableExperimentalOptimizations: vc.EnableExperimentalAllowlistOptimizations,
 	}
 	if err := allowlist.Validate(); err != nil {
 		return nil, err
@@ -279,13 +286,15 @@ func (c *Config) GetOrderedRules() []Rule {
 	return orderedRules
 }
 
-func (c *Config) extendDefault() error {
+func (c *Config) extendDefault(parent *ViperConfig) error {
 	extendDepth++
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
-	defaultViperConfig := ViperConfig{}
+	defaultViperConfig := ViperConfig{
+		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
+	}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
@@ -299,13 +308,15 @@ func (c *Config) extendDefault() error {
 	return nil
 }
 
-func (c *Config) extendPath() error {
+func (c *Config) extendPath(parent *ViperConfig) error {
 	extendDepth++
 	viper.SetConfigFile(c.Extend.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
-	extensionViperConfig := ViperConfig{}
+	extensionViperConfig := ViperConfig{
+		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
+	}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}

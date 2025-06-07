@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"golang.org/x/exp/maps"
 
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -29,10 +30,10 @@ type Allowlist struct {
 	// Short human readable description of the allowlist.
 	Description string
 
-	// MatchCondition determines whether all criteria must match.
+	// MatchCondition determines whether all criteria must match. Defaults to "OR".
 	MatchCondition AllowlistMatchCondition
 
-	// Commits is a slice of commit SHAs that are allowed to be ignored. Defaults to "OR".
+	// Commits is a slice of commit SHAs that are allowed to be ignored.
 	Commits []string
 
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
@@ -57,6 +58,18 @@ type Allowlist struct {
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
+
+	// EnableExperimentalOptimizations must be set prior to calling `Validate()`.
+	// See: https://github.com/gitleaks/gitleaks/pull/1731
+	//
+	// NOTE: This flag may be removed in the future.
+	EnableExperimentalOptimizations bool
+	// commitMap is a normalized version of Commits, used for efficiency purposes.
+	// TODO: possible optimizations so that both short and long hashes work.
+	commitMap    map[string]struct{}
+	regexPat     *regexp.Regexp
+	pathPat      *regexp.Regexp
+	stopwordTrie *ahocorasick.Trie
 }
 
 func (a *Allowlist) Validate() error {
@@ -76,16 +89,37 @@ func (a *Allowlist) Validate() error {
 	if len(a.Commits) > 0 {
 		uniqueCommits := make(map[string]struct{})
 		for _, commit := range a.Commits {
-			uniqueCommits[commit] = struct{}{}
+			// Commits are case-insensitive.
+			uniqueCommits[strings.TrimSpace(strings.ToLower(commit))] = struct{}{}
 		}
-		a.Commits = maps.Keys(uniqueCommits)
+		if a.EnableExperimentalOptimizations {
+			a.commitMap = uniqueCommits
+		} else {
+			a.Commits = maps.Keys(uniqueCommits)
+		}
 	}
 	if len(a.StopWords) > 0 {
 		uniqueStopwords := make(map[string]struct{})
 		for _, stopWord := range a.StopWords {
-			uniqueStopwords[stopWord] = struct{}{}
+			uniqueStopwords[strings.ToLower(stopWord)] = struct{}{}
 		}
-		a.StopWords = maps.Keys(uniqueStopwords)
+
+		values := maps.Keys(uniqueStopwords)
+		if a.EnableExperimentalOptimizations {
+			a.stopwordTrie = ahocorasick.NewTrieBuilder().AddStrings(values).Build()
+		} else {
+			a.StopWords = values
+		}
+	}
+
+	// Combine patterns into a single expression.
+	if a.EnableExperimentalOptimizations {
+		if len(a.Paths) > 0 {
+			a.pathPat = joinRegexOr(a.Paths)
+		}
+		if len(a.Regexes) > 0 {
+			a.regexPat = joinRegexOr(a.Regexes)
+		}
 	}
 
 	a.validated = true
@@ -97,10 +131,15 @@ func (a *Allowlist) CommitAllowed(c string) (bool, string) {
 	if a == nil || c == "" {
 		return false, ""
 	}
-
-	for _, commit := range a.Commits {
-		if commit == c {
-			return true, c
+	if a.commitMap != nil {
+		if _, ok := a.commitMap[strings.ToLower(c)]; ok {
+			return true, ""
+		}
+	} else if len(a.Commits) > 0 {
+		for _, commit := range a.Commits {
+			if commit == c {
+				return true, c
+			}
 		}
 	}
 	return false, ""
@@ -111,7 +150,12 @@ func (a *Allowlist) PathAllowed(path string) bool {
 	if a == nil || path == "" {
 		return false
 	}
-	return anyRegexMatch(path, a.Paths)
+	if a.pathPat != nil {
+		return a.pathPat.MatchString(path)
+	} else if len(a.Paths) > 0 {
+		return anyRegexMatch(path, a.Paths)
+	}
+	return false
 }
 
 // RegexAllowed returns true if the regex is allowed to be ignored.
@@ -119,7 +163,12 @@ func (a *Allowlist) RegexAllowed(secret string) bool {
 	if a == nil || secret == "" {
 		return false
 	}
-	return anyRegexMatch(secret, a.Regexes)
+	if a.regexPat != nil {
+		return a.regexPat.MatchString(secret)
+	} else if len(a.Regexes) > 0 {
+		return anyRegexMatch(secret, a.Regexes)
+	}
+	return false
 }
 
 func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
@@ -128,9 +177,15 @@ func (a *Allowlist) ContainsStopWord(s string) (bool, string) {
 	}
 
 	s = strings.ToLower(s)
-	for _, stopWord := range a.StopWords {
-		if strings.Contains(s, strings.ToLower(stopWord)) {
-			return true, stopWord
+	if a.stopwordTrie != nil {
+		if m := a.stopwordTrie.MatchFirstString(s); m != nil {
+			return true, m.MatchString()
+		}
+	} else if len(a.StopWords) > 0 {
+		for _, stopWord := range a.StopWords {
+			if strings.Contains(s, stopWord) {
+				return true, stopWord
+			}
 		}
 	}
 	return false, ""
