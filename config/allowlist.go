@@ -7,7 +7,6 @@ import (
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
 	"golang.org/x/exp/maps"
 
-	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -59,6 +58,12 @@ type Allowlist struct {
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
+
+	// EnableExperimentalOptimizations must be set prior to calling `Validate()`.
+	// See: https://github.com/gitleaks/gitleaks/pull/1731
+	//
+	// NOTE: This flag may be removed in the future.
+	EnableExperimentalOptimizations bool
 	// commitMap is a normalized version of Commits, used for efficiency purposes.
 	// TODO: possible optimizations so that both short and long hashes work.
 	commitMap    map[string]struct{}
@@ -80,8 +85,6 @@ func (a *Allowlist) Validate() error {
 		return errors.New("must contain at least one check for: commits, paths, regexes, or stopwords")
 	}
 
-	useOptimizations := flags.EnableExperimentalAllowlistOptimizations.Load()
-
 	// Deduplicate commits and stopwords.
 	if len(a.Commits) > 0 {
 		uniqueCommits := make(map[string]struct{})
@@ -89,7 +92,7 @@ func (a *Allowlist) Validate() error {
 			// Commits are case-insensitive.
 			uniqueCommits[strings.TrimSpace(strings.ToLower(commit))] = struct{}{}
 		}
-		if useOptimizations {
+		if a.EnableExperimentalOptimizations {
 			a.commitMap = uniqueCommits
 		} else {
 			a.Commits = maps.Keys(uniqueCommits)
@@ -102,7 +105,7 @@ func (a *Allowlist) Validate() error {
 		}
 
 		values := maps.Keys(uniqueStopwords)
-		if useOptimizations {
+		if a.EnableExperimentalOptimizations {
 			a.stopwordTrie = ahocorasick.NewTrieBuilder().AddStrings(values).Build()
 		} else {
 			a.StopWords = values
@@ -110,11 +113,13 @@ func (a *Allowlist) Validate() error {
 	}
 
 	// Combine patterns into a single expression.
-	if len(a.Paths) > 0 && useOptimizations {
-		a.pathPat = joinRegexOr(a.Paths)
-	}
-	if len(a.Regexes) > 0 && useOptimizations {
-		a.regexPat = joinRegexOr(a.Regexes)
+	if a.EnableExperimentalOptimizations {
+		if len(a.Paths) > 0 {
+			a.pathPat = joinRegexOr(a.Paths)
+		}
+		if len(a.Regexes) > 0 {
+			a.regexPat = joinRegexOr(a.Regexes)
+		}
 	}
 
 	a.validated = true

@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/config"
-	"github.com/zricethezav/gitleaks/v8/config/flags"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
@@ -220,15 +219,14 @@ func Execute() {
 }
 
 func Config(cmd *cobra.Command) config.Config {
-	// set experimental feature flag(s)
-	if mustGetBoolFlag(cmd, "experimental-optimizations") {
-		logging.Warn().Msgf("using experimental allowlist optimizations, updates may contain breaking changes!")
-		flags.EnableExperimentalAllowlistOptimizations.Store(true)
-	}
-
 	var vc config.ViperConfig
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
+	}
+	// set experimental feature flag(s)
+	if mustGetBoolFlag(cmd, "experimental-optimizations") {
+		logging.Warn().Msgf("using experimental allowlist optimizations, updates may contain breaking changes!")
+		vc.EnableExperimentalAllowlistOptimizations = true
 	}
 	cfg, err := vc.Translate()
 	if err != nil {
