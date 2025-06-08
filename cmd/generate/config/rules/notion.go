@@ -18,6 +18,7 @@ func Notion() *config.Rule {
         Description: "Notion API token",
         RuleID: "notion-api-token",
         Regex: regex,
+        Entropy: 4,
         Keywords: identifiers,
     }
 
