@@ -2589,11 +2589,8 @@ keywords = ["nrak"]
 id = "notion-api-token"
 description = "Notion API token"
 regex = '''\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\x60'"\s;]|\\[nr]|$)'''
-keywords = [
-    "ntn",
-    "ntn_",
-    "notion",
-]
+entropy = 4
+keywords = ["ntn_"]
 
 [[rules]]
 id = "npm-access-token"
