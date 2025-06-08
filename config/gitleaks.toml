@@ -144,7 +144,7 @@ keywords = ["asana"]
 [[rules]]
 id = "atlassian-api-token"
 description = "Detected an Atlassian API token, posing a threat to project management and collaboration tool security and data confidentiality."
-regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:atlassian|confluence|jira)(?:[ \t\w.-]{0,20})[\s'"]{0,3})(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9]{24})(?:[\x60'"\s;]|\\[nr]|$)|\b(ATATT3[A-Za-z0-9_\-=]{186})(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:(?-i:ATLASSIAN|[Aa]tlassian)|(?-i:CONFLUENCE|[Cc]onfluence)|(?-i:JIRA|[Jj]ira))(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{20}[a-f0-9]{4})(?:[\x60'"\s;]|\\[nr]|$)|\b(ATATT3[A-Za-z0-9_\-=]{186})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 3.5
 keywords = [
     "atlassian",
@@ -2295,6 +2295,13 @@ id = "heroku-api-key"
 description = "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security."
 regex = '''(?i)[\w.-]{0,50}?(?:heroku)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["heroku"]
+
+[[rules]]
+id = "heroku-api-key-v2"
+description = "Detected a Heroku API Key, potentially compromising cloud application deployments and operational security."
+regex = '''\b((HRKU-AA[0-9a-zA-Z_-]{58}))(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 4
+keywords = ["hrku-aa"]
 
 [[rules]]
 id = "hubspot-api-key"
