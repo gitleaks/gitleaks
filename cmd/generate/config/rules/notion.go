@@ -7,7 +7,7 @@ import (
 
 func Notion() *config.Rule {
     // Define the identifiers that match the Keywords
-    identifiers := []string{"ntn", "ntn_", "notion"}
+    identifiers := []string{"ntn_"}
     
     // Define the regex pattern for Notion API token
     secretRegex := `ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3}`
