@@ -59,8 +59,8 @@ regexes = [
     '''^/(?:bin|etc|home|opt|tmp|usr|var)/[\w ./-]+$''',
 ]
 stopwords = [
-    "abcdefghijklmnopqrstuvwxyz",
     "014df517-39d1-4453-b7b3-9930c563627c",
+    "abcdefghijklmnopqrstuvwxyz",
 ]
 
 [[rules]]
