@@ -161,6 +161,7 @@ func main() {
 		rules.NewRelicUserKey(),
 		rules.NewRelicBrowserAPIKey(),
 		rules.NewRelicInsertKey(),
+		rules.Notion(),
 		rules.NPM(),
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
@@ -249,7 +250,6 @@ func main() {
 				Str("rule-id", rule.RuleID).
 				Msg("Failed to validate rule")
 		}
-		sortRule(rule)
 
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
@@ -260,6 +260,13 @@ func main() {
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
+
+		// Slices are de-duplicated with a map, every iteration has a different order.
+		// This is an awkward workaround.
+		for _, allowlist := range rule.Allowlists {
+			slices.Sort(allowlist.Commits)
+			slices.Sort(allowlist.StopWords)
+		}
 	}
 
 	tmpl, err := template.ParseFiles(templatePath)
@@ -275,14 +282,11 @@ func main() {
 
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
+	for _, allowlist := range cfg.Allowlists {
+		slices.Sort(allowlist.Commits)
+		slices.Sort(allowlist.StopWords)
+	}
 	if err = tmpl.Execute(f, cfg); err != nil {
 		logging.Fatal().Err(err).Msg("could not execute template")
-	}
-}
-
-// sortRule makes the generated config deterministic.
-func sortRule(r *config.Rule) {
-	for _, a := range r.Allowlists {
-		slices.Sort(a.StopWords)
 	}
 }

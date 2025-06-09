@@ -88,5 +88,10 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = rules
 	cfg.Keywords = uniqueKeywords
+	for _, a := range cfg.Allowlists {
+		if err := a.Validate(); err != nil {
+			logging.Fatal().Err(err).Msg("invalid global allowlist")
+		}
+	}
 	return detect.NewDetector(cfg)
 }
