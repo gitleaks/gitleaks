@@ -23,4 +23,6 @@ type Fragment struct {
 
 	// CommitInfo captures additional information about the git commit if applicable
 	CommitInfo *CommitInfo
+
+	InheritedFromFinding bool // Indicates if this fragment is inherited from a finding
 }
