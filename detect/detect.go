@@ -419,10 +419,10 @@ func findFullLine(fragment Fragment, loc Location, secret string) string {
 	// We look for the nearest previous newline before the secret's start index.
 	precedingNewLineIndex := findIndexAfterPreviousNewline(fragment.Raw, secretStartIndex)
 
-	secretEndIndex := loc.endLineIndex + (loc.endColumn - 1)
+	endLineIndex := loc.endLineIndex
 
 	// Return substring between indices, trimmed of whitespace.
-	return strings.TrimSpace(fragment.Raw[precedingNewLineIndex:secretEndIndex])
+	return strings.TrimSpace(fragment.Raw[precedingNewLineIndex:endLineIndex])
 }
 
 // findIndexAfterPreviousNewline returns the index after the previous newline before startIdx.
