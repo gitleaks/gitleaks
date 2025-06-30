@@ -271,6 +271,7 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 			loc.endLineIndex = matchIndex[1]
 		}
 
+		// Find the full line containing the secret.
 		full_fragment := findFullLine(fragment, loc, secret)
 
 		finding := report.Finding{
@@ -410,40 +411,22 @@ func (d *Detector) addCommit(commit string) {
 }
 
 // this function knows how to find the full line based on the secret and the newline chars it is between
+// It will take the secret starting index and look up to 250 characters back to find the previous newline.
 func findFullLine(fragment Fragment, loc Location, secret string) string {
 
-	secretLocation := findRelevantOccurenceOfSecret(fragment.Raw, secret, loc)
-	if secretLocation == nil {
-		return ""
-	}
+	secretStartIndex := loc.startLineIndex + (loc.startColumn - 1)
 
-	secretStartingIdx := secretLocation[0] // start of secret in fragment
-	secretEndingIdx := secretLocation[1]   // end of secret in fragment
+	// We look for the nearest previous newline before the secret's start index.
+	precedingNewLineIndex := findIndexAfterPreviousNewline(fragment.Raw, secretStartIndex)
 
-	// find the nearest previous newline
-	prevNewlineIndex := findIndexAfterPreviousNewline(fragment.Raw, secretStartingIdx-1)
-	// find the nearest next newline
-	nextNewlineIndex := findIndexBeforeNextNewline(fragment.Raw, secretEndingIdx+1)
+	secretEndIndex := loc.endLineIndex + (loc.endColumn - 1)
 
-	// return substring between indices
-	return strings.TrimSpace(fragment.Raw[prevNewlineIndex:nextNewlineIndex])
+	// Return substring between indices, trimmed of whitespace.
+	return strings.TrimSpace(fragment.Raw[precedingNewLineIndex:secretEndIndex])
 }
 
-// this function checks which occurence of the secret is relevant based on the location provided
-func findRelevantOccurenceOfSecret(fragment string, secret string, loc Location) []int {
-	re := regexp.MustCompile(regexp.QuoteMeta(secret))
-	matches := re.FindAllStringIndex(fragment, -1)
-
-	// Extract the start indices
-	for _, match := range matches {
-		if match[0] >= loc.startLineIndex && match[1] <= loc.endLineIndex {
-			return match
-		}
-	}
-
-	return nil
-}
-
+// findIndexAfterPreviousNewline returns the index after the previous newline before startIdx.
+// If no newline is found, returns 0 (start of string). Stops looking after 250 characters to avoid excessive lookback.
 func findIndexAfterPreviousNewline(fragment string, startIdx int) int {
 	if startIdx <= 0 {
 		return 0
@@ -454,35 +437,19 @@ func findIndexAfterPreviousNewline(fragment string, startIdx int) int {
 		return 0
 	}
 
-	for i := startIdx; i >= 0; i-- {
+	// Calculate the minimum index to search (limit lookback to 250 chars)
+	minIdx := startIdx - 250
+	if minIdx < 0 {
+		minIdx = 0
+	}
+	
+	for i := startIdx; i >= minIdx; i-- {
 		char := fragment[i]
-
 		if isNewline := re.Match([]byte{char}); isNewline {
 			return i
 		}
 	}
-
-	return 0
-}
-
-func findIndexBeforeNextNewline(fragment string, startIdx int) int {
-	maxIdx := len(fragment)
-	if startIdx == maxIdx {
-		return maxIdx
-	}
-
-	re, err := regexp.Compile(`\r|\n`)
-	if err != nil {
-		return maxIdx
-	}
-
-	for i := startIdx; i < maxIdx; i++ {
-		char := fragment[i]
-
-		if isNewline := re.Match([]byte{char}); isNewline {
-			return i
-		}
-	}
-
-	return maxIdx
+	
+	// If no newline found within 250 chars, return the minimum index we reached
+	return minIdx
 }
