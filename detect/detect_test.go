@@ -373,6 +373,30 @@ func TestDetect(t *testing.T) {
 				},
 			},
 		},
+				{
+			cfgName: "generic",
+			fragment: Fragment{
+				Raw:      `(function(){function r(n){return n*Math.random()}var a={x:1,y:2,z:function(){return this.x+this.y}};for(var i=0;i<10;i++){setTimeout(()=>{console.log("Val:",i*r(i))},i*100)}function c(t){let s=[];for(let i=0;i<t;i++){s.push(String.fromCharCode(97+Math.floor(Math.random()*26)))}return s.join("")}let obj={name:c(5),id:Math.floor(r(1000)),data:[]};for(let j=0;j<5;j++){obj.data.push({id:j,val:r(j+1)})}console.log("Obj:",obj);const f=(m)=>{let x=1;for(let k=1;k<=m;k++){x*=k}return x};console.log("Fact(5):",f(5));["a","b","c"].forEach((v,i)=>{console.log("${i}:${v.toUpperCase()}")});let s=0;while(s<5){console.log("Sum:",s+=2)}const e=[1,2,3,4].map(n=>n**2);let password="wJalrXUtnFEMIK7MDENGbPxRfiCY";console.log("Squares:",e);})();`,
+				FilePath: "tmp.js",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Generic API Key",
+					Match:       "password=\"wJalrXUtnFEMIK7MDENGbPxRfiCY\"",
+					Secret:      "wJalrXUtnFEMIK7MDENGbPxRfiCY",
+					Line:        "(function(){function r(n){return n*Math.random()}var a={x:1,y:2,z:function(){return this.x+this.y}};for(var i=0;i<10;i++){setTimeout(()=>{console.log(\"Val:\",i*r(i))},i*100)}function c(t){let s=[];for(let i=0;i<t;i++){s.push(String.fromCharCode(97+Math.floor(Math.random()*26)))}return s.join(\"\")}let obj={name:c(5),id:Math.floor(r(1000)),data:[]};for(let j=0;j<5;j++){obj.data.push({id:j,val:r(j+1)})}console.log(\"Obj:\",obj);const f=(m)=>{let x=1;for(let k=1;k<=m;k++){x*=k}return x};console.log(\"Fact(5):\",f(5));[\"a\",\"b\",\"c\"].forEach((v,i)=>{console.log(\"${i}:${v.toUpperCase()}\")});let s=0;while(s<5){console.log(\"Sum:\",s+=2)}const e=[1,2,3,4].map(n=>n**2);let password=\"wJalrXUtnFEMIK7MDENGbPxRfiCY\";console.log(\"Squares:\",e);})();",
+					FullLine:    "\"Obj:\",obj);const f=(m)=>{let x=1;for(let k=1;k<=m;k++){x*=k}return x};console.log(\"Fact(5):\",f(5));[\"a\",\"b\",\"c\"].forEach((v,i)=>{console.log(\"${i}:${v.toUpperCase()}\")});let s=0;while(s<5){console.log(\"Sum:\",s+=2)}const e=[1,2,3,4].map(n=>n**2);let password=\"wJalrXUtnFEMIK7MDENGbPxRfiCY\";console.log(\"Squares:\",e);})();",
+					File:        "tmp.js",
+					RuleID:      "generic-api-key",
+					Tags:        []string{},
+					Entropy:     4.664498,
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 664,
+					EndColumn:   702,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
