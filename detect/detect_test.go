@@ -337,6 +337,42 @@ func TestDetect(t *testing.T) {
 			},
 			expectedFindings: []report.Finding{},
 		},
+		{
+			cfgName: "generic",
+			fragment: Fragment{
+				Raw:      `using System.Collections.Generic;
+					using System.Data.Entity;
+					using System.Linq;
+					using System.Threading.Tasks;
+					using System.Web.Mvc;
+
+					namespace xyz.Controllers
+					{
+						public class mycontroller : Controller
+						{
+							123 => String password = "wJalrXUtnFEMIK7MDENGbPxRfiCY";
+						}
+					}`,
+				FilePath: "tmp.java",
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Generic API Key",
+					Match:       "password = \"wJalrXUtnFEMIK7MDENGbPxRfiCY\"",
+					Secret:      "wJalrXUtnFEMIK7MDENGbPxRfiCY",
+					Line:        "\n\t\t\t\t\t\t\t123 => String password = \"wJalrXUtnFEMIK7MDENGbPxRfiCY\";",
+					FullLine:    `123 => String password = "wJalrXUtnFEMIK7MDENGbPxRfiCY";`,
+					File:        "tmp.java",
+					RuleID:      "generic-api-key",
+					Tags:        []string{},
+					Entropy:     4.664498,
+					StartLine:   10,
+					EndLine:     10,
+					StartColumn: 23,
+					EndColumn:   63,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
