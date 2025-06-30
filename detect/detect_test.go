@@ -670,7 +670,7 @@ func TestDetectWithSymlinks(t *testing.T) {
 					Match:       "-----BEGIN OPENSSH PRIVATE KEY-----",
 					Secret:      "-----BEGIN OPENSSH PRIVATE KEY-----",
 					Line:        "-----BEGIN OPENSSH PRIVATE KEY-----",
-					FullLine:    "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW",
+					FullLine:    "-----BEGIN OPENSSH PRIVATE KEY-----",
 					File:        "../testdata/repos/symlinks/source_file/id_ed25519",
 					SymlinkFile: "../testdata/repos/symlinks/file_symlink/symlinked_id_ed25519",
 					RuleID:      "apkey",
@@ -744,7 +744,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "Line 1\nThis is a line with some secret data.\nAnother line follows here.",
 			},
-			loc:      Location{startLineIndex: 7, endLineIndex: 50},
+			loc:      Location{startLineIndex: 7, endLineIndex: 44, startColumn: 26},
 			secret:   "secret",
 			expected: "This is a line with some secret data.",
 		},
@@ -753,7 +753,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "Line 1\r\nThis is a line with some secret data.\r\nAnother line follows here.",
 			},
-			loc:      Location{startLineIndex: 8, endLineIndex: 51},
+			loc:      Location{startLineIndex: 8, endLineIndex: 45, startColumn: 26},
 			secret:   "secret",
 			expected: "This is a line with some secret data.",
 		},
@@ -762,7 +762,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "secret is at the start\nAnother line follows here.",
 			},
-			loc:      Location{startLineIndex: 0, endLineIndex: 21},
+			loc:      Location{startLineIndex: 0, endLineIndex: 22, startColumn: 1},
 			secret:   "secret",
 			expected: "secret is at the start",
 		},
@@ -771,7 +771,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "Line 1\nAnother line follows here with secret",
 			},
-			loc:      Location{startLineIndex: 29, endLineIndex: 45},
+			loc:      Location{startLineIndex: 7, endLineIndex: 44, startColumn: 32},
 			secret:   "secret",
 			expected: "Another line follows here with secret",
 		},
@@ -780,7 +780,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "This is a secret line.",
 			},
-			loc:      Location{startLineIndex: 0, endLineIndex: 23},
+			loc:      Location{startLineIndex: 0, endLineIndex: 22, startColumn: 11},
 			secret:   "secret",
 			expected: "This is a secret line.",
 		},
@@ -789,7 +789,7 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "This is a line with secret in the middle and no newlines.",
 			},
-			loc:      Location{startLineIndex: 0, endLineIndex: 57},
+			loc:      Location{startLineIndex: 0, endLineIndex: 57, startColumn: 21},
 			secret:   "secret",
 			expected: "This is a line with secret in the middle and no newlines.",
 		},
@@ -798,16 +798,16 @@ func TestFindSecretLine(t *testing.T) {
 			fragment: Fragment{
 				Raw: "This is a line with no secrets.",
 			},
-			loc:      Location{startLineIndex: 0, endLineIndex: 30},
+			loc:      Location{startLineIndex: 0, endLineIndex: 31, startColumn: 1},
 			secret:   "hello",
-			expected: "",
+			expected: "This is a line with no secrets.",
 		},
 		{
 			name: "Multiple newlines",
 			fragment: Fragment{
 				Raw: "\n\nThis is a line with a secret in between\n\n",
 			},
-			loc:      Location{startLineIndex: 2, endLineIndex: 40},
+			loc:      Location{startLineIndex: 2, endLineIndex: 41, startColumn: 22},
 			secret:   "secret",
 			expected: "This is a line with a secret in between",
 		},
