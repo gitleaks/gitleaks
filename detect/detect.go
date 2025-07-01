@@ -270,13 +270,9 @@ func (d *Detector) detectRule(fragment Fragment, rule config.Rule) []report.Find
 		if matchIndex[1] > loc.endLineIndex {
 			loc.endLineIndex = matchIndex[1]
 		}
-		
-		full_fragment := ""
-		if( len(fragment.Raw)  > 250 ){
-			full_fragment = strings.TrimSpace(fragment.Raw[0:250])
-		}else{
-			full_fragment = strings.TrimSpace(fragment.Raw[0:])
-		}
+
+		// Find the full line containing the secret.
+		full_fragment := findFullLine(fragment, loc, secret)
 
 		finding := report.Finding{
 			Description: rule.Description,
@@ -412,4 +408,48 @@ func (d *Detector) addFinding(finding report.Finding) {
 // addCommit synchronously adds a commit to the commit slice
 func (d *Detector) addCommit(commit string) {
 	d.commitMap[commit] = true
+}
+
+// this function knows how to find the full line based on the secret and the newline chars it is between
+// It will take the secret starting index and look up to 250 characters back to find the previous newline.
+func findFullLine(fragment Fragment, loc Location, secret string) string {
+
+	secretStartIndex := loc.startLineIndex + (loc.startColumn - 1)
+
+	// We look for the nearest previous newline before the secret's start index.
+	precedingNewLineIndex := findIndexAfterPreviousNewline(fragment.Raw, secretStartIndex)
+
+	endLineIndex := loc.endLineIndex
+
+	// Return substring between indices, trimmed of whitespace.
+	return strings.TrimSpace(fragment.Raw[precedingNewLineIndex:endLineIndex])
+}
+
+// findIndexAfterPreviousNewline returns the index after the previous newline before startIdx.
+// If no newline is found, returns 0 (start of string). Stops looking after 250 characters to avoid excessive lookback.
+func findIndexAfterPreviousNewline(fragment string, startIdx int) int {
+	if startIdx <= 0 {
+		return 0
+	}
+
+	re, err := regexp.Compile(`\r|\n`)
+	if err != nil {
+		return 0
+	}
+
+	// Calculate the minimum index to search (limit lookback to 250 chars)
+	minIdx := startIdx - 250
+	if minIdx < 0 {
+		minIdx = 0
+	}
+	
+	for i := startIdx; i >= minIdx; i-- {
+		char := fragment[i]
+		if isNewline := re.Match([]byte{char}); isNewline {
+			return i
+		}
+	}
+	
+	// If no newline found within 250 chars, return the minimum index we reached
+	return minIdx
 }
