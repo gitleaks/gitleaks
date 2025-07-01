@@ -48,7 +48,7 @@ type Finding struct {
 
 	// Fragment used for multi-part rule checking, CEL filtering,
 	// and eventually ML validation
-	Fragment *sources.Fragment
+	Fragment *sources.Fragment `json:",omitempty"`
 
 	// TODO keeping private for now to during experimental phase
 	auxiliaryFindings []*AuxiliaryFinding

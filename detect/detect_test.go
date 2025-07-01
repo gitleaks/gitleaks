@@ -97,6 +97,38 @@ username = "admin"
 			password = "secret123"
 `
 
+func compare(t *testing.T, a, b []report.Finding) {
+	if diff := cmp.Diff(a, b,
+		cmpopts.SortSlices(func(a, b report.Finding) bool {
+			if a.File != b.File {
+				return a.File < b.File
+			}
+			if a.StartLine != b.StartLine {
+				return a.StartLine < b.StartLine
+			}
+			if a.StartColumn != b.StartColumn {
+				return a.StartColumn < b.StartColumn
+			}
+			if a.EndLine != b.EndLine {
+				return a.EndLine < b.EndLine
+			}
+			if a.EndColumn != b.EndColumn {
+				return a.EndColumn < b.EndColumn
+			}
+			if a.RuleID != b.RuleID {
+				return a.RuleID < b.RuleID
+			}
+			return a.Secret < b.Secret
+		}),
+		cmpopts.IgnoreFields(report.Finding{},
+			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "auxiliaryFindings"),
+		cmpopts.EquateApprox(0.0001, 0), // For floating point Entropy comparison
+	); diff != "" {
+		t.Errorf("findings mismatch (-want +got):\n%s", diff)
+	}
+
+}
+
 func TestDetect(t *testing.T) {
 	logging.Logger = logging.Logger.Level(zerolog.TraceLevel)
 	tests := map[string]struct {
@@ -770,34 +802,8 @@ const token = "mockSecret";
 			d.baselinePath = tt.baselinePath
 
 			findings := d.Detect(tt.fragment)
-			if diff := cmp.Diff(tt.expectedFindings, findings,
-				cmpopts.SortSlices(func(a, b report.Finding) bool {
-					if a.File != b.File {
-						return a.File < b.File
-					}
-					if a.StartLine != b.StartLine {
-						return a.StartLine < b.StartLine
-					}
-					if a.StartColumn != b.StartColumn {
-						return a.StartColumn < b.StartColumn
-					}
-					if a.EndLine != b.EndLine {
-						return a.EndLine < b.EndLine
-					}
-					if a.EndColumn != b.EndColumn {
-						return a.EndColumn < b.EndColumn
-					}
-					if a.RuleID != b.RuleID {
-						return a.RuleID < b.RuleID
-					}
-					return a.Secret < b.Secret
-				}),
-				cmpopts.IgnoreFields(report.Finding{},
-					"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "auxiliaryFindings"),
-				cmpopts.EquateApprox(0.0001, 0), // For floating point Entropy comparison
-			); diff != "" {
-				t.Errorf("findings mismatch (-want +got):\n%s", diff)
-			}
+
+			compare(t, findings, tt.expectedFindings)
 
 			// extremely goofy way to test auxiliary findings
 			// capture stdout and print that sonabitch
@@ -2390,9 +2396,7 @@ let password = 'Summer2024!';`
 			f := tc.fragment
 			f.Raw = raw
 			actual := d.detectRule(f, [][]int{}, raw, rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(tc.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, tc.expected, actual)
 		})
 	}
 }
@@ -2551,9 +2555,10 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(test.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, test.expected, actual)
+			// if diff := cmp.Diff(test.expected, actual); diff != "" {
+			// 	t.Errorf("diff: (-want +got)\n%s", diff)
+			// }
 		})
 	}
 }
@@ -2737,9 +2742,10 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(test.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, test.expected, actual)
+			// if diff := cmp.Diff(test.expected, actual); diff != "" {
+			// 	t.Errorf("diff: (-want +got)\n%s", diff)
+			// }
 		})
 	}
 }
