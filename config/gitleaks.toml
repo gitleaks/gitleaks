@@ -132,14 +132,14 @@ keywords = ["alibaba"]
 [[rules]]
 id = "artifactory-api-key"
 description = "Detected an Artifactory api key, posing a risk unauthorized access to the central repository."
-regex = '''AKCp[A-Za-z0-9]{69}'''
+regex = '''\bAKCp[A-Za-z0-9]{69}\b'''
 entropy = 3
 keywords = ["akcp"]
 
 [[rules]]
 id = "artifactory-reference-token"
 description = "Detected an Artifactory reference token, posing a risk of impersonation and unauthorized access to the central repository."
-regex = '''cmVmd[A-Za-z0-9]{59}'''
+regex = '''\bcmVmd[A-Za-z0-9]{59}\b'''
 entropy = 3
 keywords = ["cmvmd"]
 

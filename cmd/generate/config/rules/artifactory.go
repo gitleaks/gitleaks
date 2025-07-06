@@ -12,7 +12,7 @@ func ArtifactoryApiKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "artifactory-api-key",
 		Description: "Detected an Artifactory api key, posing a risk unauthorized access to the central repository.",
-		Regex:       regexp.MustCompile(`AKCp[A-Za-z0-9]{69}`),
+		Regex:       regexp.MustCompile(`\bAKCp[A-Za-z0-9]{69}\b`),
 		Entropy:     3,
 		Keywords:    []string{"AKCp"},
 	}
@@ -21,7 +21,15 @@ func ArtifactoryApiKey() *config.Rule {
 	tps := []string{
 		"artifactoryApiKey := \"AKCp" + secrets.NewSecret(utils.Hex("69")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	// false positives
+	fps := []string{
+		`lowEntropy := AKCpXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
+		"wrongStart := \"AkCp" + secrets.NewSecret(utils.Hex("69")) + "\"",
+		"wrongLength := \"AkCp" + secrets.NewSecret(utils.Hex("59")) + "\"",
+		"partOfAlongUnrelatedBlob gYnkgAkCp" + secrets.NewSecret(utils.Hex("69")) + "VyZSB2",
+	}
+
+	return utils.Validate(r, tps, fps)
 }
 
 func ArtifactoryReferenceToken() *config.Rule {
@@ -29,7 +37,7 @@ func ArtifactoryReferenceToken() *config.Rule {
 	r := config.Rule{
 		RuleID:      "artifactory-reference-token",
 		Description: "Detected an Artifactory reference token, posing a risk of impersonation and unauthorized access to the central repository.",
-		Regex:       regexp.MustCompile(`cmVmd[A-Za-z0-9]{59}`),
+		Regex:       regexp.MustCompile(`\bcmVmd[A-Za-z0-9]{59}\b`),
 		Entropy:     3,
 		Keywords:    []string{"cmVmd"},
 	}
@@ -38,5 +46,13 @@ func ArtifactoryReferenceToken() *config.Rule {
 	tps := []string{
 		"artifactoryRefToken := \"cmVmd" + secrets.NewSecret(utils.Hex("59")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	// false positives
+	fps := []string{
+		`lowEntropy := cmVmdXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
+		"wrongStart := \"cmVMd" + secrets.NewSecret(utils.Hex("59")) + "\"",
+		"wrongLength := \"cmVmd" + secrets.NewSecret(utils.Hex("49")) + "\"",
+		"partOfAlongUnrelatedBlob gYnkgcmVmd" + secrets.NewSecret(utils.Hex("59")) + "VyZSB2",
+	}
+
+	return utils.Validate(r, tps, fps)
 }
