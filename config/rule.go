@@ -46,6 +46,18 @@ type Rule struct {
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
+
+	// If a rule has RequiredRules, it makes the rule dependent on the RequiredRules.
+	// In otherwords, this rule is now a composite rule.
+	RequiredRules []*Required
+
+	SkipReport bool
+}
+
+type Required struct {
+	RuleID        string
+	WithinLines   *int
+	WithinColumns *int
 }
 
 // Validate guards against common misconfigurations.

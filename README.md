@@ -415,6 +415,89 @@ Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob
 
 ### Additional Configuration
 
+#### Composite Rules (Multi-part or "required" Rules)
+In v8.29.0 Gitleaks introduced composite rules, which are made up of a single `primary` rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `within_lines` and/or `within_columns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
+
+**Proximity matching:** Using the `within_lines` and `within_columns` fields instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified proximity. You can set:
+
+- **`within_lines: N`** - auxiliary findings must be within N lines (vertically)
+- **`within_columns: N`** - auxiliary findings must be within N characters (horizontally)  
+- **Both** - creates a rectangular search area (both constraints must be satisfied)
+- **Neither** - fragment-level matching (auxiliary can be anywhere in the same fragment)
+
+Here are diagrams illustrating each proximity behavior:
+
+```
+    Fragment-level matching:               
+    Any auxiliary finding within           
+    the fragment boundary                  
+    matches.                               
+          ┌────────┐                       
+   ┌──────┤fragment├─────┐                 
+   │      └──────┬─┤     │ ┌───────┐       
+   │             │a│◀────┼─│✓ MATCH│       
+   │          ┌─┐└─┘     │ └───────┘       
+   │┌─┐       │p│        │                 
+   ││a│    ┌─┐└─┘        │ ┌───────┐       
+   │└─┘    │a│◀──────────┼─│✓ MATCH│       
+   └─▲─────┴─┴───────────┘ └───────┘       
+     │    ┌───────┐                        
+     └────│✓ MATCH│                        
+          └───────┘                        
+                                           
+                                           
+   example:                                
+   `within_columns = 3`                    
+          ┌────────┐                       
+   ┌────┬─┤fragment├─┬───┐                 
+   │      └──────┬─┤     │ ┌───────────┐   
+   │    │        │a│◀┼───┼─│+1C ✓ MATCH│   
+   │          ┌─┐└─┘     │ └───────────┘   
+   │┌─┐ │     │p│    │   │                 
+┌──▶│a│  ┌─┐  └─┘        │ ┌───────────┐   
+│  │└─┘ ││a│◀────────┼───┼─│-2C ✓ MATCH│   
+│  │       ┘             │ └───────────┘   
+│  └── -3C ───0C─── +3C ─┘                 
+│  ┌─────────┐                             
+│  │ -4C ✗ NO│                             
+└──│  MATCH  │                             
+   └─────────┘                             
+                                           
+                                           
+   example:                                
+   `within_lines = 4`                      
+         ┌────────┐                        
+   ┌─────┤fragment├─────┐                  
+  +4L─ ─ ┴────────┘─ ─ ─│                  
+   │                    │                  
+   │              ┌─┐   │ ┌────────────┐   
+   │         ┌─┐  │a│◀──┼─│+1L ✓ MATCH │   
+   0L  ┌─┐   │p│  └─┘   │ ├────────────┤   
+   │   │a│◀──┴─┴────────┼─│-1L ✓ MATCH │   
+   │   └─┘              │ └────────────┘   
+   │                    │ ┌─────────┐      
+  -4L─ ─ ─ ─ ─ ─ ─ ─┌─┐─│ │-5L ✗ NO │      
+   │                │a│◀┼─│  MATCH  │      
+   └────────────────┴─┴─┘ └─────────┘      
+                                           
+                                           
+   example:                                
+   `within_lines = 4`                      
+   `within_columns = 3`                    
+         ┌────────┐                        
+   ┌─────┤fragment├─────┐                  
+  +4L   ┌└────────┴ ┐   │                  
+   │            ┌─┐     │ ┌───────────────┐
+   │    │       │a│◀┼───┼─│+2L/+1C ✓ MATCH│
+   │         ┌─┐└─┘     │ └───────────────┘
+   0L   │    │p│    │   │                  
+   │         └─┘        │                  
+   │    │           │   │ ┌────────────┐   
+  -4L    ─ ─ ─ ─ ─ ─┌─┐ │ │-5L/+3C ✗ NO│   
+   │                │a│◀┼─│   MATCH    │   
+   └───-3C────0L───+3C┴─┘ └────────────┘   
+```
+  
 #### gitleaks:allow
 
 If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
