@@ -59,11 +59,6 @@ type Allowlist struct {
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
 
-	// EnableExperimentalOptimizations must be set prior to calling `Validate()`.
-	// See: https://github.com/gitleaks/gitleaks/pull/1731
-	//
-	// NOTE: This flag may be removed in the future.
-	EnableExperimentalOptimizations bool
 	// commitMap is a normalized version of Commits, used for efficiency purposes.
 	// TODO: possible optimizations so that both short and long hashes work.
 	commitMap    map[string]struct{}
@@ -92,11 +87,8 @@ func (a *Allowlist) Validate() error {
 			// Commits are case-insensitive.
 			uniqueCommits[strings.TrimSpace(strings.ToLower(commit))] = struct{}{}
 		}
-		if a.EnableExperimentalOptimizations {
-			a.commitMap = uniqueCommits
-		} else {
-			a.Commits = maps.Keys(uniqueCommits)
-		}
+		a.Commits = maps.Keys(uniqueCommits)
+		a.commitMap = uniqueCommits
 	}
 	if len(a.StopWords) > 0 {
 		uniqueStopwords := make(map[string]struct{})
@@ -105,21 +97,16 @@ func (a *Allowlist) Validate() error {
 		}
 
 		values := maps.Keys(uniqueStopwords)
-		if a.EnableExperimentalOptimizations {
-			a.stopwordTrie = ahocorasick.NewTrieBuilder().AddStrings(values).Build()
-		} else {
-			a.StopWords = values
-		}
+		a.StopWords = values
+		a.stopwordTrie = ahocorasick.NewTrieBuilder().AddStrings(values).Build()
 	}
 
 	// Combine patterns into a single expression.
-	if a.EnableExperimentalOptimizations {
-		if len(a.Paths) > 0 {
-			a.pathPat = joinRegexOr(a.Paths)
-		}
-		if len(a.Regexes) > 0 {
-			a.regexPat = joinRegexOr(a.Regexes)
-		}
+	if len(a.Paths) > 0 {
+		a.pathPat = joinRegexOr(a.Paths)
+	}
+	if len(a.Regexes) > 0 {
+		a.regexPat = joinRegexOr(a.Regexes)
 	}
 
 	a.validated = true
