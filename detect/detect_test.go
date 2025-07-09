@@ -2107,8 +2107,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			},
 			expected: []report.Finding{
 				{
-					StartColumn: 50,
-					EndColumn:   60,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 18,
+					EndColumn:   28,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
@@ -2132,8 +2134,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			},
 			expected: []report.Finding{
 				{
-					StartColumn: 50,
-					EndColumn:   60,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 18,
+					EndColumn:   28,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
@@ -2203,8 +2207,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			},
 			expected: []report.Finding{
 				{
-					StartColumn: 50,
-					EndColumn:   60,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 18,
+					EndColumn:   28,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
@@ -2225,8 +2231,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			},
 			expected: []report.Finding{
 				{
-					StartColumn: 50,
-					EndColumn:   60,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 18,
+					EndColumn:   28,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
@@ -2249,8 +2257,10 @@ func TestDetectRuleAllowlist(t *testing.T) {
 			},
 			expected: []report.Finding{
 				{
-					StartColumn: 50,
-					EndColumn:   60,
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 18,
+					EndColumn:   28,
 					Line:        "let username = 'james@mail.com';\nlet password = 'Summer2024!';",
 					Match:       "Summer2024!",
 					Secret:      "Summer2024!",
@@ -2290,7 +2300,7 @@ let password = 'Summer2024!';`
 
 			f := tc.fragment
 			f.Raw = raw
-			actual := d.detectRule(f, [][]int{}, raw, rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(f, raw, rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(tc.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -2451,7 +2461,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
@@ -2637,7 +2647,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	require.NoError(t, err)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := d.detectRule(test.fragment, [][]int{}, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
+			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("diff: (-want +got)\n%s", diff)
 			}
