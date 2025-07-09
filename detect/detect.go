@@ -292,9 +292,6 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		return findings
 	}
 
-	// add newline indices for location calculation in detectRule
-	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
-
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
 	encodedSegments := []*codec.EncodedSegment{}
@@ -314,14 +311,14 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 			if len(rule.Keywords) == 0 {
 				// if no keywords are associated with the rule always scan the
 				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
+				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
 				continue
 			}
 
 			// check if keywords are in the fragment
 			for _, k := range rule.Keywords {
 				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
+					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
 					break
 				}
 			}
@@ -348,7 +345,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -414,6 +411,14 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			return findings
 		}
 	}
+
+	matches := r.Regex.FindAllStringIndex(currentRaw, -1)
+	if len(matches) == 0 {
+		return findings
+	}
+
+	// TODO profile this, probably should replace with something more efficient
+	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
