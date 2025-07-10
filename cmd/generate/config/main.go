@@ -35,6 +35,8 @@ func main() {
 		rules.AlgoliaApiKey(),
 		rules.AlibabaAccessKey(),
 		rules.AlibabaSecretKey(),
+		rules.AnthropicAdminApiKey(),
+		rules.AnthropicApiKey(),
 		rules.ArtifactoryApiKey(),
 		rules.ArtifactoryReferenceToken(),
 		rules.AsanaClientID(),
