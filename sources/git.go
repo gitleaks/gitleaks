@@ -440,7 +440,7 @@ End:
 	}
 }
 
-var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
+var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):(?:\d{1,5}/)?([\w/.-]+?)(?:\.git)?$`)
 
 func getRemoteUrl(source string) (*url.URL, error) {
 	// This will return the first remote — typically, "origin".
