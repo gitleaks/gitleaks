@@ -99,12 +99,12 @@ func maskSecret(secret string, percent uint) string {
 	return secret[:lth] + "..."
 }
 
-func (f *Finding) PrintAuxiliaryFindings() {
+func (f *Finding) PrintRequiredFindings() {
 	if len(f.auxiliaryFindings) == 0 {
 		return
 	}
 
-	fmt.Printf("%-12s ", "Auxiliary:")
+	fmt.Printf("%-12s ", "Required:")
 
 	// Create orange style for secrets
 	orangeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bf9478"))

@@ -488,7 +488,7 @@ const token = "mockSecret";
 					Tags:        []string{},
 				},
 			},
-			expectedAuxOutput: "Auxiliary:   username-rule:1:admin\n",
+			expectedAuxOutput: "Required:    username-rule:1:admin\n",
 		},
 		// Decoding
 		"detect encoded": {
@@ -811,7 +811,7 @@ const token = "mockSecret";
 			if tt.expectedAuxOutput != "" {
 				capturedOutput := captureStdout(func() {
 					for _, finding := range findings {
-						finding.PrintAuxiliaryFindings()
+						finding.PrintRequiredFindings()
 					}
 				})
 

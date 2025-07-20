@@ -4,7 +4,7 @@ title = "Fragment level composite rule"
 id = "primary-rule"
 description = "Primary rule"
 regex = 'password\s*=\s*"([^"]+)"'
-[[rules.requires]]
+[[rules.required]]
 id = "username-rule"
 
 [[rules]]

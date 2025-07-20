@@ -415,23 +415,26 @@ Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob
 
 ### Additional Configuration
 
-#### Composite Rules (Multi-part or "required" Rules)
-In v8.29.0 Gitleaks introduced composite rules, which are made up of a single `primary` rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `within_lines` and/or `within_columns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
+#### Composite Rules (Multi-part or `required` Rules)
+In v8.29.0 Gitleaks introduced composite rules, which are made up of a single "primary" rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `withinLines` and/or `withinColumns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
 
-**Proximity matching:** Using the `within_lines` and `within_columns` fields instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified proximity. You can set:
+**Proximity matching:** Using the `withinLines` and `withinColumns` fields instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified proximity. You can set:
 
-- **`within_lines: N`** - auxiliary findings must be within N lines (vertically)
-- **`within_columns: N`** - auxiliary findings must be within N characters (horizontally)  
+- **`withinLines: N`** - required findings must be within N lines (vertically)
+- **`withinColumns: N`** - required findings must be within N characters (horizontally)  
 - **Both** - creates a rectangular search area (both constraints must be satisfied)
-- **Neither** - fragment-level matching (auxiliary can be anywhere in the same fragment)
+- **Neither** - fragment-level matching (required findings can be anywhere in the same fragment)
 
 Here are diagrams illustrating each proximity behavior:
 
 ```
-    Fragment-level matching:               
-    Any auxiliary finding within           
-    the fragment boundary                  
-    matches.                               
+p = primary captured secret
+a = auxiliary (required) captured secret
+fragment = section of data gitleaks is looking at
+
+
+    *Fragment-level proximity*               
+    Any required finding in the fragment
           ┌────────┐                       
    ┌──────┤fragment├─────┐                 
    │      └──────┬─┤     │ ┌───────┐       
@@ -446,8 +449,8 @@ Here are diagrams illustrating each proximity behavior:
           └───────┘                        
                                            
                                            
-   example:                                
-   `within_columns = 3`                    
+   *Column bounded proximity*
+   `withinColumns = 3`                    
           ┌────────┐                       
    ┌────┬─┤fragment├─┬───┐                 
    │      └──────┬─┤     │ ┌───────────┐   
@@ -464,8 +467,8 @@ Here are diagrams illustrating each proximity behavior:
    └─────────┘                             
                                            
                                            
-   example:                                
-   `within_lines = 4`                      
+   *Line bounded proximity*
+   `withinLines = 4`                      
          ┌────────┐                        
    ┌─────┤fragment├─────┐                  
   +4L─ ─ ┴────────┘─ ─ ─│                  
@@ -481,9 +484,9 @@ Here are diagrams illustrating each proximity behavior:
    └────────────────┴─┴─┘ └─────────┘      
                                            
                                            
-   example:                                
-   `within_lines = 4`                      
-   `within_columns = 3`                    
+   *Line and column bounded proximity*
+   `withinLines = 4`                      
+   `withinColumns = 3`                    
          ┌────────┐                        
    ┌─────┤fragment├─────┐                  
   +4L   ┌└────────┴ ┐   │                  
@@ -497,6 +500,8 @@ Here are diagrams illustrating each proximity behavior:
    │                │a│◀┼─│   MATCH    │   
    └───-3C────0L───+3C┴─┘ └────────────┘   
 ```
+
+<details><summary>Some final quick thoughts on composite rules.</summary>This is an experimental feature! It's subject to change so don't go sellin' a new B2B SaaS feature built ontop of this feature. Scan type (git vs dir) based context is interesting. I'm monitoring the situation. Composite rules might not be super useful for git scans because gitleaks only looks at additions in the git history. It could be useful to scan non-additions in git history for `required` rules. Oh, right this is a readme, I'll shut up now.</details>
   
 #### gitleaks:allow
 
