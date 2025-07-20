@@ -43,13 +43,23 @@ type ViperConfig struct {
 
 		// Deprecated: this is a shim for backwards-compatibility.
 		// TODO: Remove this in 9.x.
-		AllowList  *viperRuleAllowlist
+		AllowList *viperRuleAllowlist
+
 		Allowlists []*viperRuleAllowlist
+		Required   []*viperRequired
+		SkipReport bool
 	}
 	// Deprecated: this is a shim for backwards-compatibility.
 	// TODO: Remove this in 9.x.
-	AllowList  *viperGlobalAllowlist
+	AllowList *viperGlobalAllowlist
+
 	Allowlists []*viperGlobalAllowlist
+}
+
+type viperRequired struct {
+	ID            string
+	WithinLines   *int `mapstructure:"withinLines"`
+	WithinColumns *int `mapstructure:"withinColumns"`
 }
 
 type viperRuleAllowlist struct {
@@ -130,6 +140,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Path:        pathPat,
 			Keywords:    vr.Keywords,
 			Tags:        vr.Tags,
+			SkipReport:  vr.SkipReport,
 		}
 
 		// Parse the rule allowlists, including the older format for backwards compatibility.
@@ -147,8 +158,32 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			}
 			cr.Allowlists = append(cr.Allowlists, allowlist)
 		}
+
+		for _, r := range vr.Required {
+			if r.ID == "" {
+				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID is empty", cr.RuleID)
+			}
+			requiredRule := Required{
+				RuleID:        r.ID,
+				WithinLines:   r.WithinLines,
+				WithinColumns: r.WithinColumns,
+				// Distance: r.Distance,
+			}
+			cr.RequiredRules = append(cr.RequiredRules, &requiredRule)
+		}
+
 		orderedRules = append(orderedRules, cr.RuleID)
 		rulesMap[cr.RuleID] = cr
+	}
+
+	// after all the rules have been processed, let's ensure the required rules
+	// actually exist.
+	for _, r := range rulesMap {
+		for _, rr := range r.RequiredRules {
+			if _, ok := rulesMap[rr.RuleID]; !ok {
+				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID '%s' does not exist", r.RuleID, rr.RuleID)
+			}
+		}
 	}
 
 	// Assemble the config.

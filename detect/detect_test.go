@@ -1,8 +1,10 @@
 package detect
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -86,6 +89,46 @@ secret=%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%
 secret%3D%25%35%61%25%34%37%25%35%36jb2RlZC1zZWNyZXQtdmFsdWU%25%32%35%25%33%33%25%36%34
 `
 
+var multili = `
+username = "admin"
+
+
+
+			password = "secret123"
+`
+
+func compare(t *testing.T, a, b []report.Finding) {
+	if diff := cmp.Diff(a, b,
+		cmpopts.SortSlices(func(a, b report.Finding) bool {
+			if a.File != b.File {
+				return a.File < b.File
+			}
+			if a.StartLine != b.StartLine {
+				return a.StartLine < b.StartLine
+			}
+			if a.StartColumn != b.StartColumn {
+				return a.StartColumn < b.StartColumn
+			}
+			if a.EndLine != b.EndLine {
+				return a.EndLine < b.EndLine
+			}
+			if a.EndColumn != b.EndColumn {
+				return a.EndColumn < b.EndColumn
+			}
+			if a.RuleID != b.RuleID {
+				return a.RuleID < b.RuleID
+			}
+			return a.Secret < b.Secret
+		}),
+		cmpopts.IgnoreFields(report.Finding{},
+			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "requiredFindings"),
+		cmpopts.EquateApprox(0.0001, 0), // For floating point Entropy comparison
+	); diff != "" {
+		t.Errorf("findings mismatch (-want +got):\n%s", diff)
+	}
+
+}
+
 func TestDetect(t *testing.T) {
 	logging.Logger = logging.Logger.Level(zerolog.TraceLevel)
 	tests := map[string]struct {
@@ -97,8 +140,9 @@ func TestDetect(t *testing.T) {
 		// I.e., if the finding is from a --no-git file, the line number will be
 		// increase by 1 in DetectFromFiles(). If the finding is from git,
 		// the line number will be increased by the patch delta.
-		expectedFindings []report.Finding
-		wantError        error
+		expectedFindings  []report.Finding
+		wantError         error
+		expectedAuxOutput string
 	}{
 		// General
 		"valid allow comment (1)": {
@@ -424,6 +468,28 @@ const token = "mockSecret";
 				FilePath: "tmp.go",
 			},
 		},
+		"fragment level composite": {
+			cfgName: "composite",
+			fragment: Fragment{
+				Raw: multili,
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Primary rule",
+					RuleID:      "primary-rule",
+					StartLine:   5,
+					EndLine:     5,
+					StartColumn: 5,
+					EndColumn:   26,
+					Line:        "\n\t\t\tpassword = \"secret123\"",
+					Match:       `password = "secret123"`,
+					Secret:      "secret123",
+					Entropy:     2.9477028846740723,
+					Tags:        []string{},
+				},
+			},
+			expectedAuxOutput: "Required:    username-rule:1:admin\n",
+		},
 		// Decoding
 		"detect encoded": {
 			cfgName: "encoded",
@@ -736,9 +802,48 @@ const token = "mockSecret";
 			d.baselinePath = tt.baselinePath
 
 			findings := d.Detect(tt.fragment)
-			assert.ElementsMatch(t, tt.expectedFindings, findings)
+
+			compare(t, findings, tt.expectedFindings)
+
+			// extremely goofy way to test auxiliary findings
+			// capture stdout and print that sonabitch
+			// TODO
+			if tt.expectedAuxOutput != "" {
+				capturedOutput := captureStdout(func() {
+					for _, finding := range findings {
+						finding.PrintRequiredFindings()
+					}
+				})
+
+				// Clean up the output for comparison (remove ANSI color codes)
+				cleanOutput := stripANSI(capturedOutput)
+				expectedClean := stripANSI(tt.expectedAuxOutput)
+
+				assert.Equal(t, expectedClean, cleanOutput, "Auxiliary output should match")
+			}
+
 		})
 	}
+}
+
+func stripANSI(s string) string {
+	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	return ansiRegex.ReplaceAllString(s, "")
+}
+
+func captureStdout(f func()) string {
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	f()
+
+	w.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	return buf.String()
 }
 
 // TestFromGit tests the FromGit function
@@ -2300,10 +2405,9 @@ let password = 'Summer2024!';`
 
 			f := tc.fragment
 			f.Raw = raw
+
 			actual := d.detectRule(f, raw, rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(tc.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, tc.expected, actual)
 		})
 	}
 }
@@ -2462,9 +2566,7 @@ func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(test.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, test.expected, actual)
 		})
 	}
 }
@@ -2648,11 +2750,7 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
-			if diff := cmp.Diff(test.expected, actual); diff != "" {
-				t.Errorf("diff: (-want +got)\n%s", diff)
-			}
+			compare(t, test.expected, actual)
 		})
 	}
 }
-
-//endregion

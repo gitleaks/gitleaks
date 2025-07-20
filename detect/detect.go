@@ -357,6 +357,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}()
 	)
 
+	if r.SkipReport == true && !fragment.InheritedFromFinding {
+		return findings
+	}
+
 	// check if commit or file is allowed for this rule.
 	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
 		event.Msg("skipping file: rule allowlist")
@@ -539,7 +543,145 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 		findings = append(findings, finding)
 	}
-	return findings
+
+	// Handle required rules (multi-part rules)
+	if fragment.InheritedFromFinding || len(r.RequiredRules) == 0 {
+		return findings
+	}
+
+	// Process required rules and create findings with auxiliary findings
+	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, logger)
+}
+
+// processRequiredRules handles the logic for multi-part rules with auxiliary findings
+func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, primaryFindings []report.Finding, logger zerolog.Logger) []report.Finding {
+	if len(primaryFindings) == 0 {
+		logger.Debug().Msg("no primary findings to process for required rules")
+		return primaryFindings
+	}
+
+	// Pre-collect all required rule findings once
+	allRequiredFindings := make(map[string][]report.Finding)
+
+	for _, requiredRule := range r.RequiredRules {
+		rule, ok := d.Config.Rules[requiredRule.RuleID]
+		if !ok {
+			logger.Error().Str("rule-id", requiredRule.RuleID).Msg("required rule not found in config")
+			continue
+		}
+
+		// Mark fragment as inherited to prevent infinite recursion
+		inheritedFragment := fragment
+		inheritedFragment.InheritedFromFinding = true
+
+		// Call detectRule once for each required rule
+		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments)
+		allRequiredFindings[requiredRule.RuleID] = requiredFindings
+
+		logger.Debug().
+			Str("rule-id", requiredRule.RuleID).
+			Int("findings", len(requiredFindings)).
+			Msg("collected required rule findings")
+	}
+
+	var finalFindings []report.Finding
+
+	// Now process each primary finding against the pre-collected required findings
+	for _, primaryFinding := range primaryFindings {
+		var requiredFindings []*report.RequiredFinding
+
+		for _, requiredRule := range r.RequiredRules {
+			foundRequiredFindings, exists := allRequiredFindings[requiredRule.RuleID]
+			if !exists {
+				continue // Rule wasn't found earlier, skip
+			}
+
+			// Filter findings that are within proximity of the primary finding
+			for _, requiredFinding := range foundRequiredFindings {
+				if d.withinProximity(primaryFinding, requiredFinding, requiredRule) {
+					req := &report.RequiredFinding{
+						RuleID:      requiredFinding.RuleID,
+						StartLine:   requiredFinding.StartLine,
+						EndLine:     requiredFinding.EndLine,
+						StartColumn: requiredFinding.StartColumn,
+						EndColumn:   requiredFinding.EndColumn,
+						Line:        requiredFinding.Line,
+						Match:       requiredFinding.Match,
+						Secret:      requiredFinding.Secret,
+					}
+					requiredFindings = append(requiredFindings, req)
+				}
+			}
+		}
+
+		// Check if we have at least one auxiliary finding for each required rule
+		if len(requiredFindings) > 0 && d.hasAllRequiredRules(requiredFindings, r.RequiredRules) {
+			// Create a finding with auxiliary findings
+			newFinding := primaryFinding // Copy the primary finding
+			newFinding.AddRequiredFindings(requiredFindings)
+			finalFindings = append(finalFindings, newFinding)
+
+			logger.Debug().
+				Str("primary-rule", r.RuleID).
+				Int("primary-line", primaryFinding.StartLine).
+				Int("auxiliary-count", len(requiredFindings)).
+				Msg("multi-part rule satisfied")
+		}
+	}
+
+	return finalFindings
+}
+
+// hasAllRequiredRules checks if we have at least one auxiliary finding for each required rule
+func (d *Detector) hasAllRequiredRules(auxiliaryFindings []*report.RequiredFinding, requiredRules []*config.Required) bool {
+	foundRules := make(map[string]bool)
+	// AuxiliaryFinding
+	for _, aux := range auxiliaryFindings {
+		foundRules[aux.RuleID] = true
+	}
+
+	for _, required := range requiredRules {
+		if !foundRules[required.RuleID] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (d *Detector) withinProximity(primary, required report.Finding, requiredRule *config.Required) bool {
+	// fmt.Println(requiredRule.WithinLines)
+	// If neither within_lines nor within_columns is set, findings just need to be in the same fragment
+	if requiredRule.WithinLines == nil && requiredRule.WithinColumns == nil {
+		return true
+	}
+
+	// Check line proximity (vertical distance)
+	if requiredRule.WithinLines != nil {
+		lineDiff := abs(primary.StartLine - required.StartLine)
+		if lineDiff > *requiredRule.WithinLines {
+			return false
+		}
+	}
+
+	// Check column proximity (horizontal distance)
+	if requiredRule.WithinColumns != nil {
+		// Use the start column of each finding for proximity calculation
+		colDiff := abs(primary.StartColumn - required.StartColumn)
+		if colDiff > *requiredRule.WithinColumns {
+			return false
+		}
+	}
+
+	return true
+}
+
+// abs returns the absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 // AddFinding synchronously adds a finding to the findings slice

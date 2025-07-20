@@ -232,7 +232,9 @@ func printFinding(f report.Finding, noColor bool) {
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
+
 	if f.File == "" {
+		f.PrintRequiredFindings()
 		fmt.Println("")
 		return
 	}
@@ -243,6 +245,7 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {
 		fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
+		f.PrintRequiredFindings()
 		fmt.Println("")
 		return
 	}
@@ -254,5 +257,7 @@ func printFinding(f report.Finding, noColor bool) {
 	if f.Link != "" {
 		fmt.Printf("%-12s %s\n", "Link:", f.Link)
 	}
+
+	f.PrintRequiredFindings()
 	fmt.Println("")
 }
