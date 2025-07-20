@@ -54,12 +54,6 @@ type ViperConfig struct {
 	AllowList *viperGlobalAllowlist
 
 	Allowlists []*viperGlobalAllowlist
-
-	// EnableExperimentalAllowlistOptimizations enables a preview feature.
-	// See: https://github.com/gitleaks/gitleaks/pull/1731
-	//
-	// NOTE: This flag may be removed in the future.
-	EnableExperimentalAllowlistOptimizations bool
 }
 
 type viperRequired struct {
@@ -296,14 +290,13 @@ func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error)
 	}
 
 	allowlist := &Allowlist{
-		Description:                     a.Description,
-		MatchCondition:                  matchCondition,
-		Commits:                         a.Commits,
-		Paths:                           allowlistPaths,
-		RegexTarget:                     regexTarget,
-		Regexes:                         allowlistRegexes,
-		StopWords:                       a.StopWords,
-		EnableExperimentalOptimizations: vc.EnableExperimentalAllowlistOptimizations,
+		Description:    a.Description,
+		MatchCondition: matchCondition,
+		Commits:        a.Commits,
+		Paths:          allowlistPaths,
+		RegexTarget:    regexTarget,
+		Regexes:        allowlistRegexes,
+		StopWords:      a.StopWords,
 	}
 	if err := allowlist.Validate(); err != nil {
 		return nil, err
@@ -327,9 +320,7 @@ func (c *Config) extendDefault(parent *ViperConfig) error {
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
-	defaultViperConfig := ViperConfig{
-		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
-	}
+	defaultViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
@@ -349,9 +340,7 @@ func (c *Config) extendPath(parent *ViperConfig) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
-	extensionViperConfig := ViperConfig{
-		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
-	}
+	extensionViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
