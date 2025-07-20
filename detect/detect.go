@@ -588,18 +588,18 @@ func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r 
 
 	// Now process each primary finding against the pre-collected required findings
 	for _, primaryFinding := range primaryFindings {
-		var auxiliaryFindings []*report.AuxiliaryFinding
+		var requiredFindings []*report.RequiredFinding
 
 		for _, requiredRule := range r.RequiredRules {
-			requiredFindings, exists := allRequiredFindings[requiredRule.RuleID]
+			foundRequiredFindings, exists := allRequiredFindings[requiredRule.RuleID]
 			if !exists {
 				continue // Rule wasn't found earlier, skip
 			}
 
 			// Filter findings that are within proximity of the primary finding
-			for _, requiredFinding := range requiredFindings {
+			for _, requiredFinding := range foundRequiredFindings {
 				if d.withinProximity(primaryFinding, requiredFinding, requiredRule) {
-					aux := &report.AuxiliaryFinding{
+					req := &report.RequiredFinding{
 						RuleID:      requiredFinding.RuleID,
 						StartLine:   requiredFinding.StartLine,
 						EndLine:     requiredFinding.EndLine,
@@ -609,22 +609,22 @@ func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r 
 						Match:       requiredFinding.Match,
 						Secret:      requiredFinding.Secret,
 					}
-					auxiliaryFindings = append(auxiliaryFindings, aux)
+					requiredFindings = append(requiredFindings, req)
 				}
 			}
 		}
 
 		// Check if we have at least one auxiliary finding for each required rule
-		if len(auxiliaryFindings) > 0 && d.hasAllRequiredRules(auxiliaryFindings, r.RequiredRules) {
+		if len(requiredFindings) > 0 && d.hasAllRequiredRules(requiredFindings, r.RequiredRules) {
 			// Create a finding with auxiliary findings
 			newFinding := primaryFinding // Copy the primary finding
-			newFinding.AddAuxiliaryFindings(auxiliaryFindings)
+			newFinding.AddRequiredFindings(requiredFindings)
 			finalFindings = append(finalFindings, newFinding)
 
 			logger.Debug().
 				Str("primary-rule", r.RuleID).
 				Int("primary-line", primaryFinding.StartLine).
-				Int("auxiliary-count", len(auxiliaryFindings)).
+				Int("auxiliary-count", len(requiredFindings)).
 				Msg("multi-part rule satisfied")
 		}
 	}
@@ -633,7 +633,7 @@ func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r 
 }
 
 // hasAllRequiredRules checks if we have at least one auxiliary finding for each required rule
-func (d *Detector) hasAllRequiredRules(auxiliaryFindings []*report.AuxiliaryFinding, requiredRules []*config.Required) bool {
+func (d *Detector) hasAllRequiredRules(auxiliaryFindings []*report.RequiredFinding, requiredRules []*config.Required) bool {
 	foundRules := make(map[string]bool)
 	// AuxiliaryFinding
 	for _, aux := range auxiliaryFindings {

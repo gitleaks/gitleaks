@@ -51,10 +51,10 @@ type Finding struct {
 	Fragment *sources.Fragment `json:",omitempty"`
 
 	// TODO keeping private for now to during experimental phase
-	auxiliaryFindings []*AuxiliaryFinding
+	requiredFindings []*RequiredFinding
 }
 
-type AuxiliaryFinding struct {
+type RequiredFinding struct {
 	// contains a subset of the Finding fields
 	// only used for reporting
 	RuleID      string
@@ -67,11 +67,11 @@ type AuxiliaryFinding struct {
 	Secret      string
 }
 
-func (f *Finding) AddAuxiliaryFindings(afs []*AuxiliaryFinding) {
-	if f.auxiliaryFindings == nil {
-		f.auxiliaryFindings = make([]*AuxiliaryFinding, 0)
+func (f *Finding) AddRequiredFindings(afs []*RequiredFinding) {
+	if f.requiredFindings == nil {
+		f.requiredFindings = make([]*RequiredFinding, 0)
 	}
-	f.auxiliaryFindings = append(f.auxiliaryFindings, afs...)
+	f.requiredFindings = append(f.requiredFindings, afs...)
 }
 
 // Redact removes sensitive information from a finding.
@@ -100,7 +100,7 @@ func maskSecret(secret string, percent uint) string {
 }
 
 func (f *Finding) PrintRequiredFindings() {
-	if len(f.auxiliaryFindings) == 0 {
+	if len(f.requiredFindings) == 0 {
 		return
 	}
 
@@ -109,7 +109,7 @@ func (f *Finding) PrintRequiredFindings() {
 	// Create orange style for secrets
 	orangeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bf9478"))
 
-	for i, aux := range f.auxiliaryFindings {
+	for i, aux := range f.requiredFindings {
 		auxSecret := strings.TrimSpace(aux.Secret)
 		// Truncate long secrets for readability
 		if len(auxSecret) > 40 {

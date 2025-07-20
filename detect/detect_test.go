@@ -121,7 +121,7 @@ func compare(t *testing.T, a, b []report.Finding) {
 			return a.Secret < b.Secret
 		}),
 		cmpopts.IgnoreFields(report.Finding{},
-			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "auxiliaryFindings"),
+			"Fingerprint", "Author", "Email", "Date", "Message", "Commit", "requiredFindings"),
 		cmpopts.EquateApprox(0.0001, 0), // For floating point Entropy comparison
 	); diff != "" {
 		t.Errorf("findings mismatch (-want +got):\n%s", diff)
