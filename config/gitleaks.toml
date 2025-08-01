@@ -1963,7 +1963,9 @@ stopwords = [
 
 regexTarget = "line"
 regexes = [
-    '''arn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+'''
+    '''arn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+''',
+    '''InstrumentationKey=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.*monitor.azure.com'''
+
 ]
 
 [[rules]]
