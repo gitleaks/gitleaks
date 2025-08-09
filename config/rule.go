@@ -52,6 +52,8 @@ type Rule struct {
 	RequiredRules []*Required
 
 	SkipReport bool
+
+	SmartFilter bool
 }
 
 type Required struct {

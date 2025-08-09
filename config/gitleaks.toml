@@ -626,6 +626,7 @@ keywords = [
     "secret",
     "token",
 ]
+smartFilter=true
 [[rules.allowlists]]
 regexes = [
     '''^[a-zA-Z_.-]+$''',

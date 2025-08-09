@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
+	"github.com/zricethezav/gitleaks/v8/detect/codec"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -136,14 +137,32 @@ func shannonEntropy(data string) (entropy float64) {
 // filter will dedupe and redact findings
 func filter(findings []report.Finding, redact uint) []report.Finding {
 	var retFindings []report.Finding
+
+	decoder := codec.NewDecoder()
+	encodedSegments := []*codec.EncodedSegment{}
+
 	for _, f := range findings {
 		include := true
 		if strings.Contains(strings.ToLower(f.RuleID), "generic") {
 			for _, fPrime := range findings {
+				// TODO also check if a decoded secret == the generic secret. If it does, skip the generic secret
+				isDecoded := false
+				decodedSecret := ""
+				for _, t := range fPrime.Tags {
+					if strings.Contains(t, "decoded") {
+						isDecoded = true
+					}
+				}
+
+				if isDecoded {
+					decodedSecret, _ = decoder.Decode(f.Secret, encodedSegments)
+					decodedSecret = strings.TrimSuffix(decodedSecret, "\n")
+				}
+
 				if f.StartLine == fPrime.StartLine &&
 					f.Commit == fPrime.Commit &&
 					f.RuleID != fPrime.RuleID &&
-					strings.Contains(fPrime.Secret, f.Secret) &&
+					(strings.Contains(fPrime.Secret, f.Secret) || decodedSecret == fPrime.Secret) &&
 					!strings.Contains(strings.ToLower(fPrime.RuleID), "generic") {
 
 					genericMatch := strings.ReplaceAll(f.Match, f.Secret, "REDACTED")
@@ -260,4 +279,40 @@ func printFinding(f report.Finding, noColor bool) {
 
 	f.PrintRequiredFindings()
 	fmt.Println("")
+}
+
+func isIrregularlyCased(word, secret string) bool {
+	// Find the word in the secret (case-insensitive)
+	secretLower := strings.ToLower(secret)
+	wordLower := strings.ToLower(word)
+
+	index := strings.Index(secretLower, wordLower)
+	if index == -1 {
+		return false
+	}
+
+	// Extract the actual casing from the secret
+	actualWord := secret[index : index+len(word)]
+
+	// Check if it matches conventional casing patterns
+	return !isConventionallyCased(actualWord)
+}
+
+// Helper function to determine if a word follows conventional casing
+func isConventionallyCased(word string) bool {
+	if len(word) == 0 {
+		return true
+	}
+
+	// Conventional patterns:
+	// - All lowercase (common)
+	// - All uppercase (acronyms, constants)
+	// - Title case (proper nouns)
+	// - First letter uppercase, rest lowercase
+
+	allLower := strings.ToLower(word) == word
+	allUpper := strings.ToUpper(word) == word
+	titleCase := strings.Title(strings.ToLower(word)) == word
+
+	return allLower || allUpper || titleCase
 }

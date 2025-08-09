@@ -18,7 +18,12 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 
 	ahocorasick "github.com/BobuSumisu/aho-corasick"
+	tiktoken_loader "github.com/pkoukk/tiktoken-go-loader"
+	"github.com/zricethezav/icanhazwordz"
+
+	"github.com/agnivade/levenshtein"
 	"github.com/fatih/semgroup"
+	"github.com/pkoukk/tiktoken-go"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/maps"
@@ -104,6 +109,10 @@ type Detector struct {
 	Reporter   report.Reporter
 
 	TotalBytes atomic.Uint64
+
+	tokenizer *tiktoken.Tiktoken
+
+	nltkSearcher *icanhazwordz.Searcher
 }
 
 // Fragment is an alias for sources.Fragment for backwards compatibility
@@ -113,6 +122,13 @@ type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
+	// grab offline tiktoken encoder
+	tiktoken.SetBpeLoader(tiktoken_loader.NewOfflineLoader())
+	tke, err := tiktoken.GetEncoding("cl100k_base")
+	if err != nil {
+		logging.Warn().Err(err).Msgf("Could not pull down cl100k_base tiktokenizer")
+	}
+
 	return &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
@@ -122,6 +138,10 @@ func NewDetector(cfg config.Config) *Detector {
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(context.Background(), 40),
+
+		// tokenizer and nltkSearcher are used for a generic filter
+		tokenizer:    tke,
+		nltkSearcher: icanhazwordz.NewSearcher(icanhazwordz.Filter{MinLength: 4, PreferLongestNonOverlapping: true}),
 	}
 }
 
@@ -357,7 +377,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}()
 	)
 
-	if r.SkipReport == true && !fragment.InheritedFromFinding {
+	if r.SkipReport && !fragment.InheritedFromFinding {
 		return findings
 	}
 
@@ -530,6 +550,16 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			}
 		}
 
+		// check if this is a generic rule
+		if r.SmartFilter {
+			if !d.passesSmartFilter(finding.Secret) {
+				// logger.Info().
+				// 	Str("finding", finding.Secret).
+				// 	Msg("skipping finding: fails smart filter")
+				continue
+			}
+		}
+
 		// check if the result matches any of the global allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
 			event.Msg("skipping finding: global allowlist")
@@ -551,6 +581,95 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 	// Process required rules and create findings with auxiliary findings
 	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, logger)
+}
+
+// passesSmartFilter applies heuristics to determine if a string is likely a real looking secret
+// rather than random text or common words. It uses token density, character distribution,
+// and word analysis to filter out false positives. Returns true if the string passes
+// the filter (likely a secret), false if it should be skipped.
+func (d *Detector) passesSmartFilter(secret string) bool {
+	tokens := d.tokenizer.Encode(secret, nil, nil)
+	tokenLen := len(tokens)
+	// token vals < 100
+	numShortTokens := 0
+	for _, t := range tokens {
+		if t < 100 {
+			numShortTokens++
+		}
+	}
+	// token vals > 100
+	// longTokens := tokenLen - numShortTokens
+	density := len(secret) / tokenLen
+	shortTokenRatio := float32(numShortTokens / tokenLen)
+
+	result := d.nltkSearcher.Find(secret)
+	fourPlusCharWords := len(result.Matches)
+
+	// check if the secret has a close levenshtein distance to any of the results
+	// if it does, consider this c4. normalize cases
+	c4 := false
+	secretLower := strings.ToLower(secret)
+	for _, match := range result.Matches {
+		// Only check against words with 5+ characters
+		if len(match.Word) <= 5 {
+			continue
+		}
+		wordLower := strings.ToLower(match.Word)
+		distance := levenshtein.ComputeDistance(secretLower, wordLower)
+		// Consider it close if distance is <= 2 or <= 20% of the longer string length
+		maxLen := max(len(secretLower), len(wordLower))
+		threshold := max(2, maxLen/5)
+		if distance <= threshold {
+			c4 = true
+			break
+		}
+
+		// OR check if the match is 6 characters or more _and_ is a substring of the
+		// potential secret
+		if len(match.Word) <= 6 {
+			continue
+		}
+
+		if strings.Contains(strings.ToLower(secret), strings.ToLower(match.Word)) {
+			c4 = true
+		}
+	}
+
+	c1 := density <= 2.0
+	c2 := shortTokenRatio >= 0.25
+	c3 := len(secret) >= 9 && float32(density) <= 2.5
+
+	likelySecret := c1 || c2 || c3
+
+	// Check for irregularly cased English words
+	// majorityIrregularlyCased := false
+	hasIrregularCasing := false
+	for _, word := range result.UniqueWords {
+		if isIrregularlyCased(word, secret) {
+			hasIrregularCasing = true
+			break
+		}
+	}
+	// if len(result.UniqueWords) > 0 && irregularlyCased > len(result.UniqueWords)/2 {
+	// 	majorityIrregularlyCased = true
+	// }
+	// fmt.Println(hasIrregularCasing, fourPlusCharWords, secret)
+	// fmt.Println(c1, c2, c3, fourPlusCharWords)
+
+	// Make exception if words have irregular casing
+	if hasIrregularCasing && fourPlusCharWords > 1 {
+		pass := likelySecret
+		if !pass {
+			// fmt.Println("skipping: ", secret, "--", c1, c2, c3, fourPlusCharWords, result.UniqueWords, "(irregular casing exception)")
+		}
+		return pass
+	}
+
+	pass := likelySecret && !(fourPlusCharWords > 1) && !c4
+	if !pass {
+		// fmt.Println("skipping: ", secret, "--", c1, c2, c3, fourPlusCharWords, result.UniqueWords)
+	}
+	return pass
 }
 
 // processRequiredRules handles the logic for multi-part rules with auxiliary findings

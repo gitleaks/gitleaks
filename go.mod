@@ -1,6 +1,8 @@
 module github.com/zricethezav/gitleaks/v8
 
-go 1.23.8
+go 1.24
+
+toolchain go1.24.3
 
 require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
@@ -11,10 +13,13 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/h2non/filetype v1.1.3
 	github.com/mholt/archives v0.1.2
+	github.com/pkoukk/tiktoken-go v0.1.7
+	github.com/pkoukk/tiktoken-go-loader v0.0.1
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
+	github.com/zricethezav/icanhazwordz v0.0.3
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
 )
 
@@ -28,6 +33,7 @@ require (
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/sevenzip v1.6.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
