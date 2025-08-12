@@ -171,6 +171,7 @@ func main() {
 		rules.NytimesAccessToken(),
 		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
+		rules.OnfidoAPIToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
 		rules.PerplexityAPIKey(),
