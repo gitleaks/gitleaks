@@ -69,15 +69,17 @@ func (r *Rule) Validate() error {
 	// Ensure |id| is present.
 	if strings.TrimSpace(r.RuleID) == "" {
 		// Try to provide helpful context, since |id| is empty.
-		var context string
-		if r.Regex != nil {
-			context = ", regex: " + r.Regex.String()
-		} else if r.Path != nil {
-			context = ", path: " + r.Path.String()
-		} else if r.Description != "" {
-			context = ", description: " + r.Description
+		var sb strings.Builder
+		if r.Description != "" {
+			sb.WriteString(", description: " + r.Description)
 		}
-		return errors.New("rule |id| is missing or empty" + context)
+		if r.Regex != nil {
+			sb.WriteString(", regex: " + r.Regex.String())
+		}
+		if r.Path != nil {
+			sb.WriteString(", path: " + r.Path.String())
+		}
+		return errors.New("rule |id| is missing or empty" + sb.String())
 	}
 
 	// Ensure the rule actually matches something.
