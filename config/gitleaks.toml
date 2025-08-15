@@ -610,8 +610,8 @@ regexes = [
 ]
 
 [[rules]]
-id = "gcp-service-account"
-description = "Google (GCP) Service-account"
+id = "gcp-service-account-key"
+description = "Discovered a Google Cloud (GCP) service account key file, which comes bundled with a private key and service account information"
 regex = '''(?s)\{\s*(?:(?:.*?"type"\s*:\s*"service_account".*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?")|(?:.*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?".*?"type"\s*:\s*"service_account")).*?\}'''
 entropy = 5
 keywords = [

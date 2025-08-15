@@ -16,11 +16,10 @@ import (
 func GCPServiceAccount() *config.Rule {
 	// Define rule metadata.
 	r := config.Rule{
-		Description: "Google (GCP) Service-account",
-		RuleID:      "gcp-service-account",
+		Description: "Discovered a Google Cloud (GCP) service account key file, which comes bundled with a private key and service account information",
+		RuleID:      "gcp-service-account-key",
 		Regex:       regexp.MustCompile(`(?s)\{\s*(?:(?:.*?"type"\s*:\s*"service_account".*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?")|(?:.*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?".*?"type"\s*:\s*"service_account")).*?\}`),
-
-		Entropy: 5,
+		Entropy:     5,
 		Keywords: []string{
 			"type",
 			"service_account",
@@ -54,6 +53,7 @@ func GCPServiceAccount() *config.Rule {
 	lowEntropyKey := strings.Repeat("X", 1500)
 
 	tps := []string{
+		// "type": "service_account" at beginning
 		fmt.Sprintf(
 			`{
 				"type": "service_account",
@@ -68,6 +68,7 @@ func GCPServiceAccount() *config.Rule {
 				"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gitleaks-test%%40%s.iam.gserviceaccount.com",
 				"universe_domain": "googleapis.com"
 			}`, projectId, privateKeyId, privateKey, projectId, clientId, projectId),
+		// "type": "service_account" at end
 		fmt.Sprintf(
 			`{
 					"project_id": "%s",
@@ -95,7 +96,7 @@ func GCPServiceAccount() *config.Rule {
 				"auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 				"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gitleaks-test%%40%s.iam.gserviceaccount.com",
 				"universe_domain": "googleapis.com"
-    	}`, projectId, privateKeyId, projectId, clientId, projectId),
+			}`, projectId, privateKeyId, projectId, clientId, projectId),
 	}
 
 	fps := []string{
