@@ -35,6 +35,8 @@ func main() {
 		rules.AlgoliaApiKey(),
 		rules.AlibabaAccessKey(),
 		rules.AlibabaSecretKey(),
+		rules.AmazonBedrockAPIKeyLongLived(),
+		rules.AmazonBedrockAPIKeyShortLived(),
 		rules.AnthropicAdminApiKey(),
 		rules.AnthropicApiKey(),
 		rules.ArtifactoryApiKey(),
