@@ -22,17 +22,27 @@ var directoryCmd = &cobra.Command{
 	Run:     runDirectory,
 }
 
-func runDirectory(cmd *cobra.Command, args []string) {
-	// grab source
-	source := "."
-	if len(args) == 1 {
-		source = args[0]
-		if source == "" {
-			source = "."
+func filterSourcesWithDefault(args []string) []string {
+	s := []string{}
+
+	for _, arg := range args {
+		if arg != "" {
+			s = append(s, arg)
 		}
 	}
 
-	initConfig(source)
+	if len(s) == 0 {
+		s = append(s, ".")
+	}
+
+	return s
+}
+
+func runDirectory(cmd *cobra.Command, args []string) {
+	// grab source
+	sourcesList := filterSourcesWithDefault(args)
+
+	initConfig(sourcesList...)
 	initDiagnostics()
 	var err error
 
@@ -42,7 +52,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	// start timer
 	start := time.Now()
 
-	detector := Detector(cmd, cfg, source)
+	detector := Detector(cmd, cfg, sourcesList...)
 
 	// set follow symlinks flag
 	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
@@ -55,21 +65,26 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		logging.Fatal().Err(err).Msg("could not get exit code")
 	}
 
-	findings, err := detector.DetectSource(
-		context.Background(),
-		&sources.Files{
-			Config:          &cfg,
-			FollowSymlinks:  detector.FollowSymlinks,
-			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
-			Path:            source,
-			Sema:            detector.Sema,
-			MaxArchiveDepth: detector.MaxArchiveDepth,
-		},
-	)
+	for _, source := range sourcesList {
+		logging.Trace().Str("source", source).Msg("scanning source")
+		_, err := detector.DetectSource(
+			context.Background(),
+			&sources.Files{
+				Config:          &cfg,
+				FollowSymlinks:  detector.FollowSymlinks,
+				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
+				Path:            source,
+				Sema:            detector.Sema,
+				MaxArchiveDepth: detector.MaxArchiveDepth,
+			},
+		)
 
-	if err != nil {
-		logging.Error().Err(err).Msg("failed scan directory")
+		if err != nil {
+			logging.Error().Err(err).Msg("failed scan directory")
+			break
+		}
 	}
 
+	findings := detector.Findings()
 	findingSummaryAndExit(detector, findings, exitCode, start, err)
 }
