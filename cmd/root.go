@@ -115,7 +115,7 @@ func initLog() {
 	logging.Logger = logging.Logger.Level(logLevel)
 }
 
-func initConfig(source string) {
+func initConfig(sources ...string) {
 	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
 	viper.SetConfigType("toml")
 
@@ -147,6 +147,11 @@ func initConfig(source string) {
 		logging.Debug().Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
 		return
 	} else {
+		if len(sources) > 1 {
+			logging.Fatal().Msg("when multiple sources are provided, explicit config is required")
+		}
+		// otherwise, there's a single source
+		source := sources[0]
 		fileInfo, err := os.Stat(source)
 		if err != nil {
 			logging.Fatal().Msg(err.Error())
@@ -232,7 +237,7 @@ func Config(cmd *cobra.Command) config.Config {
 	return cfg
 }
 
-func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Detector {
+func Detector(cmd *cobra.Command, cfg config.Config, sources ...string) *detect.Detector {
 	var err error
 
 	// Setup common detector
@@ -265,7 +270,10 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
 	// note that there may not be a `{source}/.gitleaks.toml` file, this is ok.
 	if detector.Config.Path == "" {
-		detector.Config.Path = filepath.Join(source, ".gitleaks.toml")
+		if len(sources) > 1 {
+			logging.Fatal().Msg("when multiple sources are provided, explicit location of .gitleaks.toml is required (even if it is absent)")
+		}
+		detector.Config.Path = filepath.Join(sources[0], ".gitleaks.toml")
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
@@ -300,8 +308,8 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		}
 	}
 
-	if fileExists(filepath.Join(source, ".gitleaksignore")) {
-		if err = detector.AddGitleaksIgnore(filepath.Join(source, ".gitleaksignore")); err != nil {
+	if len(sources) == 1 && fileExists(filepath.Join(sources[0], ".gitleaksignore")) {
+		if err = detector.AddGitleaksIgnore(filepath.Join(sources[0], ".gitleaksignore")); err != nil {
 			logging.Fatal().Err(err).Msg("could not call AddGitleaksIgnore")
 		}
 	}
@@ -309,7 +317,10 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	// ignore findings from the baseline (an existing report in json format generated earlier)
 	baselinePath, _ := cmd.Flags().GetString("baseline-path")
 	if baselinePath != "" {
-		err = detector.AddBaseline(baselinePath, source)
+		if len(sources) > 1 {
+			logging.Fatal().Msg("when multiple sources are provided, baseline is not supported")
+		}
+		err = detector.AddBaseline(baselinePath, sources[0])
 		if err != nil {
 			logging.Error().Msgf("Could not load baseline. The path must point of a gitleaks report generated using the default format: %s", err)
 		}
