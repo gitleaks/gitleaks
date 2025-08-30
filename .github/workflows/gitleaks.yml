@@ -1,17 +1,66 @@
-name: gitleaks
+name: Secrets Scan (Gitleaks)
+
 on:
-  push:
+  pull_request:            # scan contributions, including forks (no repo secrets used)
+    branches: ['**']
+  push:                    # protect default branch
+    branches: ['main']
+  schedule:
+    - cron: '0 6 * * 1'    # weekly, 06:00 UTC (adjust as you like)
   workflow_dispatch:
+
+# Least-privilege by default; allow uploading SARIF to code scanning
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  scan:
-    name: gitleaks
+  gitleaks:
+    name: Detect secrets
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'gitleaks/gitleaks' }}
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout (full history not required)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+
+      # Build args dynamically so we only use a baseline if present
+      - name: Compose Gitleaks args
+        id: compose
+        shell: bash
+        run: |
+          ARGS="detect --no-git --redact --no-banner \
+                --report-format sarif --report-path gitleaks.sarif"
+          if [ -f ".gitleaks.baseline.json" ]; then
+            ARGS="$ARGS --baseline-path=.gitleaks.baseline.json"
+          fi
+          echo "args=$ARGS" >> "$GITHUB_OUTPUT"
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}              # required by the action
+          args: ${{ steps.compose.outputs.args }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
+          # Optional commercial license—will be empty for fork PRs (and that's fine)
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Upload SARIF to code scanning
+        if: always()                                      # show results even if the job fails
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
+          category: gitleaks
+
+      - name: Keep report as artifact (helps debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-sarif
+          path: gitleaks.sarif
+          retention-days: 7
