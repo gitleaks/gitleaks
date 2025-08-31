@@ -1,0 +1,6 @@
+[[rules]]
+id = "example"
+regex = '''example\d+'''
+    [[rules.allowlists]]
+    regexTarget = "mtach"
+    regexes = ['''456''']

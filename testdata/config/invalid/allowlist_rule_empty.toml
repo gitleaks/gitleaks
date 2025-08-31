@@ -1,0 +1,4 @@
+[[rules]]
+id = "example"
+regex = '''example\d+'''
+    [[rules.allowlists]]

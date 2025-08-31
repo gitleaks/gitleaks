@@ -1,8 +1,0 @@
-[[rules]]
-    description = "AWS Access Key"
-    id = "aws-access-key"
-    regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
-    tags = ["key", "AWS"]
-
-[allowlist]
-    regexes = ['''AKIALALEMEL33243OLIA''']

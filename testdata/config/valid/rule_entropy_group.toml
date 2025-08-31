@@ -1,0 +1,6 @@
+[[rules]]
+id = "discord-api-key"
+description = "Discord API key"
+regex = '''(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]'''
+secretGroup = 3
+entropy = 3.5

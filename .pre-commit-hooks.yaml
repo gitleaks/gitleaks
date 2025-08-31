@@ -9,8 +9,9 @@
   description: Detect hardcoded secrets using Gitleaks
   entry: zricethezav/gitleaks git --pre-commit --redact --staged --verbose
   language: docker_image
+  pass_filenames: false
 - id: gitleaks-system
   name: Detect hardcoded secrets
   description: Detect hardcoded secrets using Gitleaks
-  entry: gitleaks git  --pre-commit --redact --staged --verbose
+  entry: gitleaks git --pre-commit --redact --staged --verbose
   language: system

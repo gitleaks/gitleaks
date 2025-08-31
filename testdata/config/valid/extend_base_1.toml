@@ -1,0 +1,10 @@
+title = "gitleaks extended 1"
+
+[extend]
+path="../testdata/config/valid/extend_base_2.toml"
+
+[[rules]]
+    description = "AWS Access Key"
+    id = "aws-access-key"
+    regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+    tags = ["key", "AWS"]

@@ -1,4 +1,4 @@
-//go:build stdregex
+//go:build !gore2regex
 
 package regexp
 

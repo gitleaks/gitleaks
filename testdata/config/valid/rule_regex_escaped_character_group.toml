@@ -1,0 +1,5 @@
+[[rules]]
+    id = "pypi-upload-token"
+    description = "PyPI upload token"
+    regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''
+    tags = ["key", "pypi"]

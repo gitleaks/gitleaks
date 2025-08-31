@@ -69,6 +69,7 @@ func TestWriteJunit(t *testing.T) {
 	for _, test := range tests {
 		tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".xml"))
 		require.NoError(t, err)
+		defer tmpfile.Close()
 
 		err = reporter.Write(tmpfile, test.findings)
 		require.NoError(t, err)
@@ -83,6 +84,9 @@ func TestWriteJunit(t *testing.T) {
 
 		want, err := os.ReadFile(test.expected)
 		require.NoError(t, err)
-		assert.Equal(t, string(want), string(got))
+
+		wantStr := lineEndingReplacer.Replace(string(want))
+		gotStr := lineEndingReplacer.Replace(string(got))
+		assert.Equal(t, wantStr, gotStr)
 	}
 }

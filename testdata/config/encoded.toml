@@ -1,0 +1,126 @@
+# We want to be able to find this key regardless if it's b64 encoded or not
+[[rules]]
+  id = 'private-key'
+  description = 'Private Key'
+  regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]*?-----END[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----'''
+  tags = ['key', 'private']
+  keywords = [
+      '-----begin',
+  ]
+
+# This exists to test what would happen if a normal rule matched something that
+# also gets decoded. We don't want to break anyone's existing rules that might
+# be looking for specific segments of b64 encoded data.
+[[rules]]
+  id = 'b64-encoded-private-key'
+  description = 'Private Key'
+  regex = '''(?:LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t|0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tL|tLS0tLUJFR0lOIFBSSVZBVEUgS0VZLS0tLS)[a-zA-Z0-9+\/]+={0,3}'''
+  tags = ['key', 'private']
+  keywords = [
+    'ls0tls1crudjtibquklwqvrfietfws0tls0t',
+    '0tls0tqkvhsu4gufjjvkfursblrvktls0tl',
+    'tls0tlujfr0loifbssvzbveugs0vzls0tls',
+  ]
+
+
+[[rules]]
+  id = 'aws-iam-unique-identifier'
+  description = 'AWS IAM Unique Identifier'
+  # The funky not group at the beginning consists of ascii ranges
+  regex = '''(?:^|[^!$-&\(-9<>-~])((?:A3T[A-Z0-9]|ACCA|ABIA|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16})\b'''
+  tags = ['aws', 'identifier']
+  entropy = 3.2
+  secretGroup = 1
+  keywords = [
+    'a3t',
+    'abia',
+    'acca',
+    'agpa',
+    'aida',
+    'aipa',
+    'akia',
+    'anpa',
+    'anva',
+    'aroa',
+    'asia',
+  ]
+
+[[rules]]
+  id = 'aws-secret-access-key'
+  description = 'AWS Secret Access Key'
+  regex = '''(?i)aws[\w\-]{0,32}[\'\"]?\s*?[:=\(]\s*?[\'\"]?([a-z0-9\/+]{40})\b'''
+  tags = ['aws', 'secret']
+  entropy = 4
+  secretGroup = 1
+  keywords = [
+    'aws',
+  ]
+
+[[rules]]
+  # Use a small one for making sure things shifting around are kept up with
+  # appropriately
+  id = 'small-secret'
+  description = 'Small Secret'
+  regex = '''\bsmall-secret\b'''
+  tags = ['small', 'secret']
+
+[[rules]]
+  # When the example value is decoded this will overlap and this is here to
+  # test that the location information is reported accurately when the match
+  # goes outside the bounds of the encoded value
+  id = 'overlapping'
+  description = 'Overlapping'
+  regex = '''secret=(decoded-secret-value\w*)'''
+  tags = ['overlapping']
+  secretGroup = 1
+
+# -----BEGIN REGEX TARGET DECODED MATCH PATTERNS-----
+[[rules]]
+  id = 'decoded-password-dont-ignore'
+  description = 'Make sure this would be detected with no allowlist'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+[[rules]]
+  id = 'decoded-password-ignore-secret'
+  description = 'Test ignore on decoded secrets: regexTarget = "secret"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'secret'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+
+[[rules]]
+  id = 'decoded-password-ignore-match'
+  description = 'Test ignore on decoded secrets: regexTarget = "match"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'match'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+
+[[rules]]
+  id = 'decoded-password-ignore-line'
+  description = 'Test ignore on decoded secrets: regexTarget = "line"'
+  regex = '''password\s*=\s*\"([^\"]+please-ignore-me[^\"]+)\"'''
+  tags = ['decode-ignore']
+  secretGroup = 1
+
+  [[rules.allowlists]]
+    regexTarget = 'line'
+    regexes = [
+      # The decoded segment that we are testing against
+      'please-ignore-me',
+    ]
+# -----END REGEX TARGET DECODED MATCH PATTERNS-----

@@ -6,59 +6,38 @@ import (
 	"math"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gitleaks/go-gitdiff/gitdiff"
 )
-
-// augmentGitFinding updates the start and end line numbers of a finding to include the
-// delta from the git diff
-func augmentGitFinding(scmPlatform scm.Platform, remoteUrl string, finding report.Finding, textFragment *gitdiff.TextFragment, f *gitdiff.File) report.Finding {
-	if !strings.HasPrefix(finding.Match, "file detected") {
-		finding.StartLine += int(textFragment.NewPosition)
-		finding.EndLine += int(textFragment.NewPosition)
-	}
-
-	if f.PatchHeader != nil {
-		finding.Commit = f.PatchHeader.SHA
-		if f.PatchHeader.Author != nil {
-			finding.Author = f.PatchHeader.Author.Name
-			finding.Email = f.PatchHeader.Author.Email
-		}
-		finding.Date = f.PatchHeader.AuthorDate.UTC().Format(time.RFC3339)
-		finding.Message = f.PatchHeader.Message()
-		// Results from `git diff` shouldn't have a link.
-		if finding.Commit != "" {
-			finding.Link = createScmLink(scmPlatform, remoteUrl, finding)
-		}
-	}
-	return finding
-}
 
 var linkCleaner = strings.NewReplacer(
 	" ", "%20",
 	"%", "%25",
 )
 
-func createScmLink(scmPlatform scm.Platform, remoteUrl string, finding report.Finding) string {
-	if scmPlatform == scm.NoPlatform {
+func createScmLink(remote *sources.RemoteInfo, finding report.Finding) string {
+	if remote.Platform == scm.UnknownPlatform ||
+		remote.Platform == scm.NoPlatform ||
+		finding.Commit == "" {
 		return ""
 	}
 
 	// Clean the path.
-	var (
-		filePath = linkCleaner.Replace(finding.File)
-		ext      = strings.ToLower(filepath.Ext(filePath))
-	)
+	filePath, _, hasInnerPath := strings.Cut(finding.File, sources.InnerPathSeparator)
+	filePath = linkCleaner.Replace(filePath)
 
-	switch scmPlatform {
+	switch remote.Platform {
 	case scm.GitHubPlatform:
-		link := fmt.Sprintf("%s/blob/%s/%s", remoteUrl, finding.Commit, filePath)
+		link := fmt.Sprintf("%s/blob/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		ext := strings.ToLower(filepath.Ext(filePath))
 		if ext == ".ipynb" || ext == ".md" {
 			link += "?plain=1"
 		}
@@ -70,12 +49,58 @@ func createScmLink(scmPlatform scm.Platform, remoteUrl string, finding report.Fi
 		}
 		return link
 	case scm.GitLabPlatform:
-		link := fmt.Sprintf("%s/blob/%s/%s", remoteUrl, finding.Commit, filePath)
+		link := fmt.Sprintf("%s/blob/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
 		if finding.StartLine != 0 {
 			link += fmt.Sprintf("#L%d", finding.StartLine)
 		}
 		if finding.EndLine != finding.StartLine {
 			link += fmt.Sprintf("-%d", finding.EndLine)
+		}
+		return link
+	case scm.AzureDevOpsPlatform:
+		link := fmt.Sprintf("%s/commit/%s?path=/%s", remote.Url, finding.Commit, filePath)
+		// Add line information if applicable
+		if hasInnerPath {
+			return link
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("&line=%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("&lineEnd=%d", finding.EndLine)
+		}
+		// This is a bit dirty, but Azure DevOps does not highlight the line when the lineStartColumn and lineEndColumn are not provided
+		link += "&lineStartColumn=1&lineEndColumn=10000000&type=2&lineStyle=plain&_a=files"
+		return link
+	case scm.GiteaPlatform:
+		link := fmt.Sprintf("%s/src/commit/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		ext := strings.ToLower(filepath.Ext(filePath))
+		if ext == ".ipynb" || ext == ".md" {
+			link += "?display=source"
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#L%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf("-L%d", finding.EndLine)
+		}
+		return link
+	case scm.BitbucketPlatform:
+		link := fmt.Sprintf("%s/src/%s/%s", remote.Url, finding.Commit, filePath)
+		if hasInnerPath {
+			return link
+		}
+		if finding.StartLine != 0 {
+			link += fmt.Sprintf("#lines-%d", finding.StartLine)
+		}
+		if finding.EndLine != finding.StartLine {
+			link += fmt.Sprintf(":%d", finding.EndLine)
 		}
 		return link
 	default:
@@ -121,8 +146,8 @@ func filter(findings []report.Finding, redact uint) []report.Finding {
 					strings.Contains(fPrime.Secret, f.Secret) &&
 					!strings.Contains(strings.ToLower(fPrime.RuleID), "generic") {
 
-					genericMatch := strings.Replace(f.Match, f.Secret, "REDACTED", -1)
-					betterMatch := strings.Replace(fPrime.Match, fPrime.Secret, "REDACTED", -1)
+					genericMatch := strings.ReplaceAll(f.Match, f.Secret, "REDACTED")
+					betterMatch := strings.ReplaceAll(fPrime.Match, fPrime.Secret, "REDACTED")
 					logging.Trace().Msgf("skipping %s finding (%s), %s rule takes precedence (%s)", f.RuleID, genericMatch, fPrime.RuleID, betterMatch)
 					include = false
 					break
@@ -207,7 +232,9 @@ func printFinding(f report.Finding, noColor bool) {
 
 	fmt.Printf("%-12s %s\n", "RuleID:", f.RuleID)
 	fmt.Printf("%-12s %f\n", "Entropy:", f.Entropy)
+
 	if f.File == "" {
+		f.PrintRequiredFindings()
 		fmt.Println("")
 		return
 	}
@@ -218,6 +245,7 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {
 		fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
+		f.PrintRequiredFindings()
 		fmt.Println("")
 		return
 	}
@@ -229,9 +257,7 @@ func printFinding(f report.Finding, noColor bool) {
 	if f.Link != "" {
 		fmt.Printf("%-12s %s\n", "Link:", f.Link)
 	}
-	fmt.Println("")
-}
 
-func isWhitespace(ch byte) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
+	f.PrintRequiredFindings()
+	fmt.Println("")
 }

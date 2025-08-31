@@ -1,0 +1,8 @@
+[extend]
+path="../testdata/config/valid/extend_base_1.toml"
+
+[[rules]]
+    description = "AWS Secret Key"
+    id = "aws-secret-key"
+    regex = '''(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}'''
+    tags = ["key", "AWS"]

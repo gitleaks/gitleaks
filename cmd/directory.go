@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -72,16 +73,9 @@ func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *det
 
 	logging.Debug().Msg("Initializing configuration")
 	initConfigOnce.Do(func() {
-		if initErr := initConfig(source); initErr != nil {
-			findings = nil
-			err = initErr
-		}
+		initConfig(source)
+		initDiagnostics()
 	})
-
-	if err != nil {
-		logging.Error().Err(err).Msg("Failed to initialize configuration")
-		return findings, nil, err
-	}
 
 	// setup config (aka, the thing that defines rules)
 	logging.Debug().Msgf("Initializing detector for source: %s", source)
@@ -89,31 +83,24 @@ func runDirectoryScan(cmd *cobra.Command, source string) ([]report.Finding, *det
 	detector := Detector(cmd, cfg, source)
 
 	// set follow symlinks flag
-	logging.Debug().Msg("Setting follow symlinks flag")
-	detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks")
-	if err != nil {
-		logging.Error().Err(err).Msg("Failed to get follow-symlinks flag")
-		return nil, nil, err
+	if detector.FollowSymlinks, err = cmd.Flags().GetBool("follow-symlinks"); err != nil {
+		logging.Fatal().Err(err).Send()
 	}
 
-	logging.Debug().Msg("Getting directory targets")
-	var paths <-chan sources.ScanTarget
-	paths, err = sources.DirectoryTargets(
-		source,
-		detector.Sema,
-		detector.FollowSymlinks,
-		detector.Config.Allowlist.PathAllowed,
+	findings, err = detector.DetectSource(
+		context.Background(),
+		&sources.Files{
+			Config:          &cfg,
+			FollowSymlinks:  detector.FollowSymlinks,
+			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
+			Path:            source,
+			Sema:            detector.Sema,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
+		},
 	)
-	if err != nil {
-		logging.Error().Err(err).Msg("Failed to get directory targets")
-		return nil, nil, err
-	}
 
-	logging.Debug().Msg("Detecting files")
-	findings, err = detector.DetectFiles(paths)
 	if err != nil {
-		// don't exit on error, just log it
-		logging.Error().Err(err).Msg("Failed to detect files in directory")
+		logging.Error().Err(err).Msg("failed scan directory")
 	}
 
 	return findings, detector, err

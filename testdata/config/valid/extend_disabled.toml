@@ -1,0 +1,11 @@
+title = "gitleaks extend disable"
+
+[extend]
+path = "../testdata/config/valid/extend_disabled_base.toml"
+disabledRules = [
+    'custom-rule1'
+]
+
+[[rules]]
+id = "pypi-upload-token"
+regex = '''pypi-AgEIcHlwaS5vcmc[A-Za-z0-9\-_]{50,1000}'''

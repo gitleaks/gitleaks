@@ -8,23 +8,35 @@
 └─░───┘
 ```
 
-<p align="left">
-  <p align="left">
-	  <a href="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml">
-		  <img alt="Github Test" src="https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg">
-	  </a>
-	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
-		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
-	  </a>
-	  <a href="https://github.com/gitleaks/gitleaks-action">
-        	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
-    	 </a>
-  </p>
-</p>
+[license]: ./LICENSE
+[badge-license]: https://img.shields.io/github/license/gitleaks/gitleaks.svg
+[go-docs-badge]: https://pkg.go.dev/badge/github.com/gitleaks/gitleaks/v8?status
+[go-docs]: https://pkg.go.dev/github.com/zricethezav/gitleaks/v8
+[badge-build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml/badge.svg
+[build]: https://github.com/gitleaks/gitleaks/actions/workflows/test.yml
+[go-report-card-badge]: https://goreportcard.com/badge/github.com/gitleaks/gitleaks/v8
+[go-report-card]: https://goreportcard.com/report/github.com/gitleaks/gitleaks/v8
+[dockerhub]: https://hub.docker.com/r/zricethezav/gitleaks
+[dockerhub-badge]: https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg
+[gitleaks-action]: https://github.com/gitleaks/gitleaks-action
+[gitleaks-badge]: https://img.shields.io/badge/protected%20by-gitleaks-blue
+[gitleaks-playground-badge]: https://img.shields.io/badge/gitleaks%20-playground-blue
+[gitleaks-playground]: https://gitleaks.io/playground
+
+
+[![GitHub Action Test][badge-build]][build]
+[![Docker Hub][dockerhub-badge]][dockerhub]
+[![Gitleaks Playground][gitleaks-playground-badge]][gitleaks-playground]
+[![Gitleaks Action][gitleaks-badge]][gitleaks-action]
+[![GoDoc][go-docs-badge]][go-docs]
+[![GoReportCard][go-report-card-badge]][go-report-card]
+[![License][badge-license]][license]
+
 
 ### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
 
-Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`.
+Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`. If you wanna learn more about how the detection engine works check out this blog: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
+
 
 ```
 ➜  ~/code(master) gitleaks git -v
@@ -102,12 +114,12 @@ jobs:
    ```
    repos:
      - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.23.1
+       rev: v8.24.2
        hooks:
          - id: gitleaks
    ```
 
-   for a [native execution of GitLeaks](https://github.com/gitleaks/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
+   for a [native execution of gitleaks](https://github.com/gitleaks/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing gitleaks using the [official Docker images](#docker)
 
 3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
 4. Install with `pre-commit install`
@@ -133,7 +145,6 @@ Usage:
   gitleaks [command]
 
 Available Commands:
-  completion  generate the autocompletion script for the specified shell
   dir         scan directories or files for secrets
   git         scan git repositories for secrets
   help        Help about any command
@@ -146,8 +157,11 @@ Flags:
                                       order of precedence:
                                       1. --config/-c
                                       2. env var GITLEAKS_CONFIG
-                                      3. (target path)/.gitleaks.toml
-                                      If none of the three options are used, then gitleaks will use the default config
+                                      3. env var GITLEAKS_CONFIG_TOML with the file content
+                                      4. (target path)/.gitleaks.toml
+                                      If none of the four options are used, then gitleaks will use the default config
+      --diagnostics string            enable diagnostics (comma-separated list: cpu,mem,trace). cpu=CPU profiling, mem=memory profiling, trace=execution tracing
+      --diagnostics-dir string        directory to store diagnostics output files (defaults to current directory)
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
   -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
@@ -155,11 +169,12 @@ Flags:
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
       --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
+      --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
       --max-target-megabytes int      files larger than this will be skipped
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
-  -f, --report-format string          output format (json, csv, junit, sarif) (default "json")
+  -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
   -v, --verbose                       show verbose output from scan
@@ -177,6 +192,7 @@ If you find v8.19.0 broke an existing command (`detect`/`protect`), please open 
 There are three scanning modes: `git`, `dir`, and `stdin`.
 
 #### Git
+
 The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
 You can configure the behavior of `git log -p` with the `log-opts` option.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
@@ -184,10 +200,12 @@ command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir
+
 The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
 If there is no target specified as a positional argument, then gitleaks will scan the current working directory.
 
 #### Stdin
+
 You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
 
 ### Creating a baseline
@@ -212,40 +230,76 @@ After running the detect command with the --baseline-path parameter, report outp
 You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into
 your `.git/hooks/` directory.
 
+## Load Configuration
+
+The order of precedence is:
+
+1. `--config/-c` option:
+      ```bash
+      gitleaks git --config /home/dev/customgitleaks.toml .
+      ```
+2. Environment variable `GITLEAKS_CONFIG` with the file path:
+      ```bash
+      export GITLEAKS_CONFIG="/home/dev/customgitleaks.toml"
+      gitleaks git .
+      ```
+3. Environment variable `GITLEAKS_CONFIG_TOML` with the file content:
+      ```bash
+      export GITLEAKS_CONFIG_TOML=`cat customgitleaks.toml`
+      gitleaks git .
+      ```
+4. A `.gitleaks.toml` file within the target path:
+      ```bash
+      gitleaks git .
+      ```
+
+If none of the four options are used, then gitleaks will use the default config.
+
 ## Configuration
 
 Gitleaks offers a configuration format you can follow to write your own secret detection rules:
 
 ```toml
 # Title for the gitleaks configuration file.
-title = "Gitleaks title"
+title = "Custom Gitleaks configuration"
 
-# Extend the base (this) configuration. When you extend a configuration
-# the base rules take precedence over the extended rules. I.e., if there are
-# duplicate rules in both the base configuration and the extended configuration
-# the base rules will override the extended rules.
-# Another thing to know with extending configurations is you can chain together
-# multiple configuration files to a depth of 2. Allowlist arrays are appended
-# and can contain duplicates.
+# You have basically two options for your custom configuration:
+#
+# 1. define your own configuration, default rules do not apply
+#
+#    use e.g., the default configuration as starting point:
+#    https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+#
+# 2. extend a configuration, the rules are overwritten or extended
+#
+#    When you extend a configuration the extended rules take precedence over the
+#    default rules. I.e., if there are duplicate rules in both the extended
+#    configuration and the default configuration the extended rules or
+#    attributes of them will override the default rules.
+#    Another thing to know with extending configurations is you can chain
+#    together multiple configuration files to a depth of 2. Allowlist arrays are
+#    appended and can contain duplicates.
+
 # useDefault and path can NOT be used at the same time. Choose one.
 [extend]
-# useDefault will extend the base configuration with the default gitleaks config:
+# useDefault will extend the default gitleaks config built in to the binary
+# the latest version is located at:
 # https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
 useDefault = true
-# or you can supply a path to a configuration. Path is relative to where gitleaks
-# was invoked, not the location of the base config.
-path = "common_config.toml"
+# or you can provide a path to a configuration to extend from.
+# The path is relative to where gitleaks was invoked,
+# not the location of the base config.
+# path = "common_config.toml"
 # If there are any rules you don't want to inherit, they can be specified here.
 disabledRules = [ "generic-api-key"]
 
 # An array of tables that contain information that define instructions
 # on how to detect secrets
 [[rules]]
-
 # Unique identifier for this rule
 id = "awesome-rule-1"
 
-# Short human readable description of the rule.
+# Short human-readable description of the rule.
 description = "awesome rule 1"
 
 # Golang regular expression used to detect secrets. Note Golang's regex engine
@@ -319,19 +373,20 @@ id = "gitlab-pat"
     regexTarget = "line"
     regexes = [ '''MY-glpat-''' ]
 
-# This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
+
+# ⚠️ In v8.25.0 `[allowlist]` was replaced with `[[allowlists]]`.
+#
+# Global allowlists have a higher order of precedence than rule-specific allowlists.
 # If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
 # secrets will be detected for said commit. The same logic applies for regexes and paths.
-[allowlist]
+[[allowlists]]
 description = "global allow list"
 commits = [ "commit-A", "commit-B", "commit-C"]
 paths = [
   '''gitleaks\.toml''',
   '''(.*?)(jpg|gif|doc)'''
 ]
-
 # note: (global) regexTarget defaults to check the _Secret_ in the finding.
-# if regexTarget is not specified then _Secret_ will be used.
 # Acceptable values for regexTarget are "match" and "line"
 regexTarget = "match"
 regexes = [
@@ -345,12 +400,109 @@ stopwords = [
   '''client''',
   '''endpoint''',
 ]
+
+# ⚠️ In v8.25.0, `[[allowlists]]` have a new field called |targetRules|.
+#
+# Common allowlists can be defined once and assigned to multiple rules using |targetRules|.
+# This will only run on the specified rules, not globally.
+[[allowlists]]
+targetRules = ["awesome-rule-1", "awesome-rule-2"]
+description = "Our test assets trigger false-positives in a couple rules."
+paths = ['''tests/expected/._\.json$''']
 ```
 
 Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
 
 ### Additional Configuration
 
+#### Composite Rules (Multi-part or `required` Rules)
+In v8.28.0 Gitleaks introduced composite rules, which are made up of a single "primary" rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `withinLines` and/or `withinColumns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
+
+**Proximity matching:** Using the `withinLines` and `withinColumns` fields instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified proximity. You can set:
+
+- **`withinLines: N`** - required findings must be within N lines (vertically)
+- **`withinColumns: N`** - required findings must be within N characters (horizontally)  
+- **Both** - creates a rectangular search area (both constraints must be satisfied)
+- **Neither** - fragment-level matching (required findings can be anywhere in the same fragment)
+
+Here are diagrams illustrating each proximity behavior:
+
+```
+p = primary captured secret
+a = auxiliary (required) captured secret
+fragment = section of data gitleaks is looking at
+
+
+    *Fragment-level proximity*               
+    Any required finding in the fragment
+          ┌────────┐                       
+   ┌──────┤fragment├─────┐                 
+   │      └──────┬─┤     │ ┌───────┐       
+   │             │a│◀────┼─│✓ MATCH│       
+   │          ┌─┐└─┘     │ └───────┘       
+   │┌─┐       │p│        │                 
+   ││a│    ┌─┐└─┘        │ ┌───────┐       
+   │└─┘    │a│◀──────────┼─│✓ MATCH│       
+   └─▲─────┴─┴───────────┘ └───────┘       
+     │    ┌───────┐                        
+     └────│✓ MATCH│                        
+          └───────┘                        
+                                           
+                                           
+   *Column bounded proximity*
+   `withinColumns = 3`                    
+          ┌────────┐                       
+   ┌────┬─┤fragment├─┬───┐                 
+   │      └──────┬─┤     │ ┌───────────┐   
+   │    │        │a│◀┼───┼─│+1C ✓ MATCH│   
+   │          ┌─┐└─┘     │ └───────────┘   
+   │┌─┐ │     │p│    │   │                 
+┌──▶│a│  ┌─┐  └─┘        │ ┌───────────┐   
+│  │└─┘ ││a│◀────────┼───┼─│-2C ✓ MATCH│   
+│  │       ┘             │ └───────────┘   
+│  └── -3C ───0C─── +3C ─┘                 
+│  ┌─────────┐                             
+│  │ -4C ✗ NO│                             
+└──│  MATCH  │                             
+   └─────────┘                             
+                                           
+                                           
+   *Line bounded proximity*
+   `withinLines = 4`                      
+         ┌────────┐                        
+   ┌─────┤fragment├─────┐                  
+  +4L─ ─ ┴────────┘─ ─ ─│                  
+   │                    │                  
+   │              ┌─┐   │ ┌────────────┐   
+   │         ┌─┐  │a│◀──┼─│+1L ✓ MATCH │   
+   0L  ┌─┐   │p│  └─┘   │ ├────────────┤   
+   │   │a│◀──┴─┴────────┼─│-1L ✓ MATCH │   
+   │   └─┘              │ └────────────┘   
+   │                    │ ┌─────────┐      
+  -4L─ ─ ─ ─ ─ ─ ─ ─┌─┐─│ │-5L ✗ NO │      
+   │                │a│◀┼─│  MATCH  │      
+   └────────────────┴─┴─┘ └─────────┘      
+                                           
+                                           
+   *Line and column bounded proximity*
+   `withinLines = 4`                      
+   `withinColumns = 3`                    
+         ┌────────┐                        
+   ┌─────┤fragment├─────┐                  
+  +4L   ┌└────────┴ ┐   │                  
+   │            ┌─┐     │ ┌───────────────┐
+   │    │       │a│◀┼───┼─│+2L/+1C ✓ MATCH│
+   │         ┌─┐└─┘     │ └───────────────┘
+   0L   │    │p│    │   │                  
+   │         └─┘        │                  
+   │    │           │   │ ┌────────────┐   
+  -4L    ─ ─ ─ ─ ─ ─┌─┐ │ │-5L/+3C ✗ NO│   
+   │                │a│◀┼─│   MATCH    │   
+   └───-3C────0L───+3C┴─┘ └────────────┘   
+```
+
+<details><summary>Some final quick thoughts on composite rules.</summary>This is an experimental feature! It's subject to change so don't go sellin' a new B2B SaaS feature built ontop of this feature. Scan type (git vs dir) based context is interesting. I'm monitoring the situation. Composite rules might not be super useful for git scans because gitleaks only looks at additions in the git history. It could be useful to scan non-additions in git history for `required` rules. Oh, right this is a readme, I'll shut up now.</details>
+  
 #### gitleaks:allow
 
 If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
@@ -391,7 +543,48 @@ ways:
 
 Currently supported encodings:
 
-- `base64` (both standard and base64url)
+- **percent** - Any printable ASCII percent encoded values
+- **hex** - Any printable ASCII hex encoded values >= 32 characters
+- **base64** - Any printable ASCII base64 encoded values >= 16 characters
+
+#### Archive Scanning
+
+Sometimes secrets are packaged within archive files like zip files or tarballs,
+making them difficult to discover. Now you can tell gitleaks to automatically
+extract and scan the contents of archives. The flag `--max-archive-depth`
+enables this feature for both `dir` and `git` scan types. The default value of
+"0" means this feature is disabled by default.
+
+Recursive scanning is supported since archives can also contain other archives.
+The `--max-archive-depth` flag sets the recursion limit. Recursion stops when
+there are no new archives to extract, so setting a very high max depth just
+sets the potential to go that deep. It will only go as deep as it needs to.
+
+The findings for secrets located within an archive will include the path to the
+file inside the archive. Inner paths are separated with `!`.
+
+Example finding (shortened for brevity):
+
+```
+Finding:     DB_PASSWORD=8ae31cacf141669ddfb5da
+...
+File:        testdata/archives/nested.tar.gz!archives/files.tar!files/.env.prod
+Line:        4
+Commit:      6e6ee6596d337bb656496425fb98644eb62b4a82
+...
+Fingerprint: 6e6ee6596d337bb656496425fb98644eb62b4a82:testdata/archives/nested.tar.gz!archives/files.tar!files/.env.prod:generic-api-key:4
+Link:        https://github.com/leaktk/gitleaks/blob/6e6ee6596d337bb656496425fb98644eb62b4a82/testdata/archives/nested.tar.gz
+```
+
+This means a secret was detected on line 4 of `files/.env.prod.` which is in
+`archives/files.tar` which is in `testdata/archives/nested.tar.gz`.
+
+Currently supported formats:
+
+The [compression](https://github.com/mholt/archives?tab=readme-ov-file#supported-compression-formats)
+and [archive](https://github.com/mholt/archives?tab=readme-ov-file#supported-archive-formats)
+formats supported by mholt's [archives package](https://github.com/mholt/archives)
+are supported.
 
 #### Reporting
 

@@ -2,7 +2,10 @@
 # If you would like to contribute new rules, please use
 # cmd/generate/config/main.go and follow the contributing guidelines
 # at https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md
-
+#
+# How the hell does secret scanning work? Read this:
+#   https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need
+#
 # This is the default gitleaks configuration file.
 # Rules and allowlists are defined within this file.
 # Rules instruct gitleaks on what should be considered a secret.
@@ -10,21 +13,22 @@
 
 title = "{{.Title}}"
 
-[allowlist]
-description = "{{.Allowlist.Description}}"
-{{- with .Allowlist.RegexTarget }}
-regexTarget = "{{ . }}"{{ end -}}
-{{- with .Allowlist.Regexes }}
-regexes = [{{ range $i, $regex := . }}
-    '''{{ $regex }}''',{{ end }}
+{{ with .Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}# TODO: change to [[allowlists]]{{println}}[allowlist]
+{{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
+{{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
+{{- with .Commits -}}{{println}}commits = [
+    {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}
-{{- with .Allowlist.Paths }}
-paths = [{{ range $i, $path := . }}
+{{- with .Paths }}{{println}}paths = [{{ range $j, $path := . }}
     '''{{ $path }}''',{{ end }}
 ]{{ end }}
-{{- with .Allowlist.StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
+{{- if and .RegexTarget .Regexes }}{{println}}regexTarget = "{{ .RegexTarget }}"{{ end -}}
+{{- with .Regexes }}{{println}}regexes = [{{ range $i, $regex := . }}
+    '''{{ $regex }}''',{{ end }}
+]{{ end }}
+{{- with .StopWords }}{{println}}stopwords = [{{ range $j, $stopword := . }}
     "{{ $stopword }}",{{ end }}
-]{{ end }}{{println}}
+]{{ end }}{{ end }}{{ end }}{{ end }}{{println}}
 
 {{- range $i, $rule := .Rules }}{{println}}[[rules]]
 id = "{{$rule.RuleID}}"
@@ -48,7 +52,8 @@ tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
 {{- with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}{{println}}[[rules.allowlists]]
-{{- with .MatchCondition }}{{println}}condition = "{{ .MatchCondition.String }}"{{ end }}
+{{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
+{{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
 {{- with .Commits -}}{{println}}commits = [
     {{ range $j, $commit := . }}"{{ $commit }}",{{ end }}
 ]{{ end }}

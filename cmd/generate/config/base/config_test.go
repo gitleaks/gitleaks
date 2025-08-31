@@ -62,22 +62,35 @@ var allowlistRegexTests = map[string]struct {
 		invalid: []string{`@password@`, `@LDAP_PASS@`},
 		valid:   []string{`@username@mastodon.example`},
 	},
+	"miscellaneous - file paths": {
+		invalid: []string{
+			// MacOS
+			`/Users/james/Projects/SwiftCode/build/Release`,
+			// Linux
+			`/tmp/screen-exchange`,
+		},
+		valid: []string{},
+	},
 }
 
 func TestConfigAllowlistRegexes(t *testing.T) {
 	cfg := CreateGlobalConfig()
-	allowlist := cfg.Allowlist
+	allowlists := cfg.Allowlists
 	for name, cases := range allowlistRegexTests {
 		t.Run(name, func(t *testing.T) {
 			for _, c := range cases.invalid {
-				if !allowlist.RegexAllowed(c) {
-					t.Errorf("invalid value not marked as allowed: %s", c)
+				for _, a := range allowlists {
+					if !a.RegexAllowed(c) {
+						t.Errorf("invalid value not marked as allowed: %s", c)
+					}
 				}
 			}
 
 			for _, c := range cases.valid {
-				if allowlist.RegexAllowed(c) {
-					t.Errorf("valid value marked as allowed: %s", c)
+				for _, a := range allowlists {
+					if a.RegexAllowed(c) {
+						t.Errorf("valid value marked as allowed: %s", c)
+					}
 				}
 			}
 		})
@@ -86,15 +99,19 @@ func TestConfigAllowlistRegexes(t *testing.T) {
 
 func BenchmarkConfigAllowlistRegexes(b *testing.B) {
 	cfg := CreateGlobalConfig()
-	allowlist := cfg.Allowlist
+	allowlists := cfg.Allowlists
 	for n := 0; n < b.N; n++ {
 		for _, cases := range allowlistRegexTests {
 			for _, c := range cases.invalid {
-				allowlist.RegexAllowed(c)
+				for _, a := range allowlists {
+					a.RegexAllowed(c)
+				}
 			}
 
 			for _, c := range cases.valid {
-				allowlist.RegexAllowed(c)
+				for _, a := range allowlists {
+					a.RegexAllowed(c)
+				}
 			}
 		}
 	}
@@ -143,18 +160,22 @@ var allowlistPathsTests = map[string]struct {
 
 func TestConfigAllowlistPaths(t *testing.T) {
 	cfg := CreateGlobalConfig()
-	allowlist := cfg.Allowlist
+	allowlists := cfg.Allowlists
 	for name, cases := range allowlistPathsTests {
 		t.Run(name, func(t *testing.T) {
 			for _, c := range cases.invalid {
-				if !allowlist.PathAllowed(c) {
-					t.Errorf("invalid path not marked as allowed: %s", c)
+				for _, a := range allowlists {
+					if !a.PathAllowed(c) {
+						t.Errorf("invalid path not marked as allowed: %s", c)
+					}
 				}
 			}
 
 			for _, c := range cases.valid {
-				if allowlist.PathAllowed(c) {
-					t.Errorf("valid path marked as allowed: %s", c)
+				for _, a := range allowlists {
+					if a.PathAllowed(c) {
+						t.Errorf("valid path marked as allowed: %s", c)
+					}
 				}
 			}
 		})
@@ -163,15 +184,19 @@ func TestConfigAllowlistPaths(t *testing.T) {
 
 func BenchmarkConfigAllowlistPaths(b *testing.B) {
 	cfg := CreateGlobalConfig()
-	allowlist := cfg.Allowlist
+	allowlists := cfg.Allowlists
 	for n := 0; n < b.N; n++ {
 		for _, cases := range allowlistPathsTests {
 			for _, c := range cases.invalid {
-				allowlist.PathAllowed(c)
+				for _, a := range allowlists {
+					a.PathAllowed(c)
+				}
 			}
 
 			for _, c := range cases.valid {
-				allowlist.PathAllowed(c)
+				for _, a := range allowlists {
+					a.PathAllowed(c)
+				}
 			}
 		}
 	}

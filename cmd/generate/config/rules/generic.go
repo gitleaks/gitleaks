@@ -36,7 +36,7 @@ func GenericCredential() *config.Rule {
 			"token",
 		},
 		Entropy: 3.5,
-		Allowlists: []config.Allowlist{
+		Allowlists: []*config.Allowlist{
 			{
 				// NOTE: this is a goofy hack to get around the fact there golang's regex engine does not support positive lookaheads.
 				// Ideally we would want to ensure the secret contains both numbers and alphabetical characters, not just alphabetical characters.
@@ -66,7 +66,8 @@ func GenericCredential() *config.Rule {
 						`|(?:credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
 						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
-						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
+						`|(?:turkey)` +
+						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
 						`|key(?:store|tab)[_.-]?(?:file|path)` +
@@ -77,7 +78,8 @@ func GenericCredential() *config.Rule {
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
-						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinats. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
+						`|(?:csrf)[_.-]?token` +
+						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinates. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
 						`|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])` +
@@ -97,6 +99,23 @@ func GenericCredential() *config.Rule {
 				Regexes: []*regexp.Regexp{
 					// Docker build secrets (https://docs.docker.com/build/building/secrets/#using-build-secrets).
 					regexp.MustCompile(`--mount=type=secret,`),
+					//  https://github.com/gitleaks/gitleaks/issues/1800
+					regexp.MustCompile(`import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]`),
+				},
+			},
+			{
+				MatchCondition: config.AllowlistMatchAnd,
+				RegexTarget:    "line",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`LICENSE[^=]*=\s*"[^"]+`),
+					regexp.MustCompile(`LIC_FILES_CHKSUM[^=]*=\s*"[^"]+`),
+					regexp.MustCompile(`SRC[^=]*=\s*"[a-zA-Z0-9]+`),
+				},
+				Paths: []*regexp.Regexp{
+					regexp.MustCompile(`\.bb$`),
+					regexp.MustCompile(`\.bbappend$`),
+					regexp.MustCompile(`\.bbclass$`),
+					regexp.MustCompile(`\.inc$`),
 				},
 			},
 		},
@@ -207,6 +226,10 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`KeyPair = X25519.KeyPair`,
 		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
 		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
+		`            keyPressed = kVK_Return.u16`,
+		`timezone_mapping = {
+    "Turkey Standard Time": "Europe/Istanbul",
+}`, // https://github.com/gitleaks/gitleaks/issues/1799
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//`    { key: '9df21e95-3848-409d-8f94-c675cdfee839', value: 'Americas' },`,
 		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
@@ -239,6 +262,7 @@ R5: Regulatory--21`,
 		`publicToken = "9Cnzj4p4WGeKLs1Pt8QuKUpRKfFLfRYC9AIKjbJTWit"`,
 		`<SourceFile SourceLocation="F:\Extracts\" TokenFile="RTL_INST_CODE.cer">`,
 		`notes            = "Maven - io.jsonwebtoken:jjwt-jackson-0.11.2"`,
+		`csrf-token=Mj2qykJO5rELyHgezQ69nzUX0i3OH67V7+V4eUrLfpuyOuxmiW9rhROG/Whikle15syazJOkrjJa3U2AbhIvUw==`,
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
@@ -247,12 +271,17 @@ R5: Regulatory--21`,
 DYNATRACE_API_KEY=`,
 		`snowflake.password=
 jdbc.snowflake.url=`,
+		`import { chain_Anvil1_Key, chain_Anvil2_Key } from '../blockchain-tests/pallets/supported-chains/consts';`,
+
+		// Yocto/BitBake
+		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
+		`LIC_FILES_CHKSUM = "file://${WORKDIR}/license.html;md5=5c94767cedb5d6987c902ac850ded2c6"`,
 	}
 	return utils.Validate(r, tps, fps)
 }
 
 func newPlausibleSecret(regex string) string {
-	allowList := config.Allowlist{StopWords: DefaultStopWords}
+	allowList := &config.Allowlist{StopWords: DefaultStopWords}
 	// attempt to generate a random secret,
 	// retrying until it contains at least one digit and no stop words
 	// TODO: currently the DefaultStopWords list contains many short words,

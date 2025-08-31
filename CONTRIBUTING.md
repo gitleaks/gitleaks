@@ -35,7 +35,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
            RuleID:      "beamer-api-token",
 
            // Regex capture group for the actual secret
-           
+
 
 
            // Regex used for detecting secrets. See regex section below for more details
@@ -95,7 +95,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
    the `rules.Beamer(),` in `main()`. Try and keep
    this alphabetically pretty please.
 
-1. Run `go generate ./...`
+1. Run `make config/gitleaks.toml`
 
 1. Check out your new rules in `config/gitleaks.toml` and see if everything looks good.
 

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -34,14 +35,21 @@ const configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
-3. (target path)/.gitleaks.toml
-If none of the three options are used, then gitleaks will use the default config`
+3. env var GITLEAKS_CONFIG_TOML with the file content
+4. (target path)/.gitleaks.toml
+If none of the four options are used, then gitleaks will use the default config`
 
-var rootCmd = &cobra.Command{
-	Use:     "gitleaks",
-	Short:   "Gitleaks scans code, past or present, for secrets",
-	Version: Version,
-}
+var (
+	rootCmd = &cobra.Command{
+		Use:     "gitleaks",
+		Short:   "Gitleaks scans code, past or present, for secrets",
+		Version: Version,
+	}
+
+	// diagnostics manager is global to ensure it can be started before a scan begins
+	// and stopped after a scan completes
+	diagnosticsManager *DiagnosticsManager
+)
 
 const (
 	BYTE     = 1.0
@@ -55,7 +63,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
-	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, jsonextra, csv, junit, sarif, template)")
+	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, junit, sarif, template)")
 	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
@@ -69,6 +77,11 @@ func init() {
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
+	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
+
+	// Add diagnostics flags
+	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
+	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files when not using http mode (defaults to current directory)")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -105,7 +118,7 @@ func initLog() {
 
 var bannerOnce sync.Once
 
-func initConfig(source string) error {
+func initConfig(source string) {
 	bannerOnce.Do(func() {
 		if !mustGetBoolFlag(rootCmd, "no-banner") {
 			_, _ = fmt.Fprint(os.Stderr, banner)
@@ -125,41 +138,73 @@ func initConfig(source string) error {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
 		viper.SetConfigFile(envPath)
 		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+	} else if os.Getenv("GITLEAKS_CONFIG_TOML") != "" {
+		configContent := []byte(os.Getenv("GITLEAKS_CONFIG_TOML"))
+		if err := viper.ReadConfig(bytes.NewBuffer(configContent)); err != nil {
+			logging.Fatal().Err(err).Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("unable to load gitleaks config from GITLEAKS_CONFIG_TOML env var")
+		}
+		logging.Debug().Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
+		return
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
-			return err
+			return
 		}
 
 		if !fileInfo.IsDir() {
 			logging.Debug().Msgf("unable to load gitleaks config from %s since --source=%s is a file, using default config",
 				filepath.Join(source, ".gitleaks.toml"), source)
-			viper.SetConfigType("toml")
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading toml %s", err.Error())
 			}
-			return nil
+			return
 		}
 
 		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
 			logging.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
-			viper.SetConfigType("toml")
+
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading default config toml %s", err.Error())
 			}
-			return nil
+			return
 		} else {
 			logging.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
 		}
 
 		viper.AddConfigPath(source)
 		viper.SetConfigName(".gitleaks")
-		viper.SetConfigType("toml")
 	}
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
-	return nil
+	return
+}
+
+func initDiagnostics() {
+	// Initialize diagnostics manager
+	diagnosticsFlag, err := rootCmd.PersistentFlags().GetString("diagnostics")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics flag")
+	}
+
+	diagnosticsDir, err := rootCmd.PersistentFlags().GetString("diagnostics-dir")
+	if err != nil {
+		logging.Fatal().Err(err).Msg("Error getting diagnostics-dir flag")
+	}
+
+	var diagErr error
+	diagnosticsManager, diagErr = NewDiagnosticsManager(diagnosticsFlag, diagnosticsDir)
+	if diagErr != nil {
+		logging.Fatal().Err(diagErr).Msg("Error initializing diagnostics")
+	}
+
+	if diagnosticsManager.Enabled {
+		logging.Info().Msg("Starting diagnostics...")
+		if diagErr := diagnosticsManager.StartDiagnostics(); diagErr != nil {
+			logging.Fatal().Err(diagErr).Msg("Failed to start diagnostics")
+		}
+	}
+
 }
 
 func Execute() {
@@ -177,6 +222,7 @@ func Config(cmd *cobra.Command) config.Config {
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
 	}
+
 	cfg, err := vc.Translate()
 	if err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
@@ -193,12 +239,16 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	detector := detect.NewDetector(cfg)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
+	}
+
+	if detector.MaxArchiveDepth, err = cmd.Flags().GetInt("max-archive-depth"); err != nil {
+		logging.Fatal().Err(err).Send()
 	}
 
 	// set color flag at first
 	if detector.NoColor, err = cmd.Flags().GetBool("no-color"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// also init logger again without color
 	if detector.NoColor {
@@ -209,7 +259,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	detector.Config.Path, err = cmd.Flags().GetString("config")
 	if err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	// if config path is not set, then use the {source}/.gitleaks.toml path.
@@ -219,18 +269,18 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	// set verbose flag
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set redact flag
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
-		logging.Fatal().Err(err).Msg("")
+		logging.Fatal().Err(err).Send()
 	}
 
 	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
@@ -299,6 +349,20 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 			reportFormat   = mustGetStringFlag(cmd, "report-format")
 			reportTemplate = mustGetStringFlag(cmd, "report-template")
 		)
+		if reportFormat == "" {
+			ext := strings.ToLower(filepath.Ext(reportPath))
+			switch ext {
+			case ".csv":
+				reportFormat = "csv"
+			case ".json":
+				reportFormat = "json"
+			case ".sarif":
+				reportFormat = "sarif"
+			default:
+				logging.Fatal().Msgf("Unknown report format: %s", reportFormat)
+			}
+			logging.Debug().Msgf("No report format specified, inferred %q from %q", reportFormat, ext)
+		}
 		switch strings.TrimSpace(strings.ToLower(reportFormat)) {
 		case "csv":
 			reporter = &report.CsvReporter{}
@@ -358,6 +422,11 @@ func bytesConvert(bytes uint64) string {
 }
 
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+	if diagnosticsManager.Enabled {
+		logging.Debug().Msg("Finalizing diagnostics...")
+		diagnosticsManager.StopDiagnostics()
+	}
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {

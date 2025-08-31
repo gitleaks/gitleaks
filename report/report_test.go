@@ -2,6 +2,7 @@ package report
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,6 @@ import (
 )
 
 const expectPath = "../testdata/expected/"
-const configPath = "../testdata/config/"
 const templatePath = "../testdata/report/"
 
 func TestWriteStdout(t *testing.T) {
@@ -40,3 +40,10 @@ type testWriter struct {
 func (t testWriter) Close() error {
 	return nil
 }
+
+// lineEndingReplacer normalizes CRLF to LF so tests pass on Windows.
+var lineEndingReplacer = strings.NewReplacer(
+	"\\r\\n", "\\n",
+	"\r", "",
+	"\\r", "",
+)

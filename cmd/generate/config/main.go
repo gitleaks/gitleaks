@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"slices"
 	"text/template"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
@@ -18,12 +19,13 @@ const (
 
 func main() {
 	if len(os.Args) < 2 {
-		os.Stderr.WriteString("Specify path to the gitleaks.toml config\n")
+		_, _ = os.Stderr.WriteString("Specify path to the gitleaks.toml config\n")
 		os.Exit(2)
 	}
 	gitleaksConfigPath := os.Args[1]
 
 	configRules := []*config.Rule{
+		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
@@ -33,6 +35,10 @@ func main() {
 		rules.AlgoliaApiKey(),
 		rules.AlibabaAccessKey(),
 		rules.AlibabaSecretKey(),
+		rules.AnthropicAdminApiKey(),
+		rules.AnthropicApiKey(),
+		rules.ArtifactoryApiKey(),
+		rules.ArtifactoryReferenceToken(),
 		rules.AsanaClientID(),
 		rules.AsanaClientSecret(),
 		rules.Atlassian(),
@@ -46,6 +52,7 @@ func main() {
 		rules.Beamer(),
 		rules.CodecovAccessToken(),
 		rules.CoinbaseAccessToken(),
+		rules.ClickHouseCloud(),
 		rules.Clojars(),
 		rules.CloudflareAPIKey(),
 		rules.CloudflareGlobalAPIKey(),
@@ -111,6 +118,7 @@ func main() {
 		rules.GitlabPipelineTriggerToken(),
 		rules.GitlabRunnerRegistrationToken(),
 		rules.GitlabRunnerAuthenticationToken(),
+		rules.GitlabRunnerAuthenticationTokenRoutable(),
 		rules.GitlabScimToken(),
 		rules.GitlabSessionCookie(),
 		rules.GitterAccessToken(),
@@ -121,6 +129,7 @@ func main() {
 		rules.HashiCorpTerraform(),
 		rules.HashicorpField(),
 		rules.Heroku(),
+		rules.HerokuV2(),
 		rules.HubSpot(),
 		rules.HuggingFaceAccessToken(),
 		rules.HuggingFaceOrganizationApiToken(),
@@ -147,6 +156,7 @@ func main() {
 		rules.MailGunSigningKey(),
 		rules.MapBox(),
 		rules.MattermostAccessToken(),
+		rules.MaxMindLicenseKey(),
 		rules.Meraki(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
@@ -155,6 +165,7 @@ func main() {
 		rules.NewRelicUserKey(),
 		rules.NewRelicBrowserAPIKey(),
 		rules.NewRelicInsertKey(),
+		rules.Notion(),
 		rules.NPM(),
 		rules.NugetConfigPassword(),
 		rules.NytimesAccessToken(),
@@ -162,6 +173,7 @@ func main() {
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
+		rules.PerplexityAPIKey(),
 		rules.PlaidAccessID(),
 		rules.PlaidSecretKey(),
 		rules.PlaidAccessToken(),
@@ -206,6 +218,7 @@ func main() {
 		rules.SlackLegacyToken(),
 		rules.SlackWebHookUrl(),
 		rules.Snyk(),
+		rules.Sonar(),
 		rules.SourceGraph(),
 		rules.StripeAccessToken(),
 		rules.SquareAccessToken(),
@@ -236,13 +249,28 @@ func main() {
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
+		if err := rule.Validate(); err != nil {
+			logging.Fatal().Err(err).
+				Str("rule-id", rule.RuleID).
+				Msg("Failed to validate rule")
+		}
+
 		// check if rule is in ruleLookUp
 		if _, ok := ruleLookUp[rule.RuleID]; ok {
-			logging.Fatal().Msgf("rule id %s is not unique", rule.RuleID)
+			logging.Fatal().
+				Str("rule-id", rule.RuleID).
+				Msg("rule id is not unique")
 		}
 		// TODO: eventually change all the signatures to get ride of this
 		// nasty dereferencing.
 		ruleLookUp[rule.RuleID] = *rule
+
+		// Slices are de-duplicated with a map, every iteration has a different order.
+		// This is an awkward workaround.
+		for _, allowlist := range rule.Allowlists {
+			slices.Sort(allowlist.Commits)
+			slices.Sort(allowlist.StopWords)
+		}
 	}
 
 	tmpl, err := template.ParseFiles(templatePath)
@@ -254,9 +282,14 @@ func main() {
 	if err != nil {
 		logging.Fatal().Err(err).Msg("Failed to create rules.toml")
 	}
+	defer f.Close()
 
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = ruleLookUp
+	for _, allowlist := range cfg.Allowlists {
+		slices.Sort(allowlist.Commits)
+		slices.Sort(allowlist.StopWords)
+	}
 	if err = tmpl.Execute(f, cfg); err != nil {
 		logging.Fatal().Err(err).Msg("could not execute template")
 	}

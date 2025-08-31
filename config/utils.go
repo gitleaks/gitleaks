@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
@@ -21,4 +23,18 @@ func regexMatched(f string, re *regexp.Regexp) bool {
 		return true
 	}
 	return false
+}
+
+// joinRegexOr combines multiple |patterns| into a single *regexp.Regexp.
+func joinRegexOr(patterns []*regexp.Regexp) *regexp.Regexp {
+	var sb strings.Builder
+	sb.WriteString("(?:")
+	for i, pat := range patterns {
+		sb.WriteString(pat.String())
+		if i != len(patterns)-1 {
+			sb.WriteString("|")
+		}
+	}
+	sb.WriteString(")")
+	return regexp.MustCompile(sb.String())
 }

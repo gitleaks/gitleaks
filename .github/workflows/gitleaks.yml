@@ -1,9 +1,12 @@
 name: gitleaks
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 jobs:
   scan:
     name: gitleaks
     runs-on: ubuntu-latest
+    if: ${{ github.repository == 'gitleaks/gitleaks' }}
     steps:
       - uses: actions/checkout@v3
         with:

@@ -49,6 +49,7 @@ func TestWriteSarif(t *testing.T) {
 		t.Run(test.cfgName, func(t *testing.T) {
 			tmpfile, err := os.Create(filepath.Join(t.TempDir(), test.testReportName+".json"))
 			require.NoError(t, err)
+			defer tmpfile.Close()
 
 			reporter := SarifReporter{
 				OrderedRules: []config.Rule{
@@ -76,7 +77,10 @@ func TestWriteSarif(t *testing.T) {
 
 			want, err := os.ReadFile(test.expected)
 			require.NoError(t, err)
-			assert.Equal(t, string(want), string(got))
+
+			wantStr := lineEndingReplacer.Replace(string(want))
+			gotStr := lineEndingReplacer.Replace(string(got))
+			assert.Equal(t, wantStr, gotStr)
 		})
 	}
 }
