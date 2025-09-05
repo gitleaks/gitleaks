@@ -17,8 +17,8 @@ func AdobeClientID() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("adobe", secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("adobe", secrets.NewSecret(utils.Hex("32")))
+	return &r
 }
 
 func AdobeClientSecret() *config.Rule {
@@ -32,8 +32,8 @@ func AdobeClientSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		"adobeClient := \"p8e-" + secrets.NewSecret(utils.Hex("32")) + "\"",
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }

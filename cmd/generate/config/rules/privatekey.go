@@ -16,7 +16,7 @@ func PrivateKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{`-----BEGIN PRIVATE KEY-----
+	r.TPs = []string{`-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDAC4AWkdwKYSd8
 Ks14IReLcYgADhoXk56ZzXI=
 -----END PRIVATE KEY-----`,
@@ -30,13 +30,13 @@ lQWGBGSVV4YBDAClvRnxezIRy2Yv7SFlzC0iFiRF/O/jePSw+XYhvcrTaqSYTGic
 =8xQN
 -----END PGP PRIVATE KEY BLOCK-----`,
 	} // gitleaks:allow
-	fps := []string{
+	r.FPs = []string{
 		`-----BEGIN PRIVATE KEY-----
 anything
 -----END PRIVATE KEY-----`,
 		`-----BEGIN OPENSSH PRIVATE KEY----------END OPENSSH PRIVATE KEY-----`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func PrivateKeyPKCS12File() *config.Rule {

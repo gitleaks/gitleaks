@@ -23,8 +23,8 @@ func NewRelicUserID() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("new-relic", "NRAK-"+secrets.NewSecret(utils.AlphaNumeric("27")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("new-relic", "NRAK-"+secrets.NewSecret(utils.AlphaNumeric("27")))
+	return &r
 }
 
 func NewRelicUserKey() *config.Rule {
@@ -46,8 +46,8 @@ func NewRelicUserKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("new-relic", secrets.NewSecret(utils.AlphaNumeric("64")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("new-relic", secrets.NewSecret(utils.AlphaNumeric("64")))
+	return &r
 }
 
 func NewRelicBrowserAPIKey() *config.Rule {
@@ -67,8 +67,8 @@ func NewRelicBrowserAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("new-relic", "NRJS-"+secrets.NewSecret(utils.Hex("19")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("new-relic", "NRJS-"+secrets.NewSecret(utils.Hex("19")))
+	return &r
 }
 
 func NewRelicInsertKey() *config.Rule {
@@ -88,6 +88,6 @@ func NewRelicInsertKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("new-relic", "NRII-"+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("new-relic", "NRII-"+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }

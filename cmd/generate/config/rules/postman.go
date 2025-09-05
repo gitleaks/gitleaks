@@ -19,6 +19,6 @@ func PostManAPI() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("postmanAPItoken", "PMAK-"+secrets.NewSecret(utils.Hex("24"))+"-"+secrets.NewSecret(utils.Hex("34")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("postmanAPItoken", "PMAK-"+secrets.NewSecret(utils.Hex("24"))+"-"+secrets.NewSecret(utils.Hex("34")))
+	return &r
 }

@@ -52,6 +52,11 @@ type Rule struct {
 	RequiredRules []*Required
 
 	SkipReport bool
+
+	// True positives
+	TPs []string
+	// False positives
+	FPs []string
 }
 
 type Required struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/base"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/rules"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
@@ -246,9 +247,26 @@ func main() {
 		rules.InfracostAPIToken(),
 	}
 
+	configRulesLookup := make(map[string]*config.Rule, len(configRules))
+	for _, rule := range configRules {
+		if _, ok := configRulesLookup[rule.RuleID]; !ok {
+			configRulesLookup[rule.RuleID] = rule
+		}
+	}
+
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
+		requiredRules := make([]*config.Rule, len(rule.RequiredRules))
+		for _, requriedRule := range rule.RequiredRules {
+			if _, ok := configRulesLookup[requriedRule.RuleID]; !ok {
+				logging.Error().Msg("required rule not found")
+				continue
+			}
+			requiredRules = append(requiredRules, configRulesLookup[requriedRule.RuleID])
+		}
+		rule = utils.Validate(*rule, requiredRules)
+
 		if err := rule.Validate(); err != nil {
 			logging.Fatal().Err(err).
 				Str("rule-id", rule.RuleID).

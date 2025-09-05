@@ -124,7 +124,7 @@ func GenericCredential() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443") //gitleaks:allow
 	tps = append(tps, utils.GenerateSampleSecrets("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB")...)
-	tps = append(tps,
+	r.TPs = append(tps,
 		// Access
 		`'access_token': 'eyJ0eXAioiJKV1slS3oASx=='`,
 
@@ -155,7 +155,7 @@ func GenericCredential() *config.Rule {
 		//	`"env": {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		// Access
 		`"accessor":"rA1wk0Y45YCufyfq",`,
 		`report_access_id: e8e4df51-2054-49b0-ab1c-516ac95c691d`,
@@ -277,7 +277,7 @@ jdbc.snowflake.url=`,
 		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
 		`LIC_FILES_CHKSUM = "file://${WORKDIR}/license.html;md5=5c94767cedb5d6987c902ac850ded2c6"`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func newPlausibleSecret(regex string) string {

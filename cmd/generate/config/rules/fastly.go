@@ -17,6 +17,6 @@ func FastlyAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("fastly", secrets.NewSecret(utils.AlphaNumericExtended("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("fastly", secrets.NewSecret(utils.AlphaNumericExtended("32")))
+	return &r
 }

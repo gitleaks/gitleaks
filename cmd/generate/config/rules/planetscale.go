@@ -21,8 +21,8 @@ func PlanetScalePassword() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("planetScale", "pscale_pw_"+secrets.NewSecret(utils.AlphaNumericExtended("32")))
 	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_pw_"+secrets.NewSecret(utils.AlphaNumericExtended("43")))...)
-	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_pw_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
-	return utils.Validate(r, tps, nil)
+	r.TPs = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_pw_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
+	return &r
 }
 
 func PlanetScaleAPIToken() *config.Rule {
@@ -40,8 +40,8 @@ func PlanetScaleAPIToken() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("planetScale", "pscale_tkn_"+secrets.NewSecret(utils.AlphaNumericExtended("32")))
 	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_tkn_"+secrets.NewSecret(utils.AlphaNumericExtended("43")))...)
-	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_tkn_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
-	return utils.Validate(r, tps, nil)
+	r.TPs = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_tkn_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
+	return &r
 }
 
 func PlanetScaleOAuthToken() *config.Rule {
@@ -59,6 +59,6 @@ func PlanetScaleOAuthToken() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("planetScale", "pscale_oauth_"+secrets.NewSecret(utils.AlphaNumericExtended("32")))
 	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_oauth_"+secrets.NewSecret(utils.AlphaNumericExtended("43")))...)
-	tps = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_oauth_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
-	return utils.Validate(r, tps, nil)
+	r.TPs = append(tps, utils.GenerateSampleSecrets("planetScale", "pscale_oauth_"+secrets.NewSecret(utils.AlphaNumericExtended("64")))...)
+	return &r
 }
