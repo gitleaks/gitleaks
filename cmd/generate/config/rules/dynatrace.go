@@ -18,6 +18,6 @@ func Dynatrace() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("dynatrace", "dt0c01."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("64")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("dynatrace", "dt0c01."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("64")))
+	return &r
 }

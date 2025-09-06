@@ -16,6 +16,6 @@ func Airtable() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("airtable", secrets.NewSecret(utils.AlphaNumeric("17")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("airtable", secrets.NewSecret(utils.AlphaNumeric("17")))
+	return &r
 }

@@ -20,6 +20,6 @@ func KrakenAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("kraken", secrets.NewSecret(utils.AlphaNumericExtendedLong("80,90")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("kraken", secrets.NewSecret(utils.AlphaNumericExtendedLong("80,90")))
+	return &r
 }

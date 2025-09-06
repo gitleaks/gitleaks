@@ -16,6 +16,6 @@ func AdafruitAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("adafruit", secrets.NewSecret(utils.AlphaNumericExtendedShort("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("adafruit", secrets.NewSecret(utils.AlphaNumericExtendedShort("32")))
+	return &r
 }

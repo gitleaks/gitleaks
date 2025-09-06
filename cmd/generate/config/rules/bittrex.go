@@ -16,8 +16,8 @@ func BittrexAccessKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("bittrex", secrets.NewSecret(utils.AlphaNumeric("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("bittrex", secrets.NewSecret(utils.AlphaNumeric("32")))
+	return &r
 }
 
 func BittrexSecretKey() *config.Rule {
@@ -31,6 +31,6 @@ func BittrexSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("bittrex", secrets.NewSecret(utils.AlphaNumeric("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("bittrex", secrets.NewSecret(utils.AlphaNumeric("32")))
+	return &r
 }

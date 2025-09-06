@@ -26,6 +26,6 @@ func Authress() *config.Rule {
 	account_id := "acc_" + utils.AlphaNumeric("10")
 	signature_key := utils.AlphaNumericExtendedShort("40")
 
-	tps := utils.GenerateSampleSecrets("authress", secrets.NewSecret(fmt.Sprintf(`%s\.%s\.%s\.%s`, service_client_id, access_key_id, account_id, signature_key)))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("authress", secrets.NewSecret(fmt.Sprintf(`%s\.%s\.%s\.%s`, service_client_id, access_key_id, account_id, signature_key)))
+	return &r
 }

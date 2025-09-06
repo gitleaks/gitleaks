@@ -18,8 +18,8 @@ func HarnessApiKey() *config.Rule {
 
 	// Generate a sample secret for validation
 	tps := utils.GenerateSampleSecrets("harness", "pat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20")))
-	tps = append(tps, utils.GenerateSampleSecrets("harness", "sat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20")))...)
+	r.TPs = append(tps, utils.GenerateSampleSecrets("harness", "sat."+secrets.NewSecret(utils.AlphaNumeric("22"))+"."+secrets.NewSecret(utils.AlphaNumeric("24"))+"."+secrets.NewSecret(utils.AlphaNumeric("20")))...)
 
 	// validate the rule
-	return utils.Validate(r, tps, nil)
+	return &r
 }

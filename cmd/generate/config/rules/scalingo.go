@@ -18,8 +18,8 @@ func ScalingoAPIToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("scalingo", "tk-us-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("48")))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`scalingo_api_token = "tk-us-loys7ib9yrxcys_ta2sq85mjar6lgcsspkd9x61s7h5epf_-"`, // gitleaks:allow
 	)
-	return utils.Validate(r, tps, nil)
+	return &r
 }

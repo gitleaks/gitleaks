@@ -19,6 +19,6 @@ func TravisCIAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("travis", secrets.NewSecret(utils.AlphaNumeric("22")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("travis", secrets.NewSecret(utils.AlphaNumeric("22")))
+	return &r
 }

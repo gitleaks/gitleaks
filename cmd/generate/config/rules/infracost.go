@@ -18,7 +18,7 @@ func InfracostAPIToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("ico", "ico-"+secrets.NewSecret("[A-Za-z0-9]{32}"))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`  variable {
     name = "INFRACOST_API_KEY"
     secret_value = "ico-mlCr1Mn3SRcRiZMObUZOTHLcgtH2Lpgt"
@@ -30,7 +30,7 @@ func InfracostAPIToken() *config.Rule {
 		//'Content-Type': 'application/json',
 		//}`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		// Low entropy
 		`ico-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
 		// Invalid
@@ -38,5 +38,5 @@ func InfracostAPIToken() *config.Rule {
 		`https://explosivelab.notion.site/Pianificazione-Nerdz-Ng-pubblico-1bc826ecc0994dd8915be97fc3489cde?pvs=74`,
 		`http://ece252-2.uwaterloo.ca:2540/image?q=gAAAAABdHkoqb9ZaJ3q4dlzEvTgG9WYwKcD9Aw7OUXeFicO-5M5IdNDjHBpKw7KBK3nCVqtuga4yzUaFEpJn8BqA1LzZprIJBw==`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

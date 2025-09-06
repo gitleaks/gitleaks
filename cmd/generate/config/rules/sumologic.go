@@ -21,13 +21,13 @@ func SumoLogicAccessID() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("sumo", secrets.NewSecret(`su[a-zA-Z0-9]{12}`))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`sumologic.accessId = "su9OL59biWiJu7"`,      // gitleaks:allow
 		`sumologic_access_id = "sug5XpdpaoxtOH"`,     // gitleaks:allow
 		`export SUMOLOGIC_ACCESSID="suDbJw97o9WVo0"`, // gitleaks:allow
 		`SUMO_ACCESS_ID = "suGyI5imvADdvU"`,          // gitleaks:allow
 	)
-	fps := []string{
+	r.FPs = []string{
 		`- (NSNumber *)sumOfProperty:(NSString *)property;`,
 		`- (NSInteger)sumOfValuesInRange:(NSRange)range;`,
 		`+ (unsigned char)byteChecksumOfData:(id)arg1;`,
@@ -39,7 +39,7 @@ func SumoLogicAccessID() *config.Rule {
 		`export SUMOLOGIC_ACCESSID=XXXXXXXXXXXXXX`, // gitleaks:allow
 		`sumObj = suGyI5imvADdvU`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func SumoLogicAccessToken() *config.Rule {
@@ -56,13 +56,13 @@ func SumoLogicAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("sumo", secrets.NewSecret(utils.AlphaNumeric("64")))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`export SUMOLOGIC_ACCESSKEY="3HSa1hQfz6BYzlxf7Yb1WKG3Hyovm56LMFChV2y9LgkRipsXCujcLb5ej3oQUJlx"`, // gitleaks:allow
 		`SUMO_ACCESS_KEY: gxq3rJQkS6qovOg9UY2Q70iH1jFZx0WBrrsiAYv4XHodogAwTKyLzvFK4neRN8Dk`,             // gitleaks:allow
 		`SUMOLOGIC_ACCESSKEY: 9RITWb3I3kAnSyUolcVJq4gwM17JRnQK8ugRaixFfxkdSl8ys17ZtEL3LotESKB7`,         // gitleaks:allow
 		`sumo_access_key = "3Kof2VffNQ0QgYIhXUPJosVlCaQKm2hfpWE6F1fT9YGY74blQBIPsrkCcf1TwKE5"`,          // gitleaks:allow
 	)
-	fps := []string{
+	r.FPs = []string{
 		`#   SUMO_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`, // gitleaks:allow
 		"-e SUMO_ACCESS_KEY=`etcdctl get /sumologic_secret`",
 		`SUMO_ACCESS_KEY={SumoAccessKey}`,
@@ -71,5 +71,5 @@ func SumoLogicAccessToken() *config.Rule {
 		`SUMO_ACCESS_KEY: AbCeFG123`,
 		`sumOfExposures = 3Kof2VffNQ0QgYIhXUPJosVlCaQKm2hfpWE6F1fT9YGY74blQBIPsrkCcf1TwKE5;`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

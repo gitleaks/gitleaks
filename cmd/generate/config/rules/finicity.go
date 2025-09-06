@@ -17,8 +17,8 @@ func FinicityClientSecret() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("finicity", secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("finicity", secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func FinicityAPIToken() *config.Rule {
@@ -32,6 +32,6 @@ func FinicityAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("finicity", secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("finicity", secrets.NewSecret(utils.Hex("32")))
+	return &r
 }

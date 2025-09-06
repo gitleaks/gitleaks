@@ -22,7 +22,7 @@ func FlyIOAccessToken() *config.Rule {
 	// validate
 	// fo1_
 	tps := utils.GenerateSampleSecrets("fly", secrets.NewSecret(`fo1_[\w-]{43}`))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`Fly access token: fo1_8rz-j7r2eqJ2U7affEOO3HJN0j63DInyog3eV-glQSc
 `,
 		`=============================================================================================================
@@ -40,7 +40,7 @@ fly deploy`)
 		`#           FLY_API_TOKEN: FlyV1 fm2_lJPECAAAAAAAAyZtxBD1hSZ7L5leXsj64ZbDlkm/wrVodHRwczovL2FwaS5mbHkuaW8vdjGWAJLOAAwMDB8Lk7lodHRwczovL2FwaS5mbHkuaW8vYWFhL3YxxDwDnhgJj/ML/nRKMiAYgnvXfNacrGWffj5TdfgGY2LU0ZetT7WzTLQQMO8cN2nRTztl/xLjnnZg5pBwFonETmhNA6Yl0X1tatt8ezA0UjVQiJr93VQ7qAmD5GG2Ce5txhbQv3tmIGsvaC7BOkIqAiR273bhZkO44AYsrCPr2XF8W6Twk7NyU+3UUeDwjw2SlAORgc4APu7vHwWRgqdidWlsZGVyH6J3Zx8BxCAlmLbu1HQDg8ZAGKKmEt4Mbnbqli6lbzBDHsawhcUF4A==,fm2_lJPETmhNA6Yl0X1tatt8ezA0UjVQiJr93VQ7qAmD5GG2Ce5txhbQv3tmIGsvaC7BOkIqAij273bhZkO44AYsrCPr2XF8W6Twk7NyU+3UUeDwj8QQbn07DOV+7SmoLj/uT+dbr8O5aHR0cHM6Ly9hcGkuZmx5LmlvL2FhYS92MZgEks5mqfbvzwAAAAE9PYz9F84AC7QACpHOAAu0AAzEEFfW3B+SzffV/KrAYa8qqpnEIIlD6DqZMZQ9Kt7fEenCCOLA+tUSJ+kmEFIUcc83npOI`,
 		`"BindToParentToken": "FlyV1 fm2_lJPEEKnzKy0lkwV3B+WIlmrdwejEEFv5qmevHU4fMs+2Gr6oOiPC2SAyOTc0NWI4ZmJlNjBlNjJmZTgzNTkxOThhZWE4MjY0M5IMxAMBAgPEIH7VG8u74KwO62hmx8SZO8WaU5o1g3W2IVc7QN6T1VTr",`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		// fo1_
 		`resource "doppler_integration_flyio" "prod" {
   name    = "TF Fly.io"
@@ -53,5 +53,5 @@ fly deploy`)
 		// fm2
 		`<p><span class="emoji">🗣️</span> Adobe illustrator软件基础精讲课程<br><br><span class="emoji">🏷️</span> <a href="https://t.me/abskoop/8565?q=%23%E8%AE%BE%E8%AE%A1%E5%B8%88">#设计师</a> <a href="https://t.me/abskoop/8565?q=%23%E8%B5%84%E6%BA%90">#资源</a> <a href="https://t.me/abskoop/8565?q=%23%E5%A4%B8%E5%85%8B%E7%BD%91%E7%9B%98">#夸克网盘</a><br><br><span class="emoji">👉</span> <a href="https://www.ahhhhfs.com/62409/" target="_blank" rel="noopener">https://www.ahhhhfs.com/62409/</a></p><img src="https://cdn5.cdn-telegram.org/file/uGoDMy0VXMbL1nki9OT0VbJYtfURvDNLurptsQVuhuzF45tNfm2_z5wgR7CnL7lTZ4bbotjXZtiLWvolNQqWBRFWkcidtzSyhWvta9yPB3E2uyvfJvGpditkaLVIiCCXt9BhFBEdgkXa8ODaM7geHK3pW0tmO_IViHBnG8VZqVfDpaQW0W9IRAUwGv2mPZWVRysPJyDSIuY9b-_3ElUml-Xlpm1r8EDcm9Q2WCTCOYur7Gmef4imQ5D-DLTviqmoONgQDLA10WVS3CApXBK4ADSjoIUeMck62owtjElSXnEYMaSGI_OE3B21QplsspPbPlXVUBScLfLOFb9tn-34tw.jpg" width="800" height="533" referrerpolicy="no-referrer">`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

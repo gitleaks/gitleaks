@@ -18,8 +18,8 @@ func ShopifySharedSecret() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("shopify", "shpss_"+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("shopify", "shpss_"+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }
 
 func ShopifyAccessToken() *config.Rule {
@@ -33,8 +33,8 @@ func ShopifyAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("shopify", "shpat_"+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("shopify", "shpat_"+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }
 
 func ShopifyCustomAccessToken() *config.Rule {
@@ -48,8 +48,8 @@ func ShopifyCustomAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("shopify", "shpca_"+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("shopify", "shpca_"+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }
 
 func ShopifyPrivateAppAccessToken() *config.Rule {
@@ -63,6 +63,6 @@ func ShopifyPrivateAppAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("shopify", "shppa_"+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("shopify", "shppa_"+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }

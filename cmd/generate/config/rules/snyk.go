@@ -17,7 +17,7 @@ func Snyk() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("snyk", "12345678-ABCD-ABCD-ABCD-1234567890AB")
-	tps = append(tps,
+	r.TPs = append(tps,
 		`const SNYK_TOKEN = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 		`const SNYK_KEY = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,   // gitleaks:allow
 		`SNYK_TOKEN := "12345678-ABCD-ABCD-ABCD-1234567890AB"`,      // gitleaks:allow
@@ -28,5 +28,5 @@ func Snyk() *config.Rule {
 		`SNYK_API_TOKEN = "12345678-ABCD-ABCD-ABCD-1234567890AB"`,   // gitleaks:allow
 		`SNYK_OAUTH_TOKEN = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	)
-	return utils.Validate(r, tps, nil)
+	return &r
 }

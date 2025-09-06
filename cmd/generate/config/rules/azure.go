@@ -28,7 +28,7 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		`client_secret=bP88Q~rcBcYjzzOhg1Hnn76Wm3jGgakZiZ.8vMgR`, // gitleaks:allow
 		`client_secret=bP88Q~rcBcYjzzOhg1Hnn76Wm3jGgakZiZ.8vMgR
 `, // gitleaks:allow
@@ -48,7 +48,7 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 		`(QtT8Q~9C-_Ij~RouHVpD2Tuf3oHWGh.DQ3kcjbAn)`,                                                                                                          // gitleaks:allow
 		`\"pass\": \"` + fmt.Sprintf("%s%sQ~%s", secrets.NewSecret(`[\w~.]{3}`), secrets.NewSecret(utils.Numeric("1")), secrets.NewSecret(`[\w~.-]{31,34}`)),
 	}
-	fps := []string{
+	r.FPs = []string{
 		`![图源：《深入拆解Tomcat & Jetty》](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6a9e704af49b4380bb686f0c96d33b81~tplv-k3u1fbpfcp-watermark.image)`,
 		`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`,
 		`~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`,
@@ -61,5 +61,5 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 		`+ "<Trust Comment=\"\" Identity=\"USK@u2vn3Lh6Kte2-TgBSNKorbsKkuAt34ckoLmgx0ndXO0,4~q8Q~3wIHjX9DT0yCNfQmr9oxmYrDZoQVLOdNg~yk0,AQACAAE/WebOfTrustRC2/2\" Value=\"100\"/>"`,
 		`client_secret=bP88Q~xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

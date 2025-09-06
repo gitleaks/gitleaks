@@ -21,13 +21,13 @@ func HashiCorpTerraform() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("hashicorpToken", secrets.NewSecret(utils.Hex("14"))+".atlasv1."+secrets.NewSecret(utils.AlphaNumericExtended("60,70")))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`#token = "hE1hlYILrSqpqh.atlasv1.ARjZuyzl33F71WR55s6ln5GQ1HWIwTDDH3MiRjz7OnpCfaCb1RCF5zGaSncCWmJdcYA"`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		`token        = "xxxxxxxxxxxxxx.atlasv1.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"`, // low entropy
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func HashicorpField() *config.Rule {

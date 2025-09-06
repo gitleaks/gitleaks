@@ -21,10 +21,10 @@ func ClickHouseCloud() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("ClickHouse", "4b1dbRdW3rOcB7xLthrM4BTBGK1qPLkHigpN1bXD6z")
-	tps = append(tps, utils.GenerateSampleSecrets("ClickHouse", "4b1d"+secrets.NewSecret("[A-Za-z0-9]{38}"))...)
-	fps := []string{
+	r.TPs = append(tps, utils.GenerateSampleSecrets("ClickHouse", "4b1d"+secrets.NewSecret("[A-Za-z0-9]{38}"))...)
+	r.FPs = []string{
 		`key = 4b1dXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,    // Low entropy
 		`key = adf4b1dbRdW3rOcB7xLthrM4BTBGK1qPLkHigpN1bXD6z`, // Not start of a word
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

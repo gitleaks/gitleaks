@@ -21,8 +21,8 @@ func LobPubAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("lob", "test_pub_"+secrets.NewSecret(utils.Hex("31")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("lob", "test_pub_"+secrets.NewSecret(utils.Hex("31")))
+	return &r
 }
 
 func LobAPIToken() *config.Rule {
@@ -38,6 +38,6 @@ func LobAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("lob", "test_"+secrets.NewSecret(utils.Hex("35")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("lob", "test_"+secrets.NewSecret(utils.Hex("35")))
+	return &r
 }

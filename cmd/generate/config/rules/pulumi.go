@@ -19,9 +19,9 @@ func PulumiAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("pulumi-api-token", "pul-"+secrets.NewSecret(utils.Hex("40")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("pulumi-api-token", "pul-"+secrets.NewSecret(utils.Hex("40")))
+	r.FPs = []string{
 		`                        <img src="./assets/vipul-f0eb1acf0da84c06a50c5b2c59932001997786b176dec02bd16128ee9ea83628.png" alt="" class="w-16 h-16 rounded-full">`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

@@ -18,8 +18,8 @@ func FlutterwavePublicKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X")
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("flutterwavePubKey", "FLWPUBK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X")
+	return &r
 }
 
 func FlutterwaveSecretKey() *config.Rule {
@@ -33,8 +33,8 @@ func FlutterwaveSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X")
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X")
+	return &r
 }
 
 func FlutterwaveEncKey() *config.Rule {
@@ -48,6 +48,6 @@ func FlutterwaveEncKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("12")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("12")))
+	return &r
 }

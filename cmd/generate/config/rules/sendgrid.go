@@ -19,6 +19,6 @@ func SendGridAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("sengridAPIToken", "SG."+secrets.NewSecret(utils.AlphaNumericExtended("66")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("sengridAPIToken", "SG."+secrets.NewSecret(utils.AlphaNumericExtended("66")))
+	return &r
 }
