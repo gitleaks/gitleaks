@@ -257,7 +257,7 @@ func main() {
 	// ensure rules have unique ids
 	ruleLookUp := make(map[string]config.Rule, len(configRules))
 	for _, rule := range configRules {
-		requiredRules := make([]*config.Rule, len(rule.RequiredRules))
+		requiredRules := make([]*config.Rule, 0, len(rule.RequiredRules))
 		for _, requriedRule := range rule.RequiredRules {
 			if _, ok := configRulesLookup[requriedRule.RuleID]; !ok {
 				logging.Error().Msg("required rule not found")
