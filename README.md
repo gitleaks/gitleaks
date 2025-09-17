@@ -32,11 +32,7 @@
 [![GoReportCard][go-report-card-badge]][go-report-card]
 [![License][badge-license]][license]
 
-
-### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
-
 Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`. If you wanna learn more about how the detection engine works check out this blog: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
-
 
 ```
 ➜  ~/code(master) gitleaks git -v
@@ -60,6 +56,11 @@ Email:       john@users.noreply.github.com
 Date:        2022-08-03T12:31:40Z
 Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23
 ```
+
+### GitHub Sponsors
+
+Sponsor [@zricethezav on GitHub](https://github.com/sponsors/zricethezav/) to get
+featured on this README.
 
 ## Getting Started
 
@@ -646,3 +647,5 @@ You can always set the exit code when leaks are encountered with the --exit-code
 1 - leaks or error encountered
 126 - unknown flag
 ```
+
+### Join the Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
