@@ -8,41 +8,41 @@ import (
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
-// Rules contain information that define details on how to detect secrets
+// Rule contain information that define details on how to detect secrets
 type Rule struct {
 	// RuleID is a unique identifier for this rule
-	RuleID string
+	RuleID string `toml:"id"`
 
 	// Description is the description of the rule.
-	Description string
+	Description string `toml:"description"`
 
-	// Entropy is a float representing the minimum shannon
-	// entropy a regex group must have to be considered a secret.
-	Entropy float64
+	// Regex is a golang regular expression used to detect secrets.
+	Regex *regexp.Regexp `toml:"regex,omitempty"`
 
 	// SecretGroup is an int used to extract secret from regex
 	// match and used as the group that will have its entropy
 	// checked if `entropy` is set.
-	SecretGroup int
+	SecretGroup int `toml:"secretGroup,omitempty"`
 
-	// Regex is a golang regular expression used to detect secrets.
-	Regex *regexp.Regexp
+	// Entropy is a float representing the minimum shannon
+	// entropy a regex group must have to be considered a secret.
+	Entropy float64 `toml:"entropy,omitempty"`
 
 	// Path is a golang regular expression used to
 	// filter secrets by path
-	Path *regexp.Regexp
+	Path *regexp.Regexp `toml:"path,omitempty"`
 
 	// Tags is an array of strings used for metadata
 	// and reporting purposes.
-	Tags []string
+	Tags []string `toml:"tags,omitempty"`
 
 	// Keywords are used for pre-regex check filtering. Rules that contain
 	// keywords will perform a quick string compare check to make sure the
 	// keyword(s) are in the content being scanned.
-	Keywords []string
+	Keywords []string `toml:"keywords,omitempty"`
 
 	// Allowlists allows a rule to be ignored for specific commits, paths, regexes, and/or stopwords.
-	Allowlists []*Allowlist
+	Allowlists []*Allowlist `toml:"allowlists,omitempty"`
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
@@ -58,6 +58,7 @@ type Required struct {
 	RuleID        string
 	WithinLines   *int
 	WithinColumns *int
+	validated     bool `toml:"-"`
 }
 
 // Validate guards against common misconfigurations.
