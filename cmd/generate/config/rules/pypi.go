@@ -20,6 +20,6 @@ func PyPiUploadToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("pypi", "pypi-AgEIcHlwaS5vcmc"+secrets.NewSecret(utils.Hex("32"))+secrets.NewSecret(utils.Hex("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("pypi", "pypi-AgEIcHlwaS5vcmc"+secrets.NewSecret(utils.Hex("32"))+secrets.NewSecret(utils.Hex("32")))
+	return &r
 }

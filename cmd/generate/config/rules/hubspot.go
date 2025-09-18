@@ -19,8 +19,8 @@ func HubSpot() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("hubspot", secrets.NewSecret(utils.Hex8_4_4_4_12()))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`const hubspotKey = "12345678-ABCD-ABCD-ABCD-1234567890AB"`, // gitleaks:allow
 	)
-	return utils.Validate(r, tps, nil)
+	return &r
 }

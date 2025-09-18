@@ -23,6 +23,6 @@ func DefinedNetworkingAPIToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("dnkey", "dnkey-"+secrets.NewSecret(utils.AlphaNumericExtended("26"))+"-"+secrets.NewSecret(utils.AlphaNumericExtended("52")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("dnkey", "dnkey-"+secrets.NewSecret(utils.AlphaNumericExtended("26"))+"-"+secrets.NewSecret(utils.AlphaNumericExtended("52")))
+	return &r
 }

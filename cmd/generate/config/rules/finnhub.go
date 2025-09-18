@@ -19,6 +19,6 @@ func FinnhubAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("finnhub", secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("finnhub", secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }

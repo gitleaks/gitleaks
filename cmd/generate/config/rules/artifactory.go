@@ -18,18 +18,18 @@ func ArtifactoryApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		"artifactoryApiKey := \"AKCp" + secrets.NewSecret(utils.AlphaNumeric("69")) + "\"",
 	}
 	// false positives
-	fps := []string{
+	r.FPs = []string{
 		`lowEntropy := AKCpXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
 		"wrongStart := \"AkCp" + secrets.NewSecret(utils.AlphaNumeric("69")) + "\"",
 		"wrongLength := \"AkCp" + secrets.NewSecret(utils.AlphaNumeric("59")) + "\"",
 		"partOfAlongUnrelatedBlob gYnkgAkCp" + secrets.NewSecret(utils.AlphaNumeric("69")) + "VyZSB2",
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func ArtifactoryReferenceToken() *config.Rule {
@@ -43,16 +43,16 @@ func ArtifactoryReferenceToken() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		"artifactoryRefToken := \"cmVmd" + secrets.NewSecret(utils.AlphaNumeric("59")) + "\"",
 	}
 	// false positives
-	fps := []string{
+	r.FPs = []string{
 		`lowEntropy := cmVmdXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`,
 		"wrongStart := \"cmVMd" + secrets.NewSecret(utils.AlphaNumeric("59")) + "\"",
 		"wrongLength := \"cmVmd" + secrets.NewSecret(utils.AlphaNumeric("49")) + "\"",
 		"partOfAlongUnrelatedBlob gYnkgcmVmd" + secrets.NewSecret(utils.AlphaNumeric("59")) + "VyZSB2",
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }

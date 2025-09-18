@@ -18,14 +18,14 @@ func AnthropicApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		// Valid API key example
 		"sk-ant-api03-abc123xyz-456def789ghij-klmnopqrstuvwx-3456yza789bcde-1234fghijklmnopby56aaaogaopaaaabc123xyzAA",
 		// Generate additional random test keys
 		utils.GenerateSampleSecret("anthropic", "sk-ant-api03-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("93"))+"AA"),
 	}
 
-	fps := []string{
+	r.FPs = []string{
 		// Too short key (missing characters)
 		"sk-ant-api03-abc123xyz-456de-klMnopqrstuvwx-3456yza789bcde-1234fghijklmnopAA",
 		// Wrong suffix
@@ -33,8 +33,7 @@ func AnthropicApiKey() *config.Rule {
 		// Wrong prefix (admin key, not API key)
 		"sk-ant-admin01-abc123xyz-456def789ghij-klmnopqrstuvwx-3456yza789bcde-1234fghijklmnopby56aaaogaopaaaabc123xyzAA",
 	}
-
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func AnthropicAdminApiKey() *config.Rule {
@@ -49,14 +48,14 @@ func AnthropicAdminApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		// Valid admin key example
 		"sk-ant-admin01-abc12fake-456def789ghij-klmnopqrstuvwx-3456yza789bcde-12fakehijklmnopby56aaaogaopaaaabc123xyzAA",
 		// Generate additional random test keys
 		utils.GenerateSampleSecret("anthropic", "sk-ant-admin01-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("93"))+"AA"),
 	}
 
-	fps := []string{
+	r.FPs = []string{
 		// Too short key (missing characters)
 		"sk-ant-admin01-abc123xyz-456de-klMnopqrstuvwx-3456yza789bcde-1234fghijklmnopAA",
 		// Wrong suffix
@@ -65,5 +64,5 @@ func AnthropicAdminApiKey() *config.Rule {
 		"sk-ant-api03-abc123xyz-456def789ghij-klmnopqrstuvwx-3456yza789bcde-1234fghijklmnopby56aaaogaopaaaabc123xyzAA",
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }

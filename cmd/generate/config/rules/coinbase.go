@@ -19,6 +19,6 @@ func CoinbaseAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("coinbase", secrets.NewSecret(utils.AlphaNumericExtendedShort("64")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("coinbase", secrets.NewSecret(utils.AlphaNumericExtendedShort("64")))
+	return &r
 }

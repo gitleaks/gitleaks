@@ -28,11 +28,11 @@ func GitHubPat() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("github", "ghp_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	r.FPs = []string{
 		"ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitHubFineGrainedPat() *config.Rule {
@@ -46,11 +46,11 @@ func GitHubFineGrainedPat() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("github", "github_pat_"+secrets.NewSecret(utils.AlphaNumeric("82")))
+	r.FPs = []string{
 		"github_pat_xxxxxxxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitHubOauth() *config.Rule {
@@ -64,11 +64,11 @@ func GitHubOauth() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("github", "gho_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	r.FPs = []string{
 		"gho_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitHubApp() *config.Rule {
@@ -84,12 +84,12 @@ func GitHubApp() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36")))
-	tps = append(tps, utils.GenerateSampleSecrets("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36")))...)
-	fps := []string{
+	r.TPs = append(tps, utils.GenerateSampleSecrets("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36")))...)
+	r.FPs = []string{
 		"ghu_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 		"ghs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitHubRefresh() *config.Rule {
@@ -103,9 +103,9 @@ func GitHubRefresh() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("github", "ghr_"+secrets.NewSecret(utils.AlphaNumeric("36")))
+	r.FPs = []string{
 		"ghr_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

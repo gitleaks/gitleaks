@@ -16,6 +16,6 @@ func MaxMindLicenseKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("maxmind", `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`) // gitleaks:allow
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("maxmind", `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`) // gitleaks:allow
+	return &r
 }

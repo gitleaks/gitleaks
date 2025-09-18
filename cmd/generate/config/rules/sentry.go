@@ -22,8 +22,8 @@ func SentryAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("sentry", secrets.NewSecret(utils.Hex("64")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("sentry", secrets.NewSecret(utils.Hex("64")))
+	return &r
 }
 
 func SentryOrgToken() *config.Rule {
@@ -62,19 +62,19 @@ func SentryOrgToken() *config.Rule {
 	encodedJson := base64.StdEncoding.EncodeToString([]byte(secrets.NewSecret(
 		`\{"iat":[\d\.]{3,6},"url":"https://\w{10,20}","region_url":"https://\w{20,30}","org":"\w{5,10}"\}`)))
 	generatedToken := `sntrys_` + encodedJson + `_` + secrets.NewSecret(`[a-zA-Z0-9+/]{43}`)
-	tps = append(tps,
+	r.TPs = append(tps,
 		generatedToken,
 		"<token>"+generatedToken+"</token>",
 		"https://example.com?token="+generatedToken+"&other=stuff",
 	)
 
-	fps := []string{
+	r.FPs = []string{
 		secrets.NewSecret(`sntrys_[a-zA-Z0-9]{90}_[a-zA-Z0-9]{43}`),          // does not contain encoded json
 		`sntrys_` + encodedJson + `_` + secrets.NewSecret(`[a-zA-Z0-9]{42}`), // too short
 		`sntrys_` + encodedJson + `_` + secrets.NewSecret(`[a-zA-Z0-9]{44}`), // too long
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func SentryUserToken() *config.Rule {
@@ -88,11 +88,11 @@ func SentryUserToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("sentry", secrets.NewSecret(`sntryu_[a-f0-9]{64}`))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("sentry", secrets.NewSecret(`sntryu_[a-f0-9]{64}`))
+	r.FPs = []string{
 		secrets.NewSecret(`sntryu_[a-f0-9]{63}`), // too short
 		secrets.NewSecret(`sntryu_[a-f0-9]{65}`), // too long
 		secrets.NewSecret(`sntryu_[a]{64}`),      // low entropy
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

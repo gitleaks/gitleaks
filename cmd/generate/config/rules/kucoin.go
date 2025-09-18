@@ -19,8 +19,8 @@ func KucoinAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("kucoin", secrets.NewSecret(utils.Hex("24")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("kucoin", secrets.NewSecret(utils.Hex("24")))
+	return &r
 }
 
 func KucoinSecretKey() *config.Rule {
@@ -36,6 +36,6 @@ func KucoinSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("kucoin", secrets.NewSecret(utils.Hex8_4_4_4_12()))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("kucoin", secrets.NewSecret(utils.Hex8_4_4_4_12()))
+	return &r
 }

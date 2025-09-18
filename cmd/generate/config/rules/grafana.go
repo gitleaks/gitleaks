@@ -17,8 +17,8 @@ func GrafanaApiKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("grafana-api-key", "eyJrIjoi"+secrets.NewSecret(utils.AlphaNumeric("70")))
+	return &r
 }
 
 func GrafanaCloudApiToken() *config.Rule {
@@ -33,7 +33,7 @@ func GrafanaCloudApiToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("grafana-cloud-api-token", "glc_"+secrets.NewSecret(utils.AlphaNumeric("32")))
-	tps = append(tps,
+	r.TPs = append(tps,
 		utils.GenerateSampleSecret("grafana-cloud-api-token",
 			"glc_"+
 				secrets.NewSecret(utils.AlphaNumeric("32"))),
@@ -42,7 +42,7 @@ func GrafanaCloudApiToken() *config.Rule {
 		//`  loki:
 		//endpoint: https://322137:glc_eyJvIjoiNzQ0NTg3IiwibiI7InN0YWlrLTQ3NTgzMC1obC13cml0ZS1oYW5kc29uJG9raSIsImsiOiI4M2w3cmdYUlBoMTUyMW1lMU023nl5UDUiLCJtIjp7IOIiOiJ1cyJ9fQ==@logs-prod4.grafana.net/loki/api/v1/push`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		// Low entropy.
 		`glc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
 		`   API_KEY="glc_111111111111111111111111111111111111111111="`,
@@ -55,7 +55,7 @@ void GLC_UploadLightmap(int textureUnit, int lightmapnum);`,
 void GLC_StateBeginUnderwaterAliasModelCaustics(texture_ref base_texture, texture_ref caustics_texture)
 {`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GrafanaServiceAccountToken() *config.Rule {
@@ -70,11 +70,11 @@ func GrafanaServiceAccountToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("grafana-service-account-token", "glsa_"+secrets.NewSecret(utils.AlphaNumeric("32"))+"_"+secrets.NewSecret(utils.Hex("8")))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`'Authorization': 'Bearer glsa_pITqMOBIfNH2KL4PkXJqmTyQl0D9QGxF_486f63e1'`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		"glsa_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX_AAAAAAAA",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

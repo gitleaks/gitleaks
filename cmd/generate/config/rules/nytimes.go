@@ -23,6 +23,6 @@ func NytimesAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("nytimes", secrets.NewSecret(utils.AlphaNumeric("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("nytimes", secrets.NewSecret(utils.AlphaNumeric("32")))
+	return &r
 }

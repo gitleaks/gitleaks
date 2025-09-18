@@ -18,8 +18,8 @@ func GitlabCiCdJobToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"glcbt-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "glcbt-"+secrets.NewSecret(utils.AlphaNumeric("5"))+"_"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glcbt-"+secrets.NewSecret(utils.AlphaNumeric("5"))+"_"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func GitlabDeployToken() *config.Rule {
@@ -30,10 +30,10 @@ func GitlabDeployToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"gldt-"},
 	}
-	tps := []string{
+	r.TPs = []string{
 		utils.GenerateSampleSecret("gitlab", "gldt-"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }
 
 func GitlabFeatureFlagClientToken() *config.Rule {
@@ -44,8 +44,8 @@ func GitlabFeatureFlagClientToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"glffct-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "glffct-"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glffct-"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func GitlabFeedToken() *config.Rule {
@@ -56,8 +56,8 @@ func GitlabFeedToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"glft-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "glft-"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glft-"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func GitlabIncomingMailToken() *config.Rule {
@@ -68,8 +68,8 @@ func GitlabIncomingMailToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"glimt-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "glimt-"+secrets.NewSecret(utils.AlphaNumeric("25")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glimt-"+secrets.NewSecret(utils.AlphaNumeric("25")))
+	return &r
 }
 
 func GitlabKubernetesAgentToken() *config.Rule {
@@ -80,8 +80,8 @@ func GitlabKubernetesAgentToken() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"glagent-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "glagent-"+secrets.NewSecret(utils.AlphaNumeric("50")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glagent-"+secrets.NewSecret(utils.AlphaNumeric("50")))
+	return &r
 }
 
 func GitlabOauthAppSecret() *config.Rule {
@@ -92,8 +92,8 @@ func GitlabOauthAppSecret() *config.Rule {
 		Entropy:     3,
 		Keywords:    []string{"gloas-"},
 	}
-	tps := utils.GenerateSampleSecrets("gitlab", "gloas-"+secrets.NewSecret(utils.AlphaNumeric("64")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "gloas-"+secrets.NewSecret(utils.AlphaNumeric("64")))
+	return &r
 }
 
 func GitlabPat() *config.Rule {
@@ -106,11 +106,11 @@ func GitlabPat() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	r.FPs = []string{
 		"glpat-XXXXXXXXXXX-XXXXXXXX",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitlabPatRoutable() *config.Rule {
@@ -123,11 +123,11 @@ func GitlabPatRoutable() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glpat-"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
+	r.FPs = []string{
 		"glpat-xxxxxxxx-xxxxxxxxxxxxxxxxxx.xxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitlabPipelineTriggerToken() *config.Rule {
@@ -140,11 +140,11 @@ func GitlabPipelineTriggerToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glptt-"+secrets.NewSecret(utils.Hex("40")))
+	r.FPs = []string{
 		"glptt-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitlabRunnerRegistrationToken() *config.Rule {
@@ -156,12 +156,12 @@ func GitlabRunnerRegistrationToken() *config.Rule {
 		Keywords:    []string{"GR1348941"},
 	}
 
-	tps := utils.GenerateSampleSecrets("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "GR1348941"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	r.FPs = []string{
 		"GR134894112312312312312312312",
 		"GR1348941XXXXXXXXXXXXXXXXXXXX",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitlabRunnerAuthenticationToken() *config.Rule {
@@ -173,8 +173,8 @@ func GitlabRunnerAuthenticationToken() *config.Rule {
 		Keywords:    []string{"glrt-"},
 	}
 
-	tps := utils.GenerateSampleSecrets("gitlab", "glrt-"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glrt-"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func GitlabRunnerAuthenticationTokenRoutable() *config.Rule {
@@ -186,12 +186,12 @@ func GitlabRunnerAuthenticationTokenRoutable() *config.Rule {
 		Keywords:    []string{"glrt-"},
 	}
 
-	tps := utils.GenerateSampleSecrets("gitlab", "glrt-t"+secrets.NewSecret(utils.Numeric("1"))+"_"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glrt-t"+secrets.NewSecret(utils.Numeric("1"))+"_"+secrets.NewSecret(utils.AlphaNumeric("27"))+"."+secrets.NewSecret(utils.AlphaNumeric("2"))+secrets.NewSecret(utils.AlphaNumeric("7")))
+	r.FPs = []string{
 		"glrt-tx_xxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxx",
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func GitlabScimToken() *config.Rule {
@@ -203,8 +203,8 @@ func GitlabScimToken() *config.Rule {
 		Keywords:    []string{"glsoat-"},
 	}
 
-	tps := utils.GenerateSampleSecrets("gitlab", "glsoat-"+secrets.NewSecret(utils.AlphaNumeric("20")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "glsoat-"+secrets.NewSecret(utils.AlphaNumeric("20")))
+	return &r
 }
 
 func GitlabSessionCookie() *config.Rule {
@@ -217,6 +217,6 @@ func GitlabSessionCookie() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("gitlab", "_gitlab_session="+secrets.NewSecret(utils.AlphaNumeric("32")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("gitlab", "_gitlab_session="+secrets.NewSecret(utils.AlphaNumeric("32")))
+	return &r
 }

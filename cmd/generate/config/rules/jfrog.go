@@ -28,10 +28,10 @@ func JFrogAPIKey() *config.Rule {
 		Keywords: keywords,
 	}
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		fmt.Sprintf("--set imagePullSecretJfrog.password=%s", secrets.NewSecret(utils.AlphaNumeric("73"))),
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }
 
 func JFrogIdentityToken() *config.Rule {
@@ -59,6 +59,6 @@ func JFrogIdentityToken() *config.Rule {
 	tps = append(tps, utils.GenerateSampleSecrets("artifactory", secrets.NewSecret(utils.AlphaNumeric("64")))...)
 	tps = append(tps, utils.GenerateSampleSecrets("bintray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
 	tps = append(tps, utils.GenerateSampleSecrets("xray", secrets.NewSecret(utils.AlphaNumeric("64")))...)
-	tps = append(tps, fmt.Sprintf("\"artifactory\", \"%s\"", secrets.NewSecret(utils.AlphaNumeric("64"))))
-	return utils.Validate(r, tps, nil)
+	r.TPs = append(tps, fmt.Sprintf("\"artifactory\", \"%s\"", secrets.NewSecret(utils.AlphaNumeric("64"))))
+	return &r
 }

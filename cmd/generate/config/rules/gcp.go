@@ -18,10 +18,10 @@ func GCPServiceAccount() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		`"type": "service_account"`,
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }
 
 func GCPAPIKey() *config.Rule {
@@ -59,11 +59,11 @@ func GCPAPIKey() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("gcp", secrets.NewSecret(`AIza[\w-]{35}`))
-	tps = append(tps,
+	r.TPs = append(tps,
 		// non-word character at end
 		`AIzaSyNHxIf32IQ1a1yjl3ZJIqKZqzLAK1XhDk-`, // gitleaks:allow
 	)
-	fps := []string{
+	r.FPs = []string{
 		`GWw4hjABFzZCGiRpmlDyDdo87Jn9BN9THUA47muVRNunLxsa82tMAdvmrhOqNkRKiYMEAFbTJAIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDq`, // text boundary start
 		`AIzaTesb6Tscfcni8vIpWZqNCXFDFslJtVSvFDqabcd123`,                                                                   // text boundary end
 		`apiKey: "AIzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"`,                                                                // not enough entropy
@@ -86,5 +86,5 @@ func GCPAPIKey() *config.Rule {
 		`AIzaSyB8qGxt4ec15vitgn44duC5ucxaOi4FmqE`,
 		`AIzaSyA8vmApnrHNFE0bApF4hoZ11srVL_n0nvY`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

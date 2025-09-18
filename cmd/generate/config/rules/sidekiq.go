@@ -21,7 +21,7 @@ func SidekiqSecret() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("BUNDLE_ENTERPRISE__CONTRIBSYS__COM", secrets.NewSecret("[a-f0-9]{8}:[a-f0-9]{8}"))
 	tps = append(tps, utils.GenerateSampleSecrets("BUNDLE_GEMS__CONTRIBSYS__COM", secrets.NewSecret("[a-f0-9]{8}:[a-f0-9]{8}"))...)
-	tps = append(tps,
+	r.TPs = append(tps,
 		"BUNDLE_ENTERPRISE__CONTRIBSYS__COM: cafebabe:deadbeef",
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef",
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM = cafebabe:deadbeef",
@@ -31,7 +31,7 @@ func SidekiqSecret() *config.Rule {
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef;",
 		"export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef && echo 'hello world'",
 	)
-	return utils.Validate(r, tps, nil)
+	return &r
 }
 
 func SidekiqSensitiveUrl() *config.Rule {
@@ -44,7 +44,7 @@ func SidekiqSensitiveUrl() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		"https://cafebabe:deadbeef@gems.contribsys.com/",
 		"https://cafebabe:deadbeef@gems.contribsys.com",
 		"https://cafeb4b3:d3adb33f@enterprise.contribsys.com/",
@@ -58,5 +58,5 @@ func SidekiqSensitiveUrl() *config.Rule {
 		"http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80",
 		"http://cafeb4b3:d3adb33f@enterprise.contribsys.com:80/path?param1=true&param2=false#heading1",
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }

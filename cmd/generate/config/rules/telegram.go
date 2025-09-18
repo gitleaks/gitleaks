@@ -31,7 +31,7 @@ func TelegramBotToken() *config.Rule {
 	tps = append(tps, utils.GenerateSampleSecrets("telegram", minToken)...)
 	// Token with max bot_id
 	tps = append(tps, utils.GenerateSampleSecrets("telegram", maxToken)...)
-	tps = append(tps,
+	r.TPs = append(tps,
 		// URL containing token TODO add another url based rule
 		// GenerateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
@@ -57,7 +57,7 @@ func TelegramBotToken() *config.Rule {
 		suffixedToken2               = secrets.NewSecret(`telegram_api_token = \"` + utils.Numeric("8") + `:A` + utils.AlphaNumericExtendedShort("34") + `-some-other-thing\"`)
 		suffixedToken3               = secrets.NewSecret(`telegram_api_token = \"` + utils.Numeric("8") + `:A_` + utils.AlphaNumericExtendedShort("34") + `_\"`)
 	)
-	fps := []string{
+	r.FPs = []string{
 		// Token with too small bot_id
 		utils.GenerateSampleSecret("telegram", tooSmallToken),
 		// Token with too big bot_id
@@ -75,5 +75,5 @@ func TelegramBotToken() *config.Rule {
 		utils.GenerateSampleSecret("telegram", suffixedToken3),
 	}
 
-	return utils.Validate(r, tps, fps)
+	return &r
 }
