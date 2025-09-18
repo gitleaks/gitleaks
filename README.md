@@ -139,6 +139,14 @@ and it will skip running gitleaks
 Detect hardcoded secrets................................................Skipped
 ```
 
+### Trunk Check
+Gitleaks can be run automatically on every commit with [Trunk Check](https://docs.trunk.io/check), a free
+cli super linter. 
+
+``` shell
+    trunk check enable gitleaks
+```
+
 ## Usage
 
 ```
