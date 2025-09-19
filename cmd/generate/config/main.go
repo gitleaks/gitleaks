@@ -45,6 +45,9 @@ func main() {
 		rules.Authress(),
 		rules.AWS(),
 		rules.AzureActiveDirectoryClientSecret(),
+		rules.AzureDevOpsPAT(),
+		rules.AzureStorageAccountKey(),
+		// rules.AzureSASToken(), // TODO: Fix regex validation issue
 		rules.BitBucketClientID(),
 		rules.BitBucketClientSecret(),
 		rules.BittrexAccessKey(),
