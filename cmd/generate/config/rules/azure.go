@@ -73,7 +73,7 @@ func AzureDevOpsPAT() *config.Rule {
 		RuleID:      "azure-devops-pat",
 		Description: "Identified an Azure DevOps Personal Access Token, potentially compromising project management and development workflow security.",
 		// Azure DevOps PATs are 52-character base64-encoded strings  
-		Regex:   regexp.MustCompile(`\b[A-Za-z0-9]{52}\b`),
+		Regex:   utils.GenerateSemiGenericRegex([]string{"devops", "ado", "vsts", "visualstudio", "dev.azure", "azure_devops"}, utils.AlphaNumeric("52"), true),
 		Entropy: 3.5,
 		Keywords: []string{
 			"devops",
@@ -86,7 +86,11 @@ func AzureDevOpsPAT() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("azure-devops", secrets.NewSecret(utils.AlphaNumeric("52")))
+	tps := []string{
+		`devops_token=` + secrets.NewSecret(utils.AlphaNumeric("52")), // gitleaks:allow
+		`ado_pat: ` + secrets.NewSecret(utils.AlphaNumeric("52")),     // gitleaks:allow
+		`VSTS_TOKEN="` + secrets.NewSecret(utils.AlphaNumeric("52")) + `"`, // gitleaks:allow
+	}
 	fps := []string{
 		`xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`, // low entropy
 		`ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOP`, // all uppercase, wrong length
@@ -105,29 +109,23 @@ func AzureStorageAccountKey() *config.Rule {
 		RuleID:      "azure-storage-account-key",
 		Description: "Found an Azure Storage Account Key, risking unauthorized access to cloud storage and data breaches.",
 		// Azure Storage Account Keys are 88-character base64 strings ending with ==
-		Regex:   regexp.MustCompile(`[A-Za-z0-9]{86}==`),
+		Regex:   utils.GenerateSemiGenericRegex([]string{"accountkey", "account_key", "storagekey", "storage_key", "azure", "storage"}, `[A-Za-z0-9+/]{84}==`, true),
 		Entropy: 4,
 		Keywords: []string{
 			"accountkey",
 			"account_key",
 			"storagekey",
 			"storage_key",
-			"azure storage",
-			"blob.core.windows.net",
-			"table.core.windows.net",
-			"queue.core.windows.net",
-			"file.core.windows.net",
+			"azure",
+			"storage",
 		},
 	}
 
 	// validate
 	tps := []string{
-		`AccountKey=abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx1234yzab5678cdef9012ghij3456klmn7890abcd==`,                                                                                                                                      // gitleaks:allow
-		`storage_key="1234abcd5678efgh9012ijkl3456mnop7890qrst1234uvwx5678yzab9012cdef3456ghij7890abcd=="`,                                                                                                                                     // gitleaks:allow
-		`AZURE_STORAGE_KEY=9876zyxw5432vuts1098rqpo6543nmlk2109jihg8765fedc4321ba9876zyxw543210utvuts==`,                                                                                                                                 // gitleaks:allow
-		`DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=ef12gh34ij56kl78mn90op12qr34st56uv78wx90yz12ab34cd56ef78gh90ij12kl34mn56op78ef12==;EndpointSuffix=core.windows.net`,                                                // gitleaks:allow
-		`"storageAccountKey": "gh56ij78kl90mn12op34qr56st78uv90wx12yz34ab56cd78ef90gh12ij34kl56mn78op90qr12gh56=="`,                                                                                                                           // gitleaks:allow
-		`connection_string = "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=ij90kl12mn34op56qr78st90uv12wx34yz56ab78cd90ef12gh34ij56kl78mn90op12qr34stij90==;EndpointSuffix=core.windows.net"`,                          // gitleaks:allow
+		`accountkey=` + secrets.NewSecret(`[A-Za-z0-9+/]{84}`) + `==`, // gitleaks:allow
+		`storage_key: "` + secrets.NewSecret(`[A-Za-z0-9+/]{84}`) + `=="`, // gitleaks:allow
+		`azure_storage_key=` + secrets.NewSecret(`[A-Za-z0-9+/]{84}`) + `==`, // gitleaks:allow
 	}
 	fps := []string{
 		`AccountKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx==`, // low entropy

@@ -216,6 +216,34 @@ entropy = 3
 keywords = ["q~"]
 
 [[rules]]
+id = "azure-devops-pat"
+description = "Identified an Azure DevOps Personal Access Token, potentially compromising project management and development workflow security."
+regex = '''(?i)[\w.-]{0,50}?(?:devops|ado|vsts|visualstudio|dev.azure|azure_devops)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{52})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = [
+    "devops",
+    "ado",
+    "vsts",
+    "visualstudio",
+    "dev.azure",
+    "azure_devops",
+]
+
+[[rules]]
+id = "azure-storage-account-key"
+description = "Found an Azure Storage Account Key, risking unauthorized access to cloud storage and data breaches."
+regex = '''(?i)[\w.-]{0,50}?(?:accountkey|account_key|storagekey|storage_key|azure|storage)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([A-Za-z0-9+/]{84}==)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 4
+keywords = [
+    "accountkey",
+    "account_key",
+    "storagekey",
+    "storage_key",
+    "azure",
+    "storage",
+]
+
+[[rules]]
 id = "beamer-api-token"
 description = "Detected a Beamer API token, potentially compromising content management and exposing sensitive notifications and updates."
 regex = '''(?i)[\w.-]{0,50}?(?:beamer)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}(b_[a-z0-9=_\-]{44})(?:[\x60'"\s;]|\\[nr]|$)'''
