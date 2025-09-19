@@ -63,3 +63,120 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 	}
 	return utils.Validate(r, tps, fps)
 }
+
+// References:
+// - https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+// - https://docs.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/pats
+func AzureDevOpsPAT() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "azure-devops-pat",
+		Description: "Identified an Azure DevOps Personal Access Token, potentially compromising project management and development workflow security.",
+		// Azure DevOps PATs are 52-character base64-encoded strings  
+		Regex:   regexp.MustCompile(`\b[A-Za-z0-9]{52}\b`),
+		Entropy: 3.5,
+		Keywords: []string{
+			"devops",
+			"ado",
+			"vsts",
+			"visualstudio",
+			"dev.azure",
+			"azure_devops",
+		},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("azure-devops", secrets.NewSecret(utils.AlphaNumeric("52")))
+	fps := []string{
+		`xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`, // low entropy
+		`ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOP`, // all uppercase, wrong length
+		`very_long_variable_name_that_might_look_like_a_token_but_isnt`, // too long
+		`short_token=abc123`, // too short
+	}
+	return utils.Validate(r, tps, fps)
+}
+
+// References:
+// - https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage
+// - https://docs.microsoft.com/en-us/rest/api/storageservices/authorize-with-shared-key
+func AzureStorageAccountKey() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "azure-storage-account-key",
+		Description: "Found an Azure Storage Account Key, risking unauthorized access to cloud storage and data breaches.",
+		// Azure Storage Account Keys are 88-character base64 strings ending with ==
+		Regex:   regexp.MustCompile(`[A-Za-z0-9]{86}==`),
+		Entropy: 4,
+		Keywords: []string{
+			"accountkey",
+			"account_key",
+			"storagekey",
+			"storage_key",
+			"azure storage",
+			"blob.core.windows.net",
+			"table.core.windows.net",
+			"queue.core.windows.net",
+			"file.core.windows.net",
+		},
+	}
+
+	// validate
+	tps := []string{
+		`AccountKey=abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx1234yzab5678cdef9012ghij3456klmn7890abcd==`,                                                                                                                                      // gitleaks:allow
+		`storage_key="1234abcd5678efgh9012ijkl3456mnop7890qrst1234uvwx5678yzab9012cdef3456ghij7890abcd=="`,                                                                                                                                     // gitleaks:allow
+		`AZURE_STORAGE_KEY=9876zyxw5432vuts1098rqpo6543nmlk2109jihg8765fedc4321ba9876zyxw543210utvuts==`,                                                                                                                                 // gitleaks:allow
+		`DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=ef12gh34ij56kl78mn90op12qr34st56uv78wx90yz12ab34cd56ef78gh90ij12kl34mn56op78ef12==;EndpointSuffix=core.windows.net`,                                                // gitleaks:allow
+		`"storageAccountKey": "gh56ij78kl90mn12op34qr56st78uv90wx12yz34ab56cd78ef90gh12ij34kl56mn78op90qr12gh56=="`,                                                                                                                           // gitleaks:allow
+		`connection_string = "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=ij90kl12mn34op56qr78st90uv12wx34yz56ab78cd90ef12gh34ij56kl78mn90op12qr34stij90==;EndpointSuffix=core.windows.net"`,                          // gitleaks:allow
+	}
+	fps := []string{
+		`AccountKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx==`, // low entropy
+		`storage_key="YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY=="`, // low entropy
+		`key=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdef==`, // too long
+		`short_key=abc123==`, // too short
+		`AccountKey=NotActuallyBase64Characters!@#$%^&*()+=`,                                             // invalid base64
+	}
+	return utils.Validate(r, tps, fps)
+}
+
+// References:
+// - https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview
+// - https://docs.microsoft.com/en-us/rest/api/storageservices/create-service-sas
+func AzureSASToken() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "azure-sas-token",
+		Description: "Discovered an Azure SAS Token, potentially allowing unauthorized access to Azure Storage resources and data exposure.",
+		// Azure SAS tokens contain signature (sig), expiry (se), resource (sr), and permissions (sp) parameters
+		Regex:   regexp.MustCompile(`(\?|\&)(sv|ss|srt|sp|st|se|sip|spr|sig)=[^&\s]+(&(sv|ss|srt|sp|st|se|sip|spr|sig)=[^&\s]+){3,}`),
+		Entropy: 3,
+		Keywords: []string{
+			"sig=",
+			"se=",
+			"sr=",
+			"sp=",
+			"sas",
+			"blob.core.windows.net",
+			"table.core.windows.net",
+			"queue.core.windows.net",
+			"file.core.windows.net",
+		},
+	}
+
+	// validate
+	tps := []string{
+		`https://myaccount.blob.core.windows.net/mycontainer?sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-12-31T23:59:59Z&st=2021-01-01T00:00:00Z&spr=https&sig=` + secrets.NewSecret(utils.AlphaNumeric("44")), // gitleaks:allow
+		`SAS_TOKEN="?sv=2020-08-04&ss=b&srt=o&sp=r&se=2021-12-31T23:59:59Z&sig=` + secrets.NewSecret(utils.AlphaNumeric("44")) + `"`,                                                                                   // gitleaks:allow
+		`azure_sas_url = "https://storage.blob.core.windows.net/container?sv=2020-08-04&sr=c&sp=rl&se=2021-12-31T23:59:59Z&sig=` + secrets.NewSecret(utils.AlphaNumeric("44")) + `"`,                               // gitleaks:allow
+		`?sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-12-31T23:59:59Z&sig=` + secrets.NewSecret(utils.AlphaNumeric("44")),                                                                                     // gitleaks:allow
+		`&sv=2020-08-04&sr=b&sp=r&se=2021-12-31T23:59:59Z&st=2021-01-01T00:00:00Z&sig=` + secrets.NewSecret(utils.AlphaNumeric("44")),                                                                               // gitleaks:allow
+	}
+	fps := []string{
+		`https://example.com?param1=value1&param2=value2&param3=value3`, // not SAS-specific parameters
+		`?sv=2020-08-04&se=2021-12-31T23:59:59Z`,                       // too few parameters
+		`?normal=query&string=parameters&not=sas`,                       // not SAS parameters
+		`sig=shortstring`,                                               // too short signature
+		`https://example.com?regular=url&with=normal&params=here`,       // regular URL parameters
+	}
+	return utils.Validate(r, tps, fps)
+}
