@@ -2505,6 +2505,18 @@ keywords = [
 ]
 
 [[rules]]
+id = "looker-client-id"
+description = "Found a Looker Client ID, risking unauthorized access to a Looker account and exposing sensitive data."
+regex = '''(?i)[\w.-]{0,50}?(?:looker)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{20})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["looker"]
+
+[[rules]]
+id = "looker-client-secret"
+description = "Found a Looker Client Secret, risking unauthorized access to a Looker account and exposing sensitive data."
+regex = '''(?i)[\w.-]{0,50}?(?:looker)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{24})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["looker"]
+
+[[rules]]
 id = "mailchimp-api-key"
 description = "Identified a Mailchimp API key, potentially compromising email marketing campaigns and subscriber data."
 regex = '''(?i)[\w.-]{0,50}?(?:MailchimpSDK.initialize|mailchimp)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-f0-9]{32}-us\d\d)(?:[\x60'"\s;]|\\[nr]|$)'''
