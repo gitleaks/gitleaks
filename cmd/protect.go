@@ -53,7 +53,7 @@ func runProtect(cmd *cobra.Command, args []string) {
 		remote *detect.RemoteInfo
 	)
 
-	if gitCmd, err = sources.NewGitDiffCmd(source, staged); err != nil {
+	if gitCmd, err = sources.NewGitDiffCmdContext(cmd.Context(), source, staged); err != nil {
 		logging.Fatal().Err(err).Msg("could not create Git diff cmd")
 	}
 	remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
