@@ -1530,6 +1530,7 @@ func TestDetectWithArchives(t *testing.T) {
 	tests := []struct {
 		cfgName          string
 		source           string
+		expireContext    bool
 		expectedFindings []report.Finding
 	}{
 		{
@@ -2059,6 +2060,12 @@ func TestDetectWithArchives(t *testing.T) {
 				},
 			},
 		},
+		{
+			source:           filepath.Join(archivesBasePath, "nested.tar.gz"),
+			cfgName:          "archives",
+			expireContext:    true,
+			expectedFindings: []report.Finding{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2073,13 +2080,17 @@ func TestDetectWithArchives(t *testing.T) {
 			err = viper.Unmarshal(&vc)
 			require.NoError(t, err)
 
+			ctx, cancel := context.WithCancel(context.Background())
+			if tt.expireContext {
+				cancel()
+			}
+
 			cfg, _ := vc.Translate()
-			detector := NewDetector(cfg)
+			detector := NewDetectorContext(ctx, cfg)
 			detector.MaxArchiveDepth = 8
 
 			findings, err := detector.DetectSource(
-				context.Background(),
-				&sources.Files{
+				ctx, &sources.Files{
 					Path:            tt.source,
 					Sema:            detector.Sema,
 					Config:          &cfg,
@@ -2087,7 +2098,13 @@ func TestDetectWithArchives(t *testing.T) {
 				},
 			)
 
-			require.NoError(t, err)
+			if tt.expireContext {
+				require.EqualError(t, err, "context canceled")
+			} else {
+				cancel()
+				require.NoError(t, err)
+			}
+
 			// TODO: Temporary mitigation.
 			// https://github.com/gitleaks/gitleaks/issues/1641
 			normalizedFindings := make([]report.Finding, len(findings))

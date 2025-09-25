@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -43,6 +44,17 @@ var (
 		Use:     "gitleaks",
 		Short:   "Gitleaks scans code, past or present, for secrets",
 		Version: Version,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Set the timeout for all the commands
+			if timeout, err := cmd.Flags().GetInt("timeout"); err != nil {
+				return err
+			} else if timeout > 0 {
+				ctx, cancel := context.WithTimeout(cmd.Context(), time.Duration(timeout)*time.Second)
+				cmd.SetContext(ctx)
+				cobra.OnFinalize(cancel)
+			}
+			return nil
+		},
 	}
 
 	// diagnostics manager is global to ensure it can be started before a scan begins
@@ -77,6 +89,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
+	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
 
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
@@ -236,7 +249,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	var err error
 
 	// Setup common detector
-	detector := detect.NewDetector(cfg)
+	detector := detect.NewDetectorContext(cmd.Context(), cfg)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
 		logging.Fatal().Err(err).Send()
