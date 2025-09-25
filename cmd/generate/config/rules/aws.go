@@ -47,3 +47,63 @@ func AWS() *config.Rule {
 	}
 	return utils.Validate(r, tps, fps)
 }
+
+func AmazonBedrockAPIKeyLongLived() *config.Rule {
+	// https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-how.html
+	// https://medium.com/@adan.alvarez/api-keys-for-bedrock-a-brief-security-overview-2133ed9a2b3f
+	r := config.Rule{
+		RuleID:      "aws-amazon-bedrock-api-key-long-lived",
+		Description: "Identified a pattern that may indicate long-lived Amazon Bedrock API keys, risking unauthorized Amazon Bedrock usage",
+		Regex:       utils.GenerateUniqueTokenRegex(`ABSK[A-Za-z0-9+/]{109,269}={0,2}`, false),
+		Entropy:     3,
+		Keywords: []string{
+			"ABSK", // Amazon Bedrock API Key (long-lived)
+		},
+	}
+
+	// validate
+	tps := []string{
+		// Valid API key example
+		"ABSKQmVkcm9ja0FQSUtleS1EXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXM=",
+		// Generate additional random test keys
+		utils.GenerateSampleSecret("bedrock", "ABSKQmVkcm9ja0FQSUtleS1"+secrets.NewSecret(utils.AlphaNumeric("108"))+"="),
+		utils.GenerateSampleSecret("bedrock", "ABSKQmVkcm9ja0FQSUtleS1"+secrets.NewSecret(utils.AlphaNumeric("246"))),
+	}
+
+	fps := []string{
+		// Too short key (missing characters)
+		"ABSKQmVkcm9ja0FQSUtleS1EXAMPLE",
+		// Too long
+		"ABSKQmVkcm9ja0FQSUtleS1EXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLE=",
+		// Wrong prefix
+		"AXSKQmVkcm9ja0FQSUtleS1EXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXM=",
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
+func AmazonBedrockAPIKeyShortLived() *config.Rule {
+	// https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-how.html
+	// https://github.com/aws/aws-bedrock-token-generator-js/blob/86277e1489354192c64ffc8f995601daacc1f715/src/token.ts#L21
+	r := config.Rule{
+		RuleID:      "aws-amazon-bedrock-api-key-short-lived",
+		Description: "Identified a pattern that may indicate short-lived Amazon Bedrock API keys, risking unauthorized Amazon Bedrock usage",
+		Regex:       regexp.MustCompile(`bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29t`),
+		Entropy:     3,
+		Keywords: []string{
+			"bedrock-api-key-", // Amazon Bedrock API Key (short lived)
+		},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("AmazonBedrockAPIKeyShortLived", `bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29t`)
+
+	fps := []string{
+		// Too short key (missing characters)
+		"bedrock-api-key-",
+		// Wrong prefix
+		"bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29x",
+	}
+
+	return utils.Validate(r, tps, fps)
+}
