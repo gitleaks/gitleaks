@@ -19,9 +19,9 @@ func PerplexityAPIKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("perplexity", "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'")
-	fps := []string{
+	r.TPs = utils.GenerateSampleSecrets("perplexity", "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'")
+	r.FPs = []string{
 		"PERPLEXITY_API_KEY=pplx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

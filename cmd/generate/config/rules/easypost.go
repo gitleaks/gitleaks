@@ -19,15 +19,15 @@ func EasyPost() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("EZAK", "EZAK"+secrets.NewSecret(`[a-zA-Z0-9]{54}`))
-	tps = append(tps,
+	r.TPs = append(tps,
 		"EZAK"+secrets.NewSecret(`[a-zA-Z0-9]{54}`),
 		"example.com?t=EZAK"+secrets.NewSecret(`[a-zA-Z0-9]{54}`)+"&q=1",
 	)
-	fps := []string{
+	r.FPs = []string{
 		// random base64 encoded string
 		`...6wqX6fNUXA/rYqRvfQ+EZAKGqQRiRyqAFRQshGPWOIAwNWGORfKHSBnVNFtVmWYoW6PH23lkqbbDWep95C/3VmWq/edti6...`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func EasyPostTestAPI() *config.Rule {
@@ -43,13 +43,13 @@ func EasyPostTestAPI() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("EZTK", secrets.NewSecret(`EZTK[a-zA-Z0-9]{54}`))
 	tps = append(tps, secrets.NewSecret(`EZTK[a-zA-Z0-9]{54}`))
-	tps = append(tps,
+	r.TPs = append(tps,
 		"EZTK"+secrets.NewSecret(`[a-zA-Z0-9]{54}`),
 		"example.com?t=EZTK"+secrets.NewSecret(`[a-zA-Z0-9]{54}`)+"&q=1",
 	)
-	fps := []string{
+	r.FPs = []string{
 		// random base64 encoded string
 		`...6wqX6fNUXA/rYqRvfQ+EZTKGqQRiRyqAFRQshGPWOIAwNWGORfKHSBnVNFtVmWYoW6PH23lkqbbDWep95C/3VmWq/edti6...`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

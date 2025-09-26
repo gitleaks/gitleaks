@@ -20,8 +20,8 @@ func PlaidAccessID() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(`[a-zA-Z0-9]{24}`))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("plaid", secrets.NewSecret(`[a-zA-Z0-9]{24}`))
+	return &r
 }
 
 func PlaidSecretKey() *config.Rule {
@@ -38,8 +38,8 @@ func PlaidSecretKey() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret(utils.AlphaNumeric("30")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("plaid", secrets.NewSecret(utils.AlphaNumeric("30")))
+	return &r
 }
 
 func PlaidAccessToken() *config.Rule {
@@ -56,6 +56,6 @@ func PlaidAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("plaid", secrets.NewSecret("access-(?:sandbox|development|production)-"+utils.Hex8_4_4_4_12()))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("plaid", secrets.NewSecret("access-(?:sandbox|development|production)-"+utils.Hex8_4_4_4_12()))
+	return &r
 }

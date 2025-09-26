@@ -13,10 +13,10 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
-func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+func Validate(rule config.Rule, requiredRules []*config.Rule) *config.Rule {
 	r := &rule
-	d := createSingleRuleDetector(r)
-	for _, tp := range truePositives {
+	d := createSingleRuleDetector(r, requiredRules)
+	for _, tp := range r.TPs {
 		if len(d.DetectString(tp)) < 1 {
 			logging.Fatal().
 				Str("rule", r.RuleID).
@@ -25,7 +25,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 				Msg("Failed to Validate. True positive was not detected by regex.")
 		}
 	}
-	for _, fp := range falsePositives {
+	for _, fp := range r.FPs {
 		findings := d.DetectString(fp)
 		if len(findings) != 0 {
 			logging.Fatal().
@@ -40,7 +40,7 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 
 func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
 	r := &rule
-	d := createSingleRuleDetector(r)
+	d := createSingleRuleDetector(r, nil)
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
 		if len(d.Detect(f)) != 1 {
@@ -66,7 +66,7 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	return r
 }
 
-func createSingleRuleDetector(r *config.Rule) *detect.Detector {
+func createSingleRuleDetector(r *config.Rule, requiredRules []*config.Rule) *detect.Detector {
 	// normalize keywords like in the config package
 	var (
 		uniqueKeywords = make(map[string]struct{})
@@ -84,6 +84,11 @@ func createSingleRuleDetector(r *config.Rule) *detect.Detector {
 
 	rules := map[string]config.Rule{
 		r.RuleID: *r,
+	}
+	for _, rr := range requiredRules {
+		if _, ok := rules[rr.RuleID]; !ok {
+			rules[rr.RuleID] = *rr
+		}
 	}
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = rules

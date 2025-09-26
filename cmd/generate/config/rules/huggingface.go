@@ -26,7 +26,7 @@ func HuggingFaceAccessToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("huggingface", "hf_"+secrets.NewSecret("[a-zA-Z]{34}"))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`huggingface-cli login --token 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`,
 		`huggingface-cli login --token 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`,
 		`huggingface-cli login --token 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`,
@@ -45,7 +45,7 @@ func HuggingFaceAccessToken() *config.Rule {
 		TOKEN = "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"`,
 		`    parser.add_argument("--hf_token", type=str, default='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', help="Hugging Face Access Token to access PyAnnote gated models")`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		`- (id)hf_requiredCharacteristicTypesForDisplayMetadata;`,
 		`amazon.de#@#div[data-cel-widget="desktop-rhf_SponsoredProductsRemoteRHFSearchEXPSubsK2ClickPagination"]`,
 		`                            _kHMSymptomhf_generatedByHomeAppForDebuggingPurposesKey,`,
@@ -63,7 +63,7 @@ func HuggingFaceAccessToken() *config.Rule {
 		`# HuggingFace API Token https://huggingface.co/settings/tokens
 		HUGGINGFACE_API_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // Will be deprecated Aug 1st, 2023.
@@ -82,7 +82,7 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("huggingface", "api_org_"+secrets.NewSecret("[a-zA-Z]{34}"))
-	tps = append(tps,
+	r.TPs = append(tps,
 		`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`,
 		"`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`",
 		`\'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'\`,
@@ -98,7 +98,7 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 		`os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'`,
 		fmt.Sprintf("api_org_%s", secrets.NewSecret(`[a-zA-Z]{34}`)),
 	)
-	fps := []string{
+	r.FPs = []string{
 		`public static final String API_ORG_EXIST = "APIOrganizationExist";`,
 		`const api_org_controller = require('../../controllers/api/index').organizations;`,
 		`API_ORG_CREATE("https://qyapi.weixin.qq.com/cgi-bin/department/create?access_token=ACCESS_TOKEN"),`,
@@ -112,5 +112,5 @@ func HuggingFaceOrganizationApiToken() *config.Rule {
 		You should see a token hf_xxxxx (old tokens are api_XXXXXXXX or api_org_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).
 		If you do not submit your API token when sending requests to the API, you will not be able to run inference on your private models.`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

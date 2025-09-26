@@ -18,9 +18,9 @@ func Databricks() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("databricks", "dapi"+secrets.NewSecret(utils.Hex("32")))
-	tps = append(tps, `token = dapif13ac4b49d1cb31f69f678e39602e381-2`) // gitleaks:ignore
-	fps := []string{
+	r.TPs = append(tps, `token = dapif13ac4b49d1cb31f69f678e39602e381-2`) // gitleaks:ignore
+	r.FPs = []string{
 		`DATABRICKS_TOKEN=dapi123456789012345678a9bc01234defg5`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

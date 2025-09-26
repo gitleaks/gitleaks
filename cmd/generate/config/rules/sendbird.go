@@ -19,8 +19,8 @@ func SendbirdAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("sendbird", secrets.NewSecret(utils.Hex("40")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("sendbird", secrets.NewSecret(utils.Hex("40")))
+	return &r
 }
 
 func SendbirdAccessID() *config.Rule {
@@ -36,6 +36,6 @@ func SendbirdAccessID() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("sendbird", secrets.NewSecret(utils.Hex8_4_4_4_12()))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("sendbird", secrets.NewSecret(utils.Hex8_4_4_4_12()))
+	return &r
 }

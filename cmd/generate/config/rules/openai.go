@@ -19,7 +19,7 @@ func OpenAI() *config.Rule {
 	}
 
 	// validate
-	tps := append(utils.GenerateSampleSecrets("openaiApiKey", "sk-"+secrets.NewSecret(utils.AlphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(utils.AlphaNumeric("20"))),
+	r.TPs = append(utils.GenerateSampleSecrets("openaiApiKey", "sk-"+secrets.NewSecret(utils.AlphaNumeric("20"))+"T3BlbkFJ"+secrets.NewSecret(utils.AlphaNumeric("20"))),
 		[]string{
 			"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",
 			"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",
@@ -33,5 +33,5 @@ func OpenAI() *config.Rule {
 			"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",
 			"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",
 		}...)
-	return utils.Validate(r, tps, nil)
+	return &r
 }

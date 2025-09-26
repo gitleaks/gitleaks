@@ -3,7 +3,6 @@ package rules
 import (
 	"fmt"
 
-	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
@@ -31,7 +30,7 @@ func CurlBasicAuth() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		// short
 		`curl --cacert ca.crt -u elastic:P@ssw0rd$1 https://localhost:9200`, // same lines, no quotes
 		`sh-5.0$ curl -k -X POST https://infinispan:11222/rest/v2/caches/default/hello \
@@ -56,7 +55,7 @@ func CurlBasicAuth() *config.Rule {
 		//`     curl -s --insecure --url "imaps://whatever.imap.server" --user\
 		//"myuserid:mypassword" --request "STATUS INBOX (UNSEEN)"`,
 	}
-	fps := []string{
+	r.FPs = []string{
 		// short
 		`curl -i -u 'test:test'`,
 		`   curl -sL --user "$1:$2" "$3" > "$4"`,                      // environment variable
@@ -94,7 +93,7 @@ echo -n '{"type":"serve","channel":"/","data":{"site_id":8,"post_id":12345,"geo"
 #UDP Listener (for confirmation)
 nc -u -l 41234`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // https://curl.se/docs/manpage.html#-H
@@ -116,7 +115,7 @@ func CurlHeaderAuth() *config.Rule {
 		//},
 	}
 
-	tps := []string{
+	r.TPs = []string{
 		`curl --header  'Authorization:  5eb4223e-5008-46e5-be67-c7b8f2732305'`,
 		// Short flag.
 		`curl -H 'Authorization: Basic YnJvd3Nlcjo=' \`, // same line, single quotes
@@ -167,7 +166,7 @@ func CurlHeaderAuth() *config.Rule {
 		`curl -X GET https://octopus.corp.net/
      -H "X-Octopus-ApiKey: 3a16750d-d363-41a4-8ebd-035408f7730f" \`, // X-$thing-ApiKey
 	}
-	fps := []string{
+	r.FPs = []string{
 		// Placeholders
 		`curl https://example.com/micropub -d h=entry -d "content=Hello World" -H "Authorization: Bearer XXXXXXXXXXXX"`,
 		`curl -X POST https://accounts.spotify.com/api/token -d grant_type=client_credentials --header "Authorization: Basic ..."`,
@@ -197,5 +196,5 @@ func CurlHeaderAuth() *config.Rule {
 		// Not valid BASIC
 		`curl -X POST -H "Content-Type: application/json" -H "Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb25maWRlbmNlIjowLjh9.kvRPfjAhLhtRTczoRgctVGp7KY1QVH3UBZM-gM0x8ec" \`,
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }

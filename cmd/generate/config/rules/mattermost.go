@@ -19,6 +19,6 @@ func MattermostAccessToken() *config.Rule {
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("mattermost", secrets.NewSecret(utils.AlphaNumeric("26")))
-	return utils.Validate(r, tps, nil)
+	r.TPs = utils.GenerateSampleSecrets("mattermost", secrets.NewSecret(utils.AlphaNumeric("26")))
+	return &r
 }

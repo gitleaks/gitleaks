@@ -24,7 +24,7 @@ func SlackBotToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("bot", "xoxb-781236542736-2364535789652-GkwFDQoHqzXDVsC6GzqYUypD")
-	tps = append(tps,
+	r.TPs = append(tps,
 		// https://github.com/metabase/metabase/blob/74cfb332140680425c7d37d347854160cc997ea8/frontend/src/metabase/admin/settings/slack/components/SlackForm/SlackForm.tsx#L47
 		`"bot_token1": "xoxb-781236542736-2364535789652-GkwFDQoHqzXDVsC6GzqYUypD"`, // gitleaks:allow
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#LL44C27-L44C86
@@ -32,13 +32,13 @@ func SlackBotToken() *config.Rule {
 		`"bot_token3": "xoxb-4614724432022-5152386766518-O5WzjWGLG0wcCm2WPrjEmnys"`,   // gitleaks:allow
 		`"bot_token4": `+fmt.Sprintf(`"xoxb-%s-%s-%s"`, secrets.NewSecret(utils.Numeric("13")), secrets.NewSecret(utils.Numeric("12")), secrets.NewSecret(utils.AlphaNumeric("24"))),
 	)
-	fps := []string{
+	r.FPs = []string{
 		"xoxb-xxxxxxxxx-xxxxxxxxxx-xxxxxxxxxxxx",
 		"xoxb-xxx",
 		"xoxb-12345-abcd234",
 		"xoxb-xoxb-my-bot-token",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // https://api.slack.com/authentication/token-types#user
@@ -55,7 +55,7 @@ func SlackUserToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("user", "xoxp-41684372915-1320496754-45609968301-e708ba56e1517a99f6b5fb07349476ef")
-	tps = append(tps,
+	r.TPs = append(tps,
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#L25
 		`"user_token1": "xoxp-41684372915-1320496754-45609968301-e708ba56e1517a99f6b5fb07349476ef"`, // gitleaks:allow
 		// https://github.com/praetorian-inc/noseyparker/blob/16e0e5768fd14ea54f6c9a058566184d88343bb4/crates/noseyparker/data/default/rules/slack.yml#L29
@@ -69,7 +69,7 @@ func SlackUserToken() *config.Rule {
 		// It's unclear what the `xoxe-` token means in this context, however, the format is similar to a user token.
 		`"url_private": "https:\/\/files.slack.com\/files-pri\/T04MCQMEXQ9-F04MAA1PKE3\/image.png?t=xoxe-4726837507825-4848681849303-4856614048758-e0b1f3d4cb371f92260edb0d9444d206"`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		`https://docs.google.com/document/d/1W7KCxOxP-1Fy5EyF2lbJGE2WuKmu5v0suYqoHas1jRM`,
 		`"token1": "xoxp-1234567890"`, // gitleaks:allow
 		`"token2": "xoxp-XXXXXXXXXX-XXXXXXXXXX-XXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"`, // gitleaks:allow
@@ -78,7 +78,7 @@ func SlackUserToken() *config.Rule {
 		// This technically matches the pattern but is an obvious false positive.
 		// `"token5": "xoxp-000000000000-000000000000-000000000000-00000000000000000000000000000000"`, // gitleaks:allow
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // Reference: https://api.slack.com/authentication/token-types#app
@@ -94,14 +94,14 @@ func SlackAppLevelToken() *config.Rule {
 	}
 
 	tps := utils.GenerateSampleSecrets("slack", "xapp-1-A052FGTS2DL-5171572773297-610b6a11f4b7eb819e87b767d80e6575a3634791acb9a9ead051da879eb5b55e")
-	tps = append(tps,
+	r.TPs = append(tps,
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#L17
 		`"token1": "xapp-1-A052FGTS2DL-5171572773297-610b6a11f4b7eb819e87b767d80e6575a3634791acb9a9ead051da879eb5b55e"`, // gitleaks:allow
 		`"token2": "xapp-1-IEMF8IMY1OQ-4037076220459-85c370b433e366de369c4ef5abdf41253519266982439a75af74a3d68d543fb6"`, // gitleaks:allow
 		`"token3": "xapp-1-BM3V7LC51DA-1441525068281-86641a2582cd0903402ab523e5bcc53b8253098c31591e529b55b41974d2e82f"`, // gitleaks:allow
 		`"token4": `+fmt.Sprintf(`"xapp-1-A%s-%s-%s"`, secrets.NewSecret(utils.Numeric("10")), secrets.NewSecret(utils.Numeric("13")), secrets.NewSecret(utils.AlphaNumeric("64"))),
 	)
-	return utils.Validate(r, tps, nil)
+	return &r
 }
 
 // Reference: https://api.slack.com/authentication/config-tokens
@@ -116,19 +116,19 @@ func SlackConfigurationToken() *config.Rule {
 	}
 
 	tps := utils.GenerateSampleSecrets("access", "xoxe.xoxp-1-Mi0yLTM0MTQwNDE0MDE3Ni0zNjU5NDY0Njg4MTctNTE4MjA3NTQ5NjA4MC01NDEyOTYyODY5NzUxLThhMTBjZmI1ZWIzMGIwNTg0ZDdmMDI5Y2UxNzVlZWVhYzU2ZWQyZTZiODNjNDZiMGUxMzRlNmNjNDEwYmQxMjQ")
-	tps = append(tps,
+	r.TPs = append(tps,
 		`"access_token1": "xoxe.xoxp-1-Mi0yLTM0MTQwNDE0MDE3Ni0zNjU5NDY0Njg4MTctNTE4MjA3NTQ5NjA4MC01NDEyOTYyODY5NzUxLThhMTBjZmI1ZWIzMGIwNTg0ZDdmMDI5Y2UxNzVlZWVhYzU2ZWQyZTZiODNjNDZiMGUxMzRlNmNjNDEwYmQxMjQ"`, // gitleaks:allow
 		`"access_token2": "xoxe.xoxp-1-Mi0yLTMxNzcwMjQ0MTcxMy0zNjU5NDY0Njg4MTctNTE1ODE1MjY5MTcxNC01MTU4MDI0MTgyOTc5LWRmY2YwY2U4ODhhNzY5ZGU5MTAyNDU4MDJjMGQ0ZDliMTZhMjNkMmEyYzliNjkzMDRlN2VjZTI4MWNiMzRkNGQ"`, // gitleaks:allow
 		`"access_token3": "xoxe.xoxp-1-`+secrets.NewSecret(utils.AlphaNumeric("163"))+`"`,
 		`"access_token4": "xoxe.xoxb-1-Mi0yLTMxNzcwMjQ0MTcxMy0zNjU5NDY0Njg4MTctNTE1ODE1MjY5MTcxNC01MTU4MDI0MTgyOTc5LWRmY2YwY2U4ODhhNzY5ZGU5MTAyNDU4MDJjMGQ0ZDliMTZhMjNkMmEyYzliNjkzMDRlN2VjZTI4MWNiMzRkNGQ"`,
 		`"access_token5": "xoxe.xoxb-1-`+secrets.NewSecret(utils.AlphaNumeric("165"))+`"`,
 	)
-	fps := []string{
+	r.FPs = []string{
 		"xoxe.xoxp-1-SlackAppConfigurationAccessTokenHere",
 		"xoxe.xoxp-1-RANDOMSTRINGHERE",
 		"xoxe.xoxp-1-initial",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // Reference: https://api.slack.com/authentication/config-tokens
@@ -143,13 +143,13 @@ func SlackConfigurationRefreshToken() *config.Rule {
 	}
 
 	tps := utils.GenerateSampleSecrets("refresh", "xoxe-1-My0xLTMxNzcwMjQ0MTcxMy01MTU4MTUyNjkxNzE0LTUxODE4NDI0MDY3MzYtMjA5MGFkOTFlZThkZWE2OGFlZDYwYWJjODNhYzAxYjA5ZjVmODBhYjgzN2QyNDdjOTNlOGY5NTg2YWM1OGM4Mg")
-	tps = append(tps,
+	r.TPs = append(tps,
 		`"refresh_token1": "xoxe-1-My0xLTMxNzcwMjQ0MTcxMy01MTU4MTUyNjkxNzE0LTUxODE4NDI0MDY3MzYtMjA5MGFkOTFlZThkZWE2OGFlZDYwYWJjODNhYzAxYjA5ZjVmODBhYjgzN2QyNDdjOTNlOGY5NTg2YWM1OGM4Mg"`, // gitleaks:allow
 		`"refresh_token2": "xoxe-1-My0xLTM0MTQwNDE0MDE3Ni01MTgyMDc1NDk2MDgwLTU0MjQ1NjIwNzgxODEtNGJkYTZhYTUxY2M1ODk3ZTNkN2YzMTgxMDI1ZDQzNzgwNWY4NWQ0ODdhZGIzM2ViOGI0MTM0MjdlNGVmYzQ4Ng"`, // gitleaks:allow
 		`"refresh_token3": "xoxe-1-`+secrets.NewSecret(utils.AlphaNumeric("146"))+`"`,
 	)
-	fps := []string{"xoxe-1-xxx", "XOxE-RROAmw, Home and Garden, 5:24, 20120323"}
-	return utils.Validate(r, tps, fps)
+	r.FPs = []string{"xoxe-1-xxx", "XOxE-RROAmw, Home and Garden, 5:24, 20120323"}
+	return &r
 }
 
 // Reference: https://api.slack.com/authentication/token-types#legacy_bot
@@ -166,7 +166,7 @@ func SlackLegacyBotToken() *config.Rule {
 	}
 
 	tps := utils.GenerateSampleSecrets("slack", "xoxb-263594206564-FGqddMF8t08v8N7Oq4i57vs1")
-	tps = append(tps,
+	r.TPs = append(tps,
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#LL42C38-L42C80
 		`"bot_token1": "xoxb-263594206564-FGqddMF8t08v8N7Oq4i57vs1"`, // gitleaks:allow
 		// https://heejune.me/2018/08/01/crashdump-analysis-automation-using-slackbot-python-cdb-from-windows/
@@ -187,13 +187,13 @@ func SlackLegacyBotToken() *config.Rule {
 		`"bot_token10": `+fmt.Sprintf(`"xoxb-%s-%s`, secrets.NewSecret(utils.Numeric("10")), secrets.NewSecret(utils.AlphaNumeric("24"))), // gitleaks:allow
 		`"bot_token11": `+fmt.Sprintf(`"xoxb-%s-%s`, secrets.NewSecret(utils.Numeric("12")), secrets.NewSecret(utils.AlphaNumeric("23"))), // gitleaks:allow
 	)
-	fps := []string{
+	r.FPs = []string{
 		"xoxb-xxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx", // gitleaks:allow
 		"xoxb-Slack_BOT_TOKEN",
 		"xoxb-abcdef-abcdef",
 		// "xoxb-0000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // gitleaks:allow
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // Reference: https://api.slack.com/authentication/token-types#workspace
@@ -211,20 +211,20 @@ func SlackLegacyWorkspaceToken() *config.Rule {
 	}
 
 	tps := utils.GenerateSampleSecrets("slack", "xoxa-2-511111111-31111111111-3111111111111-e039d02840a0b9379c")
-	tps = append(tps,
+	r.TPs = append(tps,
 		`"access_token": "xoxa-2-511111111-31111111111-3111111111111-e039d02840a0b9379c"`, // gitleaks:allow
 		`"access_token1": `+fmt.Sprintf(`"xoxa-%s-%s`, secrets.NewSecret(utils.Numeric("1")), secrets.NewSecret(utils.AlphaNumeric("12"))),
 		`"access_token2": `+fmt.Sprintf(`"xoxa-%s`, secrets.NewSecret(utils.AlphaNumeric("12"))),
 		`"refresh_token1": `+fmt.Sprintf(`"xoxr-%s-%s`, secrets.NewSecret(utils.Numeric("1")), secrets.NewSecret(utils.AlphaNumeric("12"))),
 		`"refresh_token2": `+fmt.Sprintf(`"xoxr-%s`, secrets.NewSecret(utils.AlphaNumeric("12"))),
 	)
-	fps := []string{
+	r.FPs = []string{
 		// "xoxa-faketoken",
 		// "xoxa-access-token-string",
 		// "XOXa-nx991k",
 		"https://github.com/xoxa-nyc/xoxa-nyc.github.io/blob/master/README.md",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 // References:
@@ -244,7 +244,7 @@ func SlackLegacyToken() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("slack", "xoxs-416843729158-132049654-5609968301-e708ba56e1")
-	tps = append(tps,
+	r.TPs = append(tps,
 		// https://github.com/GGStudy-DDUp/https-github.com-aldaor-HackerOneReports/blob/637e9261b63a7292a3a7ddf4bf13729c224d84df/PrivilegeEscalation/47940.txt#L23
 		`"access_token1": "xoxs-3206092076-3204538285-3743137121-836b042620"`, // gitleaks:allow
 		// https://github.com/jonz-secops/TokenTester/blob/978e9f3eabc7e9978769cfbba10735afa3bf627e/slack#L28
@@ -258,11 +258,11 @@ func SlackLegacyToken() *config.Rule {
 		`"access_token6": "xoxs-`+fmt.Sprintf("%s-%s-%s-%s", secrets.NewSecret(utils.Numeric("10")), secrets.NewSecret(utils.Numeric("10")), secrets.NewSecret(utils.Numeric("10")), secrets.NewSecret(utils.Hex("10")))+`"`,
 		`"access_token7": "xoxo-523423-234243-234233-e039d02840a0b9379c"`, // gitleaks:allow
 	)
-	fps := []string{
+	r.FPs = []string{
 		"https://indieweb.org/images/3/35/2018-250-xoxo-indieweb-1.jpg",
 		"https://lh3.googleusercontent.com/-tWXjX3LUD6w/Ua4La_N5E2I/AAAAAAAAACg/qcm19xbEYa4/s640/EXO-XOXO-teaser-exo-k-34521098-720-516.jpg",
 	}
-	return utils.Validate(r, tps, fps)
+	return &r
 }
 
 func SlackWebHookUrl() *config.Rule {
@@ -279,7 +279,7 @@ func SlackWebHookUrl() *config.Rule {
 	}
 
 	// validate
-	tps := []string{
+	r.TPs = []string{
 		"hooks.slack.com/services/" + secrets.NewSecret(utils.AlphaNumeric("44")),
 		"http://hooks.slack.com/services/" + secrets.NewSecret(utils.AlphaNumeric("45")),
 		"https://hooks.slack.com/services/" + secrets.NewSecret(utils.AlphaNumeric("46")),
@@ -292,5 +292,5 @@ func SlackWebHookUrl() *config.Rule {
 		"http://hooks.slack.com/workflows/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",    // gitleaks:allow
 		"https://hooks.slack.com/triggers/" + secrets.NewSecret(utils.AlphaNumeric("56")),
 	}
-	return utils.Validate(r, tps, nil)
+	return &r
 }
