@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/h2non/filetype"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/mholt/archives"
 
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -155,6 +155,24 @@ func (s *File) decompressorFragments(decompressor archives.Decompressor, reader 
 	return nil
 }
 
+// isHumanReadable returns true for text/* and a few textual application/* types.
+// Used to decide which files should be scanned vs skipped as binary.
+func isHumanReadable(m *mimetype.MIME) bool {
+	if strings.HasPrefix(m.String(), "text/") {
+		return true
+	}
+	switch m.String() {
+	case "application/json",
+		"application/xml",
+		"application/javascript",
+		"application/xhtml+xml",
+		"application/x-yaml",
+		"application/toml":
+		return true
+	}
+	return false
+}
+
 // fileFragments reads the file into fragments to yield
 func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 	// Create a buffer if the caller hasn't provided one
@@ -180,16 +198,12 @@ func (s *File) fileFragments(reader *bufio.Reader, yield FragmentsFunc) error {
 		// Only check the filetype at the start of file.
 		if totalLines == 0 {
 			// TODO: could other optimizations be introduced here?
-			if mimetype, err := filetype.Match(s.Buffer[:n]); err != nil {
-				return yield(
-					fragment,
-					fmt.Errorf("could not read file: could not determine type: %w", err),
-				)
-			} else if mimetype.MIME.Type == "application" {
+			m := mimetype.Detect(s.Buffer[:n])
+			if !isHumanReadable(m) {
 				logging.Debug().
-					Str("mime_type", mimetype.MIME.Value).
+					Str("mime_type", m.String()).
 					Str("path", s.FullPath()).
-					Msgf("skipping binary file")
+					Msg("skipping binary file")
 
 				return nil
 			}
