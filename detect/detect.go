@@ -550,16 +550,6 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			}
 		}
 
-		// check if this is a generic rule
-		if r.SmartFilter {
-			if !d.passesSmartFilter(finding.Secret) {
-				// logger.Info().
-				// 	Str("finding", finding.Secret).
-				// 	Msg("skipping finding: fails smart filter")
-				continue
-			}
-		}
-
 		// check if the result matches any of the global allowlists.
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, d.Config.Allowlists); isAllowed {
 			event.Msg("skipping finding: global allowlist")
@@ -570,6 +560,12 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		if isAllowed, event := checkFindingAllowed(logger, finding, fragment, currentLine, r.Allowlists); isAllowed {
 			event.Msg("skipping finding: rule allowlist")
 			continue
+		}
+
+		if r.SmartFilter {
+			if !d.passesSmartFilter(finding.Secret) {
+				continue
+			}
 		}
 		findings = append(findings, finding)
 	}

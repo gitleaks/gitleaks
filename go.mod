@@ -7,6 +7,7 @@ toolchain go1.24.3
 require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
 	github.com/Masterminds/sprig/v3 v3.3.0
+	github.com/agnivade/levenshtein v1.2.1
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/fatih/semgroup v1.2.0
 	github.com/gitleaks/go-gitdiff v0.9.1
