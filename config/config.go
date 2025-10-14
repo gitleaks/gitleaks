@@ -7,10 +7,12 @@ import (
 	"sort"
 	"strings"
 
+	gv "github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
 
 var (
@@ -20,6 +22,8 @@ var (
 	// use to keep track of how many configs we can extend
 	// yea I know, globals bad
 	extendDepth int
+
+	seenMinVerWarningMsg bool
 )
 
 const maxExtendDepth = 2
@@ -54,6 +58,8 @@ type ViperConfig struct {
 	AllowList *viperGlobalAllowlist
 
 	Allowlists []*viperGlobalAllowlist
+
+	MinVersion string
 }
 
 type viperRequired struct {
@@ -88,6 +94,7 @@ type Config struct {
 	// used to keep sarif results consistent
 	OrderedRules []string
 	Allowlists   []*Allowlist
+	MinVersion   string
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -194,7 +201,18 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Rules:        rulesMap,
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
+		MinVersion:   vc.MinVersion,
 	}
+
+	// check version of Gitleaks (not the config)
+	if c.MinVersion == "" {
+		logging.Debug().Msg("No minVersion specified in config. Consider adding minVersion to ensure compatibility.")
+	} else {
+		if err := validateMinVersion(c.MinVersion); err != nil {
+			return Config{}, err
+		}
+	}
+
 	// Parse the config allowlists, including the older format for backwards compatibility.
 	if vc.AllowList != nil {
 		// TODO: Remove this in v9.
@@ -255,6 +273,35 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	return c, nil
+}
+
+func validateMinVersion(minVer string) error {
+	if version.Version == version.DefaultMsg {
+		logging.Debug().
+			Str("required", minVer).
+			Msg("dev build, skipping config version check.")
+		return nil
+	}
+
+	min, err := gv.NewSemver(minVer)
+	if err != nil {
+		return fmt.Errorf("invalid minVersion '%s': %w", minVer, err)
+	}
+
+	current, err := gv.NewSemver(version.Version)
+	if err != nil {
+		return fmt.Errorf("unable to parse current version: %w", err)
+	}
+
+	if current.LessThan(min) && !seenMinVerWarningMsg {
+		seenMinVerWarningMsg = true
+		logging.Warn().
+			Str("required", minVer).
+			Str("current", version.Version).
+			Msg("config requires a newer Gitleaks version.")
+	}
+
+	return nil
 }
 
 func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
@@ -375,6 +422,14 @@ func (c *Config) extend(extensionConfig Config) {
 				Msg("Disabled rule doesn't exist in extended config.")
 		}
 		disabledRuleIDs[id] = struct{}{}
+	}
+
+	// extend minVersion
+	if validateMinVersion(extensionConfig.MinVersion) != nil {
+		// fail here?
+	}
+	if extensionConfig.MinVersion != "" {
+		c.MinVersion = extensionConfig.MinVersion
 	}
 
 	for ruleID, baseRule := range extensionConfig.Rules {
