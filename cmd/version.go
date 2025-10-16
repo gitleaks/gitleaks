@@ -7,8 +7,6 @@ import (
 	"github.com/zricethezav/gitleaks/v8/version"
 )
 
-var v = version.Version
-
 func init() {
 	rootCmd.AddCommand(versionCmd)
 }
@@ -20,5 +18,5 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
-	fmt.Println(v)
+	fmt.Println(version.Version)
 }
