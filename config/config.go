@@ -7,10 +7,12 @@ import (
 	"sort"
 	"strings"
 
+	gv "github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
 
 var (
@@ -54,6 +56,10 @@ type ViperConfig struct {
 	AllowList *viperGlobalAllowlist
 
 	Allowlists []*viperGlobalAllowlist
+
+	MinVersion string
+
+	configPath string
 }
 
 type viperRequired struct {
@@ -88,6 +94,7 @@ type Config struct {
 	// used to keep sarif results consistent
 	OrderedRules []string
 	Allowlists   []*Allowlist
+	MinVersion   string
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -194,7 +201,22 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Rules:        rulesMap,
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
+		MinVersion:   vc.MinVersion,
 	}
+
+	if extendDepth > 0 {
+		// annoying hack to set the current config with the extended path
+		// since if extendDepth > 0 we are operating an extended config.
+		c.Path = vc.configPath
+	} else {
+		// I don't love this
+		c.Path = viper.ConfigFileUsed()
+	}
+
+	if err := validateMinVersion(c.MinVersion, c.Path); err != nil {
+		return Config{}, err
+	}
+
 	// Parse the config allowlists, including the older format for backwards compatibility.
 	if vc.AllowList != nil {
 		// TODO: Remove this in v9.
@@ -256,6 +278,41 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	return c, nil
+}
+
+func validateMinVersion(minVer string, configPath string) error {
+	if minVer == "" {
+		logging.Debug().Str("config path", configPath).
+			Msg("no minVersion specified in config... consider adding minVersion to ensure compatibility.")
+		return nil
+	}
+
+	if version.Version == version.DefaultMsg {
+		logging.Debug().
+			Str("required", minVer).
+			Msg("dev build, skipping config version check.")
+		return nil
+	}
+
+	minSemVer, err := gv.NewSemver(minVer)
+	if err != nil {
+		return fmt.Errorf("invalid minVersion '%s': %w", minVer, err)
+	}
+
+	currentSemVer, err := gv.NewSemver(version.Version)
+	if err != nil {
+		return fmt.Errorf("unable to parse current version: %w", err)
+	}
+
+	if currentSemVer.LessThan(minSemVer) {
+		logging.Warn().
+			Str("required", minVer).
+			Str("current", version.Version).
+			Str("config path", configPath).
+			Msg("config requires a newer Gitleaks version...")
+	}
+
+	return nil
 }
 
 func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
@@ -345,11 +402,13 @@ func (c *Config) extendPath(parent *ViperConfig) error {
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
+
+	extensionViperConfig.configPath = c.Extend.Path
+	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
 	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
-	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
 	c.extend(cfg)
 	return nil
 }
@@ -429,4 +488,5 @@ func (c *Config) extend(extensionConfig Config) {
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
+	return
 }

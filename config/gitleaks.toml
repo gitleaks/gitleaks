@@ -13,6 +13,11 @@
 
 title = "gitleaks config"
 
+# minVersion indicates the minimum Gitleaks version required to use this config.
+# If the running version is older, a warning will be logged and not all
+# config-enabled features are guaranteed to work.
+minVersion = "v8.25.0"
+
 # TODO: change to [[allowlists]]
 [allowlist]
 description = "global allow lists"
