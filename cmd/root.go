@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -116,16 +117,14 @@ func initLog() {
 	logging.Logger = logging.Logger.Level(logLevel)
 }
 
-func initConfig(source string) {
-	hideBanner, err := rootCmd.Flags().GetBool("no-banner")
-	viper.SetConfigType("toml")
+var bannerOnce sync.Once
 
-	if err != nil {
-		logging.Fatal().Msg(err.Error())
-	}
-	if !hideBanner {
-		_, _ = fmt.Fprint(os.Stderr, banner)
-	}
+func initConfig(source string) {
+	bannerOnce.Do(func() {
+		if !mustGetBoolFlag(rootCmd, "no-banner") {
+			_, _ = fmt.Fprint(os.Stderr, banner)
+		}
+	})
 
 	logging.Debug().Msgf("using %s regex engine", regexp.Version)
 
@@ -150,7 +149,7 @@ func initConfig(source string) {
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
-			logging.Fatal().Msg(err.Error())
+			return
 		}
 
 		if !fileInfo.IsDir() {
@@ -179,6 +178,7 @@ func initConfig(source string) {
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
+	return
 }
 
 func initDiagnostics() {
