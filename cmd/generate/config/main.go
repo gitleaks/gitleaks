@@ -192,6 +192,7 @@ func main() {
 		rules.RapidAPIAccessToken(),
 		rules.ReadMe(),
 		rules.RubyGemsAPIToken(),
+		rules.SaladCloudAPIKey(),
 		rules.ScalingoAPIToken(),
 		rules.SendbirdAccessID(),
 		rules.SendbirdAccessToken(),
