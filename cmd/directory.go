@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -56,7 +55,7 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	}
 
 	findings, err := detector.DetectSource(
-		context.Background(),
+		cmd.Context(),
 		&sources.Files{
 			Config:          &cfg,
 			FollowSymlinks:  detector.FollowSymlinks,
