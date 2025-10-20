@@ -18,7 +18,7 @@ builds:
     tags:
       - gore2regex
     ldflags:
-      - -s -w -X=github.com/zricethezav/gitleaks/v8/cmd.Version={{.Version}}
+      - -s -w -X=github.com/zricethezav/gitleaks/v8/version.Version={{.Version}}
 archives:
   - builds: [gitleaks]
     format_overrides:

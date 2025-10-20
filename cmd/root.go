@@ -19,6 +19,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
 
 const banner = `
@@ -42,7 +43,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "gitleaks",
 		Short:   "Gitleaks scans code, past or present, for secrets",
-		Version: Version,
+		Version: version.Version,
 	}
 
 	// diagnostics manager is global to ensure it can be started before a scan begins

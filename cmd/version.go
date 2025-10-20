@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
-
-var Version = "version is set by build process"
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
@@ -19,5 +18,5 @@ var versionCmd = &cobra.Command{
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
-	fmt.Println(Version)
+	fmt.Println(version.Version)
 }
