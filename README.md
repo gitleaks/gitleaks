@@ -84,6 +84,18 @@ docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:lat
 git clone https://github.com/gitleaks/gitleaks.git
 cd gitleaks
 make build
+
+# Install script (latest release):
+# wget:
+wget -q -O - https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | bash
+# curl:
+curl -s https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | bash
+
+# Install script (specific release via TAG environment variable):
+# wget:
+wget -q -O - https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | TAG=v8.18.1 bash
+# curl:
+curl -s https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | TAG=v8.18.1 bash
 ```
 
 ### GitHub Action
