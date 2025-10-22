@@ -653,7 +653,7 @@ regexes = [
 description = "Allowlist for Generic API Keys"
 regexTarget = "match"
 regexes = [
-    '''(?i)(?:access(?:ibility|or)|access[_.-]?id|random[_.-]?access|api[_.-]?(?:id|name|version)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|(?:credentials?[_.-]?id|withCredentials)|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key|(?:turkey)|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets|key(?:store|tab)[_.-]?(?:file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(?:secret)[_.-]?(?:length|name|size)|UserSecretsId|(?:csrf)[_.-]?token|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])|public[_.-]?token|(?:key|token)[_.-]?file|(?-i:(?:[A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(?:\n|\z))|(?-i:(?:[A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(?:\n|\z)))''',
+    '''(?i)(?:access(?:ibility|or)|access[_.-]?id|random[_.-]?access|api[_.-]?(?:id|name|version)|rapid|capital|[a-z0-9-]*?api[a-z0-9-]*?:jar:|author|X-MS-Exchange-Organization-Auth|Authentication-Results|auth[_.-]?type|(?:credentials?[_.-]?id|withCredentials)|(?:bucket|criterion|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key|(?:turkey)|key[_.-]?(?:algorithm|alias|board|code|frame|id|length|mesh|name|pair|prefix|press(?:ed)?|ring|selector|signature|size|stone|storetype|store[_.-]?id|usage|word|up|down|left|right)|key[ ]id|key[_.-]?to[_.-]?(?:exclude|include)|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets|key(?:store|tab)[_.-]?(?:file|path)|issuerkeyhash|(?-i:[DdMm]onkey|[DM]ONKEY)|keying|(?:secret)[_.-]?(?:length|name|size)|UserSecretsId|(?:continuation|csrf|next|postman)[_.-]?token|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)|(?:api|credentials|token)[_.-]?(?:endpoint|ur[il])|public[_.-]?token|(?:key|token)[_.-]?file|(?-i:(?:[A-Z_]+=\n[A-Z_]+=|[a-z_]+=\n[a-z_]+=)(?:\n|\z))|(?-i:(?:[A-Z.]+=\n[A-Z.]+=|[a-z.]+=\n[a-z.]+=)(?:\n|\z)))''',
 ]
 stopwords = [
     "000000",
@@ -2108,6 +2108,8 @@ regexTarget = "line"
 regexes = [
     '''--mount=type=secret,''',
     '''import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]''',
+    '''\barn:aws:s3:[a-z0-9-]*:\d{12}:accesspoint[:/][\w+=,.@/-]+''',
+    '''\barn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+''',
 ]
 [[rules.allowlists]]
 condition = "AND"
@@ -3163,6 +3165,12 @@ keywords = [
 [[rules.allowlists]]
 regexes = [
     '''s\.[A-Za-z]{24}''',
+]
+[[rules.allowlists]]
+regexTarget = "line"
+regexes = [
+    '''\bs\.(?i:[a-z0-9]{24})[ \t]{0,10}[:!=]?=''',
+    '''[!:]=[ \t]{0,10}s\.(?i:[a-z0-9]{24})\b''',
 ]
 
 [[rules]]
