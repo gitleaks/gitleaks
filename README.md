@@ -1,5 +1,7 @@
-# Gitleaks
-
+Telegram +84 0916363743 minh Dien truong (####9999999999999%%##/agribank  7501205196575 trương Minh Điền  minhdient49@gmail.comGitleaks
+truongminhdien833@gmail.com 
+quedien69cm@outlook.com 
+quedien47@gmail.com 
 ```
 ┌─○───┐
 │ │╲  │
