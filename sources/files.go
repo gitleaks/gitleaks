@@ -34,7 +34,8 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 	}
 
 	s.Go(func() error {
-		err := files.scanTargets(func(scanTarget ScanTarget, err error) error {
+		ctx := context.Background()
+		err := files.scanTargets(ctx, func(scanTarget ScanTarget, err error) error {
 			paths <- scanTarget
 			return nil
 		})
@@ -56,7 +57,7 @@ type Files struct {
 }
 
 // scanTargets yields scan targets to a callback func
-func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
+func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) error) error {
 	return filepath.WalkDir(s.Path, func(path string, d fs.DirEntry, err error) error {
 		scanTarget := ScanTarget{Path: path}
 		logger := logging.With().Str("path", path).Logger()
@@ -141,40 +142,50 @@ func (s *Files) scanTargets(yield func(ScanTarget, error) error) error {
 func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
-	err := s.scanTargets(func(scanTarget ScanTarget, err error) error {
-		wg.Add(1)
-		s.Sema.Go(func() error {
-			logger := logging.With().Str("path", scanTarget.Path).Logger()
-			logger.Trace().Msg("scanning path")
+	err := s.scanTargets(ctx, func(scanTarget ScanTarget, err error) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			wg.Add(1)
+			s.Sema.Go(func() error {
+				logger := logging.With().Str("path", scanTarget.Path).Logger()
+				logger.Trace().Msg("scanning path")
 
-			f, err := os.Open(scanTarget.Path)
-			if err != nil {
-				if os.IsPermission(err) {
-					logger.Warn().Msg("skipping file: permission denied")
+				f, err := os.Open(scanTarget.Path)
+				if err != nil {
+					if os.IsPermission(err) {
+						logger.Warn().Msg("skipping file: permission denied")
+					}
+					wg.Done()
+					return nil
 				}
+
+				// Convert this to a file source
+				file := File{
+					Content:         f,
+					Path:            scanTarget.Path,
+					Symlink:         scanTarget.Symlink,
+					Config:          s.Config,
+					MaxArchiveDepth: s.MaxArchiveDepth,
+				}
+
+				err = file.Fragments(ctx, yield)
+				// Avoiding a defer in a hot loop
+				_ = f.Close()
 				wg.Done()
-				return nil
-			}
+				return err
+			})
 
-			// Convert this to a file source
-			file := File{
-				Content:         f,
-				Path:            scanTarget.Path,
-				Symlink:         scanTarget.Symlink,
-				Config:          s.Config,
-				MaxArchiveDepth: s.MaxArchiveDepth,
-			}
-
-			err = file.Fragments(ctx, yield)
-			// Avoiding a defer in a hot loop
-			_ = f.Close()
-			wg.Done()
-			return err
-		})
-
-		return nil
+			return nil
+		}
 	})
 
-	wg.Wait()
-	return err
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		wg.Wait()
+		return err
+	}
 }
