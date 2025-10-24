@@ -12,6 +12,7 @@ import (
 
 	"github.com/h2non/filetype"
 	"github.com/mholt/archives"
+	"github.com/rs/zerolog"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
@@ -56,14 +57,21 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	// decide what to do with it.
 	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
-			// Only warn when the feature is enabled
+			var event *zerolog.Event
+
+			// Warn if the feature is enabled; else emit a trace log.
 			if s.MaxArchiveDepth != 0 {
-				logging.Warn().Str(
-					"path", s.FullPath(),
-				).Int(
-					"max_archive_depth", s.MaxArchiveDepth,
-				).Msg("skipping archive: exceeds max archive depth")
+				event = logging.Warn()
+			} else {
+				event = logging.Trace()
 			}
+
+			event.Str(
+				"path", s.FullPath(),
+			).Int(
+				"max_archive_depth", s.MaxArchiveDepth,
+			).Msg("skipping archive: exceeds max archive depth")
+
 			return nil
 		}
 		if extractor, ok := format.(archives.Extractor); ok {
