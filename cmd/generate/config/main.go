@@ -152,6 +152,8 @@ func main() {
 		rules.LinkedinClientSecret(),
 		rules.LobAPIToken(),
 		rules.LobPubAPIToken(),
+		rules.LookerClientID(),
+		rules.LookerClientSecret(),
 		rules.MailChimp(),
 		rules.MailGunPubAPIToken(),
 		rules.MailGunPrivateAPIToken(),
