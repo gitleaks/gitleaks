@@ -19,7 +19,6 @@
 package cmd
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -66,18 +65,16 @@ func runDetect(cmd *cobra.Command, args []string) {
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 	noGit := mustGetBoolFlag(cmd, "no-git")
 	fromPipe := mustGetBoolFlag(cmd, "pipe")
-
 	// determine what type of scan:
 	// - git: scan the history of the repo
 	// - no-git: scan files by treating the repo as a plain directory
 	var (
 		err      error
 		findings []report.Finding
-		ctx      = context.Background()
 	)
 	if noGit {
 		findings, err = detector.DetectSource(
-			ctx, &sources.Files{
+			cmd.Context(), &sources.Files{
 				Config:          &cfg,
 				FollowSymlinks:  detector.FollowSymlinks,
 				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
@@ -93,7 +90,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	} else if fromPipe {
 		findings, err = detector.DetectSource(
-			ctx, &sources.File{
+			cmd.Context(), &sources.File{
 				Content:         os.Stdin,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
@@ -111,7 +108,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		)
 
 		logOpts := mustGetStringFlag(cmd, "log-opts")
-		if gitCmd, err = sources.NewGitLogCmd(sourcePath, logOpts); err != nil {
+		if gitCmd, err = sources.NewGitLogCmdContext(cmd.Context(), sourcePath, logOpts); err != nil {
 			logging.Fatal().Err(err).Msg("could not create Git cmd")
 		}
 
@@ -120,10 +117,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 
 		findings, err = detector.DetectSource(
-			ctx, &sources.Git{
+			cmd.Context(), &sources.Git{
 				Cmd:             gitCmd,
 				Config:          &detector.Config,
-				Remote:          sources.NewRemoteInfo(scmPlatform, sourcePath),
+				Remote:          sources.NewRemoteInfoContext(cmd.Context(), scmPlatform, sourcePath),
 				Sema:            detector.Sema,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},

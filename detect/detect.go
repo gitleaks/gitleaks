@@ -113,6 +113,12 @@ type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
+	return NewDetectorContext(context.Background(), cfg)
+}
+
+// NewDetectorContext is the same as NewDetector but supports passing in a
+// context to use for timeouts
+func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
@@ -121,7 +127,7 @@ func NewDetector(cfg config.Config) *Detector {
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(context.Background(), 40),
+		Sema:           semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -240,7 +246,7 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 			})
 		}
 
-		for _, finding := range d.Detect(Fragment(fragment)) {
+		for _, finding := range d.DetectContext(ctx, Fragment(fragment)) {
 			d.AddFinding(finding)
 		}
 
@@ -262,6 +268,12 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	return d.DetectContext(context.Background(), fragment)
+}
+
+// DetectContext is the same as Detect but supports passing in a
+// context to use for timeouts
+func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
 		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
@@ -298,46 +310,57 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 	currentDecodeDepth := 0
 	decoder := codec.NewDecoder()
 
+ScanLoop:
 	for {
-		// build keyword map for prefiltering rules
-		keywords := make(map[string]bool)
-		normalizedRaw := strings.ToLower(currentRaw)
-		matches := d.prefilter.MatchString(normalizedRaw)
-		for _, m := range matches {
-			keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
-		}
-
-		for _, rule := range d.Config.Rules {
-			if len(rule.Keywords) == 0 {
-				// if no keywords are associated with the rule always scan the
-				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
-				continue
+		select {
+		case <-ctx.Done():
+			break ScanLoop
+		default:
+			// build keyword map for prefiltering rules
+			keywords := make(map[string]bool)
+			normalizedRaw := strings.ToLower(currentRaw)
+			matches := d.prefilter.MatchString(normalizedRaw)
+			for _, m := range matches {
+				keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 			}
 
-			// check if keywords are in the fragment
-			for _, k := range rule.Keywords {
-				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
-					break
+			for _, rule := range d.Config.Rules {
+				select {
+				case <-ctx.Done():
+					break ScanLoop
+				default:
+					if len(rule.Keywords) == 0 {
+						// if no keywords are associated with the rule always scan the
+						// fragment using the rule
+						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+						continue
+					}
+
+					// check if keywords are in the fragment
+					for _, k := range rule.Keywords {
+						if _, ok := keywords[strings.ToLower(k)]; ok {
+							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+							break
+						}
+					}
 				}
 			}
-		}
 
-		// increment the depth by 1 as we start our decoding pass
-		currentDecodeDepth++
+			// increment the depth by 1 as we start our decoding pass
+			currentDecodeDepth++
 
-		// stop the loop if we've hit our max decoding depth
-		if currentDecodeDepth > d.MaxDecodeDepth {
-			break
-		}
+			// stop the loop if we've hit our max decoding depth
+			if currentDecodeDepth > d.MaxDecodeDepth {
+				break ScanLoop
+			}
 
-		// decode the currentRaw for the next pass
-		currentRaw, encodedSegments = decoder.Decode(currentRaw, encodedSegments)
+			// decode the currentRaw for the next pass
+			currentRaw, encodedSegments = decoder.Decode(currentRaw, encodedSegments)
 
-		// stop the loop when there's nothing else to decode
-		if len(encodedSegments) == 0 {
-			break
+			// stop the loop when there's nothing else to decode
+			if len(encodedSegments) == 0 {
+				break ScanLoop
+			}
 		}
 	}
 
@@ -357,7 +380,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}()
 	)
 
-	if r.SkipReport == true && !fragment.InheritedFromFinding {
+	if r.SkipReport && !fragment.InheritedFromFinding {
 		return findings
 	}
 
