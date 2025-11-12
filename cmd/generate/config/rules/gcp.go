@@ -21,18 +21,7 @@ func GCPServiceAccount() *config.Rule {
 		Regex:       regexp.MustCompile(`(?s)\{\s*(?:(?:.*?"type"\s*:\s*"service_account".*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?")|(?:.*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?".*?"type"\s*:\s*"service_account")).*?\}`),
 		Entropy:     5,
 		Keywords: []string{
-			"type",
 			"service_account",
-			"project_id",
-			"private_key_id",
-			"private_key",
-			"client_email",
-			"client_id",
-			"auth_uri",
-			"token_uri",
-			"auth_provider_x509_cert_url",
-			"client_x509_cert_url",
-			"universe_domain",
 		},
 		Tags: []string{
 			"gcp",

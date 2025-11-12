@@ -614,20 +614,7 @@ id = "gcp-service-account-key"
 description = "Discovered a Google Cloud (GCP) service account key file, which comes bundled with a private key and service account information"
 regex = '''(?s)\{\s*(?:(?:.*?"type"\s*:\s*"service_account".*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?")|(?:.*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?".*?"type"\s*:\s*"service_account")).*?\}'''
 entropy = 5
-keywords = [
-    "type",
-    "service_account",
-    "project_id",
-    "private_key_id",
-    "private_key",
-    "client_email",
-    "client_id",
-    "auth_uri",
-    "token_uri",
-    "auth_provider_x509_cert_url",
-    "client_x509_cert_url",
-    "universe_domain",
-]
+keywords = ["service_account"]
 tags = [
     "gcp","google",
 ]
