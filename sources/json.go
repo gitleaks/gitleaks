@@ -17,15 +17,16 @@ import (
 
 var urlRegexp = regexp.MustCompile(`^https?:\/\/\S+$`)
 
-// JSON is a source for yielding fragments from strings in json data
+// JSON is a source for yielding fragments from strings in a json text
 // and from URLs contained in the data that match FetchURLPatterns
 type JSON struct {
 	Config           *config.Config
 	FetchURLPatterns []string
 	HTTPClient       *http.Client
+	HTTPHeader       http.Header
 	MaxArchiveDepth  int
 	Path             string
-	RawMessage       json.RawMessage
+	Text             json.RawMessage
 	data             any
 }
 
@@ -37,8 +38,8 @@ type jsonNode struct {
 // Fragments yields the fragments contained in this resource
 func (s *JSON) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	if s.data == nil {
-		if err := json.Unmarshal([]byte(s.RawMessage), &s.data); err != nil {
-			return fmt.Errorf("could not unmarshal json data: %w", err)
+		if err := json.Unmarshal([]byte(s.Text), &s.data); err != nil {
+			return fmt.Errorf("could not unmarshal json text: %w", err)
 		}
 	}
 
@@ -80,10 +81,10 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 			req, err := http.NewRequestWithContext(ctx, "GET", obj, nil)
 			if err != nil {
 				logging.Error().Err(err).Str("path", currentNode.path).Msg("json fetch url failed")
-
 				return nil
 			}
 
+			req.Header = s.HTTPHeader
 			resp, err := s.HTTPClient.Do(req)
 			if err != nil {
 				logging.Error().Err(err).Str("path", currentNode.path).Msg("json fetch url failed")
@@ -111,21 +112,21 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 
 			// Handle when the URL returns more json
 			if strings.HasPrefix(resp.Header.Get("Content-Type"), "application/json") {
-				data, err := io.ReadAll(resp.Body)
+				jsonText, err := io.ReadAll(resp.Body)
 				if err != nil {
 					logging.Error().Err(err).Str("path", currentNode.path).Msg("could not read fetched json response body")
 					return nil
 				}
 
-				jsonData := &JSON{
+				jsonSource := &JSON{
 					Config:          s.Config,
 					HTTPClient:      s.HTTPClient,
 					MaxArchiveDepth: s.MaxArchiveDepth,
 					Path:            currentNode.path,
-					RawMessage:      data,
+					Text:            jsonText,
 				}
 
-				return jsonData.Fragments(ctx, yield)
+				return jsonSource.Fragments(ctx, yield)
 			}
 
 			file := &File{

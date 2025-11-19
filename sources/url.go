@@ -16,7 +16,7 @@ type URL struct {
 	Config           *config.Config
 	FetchURLPatterns []string
 	HTTPClient       *http.Client
-	HTTPHeaders      map[string][]string
+	HTTPHeader       http.Header
 	HTTPMethod       string
 	MaxArchiveDepth  int
 	RawURL           string
@@ -42,10 +42,7 @@ func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 
-	if len(s.HTTPHeaders) > 0 {
-		req.Header = http.Header(s.HTTPHeaders)
-	}
-
+	req.Header = s.HTTPHeader
 	resp, err := s.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("HTTP error: %w", err)
@@ -62,7 +59,7 @@ func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	})()
 
 	if strings.HasPrefix(resp.Header.Get("Content-Type"), "application/json") {
-		data, err := io.ReadAll(resp.Body)
+		jsonText, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("could not read JSON response body: %w", err)
 		}
@@ -71,9 +68,10 @@ func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
 			Config:           s.Config,
 			FetchURLPatterns: s.FetchURLPatterns,
 			HTTPClient:       s.HTTPClient,
+			HTTPHeader:       s.HTTPHeader,
 			MaxArchiveDepth:  s.MaxArchiveDepth,
 			Path:             parsedURL.Path,
-			RawMessage:       data,
+			Text:             jsonText,
 		}
 
 		return json.Fragments(ctx, yield)

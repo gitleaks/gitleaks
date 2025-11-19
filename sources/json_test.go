@@ -41,7 +41,7 @@ func TestJSON(t *testing.T) {
 	ts.Start()
 	defer ts.Close()
 
-	data := `{
+	jsonText := `{
 			"foo": "bar",
 			"baz": ["bop", true, 1, 2.3, null, {"hello": "there"}],
 			"url": "` + ts.URL + `/hello",
@@ -51,13 +51,13 @@ func TestJSON(t *testing.T) {
 			"jsonurl":  "` + ts.URL + `/leak.json"
 	}`
 
-	jsonData := &JSON{
-		RawMessage:       json.RawMessage(data),
+	jsonSource := &JSON{
+		Text:             json.RawMessage(jsonText),
 		FetchURLPatterns: []string{"url", "nested/*", "invalid", "jsonurl"},
 	}
 
 	fragments := []Fragment{}
-	err := jsonData.Fragments(context.Background(), func(fragment Fragment, err error) error {
+	err := jsonSource.Fragments(context.Background(), func(fragment Fragment, err error) error {
 		fragments = append(fragments, fragment)
 
 		return nil
