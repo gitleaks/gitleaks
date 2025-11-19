@@ -30,7 +30,7 @@ lint:
 	golangci-lint run
 
 clean:
-	rm -rf profile
+	rm -rf profile gitleaks
 	find . -type f -name '*.got.*' -delete
 	find . -type f -name '*.out' -delete
 

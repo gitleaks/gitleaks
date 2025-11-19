@@ -488,5 +488,4 @@ func (c *Config) extend(extensionConfig Config) {
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
-	return
 }

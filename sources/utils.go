@@ -8,6 +8,15 @@ import (
 )
 
 var httpClient *http.Client
+var defaultUserAgent string
+
+func init() {
+	if version.Version == version.DefaultMsg {
+		defaultUserAgent = "Gitleaks/src-build"
+	} else {
+		defaultUserAgent = "Gitleaks/" + version.Version
+	}
+}
 
 type customRoundTripper struct {
 	rt http.RoundTripper
@@ -88,7 +97,10 @@ func NewHTTPClient() *http.Client {
 
 func (rt *customRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = req.Clone(req.Context())
-	req.Header.Set("User-Agent", "Gitleaks/"+version.Version)
+
+	if len(req.Header.Get("User-Agent")) == 0 {
+		req.Header.Set("User-Agent", defaultUserAgent)
+	}
 
 	return rt.rt.RoundTrip(req)
 }

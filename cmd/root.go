@@ -546,3 +546,11 @@ func mustGetStringFlag(cmd *cobra.Command, name string) string {
 	}
 	return value
 }
+
+func mustGetStringSliceFlag(cmd *cobra.Command, name string) []string {
+	value, err := cmd.Flags().GetStringSlice(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
+}

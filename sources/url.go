@@ -16,6 +16,8 @@ type URL struct {
 	Config           *config.Config
 	FetchURLPatterns []string
 	HTTPClient       *http.Client
+	HTTPHeaders      map[string][]string
+	HTTPMethod       string
 	MaxArchiveDepth  int
 	RawURL           string
 }
@@ -30,14 +32,23 @@ func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		s.HTTPClient = NewHTTPClient()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", s.RawURL, nil)
+	method := "GET"
+	if len(s.HTTPMethod) > 0 {
+		method = s.HTTPMethod
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, s.RawURL, nil)
 	if err != nil {
-		return fmt.Errorf("error creating HTTP GET request: %w", err)
+		return fmt.Errorf("error creating HTTP request: %w", err)
+	}
+
+	if len(s.HTTPHeaders) > 0 {
+		req.Header = http.Header(s.HTTPHeaders)
 	}
 
 	resp, err := s.HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("HTTP GET error: %w", err)
+		return fmt.Errorf("HTTP error: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
