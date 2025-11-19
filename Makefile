@@ -9,6 +9,10 @@ test-cover:
 	go test -v ./... --race $(COVER) $(PKG)
 	go tool cover -html=cover.out
 
+import:
+	goimports -local $(PKG) -l -w .
+	go mod tidy
+
 format:
 	go fmt ./...
 
