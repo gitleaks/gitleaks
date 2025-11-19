@@ -227,6 +227,7 @@ func main() {
 		rules.SquareSpaceAccessToken(),
 		rules.SumoLogicAccessID(),
 		rules.SumoLogicAccessToken(),
+		rules.Tailscale(),
 		rules.TeamsWebhook(),
 		rules.TelegramBotToken(),
 		rules.TravisCIAccessToken(),
