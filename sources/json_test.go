@@ -47,7 +47,7 @@ func TestJSON(t *testing.T) {
 			"url": "` + ts.URL + `/hello",
 			"nested": {"url": "` + ts.URL + `/hello.json"},
 			"skipped": "https://example.com",
-			"invalid": "https://raw.githubusercontent.com/leaktk/fake-leaks/main/this-url-doesnt-exist-8UaehX5b24MzZiaeJ428FK5R",
+			"invalid": "https://raw.githubusercontent.com/gitleaks/gitleaks/master/this-url-doesnt-exist-8UaehX5b24MzZiaeJ428FK5R",
 			"jsonurl":  "` + ts.URL + `/leak.json"
 	}`
 
@@ -59,7 +59,6 @@ func TestJSON(t *testing.T) {
 	fragments := []Fragment{}
 	err := jsonSource.Fragments(context.Background(), func(fragment Fragment, err error) error {
 		fragments = append(fragments, fragment)
-
 		return nil
 	})
 
@@ -71,7 +70,7 @@ func TestJSON(t *testing.T) {
 		"url":         "hello world",
 		"nested/url" + InnerPathSeparator + "hello": "world",
 		"skipped": "https://example.com",
-		"invalid": "https://raw.githubusercontent.com/leaktk/fake-leaks/main/this-url-doesnt-exist-8UaehX5b24MzZiaeJ428FK5R",
+		"invalid": "https://raw.githubusercontent.com/gitleaks/gitleaks/master/this-url-doesnt-exist-8UaehX5b24MzZiaeJ428FK5R",
 		"jsonurl" + InnerPathSeparator + "quay.io/auth": "SUPER SECRET",
 	}
 
@@ -79,6 +78,6 @@ func TestJSON(t *testing.T) {
 
 	for _, fragment := range fragments {
 		assert.Contains(t, expected, fragment.FilePath)
-		assert.Equal(t, expected[fragment.FilePath], fragment.Raw, "path=%s", fragment.FilePath)
+		assert.Equal(t, expected[fragment.FilePath], fragment.Raw, "path=%q", fragment.FilePath)
 	}
 }

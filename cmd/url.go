@@ -68,7 +68,7 @@ func runURL(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		// don't exit on error, just log it
-		logging.Error().Err(err).Msg("failed scan URL")
+		logging.Error().Err(err).Msg("failed to scan URL")
 	}
 
 	findingSummaryAndExit(detector, findings, exitCode, start, err)

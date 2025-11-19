@@ -51,7 +51,7 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 	case map[string]any:
 		for key, value := range obj {
 			childNode := jsonNode{
-				path:  s.JoinPath(currentNode.path, key),
+				path:  s.joinPath(currentNode.path, key),
 				value: value,
 			}
 			if err := s.walkAndYield(ctx, childNode, yield); err != nil {
@@ -63,7 +63,7 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 	case []any:
 		for i, value := range obj {
 			childNode := jsonNode{
-				path:  s.JoinPath(currentNode.path, strconv.Itoa(i)),
+				path:  s.joinPath(currentNode.path, strconv.Itoa(i)),
 				value: value,
 			}
 			if err := s.walkAndYield(ctx, childNode, yield); err != nil {
@@ -74,6 +74,8 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 		return nil
 	case string:
 		if s.shouldFetchURL(currentNode.path) && urlRegexp.MatchString(obj) {
+			logging.Info().Str("path", currentNode.path).Str("method", "GET").Str("url", obj).Msg("fetching URL")
+
 			if s.HTTPClient == nil {
 				s.HTTPClient = NewHTTPClient()
 			}
@@ -88,12 +90,12 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 			resp, err := s.HTTPClient.Do(req)
 			if err != nil {
 				logging.Error().Err(err).Str("path", currentNode.path).Msg("json fetch url failed")
-
 				return nil
 			}
 
 			if resp.StatusCode != http.StatusOK {
 				logging.Error().Int("status_code", resp.StatusCode).Str("path", currentNode.path).Msg("json fetch url failed with an unexpected status code")
+				logging.Trace().Str("path", currentNode.path).Msg("converting response to a file source")
 				file := &File{
 					Config:          s.Config,
 					Content:         strings.NewReader(obj),
@@ -118,6 +120,7 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 					return nil
 				}
 
+				logging.Trace().Str("path", currentNode.path).Msg("converting response to a JSON source")
 				jsonSource := &JSON{
 					Config:          s.Config,
 					HTTPClient:      s.HTTPClient,
@@ -129,17 +132,21 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 				return jsonSource.Fragments(ctx, yield)
 			}
 
+			logging.Trace().Str("path", currentNode.path).Msg("converting value to a file source")
 			file := &File{
-				Path:    currentNode.path,
-				Content: resp.Body,
+				Content:         resp.Body,
+				MaxArchiveDepth: s.MaxArchiveDepth,
+				Path:            currentNode.path,
 			}
 
 			return file.Fragments(ctx, yield)
 		}
 
+		logging.Trace().Str("path", currentNode.path).Msg("converting value to a file source")
 		file := &File{
-			Path:    currentNode.path,
-			Content: strings.NewReader(obj),
+			Content:         strings.NewReader(obj),
+			MaxArchiveDepth: s.MaxArchiveDepth,
+			Path:            currentNode.path,
 		}
 
 		return file.Fragments(ctx, yield)
@@ -148,12 +155,15 @@ func (s *JSON) walkAndYield(ctx context.Context, currentNode jsonNode, yield Fra
 	}
 }
 
-func (s *JSON) JoinPath(root, child string) string {
-	if len(s.Path) > 0 && s.Path == root {
+func (s *JSON) joinPath(root, child string) string {
+	switch root {
+	case "":
+		return child
+	case s.Path:
 		return root + InnerPathSeparator + child
+	default:
+		return filepath.Clean(root + "/" + child)
 	}
-
-	return filepath.Join(root, child)
 }
 
 func (s *JSON) shouldFetchURL(path string) bool {
@@ -162,7 +172,7 @@ func (s *JSON) shouldFetchURL(path string) bool {
 	}
 
 	for _, pattern := range s.FetchURLPatterns {
-		if PathGlobMatch(pattern, path) {
+		if pathGlobMatch(pattern, path) {
 			return true
 		}
 	}

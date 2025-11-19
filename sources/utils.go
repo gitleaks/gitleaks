@@ -3,6 +3,7 @@ package sources
 import (
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/version"
 )
@@ -22,31 +23,35 @@ type customRoundTripper struct {
 	rt http.RoundTripper
 }
 
-func PathSplitAll(path string) []string {
-	prefix, part := filepath.Split(path)
+// pathSplitAll takes a path with '/' and '!' separators and splits it into its
+// components
+func pathSplitAll(path string) []string {
+	path = filepath.ToSlash(path)
+	seps := "/" + InnerPathSeparator
+	components := []string{}
+	size := len(path)
+	start := 0
 
-	if prefix == "" || prefix == "/" {
-		if len(part) > 0 {
-			return []string{part}
+	for i, c := range path {
+		if strings.ContainsRune(seps, c) {
+			if i-start > 0 {
+				components = append(components, path[start:i])
+			}
+			start = i + 1
+		} else if i == size-1 && size-start > 0 {
+			components = append(components, path[start:size])
 		}
-
-		return []string{}
 	}
 
-	if len(part) > 0 {
-		return append(PathSplitAll(filepath.Clean(prefix)), part)
-	}
-
-	return PathSplitAll(filepath.Clean(prefix))
+	return components
 }
 
-// PathGlobMatch does basic glob matching. It is similar to filepath.Match except
+// pathGlobMatch does basic glob matching. It is similar to filepath.Match except
 // it currently only supports wildcards (*) and recursive wildcards (**), which
 // is not supported by filepath.Match
-func PathGlobMatch(pattern, path string) bool {
-	patternParts := PathSplitAll(pattern)
-	pathParts := PathSplitAll(path)
-
+func pathGlobMatch(pattern, path string) bool {
+	patternParts := pathSplitAll(pattern)
+	pathParts := pathSplitAll(path)
 	return matchParts(patternParts, pathParts)
 }
 
