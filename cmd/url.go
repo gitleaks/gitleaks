@@ -16,7 +16,7 @@ func init() {
 	rootCmd.AddCommand(urlCmd)
 	urlCmd.Flags().StringP("http-method", "X", "GET", "HTTP method used for the request")
 	urlCmd.Flags().StringSliceP("http-header", "H", []string{}, "HTTP header to pass along with the request (format 'field: value')")
-	urlCmd.Flags().StringSlice("fetch-url-glob", []string{}, "scan URLs in 'application/json' responses matching these paths in the JSON (run 'gitleaks help json' for more info)")
+	urlCmd.Flags().StringSlice("fetch-url-glob", []string{}, "(experimental) scan URLs in 'application/json' responses matching these paths in the JSON (run 'gitleaks help json' for more info)")
 }
 
 var urlCmd = &cobra.Command{
@@ -52,7 +52,7 @@ func runURL(cmd *cobra.Command, args []string) {
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 	httpMethod := mustGetStringFlag(cmd, "http-method")
 	httpHeaderArgs := mustGetStringSliceFlag(cmd, "http-header")
-	fetchURLGlobs := mustGetStringSliceFlag(cmd, "fetch-url-glob")
+	fetchURLGlobs := mustGetExperimentalStringSliceFlag(cmd, "fetch-url-glob")
 
 	findings, err := detector.DetectSource(
 		cmd.Context(),
