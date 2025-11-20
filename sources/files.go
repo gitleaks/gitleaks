@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/fatih/semgroup"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )

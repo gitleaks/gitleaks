@@ -19,7 +19,7 @@ import (
 )
 
 const defaultBufferSize = 100 * 1_000 // 100kb
-const InnerPathSeparator = "!"
+const InnerPathSeparator = "!"        // should be a single character
 
 type seekReaderAt interface {
 	io.ReaderAt
