@@ -16,7 +16,7 @@ func init() {
 	rootCmd.AddCommand(urlCmd)
 	urlCmd.Flags().StringP("http-method", "X", "GET", "HTTP method used for the request")
 	urlCmd.Flags().StringSliceP("http-header", "H", []string{}, "HTTP header to pass along with the request (format 'field: value')")
-	urlCmd.Flags().StringSlice("fetch-url-pattern", []string{}, "scan URLs in 'application/json' responses matching these paths in the JSON (run 'gitleaks help json' for more info)")
+	urlCmd.Flags().StringSlice("fetch-url-glob", []string{}, "scan URLs in 'application/json' responses matching these paths in the JSON (run 'gitleaks help json' for more info)")
 }
 
 var urlCmd = &cobra.Command{
@@ -52,17 +52,17 @@ func runURL(cmd *cobra.Command, args []string) {
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 	httpMethod := mustGetStringFlag(cmd, "http-method")
 	httpHeaderArgs := mustGetStringSliceFlag(cmd, "http-header")
-	fetchURLPatterns := mustGetStringSliceFlag(cmd, "fetch-url-pattern")
+	fetchURLGlobs := mustGetStringSliceFlag(cmd, "fetch-url-glob")
 
 	findings, err := detector.DetectSource(
 		cmd.Context(),
 		&sources.URL{
-			Config:           &cfg,
-			FetchURLPatterns: fetchURLPatterns,
-			MaxArchiveDepth:  detector.MaxArchiveDepth,
-			HTTPMethod:       httpMethod,
-			HTTPHeader:       parseHTTPHeaderArgs(httpHeaderArgs),
-			RawURL:           rawURL,
+			Config:          &cfg,
+			FetchURLGlobs:   fetchURLGlobs,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
+			HTTPMethod:      httpMethod,
+			HTTPHeader:      parseHTTPHeaderArgs(httpHeaderArgs),
+			RawURL:          rawURL,
 		},
 	)
 

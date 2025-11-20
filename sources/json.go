@@ -18,16 +18,16 @@ import (
 var urlRegexp = regexp.MustCompile(`^https?:\/\/\S+$`)
 
 // JSON is a source for yielding fragments from strings in a json text
-// and from URLs contained in the data that match FetchURLPatterns
+// and from URLs contained in the data that match FetchURLGlobs
 type JSON struct {
-	Config           *config.Config
-	FetchURLPatterns []string
-	HTTPClient       *http.Client
-	HTTPHeader       http.Header
-	MaxArchiveDepth  int
-	Path             string
-	Text             json.RawMessage
-	data             any
+	Config          *config.Config
+	FetchURLGlobs   []string
+	HTTPClient      *http.Client
+	HTTPHeader      http.Header
+	MaxArchiveDepth int
+	Path            string
+	Text            json.RawMessage
+	data            any
 }
 
 type jsonNode struct {
@@ -167,12 +167,12 @@ func (s *JSON) joinPath(root, child string) string {
 }
 
 func (s *JSON) shouldFetchURL(path string) bool {
-	if len(s.FetchURLPatterns) == 0 {
+	if len(s.FetchURLGlobs) == 0 {
 		return false
 	}
 
-	for _, pattern := range s.FetchURLPatterns {
-		if pathGlobMatch(pattern, path) {
+	for _, glob := range s.FetchURLGlobs {
+		if pathGlobMatch(glob, path) {
 			return true
 		}
 	}

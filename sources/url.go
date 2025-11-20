@@ -13,13 +13,13 @@ import (
 )
 
 type URL struct {
-	Config           *config.Config
-	FetchURLPatterns []string
-	HTTPClient       *http.Client
-	HTTPHeader       http.Header
-	HTTPMethod       string
-	MaxArchiveDepth  int
-	RawURL           string
+	Config          *config.Config
+	FetchURLGlobs   []string
+	HTTPClient      *http.Client
+	HTTPHeader      http.Header
+	HTTPMethod      string
+	MaxArchiveDepth int
+	RawURL          string
 }
 
 func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
@@ -68,13 +68,13 @@ func (s *URL) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		}
 
 		json := &JSON{
-			Config:           s.Config,
-			FetchURLPatterns: s.FetchURLPatterns,
-			HTTPClient:       s.HTTPClient,
-			HTTPHeader:       s.HTTPHeader,
-			MaxArchiveDepth:  s.MaxArchiveDepth,
-			Path:             parsedURL.Path,
-			Text:             jsonText,
+			Config:          s.Config,
+			FetchURLGlobs:   s.FetchURLGlobs,
+			HTTPClient:      s.HTTPClient,
+			HTTPHeader:      s.HTTPHeader,
+			MaxArchiveDepth: s.MaxArchiveDepth,
+			Path:            parsedURL.Path,
+			Text:            jsonText,
 		}
 
 		return json.Fragments(ctx, yield)

@@ -49,46 +49,45 @@ func pathSplitAll(path string) []string {
 // pathGlobMatch does basic glob matching. It is similar to filepath.Match except
 // it currently only supports wildcards (*) and recursive wildcards (**), which
 // is not supported by filepath.Match
-func pathGlobMatch(pattern, path string) bool {
-	patternParts := pathSplitAll(pattern)
+func pathGlobMatch(glob, path string) bool {
+	globParts := pathSplitAll(glob)
 	pathParts := pathSplitAll(path)
-	return matchParts(patternParts, pathParts)
+	return matchParts(globParts, pathParts)
 }
 
-func matchParts(patternParts, pathParts []string) bool {
-	pIdx, ptIdx := 0, 0
+func matchParts(globParts, pathParts []string) bool {
+	globIndex, pathIndex := 0, 0
 
-	for pIdx < len(patternParts) && ptIdx < len(pathParts) {
-		switch patternParts[pIdx] {
+	for globIndex < len(globParts) && pathIndex < len(pathParts) {
+		switch globParts[globIndex] {
 		case "*": // Match a single segment
-			// Move to next part of both the pattern and path
-			pIdx++
-			ptIdx++
+			// Move to next part of both the glob and path
+			globIndex++
+			pathIndex++
 		case "**": // Match zero or more segments
-			// If this is the last pattern part, we match the rest of the path
-			if pIdx == len(patternParts)-1 {
+			// If this is the last glob part, we match the rest of the path
+			if globIndex == len(globParts)-1 {
 				return true
 			}
 			// Try matching subsequent parts
-			for i := ptIdx; i <= len(pathParts); i++ {
-				if matchParts(patternParts[pIdx+1:], pathParts[i:]) {
+			for i := pathIndex; i <= len(pathParts); i++ {
+				if matchParts(globParts[globIndex+1:], pathParts[i:]) {
 					return true
 				}
 			}
-
 			return false
 		default:
 			// Exact match required for this segment
-			if patternParts[pIdx] != pathParts[ptIdx] {
+			if globParts[globIndex] != pathParts[pathIndex] {
 				return false
 			}
-			pIdx++
-			ptIdx++
+			globIndex++
+			pathIndex++
 		}
 	}
 
-	// Both pattern and path should be fully consumed for a match
-	return pIdx == len(patternParts) && ptIdx == len(pathParts)
+	// Both glob and path should be fully consumed for a match
+	return globIndex == len(globParts) && pathIndex == len(pathParts)
 }
 
 // NewHTTPClient creates an http client with preferred configuration

@@ -11,7 +11,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
-const fetchURLPatternDescription = `
+const fetchURLGlobDescription = `
 scan URL values in the JSON in matching paths:
 - the full value must be a URL (i.e. URLs located just somewhere in a string will be skipped)
 - currently only HTTP(S) URLs and GET requests are supported
@@ -23,8 +23,8 @@ scan URL values in the JSON in matching paths:
 
 func init() {
 	rootCmd.AddCommand(jsonCmd)
-	jsonCmd.Flags().StringSliceP("http-header", "H", []string{}, "HTTP header used in fetch-url-pattern requests (format 'Header: value')")
-	jsonCmd.Flags().StringSlice("fetch-url-pattern", []string{}, fetchURLPatternDescription)
+	jsonCmd.Flags().StringSliceP("http-header", "H", []string{}, "HTTP header used in fetch-url-glob requests (format 'field: value')")
+	jsonCmd.Flags().StringSlice("fetch-url-glob", []string{}, fetchURLGlobDescription)
 }
 
 var jsonCmd = &cobra.Command{
@@ -49,7 +49,7 @@ func runJSON(cmd *cobra.Command, args []string) {
 	// parse flags
 	exitCode := mustGetIntFlag(cmd, "exit-code")
 	httpHeaderArgs := mustGetStringSliceFlag(cmd, "http-header")
-	fetchURLPatterns := mustGetStringSliceFlag(cmd, "fetch-url-pattern")
+	fetchURLGlobs := mustGetStringSliceFlag(cmd, "fetch-url-glob")
 
 	jsonText, err := io.ReadAll(os.Stdin)
 	if err != nil {
@@ -59,11 +59,11 @@ func runJSON(cmd *cobra.Command, args []string) {
 	findings, err := detector.DetectSource(
 		cmd.Context(),
 		&sources.JSON{
-			Config:           &cfg,
-			FetchURLPatterns: fetchURLPatterns,
-			MaxArchiveDepth:  detector.MaxArchiveDepth,
-			HTTPHeader:       parseHTTPHeaderArgs(httpHeaderArgs),
-			Text:             jsonText,
+			Config:          &cfg,
+			FetchURLGlobs:   fetchURLGlobs,
+			MaxArchiveDepth: detector.MaxArchiveDepth,
+			HTTPHeader:      parseHTTPHeaderArgs(httpHeaderArgs),
+			Text:            jsonText,
 		},
 	)
 

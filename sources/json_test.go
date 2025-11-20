@@ -52,8 +52,8 @@ func TestJSON(t *testing.T) {
 	}`
 
 	jsonSource := &JSON{
-		Text:             json.RawMessage(jsonText),
-		FetchURLPatterns: []string{"url", "nested/*", "invalid", "jsonurl"},
+		Text:          json.RawMessage(jsonText),
+		FetchURLGlobs: []string{"url", "nested/*", "invalid", "jsonurl"},
 	}
 
 	fragments := []Fragment{}
