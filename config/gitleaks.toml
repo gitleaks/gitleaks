@@ -379,6 +379,11 @@ regexes = [
 ]
 
 [[rules]]
+id = "database-password"
+description = "Discovered a possible database credentials."
+regex = '''[\w.-]{0,50}?(?i:[\w.-]{0,50}?(?:db_passw(?:or)?d|database_passw(?:or)?d|pwd)(?:[ \t\w.-]{0,20})[\s'"]{0,3})(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9:;<@=},!$?^]{1,100})(?:[\x60'"\s;]|\\[nr]|$)'''
+
+[[rules]]
 id = "databricks-api-token"
 description = "Uncovered a Databricks API token, which may compromise big data analytics platforms and sensitive data processing."
 regex = '''\b(dapi[a-f0-9]{32}(?:-\d)?)(?:[\x60'"\s;]|\\[nr]|$)'''
