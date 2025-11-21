@@ -635,6 +635,16 @@ regexes = [
 ]
 
 [[rules]]
+id = "gcp-service-account-key"
+description = "Discovered a Google Cloud (GCP) service account key file, which comes bundled with a private key and service account information"
+regex = '''(?s)\{\s*(?:(?:.*?"type"\s*:\s*"service_account".*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?")|(?:.*?"private_key"\s*:\s*"-----BEGIN PRIVATE KEY-----[\s\S-]{64,}?-----END PRIVATE KEY-----[\s\S]*?".*?"type"\s*:\s*"service_account")).*?\}'''
+entropy = 5
+keywords = ["service_account"]
+tags = [
+    "gcp","google",
+]
+
+[[rules]]
 id = "generic-api-key"
 description = "Detected a Generic API Key, potentially exposing access to various services and sensitive operations."
 regex = '''(?i)[\w.-]{0,50}?(?:access|auth|(?-i:[Aa]pi|API)|credential|creds|key|passw(?:or)?d|secret|token)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2786,6 +2796,16 @@ id = "private-key"
 description = "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
 regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]{64,}?KEY(?: BLOCK)?-----'''
 keywords = ["-----begin"]
+[[rules.allowlists]]
+description = "Ignore private keys within GCP service account JSON files to prevent duplicate findings"
+regexTarget = "line"
+regexes = [
+    '''.*"type":\s*"service_account".*''',
+    '''.*"private_key":\s*"-----BEGIN PRIVATE KEY-----.*''',
+    '''.*"project_id":\s*"[a-z][-a-z0-9]{4,28}[a-z0-9]{1}".*''',
+    '''.*"private_key_id":\s*"[^"]*".*''',
+    '''.*"client_id":\s*"[0-9]+".*''',
+]
 
 [[rules]]
 id = "privateai-api-token"
