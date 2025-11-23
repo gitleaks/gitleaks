@@ -2784,8 +2784,14 @@ keywords = ["pnu_"]
 [[rules]]
 id = "private-key"
 description = "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption."
-regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]{64,}?KEY(?: BLOCK)?-----'''
+regex = '''(?i)-----BEGIN[ \w-]{0,100}PRIVATE KEY(?: BLOCK)?-----(?:(?:\\r|\r|\\n|\n){0,5}.*?){0,5}?(?:(?:\\r|\\n|[ \t\r\n]){1,5}.*?[a-z0-9/+]{64,}.*?)*?(?:(?:\\r|\\n|[ \t\r\n]){1,5}.*?[a-z0-9/+]{4,}={0,3}.*?)(?:(?:\\r|\r|\\n|\n){0,5}.*?){0,5}?-----[ \t]{0,5}END[ \w-]{0,100}KEY(?: BLOCK)?[ \t]{0,5}-----'''
+entropy = 3.5
 keywords = ["-----begin"]
+[[rules.allowlists]]
+regexes = [
+    '''(?i)-----BEGIN[ \w-]{0,100}PRIVATE KEY(?: BLOCK)?-----.{0,50}-----[ \t]{0,5}END[ \w-]{0,100}KEY(?: BLOCK)?[ \t]{0,5}-----''',
+    '''(?i)-----BEGIN[ \w-]{0,100}PRIVATE KEY(?: BLOCK)?-----(?:.|\s){0,50}?-----BEGIN''',
+]
 
 [[rules]]
 id = "privateai-api-token"
