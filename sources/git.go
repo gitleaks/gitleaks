@@ -63,6 +63,12 @@ func (br *blobReader) Close() error {
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
 func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
+	return NewGitLogCmdContext(context.Background(), source, logOpts)
+}
+
+// NewGitLogCmdContext is the same as NewGitLogCmd but supports passing in a
+// context to use for timeouts
+func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
@@ -82,9 +88,9 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 		}
 
 		args = append(args, userArgs...)
-		cmd = exec.Command("git", args...)
+		cmd = exec.CommandContext(ctx, "git", args...)
 	} else {
-		cmd = exec.Command("git", "-C", sourceClean, "log", "-p", "-U0",
+		cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "log", "-p", "-U0",
 			"--full-history", "--all", "--diff-filter=tuxdb")
 	}
 
@@ -122,11 +128,17 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 // Caller should read everything from channels until receiving a signal about their closure and call
 // the `func (*DiffFilesCmd) Wait()` error in order to release resources.
 func NewGitDiffCmd(source string, staged bool) (*GitCmd, error) {
+	return NewGitDiffCmdContext(context.Background(), source, staged)
+}
+
+// NewGitDiffCmdContext is the same as NewGitDiffCmd but supports passing in a
+// context to use for timeouts
+func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
-	cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
+	cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff", ".")
 	if staged {
-		cmd = exec.Command("git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
+		cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
 	}
 	logging.Debug().Msgf("executing: %s", cmd.String())
@@ -177,13 +189,24 @@ func (c *GitCmd) Wait() error {
 	return c.cmd.Wait()
 }
 
+// String displays the command used for GitCmd
+func (c *GitCmd) String() string {
+	return c.cmd.String()
+}
+
 // NewBlobReader returns an io.ReadCloser that can be used to read a blob
 // within the git repo used to create the GitCmd.
 //
 // The caller is responsible for closing the reader.
 func (c *GitCmd) NewBlobReader(commit, path string) (io.ReadCloser, error) {
+	return c.NewBlobReaderContext(context.Background(), commit, path)
+}
+
+// NewBlobReaderContext is the same as NewBlobReader but supports passing in a
+// context to use for timeouts
+func (c *GitCmd) NewBlobReaderContext(ctx context.Context, commit, path string) (io.ReadCloser, error) {
 	gitArgs := []string{"-C", c.repoPath, "cat-file", "blob", commit + ":" + path}
-	cmd := exec.Command("git", gitArgs...)
+	cmd := exec.CommandContext(ctx, "git", gitArgs...)
 	cmd.Stderr = io.Discard
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -275,7 +298,9 @@ type CommitInfo struct {
 // Fragments yields fragments from a git repo
 func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	defer func() {
-		_ = s.Cmd.Wait()
+		if err := s.Cmd.Wait(); err != nil {
+			logging.Debug().Err(err).Str("cmd", s.Cmd.String()).Msg("command aborted")
+		}
 	}()
 
 	var (
@@ -287,6 +312,8 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
 	for diffFilesCh != nil || errCh != nil {
 		select {
+		case <-ctx.Done():
+			return ctx.Err()
 		case gitdiffFile, open := <-diffFilesCh:
 			if !open {
 				diffFilesCh = nil
@@ -336,7 +363,7 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				defer wg.Done()
 
 				if yieldAsArchive {
-					blob, err := s.Cmd.NewBlobReader(commitSHA, gitdiffFile.NewName)
+					blob, err := s.Cmd.NewBlobReaderContext(ctx, commitSHA, gitdiffFile.NewName)
 					if err != nil {
 						logging.Error().Err(err).Msg("could not read archive blob")
 						return nil
@@ -394,17 +421,28 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		}
 	}
 
-	wg.Wait()
-	return nil
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		wg.Wait()
+		return nil
+	}
 }
 
 // NewRemoteInfo builds a new RemoteInfo for generating finding links
 func NewRemoteInfo(platform scm.Platform, source string) *RemoteInfo {
+	return NewRemoteInfoContext(context.Background(), platform, source)
+}
+
+// NewRemoteInfoContext is the same as NewRemoteInfo but supports passing in a
+// context to use for timeouts
+func NewRemoteInfoContext(ctx context.Context, platform scm.Platform, source string) *RemoteInfo {
 	if platform == scm.NoPlatform {
 		return &RemoteInfo{Platform: platform}
 	}
 
-	remoteUrl, err := getRemoteUrl(source)
+	remoteUrl, err := getRemoteUrl(ctx, source)
 	if err != nil {
 		if strings.Contains(err.Error(), "No remote configured") {
 			logging.Debug().Msg("skipping finding links: repository has no configured remote.")
@@ -440,11 +478,11 @@ End:
 	}
 }
 
-var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):([\w/.-]+?)(?:\.git)?$`)
+var sshUrlpat = regexp.MustCompile(`^git@([a-zA-Z0-9.-]+):(?:\d{1,5}/)?([\w/.-]+?)(?:\.git)?$`)
 
-func getRemoteUrl(source string) (*url.URL, error) {
+func getRemoteUrl(ctx context.Context, source string) (*url.URL, error) {
 	// This will return the first remote — typically, "origin".
-	cmd := exec.Command("git", "ls-remote", "--quiet", "--get-url")
+	cmd := exec.CommandContext(ctx, "git", "ls-remote", "--quiet", "--get-url")
 	if source != "." {
 		cmd.Dir = source
 	}

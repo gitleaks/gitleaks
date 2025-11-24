@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,6 +22,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
 
 const banner = `
@@ -44,7 +46,18 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "gitleaks",
 		Short:   "Gitleaks scans code, past or present, for secrets",
-		Version: Version,
+		Version: version.Version,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Set the timeout for all the commands
+			if timeout, err := cmd.Flags().GetInt("timeout"); err != nil {
+				return err
+			} else if timeout > 0 {
+				ctx, cancel := context.WithTimeout(cmd.Context(), time.Duration(timeout)*time.Second)
+				cmd.SetContext(ctx)
+				cobra.OnFinalize(cancel)
+			}
+			return nil
+		},
 	}
 
 	// diagnostics manager is global to ensure it can be started before a scan begins
@@ -63,7 +76,7 @@ func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
-	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
+	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file (use \"-\" for stdout)")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "", "output format (json, csv, junit, sarif, template)")
 	rootCmd.PersistentFlags().StringP("report-template", "", "", "template file used to generate the report (implies --report-format=template)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
@@ -79,7 +92,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 0, "allow recursive decoding up to this depth (default \"0\", no decoding is done)")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
-	rootCmd.PersistentFlags().BoolP("experimental-optimizations", "", false, "enables experimental allowlist optimizations, increasing performance at the cost of startup time")
+	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
 
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
@@ -277,11 +290,7 @@ func Config(cmd *cobra.Command) config.Config {
 	if err := viper.Unmarshal(&vc); err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
 	}
-	// set experimental feature flag(s)
-	if mustGetBoolFlag(cmd, "experimental-optimizations") {
-		logging.Warn().Msgf("using experimental allowlist optimizations, updates may contain breaking changes!")
-		vc.EnableExperimentalAllowlistOptimizations = true
-	}
+
 	cfg, err := vc.Translate()
 	if err != nil {
 		logging.Fatal().Err(err).Msg("Failed to load config")
@@ -295,7 +304,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	var err error
 
 	// Setup common detector
-	detector := detect.NewDetector(cfg)
+	detector := detect.NewDetectorContext(cmd.Context(), cfg)
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
 		logging.Fatal().Err(err).Send()

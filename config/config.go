@@ -7,10 +7,12 @@ import (
 	"sort"
 	"strings"
 
+	gv "github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
 	"github.com/zricethezav/gitleaks/v8/regexp"
+	"github.com/zricethezav/gitleaks/v8/version"
 )
 
 var (
@@ -43,19 +45,27 @@ type ViperConfig struct {
 
 		// Deprecated: this is a shim for backwards-compatibility.
 		// TODO: Remove this in 9.x.
-		AllowList  *viperRuleAllowlist
+		AllowList *viperRuleAllowlist
+
 		Allowlists []*viperRuleAllowlist
+		Required   []*viperRequired
+		SkipReport bool
 	}
 	// Deprecated: this is a shim for backwards-compatibility.
 	// TODO: Remove this in 9.x.
-	AllowList  *viperGlobalAllowlist
+	AllowList *viperGlobalAllowlist
+
 	Allowlists []*viperGlobalAllowlist
 
-	// EnableExperimentalAllowlistOptimizations enables a preview feature.
-	// See: https://github.com/gitleaks/gitleaks/pull/1731
-	//
-	// NOTE: This flag may be removed in the future.
-	EnableExperimentalAllowlistOptimizations bool
+	MinVersion string
+
+	configPath string
+}
+
+type viperRequired struct {
+	ID            string
+	WithinLines   *int `mapstructure:"withinLines"`
+	WithinColumns *int `mapstructure:"withinColumns"`
 }
 
 type viperRuleAllowlist struct {
@@ -84,6 +94,7 @@ type Config struct {
 	// used to keep sarif results consistent
 	OrderedRules []string
 	Allowlists   []*Allowlist
+	MinVersion   string
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -136,6 +147,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			Path:        pathPat,
 			Keywords:    vr.Keywords,
 			Tags:        vr.Tags,
+			SkipReport:  vr.SkipReport,
 		}
 
 		// Parse the rule allowlists, including the older format for backwards compatibility.
@@ -153,8 +165,32 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			}
 			cr.Allowlists = append(cr.Allowlists, allowlist)
 		}
+
+		for _, r := range vr.Required {
+			if r.ID == "" {
+				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID is empty", cr.RuleID)
+			}
+			requiredRule := Required{
+				RuleID:        r.ID,
+				WithinLines:   r.WithinLines,
+				WithinColumns: r.WithinColumns,
+				// Distance: r.Distance,
+			}
+			cr.RequiredRules = append(cr.RequiredRules, &requiredRule)
+		}
+
 		orderedRules = append(orderedRules, cr.RuleID)
 		rulesMap[cr.RuleID] = cr
+	}
+
+	// after all the rules have been processed, let's ensure the required rules
+	// actually exist.
+	for _, r := range rulesMap {
+		for _, rr := range r.RequiredRules {
+			if _, ok := rulesMap[rr.RuleID]; !ok {
+				return Config{}, fmt.Errorf("%s: [[rules.required]] rule ID '%s' does not exist", r.RuleID, rr.RuleID)
+			}
+		}
 	}
 
 	// Assemble the config.
@@ -165,7 +201,22 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Rules:        rulesMap,
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
+		MinVersion:   vc.MinVersion,
 	}
+
+	if extendDepth > 0 {
+		// annoying hack to set the current config with the extended path
+		// since if extendDepth > 0 we are operating an extended config.
+		c.Path = vc.configPath
+	} else {
+		// I don't love this
+		c.Path = viper.ConfigFileUsed()
+	}
+
+	if err := validateMinVersion(c.MinVersion, c.Path); err != nil {
+		return Config{}, err
+	}
+
 	// Parse the config allowlists, including the older format for backwards compatibility.
 	if vc.AllowList != nil {
 		// TODO: Remove this in v9.
@@ -190,7 +241,8 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		}
 	}
 
-	if maxExtendDepth != extendDepth {
+	currentExtendDepth := extendDepth
+	if maxExtendDepth != currentExtendDepth {
 		// disallow both usedefault and path from being set
 		if c.Extend.Path != "" && c.Extend.UseDefault {
 			return Config{}, errors.New("unable to load config due to extend.path and extend.useDefault being set")
@@ -207,7 +259,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	// Validate the rules after everything has been assembled (including extended configs).
-	if extendDepth == 0 {
+	if currentExtendDepth == 0 {
 		for _, rule := range c.Rules {
 			if err := rule.Validate(); err != nil {
 				return Config{}, err
@@ -226,6 +278,41 @@ func (vc *ViperConfig) Translate() (Config, error) {
 	}
 
 	return c, nil
+}
+
+func validateMinVersion(minVer string, configPath string) error {
+	if minVer == "" {
+		logging.Debug().Str("config path", configPath).
+			Msg("no minVersion specified in config... consider adding minVersion to ensure compatibility.")
+		return nil
+	}
+
+	if version.Version == version.DefaultMsg {
+		logging.Debug().
+			Str("required", minVer).
+			Msg("dev build, skipping config version check.")
+		return nil
+	}
+
+	minSemVer, err := gv.NewSemver(minVer)
+	if err != nil {
+		return fmt.Errorf("invalid minVersion '%s': %w", minVer, err)
+	}
+
+	currentSemVer, err := gv.NewSemver(version.Version)
+	if err != nil {
+		return fmt.Errorf("unable to parse current version: %w", err)
+	}
+
+	if currentSemVer.LessThan(minSemVer) {
+		logging.Warn().
+			Str("required", minVer).
+			Str("current", version.Version).
+			Str("config path", configPath).
+			Msg("config requires a newer Gitleaks version...")
+	}
+
+	return nil
 }
 
 func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
@@ -261,14 +348,13 @@ func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error)
 	}
 
 	allowlist := &Allowlist{
-		Description:                     a.Description,
-		MatchCondition:                  matchCondition,
-		Commits:                         a.Commits,
-		Paths:                           allowlistPaths,
-		RegexTarget:                     regexTarget,
-		Regexes:                         allowlistRegexes,
-		StopWords:                       a.StopWords,
-		EnableExperimentalOptimizations: vc.EnableExperimentalAllowlistOptimizations,
+		Description:    a.Description,
+		MatchCondition: matchCondition,
+		Commits:        a.Commits,
+		Paths:          allowlistPaths,
+		RegexTarget:    regexTarget,
+		Regexes:        allowlistRegexes,
+		StopWords:      a.StopWords,
 	}
 	if err := allowlist.Validate(); err != nil {
 		return nil, err
@@ -292,9 +378,7 @@ func (c *Config) extendDefault(parent *ViperConfig) error {
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
-	defaultViperConfig := ViperConfig{
-		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
-	}
+	defaultViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&defaultViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
 	}
@@ -314,17 +398,17 @@ func (c *Config) extendPath(parent *ViperConfig) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
-	extensionViperConfig := ViperConfig{
-		EnableExperimentalAllowlistOptimizations: parent.EnableExperimentalAllowlistOptimizations,
-	}
+	extensionViperConfig := ViperConfig{}
 	if err := viper.Unmarshal(&extensionViperConfig); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
+
+	extensionViperConfig.configPath = c.Extend.Path
+	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
 	cfg, err := extensionViperConfig.Translate()
 	if err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)
 	}
-	logging.Debug().Msgf("extending config with %s", c.Extend.Path)
 	c.extend(cfg)
 	return nil
 }
@@ -404,4 +488,5 @@ func (c *Config) extend(extensionConfig Config) {
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)
+	return
 }

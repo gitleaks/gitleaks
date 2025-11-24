@@ -1,8 +1,6 @@
 module github.com/zricethezav/gitleaks/v8
 
-go 1.23.0
-
-toolchain go1.23.4
+go 1.25.4
 
 require (
 	github.com/BobuSumisu/aho-corasick v1.0.3
@@ -12,6 +10,7 @@ require (
 	github.com/gitleaks/go-gitdiff v0.9.1
 	github.com/google/go-cmp v0.6.0
 	github.com/h2non/filetype v1.1.3
+	github.com/hashicorp/go-version v1.7.0
 	github.com/mholt/archives v0.1.2
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.9.1
@@ -62,7 +61,7 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 )
 
 require (

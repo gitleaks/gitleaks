@@ -46,6 +46,18 @@ type Rule struct {
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
+
+	// If a rule has RequiredRules, it makes the rule dependent on the RequiredRules.
+	// In otherwords, this rule is now a composite rule.
+	RequiredRules []*Required
+
+	SkipReport bool
+}
+
+type Required struct {
+	RuleID        string
+	WithinLines   *int
+	WithinColumns *int
 }
 
 // Validate guards against common misconfigurations.
@@ -57,15 +69,17 @@ func (r *Rule) Validate() error {
 	// Ensure |id| is present.
 	if strings.TrimSpace(r.RuleID) == "" {
 		// Try to provide helpful context, since |id| is empty.
-		var context string
-		if r.Regex != nil {
-			context = ", regex: " + r.Regex.String()
-		} else if r.Path != nil {
-			context = ", path: " + r.Path.String()
-		} else if r.Description != "" {
-			context = ", description: " + r.Description
+		var sb strings.Builder
+		if r.Description != "" {
+			sb.WriteString(", description: " + r.Description)
 		}
-		return errors.New("rule |id| is missing or empty" + context)
+		if r.Regex != nil {
+			sb.WriteString(", regex: " + r.Regex.String())
+		}
+		if r.Path != nil {
+			sb.WriteString(", path: " + r.Path.String())
+		}
+		return errors.New("rule |id| is missing or empty" + sb.String())
 	}
 
 	// Ensure the rule actually matches something.

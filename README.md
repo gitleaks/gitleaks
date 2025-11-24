@@ -32,11 +32,7 @@
 [![GoReportCard][go-report-card-badge]][go-report-card]
 [![License][badge-license]][license]
 
-
-### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)
-
 Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`. If you wanna learn more about how the detection engine works check out this blog: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
-
 
 ```
 ➜  ~/code(master) gitleaks git -v
@@ -60,6 +56,11 @@ Email:       john@users.noreply.github.com
 Date:        2022-08-03T12:31:40Z
 Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23
 ```
+
+### GitHub Sponsors
+
+Sponsor [@zricethezav on GitHub](https://github.com/sponsors/zricethezav/) to get
+featured on this README.
 
 ## Getting Started
 
@@ -141,10 +142,13 @@ Detect hardcoded secrets................................................Skipped
 ## Usage
 
 ```
+Gitleaks scans code, past or present, for secrets
+
 Usage:
   gitleaks [command]
 
 Available Commands:
+  completion  Generate the autocompletion script for the specified shell
   dir         scan directories or files for secrets
   git         scan git repositories for secrets
   help        Help about any command
@@ -160,16 +164,16 @@ Flags:
                                       3. env var GITLEAKS_CONFIG_TOML with the file content
                                       4. (target path)/.gitleaks.toml
                                       If none of the four options are used, then gitleaks will use the default config
-      --diagnostics string            enable diagnostics (comma-separated list: cpu,mem,trace). cpu=CPU profiling, mem=memory profiling, trace=execution tracing
-      --diagnostics-dir string        directory to store diagnostics output files (defaults to current directory)
+      --diagnostics string            enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof
+      --diagnostics-dir string        directory to store diagnostics output files when not using http mode (defaults to current directory)
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
   -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
   -h, --help                          help for gitleaks
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
-      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
       --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
+      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
       --max-target-megabytes int      files larger than this will be skipped
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
@@ -177,6 +181,7 @@ Flags:
   -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
+      --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
 
@@ -415,6 +420,94 @@ Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob
 
 ### Additional Configuration
 
+#### Composite Rules (Multi-part or `required` Rules)
+In v8.28.0 Gitleaks introduced composite rules, which are made up of a single "primary" rule and one or more auxiliary or `required` rules. To create a composite rule, add a `[[rules.required]]` table to the primary rule specifying an `id` and optionally `withinLines` and/or `withinColumns` proximity constraints. A fragment is a chunk of content that Gitleaks processes at once (typically a file, part of a file, or git diff), and proximity matching instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified area of the fragment.
+
+**Proximity matching:** Using the `withinLines` and `withinColumns` fields instructs the primary rule to only report a finding if the auxiliary `required` rules also find matches within the specified proximity. You can set:
+
+- **`withinLines: N`** - required findings must be within N lines (vertically)
+- **`withinColumns: N`** - required findings must be within N characters (horizontally)
+- **Both** - creates a rectangular search area (both constraints must be satisfied)
+- **Neither** - fragment-level matching (required findings can be anywhere in the same fragment)
+
+Here are diagrams illustrating each proximity behavior:
+
+```
+p = primary captured secret
+a = auxiliary (required) captured secret
+fragment = section of data gitleaks is looking at
+
+
+    *Fragment-level proximity*
+    Any required finding in the fragment
+          ┌────────┐
+   ┌──────┤fragment├─────┐
+   │      └──────┬─┤     │ ┌───────┐
+   │             │a│◀────┼─│✓ MATCH│
+   │          ┌─┐└─┘     │ └───────┘
+   │┌─┐       │p│        │
+   ││a│    ┌─┐└─┘        │ ┌───────┐
+   │└─┘    │a│◀──────────┼─│✓ MATCH│
+   └─▲─────┴─┴───────────┘ └───────┘
+     │    ┌───────┐
+     └────│✓ MATCH│
+          └───────┘
+
+
+   *Column bounded proximity*
+   `withinColumns = 3`
+          ┌────────┐
+   ┌────┬─┤fragment├─┬───┐
+   │      └──────┬─┤     │ ┌───────────┐
+   │    │        │a│◀┼───┼─│+1C ✓ MATCH│
+   │          ┌─┐└─┘     │ └───────────┘
+   │┌─┐ │     │p│    │   │
+┌──▶│a│  ┌─┐  └─┘        │ ┌───────────┐
+│  │└─┘ ││a│◀────────┼───┼─│-2C ✓ MATCH│
+│  │       ┘             │ └───────────┘
+│  └── -3C ───0C─── +3C ─┘
+│  ┌─────────┐
+│  │ -4C ✗ NO│
+└──│  MATCH  │
+   └─────────┘
+
+
+   *Line bounded proximity*
+   `withinLines = 4`
+         ┌────────┐
+   ┌─────┤fragment├─────┐
+  +4L─ ─ ┴────────┘─ ─ ─│
+   │                    │
+   │              ┌─┐   │ ┌────────────┐
+   │         ┌─┐  │a│◀──┼─│+1L ✓ MATCH │
+   0L  ┌─┐   │p│  └─┘   │ ├────────────┤
+   │   │a│◀──┴─┴────────┼─│-1L ✓ MATCH │
+   │   └─┘              │ └────────────┘
+   │                    │ ┌─────────┐
+  -4L─ ─ ─ ─ ─ ─ ─ ─┌─┐─│ │-5L ✗ NO │
+   │                │a│◀┼─│  MATCH  │
+   └────────────────┴─┴─┘ └─────────┘
+
+
+   *Line and column bounded proximity*
+   `withinLines = 4`
+   `withinColumns = 3`
+         ┌────────┐
+   ┌─────┤fragment├─────┐
+  +4L   ┌└────────┴ ┐   │
+   │            ┌─┐     │ ┌───────────────┐
+   │    │       │a│◀┼───┼─│+2L/+1C ✓ MATCH│
+   │         ┌─┐└─┘     │ └───────────────┘
+   0L   │    │p│    │   │
+   │         └─┘        │
+   │    │           │   │ ┌────────────┐
+  -4L    ─ ─ ─ ─ ─ ─┌─┐ │ │-5L/+3C ✗ NO│
+   │                │a│◀┼─│   MATCH    │
+   └───-3C────0L───+3C┴─┘ └────────────┘
+```
+
+<details><summary>Some final quick thoughts on composite rules.</summary>This is an experimental feature! It's subject to change so don't go sellin' a new B2B SaaS feature built ontop of this feature. Scan type (git vs dir) based context is interesting. I'm monitoring the situation. Composite rules might not be super useful for git scans because gitleaks only looks at additions in the git history. It could be useful to scan non-additions in git history for `required` rules. Oh, right this is a readme, I'll shut up now.</details>
+
 #### gitleaks:allow
 
 If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
@@ -589,3 +682,5 @@ You can always set the exit code when leaks are encountered with the --exit-code
 1 - leaks or error encountered
 126 - unknown flag
 ```
+
+### Join the Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/8Hzbrnkr7E)

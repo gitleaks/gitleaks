@@ -13,6 +13,11 @@
 
 title = "{{.Title}}"
 
+# minVersion indicates the minimum Gitleaks version required to use this config.
+# If the running version is older, a warning will be logged and not all
+# config-enabled features are guaranteed to work.
+minVersion = "v8.25.0"
+
 {{ with .Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}# TODO: change to [[allowlists]]{{println}}[allowlist]
 {{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
 {{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}

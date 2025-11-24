@@ -151,7 +151,7 @@ func TestValidate(t *testing.T) {
 				cmpopts.IgnoreUnexported(Allowlist{}),
 			}
 		)
-		if diff := cmp.Diff(tt.input, tt.expected, opts); diff != "" {
+		if diff := cmp.Diff(tt.expected, tt.input, opts); diff != "" {
 			t.Errorf("diff: (-want +got)\n%s", diff)
 		}
 	}

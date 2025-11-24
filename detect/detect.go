@@ -113,6 +113,12 @@ type Fragment sources.Fragment
 
 // NewDetector creates a new detector with the given config
 func NewDetector(cfg config.Config) *Detector {
+	return NewDetectorContext(context.Background(), cfg)
+}
+
+// NewDetectorContext is the same as NewDetector but supports passing in a
+// context to use for timeouts
+func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
@@ -121,7 +127,7 @@ func NewDetector(cfg config.Config) *Detector {
 		findings:       make([]report.Finding, 0),
 		Config:         cfg,
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(context.Background(), 40),
+		Sema:           semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -240,7 +246,7 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 			})
 		}
 
-		for _, finding := range d.Detect(Fragment(fragment)) {
+		for _, finding := range d.DetectContext(ctx, Fragment(fragment)) {
 			d.AddFinding(finding)
 		}
 
@@ -262,6 +268,12 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 
 // Detect scans the given fragment and returns a list of findings
 func (d *Detector) Detect(fragment Fragment) []report.Finding {
+	return d.DetectContext(context.Background(), fragment)
+}
+
+// DetectContext is the same as Detect but supports passing in a
+// context to use for timeouts
+func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []report.Finding {
 	if fragment.Bytes == nil {
 		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
@@ -292,55 +304,63 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 		return findings
 	}
 
-	// add newline indices for location calculation in detectRule
-	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
-
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
 	encodedSegments := []*codec.EncodedSegment{}
 	currentDecodeDepth := 0
 	decoder := codec.NewDecoder()
 
+ScanLoop:
 	for {
-		// build keyword map for prefiltering rules
-		keywords := make(map[string]bool)
-		normalizedRaw := strings.ToLower(currentRaw)
-		matches := d.prefilter.MatchString(normalizedRaw)
-		for _, m := range matches {
-			keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
-		}
-
-		for _, rule := range d.Config.Rules {
-			if len(rule.Keywords) == 0 {
-				// if no keywords are associated with the rule always scan the
-				// fragment using the rule
-				findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
-				continue
+		select {
+		case <-ctx.Done():
+			break ScanLoop
+		default:
+			// build keyword map for prefiltering rules
+			keywords := make(map[string]bool)
+			normalizedRaw := strings.ToLower(currentRaw)
+			matches := d.prefilter.MatchString(normalizedRaw)
+			for _, m := range matches {
+				keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
 			}
 
-			// check if keywords are in the fragment
-			for _, k := range rule.Keywords {
-				if _, ok := keywords[strings.ToLower(k)]; ok {
-					findings = append(findings, d.detectRule(fragment, newlineIndices, currentRaw, rule, encodedSegments)...)
-					break
+			for _, rule := range d.Config.Rules {
+				select {
+				case <-ctx.Done():
+					break ScanLoop
+				default:
+					if len(rule.Keywords) == 0 {
+						// if no keywords are associated with the rule always scan the
+						// fragment using the rule
+						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+						continue
+					}
+
+					// check if keywords are in the fragment
+					for _, k := range rule.Keywords {
+						if _, ok := keywords[strings.ToLower(k)]; ok {
+							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+							break
+						}
+					}
 				}
 			}
-		}
 
-		// increment the depth by 1 as we start our decoding pass
-		currentDecodeDepth++
+			// increment the depth by 1 as we start our decoding pass
+			currentDecodeDepth++
 
-		// stop the loop if we've hit our max decoding depth
-		if currentDecodeDepth > d.MaxDecodeDepth {
-			break
-		}
+			// stop the loop if we've hit our max decoding depth
+			if currentDecodeDepth > d.MaxDecodeDepth {
+				break ScanLoop
+			}
 
-		// decode the currentRaw for the next pass
-		currentRaw, encodedSegments = decoder.Decode(currentRaw, encodedSegments)
+			// decode the currentRaw for the next pass
+			currentRaw, encodedSegments = decoder.Decode(currentRaw, encodedSegments)
 
-		// stop the loop when there's nothing else to decode
-		if len(encodedSegments) == 0 {
-			break
+			// stop the loop when there's nothing else to decode
+			if len(encodedSegments) == 0 {
+				break ScanLoop
+			}
 		}
 	}
 
@@ -348,7 +368,7 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -359,6 +379,10 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			return l.Logger()
 		}()
 	)
+
+	if r.SkipReport && !fragment.InheritedFromFinding {
+		return findings
+	}
 
 	// check if commit or file is allowed for this rule.
 	if isAllowed, event := checkCommitOrPathAllowed(logger, fragment, r.Allowlists); isAllowed {
@@ -414,6 +438,14 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 			return findings
 		}
 	}
+
+	matches := r.Regex.FindAllStringIndex(currentRaw, -1)
+	if len(matches) == 0 {
+		return findings
+	}
+
+	// TODO profile this, probably should replace with something more efficient
+	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
 
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
@@ -534,7 +566,145 @@ func (d *Detector) detectRule(fragment Fragment, newlineIndices [][]int, current
 		}
 		findings = append(findings, finding)
 	}
-	return findings
+
+	// Handle required rules (multi-part rules)
+	if fragment.InheritedFromFinding || len(r.RequiredRules) == 0 {
+		return findings
+	}
+
+	// Process required rules and create findings with auxiliary findings
+	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, logger)
+}
+
+// processRequiredRules handles the logic for multi-part rules with auxiliary findings
+func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, primaryFindings []report.Finding, logger zerolog.Logger) []report.Finding {
+	if len(primaryFindings) == 0 {
+		logger.Debug().Msg("no primary findings to process for required rules")
+		return primaryFindings
+	}
+
+	// Pre-collect all required rule findings once
+	allRequiredFindings := make(map[string][]report.Finding)
+
+	for _, requiredRule := range r.RequiredRules {
+		rule, ok := d.Config.Rules[requiredRule.RuleID]
+		if !ok {
+			logger.Error().Str("rule-id", requiredRule.RuleID).Msg("required rule not found in config")
+			continue
+		}
+
+		// Mark fragment as inherited to prevent infinite recursion
+		inheritedFragment := fragment
+		inheritedFragment.InheritedFromFinding = true
+
+		// Call detectRule once for each required rule
+		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments)
+		allRequiredFindings[requiredRule.RuleID] = requiredFindings
+
+		logger.Debug().
+			Str("rule-id", requiredRule.RuleID).
+			Int("findings", len(requiredFindings)).
+			Msg("collected required rule findings")
+	}
+
+	var finalFindings []report.Finding
+
+	// Now process each primary finding against the pre-collected required findings
+	for _, primaryFinding := range primaryFindings {
+		var requiredFindings []*report.RequiredFinding
+
+		for _, requiredRule := range r.RequiredRules {
+			foundRequiredFindings, exists := allRequiredFindings[requiredRule.RuleID]
+			if !exists {
+				continue // Rule wasn't found earlier, skip
+			}
+
+			// Filter findings that are within proximity of the primary finding
+			for _, requiredFinding := range foundRequiredFindings {
+				if d.withinProximity(primaryFinding, requiredFinding, requiredRule) {
+					req := &report.RequiredFinding{
+						RuleID:      requiredFinding.RuleID,
+						StartLine:   requiredFinding.StartLine,
+						EndLine:     requiredFinding.EndLine,
+						StartColumn: requiredFinding.StartColumn,
+						EndColumn:   requiredFinding.EndColumn,
+						Line:        requiredFinding.Line,
+						Match:       requiredFinding.Match,
+						Secret:      requiredFinding.Secret,
+					}
+					requiredFindings = append(requiredFindings, req)
+				}
+			}
+		}
+
+		// Check if we have at least one auxiliary finding for each required rule
+		if len(requiredFindings) > 0 && d.hasAllRequiredRules(requiredFindings, r.RequiredRules) {
+			// Create a finding with auxiliary findings
+			newFinding := primaryFinding // Copy the primary finding
+			newFinding.AddRequiredFindings(requiredFindings)
+			finalFindings = append(finalFindings, newFinding)
+
+			logger.Debug().
+				Str("primary-rule", r.RuleID).
+				Int("primary-line", primaryFinding.StartLine).
+				Int("auxiliary-count", len(requiredFindings)).
+				Msg("multi-part rule satisfied")
+		}
+	}
+
+	return finalFindings
+}
+
+// hasAllRequiredRules checks if we have at least one auxiliary finding for each required rule
+func (d *Detector) hasAllRequiredRules(auxiliaryFindings []*report.RequiredFinding, requiredRules []*config.Required) bool {
+	foundRules := make(map[string]bool)
+	// AuxiliaryFinding
+	for _, aux := range auxiliaryFindings {
+		foundRules[aux.RuleID] = true
+	}
+
+	for _, required := range requiredRules {
+		if !foundRules[required.RuleID] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (d *Detector) withinProximity(primary, required report.Finding, requiredRule *config.Required) bool {
+	// fmt.Println(requiredRule.WithinLines)
+	// If neither within_lines nor within_columns is set, findings just need to be in the same fragment
+	if requiredRule.WithinLines == nil && requiredRule.WithinColumns == nil {
+		return true
+	}
+
+	// Check line proximity (vertical distance)
+	if requiredRule.WithinLines != nil {
+		lineDiff := abs(primary.StartLine - required.StartLine)
+		if lineDiff > *requiredRule.WithinLines {
+			return false
+		}
+	}
+
+	// Check column proximity (horizontal distance)
+	if requiredRule.WithinColumns != nil {
+		// Use the start column of each finding for proximity calculation
+		colDiff := abs(primary.StartColumn - required.StartColumn)
+		if colDiff > *requiredRule.WithinColumns {
+			return false
+		}
+	}
+
+	return true
+}
+
+// abs returns the absolute value of an integer
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 // AddFinding synchronously adds a finding to the findings slice
