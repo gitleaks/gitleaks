@@ -3207,3 +3207,145 @@ description = "Detected a Zendesk Secret Key, risking unauthorized access to cus
 regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["zendesk"]
 
+[[rules]]
+id = "lloydcoder-paystack-secret-key"
+description = "Paystack Secret Key (Live or Test) - Nigerian Fintech"
+regex = '''sk_(live|test)_[0-9a-zA-Z]{50,}'''
+secretGroup = 1
+keywords = [
+  "paystack",
+  "secret_key",
+  "sk_live",
+  "sk_test",
+]
+path = [
+  "*.toml",
+  "*.yaml",
+  "*.yml",
+  "*.json",
+  "*.js",
+  "*.ts",
+  "*.py",
+  "*.go",
+  "*.env",
+]
+tags = [
+  "secret",
+  "paystack",
+  "fintech",
+  "nigeria",
+]
+
+[[rules]]
+id = "lloydcoder-flutterwave-secret-key"
+description = "Flutterwave (Rave) Secret Key - Nigerian Fintech"
+regex = '''FLWSECK[_-]?[a-zA-Z0-9]{30,}'''
+secretGroup = 1
+keywords = [
+  "flutterwave",
+  "rave",
+  "flwseck",
+]
+path = [
+  "*.toml",
+  "*.yaml",
+  "*.yml",
+  "*.json",
+  "*.js",
+  "*.ts",
+  "*.py",
+  "*.go",
+  "*.env",
+]
+tags = [
+  "secret",
+  "flutterwave",
+  "fintech",
+  "nigeria",
+]
+
+[[rules]]
+id = "lloydcoder-remita-credentials"
+description = "Remita Merchant ID & API Key/Hash - Nigerian Billing"
+regex = '''\b\d{10,15}\|[a-zA-Z0-9]{40,}\b'''
+secretGroup = 1
+keywords = [
+  "remita",
+  "merchantId",
+  "apiKey",
+  "publicKey",
+]
+path = [
+  "*.toml",
+  "*.yaml",
+  "*.yml",
+  "*.json",
+  "*.js",
+  "*.ts",
+  "*.py",
+  "*.go",
+  "*.env",
+]
+tags = [
+  "credentials",
+  "remita",
+  "fintech",
+  "nigeria",
+]
+
+[[rules]]
+id = "lloydcoder-interswitch-mackey"
+description = "Interswitch Webpay MAC Key - Nigerian Payments"
+regex = '''macKey["']?\s*[:=]\s*["']?[0-9A-Fa-f]{64}["']?'''
+secretGroup = 1
+keywords = [
+  "interswitch",
+  "webpay",
+  "macKey",
+]
+path = [
+  "*.toml",
+  "*.yaml",
+  "*.yml",
+  "*.json",
+  "*.js",
+  "*.ts",
+  "*.py",
+  "*.go",
+  "*.env",
+]
+tags = [
+  "secret",
+  "interswitch",
+  "fintech",
+  "nigeria",
+]
+
+[[rules]]
+id = "lloydcoder-sportybet-token"
+description = "SportyBet/BetKing Admin or API Token - Nigerian Betting"
+regex = '''eyJ[A-Za-z0-9-_]{100,}'''
+secretGroup = 1
+keywords = [
+  "sportybet",
+  "betking",
+  "bet9ja",
+  "admin",
+  "api_token",
+]
+path = [
+  "*.toml",
+  "*.yaml",
+  "*.yml",
+  "*.json",
+  "*.js",
+  "*.ts",
+  "*.py",
+  "*.go",
+  "*.env",
+]
+tags = [
+  "token",
+  "betting",
+  "nigeria",
+]
