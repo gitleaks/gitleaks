@@ -3267,7 +3267,7 @@ tags = [
 [[rules]]
 id = "lloydcoder-remita-credentials"
 description = "Remita Merchant ID & API Key/Hash - Nigerian Billing"
-regex = '''\b\d{10,15}\|[a-zA-Z0-9]{40,}\b'''
+regex = '''\\d{10,15}(\\|)?[a-zA-Z0-9]{40,}'''
 secretGroup = 1
 keywords = [
   "remita",
@@ -3296,7 +3296,7 @@ tags = [
 [[rules]]
 id = "lloydcoder-interswitch-mackey"
 description = "Interswitch Webpay MAC Key - Nigerian Payments"
-regex = '''macKey["']?\s*[:=]\s*["']?[0-9A-Fa-f]{64}["']?'''
+regex = '''macKey["'']?\\s*[:=]\\s*["'']?[0-9A-Fa-f]{64}["'']?'''
 secretGroup = 1
 keywords = [
   "interswitch",
@@ -3324,7 +3324,7 @@ tags = [
 [[rules]]
 id = "lloydcoder-sportybet-token"
 description = "SportyBet/BetKing Admin or API Token - Nigerian Betting"
-regex = '''eyJ[A-Za-z0-9-_]{100,}'''
+regex = '''eyJ[A-Za-z0-9_-]{100,}'''
 secretGroup = 1
 keywords = [
   "sportybet",
