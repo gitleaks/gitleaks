@@ -10,6 +10,7 @@ test-cover:
 	go tool cover -html=cover.out
 
 format:
+	if command -v goimports >/dev/null; then goimports -local $(PKG) -l -w .; fi
 	go fmt ./...
 
 test: config/gitleaks.toml format
@@ -26,7 +27,7 @@ lint:
 	golangci-lint run
 
 clean:
-	rm -rf profile
+	rm -rf profile gitleaks
 	find . -type f -name '*.got.*' -delete
 	find . -type f -name '*.out' -delete
 
