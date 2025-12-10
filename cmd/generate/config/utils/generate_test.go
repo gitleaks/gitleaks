@@ -123,6 +123,7 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				`api_key="xxx'`, // could try to match only same opening and closing quotes, might not be worth the complexity
 				`api_key="don't do it!"`,
 				`api_key="xxx;notpartofthematch"`,
+				"example.com?api_key=xxx&other=yyy", // potentially valid
 			},
 			invalidStrings: []string{
 				"api_key=_xxx",
@@ -133,8 +134,7 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"api_key=(xxx)",
 				"api_key=<xxx>",
 				"api_key={xxx}",
-				"<api_key>xxx</api_key>",            // potentially valid
-				"example.com?api_key=xxx&other=yyy", // potentially valid
+				"<api_key>xxx</api_key>", // potentially valid
 			},
 		},
 		// Note: these test cases do not necessarily prescribe the expected behavior of the function,
@@ -199,11 +199,11 @@ func TestGenerateUniqueTokenRegex(t *testing.T) {
 				"```abc```",
 				"my abc's",
 				".com?abc",
+				".com?abc&def", // potentially valid
 			},
 			invalidStrings: []string{
 				"abcabc",
 				"_abc_",
-				".com?abc&def", // potentially valid
 				"/*abc*/",
 				"<abc>",
 				"<str>abc</str>", // potentially valid
