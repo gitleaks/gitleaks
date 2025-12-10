@@ -632,6 +632,37 @@ Usage:
 $ gitleaks dir ~/leaky-repo/ --report-path "report.json" --report-format template --report-template testdata/report/jsonextra.tmpl
 ```
 
+### Remote Configuration
+
+> Note: this feature is experimental
+
+In addition to local files, Gitleaks can load its configuration from a remote URL. Simply pass an `http://` or `https://` URL to the `--config/-c` flag.
+
+This is useful for teams who want to manage a shared configuration from a central location. For configurations hosted on private servers that require authentication, you can pass custom HTTP headers.
+
+- `--remote-config-header` - Sets a custom header for the request. This flag can be used multiple times to add multiple headers.
+- `--remote-config-uagent` - Overrides the default user agent. By default, Gitleaks uses `Gitleaks-remote-config-client` to help you identify these requests in your server logs.
+
+#### Examples
+
+- Load a public configuration from a URL
+```bash
+gitleaks git --config https://raw.githubusercontent.com/example-user/my-configs/main/.gitleaks.toml
+```
+
+- Load a private configuration using an Authorization header
+```bash
+gitleaks git --config https://example.com/configs/gitleaks.toml --remote-config-header "Authorization: Bearer <your_token>"
+```
+
+- Load a configuration with a custom user agent and multiple headers
+```bash
+gitleaks git --config "https://example.com/configs/gitleaks.toml" \
+  --remote-config-header "Authorization: Bearer <your_token>" \
+  --remote-config-header "X-Custom-Header: XYZ" \
+  --remote-config-uagent "Security-CI-Scanner/1.1"
+```
+
 ## Sponsorships
 
 <p align="left">
