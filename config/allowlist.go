@@ -24,20 +24,24 @@ func (a AllowlistMatchCondition) String() string {
 	}[a]
 }
 
+func (a AllowlistMatchCondition) MarshalText() ([]byte, error) {
+	return []byte(a.String()), nil
+}
+
 // Allowlist allows a rule to be ignored for specific
 // regexes, paths, and/or commits
 type Allowlist struct {
 	// Short human readable description of the allowlist.
-	Description string
+	Description string `toml:"description,omitempty"`
 
 	// MatchCondition determines whether all criteria must match. Defaults to "OR".
-	MatchCondition AllowlistMatchCondition
+	MatchCondition AllowlistMatchCondition `toml:"condition"`
 
 	// Commits is a slice of commit SHAs that are allowed to be ignored.
-	Commits []string
+	Commits []string `toml:"commits,omitempty"`
 
 	// Paths is a slice of path regular expressions that are allowed to be ignored.
-	Paths []*regexp.Regexp
+	Paths []*regexp.Regexp `toml:"paths,omitempty"`
 
 	// Can be `match` or `line`.
 	//
@@ -46,15 +50,15 @@ type Allowlist struct {
 	// If `line` the _Regexes_ will be tested against the entire line.
 	//
 	// If RegexTarget is empty, it will be tested against the found secret.
-	RegexTarget string
+	RegexTarget string `toml:"regexTarget,omitempty"`
 
 	// Regexes is slice of content regular expressions that are allowed to be ignored.
-	Regexes []*regexp.Regexp
+	Regexes []*regexp.Regexp `toml:"regexes,omitempty"`
 
 	// StopWords is a slice of stop words that are allowed to be ignored.
 	// This targets the _secret_, not the content of the regex match like the
 	// Regexes slice.
-	StopWords []string
+	StopWords []string `toml:"stopwords,omitempty"`
 
 	// validated is an internal flag to track whether `Validate()` has been called.
 	validated bool
