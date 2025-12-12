@@ -7,7 +7,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/go-sprout/sprout/sprigin"
 )
 
 type TemplateReporter struct {
@@ -29,7 +29,7 @@ func NewTemplateReporter(templatePath string) (*TemplateReporter, error) {
 
 	// TODO: Add helper functions like escaping for JSON, XML, etc.
 	t := template.New("custom")
-	t = t.Funcs(sprig.TxtFuncMap())
+	t = t.Funcs(sprigin.TxtFuncMap())
 	t, err = t.Parse(templateText)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing file: %w", err)
