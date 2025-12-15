@@ -268,6 +268,10 @@ Gitleaks offers a configuration format you can follow to write your own secret d
 # Title for the gitleaks configuration file.
 title = "Custom Gitleaks configuration"
 
+# (Optional) Maximum file size in megabytes to scan. Files larger than this are skipped.
+# This can be overridden with the --max-target-megabytes command line flag.
+# maxTargetMegaBytes = 100
+
 # You have basically two options for your custom configuration:
 #
 # 1. define your own configuration, default rules do not apply

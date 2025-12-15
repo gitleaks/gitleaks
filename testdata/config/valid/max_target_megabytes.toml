@@ -1,0 +1,6 @@
+title = "config with max target megabytes"
+maxTargetMegaBytes = 100
+
+[[rules]]
+id = "test-rule"
+regex = '''test'''
