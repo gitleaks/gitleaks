@@ -59,6 +59,8 @@ type ViperConfig struct {
 
 	MinVersion string
 
+	MaxTargetMegaBytes int
+
 	configPath string
 }
 
@@ -92,9 +94,10 @@ type Config struct {
 	Rules       map[string]Rule
 	Keywords    map[string]struct{}
 	// used to keep sarif results consistent
-	OrderedRules []string
-	Allowlists   []*Allowlist
-	MinVersion   string
+	OrderedRules       []string
+	Allowlists         []*Allowlist
+	MinVersion         string
+	MaxTargetMegaBytes int
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -195,13 +198,14 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	// Assemble the config.
 	c := Config{
-		Title:        vc.Title,
-		Description:  vc.Description,
-		Extend:       vc.Extend,
-		Rules:        rulesMap,
-		Keywords:     keywords,
-		OrderedRules: orderedRules,
-		MinVersion:   vc.MinVersion,
+		Title:              vc.Title,
+		Description:        vc.Description,
+		Extend:             vc.Extend,
+		Rules:              rulesMap,
+		Keywords:           keywords,
+		OrderedRules:       orderedRules,
+		MinVersion:         vc.MinVersion,
+		MaxTargetMegaBytes: vc.MaxTargetMegaBytes,
 	}
 
 	if extendDepth > 0 {

@@ -88,6 +88,19 @@ func TestTranslate(t *testing.T) {
 				}},
 			},
 		},
+		{
+			cfgName: "valid/max_target_megabytes",
+			cfg: Config{
+				Title:             "config with max target megabytes",
+				MaxTargetMegaBytes: 100,
+				Rules: map[string]Rule{"test-rule": {
+					RuleID:   "test-rule",
+					Regex:    regexp.MustCompile(`test`),
+					Keywords: []string{},
+					Tags:     []string{},
+				}},
+			},
+		},
 
 		// Invalid
 		{
@@ -619,6 +632,9 @@ func testTranslate(t *testing.T, test translateCase) {
 		cmpopts.IgnoreUnexported(Rule{}, Allowlist{}),
 	}
 	if diff := cmp.Diff(test.cfg.Title, cfg.Title); diff != "" {
+		t.Errorf("%s diff: (-want +got)\n%s", test.cfgName, diff)
+	}
+	if diff := cmp.Diff(test.cfg.MaxTargetMegaBytes, cfg.MaxTargetMegaBytes); diff != "" {
 		t.Errorf("%s diff: (-want +got)\n%s", test.cfgName, diff)
 	}
 	if diff := cmp.Diff(test.cfg.Rules, cfg.Rules, opts); diff != "" {
