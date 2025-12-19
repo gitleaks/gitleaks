@@ -72,6 +72,9 @@ Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also availa
 # MacOS
 brew install gitleaks
 
+# Linux, MacOS, Windows using [mise](https://github.com/jdx/mise)
+mise use -g gitleaks@latest
+
 # Docker (DockerHub)
 docker pull zricethezav/gitleaks:latest
 docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] [OPTIONS] [SOURCE_PATH]
