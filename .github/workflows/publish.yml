@@ -69,17 +69,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: linux-amd64
+          - platform: linux
             runs_on: ubuntu-latest
-            out_dir: build/out/linux-amd64
             script: bash build-scripts/build-linux.sh
-          - platform: windows-amd64
-            runs_on: windows-latest
-            out_dir: build/out/windows-amd64
+          - platform: windows
+            runs_on: ubuntu-latest
             script: bash build-scripts/build-windows.sh
           - platform: darwin
             runs_on: macos-14
-            out_dir: build/out/darwin
             script: |
               bash build-scripts/build-darwin.sh amd64
               bash build-scripts/build-darwin.sh arm64
@@ -96,33 +93,33 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Set up MSYS2 (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            mingw-w64-x86_64-gcc
+      - name: Install build tools (Linux cross-compilation)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git gcc-aarch64-linux-gnu
+
+      - name: Install build tools (Windows cross-compilation)
+        if: matrix.platform == 'windows'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git mingw-w64 gcc-mingw-w64-aarch64
+
+      - name: Build native library (Linux - amd64 + arm64)
+        if: matrix.platform == 'linux'
+        run: |
+          ${{ matrix.script }} amd64
+          ${{ matrix.script }} arm64
+
+      - name: Build native library (Windows - amd64 + arm64)
+        if: matrix.platform == 'windows'
+        run: |
+          ${{ matrix.script }} amd64
+          ${{ matrix.script }} arm64
 
       - name: Build native library
-        if: runner.os != 'Windows' && matrix.platform != 'darwin'
-        run: ${{ matrix.script }}
-
-      - name: Build native library (Darwin - both architectures)
         if: matrix.platform == 'darwin'
-        run: |
-          bash build-scripts/build-darwin.sh amd64
-          bash build-scripts/build-darwin.sh arm64
-
-      - name: Build native library (Windows/MSYS2)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: |
-          # Add Go to PATH for MSYS2 (standard installation path)
-          export PATH="/c/Program Files/Go/bin:/usr/bin:$PATH"
-          # Verify Go is available
-          go version || (echo "Go not found in PATH" && echo "PATH: $PATH" && exit 1)
-          ${{ matrix.script }}
+        run: ${{ matrix.script }}
 
       - name: Upload native artifacts (Darwin AMD64)
         if: matrix.platform == 'darwin'
@@ -140,12 +137,36 @@ jobs:
           path: build/out/darwin-arm64
           if-no-files-found: error
 
-      - name: Upload native artifacts
-        if: matrix.platform != 'darwin'
+      - name: Upload native artifacts (Linux AMD64)
+        if: matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         with:
-          name: native-${{ matrix.platform }}
-          path: ${{ matrix.out_dir }}
+          name: native-linux-amd64
+          path: build/out/linux-amd64
+          if-no-files-found: error
+
+      - name: Upload native artifacts (Linux ARM64)
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-arm64
+          path: build/out/linux-arm64
+          if-no-files-found: error
+
+      - name: Upload native artifacts (Windows AMD64)
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-windows-amd64
+          path: build/out/windows-amd64
+          if-no-files-found: error
+
+      - name: Upload native artifacts (Windows ARM64)
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-windows-arm64
+          path: build/out/windows-arm64
           if-no-files-found: error
 
   publish:
