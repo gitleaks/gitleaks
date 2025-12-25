@@ -41,7 +41,9 @@ kotlin {
                 // JNA is used to load libgitleaks shared library at runtime
                 // The library (libgitleaks.so/.dll/.dylib) must be built from Go code
                 // and available in java.library.path or system library path
-                implementation(libs.jna)
+                // Using 'api' instead of 'implementation' to make it a transitive dependency
+                // so users don't need to manually add JNA
+                api(libs.jna)
             }
         }
         @Suppress("unused")
