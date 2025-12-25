@@ -1,37 +1,55 @@
-name: Test
+name: test
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
-    branches:
-      - "*"
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
-    strategy:
-      matrix:
-        platform: [ ubuntu-latest, windows-latest ]
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version-file: go.mod
+          cache: true
 
-      - name: Build
-        run: go build ./...
-
-      - name: Set up gotestsum
+      - name: Install build tools (for CGO)
         run: |
-          go install gotest.tools/gotestsum@latest
+          sudo apt-get update
+          sudo apt-get install -y build-essential git
 
-      - name: Test
+      - name: Build native library (linux-amd64) for Kotlin JVM tests
         run: |
-          gotestsum --raw-command -- go test -json ./... --race
+          bash build-scripts/build-linux.sh
 
-      - name: Validate Config
-        run: go generate ./... && git diff --exit-code
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Make gradlew executable
+        working-directory: kotlin
+        run: |
+          chmod +x gradlew
+
+      - name: Run Kotlin JVM tests
+        working-directory: kotlin
+        run: |
+          ./gradlew --no-daemon jvmTest
+

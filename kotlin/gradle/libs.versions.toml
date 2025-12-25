@@ -1,0 +1,17 @@
+[versions]
+kotlin = "2.3.0"
+kotlinx-serialization-json = "1.9.0"
+jna = "5.18.1"
+angryscan-core = "1.4.4"
+mpublish = "0.35.0"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+angryscan-core = { module = "org.angryscan:core", version.ref = "angryscan-core" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mpublish" }

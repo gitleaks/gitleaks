@@ -7,7 +7,7 @@
 *.DS_STORE
 *.idea
 *.got
-gitleaks
+/gitleaks
 build
 profile
 
@@ -22,3 +22,6 @@ testdata/expected/report/*.got.*
 *.out
 
 dist/
+
+# local vendor checkouts
+_vendor/

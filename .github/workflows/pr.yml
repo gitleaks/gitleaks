@@ -1,0 +1,241 @@
+name: pr
+
+on:
+  workflow_run:
+    workflows:
+      - test
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  build_native:
+    name: build-native (${{ matrix.platform }})
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 45
+    # Run only after successful tests, only for PRs, and never for forks (secrets exposure)
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'pull_request'
+          && github.event.workflow_run.head_repository.full_name == github.repository }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runs_on: ubuntu-latest
+            out_dir: build/out/linux-amd64
+            script: bash build-scripts/build-linux.sh
+          - platform: windows-amd64
+            runs_on: ubuntu-latest
+            out_dir: build/out/windows-amd64
+            script: bash build-scripts/build-windows.sh
+          - platform: darwin
+            runs_on: macos-14
+            out_dir: build/out/darwin
+            script: |
+              bash build-scripts/build-darwin.sh amd64
+              bash build-scripts/build-darwin.sh arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install build tools (Linux and Windows cross-compilation)
+        if: matrix.platform == 'linux-amd64' || matrix.platform == 'windows-amd64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git mingw-w64
+
+      - name: Build native library
+        run: ${{ matrix.script }}
+
+      - name: Upload native artifacts (Darwin)
+        if: matrix.platform == 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-darwin-amd64
+          path: build/out/darwin-amd64
+          if-no-files-found: error
+      
+      - name: Upload native artifacts (Darwin ARM64)
+        if: matrix.platform == 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-darwin-arm64
+          path: build/out/darwin-arm64
+          if-no-files-found: error
+
+      - name: Upload native artifacts
+        if: matrix.platform != 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: ${{ matrix.out_dir }}
+          if-no-files-found: error
+
+  publish_snapshot:
+    name: publish-snapshot
+    runs-on: ubuntu-latest
+    needs: build_native
+    timeout-minutes: 30
+    # Only publish after successful tests, only for PRs, and never for forks (secrets exposure)
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'pull_request'
+          && github.event.workflow_run.head_repository.full_name == github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/out
+          pattern: native-*
+          merge-multiple: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Compute snapshot version
+        id: ver
+        shell: bash
+        run: |
+          BASE_VERSION="$(grep -E '^version=' kotlin/gradle.properties | head -1 | cut -d= -f2 | tr -d '\r' | tr -d ' ')"
+          if [ -z "$BASE_VERSION" ]; then
+            echo "Failed to read base version from kotlin/gradle.properties" >&2
+            exit 1
+          fi
+          SNAPSHOT_VERSION="${BASE_VERSION}-SNAPSHOT"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "snapshot_version=$SNAPSHOT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Make gradlew executable
+        working-directory: kotlin
+        run: |
+          chmod +x gradlew
+
+      - name: Publish SNAPSHOT to Maven Central (OSSRH)
+        id: publish
+        working-directory: kotlin
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ -z "${ORG_GRADLE_PROJECT_mavenCentralUsername:-}" ] || [ -z "${ORG_GRADLE_PROJECT_mavenCentralPassword:-}" ]; then
+            echo "Missing Maven Central credentials. Configure repository secrets:"
+            echo "  - OSSRH_USERNAME (or Central Portal token username)"
+            echo "  - OSSRH_PASSWORD (or Central Portal token password)"
+            exit 1
+          fi
+          if [ -z "${ORG_GRADLE_PROJECT_signingInMemoryKey:-}" ] || [ -z "${ORG_GRADLE_PROJECT_signingInMemoryKeyPassword:-}" ]; then
+            echo "Missing signing key material. Configure repository secrets:"
+            echo "  - SIGNING_KEY"
+            echo "  - SIGNING_PASSWORD"
+            exit 1
+          fi
+          ./gradlew --no-daemon --stacktrace -Pversion="${{ steps.ver.outputs.snapshot_version }}" publish 2>&1 | tee ../publish.log
+
+      - name: Extract published timestamp version
+        id: published
+        shell: bash
+        run: |
+          # Best-effort: try to find Maven timestamped snapshot version in Gradle output.
+          # Expected format: X.Y.Z-YYYYMMDD.HHMMSS-N
+          TS_VERSION="$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+-[0-9]{8}\.[0-9]{6}-[0-9]+' publish.log | head -1 || true)"
+          if [ -z "$TS_VERSION" ]; then
+            TS_VERSION="${{ steps.ver.outputs.snapshot_version }}"
+          fi
+          echo "published_version=$TS_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Comment PR with published version
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const prs = (context.payload.workflow_run && context.payload.workflow_run.pull_requests) || [];
+            if (prs.length === 0) {
+              console.log("No pull_requests associated with this workflow_run; skipping PR comment.");
+              return;
+            }
+            const prNumber = prs[0].number;
+            const version = `${{ steps.published.outputs.published_version }}`;
+            const groupId = "org.angryscan";
+            const artifactId = "gitleaks";
+            const headSha = context.payload.workflow_run.head_sha;
+            const body =
+              `✅ SNAPSHOT published.\n\n` +
+              `**Published version:** \`${version}\`\n\n` +
+              `Gradle:\n` +
+              "```kotlin\n" +
+              `dependencies { implementation(\"${groupId}:${artifactId}:${version}\") }\n` +
+              "```\n\n" +
+              `Maven:\n` +
+              "```xml\n" +
+              "<dependency>\n" +
+              `  <groupId>${groupId}</groupId>\n` +
+              `  <artifactId>${artifactId}</artifactId>\n` +
+              `  <version>${version}</version>\n` +
+              "</dependency>\n" +
+              "```\n\n" +
+              `Commit: \`${headSha}\``;
+            
+            // Get all comments on the PR
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            // Find and delete existing SNAPSHOT published comments
+            for (const comment of comments.data) {
+              // Check if comment is from the bot and contains the SNAPSHOT published marker
+              if (comment.user.type === 'Bot' && comment.body && comment.body.startsWith('✅ SNAPSHOT published.')) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: comment.id,
+                });
+              }
+            }
+            
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+
+

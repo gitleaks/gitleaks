@@ -28,6 +28,12 @@ type Finding struct {
 	// Captured secret
 	Secret string
 
+	// Absolute offsets (0-based, end exclusive) within the scanned fragment.
+	// These are intentionally excluded from standard report JSON outputs to
+	// preserve backward compatibility. They are used by the CGO shared library.
+	SecretStart int `json:"-"`
+	SecretEnd   int `json:"-"`
+
 	// File is the name of the file containing the finding
 	File        string
 	SymlinkFile string

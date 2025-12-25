@@ -374,6 +374,7 @@ func (c *Config) GetOrderedRules() []Rule {
 
 func (c *Config) extendDefault(parent *ViperConfig) error {
 	extendDepth++
+	defer func() { extendDepth-- }()
 	viper.SetConfigType("toml")
 	if err := viper.ReadConfig(strings.NewReader(DefaultConfig)); err != nil {
 		return fmt.Errorf("failed to load extended default config, err: %w", err)
@@ -394,6 +395,7 @@ func (c *Config) extendDefault(parent *ViperConfig) error {
 
 func (c *Config) extendPath(parent *ViperConfig) error {
 	extendDepth++
+	defer func() { extendDepth-- }()
 	viper.SetConfigFile(c.Extend.Path)
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to load extended config, err: %w", err)

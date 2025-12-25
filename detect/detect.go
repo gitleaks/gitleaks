@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/codec"
@@ -499,6 +500,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			File:        fragment.FilePath,
 			SymlinkFile: fragment.SymlinkFile,
 			Tags:        append(r.Tags, metaTags...),
+			// Convert byte indices to rune indices to better align with Kotlin String indexing.
+			// (For BMP text rune count == Kotlin char index; secrets are typically ASCII.)
+			SecretStart: utf8.RuneCountInString(fragment.Raw[:matchIndex[0]]),
+			SecretEnd:   utf8.RuneCountInString(fragment.Raw[:matchIndex[1]]),
 		}
 		if fragment.CommitInfo != nil {
 			finding.Author = fragment.CommitInfo.AuthorName
@@ -535,6 +540,20 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 						finding.Secret = s
 						break
 					}
+				}
+			}
+		}
+
+		// If the extracted secret is a substring of the full match, adjust secret offsets.
+		// Otherwise keep offsets equal to match offsets.
+		if finding.Secret != "" {
+			// strings.Index returns a byte index; convert via fragment.Raw slices.
+			if idx := strings.Index(finding.Match, finding.Secret); idx >= 0 {
+				secretStartByte := matchIndex[0] + idx
+				secretEndByte := secretStartByte + len(finding.Secret)
+				if secretStartByte >= 0 && secretStartByte <= len(fragment.Raw) && secretEndByte >= 0 && secretEndByte <= len(fragment.Raw) {
+					finding.SecretStart = utf8.RuneCountInString(fragment.Raw[:secretStartByte])
+					finding.SecretEnd = utf8.RuneCountInString(fragment.Raw[:secretEndByte])
 				}
 			}
 		}

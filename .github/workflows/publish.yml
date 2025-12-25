@@ -1,0 +1,213 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: publish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate_test:
+    name: wait-for-test-workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Wait for test workflow to succeed for this SHA
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const headSha = context.sha;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const sleepMs = 15_000;
+            const maxAttempts = 120; // 30 minutes
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: "test.yml",
+                head_sha: headSha,
+                event: "push",
+                per_page: 10,
+              });
+
+              const run = runs.data.workflow_runs && runs.data.workflow_runs[0];
+              if (run) {
+                core.info(`Found test workflow run: id=${run.id} status=${run.status} conclusion=${run.conclusion}`);
+                if (run.status === "completed") {
+                  if (run.conclusion === "success") {
+                    core.info("test.yml succeeded; continuing publish workflow.");
+                    return;
+                  }
+                  core.setFailed(`test.yml completed but did not succeed (conclusion=${run.conclusion}).`);
+                  return;
+                }
+              } else {
+                core.info("No test.yml run found yet for this SHA; waiting...");
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, sleepMs));
+            }
+
+            core.setFailed("Timed out waiting for test.yml to complete successfully for this SHA.");
+
+  build_native:
+    name: build-native (${{ matrix.platform }})
+    runs-on: ${{ matrix.runs_on }}
+    needs: gate_test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runs_on: ubuntu-latest
+            out_dir: build/out/linux-amd64
+            script: bash build-scripts/build-linux.sh
+          - platform: windows-amd64
+            runs_on: windows-latest
+            out_dir: build/out/windows-amd64
+            script: bash build-scripts/build-windows.sh
+          - platform: darwin
+            runs_on: macos-14
+            out_dir: build/out/darwin
+            script: |
+              bash build-scripts/build-darwin.sh amd64
+              bash build-scripts/build-darwin.sh arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+
+      - name: Build native library
+        if: runner.os != 'Windows' && matrix.platform != 'darwin'
+        run: ${{ matrix.script }}
+
+      - name: Build native library (Darwin - both architectures)
+        if: matrix.platform == 'darwin'
+        run: |
+          bash build-scripts/build-darwin.sh amd64
+          bash build-scripts/build-darwin.sh arm64
+
+      - name: Build native library (Windows/MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          # Add Go to PATH for MSYS2 (standard installation path)
+          export PATH="/c/Program Files/Go/bin:/usr/bin:$PATH"
+          # Verify Go is available
+          go version || (echo "Go not found in PATH" && echo "PATH: $PATH" && exit 1)
+          ${{ matrix.script }}
+
+      - name: Upload native artifacts (Darwin AMD64)
+        if: matrix.platform == 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-darwin-amd64
+          path: build/out/darwin-amd64
+          if-no-files-found: error
+      
+      - name: Upload native artifacts (Darwin ARM64)
+        if: matrix.platform == 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-darwin-arm64
+          path: build/out/darwin-arm64
+          if-no-files-found: error
+
+      - name: Upload native artifacts
+        if: matrix.platform != 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: ${{ matrix.out_dir }}
+          if-no-files-found: error
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build_native
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/out
+          pattern: native-*
+          merge-multiple: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Resolve release version from tag
+        id: ver
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Make gradlew executable
+        working-directory: kotlin
+        run: |
+          chmod +x gradlew
+
+      - name: Publish and release to Maven Central (Central Portal)
+        id: publish
+        working-directory: kotlin
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ -z "${ORG_GRADLE_PROJECT_mavenCentralUsername:-}" ] || [ -z "${ORG_GRADLE_PROJECT_mavenCentralPassword:-}" ]; then
+            echo "Missing Maven Central credentials. Configure repository secrets:"
+            echo "  - OSSRH_USERNAME (or Central Portal token username)"
+            echo "  - OSSRH_PASSWORD (or Central Portal token password)"
+            exit 1
+          fi
+          if [ -z "${ORG_GRADLE_PROJECT_signingInMemoryKey:-}" ] || [ -z "${ORG_GRADLE_PROJECT_signingInMemoryKeyPassword:-}" ]; then
+            echo "Missing signing key material. Configure repository secrets:"
+            echo "  - SIGNING_KEY"
+            echo "  - SIGNING_PASSWORD"
+            exit 1
+          fi
+          ./gradlew --no-daemon --stacktrace -Pversion="${{ steps.ver.outputs.version }}" publishAndReleaseToMavenCentral 2>&1 | tee ../publish.log
+
+
