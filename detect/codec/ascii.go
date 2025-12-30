@@ -1,5 +1,7 @@
 package codec
 
+import "unicode/utf8"
+
 var printableASCII [256]bool
 
 func init() {
@@ -10,12 +12,24 @@ func init() {
 	}
 }
 
-// isPrintableASCII returns true if all bytes are printable ASCII
+// isPrintableASCII returns true if all bytes are printable ASCII or valid UTF-8
 func isPrintableASCII(b []byte) bool {
-	for _, c := range b {
-		if !printableASCII[c] {
-			return false
+	for i := 0; i < len(b); {
+		c := b[i]
+		// Check for printable ASCII (single byte)
+		if printableASCII[c] {
+			i++
+			continue
 		}
+		// Check for valid UTF-8 multi-byte sequence
+		if c >= 0x80 {
+			r, size := utf8.DecodeRune(b[i:])
+			if r != utf8.RuneError && size > 1 {
+				i += size
+				continue
+			}
+		}
+		return false
 	}
 
 	return true
