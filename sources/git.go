@@ -78,13 +78,17 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 		// https://github.com/gitleaks/gitleaks/issues/1153
 		userArgs := strings.Split(logOpts, " ")
 		var quotedOpts []string
-		for _, element := range userArgs {
+		for i, element := range userArgs {
 			if quotedOptPattern.MatchString(element) {
 				quotedOpts = append(quotedOpts, element)
+				// Strip the surrounding quotes so git receives the unquoted argument
+				if len(element) >= 2 {
+					userArgs[i] = element[1 : len(element)-1]
+				}
 			}
 		}
 		if len(quotedOpts) > 0 {
-			logging.Warn().Msgf("the following `--log-opts` values may not work as expected: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
+			logging.Warn().Msgf("the following `--log-opts` values had quotes stripped: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
 		}
 
 		args = append(args, userArgs...)
