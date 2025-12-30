@@ -1,7 +1,8 @@
 FROM golang:1.24 AS build
+ARG VERSION
 WORKDIR /go/src/github.com/zricethezav/gitleaks
 COPY . .
-RUN VERSION=$(git describe --tags --abbrev=0) && \
+RUN if [ -z "$VERSION" ]; then VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "unknown"); fi && \
 CGO_ENABLED=0 go build -o bin/gitleaks -ldflags "-X=github.com/zricethezav/gitleaks/v8/version.Version=${VERSION}"
 
 FROM alpine:3.22
