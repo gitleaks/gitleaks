@@ -1,5 +1,59 @@
 package sources
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+// TestQuotedOptPattern tests that the quotedOptPattern correctly identifies quoted strings
+func TestQuotedOptPattern(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{`"--no-notes"`, true},
+		{`'--no-notes'`, true},
+		{`--no-notes`, false},
+		{`"--since=2024-01-01"`, true},
+		{`'--since=2024-01-01'`, true},
+		{`--since="2024-01-01"`, false}, // embedded quotes, not fully quoted
+		{`""`, false},                   // empty quoted string doesn't match [^"]+
+		{`"a"`, true},
+		{`'a'`, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := quotedOptPattern.MatchString(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// TestStripQuotes verifies that quotes are correctly stripped from quoted log-opts arguments
+func TestStripQuotes(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{`"--no-notes"`, `--no-notes`},
+		{`'--no-notes'`, `--no-notes`},
+		{`"--since=2024-01-01"`, `--since=2024-01-01`},
+		{`'--author=John Doe'`, `--author=John Doe`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			// Simulate the quote stripping logic from NewGitLogCmdContext
+			if quotedOptPattern.MatchString(tt.input) && len(tt.input) >= 2 {
+				result := tt.input[1 : len(tt.input)-1]
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
