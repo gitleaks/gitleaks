@@ -106,6 +106,16 @@ func TestDecode(t *testing.T) {
 			chunk:    `secret=\u0068\u0065\u006c\u006c\u006f\u0020\u0077\u006f\u0072\u006c\u0064 6C6F76656C792070656F706C65206F66206561727468`,
 			expected: "secret=hello world lovely people of earth",
 		},
+		{
+			name:     "b64 with UTF-8 content (emoji)",
+			chunk:    `secret=c2VjcmV0LXBhc3N3b3JkLfCflJM=`,
+			expected: "secret=secret-password-🔓",
+		},
+		{
+			name:     "b64 with UTF-8 content (accented chars)",
+			chunk:    `secret=Y2Fmw6ktYXUtbGFpdC1zZWNyZXQ=`,
+			expected: "secret=café-au-lait-secret",
+		},
 	}
 
 	decoder := NewDecoder()
