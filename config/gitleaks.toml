@@ -2715,6 +2715,90 @@ entropy = 3.5
 keywords = ["sha256~"]
 
 [[rules]]
+id = "password"
+description = "Detected a password in a configuration file or code, which may lead to unauthorized access."
+regex = '''(?i)[\w.-]{0,50}?(?:passw(?:or)?d|passwd|pwd)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9!@#$%^&*()\-_+=\[\]{}|\\;:,.<>/?~]{6,64})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = [
+    "passwd",
+    "password",
+    "pwd",
+]
+[[rules.allowlists]]
+regexes = [
+    '''^[a-zA-Z]+$''',
+]
+[[rules.allowlists]]
+description = "Allowlist for common password false positives"
+regexTarget = "match"
+regexes = [
+    '''(?i)(?:passw(?:or)?d[_.-]?(?:file|hash|length|policy|reset|confirm|confirmation|salt|strength|expire|expiry|change|update|min|max|url|uri|path|field|input|box|form|name|key|id|ref|var|env)|(?:forgot|change|update|reset|confirm|new|old|current|default|temp|temporary|initial)[_.-]?passw(?:or)?d|(?:hash|encode|decode|encrypt|decrypt|verify|validate|check|match|compare|set|get|has)[_.-]?passw(?:or)?d|no[_.-]?passw(?:or)?d)''',
+]
+stopwords = [
+    "$(password)",
+    "$password",
+    "${password}",
+    "******",
+    "000000",
+    "111111",
+    "123456",
+    "654321",
+    "<password>",
+    "[password]",
+    "abc123",
+    "abcdef",
+    "asdfgh",
+    "blank",
+    "change-me",
+    "change_me",
+    "changeit",
+    "changeme",
+    "dummy_password",
+    "dummypass",
+    "dummypassword",
+    "empty",
+    "example",
+    "fake_password",
+    "fakepass",
+    "fakepassword",
+    "foobar",
+    "hidden",
+    "masked",
+    "mock_password",
+    "mockpassword",
+    "my-password",
+    "my_password",
+    "mypassword",
+    "none",
+    "not-set",
+    "not_set",
+    "notset",
+    "null",
+    "placeholder",
+    "qwerty",
+    "redacted",
+    "removed",
+    "sample",
+    "secret",
+    "test-password",
+    "test123",
+    "test_password",
+    "testing",
+    "testpass",
+    "testpassword",
+    "the_password",
+    "thepassword",
+    "undefined",
+    "unset",
+    "xxxxxx",
+    "your-password",
+    "your_password",
+    "yourpassword",
+    "zxcvbn",
+    "{password}",
+    "{{password}}",
+]
+
+[[rules]]
 id = "perplexity-api-key"
 description = "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure."
 regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''

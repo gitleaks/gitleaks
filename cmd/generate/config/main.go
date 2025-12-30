@@ -179,6 +179,7 @@ func main() {
 		rules.OpenAI(),
 		rules.OpenshiftUserToken(),
 		rules.PerplexityAPIKey(),
+		rules.Password(),
 		rules.PlaidAccessID(),
 		rules.PlaidSecretKey(),
 		rules.PlaidAccessToken(),
