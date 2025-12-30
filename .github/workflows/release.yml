@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8
@@ -55,3 +58,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
