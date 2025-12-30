@@ -88,7 +88,6 @@ func TestTranslate(t *testing.T) {
 				}},
 			},
 		},
-
 		// Invalid
 		{
 			cfgName:   "invalid/rule_missing_id",
@@ -669,4 +668,31 @@ func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
 			require.Truef(t, exists, "The expected keyword %s did not exist as a key of cfg.Keywords", tt.expectedKeywords)
 		})
 	}
+}
+
+func TestTranslateEmptyRules(t *testing.T) {
+	// Reset global state before and after test
+	extendDepth = 0
+	viper.Reset()
+	t.Cleanup(func() {
+		extendDepth = 0
+		viper.Reset()
+	})
+
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("valid/empty_rules")
+	viper.SetConfigType("toml")
+	err := viper.ReadInConfig()
+	require.NoError(t, err)
+
+	var vc ViperConfig
+	err = viper.Unmarshal(&vc)
+	require.NoError(t, err)
+
+	cfg, err := vc.Translate()
+	require.NoError(t, err, "Empty [[rules]] entry should not cause an error")
+
+	assert.Equal(t, "Custom Gitleaks configuration", cfg.Title)
+	// The config extends the default, so rules should be populated
+	assert.NotEmpty(t, cfg.Rules, "Default rules should be loaded when extending default config")
 }

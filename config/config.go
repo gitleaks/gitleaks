@@ -116,6 +116,14 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	// Validate individual rules.
 	for _, vr := range vc.Rules {
+		// Skip completely empty rule entries (e.g., from an empty [[rules]] in TOML).
+		if vr.ID == "" && vr.Description == "" && vr.Path == "" && vr.Regex == "" &&
+			vr.SecretGroup == 0 && vr.Entropy == 0 && len(vr.Keywords) == 0 &&
+			len(vr.Tags) == 0 && vr.AllowList == nil && len(vr.Allowlists) == 0 &&
+			len(vr.Required) == 0 && !vr.SkipReport {
+			continue
+		}
+
 		var (
 			pathPat  *regexp.Regexp
 			regexPat *regexp.Regexp
