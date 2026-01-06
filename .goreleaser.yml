@@ -15,8 +15,6 @@ builds:
     goarm:
       - "6"
       - "7"
-    tags:
-      - gore2regex
     ldflags:
       - -s -w -X=github.com/zricethezav/gitleaks/v8/version.Version={{.Version}}
 archives:
