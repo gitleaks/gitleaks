@@ -2,10 +2,11 @@ package codec
 
 import (
 	"bytes"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 var (
