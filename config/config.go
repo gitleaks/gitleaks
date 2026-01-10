@@ -472,9 +472,13 @@ func (c *Config) extend(extensionConfig Config) {
 			if currentRule.Path != nil {
 				baseRule.Path = currentRule.Path
 			}
+			if currentRule.SkipReport {
+				baseRule.SkipReport = currentRule.SkipReport
+			}
 			baseRule.Tags = append(baseRule.Tags, currentRule.Tags...)
 			baseRule.Keywords = append(baseRule.Keywords, currentRule.Keywords...)
 			baseRule.Allowlists = append(baseRule.Allowlists, currentRule.Allowlists...)
+			baseRule.RequiredRules = append(baseRule.RequiredRules, currentRule.RequiredRules...)
 			// The keywords from the base rule and the extended rule must be merged into the global keywords list
 			for _, k := range baseRule.Keywords {
 				c.Keywords[k] = struct{}{}
