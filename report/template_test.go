@@ -96,3 +96,52 @@ func TestWriteTemplate(t *testing.T) {
 		})
 	}
 }
+
+func TestTemplateDangerousFunctions(t *testing.T) {
+	tests := []struct {
+		name     string
+		template string
+		wantErr  string
+	}{
+		{
+			name:     "env is blocked",
+			template: `{{ env "SECRET" }}`,
+			wantErr:  `function "env" not defined`,
+		},
+		{
+			name:     "expandenv is blocked",
+			template: `{{ expandenv "$SECRET" }}`,
+			wantErr:  `function "expandenv" not defined`,
+		},
+		{
+			name:     "getHostByName is blocked",
+			template: `{{ getHostByName "localhost" }}`,
+			wantErr:  `function "getHostByName" not defined`,
+		},
+		{
+			name:     "now is allowed (benign)",
+			template: `{{ now | date "2006-01-02" }}`,
+			wantErr:  "", // should not error on parse
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpfile, err := os.CreateTemp(t.TempDir(), "test*.tmpl")
+			require.NoError(t, err)
+			defer os.Remove(tmpfile.Name())
+
+			_, err = tmpfile.WriteString(tt.template)
+			require.NoError(t, err)
+			tmpfile.Close()
+
+			_, err = NewTemplateReporter(tmpfile.Name())
+			if tt.wantErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

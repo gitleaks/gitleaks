@@ -29,7 +29,13 @@ func NewTemplateReporter(templatePath string) (*TemplateReporter, error) {
 
 	// TODO: Add helper functions like escaping for JSON, XML, etc.
 	t := template.New("custom")
-	t = t.Funcs(sprig.TxtFuncMap())
+
+	funcMap := sprig.TxtFuncMap()
+	delete(funcMap, "env")
+	delete(funcMap, "expandenv")
+	delete(funcMap, "getHostByName")
+
+	t = t.Funcs(funcMap)
 	t, err = t.Parse(templateText)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing file: %w", err)
