@@ -2826,6 +2826,13 @@ entropy = 2
 keywords = ["rdme_"]
 
 [[rules]]
+id = "replicate-api-token"
+description = "Detected a Replicate API token, risking unauthorized access to AI model endpoints."
+regex = '''(?i)\b(r8_[a-zA-Z0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 2
+keywords = ["r8_"]
+
+[[rules]]
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
 regex = '''\b(rubygems_[a-f0-9]{48})(?:[\x60'"\s;]|\\[nr]|$)'''
