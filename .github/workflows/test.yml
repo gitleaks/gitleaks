@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests with race detector
         run: |
-          gotestsum --raw-command -- go test -json ./... --race
+          gotestsum -- -race ./...
 
       - name: Validate generated config
         run: |
