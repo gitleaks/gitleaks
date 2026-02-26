@@ -2,7 +2,7 @@
 
 ## Test Failures Analysis
 
-The initial implementation failed CI tests due to incorrect test patterns that didn't match the project's established conventions.
+A implementação inicial falhou nos testes do CI devido a padrões de teste incorretos e imports não utilizados.
 
 ## Root Causes
 
@@ -36,6 +36,25 @@ Regex: utils.GenerateUniqueTokenRegex("sgp", false)
 - Couldn't enforce length requirements
 - No word boundary checks
 
+### 3. ❌ Unused Import
+
+**Problem:**
+```go
+import (
+    "github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"  // Not used!
+)
+```
+
+**Why it failed:**
+- Go compiler error: `imported and not used`
+- Build fails before tests even run
+- Leftover from dynamic secret generation approach
+
+**Error:**
+```
+Error: ./sourcegraph.go:5:2: "github.com/zricethezav/gitleaks/v8/cmd/generate/secrets" imported and not used
+```
+
 ## Solutions Applied
 
 ### 1. ✅ Static Test Cases
@@ -62,7 +81,7 @@ tps := []string{
 ```go
 // CORRECT - Explicit format with constraints
 Regex: utils.GenerateUniqueTokenRegex(
-    `\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\b`,
+    `\\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\\b`,
     true
 )
 ```
@@ -73,6 +92,22 @@ Regex: utils.GenerateUniqueTokenRegex(
 - Word boundaries: `\b`
 - Multiple format support via alternation: `|`
 - Second parameter `true` enables word boundary enforcement
+
+### 3. ✅ Clean Imports
+
+**Fixed:**
+```go
+import (
+    "github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+    "github.com/zricethezav/gitleaks/v8/config"
+    // secrets package removed - not needed for static tests
+)
+```
+
+**Benefits:**
+- Build succeeds
+- Clean code without unused dependencies
+- Follows Go best practices
 
 ## Pattern Breakdown
 
@@ -97,26 +132,40 @@ Regex: utils.GenerateUniqueTokenRegex(
 
 ### File: `cmd/generate/config/rules/sourcegraph.go`
 
-**Commit:** `f57396a3e9918194771fb6a1e9a79230d004b586`
+#### Commit History
+
+1. **Initial implementation** `f57396a` - Fixed test patterns
+2. **Remove unused import** `b8afa05` - Cleaned up imports
 
 #### Before ❌
 ```go
-Regex: utils.GenerateUniqueTokenRegex("sgp", false),
+import (
+    "github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+    "github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"  // ❌ Unused
+    "github.com/zricethezav/gitleaks/v8/config"
+)
+
+Regex: utils.GenerateUniqueTokenRegex("sgp", false),  // ❌ Too generic
 tps := []string{
-    utils.GenerateSampleSecret(...),  // Dynamic
-    secrets.NewSecret(...),           // Random
+    utils.GenerateSampleSecret(...),  // ❌ Dynamic
+    secrets.NewSecret(...),           // ❌ Random
 }
 ```
 
 #### After ✅
 ```go
+import (
+    "github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"  // ✅ Used
+    "github.com/zricethezav/gitleaks/v8/config"                     // ✅ Used
+)
+
 Regex: utils.GenerateUniqueTokenRegex(
-    `\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\b`,
+    `\\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\\b`,
     true
-),
+),  // ✅ Explicit
 tps := []string{
-    `sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b`,  // Static
-    `sgp_0D697F54cb24238EefB29af05Abf1b505E90950F`,                  // Static
+    `sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b`,  // ✅ Static
+    `sgp_0D697F54cb24238EefB29af05Abf1b505E90950F`,                  // ✅ Static
 }
 ```
 
@@ -158,6 +207,7 @@ tps := []string{
 ### 3. Code Quality
 
 - ✅ Follows project conventions
+- ✅ Clean imports (no unused)
 - ✅ Comprehensive documentation
 - ✅ Clear comments
 - ✅ Proper error handling
@@ -181,33 +231,44 @@ chmod +x test_sourcegraph_local.sh
 cd cmd/generate/config/rules/
 go test -v -run TestValidate/sourcegraph-access-token
 
-# 2. Regenerate config
+# 2. Check for build errors
+go build ./...
+
+# 3. Regenerate config
 cd ../../../..
 make generate
 
-# 3. Build
+# 4. Build
 make build
 
-# 4. Test detection
+# 5. Test detection
 echo 'TOKEN=sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b' > /tmp/test.txt
 ./gitleaks detect --no-git -s /tmp/test.txt -v
 
-# 5. Run full suite
+# 6. Run full suite
 make test
 ```
 
 ## Expected Results
 
 ✅ **All tests should pass:**
+- Build: SUCCESS (no import errors)
 - Unit tests: PASS
-- Build: SUCCESS
 - Detection: 1+ tokens found
 - Full test suite: PASS
 
+## Complete Fix Timeline
+
+| Order | Issue | Fix | Commit |
+|-------|-------|-----|--------|
+| 1 | Dynamic secret generation | Static test cases | `f57396a` |
+| 2 | Generic regex | Explicit pattern | `f57396a` |
+| 3 | Unused import | Remove secrets import | `b8afa05` |
+
 ## References
 
-- **Original Implementation:** Commit `19218ba`
-- **Fix Implementation:** Commit `f57396a`
+- **Initial Fix:** Commit `f57396a`
+- **Import Cleanup:** Commit `b8afa05`
 - **Pattern Reference:** `cmd/generate/config/rules/github.go`
 - **Issue:** [#1697](https://github.com/gitleaks/gitleaks/issues/1697)
 
@@ -217,9 +278,24 @@ make test
 
 1. **Use static test cases** - No runtime randomization
 2. **Explicit regex patterns** - Specify exact format
-3. **Follow existing patterns** - Check similar rules first
-4. **Test locally first** - Before pushing to CI
-5. **Document thoroughly** - Explain architectural decisions
+3. **Clean imports** - Remove unused dependencies
+4. **Follow existing patterns** - Check similar rules first
+5. **Test locally first** - Before pushing to CI
+6. **Document thoroughly** - Explain architectural decisions
+
+### Common Pitfalls to Avoid
+
+❌ **Don't:**
+- Use `secrets.NewSecret()` in test cases
+- Leave unused imports
+- Use generic regex without constraints
+- Forget to test locally before push
+
+✅ **Do:**
+- Use hardcoded static test strings
+- Import only what you use
+- Specify exact patterns with character classes and lengths
+- Run `go build` and `go test` before commit
 
 ### Testing Workflow
 
@@ -227,24 +303,28 @@ make test
 graph TD
     A[Write Rule] --> B[Static Test Cases]
     B --> C[Explicit Regex]
-    C --> D[Local Unit Tests]
-    D --> E{Pass?}
-    E -->|No| F[Debug & Fix]
-    F --> D
-    E -->|Yes| G[Regenerate Config]
-    G --> H[Build & Integration Test]
+    C --> D[Clean Imports]
+    D --> E[Local Build Check]
+    E --> F{Build OK?}
+    F -->|No| G[Fix Errors]
+    G --> E
+    F -->|Yes| H[Local Unit Tests]
     H --> I{Pass?}
-    I -->|No| F
-    I -->|Yes| J[Push to GitHub]
-    J --> K[CI Validation]
+    I -->|No| G
+    I -->|Yes| J[Regenerate Config]
+    J --> K[Integration Test]
+    K --> L{Pass?}
+    L -->|No| G
+    L -->|Yes| M[Push to GitHub]
+    M --> N[CI Validation]
 ```
 
 ## Next Steps
 
 1. ✅ **Fixes Applied** - All corrections implemented
-2. 🔄 **Local Testing** - Run validation script
-3. 📝 **Commit & Push** - Update PR with fixes
-4. ⏳ **Wait for CI** - GitHub Actions validation
+2. ✅ **Imports Cleaned** - No unused dependencies
+3. 🔄 **CI Running** - GitHub Actions validating
+4. ⏳ **Wait for CI** - All checks should pass
 5. ✅ **Ready for Review** - Once CI passes
 
 ## Support
@@ -252,4 +332,10 @@ graph TD
 For testing help, see:
 - [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Comprehensive testing instructions
 - [test_sourcegraph_local.sh](./test_sourcegraph_local.sh) - Automated test script
-- [docs/SOURCEGRAPH_IMPLEMENTATION.md](./docs/SOURCEGRAPH_IMPLEMENTATION.md) - Architecture details
+- [CI_FIXES.md](./CI_FIXES.md) - CI workflow fixes
+
+---
+
+**Status:** ✅ All fixes applied including import cleanup!
+
+**Last Update:** Removed unused `secrets` import (commit `b8afa05`)
