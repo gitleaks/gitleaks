@@ -2,7 +2,7 @@
 
 ## 🎯 Problema Identificado
 
-Os workflows do GitHub Actions estavam sendo **skipped** no fork devido a configurações específicas que impediam a execução.
+Os workflows do GitHub Actions estavam sendo **skipped** ou **falhando** no fork devido a configurações específicas que impediam a execução.
 
 ## 🔍 Análise Detalhada
 
@@ -55,7 +55,43 @@ go-version: '1.21'  # Versão estável e válida
 
 ---
 
-### Melhoria 3: Workflow Dedicado para SourceGraph ✨
+### Problema 3: Sintaxe Incorreta do gotestsum ❌
+
+**Arquivo:** `.github/workflows/test.yml`
+
+**Comando incorreto:**
+```yaml
+run: gotestsum --raw-command -- go test -json ./... --race
+```
+
+**Por quê falhava:**
+- `--raw-command` requer que o comando produza saída no formato `test2json`
+- `go test -json ./... --race` tem sintaxe incorreta (--race no lugar errado)
+- O comando deve ser: `go test -race -json ./...` (flags antes dos pacotes)
+- Mas para uso padrão, não precisamos de `--raw-command` nem `-json` explícito
+
+**Erro resultante:**
+```
+Error: exit status 2
+```
+
+**Solução Aplicada:**
+```yaml
+# Sintaxe padrão do gotestsum (sem --raw-command)
+run: gotestsum -- -race ./...
+```
+
+**Como funciona:**
+- `gotestsum` automaticamente adiciona `-json` ao `go test`
+- `--` separa flags do gotestsum de flags do go test
+- `-race` vai direto para `go test -race -json ./...`
+- Muito mais simples e confiável!
+
+**Commit:** [`b1972dd`](https://github.com/ElioNeto/gitleaks/commit/b1972ddb4e4f5ab647763c53b4c35cf2bc2edfe1)
+
+---
+
+### Melhoria 4: Workflow Dedicado para SourceGraph ✨
 
 **Arquivo:** `.github/workflows/test-sourcegraph.yml` (novo)
 
@@ -75,8 +111,54 @@ go-version: '1.21'  # Versão estável e válida
 | Workflow | Antes | Depois |
 |----------|-------|--------|
 | **gitleaks.yml** | ❌ Skip (repo restriction) | ✅ Executa no fork |
-| **test.yml** | ❌ Go 1.24 inválido | ✅ Go 1.21 válido |
+| **test.yml (Go)** | ❌ Go 1.24 inválido | ✅ Go 1.21 válido |
+| **test.yml (gotestsum)** | ❌ Sintaxe incorreta com --raw-command | ✅ Sintaxe padrão correta |
 | **test-sourcegraph.yml** | ❌ Não existia | ✅ Novo workflow dedicado |
+
+---
+
+## 📚 Detalhamento: gotestsum --raw-command
+
+### Quando usar --raw-command
+
+**Use apenas quando:**
+- Você precisa executar um script customizado
+- Você está usando um binário de teste pré-compilado
+- Você precisa de processamento especial antes dos testes
+
+**Exemplo válido:**
+```bash
+# Script customizado que já produz test2json
+gotestsum --raw-command -- ./custom-test-runner.sh
+```
+
+### Uso padrão (recomendado)
+
+**Para testes normais com go test:**
+```bash
+# Simples e funciona
+gotestsum -- -race ./...
+
+# Com flags adicionais
+gotestsum -- -race -count=1 -timeout=10m ./...
+
+# Com tags
+gotestsum -- -tags=integration -race ./...
+```
+
+### Sintaxe do --raw-command (quando necessário)
+
+**Se realmente precisar usar --raw-command:**
+```bash
+# Correto: comando deve produzir test2json
+gotestsum --raw-command -- go test -json -race ./...
+
+# Errado: flags no lugar errado
+gotestsum --raw-command -- go test -json ./... --race  # ❌
+
+# Errado: falta -json
+gotestsum --raw-command -- go test -race ./...  # ❌
+```
 
 ---
 
@@ -95,6 +177,7 @@ go-version: '1.21'  # Versão estável e válida
 - ✅ Go version: `1.24` → `1.21`
 - ✅ Actions atualizadas: `@v3` → `@v4` (checkout)
 - ✅ Actions atualizadas: `@v2` → `@v5` (setup-go)
+- ✅ gotestsum: `--raw-command -- go test -json ./... --race` → `-- -race ./...`
 - ✅ Adicionado: `workflow_dispatch` para trigger manual
 - ✅ Melhorado: Nomes descritivos nos steps
 
@@ -143,17 +226,6 @@ gh run watch --repo ElioNeto/gitleaks
 gh run view <run-id> --repo ElioNeto/gitleaks --log
 ```
 
-### Opção 3: Executar Manualmente
-
-```bash
-# Via CLI
-gh workflow run test-sourcegraph.yml --repo ElioNeto/gitleaks --ref feat/sourcegraph-token-detection
-
-# Via Web
-# https://github.com/ElioNeto/gitleaks/actions/workflows/test-sourcegraph.yml
-# Clique em "Run workflow"
-```
-
 ---
 
 ## 🎯 Status Esperado Após as Correções
@@ -180,6 +252,25 @@ gh workflow run test-sourcegraph.yml --repo ElioNeto/gitleaks --ref feat/sourceg
 
 ## 🔧 Troubleshooting
 
+### Erro: "gotestsum --raw-command" falha
+
+**Sintomas:**
+```
+Error: exit status 2
+```
+
+**Causa:**
+- Sintaxe incorreta do comando
+- Flags no lugar errado
+- Uso desnecessário de --raw-command
+
+**Solução:**
+```bash
+# NÃO use --raw-command para go test padrão
+# Use a sintaxe simples:
+gotestsum -- -race ./...
+```
+
 ### Workflow ainda em skip?
 
 **Verifique:**
@@ -189,9 +280,6 @@ gh api repos/ElioNeto/gitleaks/actions/permissions
 
 # 2. Último commit acionou os workflows?
 gh run list --repo ElioNeto/gitleaks --branch feat/sourcegraph-token-detection
-
-# 3. Verifique os arquivos de workflow
-gh api repos/ElioNeto/gitleaks/contents/.github/workflows --jq '.[].name'
 ```
 
 **Solução:**
@@ -199,25 +287,6 @@ gh api repos/ElioNeto/gitleaks/contents/.github/workflows --jq '.[].name'
 # Force um novo push
 git commit --allow-empty -m "ci: trigger workflows"
 git push origin feat/sourcegraph-token-detection
-```
-
-### Workflow falha no setup do Go?
-
-**Erro comum:**
-```
-Error: Version 1.24 not found
-```
-
-**Solução:**
-Já corrigido no commit [`e2ac5c0`](https://github.com/ElioNeto/gitleaks/commit/e2ac5c039f35a8398fb63dc42ccb00cc2716d3c5)
-
-### Workflow falha nos testes?
-
-**Verifique:**
-```bash
-# Rode localmente primeiro
-cd cmd/generate/config/rules/
-go test -v -run TestValidate/sourcegraph-access-token
 ```
 
 ---
@@ -246,55 +315,17 @@ git push origin feat/sourcegraph-token-detection
 # O PR #2045 será automaticamente atualizado
 ```
 
-### 4. Aguardar Aprovação dos Maintainers
-
-- Os maintainers precisarão aprovar workflows no PR upstream
-- Isso é normal para PRs de forks (segurança)
-- Seus testes no fork já comprovam que funciona
-
 ---
 
-## 📚 Referências
+## 📖 Referências
 
+- **gotestsum Documentation:** https://github.com/gotestyourself/gotestsum
 - **Issue Original:** [#1697](https://github.com/gitleaks/gitleaks/issues/1697)
 - **PR Upstream:** [#2045](https://github.com/gitleaks/gitleaks/pull/2045)
 - **Fork Actions:** [ElioNeto/gitleaks/actions](https://github.com/ElioNeto/gitleaks/actions)
 
 ---
 
-## 🎓 Lições Aprendidas
-
-### 1. Repository Restrictions em Workflows
-
-**Evite:**
-```yaml
-if: ${{ github.repository == 'org/repo' }}
-```
-
-**Use quando necessário:**
-```yaml
-# Para workflows que precisam de secrets específicos
-if: ${{ github.repository == 'org/repo' }}
-env:
-  PRODUCTION_SECRET: ${{ secrets.PROD_KEY }}
-```
-
-### 2. Validação de Versões
-
-**Sempre verifique:**
-- Versões do Go disponíveis: https://go.dev/dl/
-- Versões de Actions: https://github.com/actions/
-
-### 3. Workflows Dedicados
-
-**Benefícios:**
-- ✅ Feedback rápido em mudanças específicas
-- ✅ Debug mais fácil
-- ✅ Execução paralela
-- ✅ Logs mais claros
-
----
-
 **Status:** ✅ Todas as correções aplicadas e commitadas!
 
-**Próximo Passo:** Monitorar execução dos workflows no fork.
+**Último Update:** Corrigido sintaxe do gotestsum (commit `b1972dd`)
