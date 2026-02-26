@@ -1,0 +1,104 @@
+name: Test SourceGraph Rule
+
+on:
+  push:
+    branches:
+      - "feat/sourcegraph-token-detection"
+      - "master"
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  test-sourcegraph-rule:
+    name: Test SourceGraph Token Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Run SourceGraph rule unit tests
+        run: |
+          cd cmd/generate/config/rules/
+          go test -v -run TestValidate/sourcegraph-access-token
+          cd ../../../..
+
+      - name: Generate configuration
+        run: |
+          go generate ./...
+          
+      - name: Verify config generation
+        run: |
+          git diff --exit-code config/gitleaks.toml || (
+            echo "❌ Generated config is out of date. Run 'make generate' locally."
+            exit 1
+          )
+
+      - name: Build gitleaks
+        run: go build -o gitleaks ./cmd
+
+      - name: Create test file with valid tokens
+        run: |
+          cat > /tmp/test_valid_tokens.txt <<'EOF'
+          # True positives - should be detected
+          TOKEN=sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b
+          environment("CODY_TOKEN", "sgp_1a2b3c4d5e6f7890_AbC123DeF456789012345678901234567890AbCd")
+          SOURCEGRAPH_KEY=sgp_0D697F54cb24238EefB29af05Abf1b505E90950F
+          API_TOKEN="sgp_local_d7dfFD43cF2503B1da673EB560aAa3e80f16FA42"
+          EOF
+
+      - name: Test detection of valid tokens
+        run: |
+          ./gitleaks detect --no-git -s /tmp/test_valid_tokens.txt -v
+          DETECTIONS=$(./gitleaks detect --no-git -s /tmp/test_valid_tokens.txt 2>&1 | grep -c "sourcegraph-access-token" || true)
+          echo "✅ Detected $DETECTIONS SourceGraph tokens"
+          if [ "$DETECTIONS" -lt 4 ]; then
+            echo "❌ Expected at least 4 detections, got $DETECTIONS"
+            exit 1
+          fi
+
+      - name: Create test file with invalid tokens (false positives)
+        run: |
+          cat > /tmp/test_invalid_tokens.txt <<'EOF'
+          # False positives - should NOT be detected
+          EXAMPLE=sgp_0000000000000000_0000000000000000000000000000000000000000
+          TEMPLATE=sgp_xxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          LOW_ENTROPY=sgp_5555555dAAAAA7777777CcccCFaaaaaaaaaaaaaa
+          INVALID_CHAR=sgp_local_d45b6G86aBb0F2Cee943902dbaDBCFCFDD1dA089
+          EOF
+
+      - name: Test no false positives
+        run: |
+          if ./gitleaks detect --no-git -s /tmp/test_invalid_tokens.txt -v 2>&1 | grep -q "sourcegraph-access-token"; then
+            echo "❌ False positive detected!"
+            ./gitleaks detect --no-git -s /tmp/test_invalid_tokens.txt -v
+            exit 1
+          else
+            echo "✅ No false positives detected"
+          fi
+
+      - name: Run full test suite
+        run: go test -race ./...
+
+      - name: Test summary
+        if: success()
+        run: |
+          echo "" 
+          echo "============================================"
+          echo "✅ SourceGraph Token Detection - All Tests Passed!"
+          echo "============================================"
+          echo ""
+          echo "✓ Unit tests passed"
+          echo "✓ Configuration validated"
+          echo "✓ Build successful"
+          echo "✓ True positives detected (4+ tokens)"
+          echo "✓ No false positives"
+          echo "✓ Full test suite passed"
+          echo ""
