@@ -6,7 +6,8 @@ jobs:
   scan:
     name: gitleaks
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'gitleaks/gitleaks' }}
+    # Removed restriction: if: ${{ github.repository == 'gitleaks/gitleaks' }}
+    # This allows the workflow to run in forks for testing purposes
     steps:
       - uses: actions/checkout@v3
         with:
