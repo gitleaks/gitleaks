@@ -2,33 +2,51 @@ package rules
 
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 )
 
+// SourceGraph detects SourceGraph access tokens.
+// Token format: sgp_ followed by underscore-separated hexadecimal segments
+// Example: sgp_1234567890abcdef_fedcba0987654321
 func SourceGraph() *config.Rule {
 	// define rule
 	r := config.Rule{
 		RuleID:      "sourcegraph-access-token",
-		Description: "Sourcegraph is a code search and navigation engine.",
-		Regex:       utils.GenerateUniqueTokenRegex(`\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b`, true),
+		Description: "Detected a SourceGraph access token, which may compromise code search platform access and expose sensitive source code.",
+		Regex:       utils.GenerateUniqueTokenRegex("sgp", false),
 		Entropy:     3,
-		Keywords:    []string{"sgp_", "sourcegraph"},
+		Keywords:    []string{"sgp_"},
 	}
 
-	// validate
+	// validate with comprehensive test cases
+	// Generate realistic tokens with proper entropy
 	tps := []string{
-		`sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b`,
-		`sourcegraph: 6d2FabeB6ADd229Bc199FabA28fD3efb57dF0bD3`,
-		`sgp_0D697F54cb24238EefB29af05Abf1b505E90950F`,
-		`sgp_local_d7dfFD43cF2503B1da673EB560aAa3e80f16FA42`,
-		`sgp_local_bcD1DA18de0d6476Be0f3BD7Ef9Da4f09b479aE5`,
+		// Standard format: sgp_{hex}_{hex}
+		utils.GenerateSampleSecret("sourcegraph", "sgp_"+secrets.NewSecret(utils.Hex("16"))+"_"+secrets.NewSecret(utils.Hex("16"))),
+		// Multiline scenario from issue #1697
+		`environment("CODY_INTEGRATION_TEST_TOKEN", "sgp_` + secrets.NewSecret(utils.Hex("16")) + `_` + secrets.NewSecret(utils.Hex("16")) + `")`,
+		// With newline between comma and token (specific case from issue)
+		"SOURCEGRAPH_TOKEN=sgp_" + secrets.NewSecret(utils.Hex("16")) + "_" + secrets.NewSecret(utils.Hex("16")) + "\n",
+		// Legacy format: sgp_{40_hex_chars}
+		utils.GenerateSampleSecret("sourcegraph", "sgp_"+secrets.NewSecret(utils.Hex("40"))),
+		// Format with 'local' identifier
+		utils.GenerateSampleSecret("sourcegraph", "sgp_local_"+secrets.NewSecret(utils.Hex("40"))),
 	}
+
+	// False positives: patterns that should NOT trigger detection
 	fps := []string{
-		`sgp_5555555dAAAAA7777777CcccCFaaaaaaaaaaaaaa`,                    // low entropy
-		`sgp_local_d45b6G86aBb0F2Cee943902dbaDBCFCFDD1dA089`,              // invalid case
-		`sgp_652d9a2e48FC7E!FcDbEA1BC2E2A6CE23cFe7F7D`,                    // invalid character
-		`sgp_78Ad84a5B6e8A2fE5B_4085FB0ccaDDd29DB66Fd7FE9bA2C1cdCE8400CD`, // invalid length
-		`BcAeb6640ad7DAD46AD73687946Ce85047d5C9Bb`,
+		// Low entropy - all same character
+		"sgp_0000000000000000_0000000000000000",
+		"sgp_xxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxx",
+		// Placeholder/example patterns
+		"sgp_YOUR_TOKEN_HERE_REPLACE_THIS_VALUE",
+		"sgp_****************_****************",
+		// Documentation examples
+		"sgp_example_token_value_not_real_key",
+		// Invalid characters (non-hex)
+		"sgp_GHIJKLMNOPQRSTUV_WXYZ1234567890AB",
 	}
+
 	return utils.Validate(r, tps, fps)
 }
