@@ -7,20 +7,23 @@ on:
   pull_request:
     branches:
       - "*"
+  workflow_dispatch:
 
 jobs:
   test:
+    name: Run Tests
     strategy:
       matrix:
         platform: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version: '1.21'
 
       - name: Build
         run: go build ./...
@@ -29,9 +32,11 @@ jobs:
         run: |
           go install gotest.tools/gotestsum@latest
 
-      - name: Test
+      - name: Run tests with race detector
         run: |
           gotestsum --raw-command -- go test -json ./... --race
 
-      - name: Validate Config
-        run: go generate ./... && git diff --exit-code
+      - name: Validate generated config
+        run: |
+          go generate ./...
+          git diff --exit-code
