@@ -3,6 +3,7 @@ package rules
 import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 // SourceGraph detects SourceGraph access tokens.
@@ -15,9 +16,9 @@ func SourceGraph() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sourcegraph-access-token",
 		Description: "Detected a SourceGraph access token, which may compromise code search platform access and expose sensitive source code.",
-		Regex:       utils.GenerateUniqueTokenRegex(`\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\b`, true),
+		Regex:       regexp.MustCompile(`\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40})\b`),
 		Entropy:     3,
-		Keywords:    []string{"sgp_", "sourcegraph"},
+		Keywords:    []string{"sgp_"},
 	}
 
 	// validate with realistic test cases
