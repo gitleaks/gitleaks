@@ -226,9 +226,9 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
+			// Log the error and propagate it to stop the scan
 			logger.Error().Err(err).Send()
-			return nil
+			return err
 		}
 
 		// both the fragment's content and path should be empty for it to be
