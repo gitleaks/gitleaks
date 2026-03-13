@@ -1,17 +1,19 @@
-name: gitleaks
+name: Gitleaks Scan
+
 on:
   push:
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  scan:
-    name: gitleaks
+  gitleaks:
+    name: Scan for Secrets
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'gitleaks/gitleaks' }}
+
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Run Gitleaks
+        uses: zricethezav/gitleaks-action@v2.3.4
