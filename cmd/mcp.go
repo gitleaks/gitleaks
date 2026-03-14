@@ -49,9 +49,14 @@ func runMCP(_ *cobra.Command, _ []string) {
 	}
 }
 
+func boolPtr(b bool) *bool { return &b }
+
 func scanDirectoryTool() mcp.Tool {
 	return mcp.NewTool("scan_directory",
 		mcp.WithDescription("Scan a directory or file for secrets using gitleaks. Returns any findings as JSON."),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			ReadOnlyHint: boolPtr(true),
+		}),
 		mcp.WithString("path",
 			mcp.Required(),
 			mcp.Description("Path to the directory or file to scan"),
@@ -74,6 +79,9 @@ func scanDirectoryTool() mcp.Tool {
 func scanGitTool() mcp.Tool {
 	return mcp.NewTool("scan_git",
 		mcp.WithDescription("Scan a git repository's commit history for secrets using gitleaks. Returns any findings as JSON."),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			ReadOnlyHint: boolPtr(true),
+		}),
 		mcp.WithString("path",
 			mcp.Required(),
 			mcp.Description("Path to the git repository to scan"),
