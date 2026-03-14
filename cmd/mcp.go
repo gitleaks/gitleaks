@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -31,6 +33,54 @@ var mcpCmd = &cobra.Command{
 scanning capabilities as tools. The server communicates via stdio and can be
 used with MCP-compatible clients such as coding agents and AI assistants.`,
 	Run: runMCP,
+}
+
+// allowedLogOpts is the set of git log flags considered safe to pass through
+// from MCP clients. Flags not in this list are rejected to prevent injection
+// of arbitrary git options (e.g. --exec, --output).
+var allowedLogOpts = map[string]bool{
+	"--since":          true,
+	"--until":          true,
+	"--after":          true,
+	"--before":         true,
+	"--author":         true,
+	"--committer":      true,
+	"--grep":           true,
+	"--all":            true,
+	"--branches":       true,
+	"--tags":           true,
+	"--remotes":        true,
+	"--first-parent":   true,
+	"--merges":         true,
+	"--no-merges":      true,
+	"--max-count":      true,
+	"--skip":           true,
+	"--ancestry-path":  true,
+	"-n":               true,
+}
+
+// validateLogOpts checks that every flag in logOpts is in the allowlist.
+// Returns an error describing the first rejected flag, or nil if all are safe.
+func validateLogOpts(logOpts string) error {
+	if logOpts == "" {
+		return nil
+	}
+	parts := strings.Fields(logOpts)
+	for _, part := range parts {
+		if !strings.HasPrefix(part, "-") {
+			// Positional arg (e.g. a value for --since), allow it.
+			continue
+		}
+		// Handle --flag=value by splitting on '='.
+		flag := part
+		if idx := strings.Index(part, "="); idx != -1 {
+			flag = part[:idx]
+		}
+		if !allowedLogOpts[flag] {
+			return fmt.Errorf("log_opts contains disallowed flag %q; only date/author/branch filter flags are permitted", flag)
+		}
+	}
+	return nil
 }
 
 func runMCP(_ *cobra.Command, _ []string) {
@@ -70,8 +120,11 @@ func scanDirectoryTool() mcp.Tool {
 		mcp.WithNumber("max_decode_depth",
 			mcp.Description("Maximum recursive decoding depth (default 5)"),
 		),
+		mcp.WithNumber("max_archive_depth",
+			mcp.Description("Maximum nested archive scanning depth (default 0, no archive traversal)"),
+		),
 		mcp.WithNumber("redact",
-			mcp.Description("Redact secrets from output. Value from 0-100 as percentage (default 0, no redaction)"),
+			mcp.Description("Redact secrets from output. Value from 0-100 as percentage (default 100, full redaction). Set to 0 to disable redaction."),
 		),
 	)
 }
@@ -87,7 +140,7 @@ func scanGitTool() mcp.Tool {
 			mcp.Description("Path to the git repository to scan"),
 		),
 		mcp.WithString("log_opts",
-			mcp.Description("Additional git log options (e.g. '--since=2024-01-01')"),
+			mcp.Description("Additional git log options (e.g. '--since=2024-01-01'). Only date, author, and branch filter flags are allowed."),
 		),
 		mcp.WithBoolean("staged",
 			mcp.Description("Scan only staged changes (default false)"),
@@ -98,42 +151,94 @@ func scanGitTool() mcp.Tool {
 		mcp.WithNumber("max_decode_depth",
 			mcp.Description("Maximum recursive decoding depth (default 5)"),
 		),
+		mcp.WithNumber("max_archive_depth",
+			mcp.Description("Maximum nested archive scanning depth (default 0, no archive traversal)"),
+		),
 		mcp.WithNumber("redact",
-			mcp.Description("Redact secrets from output. Value from 0-100 as percentage (default 0, no redaction)"),
+			mcp.Description("Redact secrets from output. Value from 0-100 as percentage (default 100, full redaction). Set to 0 to disable redaction."),
 		),
 	)
 }
 
 // loadMCPConfig loads the gitleaks config for a given source path.
-func loadMCPConfig(source string) config.Config {
+// It checks GITLEAKS_CONFIG and GITLEAKS_CONFIG_TOML env vars first,
+// then source-local .gitleaks.toml, and falls back to the built-in default.
+// Returns an error if config loading or parsing fails.
+func loadMCPConfig(source string) (config.Config, error) {
 	v := viper.New()
 	v.SetConfigType("toml")
 
-	if err := v.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
-		logging.Warn().Err(err).Msg("failed to load default config")
-		return config.Config{}
+	loaded := false
+
+	// Check GITLEAKS_CONFIG env var first (points to a file path).
+	if envPath := os.Getenv("GITLEAKS_CONFIG"); envPath != "" {
+		v.SetConfigFile(envPath)
+		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+		if err := v.ReadInConfig(); err != nil {
+			return config.Config{}, fmt.Errorf("failed to load config from GITLEAKS_CONFIG (%s): %w", envPath, err)
+		}
+		loaded = true
+	} else if envContent := os.Getenv("GITLEAKS_CONFIG_TOML"); envContent != "" {
+		// GITLEAKS_CONFIG_TOML contains inline TOML content.
+		logging.Debug().Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
+		if err := v.ReadConfig(strings.NewReader(envContent)); err != nil {
+			return config.Config{}, fmt.Errorf("failed to load config from GITLEAKS_CONFIG_TOML: %w", err)
+		}
+		loaded = true
+	}
+
+	if !loaded {
+		// Check for {source}/.gitleaks.toml.
+		localConfig := filepath.Join(source, ".gitleaks.toml")
+		fileInfo, statErr := os.Stat(source)
+		if statErr == nil && fileInfo.IsDir() {
+			if _, err := os.Stat(localConfig); err == nil {
+				logging.Debug().Msgf("using gitleaks config from %s", localConfig)
+				v.AddConfigPath(source)
+				v.SetConfigName(".gitleaks")
+				if err := v.ReadInConfig(); err != nil {
+					return config.Config{}, fmt.Errorf("failed to load config from %s: %w", localConfig, err)
+				}
+				loaded = true
+			}
+		}
+	}
+
+	if !loaded {
+		// Fall back to built-in default config.
+		logging.Debug().Msg("using default gitleaks config")
+		if err := v.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
+			return config.Config{}, fmt.Errorf("failed to load default config: %w", err)
+		}
 	}
 
 	var vc config.ViperConfig
 	if err := v.Unmarshal(&vc); err != nil {
-		logging.Warn().Err(err).Msg("failed to unmarshal config")
-		return config.Config{}
+		return config.Config{}, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
 	cfg, err := vc.Translate()
 	if err != nil {
-		logging.Warn().Err(err).Msg("failed to translate config")
-		return config.Config{}
+		return config.Config{}, fmt.Errorf("failed to translate config: %w", err)
 	}
-	return cfg
+	return cfg, nil
 }
 
-func newMCPDetector(ctx context.Context, cfg config.Config, maxDecodeDepth int, redact uint) *detect.Detector {
+func newMCPDetector(ctx context.Context, cfg config.Config, source string, maxDecodeDepth, maxArchiveDepth int, redact uint) *detect.Detector {
 	detector := detect.NewDetectorContext(ctx, cfg)
 	detector.MaxDecodeDepth = maxDecodeDepth
-	if redact > 0 {
-		detector.Redact = redact
+	detector.MaxArchiveDepth = maxArchiveDepth
+	detector.Redact = redact
+
+	// Load .gitleaksignore from the source path, matching the behavior in
+	// cmd/root.go Detector().
+	ignorePath := filepath.Join(source, ".gitleaksignore")
+	if fileExists(ignorePath) {
+		if err := detector.AddGitleaksIgnore(ignorePath); err != nil {
+			logging.Warn().Err(err).Msg("could not load .gitleaksignore")
+		}
 	}
+
 	return detector
 }
 
@@ -178,24 +283,37 @@ func handleScanDirectory(ctx context.Context, request mcp.CallToolRequest) (*mcp
 		}
 	}
 
-	var redact uint
+	maxArchiveDepth := 0
+	if v, ok := request.GetArguments()["max_archive_depth"]; ok {
+		if n, ok := v.(float64); ok {
+			maxArchiveDepth = int(n)
+		}
+	}
+
+	// Default to full redaction (100%) for MCP server output.
+	// Callers must explicitly set redact=0 to get unredacted secrets.
+	redact := uint(100)
 	if v, ok := request.GetArguments()["redact"]; ok {
 		if n, ok := v.(float64); ok {
 			redact = uint(n)
 		}
 	}
 
-	cfg := loadMCPConfig(path)
-	detector := newMCPDetector(ctx, cfg, maxDecodeDepth, redact)
+	cfg, err := loadMCPConfig(path)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("config error: %v", err)), nil
+	}
+	detector := newMCPDetector(ctx, cfg, path, maxDecodeDepth, maxArchiveDepth, redact)
 
 	findings, err := detector.DetectSource(
 		ctx,
 		&sources.Files{
-			Config:         &cfg,
-			FollowSymlinks: followSymlinks,
-			MaxFileSize:    maxTargetMB * 1_000_000,
-			Path:           path,
-			Sema:           detector.Sema,
+			Config:          &cfg,
+			FollowSymlinks:  followSymlinks,
+			MaxFileSize:     maxTargetMB * 1_000_000,
+			Path:            path,
+			Sema:            detector.Sema,
+			MaxArchiveDepth: maxArchiveDepth,
 		},
 	)
 
@@ -203,12 +321,8 @@ func handleScanDirectory(ctx context.Context, request mcp.CallToolRequest) (*mcp
 		return mcp.NewToolResultError(fmt.Sprintf("scan failed: %v", err)), nil
 	}
 
-	// Redact if requested
-	if redact > 0 {
-		for i := range findings {
-			findings[i].Redact(redact)
-		}
-	}
+	// Redaction is already applied by the detector's filter() in DetectContext.
+	// Do not redact again here to avoid corrupting already-masked output.
 
 	result, err := findingsToJSON(findings)
 	if err != nil {
@@ -232,6 +346,11 @@ func handleScanGit(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 		}
 	}
 
+	// Validate log_opts against the allowlist before passing to git.
+	if err := validateLogOpts(logOpts); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("invalid log_opts: %v", err)), nil
+	}
+
 	staged := false
 	if v, ok := request.GetArguments()["staged"]; ok {
 		if b, ok := v.(bool); ok {
@@ -253,15 +372,27 @@ func handleScanGit(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 		}
 	}
 
-	var redact uint
+	maxArchiveDepth := 0
+	if v, ok := request.GetArguments()["max_archive_depth"]; ok {
+		if n, ok := v.(float64); ok {
+			maxArchiveDepth = int(n)
+		}
+	}
+
+	// Default to full redaction (100%) for MCP server output.
+	// Callers must explicitly set redact=0 to get unredacted secrets.
+	redact := uint(100)
 	if v, ok := request.GetArguments()["redact"]; ok {
 		if n, ok := v.(float64); ok {
 			redact = uint(n)
 		}
 	}
 
-	cfg := loadMCPConfig(path)
-	detector := newMCPDetector(ctx, cfg, maxDecodeDepth, redact)
+	cfg, err := loadMCPConfig(path)
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("config error: %v", err)), nil
+	}
+	detector := newMCPDetector(ctx, cfg, path, maxDecodeDepth, maxArchiveDepth, redact)
 
 	var (
 		gitCmd   *sources.GitCmd
@@ -283,9 +414,10 @@ func handleScanGit(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	findings, err = detector.DetectSource(
 		ctx,
 		&sources.Git{
-			Cmd:    gitCmd,
-			Config: &detector.Config,
-			Sema:   detector.Sema,
+			Cmd:             gitCmd,
+			Config:          &detector.Config,
+			Sema:            detector.Sema,
+			MaxArchiveDepth: maxArchiveDepth,
 		},
 	)
 
@@ -293,12 +425,8 @@ func handleScanGit(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 		return mcp.NewToolResultError(fmt.Sprintf("scan failed: %v", err)), nil
 	}
 
-	// Redact if requested
-	if redact > 0 {
-		for i := range findings {
-			findings[i].Redact(redact)
-		}
-	}
+	// Redaction is already applied by the detector's filter() in DetectContext.
+	// Do not redact again here to avoid corrupting already-masked output.
 
 	result, err := findingsToJSON(findings)
 	if err != nil {
