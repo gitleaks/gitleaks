@@ -162,7 +162,7 @@ func AzureSQLConnectionString() *config.Rule {
 	// validate
 	tps := []string{
 		`connectionString = "Server=tcp:myserver.database.windows.net,1433;Database=mydb;User ID=admin;Password=` + secrets.NewSecret(`[A-Za-z0-9!@#$%^&]{16}`) + `;Encrypt=True"`, // gitleaks:allow
-		`Data Source=myserver.database.windows.net;Initial Catalog=mydb;User ID=sa;Password=` + secrets.NewSecret(`[A-Za-z0-9!@#$%^&]{12}`),                                        // gitleaks:allow
+		`Data Source=myserver.database.windows.net;Initial Catalog=mydb;User ID=sa;Password=` + secrets.NewSecret(`[A-Za-z0-9!@#$%^&]{20}`),                                        // gitleaks:allow
 	}
 	fps := []string{
 		// env var placeholder — global allowlist catches $VAR patterns but we keep this explicit
@@ -380,9 +380,11 @@ func AzureSearchAPIKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "azure-search-api-key",
 		Description: "Found an Azure Cognitive Search API Key, which may allow unauthorized read or write access to search indexes and data.",
-		// Azure Search admin keys are 32 hex characters
+		// Azure Search admin keys are 32 hex characters.
+		// Hex strings (16-char alphabet) have a theoretical max entropy of 4.0;
+		// random 32-char hex averages ~3.3-3.5, so we use a lower threshold.
 		Regex:   utils.GenerateSemiGenericRegex([]string{"search.?key", "search.?api.?key", "azure.?search", "cognitive.?search"}, `[A-Fa-f0-9]{32}`, true),
-		Entropy: 3.5,
+		Entropy: 3,
 		Keywords: []string{
 			"search_key", "search-key", "azure_search", "azure-search",
 		},
