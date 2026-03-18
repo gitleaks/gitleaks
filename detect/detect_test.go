@@ -1815,6 +1815,47 @@ func TestDetectWithArchives(t *testing.T) {
 			},
 		},
 		{
+			// Regression test for https://github.com/gitleaks/gitleaks/issues/2010:
+			// zip archive with a non-standard extension should still be detected
+			// via content sniffing (magic bytes) rather than relying on extension.
+			source:  filepath.Join(archivesBasePath, "files.unknown"),
+			cfgName: "archives",
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files.unknown!files/api.go",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files.unknown!files/api.go:aws-access-key:20",
+				},
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   20,
+					EndLine:     20,
+					StartColumn: 16,
+					EndColumn:   35,
+					Line:        "\n\tawsToken := \"AKIALALEMEL33243OLIA\"",
+					Match:       "AKIALALEMEL33243OLIA",
+					Secret:      "AKIALALEMEL33243OLIA",
+					File:        "../testdata/archives/files.unknown!files/main.go",
+					SymlinkFile: "",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "../testdata/archives/files.unknown!files/main.go:aws-access-key:20",
+				},
+			},
+		},
+		{
 			source:  filepath.Join(archivesBasePath, "nested.tar.gz"),
 			cfgName: "archives",
 			expectedFindings: []report.Finding{

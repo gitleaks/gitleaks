@@ -50,7 +50,23 @@ type File struct {
 
 // Fragments yields fragments for the this source
 func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
+	// First, try to identify the archive format by file extension alone.
 	format, _, err := archives.Identify(ctx, s.Path, nil)
+
+	// If the extension didn't match, fall back to content sniffing (magic
+	// bytes) so that archives with renamed or unknown extensions are still
+	// detected. Content sniffing is only safe when the reader supports
+	// seeking (e.g. *os.File), since Identify needs to peek at bytes
+	// without consuming them from non-replayable readers.
+	// See https://github.com/gitleaks/gitleaks/issues/2010
+	if (err != nil || format == nil) && s.Content != nil {
+		if seeker, ok := s.Content.(io.Seeker); ok {
+			format, _, err = archives.Identify(ctx, "", s.Content)
+			// Seek back to the start so subsequent reads see the full content.
+			_, _ = seeker.Seek(0, io.SeekStart)
+		}
+	}
+
 	// Process the file as an archive if there's no error && Identify returns
 	// a format; but if there's an error or no format, just swallow the error
 	// and fall back on treating it like a normal file and let fileFragments
