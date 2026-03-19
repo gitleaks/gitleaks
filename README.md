@@ -209,6 +209,8 @@ If there is no target specified as a positional argument, then gitleaks will att
 The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
 If there is no target specified as a positional argument, then gitleaks will scan the current working directory.
 
+Use `-g` / `--gitignore` to skip files that match patterns in a `.gitignore` file found in the scan root. This is useful for local build artifacts and caches that should not be scanned.
+
 #### Stdin
 
 You can also stream data to gitleaks with the `stdin` command. Example: `cat some_file | gitleaks -v stdin`
