@@ -66,7 +66,7 @@ func TestRunSubmit_ReadsJSONAndSubmits(t *testing.T) {
 }
 
 func TestRunSubmit_FileNotFound(t *testing.T) {
-	err := runSubmit(nil, "eng_test123", "/nonexistent/path/results.json")
+	err := runSubmit(nil, "eng_test123", "tok_test", "/nonexistent/path/results.json")
 	if err == nil {
 		t.Error("expected error for missing file")
 	}
