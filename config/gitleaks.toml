@@ -2315,6 +2315,13 @@ entropy = 3
 keywords = ["glsa_"]
 
 [[rules]]
+id = "groq-api-key"
+description = "Detected a Groq API key, which could allow unauthorized access to Groq AI inference services and incur unexpected costs."
+regex = '''\b(gsk_[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 4
+keywords = ["gsk_"]
+
+[[rules]]
 id = "harness-api-key"
 description = "Identified a Harness Access Token (PAT or SAT), risking unauthorized access to a Harness account."
 regex = '''(?:pat|sat)\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9]{24}\.[a-zA-Z0-9]{20}'''
@@ -3102,6 +3109,13 @@ entropy = 3
 keywords = ["sumo"]
 
 [[rules]]
+id = "supabase-service-key"
+description = "Detected a Supabase Personal Access Token (PAT), which could allow unauthorized access to Supabase project management APIs."
+regex = '''\b(sbp_[a-f0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["sbp_"]
+
+[[rules]]
 id = "telegram-bot-api-token"
 description = "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram."
 regex = '''(?i)[\w.-]{0,50}?(?:telegr)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -3182,6 +3196,13 @@ keywords = [
 regexes = [
     '''s\.[A-Za-z]{24}''',
 ]
+
+[[rules]]
+id = "xai-api-key"
+description = "Detected an xAI API key, which could allow unauthorized access to xAI (Grok) AI services and data exposure."
+regex = '''\b(xai-[A-Za-z0-9]{80})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 4
+keywords = ["xai-"]
 
 [[rules]]
 id = "yandex-access-token"

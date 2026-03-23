@@ -101,6 +101,7 @@ func main() {
 		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
+		rules.GroqAPIKey(),
 		// TODO figure out what makes sense for GCP
 		// rules.GCPServiceAccount(),
 		rules.GCPAPIKey(),
@@ -228,6 +229,7 @@ func main() {
 		rules.StripeAccessToken(),
 		rules.SquareAccessToken(),
 		rules.SquareSpaceAccessToken(),
+		rules.SupabaseServiceKey(),
 		rules.SumoLogicAccessID(),
 		rules.SumoLogicAccessToken(),
 		rules.TeamsWebhook(),
@@ -243,6 +245,7 @@ func main() {
 		rules.Typeform(),
 		rules.VaultBatchToken(),
 		rules.VaultServiceToken(),
+		rules.XAIAPIKey(),
 		rules.YandexAPIKey(),
 		rules.YandexAWSAccessToken(),
 		rules.YandexAccessToken(),
