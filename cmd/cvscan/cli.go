@@ -9,7 +9,8 @@ import (
 
 // CLIConfig holds all flag-based configuration.
 type CLIConfig struct {
-	ID        string // eng_xxx or tok_xxx (empty = local-only)
+	ID        string // eng_xxx
+	Token     string // tok_xxx
 	ReposPath string
 	Output    string
 	Scanners  string // comma-separated: "secrets,iac"
@@ -68,8 +69,11 @@ func runCLI(ctx context.Context, cfg CLIConfig) error {
 		if err := ValidateID(cfg.ID); err != nil {
 			return err
 		}
+		if cfg.Token == "" {
+			return fmt.Errorf("--token is required when --id is provided")
+		}
 		fmt.Print("\nSubmitting findings to Cloudvisor... ")
-		if err := submitFindings(apiBaseURL, cfg.ID, result); err != nil {
+		if err := submitFindings(apiBaseURL, cfg.ID, cfg.Token, result); err != nil {
 			fmt.Println("FAILED")
 			return err
 		}

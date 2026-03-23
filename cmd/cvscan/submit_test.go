@@ -15,8 +15,11 @@ func TestRunSubmit_ReadsJSONAndSubmits(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
-		if r.URL.Path != "/submit" {
+		if r.URL.Path != "/submit-findings" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if auth := r.Header.Get("Authorization"); auth != "Bearer tok_test" {
+			t.Errorf("unexpected Authorization header: %s", auth)
 		}
 		if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
 			t.Fatal(err)
@@ -49,7 +52,7 @@ func TestRunSubmit_ReadsJSONAndSubmits(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := runSubmit(nil, "eng_test123", sidecar)
+	err := runSubmit(nil, "eng_test123", "tok_test", sidecar)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,18 +78,15 @@ func TestSubmitFindings_Success(t *testing.T) {
 		if r.Method != http.MethodPost {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
-		if r.URL.Path != "/submit" {
+		if r.URL.Path != "/submit-findings" {
 			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		if auth := r.Header.Get("Authorization"); auth != "Bearer tok_abc123" {
+			t.Errorf("unexpected Authorization header: %s", auth)
 		}
 		if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
 			t.Fatal(err)
 		}
-
-		// Verify no Authorization header (ID is in body now)
-		if auth := r.Header.Get("Authorization"); auth != "" {
-			t.Errorf("unexpected Authorization header: %s", auth)
-		}
-
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -105,7 +105,7 @@ func TestSubmitFindings_Success(t *testing.T) {
 		Summary: Summary{TotalFindings: 1, SecretsFindings: 1},
 	}
 
-	err := submitFindings(server.URL, "eng_abc123", result)
+	err := submitFindings(server.URL, "eng_abc123", "tok_abc123", result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestSubmitFindings_ServerError(t *testing.T) {
 	defer server.Close()
 
 	result := &ScanResult{Summary: Summary{}}
-	err := submitFindings(server.URL, "eng_abc123", result)
+	err := submitFindings(server.URL, "eng_abc123", "tok_abc123", result)
 	if err == nil {
 		t.Error("expected error on server error")
 	}
@@ -144,7 +144,7 @@ func TestSubmitFindings_Conflict(t *testing.T) {
 	defer server.Close()
 
 	result := &ScanResult{Summary: Summary{}}
-	err := submitFindings(server.URL, "eng_abc123", result)
+	err := submitFindings(server.URL, "eng_abc123", "tok_abc123", result)
 	if err == nil {
 		t.Error("expected error on 409 conflict")
 	}
@@ -159,7 +159,7 @@ func TestValidateID(t *testing.T) {
 		wantErr bool
 	}{
 		{"eng_abc123", false},
-		{"tok_xyz789", false},
+		{"tok_xyz789", true},
 		{"ENG-123", true},
 		{"invalid", true},
 		{"", true},

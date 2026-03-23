@@ -76,7 +76,7 @@ func TestIntegration_LocalOnly(t *testing.T) {
 }
 
 // TestIntegration_WithSubmission verifies scanning + submission via --id.
-// A mock server captures the POST /submit payload so we can assert on it.
+// A mock server captures the POST /submit-findings payload so we can assert on it.
 func TestIntegration_WithSubmission(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
@@ -87,9 +87,9 @@ func TestIntegration_WithSubmission(t *testing.T) {
 	var submitCalled bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/submit":
+		case "/submit-findings":
 			if r.Method != http.MethodPost {
-				t.Errorf("expected POST /submit, got %s", r.Method)
+				t.Errorf("expected POST /submit-findings, got %s", r.Method)
 				w.WriteHeader(http.StatusMethodNotAllowed)
 				return
 			}
@@ -116,6 +116,7 @@ func TestIntegration_WithSubmission(t *testing.T) {
 
 	err := runCLI(context.Background(), CLIConfig{
 		ID:        "eng_test123",
+		Token:     "tok_test123",
 		ReposPath: tmpDir,
 		Output:    reportPath,
 		Scanners:  "secrets",

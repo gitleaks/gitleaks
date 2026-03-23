@@ -14,7 +14,7 @@ import (
 
 type submitRequest struct {
 	Schema      string    `json:"schema"`
-	ID          string    `json:"id"`
+	ID          string    `json:"engagement_id"`
 	GeneratedAt string    `json:"generated_at"`
 	ReposPath   string    `json:"repos_path"`
 	Summary     Summary   `json:"summary"`
@@ -23,10 +23,10 @@ type submitRequest struct {
 
 var httpClient = &http.Client{Timeout: 15 * time.Second}
 
-func submitFindings(baseURL, id string, result *ScanResult) error {
+func submitFindings(baseURL, engagementID, token string, result *ScanResult) error {
 	payload := submitRequest{
 		Schema:      "cloudvisor.cvscan-report.v1",
-		ID:          id,
+		ID:          engagementID,
 		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		ReposPath:   result.ReposPath,
 		Summary:     result.Summary,
@@ -38,11 +38,12 @@ func submitFindings(baseURL, id string, result *ScanResult) error {
 		return fmt.Errorf("failed to marshal findings: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, baseURL+"/submit", bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, baseURL+"/submit-findings", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -55,15 +56,23 @@ func submitFindings(baseURL, id string, result *ScanResult) error {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		var body map[string]any
+		_ = json.NewDecoder(resp.Body).Decode(&body)
+		if msg, ok := body["error"].(string); ok {
+			return fmt.Errorf("submission failed with HTTP %d: %s", resp.StatusCode, msg)
+		}
 		return fmt.Errorf("submission failed with HTTP %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
-func runSubmit(_ context.Context, id string, filePath string) error {
-	if err := ValidateID(id); err != nil {
+func runSubmit(_ context.Context, engagementID, token, filePath string) error {
+	if err := ValidateID(engagementID); err != nil {
 		return err
+	}
+	if token == "" {
+		return fmt.Errorf("--token is required for submission")
 	}
 
 	data, err := os.ReadFile(filePath)
@@ -77,7 +86,7 @@ func runSubmit(_ context.Context, id string, filePath string) error {
 	}
 
 	fmt.Print("Submitting findings to Cloudvisor... ")
-	if err := submitFindings(apiBaseURL, id, &result); err != nil {
+	if err := submitFindings(apiBaseURL, engagementID, token, &result); err != nil {
 		fmt.Println("FAILED")
 		return err
 	}
@@ -101,10 +110,10 @@ func jsonSidecarPath(htmlPath string) string {
 	return filepath.Join(dir, ".cvscan-results.json")
 }
 
-// ValidateID checks that the ID has a valid prefix (eng_ or tok_).
+// ValidateID checks that the engagement ID has the eng_ prefix.
 func ValidateID(id string) error {
-	if strings.HasPrefix(id, "eng_") || strings.HasPrefix(id, "tok_") {
+	if strings.HasPrefix(id, "eng_") {
 		return nil
 	}
-	return fmt.Errorf("invalid ID %q: must start with eng_ or tok_", id)
+	return fmt.Errorf("invalid engagement ID %q: must start with eng_", id)
 }
