@@ -56,6 +56,9 @@ var submitCmd = &cobra.Command{
 		if id == "" {
 			return fmt.Errorf("--id is required for submission")
 		}
+		if token == "" {
+			return fmt.Errorf("--token is required for submission")
+		}
 
 		return runSubmit(cmd.Context(), id, token, file)
 	},
