@@ -57,9 +57,10 @@ func submitFindings(baseURL, engagementID, token string, result *ScanResult) err
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var body map[string]any
-		_ = json.NewDecoder(resp.Body).Decode(&body)
-		if msg, ok := body["error"].(string); ok {
-			return fmt.Errorf("submission failed with HTTP %d: %s", resp.StatusCode, msg)
+		if err := json.NewDecoder(resp.Body).Decode(&body); err == nil {
+			if msg, ok := body["error"].(string); ok {
+				return fmt.Errorf("submission failed with HTTP %d: %s", resp.StatusCode, msg)
+			}
 		}
 		return fmt.Errorf("submission failed with HTTP %d", resp.StatusCode)
 	}
