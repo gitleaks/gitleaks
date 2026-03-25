@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.repository == 'gitleaks/gitleaks' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@bf2dc8e55639c1e091e9b45970152e4313705814
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
