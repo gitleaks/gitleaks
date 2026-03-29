@@ -57,10 +57,6 @@ Date:        2022-08-03T12:31:40Z
 Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23
 ```
 
-### GitHub Sponsors
-
-Sponsor [@zricethezav on GitHub](https://github.com/sponsors/zricethezav/) to get
-featured on this README.
 
 ## Getting Started
 

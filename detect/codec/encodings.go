@@ -3,8 +3,9 @@ package codec
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"strings"
+
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 var (
