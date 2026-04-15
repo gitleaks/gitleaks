@@ -163,6 +163,7 @@ func main() {
 		rules.MattermostAccessToken(),
 		rules.MaxMindLicenseKey(),
 		rules.Meraki(),
+		rules.MongoDBConnectionString(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
 		rules.NetlifyAccessToken(),

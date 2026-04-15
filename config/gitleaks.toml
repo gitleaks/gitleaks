@@ -2615,6 +2615,20 @@ keywords = [
 ]
 
 [[rules]]
+id = "mongodb-connection-string"
+description = "Detected a MongoDB connection string with embedded credentials, potentially exposing direct database access and sensitive application data."
+regex = '''(?i)\b(mongodb(?:\+srv)?:\/\/(?:[^:@\/\s'"\x60]{1,100}):(?:[^@\/\s'"\x60]{3,100})@(?:\[[0-9a-f:]+\]|[-a-z0-9.]+)(?::\d{2,5})?(?:,(?:\[[0-9a-f:]+\]|[-a-z0-9.]+)(?::\d{2,5})?)*(?:\/[^\s'"\x60)]*)?)(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = [
+    "mongodb://",
+    "mongodb+srv://",
+]
+[[rules.allowlists]]
+regexes = [
+    '''(?i)\bmongodb(?:\+srv)?:\/\/(?:user(?:name)?|foo):(?:pass(?:word)?|bar)(?:[^@\/]*)?@''',
+    '''(?i)\bmongodb(?:\+srv)?:\/\/[^\s'"\x60]*(?:\$\{\{[^}]+}}|\$\{[^}]+}|\$[A-Za-z_][A-Za-z0-9_]*|{{[^}]+}}|<[^>]+>|\[[^]]+])[^\s'"\x60]*''',
+]
+
+[[rules]]
 id = "netlify-access-token"
 description = "Detected a Netlify Access Token, potentially compromising web hosting services and site management."
 regex = '''(?i)[\w.-]{0,50}?(?:netlify)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40,46})(?:[\x60'"\s;]|\\[nr]|$)'''
