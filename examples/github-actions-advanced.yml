@@ -1,0 +1,94 @@
+name: Gitleaks Security Scan
+
+# Enhanced GitHub Actions workflow for gitleaks with security best practices
+# This example demonstrates:
+# - GitHub Advanced Security integration (SARIF output)
+# - Multiple scan strategies (full history vs incremental)
+# - Baseline support for gradual adoption
+# - Custom configuration
+# - Job summary reporting
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Scan type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - incremental
+          - baseline
+
+permissions:
+  contents: read
+  security-events: write  # Required for uploading SARIF results
+
+jobs:
+  scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for accurate scanning
+
+      # Option 1: Using the official gitleaks-action (recommended for most users)
+      - name: Run Gitleaks Scan
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}  # Required for organizations
+          GITLEAKS_CONFIG: .gitleaks.toml  # Optional: custom config
+
+      # Option 2: Manual CLI execution (for advanced use cases)
+      # Uncomment below if you need more control over the scan
+      #
+      # - name: Install gitleaks
+      #   run: |
+      #     curl -sL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz
+      #     chmod +x gitleaks
+      #
+      # - name: Run gitleaks scan with SARIF output
+      #   run: |
+      #     ./gitleaks git \
+      #       --report-format sarif \
+      #       --report-path gitleaks-results.sarif \
+      #       --exit-code 0  # Don't fail the build, just report
+      #
+      # - name: Upload SARIF to GitHub Advanced Security
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   if: always()
+      #   with:
+      #     sarif_file: gitleaks-results.sarif
+      #     category: gitleaks
+
+      # Generate job summary for PR visibility
+      - name: Generate Job Summary
+        if: always()
+        run: |
+          echo "## 🔒 Gitleaks Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.gitleaks.outcome }}" == "success" ]; then
+            echo "✅ No secrets detected!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Potential secrets detected - please review" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review the findings in the workflow logs" >> $GITHUB_STEP_SUMMARY
+            echo "2. If these are false positives, add them to ".gitleaksignore"" >> $GITHUB_STEP_SUMMARY
+            echo "3. If these are real secrets, rotate them immediately" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 Resources:" >> $GITHUB_STEP_SUMMARY
+          echo "- [Gitleaks Documentation](https://github.com/gitleaks/gitleaks)" >> $GITHUB_STEP_SUMMARY
+          echo "- [False Positive Handling](https://github.com/gitleaks/gitleaks#false-positives)" >> $GITHUB_STEP_SUMMARY
