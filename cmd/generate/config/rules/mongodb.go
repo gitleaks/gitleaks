@@ -1,7 +1,10 @@
 package rules
 
 import (
+	"strings"
+
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
+	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
@@ -80,6 +83,37 @@ func MongoDBAtlasPublicKey() *config.Rule {
 		`atlas_public_key = "0123456789"`,
 		`atlas_public_key = "PUBLICKEY"`,
 		`atlas_project_name = "mongodb123"`,
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
+func MongoDBAtlasServiceAccountToken() *config.Rule {
+	r := config.Rule{
+		RuleID:      "mongodb-atlas-service-account-token",
+		Description: "Detected a MongoDB Atlas service account client secret, which could allow unauthorized Atlas administration API access when paired with a service account client ID.",
+		Regex:       utils.GenerateUniqueTokenRegex(`mdb_sa_sk_[A-Za-z0-9_-]{40}`, false),
+		Entropy:     3,
+		Keywords:    []string{"mdb_sa_sk_"},
+		Allowlists: []*config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`(?i)^x{40}$`),
+					regexp.MustCompile(`^[0-9]{40}$`),
+				},
+			},
+		},
+	}
+
+	tps := utils.GenerateSampleSecrets("mongodbAtlasServiceAccount", "mdb_sa_sk_"+secrets.NewSecret(utils.AlphaNumeric("40")))
+	tps = append(tps,
+		`export MDB_MCP_API_CLIENT_SECRET="mdb_sa_sk_`+secrets.NewSecret(utils.AlphaNumeric("18"))+`_-`+secrets.NewSecret(utils.AlphaNumeric("20"))+`"`,
+		`MDB_ATLAS_SERVICE_ACCOUNT_SECRET='mdb_sa_sk_`+secrets.NewSecret(utils.AlphaNumeric("12"))+`-`+secrets.NewSecret(utils.AlphaNumeric("27"))+`'`,
+		`clientSecret: "mdb_sa_sk_`+secrets.NewSecret(utils.AlphaNumeric("15"))+`_`+secrets.NewSecret(utils.AlphaNumeric("24"))+`"`,
+	)
+	fps := []string{
+		`atlas api serviceAccounts getServiceAccount --clientId mdb_sa_id_1234567890abcdef12345678 --orgId 4888442a3354817a7320eb61`,
+		`export MDB_MCP_API_CLIENT_SECRET="mdb_sa_sk_` + strings.Repeat("x", 40) + `"`,
 	}
 
 	return utils.Validate(r, tps, fps)

@@ -2651,6 +2651,18 @@ regexes = [
 ]
 
 [[rules]]
+id = "mongodb-atlas-service-account-token"
+description = "Detected a MongoDB Atlas service account client secret, which could allow unauthorized Atlas administration API access when paired with a service account client ID."
+regex = '''\b(mdb_sa_sk_[A-Za-z0-9_-]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["mdb_sa_sk_"]
+[[rules.allowlists]]
+regexes = [
+    '''(?i)^x{40}$''',
+    '''^[0-9]{40}$''',
+]
+
+[[rules]]
 id = "mongodb-connection-string"
 description = "Detected a MongoDB connection string with embedded credentials, potentially exposing direct database access and sensitive application data."
 regex = '''(?i)\b(mongodb(?:\+srv)?:\/\/(?:[^:@\/\s'"\x60]{1,100}):(?:[^@\/\s'"\x60]{3,100})@(?:\[[0-9a-f:]+\]|[-a-z0-9.]+)(?::\d{2,5})?(?:,(?:\[[0-9a-f:]+\]|[-a-z0-9.]+)(?::\d{2,5})?)*(?:\/[^\s'"\x60)]*)?)(?:[\x60'"\s;]|\\[nr]|$)'''

@@ -165,6 +165,7 @@ func main() {
 		rules.Meraki(),
 		rules.MongoDBAtlasPrivateKey(),
 		rules.MongoDBAtlasPublicKey(),
+		rules.MongoDBAtlasServiceAccountToken(),
 		rules.MongoDBConnectionString(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
