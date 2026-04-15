@@ -163,6 +163,8 @@ func main() {
 		rules.MattermostAccessToken(),
 		rules.MaxMindLicenseKey(),
 		rules.Meraki(),
+		rules.MongoDBAtlasPrivateKey(),
+		rules.MongoDBAtlasPublicKey(),
 		rules.MongoDBConnectionString(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),

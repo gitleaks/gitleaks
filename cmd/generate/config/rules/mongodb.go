@@ -6,6 +6,85 @@ import (
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
+func MongoDBAtlasPrivateKey() *config.Rule {
+	r := config.Rule{
+		RuleID:      "mongodb-atlas-private-key",
+		Description: "Detected a MongoDB Atlas API private key, which could allow unauthorized Atlas administration API access when paired with a public key.",
+		Regex: utils.GenerateSemiGenericRegex([]string{
+			`(?:mongodb(?:[_ .-]?atlas)?|atlas)(?:[_ .-]?api)?(?:[_ .-]?(?:private|secret))[_ .-]?key`,
+		}, utils.Hex8_4_4_4_12(), true),
+		Keywords: []string{
+			"atlas_private",
+			"atlas-private",
+			"atlasprivate",
+			"mongodb_atlas",
+			"mongodb-atlas",
+			"mongodbatlas",
+		},
+		Allowlists: []*config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`^0{8}-0{4}-0{4}-0{4}-0{12}$`),
+				},
+			},
+		},
+	}
+
+	tps := []string{
+		`ATLAS_PRIVATE_KEY="4b18315e-6b7d-4337-b449-5d38f5a189ec"`,
+		`mongodb_atlas_api_private_key = "d0f7c488-5d6b-4fea-9fae-e6b7bcf5e3c1"`,
+		`const atlasPrivateKey = "f17a2c01-89ef-49c9-a5a8-c735a1c0c3f6"`,
+	}
+	fps := []string{
+		`atlas_project_id = "5a0a1e7e0f2912c554080adc"`,
+		`atlasPrivateLinkEndpointId = "4b18315e-6b7d-4337-b449-5d38f5a189ec"`,
+		`mongodb_atlas_api_private_key = "00000000-0000-0000-0000-000000000000"`,
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
+func MongoDBAtlasPublicKey() *config.Rule {
+	r := config.Rule{
+		RuleID:      "mongodb-atlas-public-key",
+		Description: "Detected a MongoDB Atlas API public key, which can identify Atlas administration credentials and increases risk when exposed with a private key.",
+		Regex: utils.GenerateSemiGenericRegex([]string{
+			`(?:mongodb(?:[_ .-]?atlas)?|atlas)(?:[_ .-]?api)?(?:[_ .-]?public)[_ .-]?key`,
+		}, `[a-z0-9]{10}`, true),
+		Keywords: []string{
+			"atlas_public",
+			"atlas-public",
+			"atlaspublic",
+			"mongodb_atlas",
+			"mongodb-atlas",
+			"mongodbatlas",
+		},
+		Allowlists: []*config.Allowlist{
+			{
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`(?i)^(?:publickey|yourpublic|examplekey|samplekey)$`),
+					regexp.MustCompile(`(?i)^[a-z]{10}$`),
+					regexp.MustCompile(`^[0-9]{10}$`),
+				},
+			},
+		},
+	}
+
+	tps := []string{
+		`ATLAS_PUBLIC_KEY="qj4Zrh8e6A"`,
+		`mongodb_atlas_api_public_key = "Ab3dE6fGh9"`,
+		`const atlas_public_key = "zX7cV4bN2m"`,
+	}
+	fps := []string{
+		`atlas_public_key = "abcdefghij"`,
+		`atlas_public_key = "0123456789"`,
+		`atlas_public_key = "PUBLICKEY"`,
+		`atlas_project_name = "mongodb123"`,
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
 func MongoDBConnectionString() *config.Rule {
 	r := config.Rule{
 		RuleID:      "mongodb-connection-string",
