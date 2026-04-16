@@ -98,8 +98,8 @@ func MongoDBAtlasServiceAccountToken() *config.Rule {
 		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`(?i)^x{40}$`),
-					regexp.MustCompile(`^[0-9]{40}$`),
+					regexp.MustCompile(`(?i)^mdb_sa_sk_x{40}$`),
+					regexp.MustCompile(`^mdb_sa_sk_[0-9]{40}$`),
 				},
 			},
 		},

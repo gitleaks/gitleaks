@@ -2658,8 +2658,8 @@ entropy = 3
 keywords = ["mdb_sa_sk_"]
 [[rules.allowlists]]
 regexes = [
-    '''(?i)^x{40}$''',
-    '''^[0-9]{40}$''',
+    '''(?i)^mdb_sa_sk_x{40}$''',
+    '''^mdb_sa_sk_[0-9]{40}$''',
 ]
 
 [[rules]]
