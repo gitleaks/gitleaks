@@ -3,6 +3,7 @@ package detect
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -127,6 +128,40 @@ func compare(t *testing.T, a, b []report.Finding) {
 		t.Errorf("findings mismatch (-want +got):\n%s", diff)
 	}
 
+}
+
+type sourceFunc func(context.Context, sources.FragmentsFunc) error
+
+func (f sourceFunc) Fragments(ctx context.Context, yield sources.FragmentsFunc) error {
+	return f(ctx, yield)
+}
+
+func TestDetectSourceReturnsSourceLevelErrors(t *testing.T) {
+	detector, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	sourceErr := errors.New("stderr is not empty")
+
+	findings, err := detector.DetectSource(context.Background(), sourceFunc(func(ctx context.Context, yield sources.FragmentsFunc) error {
+		return yield(sources.Fragment{}, sourceErr)
+	}))
+
+	require.ErrorIs(t, err, sourceErr)
+	require.Empty(t, findings)
+}
+
+func TestDetectSourceIgnoresFragmentScopedErrors(t *testing.T) {
+	detector, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	fragmentErr := errors.New("could not read file")
+
+	findings, err := detector.DetectSource(context.Background(), sourceFunc(func(ctx context.Context, yield sources.FragmentsFunc) error {
+		return yield(sources.Fragment{FilePath: "README.md"}, fragmentErr)
+	}))
+
+	require.NoError(t, err)
+	require.Empty(t, findings)
 }
 
 func TestDetect(t *testing.T) {

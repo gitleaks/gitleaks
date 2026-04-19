@@ -226,8 +226,13 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
+			// Fragment-scoped errors can be logged and skipped so the scan can
+			// continue, but source-level errors arrive without fragment context
+			// and must abort the scan.
 			logger.Error().Err(err).Send()
+			if fragment.FilePath == "" && fragment.CommitSHA == "" && len(fragment.Raw) == 0 && len(fragment.Bytes) == 0 {
+				return err
+			}
 			return nil
 		}
 
