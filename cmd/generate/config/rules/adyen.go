@@ -39,6 +39,7 @@ func AdyenClientKey() *config.Rule {
 
 	// validate
 	tps := utils.GenerateSampleSecrets("adyen", "test_"+secrets.NewSecret(utils.AlphaNumeric("34")))
+	tps = append(tps, utils.GenerateSampleSecrets("adyen", "live_"+secrets.NewSecret(utils.AlphaNumeric("34")))...)
 	fps := []string{"nonMatchingToken := \"prod_" + secrets.NewSecret(utils.AlphaNumeric("34")) + "\""}
 	return utils.Validate(r, tps, fps)
 }
