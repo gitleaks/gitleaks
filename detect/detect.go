@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -29,6 +31,9 @@ const (
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
+	// wildcardField marks a `.gitleaksignore` fingerprint field that should match
+	// any value.
+	wildcardField = "*"
 )
 
 var (
@@ -93,8 +98,14 @@ type Detector struct {
 	// path to baseline
 	baselinePath string
 
-	// gitleaksIgnore
+	// gitleaksIgnore holds exact-match fingerprints from .gitleaksignore.
 	gitleaksIgnore map[string]struct{}
+
+	// gitleaksIgnoreWildcards holds fingerprint patterns from .gitleaksignore
+	// that contain one or more `*` wildcard fields. Each entry is the
+	// colon-separated fields of the pattern (3 for global, 4 for commit).
+	// A field equal to `*` matches any value; other fields must match exactly.
+	gitleaksIgnoreWildcards [][]string
 
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
@@ -186,8 +197,13 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 			s[1] = replacer.Replace(s[1])
 		default:
 			logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
+			continue
 		}
-		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+		if slices.Contains(s, wildcardField) {
+			d.gitleaksIgnoreWildcards = append(d.gitleaksIgnoreWildcards, s)
+		} else {
+			d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
+		}
 	}
 	return nil
 }
@@ -707,6 +723,41 @@ func abs(x int) int {
 	return x
 }
 
+// matchesIgnoreWildcard reports whether finding matches any wildcard pattern
+// loaded from .gitleaksignore. Patterns with 3 fields apply to every finding;
+// patterns with 4 fields only apply to findings with a commit. A field equal
+// to `*` matches any value; other fields must match exactly. Callers should
+// first check len(d.gitleaksIgnoreWildcards) to avoid the call overhead in the
+// common no-wildcard case.
+func (d *Detector) matchesIgnoreWildcard(finding report.Finding) bool {
+	line := strconv.Itoa(finding.StartLine)
+	for _, p := range d.gitleaksIgnoreWildcards {
+		switch len(p) {
+		case 3:
+			if fieldMatch(p[0], finding.File) &&
+				fieldMatch(p[1], finding.RuleID) &&
+				fieldMatch(p[2], line) {
+				return true
+			}
+		case 4:
+			if finding.Commit == "" {
+				continue
+			}
+			if fieldMatch(p[0], finding.Commit) &&
+				fieldMatch(p[1], finding.File) &&
+				fieldMatch(p[2], finding.RuleID) &&
+				fieldMatch(p[3], line) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func fieldMatch(pattern, value string) bool {
+	return pattern == wildcardField || pattern == value
+}
+
 // AddFinding synchronously adds a finding to the findings slice
 func (d *Detector) AddFinding(finding report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
@@ -731,6 +782,12 @@ func (d *Detector) AddFinding(finding report.Finding) {
 				Msgf("skipping finding: fingerprint")
 			return
 		}
+	}
+	if len(d.gitleaksIgnoreWildcards) > 0 && d.matchesIgnoreWildcard(finding) {
+		logger.Debug().
+			Str("fingerprint", finding.Fingerprint).
+			Msg("skipping finding: wildcard fingerprint")
+		return
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {

@@ -2771,3 +2771,99 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestGitleaksIgnoreWildcardParsing(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	err = d.AddGitleaksIgnore("../testdata/gitleaksignore/.wildcards")
+	require.NoError(t, err)
+
+	assert.Len(t, d.gitleaksIgnore, 1)
+	assert.Contains(t, d.gitleaksIgnore, "foo/bar/exact.yaml:aws-access-token:7")
+	assert.Len(t, d.gitleaksIgnoreWildcards, 4)
+	assert.ElementsMatch(t, d.gitleaksIgnoreWildcards, [][]string{
+		{"*", "aws-access-token", "*"},
+		{"foo/bar/gitleaks-false-positive.yaml", "aws-access-token", "*"},
+		{"*", "path/to/file.go", "generic-secret", "42"},
+		{"*", "*", "sidekiq-secret", "*"},
+	})
+}
+
+func TestGitleaksIgnoreWildcardMatch(t *testing.T) {
+	cases := []struct {
+		name    string
+		pattern []string
+		finding report.Finding
+		want    bool
+	}{
+		{
+			name:    "global wildcard file and line",
+			pattern: []string{"*", "aws-access-token", "*"},
+			finding: report.Finding{File: "any/path.go", RuleID: "aws-access-token", StartLine: 99},
+			want:    true,
+		},
+		{
+			name:    "global wildcard rejects different rule",
+			pattern: []string{"*", "aws-access-token", "*"},
+			finding: report.Finding{File: "any/path.go", RuleID: "other-rule", StartLine: 99},
+			want:    false,
+		},
+		{
+			name:    "line wildcard same file",
+			pattern: []string{"foo.yaml", "aws-access-token", "*"},
+			finding: report.Finding{File: "foo.yaml", RuleID: "aws-access-token", StartLine: 12},
+			want:    true,
+		},
+		{
+			name:    "commit wildcard matches any commit",
+			pattern: []string{"*", "file.go", "rule-x", "10"},
+			finding: report.Finding{Commit: "deadbeef", File: "file.go", RuleID: "rule-x", StartLine: 10},
+			want:    true,
+		},
+		{
+			name:    "4-field pattern does not match non-commit finding",
+			pattern: []string{"*", "file.go", "rule-x", "10"},
+			finding: report.Finding{File: "file.go", RuleID: "rule-x", StartLine: 10},
+			want:    false,
+		},
+		{
+			name:    "line mismatch",
+			pattern: []string{"foo.yaml", "aws-access-token", "5"},
+			finding: report.Finding{File: "foo.yaml", RuleID: "aws-access-token", StartLine: 7},
+			want:    false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			d, err := NewDetectorDefaultConfig()
+			require.NoError(t, err)
+			d.gitleaksIgnoreWildcards = [][]string{tc.pattern}
+			assert.Equal(t, tc.want, d.matchesIgnoreWildcard(tc.finding))
+		})
+	}
+}
+
+func TestAddFindingIgnoresWildcard(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	d.gitleaksIgnoreWildcards = [][]string{{"*", "aws-access-token", "*"}}
+
+	d.AddFinding(report.Finding{
+		File:      "something/new.go",
+		RuleID:    "aws-access-token",
+		StartLine: 42,
+		Secret:    "AKIA...",
+	})
+	d.AddFinding(report.Finding{
+		File:      "something/new.go",
+		RuleID:    "other-rule",
+		StartLine: 42,
+		Secret:    "something-else",
+	})
+
+	findings := d.Findings()
+	require.Len(t, findings, 1)
+	assert.Equal(t, "other-rule", findings[0].RuleID)
+}
