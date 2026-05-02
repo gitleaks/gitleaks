@@ -55,6 +55,7 @@ func main() {
 		rules.Beamer(),
 		rules.CodecovAccessToken(),
 		rules.CoinbaseAccessToken(),
+		rules.ClaudeCodeSessionURL(),
 		rules.ClickHouseCloud(),
 		rules.Clojars(),
 		rules.CloudflareAPIKey(),
