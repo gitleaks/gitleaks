@@ -167,6 +167,7 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 					Path:            scanTarget.Path,
 					Symlink:         scanTarget.Symlink,
 					Config:          s.Config,
+					MaxFileSize:     s.MaxFileSize,
 					MaxArchiveDepth: s.MaxArchiveDepth,
 				}
 
