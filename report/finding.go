@@ -5,7 +5,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
