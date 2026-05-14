@@ -12,6 +12,7 @@ import (
 func init() {
 	rootCmd.AddCommand(directoryCmd)
 	directoryCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
+	directoryCmd.Flags().Bool("source-relative-paths", false, "emit finding paths relative to the scan source so fingerprints match `gitleaks git`")
 }
 
 var directoryCmd = &cobra.Command{
@@ -48,6 +49,11 @@ func runDirectory(cmd *cobra.Command, args []string) {
 		logging.Fatal().Err(err).Send()
 	}
 
+	sourceRelativePaths, err := cmd.Flags().GetBool("source-relative-paths")
+	if err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+
 	// set exit code
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
@@ -57,12 +63,13 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	findings, err := detector.DetectSource(
 		cmd.Context(),
 		&sources.Files{
-			Config:          &cfg,
-			FollowSymlinks:  detector.FollowSymlinks,
-			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
-			Path:            source,
-			Sema:            detector.Sema,
-			MaxArchiveDepth: detector.MaxArchiveDepth,
+			Config:              &cfg,
+			FollowSymlinks:      detector.FollowSymlinks,
+			MaxFileSize:         detector.MaxTargetMegaBytes * 1_000_000,
+			Path:                source,
+			Sema:                detector.Sema,
+			MaxArchiveDepth:     detector.MaxArchiveDepth,
+			SourceRelativePaths: sourceRelativePaths,
 		},
 	)
 
