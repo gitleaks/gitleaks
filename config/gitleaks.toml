@@ -3219,3 +3219,17 @@ id = "mercadopago-public-key"
 description = "Detected a Mercado Pago Public Key, which could expose payment integration credentials."
 regex = '''\b(APP_USR-[a-f0-9]{8}-[A-Z0-9]{6}-[a-f0-9]{12})\b'''
 keywords = ["app_usr"]
+
+[[rules]]
+id = "cielo-client-id"
+description = "Detected a Cielo Client ID, which could expose payment gateway credentials for Brazil's largest payment acquirer."
+regex = '''(?i)[\w.-]{0,50}?(?:cielo)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["cielo"]
+
+[[rules]]
+id = "cielo-client-secret"
+description = "Detected a Cielo Client Secret, which could allow unauthorized access to payment processing via Brazil's largest payment acquirer."
+regex = '''(?i)[\w.-]{0,50}?(?:cielo)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9]{20,64})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["cielo"]
