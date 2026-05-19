@@ -654,6 +654,7 @@ keywords = [
 [[rules.allowlists]]
 regexes = [
     '''^[a-zA-Z_.-]+$''',
+    '''(?i)^(?:(?:ctrl|cmd|shift|alt|opt|meta|super|win|fn|control|command|option)\+){1,5}(?:f[0-9]{1,2}|[a-z][a-z0-9]{0,14}|[0-9]{1,3}|[\[\]\\=\-'",.<>/;:`])$''',
 ]
 [[rules.allowlists]]
 description = "Allowlist for Generic API Keys"

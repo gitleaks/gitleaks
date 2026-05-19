@@ -42,6 +42,8 @@ func GenericCredential() *config.Rule {
 				// Ideally we would want to ensure the secret contains both numbers and alphabetical characters, not just alphabetical characters.
 				Regexes: []*regexp.Regexp{
 					regexp.MustCompile(`^[a-zA-Z_.-]+$`),
+					// Keyboard shortcut chord (e.g. "ctrl+shift+down") used in VSCode/JetBrains keybindings. See #1897.
+					regexp.MustCompile(`(?i)^(?:(?:ctrl|cmd|shift|alt|opt|meta|super|win|fn|control|command|option)\+){1,5}(?:f[0-9]{1,2}|[a-z][a-z0-9]{0,14}|[0-9]{1,3}|[\[\]\\=\-'",.<>/;:` + "`" + `])$`),
 				},
 			},
 			{
@@ -276,6 +278,14 @@ jdbc.snowflake.url=`,
 		// Yocto/BitBake
 		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
 		`LIC_FILES_CHKSUM = "file://${WORKDIR}/license.html;md5=5c94767cedb5d6987c902ac850ded2c6"`,
+
+		// IDE keybinding chords (see #1897).
+		`"key": "ctrl+shift+down"`,
+		`"key": "shift+alt+down"`,
+		`"key": "ctrl+shift+alt+down"`,
+		`"key": "ctrl+shift+end"`,
+		`"key": "cmd+shift+p"`,
+		`"key": "ctrl+,"`,
 	}
 	return utils.Validate(r, tps, fps)
 }
