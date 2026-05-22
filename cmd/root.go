@@ -147,10 +147,18 @@ func initConfig(source string) {
 		logging.Fatal().Msg(err.Error())
 	}
 	if cfgPath != "" {
+		if isPyprojectPath(cfgPath) {
+			loadPyprojectConfig(cfgPath, "--config")
+			return
+		}
 		viper.SetConfigFile(cfgPath)
 		logging.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
 	} else if os.Getenv("GITLEAKS_CONFIG") != "" {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
+		if isPyprojectPath(envPath) {
+			loadPyprojectConfig(envPath, "GITLEAKS_CONFIG env var")
+			return
+		}
 		viper.SetConfigFile(envPath)
 		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
 	} else if os.Getenv("GITLEAKS_CONFIG_TOML") != "" {
@@ -175,23 +183,45 @@ func initConfig(source string) {
 			return
 		}
 
-		if _, err := os.Stat(filepath.Join(source, ".gitleaks.toml")); os.IsNotExist(err) {
-			logging.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", filepath.Join(source, ".gitleaks.toml"))
+		gitleaksTomlPath := filepath.Join(source, ".gitleaks.toml")
+		pyprojectTomlPath := filepath.Join(source, pyprojectFilename)
+
+		if _, err := os.Stat(gitleaksTomlPath); err == nil {
+			logging.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", gitleaksTomlPath)
+			viper.AddConfigPath(source)
+			viper.SetConfigName(".gitleaks")
+		} else if _, perr := os.Stat(pyprojectTomlPath); perr == nil {
+			// Auto-discover pyproject.toml only when .gitleaks.toml is absent;
+			// .gitleaks.toml wins when both exist so existing setups don't change.
+			loadPyprojectConfig(pyprojectTomlPath, "(--source)/pyproject.toml")
+			return
+		} else {
+			logging.Debug().Msgf("no gitleaks config found in path %s, using default gitleaks config", gitleaksTomlPath)
 
 			if err = viper.ReadConfig(strings.NewReader(config.DefaultConfig)); err != nil {
 				logging.Fatal().Msgf("err reading default config toml %s", err.Error())
 			}
 			return
-		} else {
-			logging.Debug().Msgf("using existing gitleaks config %s from `(--source)/.gitleaks.toml`", filepath.Join(source, ".gitleaks.toml"))
 		}
-
-		viper.AddConfigPath(source)
-		viper.SetConfigName(".gitleaks")
 	}
 	if err := viper.ReadInConfig(); err != nil {
 		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
 	}
+}
+
+// loadPyprojectConfig reads pyproject.toml at path, extracts [tool.gitleaks],
+// and feeds it into viper. source describes where the path came from for log
+// messages (e.g. "--config", "GITLEAKS_CONFIG env var",
+// "(--source)/pyproject.toml").
+func loadPyprojectConfig(path, source string) {
+	cfgBytes, err := extractGitleaksFromPyproject(path)
+	if err != nil {
+		logging.Fatal().Err(err).Str("path", path).Msgf("unable to load gitleaks config from %s", source)
+	}
+	if err := viper.ReadConfig(bytes.NewReader(cfgBytes)); err != nil {
+		logging.Fatal().Err(err).Str("path", path).Msgf("unable to parse [tool.gitleaks] from %s", source)
+	}
+	logging.Debug().Str("path", path).Msgf("using gitleaks config from [tool.gitleaks] in %s", source)
 }
 
 func initDiagnostics() {
