@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -96,6 +98,10 @@ func init() {
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
 	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files when not using http mode (defaults to current directory)")
 
+	// Add remote config support
+	rootCmd.PersistentFlags().StringSlice("remote-config-header", []string{}, "HTTP headers to include when fetching remote config (format: key=value); can be specified multiple times or as a comma-separated list")
+	rootCmd.PersistentFlags().String("remote-config-uagent", "Gitleaks-remote-config-client", "User-Agent for remote config requests")
+
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
 		logging.Fatal().Msgf("err binding config %s", err.Error())
@@ -146,13 +152,61 @@ func initConfig(source string) {
 	if err != nil {
 		logging.Fatal().Msg(err.Error())
 	}
+
+	// This will be set to a temporary file name if the config is fetched from a remote URL
+	var tempConfigFileName string
+
 	if cfgPath != "" {
-		viper.SetConfigFile(cfgPath)
-		logging.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
+		logging.Debug().Msgf("using gitleaks config from '--config' flag: %s", cfgPath)
+		if isHTTPURL(cfgPath) {
+			headers, _ := rootCmd.Flags().GetStringSlice("remote-config-header")
+			uagent, _ := rootCmd.Flags().GetString("remote-config-uagent")
+			tempConfigFileName, err := loadRemoteConfig(cfgPath, headers, uagent)
+			if err != nil {
+				logging.Fatal().Msg(err.Error())
+			}
+			viper.SetConfigFile(tempConfigFileName)
+			logging.Debug().Msgf("using gitleaks config from downloaded temp file: %s", tempConfigFileName)
+			// When using a temporary file, we defer its removal to clean up after reading the config
+			// This is important to avoid leaving temporary files behind
+			// after the program exits, especially in case of errors.
+			defer os.Remove(tempConfigFileName)
+		} else {
+			// Regular file path
+			viper.SetConfigFile(cfgPath)
+		}
+		if err := viper.ReadInConfig(); err != nil {
+			// If we have a temporary config file name, remove it before exiting
+			// This ensures that we do not leave temporary files behind in case of an error
+			// or if the config file cannot be read.
+			// It is used only when the config is fetched from a remote URL.
+			if tempConfigFileName != "" {
+				os.Remove(tempConfigFileName)
+			}
+			logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+		}
 	} else if os.Getenv("GITLEAKS_CONFIG") != "" {
 		envPath := os.Getenv("GITLEAKS_CONFIG")
-		viper.SetConfigFile(envPath)
-		logging.Debug().Msgf("using gitleaks config from GITLEAKS_CONFIG env var: %s", envPath)
+		logging.Debug().Msgf("using gitleaks config from 'GITLEAKS_CONFIG' env var: %s", envPath)
+		if isHTTPURL(envPath) {
+			headers, _ := rootCmd.Flags().GetStringSlice("remote-config-header")
+			uagent, _ := rootCmd.Flags().GetString("remote-config-uagent")
+			tempConfigFileName, err := loadRemoteConfig(envPath, headers, uagent)
+			if err != nil {
+				logging.Fatal().Msg(err.Error())
+			}
+			viper.SetConfigFile(tempConfigFileName)
+			logging.Debug().Msgf("using gitleaks config from downloaded temp file: %s", tempConfigFileName)
+			defer os.Remove(tempConfigFileName)
+		} else {
+			viper.SetConfigFile(envPath)
+		}
+		if err := viper.ReadInConfig(); err != nil {
+			if tempConfigFileName != "" {
+				os.Remove(tempConfigFileName)
+			}
+			logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+		}
 	} else if os.Getenv("GITLEAKS_CONFIG_TOML") != "" {
 		configContent := []byte(os.Getenv("GITLEAKS_CONFIG_TOML"))
 		if err := viper.ReadConfig(bytes.NewBuffer(configContent)); err != nil {
@@ -188,9 +242,9 @@ func initConfig(source string) {
 
 		viper.AddConfigPath(source)
 		viper.SetConfigName(".gitleaks")
-	}
-	if err := viper.ReadInConfig(); err != nil {
-		logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+		if err := viper.ReadInConfig(); err != nil {
+			logging.Fatal().Msgf("unable to load gitleaks config, err: %s", err)
+		}
 	}
 }
 
@@ -545,4 +599,84 @@ func mustGetStringFlag(cmd *cobra.Command, name string) string {
 		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
 	}
 	return value
+}
+
+// isHTTPURL checks if the given path is a valid HTTP or HTTPS URL.
+func isHTTPURL(path string) bool {
+	u, err := url.Parse(path)
+	// Check if the URL is valid and has a scheme and host
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https://") && u.Host != ""
+}
+
+// loadRemoteConfig fetches the gitleaks config from a remote URL and returns the filename.
+func loadRemoteConfig(cfgURL string, headerSlice []string, userAgent string) (string, error) {
+	parsedURL, err := url.Parse(cfgURL)
+	// This is first checked in isHTTPURL, but we also want to ensure that the URL is valid
+	// and has a scheme and host before proceeding with the HTTP request.
+	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+		logging.Fatal().Msgf("invalid config URL: %s", cfgURL)
+	}
+
+	// Prepare headers from the provided header slice.
+	headers := make(http.Header)
+	for _, h := range headerSlice {
+		key, val, found := strings.Cut(h, ":")
+		if !found {
+			// Or log a warning and continue
+			return "", fmt.Errorf("invalid header format: %q", h)
+		}
+		headers.Add(strings.TrimSpace(key), strings.TrimSpace(val))
+	}
+	if userAgent != "" {
+		headers.Set("User-Agent", userAgent)
+	}
+
+	// Timeout is set to 20 seconds to avoid hanging indefinitely
+	// when fetching the remote config.
+	client := &http.Client{Timeout: 20 * time.Second}
+
+	// Send an HEAD request to check server response
+	// We assume that the server supports HEAD requests (as most repositories do)
+	logging.Debug().Str("url", cfgURL).Msg("sending HEAD request to remote config URL")
+	headReq, err := http.NewRequest(http.MethodHead, cfgURL, nil)
+	if err != nil {
+		logging.Fatal().Err(err).Str("url", cfgURL).Msg("failed to create HEAD request")
+	}
+	headReq.Header = headers
+
+	headResp, err := client.Do(headReq)
+	if err != nil {
+		logging.Fatal().Msgf("failed to connect to the remote config URL: %s", cfgURL)
+	}
+	headResp.Body.Close()
+	if headResp.StatusCode < 200 || headResp.StatusCode >= 400 {
+		logging.Fatal().Msgf("provided remote config URL is not accessible: %s", cfgURL)
+	}
+
+	getReq, err := http.NewRequest(http.MethodGet, cfgURL, nil)
+	if err != nil {
+		logging.Fatal().Err(err).Str("url", cfgURL).Msg("failed to create GET request")
+	}
+	getReq.Header = headers
+
+	getResp, err := client.Do(getReq)
+	if err != nil {
+		logging.Fatal().Msgf("failed to fetch config from URL: %s", cfgURL)
+	}
+	defer getResp.Body.Close()
+	if getResp.StatusCode != http.StatusOK {
+		logging.Fatal().Msgf("failed to fetch config from URL: status %d", getResp.StatusCode)
+	}
+	// Create a temporary file to store the config
+	tmpFile, err := os.CreateTemp("", "gitleaks-config-*.toml")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer tmpFile.Close()
+	if _, err := io.Copy(tmpFile, getResp.Body); err != nil {
+		return "", fmt.Errorf("failed to write config to temp file: %w", err)
+	}
+
+	logging.Debug().Msgf("using gitleaks config from remote URL: %s", cfgURL)
+	return tmpFile.Name(), nil
 }
