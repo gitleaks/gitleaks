@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"github.com/zricethezav/gitleaks/v8/version"
 )
 

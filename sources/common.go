@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/mholt/archives"
+
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )

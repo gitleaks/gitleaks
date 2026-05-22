@@ -34,10 +34,10 @@ const banner = `
 
 const configDescription = `config file path
 order of precedence:
-1. --config/-c
-2. env var GITLEAKS_CONFIG
-3. env var GITLEAKS_CONFIG_TOML with the file content
-4. (target path)/.gitleaks.toml
+  1. --config/-c
+  2. env var GITLEAKS_CONFIG
+  3. env var GITLEAKS_CONFIG_TOML with the file content
+  4. (target path)/.gitleaks.toml
 If none of the four options are used, then gitleaks will use the default config`
 
 var (
@@ -95,6 +95,9 @@ func init() {
 	// Add diagnostics flags
 	rootCmd.PersistentFlags().String("diagnostics", "", "enable diagnostics (http OR comma-separated list: cpu,mem,trace). cpu=CPU prof, mem=memory prof, trace=exec tracing, http=serve via net/http/pprof")
 	rootCmd.PersistentFlags().String("diagnostics-dir", "", "directory to store diagnostics output files when not using http mode (defaults to current directory)")
+
+	// Add experimental toggle
+	rootCmd.PersistentFlags().Bool("experimental", false, "allow, but do not automatically enable, experimental features")
 
 	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 	if err != nil {
@@ -545,4 +548,19 @@ func mustGetStringFlag(cmd *cobra.Command, name string) string {
 		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
 	}
 	return value
+}
+
+func mustGetStringSliceFlag(cmd *cobra.Command, name string) []string {
+	value, err := cmd.Flags().GetStringSlice(name)
+	if err != nil {
+		logging.Fatal().Err(err).Msgf("could not get flag: %s", name)
+	}
+	return value
+}
+
+func mustGetExperimentalStringSliceFlag(cmd *cobra.Command, name string) []string {
+	if !mustGetBoolFlag(cmd, "experimental") {
+		logging.Fatal().Msgf("the experimental flag must be enabled to use: %s", name)
+	}
+	return mustGetStringSliceFlag(cmd, name)
 }
