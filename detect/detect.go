@@ -35,6 +35,12 @@ var (
 	newLineRegexp = regexp.MustCompile("\n")
 )
 
+type gitleaksIgnoreSecret struct {
+	Path   string
+	RuleID string
+	Secret string
+}
+
 // Detector is the main detector struct
 type Detector struct {
 	// Config is the configuration for the detector
@@ -96,6 +102,9 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	// gitleaksIgnoreSecrets
+	gitleaksIgnoreSecrets map[string][]gitleaksIgnoreSecret
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -120,14 +129,15 @@ func NewDetector(cfg config.Config) *Detector {
 // context to use for timeouts
 func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		commitMutex:    &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(ctx, 40),
+		commitMap:             make(map[string]bool),
+		gitleaksIgnore:        make(map[string]struct{}),
+		gitleaksIgnoreSecrets: make(map[string][]gitleaksIgnoreSecret),
+		findingMutex:          &sync.Mutex{},
+		commitMutex:           &sync.Mutex{},
+		findings:              make([]report.Finding, 0),
+		Config:                cfg,
+		prefilter:             *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:                  semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -164,11 +174,20 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	}()
 
 	scanner := bufio.NewScanner(file)
-	replacer := strings.NewReplacer("\\", "/")
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
 		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if isSecretIgnore(line) {
+			secretIgnore, err := parseGitleaksIgnoreSecret(line)
+			if err != nil {
+				logging.Warn().Err(err).Str("entry", line).Msg("Invalid .gitleaksignore secret entry")
+				continue
+			}
+			d.gitleaksIgnoreSecrets[secretIgnore.Secret] = append(d.gitleaksIgnoreSecrets[secretIgnore.Secret], *secretIgnore)
 			continue
 		}
 
@@ -179,17 +198,67 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		case 3:
 			// Global fingerprint.
 			// `file:rule-id:start-line`
-			s[0] = replacer.Replace(s[0])
+			s[0] = normalizeGitleaksIgnorePath(s[0])
 		case 4:
 			// Commit fingerprint.
 			// `commit:file:rule-id:start-line`
-			s[1] = replacer.Replace(s[1])
+			s[1] = normalizeGitleaksIgnorePath(s[1])
 		default:
 			logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
 		}
 		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
 	}
 	return nil
+}
+
+func isSecretIgnore(line string) bool {
+	return strings.HasPrefix(line, "secret:") ||
+		strings.HasPrefix(line, "rule:") ||
+		strings.HasPrefix(line, "path:")
+}
+
+func parseGitleaksIgnoreSecret(line string) (*gitleaksIgnoreSecret, error) {
+	var secretIgnore gitleaksIgnoreSecret
+
+	if strings.HasPrefix(line, "path:") {
+		var ok bool
+		secretIgnore.Path, line, ok = cutGitleaksIgnoreSegment(strings.TrimPrefix(line, "path:"))
+		if !ok {
+			return nil, fmt.Errorf("missing path segment")
+		}
+		secretIgnore.Path = normalizeGitleaksIgnorePath(secretIgnore.Path)
+	}
+
+	if strings.HasPrefix(line, "rule:") {
+		var ok bool
+		secretIgnore.RuleID, line, ok = cutGitleaksIgnoreSegment(strings.TrimPrefix(line, "rule:"))
+		if !ok {
+			return nil, fmt.Errorf("missing rule segment")
+		}
+	}
+
+	if !strings.HasPrefix(line, "secret:") {
+		return nil, fmt.Errorf("missing secret segment")
+	}
+
+	secretIgnore.Secret = strings.TrimPrefix(line, "secret:")
+	if secretIgnore.Secret == "" {
+		return nil, fmt.Errorf("missing secret value")
+	}
+
+	return &secretIgnore, nil
+}
+
+func cutGitleaksIgnoreSegment(line string) (segment string, rest string, ok bool) {
+	idx := strings.Index(line, ":")
+	if idx <= 0 {
+		return "", "", false
+	}
+	return line[:idx], line[idx+1:], true
+}
+
+func normalizeGitleaksIgnorePath(path string) string {
+	return strings.ReplaceAll(path, "\\", "/")
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
@@ -246,7 +315,7 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 			})
 		}
 
-		for _, finding := range d.DetectContext(ctx, Fragment(fragment)) {
+		for _, finding := range d.detect(ctx, Fragment(fragment), 0) {
 			d.AddFinding(finding)
 		}
 
@@ -274,6 +343,10 @@ func (d *Detector) Detect(fragment Fragment) []report.Finding {
 // DetectContext is the same as Detect but supports passing in a
 // context to use for timeouts
 func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []report.Finding {
+	return d.detect(ctx, fragment, d.Redact)
+}
+
+func (d *Detector) detect(ctx context.Context, fragment Fragment, redact uint) []report.Finding {
 	if fragment.Bytes == nil {
 		d.TotalBytes.Add(uint64(len(fragment.Raw)))
 	}
@@ -364,7 +437,7 @@ ScanLoop:
 		}
 	}
 
-	return filter(findings, d.Redact)
+	return filter(findings, redact)
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
@@ -732,12 +805,19 @@ func (d *Detector) AddFinding(finding report.Finding) {
 			return
 		}
 	}
+	if d.isSecretIgnored(finding) {
+		logger.Debug().Msg("skipping finding: secret ignore")
+		return
+	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
 		logger.Debug().
 			Str("fingerprint", finding.Fingerprint).
 			Msgf("skipping finding: baseline")
 		return
+	}
+	if d.Redact > 0 {
+		finding.Redact(d.Redact)
 	}
 
 	d.findingMutex.Lock()
@@ -746,6 +826,26 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
+}
+
+func (d *Detector) isSecretIgnored(finding report.Finding) bool {
+	secretIgnores := d.gitleaksIgnoreSecrets[finding.Secret]
+	if len(secretIgnores) == 0 {
+		return false
+	}
+
+	filePath := normalizeGitleaksIgnorePath(finding.File)
+	for _, secretIgnore := range secretIgnores {
+		if secretIgnore.Path != "" && secretIgnore.Path != filePath {
+			continue
+		}
+		if secretIgnore.RuleID != "" && secretIgnore.RuleID != finding.RuleID {
+			continue
+		}
+		return true
+	}
+
+	return false
 }
 
 // Findings returns the findings added to the detector
