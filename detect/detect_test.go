@@ -2771,3 +2771,25 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestWithinProximityColumnsRequireSameLine(t *testing.T) {
+	// Regression for #2122: column proximity has no meaning across
+	// different lines, since columns restart at each newline.
+	d := &Detector{}
+	cols := 5
+	required := &config.Required{WithinColumns: &cols}
+	primary := report.Finding{StartLine: 1, StartColumn: 5}
+	otherLine := report.Finding{StartLine: 300, StartColumn: 6}
+	sameLine := report.Finding{StartLine: 1, StartColumn: 8}
+	farSameLine := report.Finding{StartLine: 1, StartColumn: 60}
+
+	if d.withinProximity(primary, otherLine, required) {
+		t.Error("findings on different lines should fail withinColumns")
+	}
+	if !d.withinProximity(primary, sameLine, required) {
+		t.Error("findings 3 columns apart on the same line should satisfy withinColumns: 5")
+	}
+	if d.withinProximity(primary, farSameLine, required) {
+		t.Error("findings 55 columns apart on the same line should fail withinColumns: 5")
+	}
+}
