@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/adrg/xdg"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,6 +24,13 @@ import (
 	"github.com/zricethezav/gitleaks/v8/version"
 )
 
+type LocalConfigPaths struct {
+	ConfigDir    string
+	GitleaksFile string
+}
+
+var localConfigPaths LocalConfigPaths
+
 const banner = `
     ○
     │╲
@@ -31,14 +39,16 @@ const banner = `
     ░    gitleaks
 
 `
-
-const configDescription = `config file path
+const (
+	configDescription = `config file path
 order of precedence:
 1. --config/-c
 2. env var GITLEAKS_CONFIG
 3. env var GITLEAKS_CONFIG_TOML with the file content
-4. (target path)/.gitleaks.toml
+4. ${XDG_CONFIG_HOME}/gitleaks/config.toml
+5. (target path)/.gitleaks.toml
 If none of the four options are used, then gitleaks will use the default config`
+)
 
 var (
 	rootCmd = &cobra.Command{
@@ -71,6 +81,11 @@ const (
 )
 
 func init() {
+	localConfigPaths = LocalConfigPaths{
+		ConfigDir:    filepath.Join(xdg.ConfigHome, "gitleaks"),
+		GitleaksFile: "config.toml",
+	}
+
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().StringP("config", "c", "", configDescription)
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
@@ -146,6 +161,9 @@ func initConfig(source string) {
 	if err != nil {
 		logging.Fatal().Msg(err.Error())
 	}
+
+	homeDirConfigPath := filepath.Join(localConfigPaths.ConfigDir, localConfigPaths.GitleaksFile)
+
 	if cfgPath != "" {
 		viper.SetConfigFile(cfgPath)
 		logging.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
@@ -160,6 +178,9 @@ func initConfig(source string) {
 		}
 		logging.Debug().Str("content", os.Getenv("GITLEAKS_CONFIG_TOML")).Msg("using gitleaks config from GITLEAKS_CONFIG_TOML env var content")
 		return
+	} else if _, err := os.Stat(homeDirConfigPath); err == nil {
+		viper.SetConfigFile(homeDirConfigPath)
+		logging.Debug().Msgf("using gitleaks config from %s", homeDirConfigPath)
 	} else {
 		fileInfo, err := os.Stat(source)
 		if err != nil {
