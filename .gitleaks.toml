@@ -6,7 +6,7 @@ title = "Gitleaks development"
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 paths = [
   '''(^|/)cmd/generate/config/rules''',
   '''.*test\.go''',
