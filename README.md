@@ -197,7 +197,7 @@ gitleaks will ignore any old findings that are present in the baseline. A baseli
 gitleaks git --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
 ```
 
-Once as baseline is created it can be applied when running the detect command again:
+Once a baseline is created it can be applied when running the detect command again:
 
 ```
 gitleaks git --baseline-path gitleaks-report.json --report-path findings.json
@@ -300,7 +300,7 @@ path = '''a-file-path-regex'''
 # Keywords are used for pre-regex check filtering. Rules that contain
 # keywords will perform a quick string compare check to make sure the
 # keyword(s) are in the content being scanned. Ideally these values should
-# either be part of the identiifer or unique strings specific to the rule's regex
+# either be part of the identifier or unique strings specific to the rule's regex
 # (introduced in v8.6.0)
 keywords = [
   "auth",
