@@ -63,3 +63,28 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 	}
 	return utils.Validate(r, tps, fps)
 }
+
+// References:
+// - https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage
+// - https://github.com/gitleaks/gitleaks/issues/539
+func AzureStorageAccountKey() *config.Rule {
+	// Azure Storage account keys are 512-bit keys, base64-encoded to 86 characters + "==".
+	r := config.Rule{
+		RuleID:      "azure-storage-account-key",
+		Description: "Identified an Azure Storage Account Key, which could lead to unauthorized access to Azure Storage services and data.",
+		Regex: utils.GenerateSemiGenericRegex(
+			[]string{"accountkey", "account_key", "azure_storage", "azurestoragekey", "storage_key"},
+			`[a-zA-Z0-9+/]{86}==`,
+			true,
+		),
+		Keywords: []string{"accountkey", "account_key", "azure_storage", "azurestoragekey", "storage_key"},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("accountkey", secrets.NewSecret(`[a-zA-Z0-9+/]{86}`)+`==`)
+	fps := []string{
+		`AccountKey=dGhpcyBpcyBhIHRlc3Qgc3RyaW5nIHdpdGggbm8gcmVhbCBrZXkgZGF0YSBpbiBpdCBhdCBhbGwu`, // no trailing ==
+		`AccountKey=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx==`, // repetitive
+	}
+	return utils.Validate(r, tps, fps)
+}
