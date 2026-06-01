@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/fatih/semgroup v1.2.0
 	github.com/gitleaks/go-gitdiff v0.9.1
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/go-version v1.7.0
 	github.com/mholt/archives v0.1.2
