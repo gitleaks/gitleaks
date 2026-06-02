@@ -3060,11 +3060,15 @@ keywords = [
 [[rules]]
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
-regex = '''\b((?:EAAA|sq0atp-)[\w-]{22,60})(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''\b((?:EAAA[\w-]{60}|sq0atp-[\w-]{22,43}))(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 2
 keywords = [
     "sq0atp-",
     "eaaa",
+]
+[[rules.allowlists]]
+paths = [
+    '''(?i)\.(?:eml|mht|msg|xlsx|docx|pptx|zip|jar|war|ear|apk|ipa)$''',
 ]
 
 [[rules]]
