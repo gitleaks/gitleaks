@@ -56,6 +56,13 @@ keywords = [{{ range $j, $keyword := . }}"{{ $keyword }}"{{ end }}]{{end}}{{ end
 tags = [
     {{ range $j, $tag := . }}"{{ $tag }}",{{ end }}
 ]{{ end }}
+{{- with $rule.RequiredRules }}{{ range $i, $required := . }}{{println}}[[rules.required]]
+id = "{{$required.RuleID}}"
+{{- with $required.WithinLines }}
+withinLines = {{ . }}{{ end -}}
+{{- with $required.WithinColumns }}
+withinColumns = {{ . }}{{ end }}
+{{- end }}{{ end }}
 {{- with $rule.Allowlists }}{{ range $i, $allowlist := . }}{{ if or $allowlist.Regexes $allowlist.Paths $allowlist.Commits $allowlist.StopWords }}{{println}}[[rules.allowlists]]
 {{- with .Description }}{{println}}description = "{{ . }}"{{ end }}
 {{- with .MatchCondition }}{{println}}condition = "{{ .String }}"{{ end }}
