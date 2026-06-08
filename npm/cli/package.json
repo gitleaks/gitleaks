@@ -1,0 +1,31 @@
+{
+  "name": "@gitleaks/cli",
+  "version": "8.21.2",
+  "description": "Protect and discover secrets using Gitleaks 🔑",
+  "bin": {
+    "gitleaks": "cli"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitleaks/gitleaks.git",
+    "directory": "npm/gitleaks"
+  },
+  "keywords": ["git", "go", "golang", "security", "secret", "gitleaks"],
+  "author": "Zachary Rice",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gitleaks/gitleaks/issues"
+  },
+  "homepage": "https://github.com/gitleaks/gitleaks#readme",
+  "scripts": { "release": "npx semantic-release" },
+  "optionalDependencies": {
+    "@gitleaks/darwin-x64": "8.21.2",
+    "@gitleaks/linux-x64": "8.21.2",
+    "@gitleaks/win32-x64": "8.21.2"
+  },
+  "publishConfig": {
+    "provenance": true
+  },
+  "os": ["darwin", "linux", "win32"],
+  "cpu": ["x64"]
+}
