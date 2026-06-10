@@ -908,6 +908,35 @@ func TestFromGit(t *testing.T) {
 			},
 		},
 		{
+			// Regression test: global [[allowlists]] commit entries must skip the entire
+			// diff file, not just advance the inner allowlist loop.
+			source:  filepath.Join(repoBasePath, "small"),
+			cfgName: "valid/allowlist_global_commit",
+			expectedFindings: []report.Finding{
+				{
+					RuleID:      "aws-access-key",
+					Description: "AWS Access Key",
+					StartLine:   9,
+					EndLine:     9,
+					StartColumn: 17,
+					EndColumn:   36,
+					Secret:      "AKIALALEMEL33243OLIA",
+					Match:       "AKIALALEMEL33243OLIA",
+					Line:        "\n\taws_token := \"AKIALALEMEL33243OLIA\"",
+					File:        "foo/foo.go",
+					Date:        "2021-11-02T23:48:06Z",
+					Commit:      "491504d5a31946ce75e22554cc34203d8e5ff3ca",
+					Author:      "Zach Rice",
+					Email:       "zricer@protonmail.com",
+					Message:     "adding foo package with secret",
+					Tags:        []string{"key", "AWS"},
+					Entropy:     3.0841837,
+					Fingerprint: "491504d5a31946ce75e22554cc34203d8e5ff3ca:foo/foo.go:aws-access-key:9",
+					Link:        "https://github.com/gitleaks/test/blob/491504d5a31946ce75e22554cc34203d8e5ff3ca/foo/foo.go#L9",
+				},
+			},
+		},
+		{
 			source:  filepath.Join(repoBasePath, "small"),
 			logOpts: "--all foo...",
 			cfgName: "simple",

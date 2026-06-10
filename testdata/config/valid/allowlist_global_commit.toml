@@ -1,0 +1,10 @@
+title = "config with global commit allowlist"
+
+[[rules]]
+    description = "AWS Access Key"
+    id = "aws-access-key"
+    regex = '''(?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}'''
+    tags = ["key", "AWS"]
+
+[[allowlists]]
+    commits = ["1b6da43b82b22e4eaa10bcf8ee591e91abbfc587"]
