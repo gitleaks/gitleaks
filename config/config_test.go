@@ -89,6 +89,15 @@ func TestTranslate(t *testing.T) {
 			},
 		},
 
+		// Empty [[rules]] block should be a no-op (regression: #1985)
+		{
+			cfgName: "valid/rule_empty_block",
+			cfg: Config{
+				Title: "Custom Gitleaks configuration",
+				Rules: map[string]Rule{},
+			},
+		},
+
 		// Invalid
 		{
 			cfgName:   "invalid/rule_missing_id",
