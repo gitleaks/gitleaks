@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
 	"time"
 
+	gitignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/cobra"
 
 	"github.com/zricethezav/gitleaks/v8/logging"
@@ -11,6 +14,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(directoryCmd)
+	directoryCmd.Flags().BoolP("gitignore", "g", false, "respect patterns from .gitignore")
 	directoryCmd.Flags().Bool("follow-symlinks", false, "scan files that are symlinks to other files")
 }
 
@@ -38,6 +42,26 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
 
+	// Optional .gitignore support for dir scans.
+	var gitIgnoreParser gitignore.IgnoreParser
+	var gitIgnoreBasePath string
+	if useGitIgnore, err := cmd.Flags().GetBool("gitignore"); err != nil {
+		logging.Fatal().Err(err).Send()
+	} else if useGitIgnore {
+		gitIgnoreBasePath = source
+		if info, statErr := os.Stat(source); statErr == nil && !info.IsDir() {
+			gitIgnoreBasePath = filepath.Dir(source)
+		}
+
+		gitIgnorePath := filepath.Join(gitIgnoreBasePath, ".gitignore")
+		if fileExists(gitIgnorePath) {
+			gitIgnoreParser, err = gitignore.CompileIgnoreFile(gitIgnorePath)
+			if err != nil {
+				logging.Fatal().Err(err).Str("path", gitIgnorePath).Msg("failed to load .gitignore")
+			}
+		}
+	}
+
 	// start timer
 	start := time.Now()
 
@@ -57,12 +81,14 @@ func runDirectory(cmd *cobra.Command, args []string) {
 	findings, err := detector.DetectSource(
 		cmd.Context(),
 		&sources.Files{
-			Config:          &cfg,
-			FollowSymlinks:  detector.FollowSymlinks,
-			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
-			Path:            source,
-			Sema:            detector.Sema,
-			MaxArchiveDepth: detector.MaxArchiveDepth,
+			Config:            &cfg,
+			FollowSymlinks:    detector.FollowSymlinks,
+			MaxFileSize:       detector.MaxTargetMegaBytes * 1_000_000,
+			Path:              source,
+			Sema:              detector.Sema,
+			MaxArchiveDepth:   detector.MaxArchiveDepth,
+			GitIgnoreParser:   gitIgnoreParser,
+			GitIgnoreBasePath: gitIgnoreBasePath,
 		},
 	)
 
