@@ -226,8 +226,17 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
 			logger.Error().Err(err).Send()
+			// A source signals a fatal, scan-aborting error by yielding it with
+			// an empty fragment (e.g. the git source when `git log` writes to
+			// stderr). Propagate it so the caller reports a partial scan and
+			// exits non-zero, instead of silently reporting "no leaks found"
+			// with exit 0. A populated fragment indicates a recoverable
+			// per-item error (e.g. a single unreadable file), which we log and
+			// skip so the rest of the scan continues. See #2129.
+			if fragment.FilePath == "" && fragment.CommitSHA == "" && len(fragment.Raw) == 0 {
+				return err
+			}
 			return nil
 		}
 

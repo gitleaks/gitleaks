@@ -3,6 +3,7 @@ package detect
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -2768,6 +2769,69 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			compare(t, test.expected, actual)
+		})
+	}
+}
+
+// fakeSource is a minimal sources.Source used to exercise DetectSource's
+// error-propagation contract without spawning a real git process.
+type fakeSource struct {
+	items []fakeYield
+}
+
+type fakeYield struct {
+	fragment sources.Fragment
+	err      error
+}
+
+func (s *fakeSource) Fragments(_ context.Context, yield sources.FragmentsFunc) error {
+	for _, item := range s.items {
+		if err := yield(item.fragment, item.err); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// TestDetectSourceErrorPropagation guards the fix for #2129: a fatal,
+// scan-aborting error (yielded with an empty fragment, as the git source does
+// when `git log` writes to stderr) must propagate out of DetectSource so the
+// CLI reports a partial scan and exits non-zero. A recoverable per-item error
+// (yielded with a populated fragment) must still be logged and skipped.
+func TestDetectSourceErrorPropagation(t *testing.T) {
+	tests := map[string]struct {
+		source    *fakeSource
+		expectErr bool
+	}{
+		"source-level error (empty fragment) propagates": {
+			source: &fakeSource{items: []fakeYield{
+				{fragment: sources.Fragment{}, err: errors.New("stderr is not empty")},
+			}},
+			expectErr: true,
+		},
+		"per-item error (populated fragment) is swallowed": {
+			source: &fakeSource{items: []fakeYield{
+				{fragment: sources.Fragment{FilePath: "broken.txt"}, err: errors.New("could not read file")},
+			}},
+			expectErr: false,
+		},
+		"clean scan returns no error": {
+			source: &fakeSource{items: []fakeYield{
+				{fragment: sources.Fragment{FilePath: "ok.txt", Raw: "nothing to see"}, err: nil},
+			}},
+			expectErr: false,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			detector := NewDetector(config.Config{})
+			_, err := detector.DetectSource(context.Background(), tt.source)
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
