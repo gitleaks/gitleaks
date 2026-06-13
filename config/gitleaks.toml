@@ -2840,6 +2840,48 @@ entropy = 2
 keywords = ["tk-us-"]
 
 [[rules]]
+id = "sealed-env-credential-token"
+description = "Discovered a sealed-env credential token (carries master key, signing key, or — in legacy enterprise mode — TOTP secret)."
+regex = '''(?i)\b(sealed_env_[btued]_[0-9a-fA-F]{4}_[A-Za-z0-9_-]{20,500})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["sealed_env_"]
+
+[[rules]]
+id = "sealed-env-master-key"
+description = "Discovered a sealed-env master key (32-byte hex in SEALED_ENV_KEY)."
+regex = '''(?i)[\w.-]{0,50}?(?:SEALED_ENV_KEY)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-fA-F]{64}\b)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["sealed_env_key"]
+
+[[rules]]
+id = "sealed-env-signing-key"
+description = "Discovered a sealed-env signing key (32-byte hex in SEALED_ENV_SIGNING_KEY)."
+regex = '''(?i)[\w.-]{0,50}?(?:SEALED_ENV_SIGNING_KEY)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-fA-F]{64}\b)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["sealed_env_signing_key"]
+
+[[rules]]
+id = "sealed-env-totp-otpauth-uri"
+description = "Discovered an otpauth:// URI containing a TOTP secret (sealed-env enterprise mode)."
+regex = '''(?i)\b(otpauth://totp/[^?\s]*\?[^"\s]*secret=[A-Z2-7]{16,64}={0,6}[^"\s]*)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["otpauth://"]
+
+[[rules]]
+id = "sealed-env-totp-secret"
+description = "Discovered a sealed-env TOTP secret (base32 in SEALED_ENV_TOTP_SECRET)."
+regex = '''(?i)[\w.-]{0,50}?(?:SEALED_ENV_TOTP_SECRET)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([A-Z2-7]{16,64}={0,6}\b)(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["sealed_env_totp_secret"]
+
+[[rules]]
+id = "sealed-env-unseal-token"
+description = "Discovered a sealed-env unseal token (TOTP-bound, HS256 JWS)."
+regex = '''(?i)\b(usl_[A-Za-z0-9_-]{40,200}\.[A-Za-z0-9_-]{40,400}\.[A-Za-z0-9_-]{40,100})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["usl_"]
+
+[[rules]]
 id = "sendbird-access-id"
 description = "Discovered a Sendbird Access ID, which could compromise chat and messaging platform integrations."
 regex = '''(?i)[\w.-]{0,50}?(?:sendbird)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
