@@ -1,0 +1,19 @@
+[
+ {
+  "type": "issue",
+  "check_name": "test-rule",
+  "description": "test-rule: A test rule",
+  "fingerprint": "b945bd2df7455904e5f9dde0fd45f967dd9fdb30c639caf8ff153d7ee49ec009",
+  "severity": "critical",
+  "categories": [
+   "Security"
+  ],
+  "engine_name": "gitleaks",
+  "location": {
+   "path": "auth.py",
+   "lines": {
+    "begin": 17
+   }
+  }
+ }
+]
