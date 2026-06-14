@@ -247,6 +247,7 @@ func main() {
 		rules.YandexAWSAccessToken(),
 		rules.YandexAccessToken(),
 		rules.ZendeskSecretKey(),
+		rules.ZhipuApiKey(),
 		rules.GenericCredential(),
 		rules.InfracostAPIToken(),
 	}
