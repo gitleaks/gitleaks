@@ -338,11 +338,16 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 			var commitInfo *CommitInfo
 			if gitdiffFile.PatchHeader != nil {
 				commitSHA = gitdiffFile.PatchHeader.SHA
+				commitAllowed := false
 				for _, a := range s.Config.Allowlists {
 					if ok, c := a.CommitAllowed(gitdiffFile.PatchHeader.SHA); ok {
 						logging.Trace().Str("allowed-commit", c).Msg("skipping commit: global allowlist")
-						continue
+						commitAllowed = true
+						break
 					}
+				}
+				if commitAllowed {
+					continue
 				}
 
 				commitInfo = &CommitInfo{
