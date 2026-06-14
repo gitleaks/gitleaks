@@ -282,6 +282,7 @@ type Git struct {
 	Config          *config.Config
 	Remote          *RemoteInfo
 	Sema            *semgroup.Group
+	MaxFileSize     int
 	MaxArchiveDepth int
 }
 
@@ -372,6 +373,7 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 					file := File{
 						Content:         blob,
 						Path:            gitdiffFile.NewName,
+						MaxFileSize:     s.MaxFileSize,
 						MaxArchiveDepth: s.MaxArchiveDepth,
 						Config:          s.Config,
 					}

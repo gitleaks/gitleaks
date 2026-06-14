@@ -83,6 +83,7 @@ func runGit(cmd *cobra.Command, args []string) {
 			Config:          &detector.Config,
 			Remote:          sources.NewRemoteInfoContext(cmd.Context(), scmPlatform, source),
 			Sema:            detector.Sema,
+			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
 			MaxArchiveDepth: detector.MaxArchiveDepth,
 		},
 	)
