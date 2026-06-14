@@ -2474,6 +2474,50 @@ func TestNormalizeGitleaksIgnorePaths(t *testing.T) {
 	assert.ElementsMatch(t, maps.Keys(d.gitleaksIgnore), maps.Keys(expected))
 }
 
+func TestAddFinding_LogIgnored(t *testing.T) {
+	finding := report.Finding{
+		RuleID:    "test-rule",
+		File:      "secrets.env",
+		StartLine: 12,
+		Secret:    "shhh",
+	}
+	fingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+
+	cases := []struct {
+		name        string
+		logIgnored  bool
+		wantLogged  bool
+	}{
+		{name: "default keeps skip log at debug", logIgnored: false, wantLogged: false},
+		{name: "log-ignored promotes skip log to info", logIgnored: true, wantLogged: true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			origLogger := logging.Logger
+			t.Cleanup(func() { logging.Logger = origLogger })
+
+			var buf bytes.Buffer
+			logging.Logger = zerolog.New(&buf).Level(zerolog.InfoLevel)
+
+			d, err := NewDetectorDefaultConfig()
+			require.NoError(t, err)
+			d.gitleaksIgnore = map[string]struct{}{fingerprint: {}}
+			d.LogIgnored = tc.logIgnored
+
+			d.AddFinding(finding)
+
+			require.Empty(t, d.Findings(), "ignored finding must not be added to results")
+			if tc.wantLogged {
+				require.Contains(t, buf.String(), "skipping finding: global fingerprint")
+				require.Contains(t, buf.String(), fingerprint)
+			} else {
+				require.NotContains(t, buf.String(), "skipping finding")
+			}
+		})
+	}
+}
+
 func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	unixRule := config.Rule{
 		RuleID: "test-rule",
