@@ -18,8 +18,7 @@ title = "gitleaks config"
 # config-enabled features are guaranteed to work.
 minVersion = "v8.25.0"
 
-# TODO: change to [[allowlists]]
-[allowlist]
+[[allowlists]]
 description = "global allow lists"
 paths = [
     '''gitleaks\.toml''',
