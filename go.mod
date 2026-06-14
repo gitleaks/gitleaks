@@ -12,7 +12,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/go-version v1.7.0
 	github.com/mholt/archives v0.1.5
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
