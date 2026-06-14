@@ -656,6 +656,11 @@ regexes = [
     '''^[a-zA-Z_.-]+$''',
 ]
 [[rules.allowlists]]
+description = "Allow JS instance property assignments to identifiers"
+regexes = [
+    '''^(?:this|self)\.[A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*$''',
+]
+[[rules.allowlists]]
 description = "Allowlist for Generic API Keys"
 regexTarget = "match"
 regexes = [
