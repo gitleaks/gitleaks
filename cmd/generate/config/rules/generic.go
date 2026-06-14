@@ -62,12 +62,15 @@ func GenericCredential() *config.Rule {
 						`|author` +
 						`|X-MS-Exchange-Organization-Auth` + // email header
 						`|Authentication-Results` + // email header
+						`|auth[_.-]?type` +
 						// Credentials
 						`|(?:credentials?[_.-]?id|withCredentials)` + // Jenkins plugins
 						// Key
-						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
+						`|(?:bucket|criterion|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
 						`|(?:turkey)` +
-						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
+						`|key[_.-]?(?:algorithm|alias|board|code|frame|id|length|mesh|name|pair|prefix|press(?:ed)?|ring|selector|signature|size|stone|storetype|store[_.-]?id|usage|word|up|down|left|right)` +
+						`|key[ ]id` +
+						`|key[_.-]?to[_.-]?(?:exclude|include)` + // Boto3 documentation (https://boto3.amazonaws.com/v1/documentation/api/1.26.92/reference/services/wafv2/client/put_logging_configuration.html)
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
 						`|key(?:store|tab)[_.-]?(?:file|path)` +
@@ -78,7 +81,7 @@ func GenericCredential() *config.Rule {
 						`|UserSecretsId` + // https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-8.0&tabs=linux
 
 						// Token
-						`|(?:csrf)[_.-]?token` +
+						`|(?:continuation|csrf|next|postman)[_.-]?token` +
 						`|(?:io\.jsonwebtoken[ \t]?:[ \t]?[\w-]+)` + // Maven library coordinates. (e.g., https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt)
 
 						// General
@@ -101,6 +104,10 @@ func GenericCredential() *config.Rule {
 					regexp.MustCompile(`--mount=type=secret,`),
 					//  https://github.com/gitleaks/gitleaks/issues/1800
 					regexp.MustCompile(`import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]`),
+					// AWS S3 Access Point ARN.
+					regexp.MustCompile(`\barn:aws:s3:[a-z0-9-]*:\d{12}:accesspoint[:/][\w+=,.@/-]+`),
+					// AWS Secrets Manager secret. (https://docs.aws.amazon.com/secretsmanager/latest/userguide/whats-in-a-secret.html)
+					regexp.MustCompile(`\barn:aws:secretsmanager:[a-z0-9-]+:\d{12}:secret:[\w+=,.@/-]+`),
 				},
 			},
 			{
@@ -162,6 +169,10 @@ func GenericCredential() *config.Rule {
 		`accessibilityYesOptionId = "0736f5ef-7e88-499a-80cc-90c85d2a5180"`,
 		`_RandomAccessIterator>
 _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
+		`				Bucket: aws.String("arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap"),
+--conf spark.sql.catalog.test.s3.access-points.my-bucket1=arn:aws:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap \
+			bucket:         "arn:aws-cn:s3::123456789012:accesspoint:mfzwi23gnjvgw.mrap",`,
+		`arn:aws:s3:us-west-2:123456789012:accesspoint/my-access-point/object/reports/january.pdf. The value must be URL`,
 
 		// API
 		`this.ultraPictureBox1.Name = "ultraPictureBox1";`,
@@ -180,6 +191,7 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`author = "james.fake@ymail.com",`,
 		`X-MS-Exchange-Organization-AuthSource: sm02915.int.contoso.com`,
 		`Authentication-Results: 5h.ca.iphmx.com`,
+		`	V4UnsignedBodyAuthType AuthType = "v4-unsigned-body"`,
 
 		// Credentials
 		`withCredentials([usernamePassword(credentialsId: '29f63271-dc2f-4734-8221-5b31b5169bac', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {`,
@@ -230,6 +242,25 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`timezone_mapping = {
     "Turkey Standard Time": "Europe/Istanbul",
 }`, // https://github.com/gitleaks/gitleaks/issues/1799
+		`	SearchResourcesSimpleCriterionKeyS3BucketEffectivePermission        SearchResourcesSimpleCriterionKey = "S3_BUCKET_EFFECTIVE_PERMISSION"`, // https://github.com/aws/aws-sdk-go-v2/blob/215d328ca489214cb796a3e5a8346ba0e3bc5a2b/service/macie2/types/enums.go#L951
+		`//   - Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab`, // https://github.com/aws/aws-sdk-go-v2/blob/6854498d985422048303008e6ba31942940d03b0/service/kms/api_op_DeriveSharedSecret.go#L130
+		`type KeyAlgorithm string
+
+// Enum values for KeyAlgorithm
+const (
+	KeyAlgorithmRsa2048      KeyAlgorithm = "RSA_2048"
+	KeyAlgorithmRsa1024      KeyAlgorithm = "RSA_1024"
+	KeyAlgorithmRsa4096      KeyAlgorithm = "RSA_4096"
+	KeyAlgorithmEcPrime256v1 KeyAlgorithm = "EC_prime256v1"
+	KeyAlgorithmEcSecp384r1  KeyAlgorithm = "EC_secp384r1"
+	KeyAlgorithmEcSecp521r1  KeyAlgorithm = "EC_secp521r1"
+)`,
+		`	ErrCodeInvalidS3KeyPrefixFault = "InvalidS3KeyPrefixFault"`,
+		`	// OutputKeyPrefixOutputs:Key_v4.m3u8 OutputKeyPrefixOutputs:Key_iframe.m3u8`,
+		`	KeyUsageTr31E2EmvMkeyIntegrity                 KeyUsage = "TR31_E2_EMV_MKEY_INTEGRITY"`,
+		` "CustomKeyStoreId": "cks-1234567890abcdef0",`,
+		`"MatchPattern": { "IncludedCookies": {"KeyToInclude1", "KeyToInclude2", "KeyToInclude3"} }`,
+		`"MatchPattern": { "ExcludedHeaders": {"KeyToExclude1", "KeyToExclude2"} }`,
 		// `<add key="SchemaTable" value="G:\SchemaTable.xml" />`,
 		//`    { key: '9df21e95-3848-409d-8f94-c675cdfee839', value: 'Americas' },`,
 		// `<TAR key="REF_ID_923.properties" value="/opts/config/alias/"/>`,
@@ -256,6 +287,7 @@ R5: Regulatory--21`,
 		`# get build time secret for authentication
 #RUN --mount=type=secret,id=jfrog_secret \
 #    JFROG_SECRET = $(cat /run/secrets/jfrog_secret) && \`,
+		`                            "ARN": "arn:aws:secretsmanager:us-west-2:123456789012:secret:MyTestSecret-1a2b3c",`,
 
 		// Token
 		`    access_token_url='https://github.com/login/oauth/access_token',`,
@@ -263,6 +295,9 @@ R5: Regulatory--21`,
 		`<SourceFile SourceLocation="F:\Extracts\" TokenFile="RTL_INST_CODE.cer">`,
 		`notes            = "Maven - io.jsonwebtoken:jjwt-jackson-0.11.2"`,
 		`csrf-token=Mj2qykJO5rELyHgezQ69nzUX0i3OH67V7+V4eUrLfpuyOuxmiW9rhROG/Whikle15syazJOkrjJa3U2AbhIvUw==`,
+		`"NextContinuationToken": "1w41l63U0xa8q7smH50vCxyTQqdxo69O3EmK28Bi5PcROI4wI/EyIJg=="`,
+		`"nextToken": "YW5vdGhlclRva2VuIQ=="`,
+		`Cache-Control: no-cache\nPostman-Token: 3b2a1ce9-c848-2e26-2e2f-9c2caefbed45\n`, // https://stackoverflow.com/a/36883407
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
