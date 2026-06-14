@@ -1,0 +1,10 @@
+# Global wildcard: ignore aws-access-token in any file/line
+*:aws-access-token:*
+# Line-only wildcard for a known file
+foo/bar/gitleaks-false-positive.yaml:aws-access-token:*
+# Commit wildcard: ignore any commit, specific file/rule/line
+*:path/to/file.go:generic-secret:42
+# Full wildcard commit fingerprint
+*:*:sidekiq-secret:*
+# exact entry still works
+foo/bar/exact.yaml:aws-access-token:7

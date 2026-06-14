@@ -498,6 +498,29 @@ class CustomClass:
 
 You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
 
+Any field in a fingerprint can also be the wildcard `*`, which matches any value
+for that field. This is useful when the file, line number, or commit hash is
+unstable (for example, with code generation). Entries keep their fixed shape:
+`file:rule-id:start-line` (global) or `commit:file:rule-id:start-line` (commit).
+
+```
+# Ignore a specific rule everywhere
+*:aws-access-token:*
+# Ignore every line of one rule in one file
+path/to/generated.go:generic-api-key:*
+# Ignore a rule across every commit, specific file and line
+*:path/to/file.go:generic-api-key:42
+```
+
+Limitations:
+
+- Entries are split on `:`, so a file path containing a literal `:` cannot be
+  expressed as an exact fingerprint.
+- `*` is always treated as a wildcard. A file or rule-id whose literal value is
+  `*` cannot be pinned exactly; it will match any value for that field.
+- `*` matches a whole field only. Partial globs like `*.js` or `vendor/**` are
+  not supported.
+
 #### Decoding
 
 Sometimes secrets are encoded in a way that can make them difficult to find
