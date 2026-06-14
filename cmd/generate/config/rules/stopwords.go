@@ -203,6 +203,7 @@ var DefaultStopWords = []string{
 	"changelog",
 	"channel",
 	"chart",
+	"chargebee",
 	"chat",
 	"cheat",
 	"check",
