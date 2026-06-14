@@ -10,7 +10,7 @@ func SourceGraph() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sourcegraph-access-token",
 		Description: "Sourcegraph is a code search and navigation engine.",
-		Regex:       utils.GenerateUniqueTokenRegex(`\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b`, true),
+		Regex:       utils.GenerateUniqueTokenRegex(`\b(sgp_(?:[a-fA-F0-9]{16}|local|[a-zA-Z0-9]{4,})_[a-fA-F0-9]{6,40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b`, true),
 		Entropy:     3,
 		Keywords:    []string{"sgp_", "sourcegraph"},
 	}
