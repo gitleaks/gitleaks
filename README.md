@@ -32,7 +32,7 @@
 [![GoReportCard][go-report-card-badge]][go-report-card]
 [![License][badge-license]][license]
 
-Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`. If you wanna learn more about how the detection engine works check out this blog: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
+Gitleaks is a tool for **detecting** secrets such as passwords, API keys, and tokens in Git repositories, files, and any input streamed through `stdin`. If you want to learn more about how the detection engine works, see this blog post: [Regex is (almost) all you need](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need).
 
 ```
 ➜  ~/code(master) gitleaks git -v
