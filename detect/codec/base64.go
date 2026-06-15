@@ -25,13 +25,13 @@ func decodeBase64(encodedValue string) string {
 
 	// Try standard base64 decoding
 	decodedValue, err := base64.StdEncoding.DecodeString(encodedValue)
-	if err == nil && isPrintableASCII(decodedValue) {
+	if err == nil && isPrintable(decodedValue) {
 		return string(decodedValue)
 	}
 
 	// Try base64url decoding
 	decodedValue, err = base64.RawURLEncoding.DecodeString(encodedValue)
-	if err == nil && isPrintableASCII(decodedValue) {
+	if err == nil && isPrintable(decodedValue) {
 		return string(decodedValue)
 	}
 
