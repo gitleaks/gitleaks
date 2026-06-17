@@ -179,6 +179,8 @@ For example, if you wanted to run gitleaks on a range of commits you could use t
 command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
+Use `--platform` to generate links to findings on a specific SCM platform. Supported values: `github`, `gitlab`, `azuredevops`, `gitea`, `bitbucket`. Use `--staged` to scan staged (index) changes only. Use `--pre-commit` to scan unstaged working tree changes only (via `git diff`).
+
 #### Dir
 
 The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
