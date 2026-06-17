@@ -30,6 +30,14 @@ func (p Platform) String() string {
 	}[p]
 }
 
+func UserFacingPlatforms() []string {
+	var platforms []string
+	for p := GitHubPlatform; p <= BitbucketPlatform; p++ {
+		platforms = append(platforms, p.String())
+	}
+	return platforms
+}
+
 func PlatformFromString(s string) (Platform, error) {
 	switch strings.ToLower(s) {
 	case "", "unknown":

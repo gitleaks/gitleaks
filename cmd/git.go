@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(gitCmd)
-	gitCmd.Flags().String("platform", "", "the target platform used to generate links (github, gitlab, azuredevops, gitea, bitbucket)")
+	gitCmd.Flags().String("platform", "", "the target platform used to generate links ("+strings.Join(scm.UserFacingPlatforms(), ", ")+")")
 	gitCmd.Flags().Bool("staged", false, "scan staged commits (good for pre-commit)")
 	gitCmd.Flags().Bool("pre-commit", false, "scan using git diff")
 	gitCmd.Flags().String("log-opts", "", "git log options")
