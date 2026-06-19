@@ -295,6 +295,19 @@ type CommitInfo struct {
 	SHA         string
 }
 
+// isCommitAllowed reports whether the commit SHA is covered by any global
+// allowlist. It returns the matched allowlist's commit value so callers can
+// trace which entry applied. It stops at the first match, since one match is
+// enough to skip the commit.
+func isCommitAllowed(allowlists []*config.Allowlist, sha string) (bool, string) {
+	for _, a := range allowlists {
+		if ok, c := a.CommitAllowed(sha); ok {
+			return true, c
+		}
+	}
+	return false, ""
+}
+
 // Fragments yields fragments from a git repo
 func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	defer func() {
@@ -338,15 +351,8 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 			var commitInfo *CommitInfo
 			if gitdiffFile.PatchHeader != nil {
 				commitSHA = gitdiffFile.PatchHeader.SHA
-				commitAllowed := false
-				for _, a := range s.Config.Allowlists {
-					if ok, c := a.CommitAllowed(gitdiffFile.PatchHeader.SHA); ok {
-						logging.Trace().Str("allowed-commit", c).Msg("skipping commit: global allowlist")
-						commitAllowed = true
-						break
-					}
-				}
-				if commitAllowed {
+				if ok, c := isCommitAllowed(s.Config.Allowlists, commitSHA); ok {
+					logging.Trace().Str("allowed-commit", c).Msg("skipping commit: global allowlist")
 					continue
 				}
 
