@@ -1,5 +1,77 @@
 package sources
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+)
+
+func TestIsCommitAllowed(t *testing.T) {
+	tests := map[string]struct {
+		allowlists  []*config.Allowlist
+		sha         string
+		wantAllowed bool
+		wantCommit  string
+	}{
+		"no allowlists": {
+			allowlists:  nil,
+			sha:         "commitA",
+			wantAllowed: false,
+		},
+		"single allowlist matches": {
+			allowlists:  []*config.Allowlist{{Commits: []string{"commitA"}}},
+			sha:         "commitA",
+			wantAllowed: true,
+			wantCommit:  "commitA",
+		},
+		"single allowlist does not match": {
+			allowlists:  []*config.Allowlist{{Commits: []string{"commitB"}}},
+			sha:         "commitA",
+			wantAllowed: false,
+		},
+		"empty sha is never allowed": {
+			allowlists:  []*config.Allowlist{{Commits: []string{"commitA"}}},
+			sha:         "",
+			wantAllowed: false,
+		},
+		// The original bug: the allowed commit lived in a later allowlist and the
+		// misscoped continue let it fall through to be scanned anyway. Match on a
+		// non-first entry guards against that regression.
+		"match in a later allowlist": {
+			allowlists: []*config.Allowlist{
+				{Commits: []string{"commitB"}},
+				{Commits: []string{"commitA"}},
+			},
+			sha:         "commitA",
+			wantAllowed: true,
+			wantCommit:  "commitA",
+		},
+		// Overlapping allowlists: both cover the commit. We stop at the first
+		// match and never scan, regardless of how many entries match.
+		"overlapping allowlists both match": {
+			allowlists: []*config.Allowlist{
+				{Commits: []string{"commitA"}},
+				{Commits: []string{"commitA"}},
+			},
+			sha:         "commitA",
+			wantAllowed: true,
+			wantCommit:  "commitA",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotAllowed, gotCommit := isCommitAllowed(tt.allowlists, tt.sha)
+			assert.Equal(t, tt.wantAllowed, gotAllowed)
+			if tt.wantAllowed {
+				assert.Equal(t, tt.wantCommit, gotCommit)
+			}
+		})
+	}
+}
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
