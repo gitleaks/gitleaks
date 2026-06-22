@@ -67,3 +67,32 @@ func AnthropicAdminApiKey() *config.Rule {
 
 	return utils.Validate(r, tps, fps)
 }
+
+func AnthropicOauthRefreshToken() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "anthropic-oauth-refresh-token",
+		Description: "Identified an Anthropic OAuth refresh token (e.g. Claude Code), which can be exchanged for new access tokens and provides long-lived access to Anthropic APIs on behalf of a user.",
+		Regex:       utils.GenerateUniqueTokenRegex(`sk-ant-ort01-[a-zA-Z0-9_\-]{95}`, false),
+		Keywords: []string{
+			"sk-ant-ort01",
+		},
+	}
+
+	// validate
+	tps := []string{
+		// Valid OAuth refresh token example
+		"sk-ant-ort01-ort01samplexyzABC0123456789-_ort01samplexyzABC0123456789-_ort01samplexyzABC0123456789-_ort01sam",
+		// Generate additional random test tokens
+		utils.GenerateSampleSecret("anthropic", "sk-ant-ort01-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("95"))),
+	}
+
+	fps := []string{
+		// Too short token (missing characters)
+		"sk-ant-ort01-tooShort0123456789-_abcXYZ",
+		// Wrong prefix (access token, not refresh token)
+		"sk-ant-oat01-oat01samplexyzABC0123456789-_oat01samplexyzABC0123456789-_oat01samplexyzABC0123456789-_oat01sam",
+	}
+
+	return utils.Validate(r, tps, fps)
+}
