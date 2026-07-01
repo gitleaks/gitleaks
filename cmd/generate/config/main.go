@@ -194,6 +194,7 @@ func main() {
 		rules.PyPiUploadToken(),
 		rules.RapidAPIAccessToken(),
 		rules.ReadMe(),
+		rules.Resend(),
 		rules.RubyGemsAPIToken(),
 		rules.ScalingoAPIToken(),
 		rules.SendbirdAccessID(),
