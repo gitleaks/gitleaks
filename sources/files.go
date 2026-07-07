@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/fatih/semgroup"
+	gitignore "github.com/sabhiram/go-gitignore"
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
@@ -48,16 +49,28 @@ func DirectoryTargets(sourcePath string, s *semgroup.Group, followSymlinks bool,
 
 // Files is a source for yielding fragments from a collection of files
 type Files struct {
-	Config          *config.Config
-	FollowSymlinks  bool
-	MaxFileSize     int
-	Path            string
-	Sema            *semgroup.Group
-	MaxArchiveDepth int
+	Config            *config.Config
+	FollowSymlinks    bool
+	MaxFileSize       int
+	Path              string
+	Sema              *semgroup.Group
+	MaxArchiveDepth   int
+	GitIgnoreParser   gitignore.IgnoreParser
+	GitIgnoreBasePath string
 }
 
 // scanTargets yields scan targets to a callback func
 func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) error) error {
+	gitIgnoreBasePath := s.GitIgnoreBasePath
+	if gitIgnoreBasePath == "" {
+		gitIgnoreBasePath = s.Path
+		if s.GitIgnoreParser != nil {
+			if info, err := os.Stat(s.Path); err == nil && !info.IsDir() {
+				gitIgnoreBasePath = filepath.Dir(s.Path)
+			}
+		}
+	}
+
 	return filepath.WalkDir(s.Path, func(path string, d fs.DirEntry, err error) error {
 		scanTarget := ScanTarget{Path: path}
 		logger := logging.With().Str("path", path).Logger()
@@ -129,6 +142,11 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 			return nil
 		}
 
+		if shouldSkipPathWithGitIgnore(s.GitIgnoreParser, gitIgnoreBasePath, path) {
+			logger.Debug().Msg("skipping file: .gitignore")
+			return nil
+		}
+
 		if shouldSkipPath(s.Config, path) {
 			logger.Debug().Msg("skipping file: global allowlist")
 			return nil
@@ -136,6 +154,24 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 
 		return yield(scanTarget, nil)
 	})
+}
+
+func shouldSkipPathWithGitIgnore(parser gitignore.IgnoreParser, basePath, path string) bool {
+	if parser == nil {
+		return false
+	}
+
+	relPath, err := filepath.Rel(basePath, path)
+	if err != nil {
+		return false
+	}
+
+	if relPath == "." {
+		return false
+	}
+
+	relPath = filepath.ToSlash(relPath)
+	return parser.MatchesPath(relPath)
 }
 
 // Fragments yields fragments from files discovered under the path
