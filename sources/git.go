@@ -417,7 +417,10 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				break
 			}
 
-			return yield(Fragment{}, err)
+			// Return the git error directly so it propagates up through DetectSource
+			// and the caller can exit with a non-zero exit code. Previously this went
+			// through yield() where the fragment callback swallowed it.
+			return err
 		}
 	}
 
