@@ -40,6 +40,7 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 		cmd.Context(),
 		&sources.File{
 			Content:         os.Stdin,
+			MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
 			MaxArchiveDepth: detector.MaxArchiveDepth,
 		},
 	)
