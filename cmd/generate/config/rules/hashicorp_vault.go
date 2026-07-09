@@ -22,6 +22,13 @@ func VaultServiceToken() *config.Rule {
 					regexp.MustCompile(`s\.[A-Za-z]{24}`),
 				},
 			},
+			{
+				RegexTarget: "line",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`\bs\.(?i:[a-z0-9]{24})[ \t]{0,10}[:!=]?=`),
+					regexp.MustCompile(`[!:]=[ \t]{0,10}s\.(?i:[a-z0-9]{24})\b`),
+				},
+			},
 		},
 	}
 
@@ -44,6 +51,10 @@ func VaultServiceToken() *config.Rule {
 		`s.thisstringisalllowercase`,        // lowercase
 		`s.AcceptanceTimeoutSeconds `,       // pascal-case
 		`s.makeKubeConfigController = args`, // camel-case
+		// Variable
+		`if s.Scte35DescriptorSettings != nil {`,
+		`s.DestinationIpv6CidrBlock = &v`,
+		`v := s.Scte35TimeSignalSettings`,
 		// New
 		`hvs.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`, // low entropy
 	}
