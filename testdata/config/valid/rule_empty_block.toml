@@ -1,0 +1,4 @@
+title = "Custom Gitleaks configuration"
+
+# Empty [[rules]] block — should be treated as a no-op (regression: #1985)
+[[rules]]
