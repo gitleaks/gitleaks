@@ -2457,6 +2457,269 @@ func moveDotGit(t *testing.T, from, to string) {
 	}
 }
 
+func TestParseGitleaksIgnoreSecret(t *testing.T) {
+	tests := map[string]struct {
+		line    string
+		want    *gitleaksIgnoreSecret
+		wantErr bool
+	}{
+		"secret only": {
+			line: "secret:AKIALALEMEL33243OLIA",
+			want: &gitleaksIgnoreSecret{
+				Secret: "AKIALALEMEL33243OLIA",
+			},
+		},
+		"rule and secret": {
+			line: "rule:aws-access-key:secret:AKIALALEMEL33243OLIA",
+			want: &gitleaksIgnoreSecret{
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			},
+		},
+		"path and secret": {
+			line: "path:foo\\bar\\main.go:secret:AKIALALEMEL33243OLIA",
+			want: &gitleaksIgnoreSecret{
+				Path:   "foo/bar/main.go",
+				Secret: "AKIALALEMEL33243OLIA",
+			},
+		},
+		"path rule and secret": {
+			line: "path:foo/bar/main.go:rule:aws-access-key:secret:AKIALALEMEL33243OLIA",
+			want: &gitleaksIgnoreSecret{
+				Path:   "foo/bar/main.go",
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			},
+		},
+		"secret with colons": {
+			line: "secret:user:pass:token",
+			want: &gitleaksIgnoreSecret{
+				Secret: "user:pass:token",
+			},
+		},
+		"missing secret value": {
+			line:    "secret:",
+			wantErr: true,
+		},
+		"invalid order": {
+			line:    "rule:aws-access-key:path:foo/bar/main.go:secret:AKIALALEMEL33243OLIA",
+			wantErr: true,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := parseGitleaksIgnoreSecret(tt.line)
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Nil(t, got)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestAddFindingGitleaksIgnoreSecret(t *testing.T) {
+	tests := map[string]struct {
+		secretIgnores []gitleaksIgnoreSecret
+		finding       report.Finding
+		wantFindings  int
+	}{
+		"secret only": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/main.go",
+				StartLine: 20,
+			},
+		},
+		"path exact match": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Path:   "foo/bar/main.go",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/bar/main.go",
+				StartLine: 20,
+			},
+		},
+		"path normalized match": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Path:   "foo/bar/main.go",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo\\bar\\main.go",
+				StartLine: 20,
+			},
+		},
+		"path mismatch": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Path:   "foo/bar/main.go",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/other.go",
+				StartLine: 20,
+			},
+			wantFindings: 1,
+		},
+		"rule match": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/main.go",
+				StartLine: 20,
+			},
+		},
+		"rule mismatch": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "generic-api-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/main.go",
+				StartLine: 20,
+			},
+			wantFindings: 1,
+		},
+		"path and rule both match": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Path:   "foo/bar/main.go",
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "aws-access-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/bar/main.go",
+				StartLine: 20,
+			},
+		},
+		"path and rule mismatch": {
+			secretIgnores: []gitleaksIgnoreSecret{{
+				Path:   "foo/bar/main.go",
+				RuleID: "aws-access-key",
+				Secret: "AKIALALEMEL33243OLIA",
+			}},
+			finding: report.Finding{
+				RuleID:    "generic-api-key",
+				Secret:    "AKIALALEMEL33243OLIA",
+				File:      "foo/bar/main.go",
+				StartLine: 20,
+			},
+			wantFindings: 1,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			d := NewDetector(config.Config{})
+			for _, secretIgnore := range tt.secretIgnores {
+				d.gitleaksIgnoreSecrets[secretIgnore.Secret] = append(d.gitleaksIgnoreSecrets[secretIgnore.Secret], secretIgnore)
+			}
+
+			d.AddFinding(tt.finding)
+
+			assert.Len(t, d.Findings(), tt.wantFindings)
+		})
+	}
+}
+
+func TestDecodedSecretGitleaksIgnore(t *testing.T) {
+	viper.Reset()
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("encoded")
+	viper.SetConfigType("toml")
+	err := viper.ReadInConfig()
+	require.NoError(t, err)
+
+	var vc config.ViperConfig
+	err = viper.Unmarshal(&vc)
+	require.NoError(t, err)
+	cfg, err := vc.Translate()
+	require.NoError(t, err)
+
+	d := NewDetector(cfg)
+	d.MaxDecodeDepth = maxDecodeDepth
+
+	dir := t.TempDir()
+	ignorePath := filepath.Join(dir, ".gitleaksignore")
+	err = os.WriteFile(ignorePath, []byte("secret:lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw\n"), 0o600)
+	require.NoError(t, err)
+	err = d.AddGitleaksIgnore(ignorePath)
+	require.NoError(t, err)
+
+	findings := d.Detect(Fragment{
+		Raw:      "password=\"bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==\"",
+		FilePath: "tmp.go",
+	})
+	require.Len(t, findings, 1)
+	assert.Equal(t, "decoded-password-dont-ignore", findings[0].RuleID)
+	assert.Equal(t, "lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw", findings[0].Secret)
+
+	for _, finding := range findings {
+		d.AddFinding(finding)
+	}
+
+	assert.Empty(t, d.Findings())
+}
+
+func TestDecodedSecretGitleaksIgnoreWithRedaction(t *testing.T) {
+	viper.Reset()
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("encoded")
+	viper.SetConfigType("toml")
+	err := viper.ReadInConfig()
+	require.NoError(t, err)
+
+	var vc config.ViperConfig
+	err = viper.Unmarshal(&vc)
+	require.NoError(t, err)
+	cfg, err := vc.Translate()
+	require.NoError(t, err)
+
+	d := NewDetector(cfg)
+	d.MaxDecodeDepth = maxDecodeDepth
+	d.Redact = 100
+
+	dir := t.TempDir()
+	ignorePath := filepath.Join(dir, ".gitleaksignore")
+	err = os.WriteFile(ignorePath, []byte("secret:lRqBK-z5kf4-please-ignore-me-X-XIJM2Pddw\n"), 0o600)
+	require.NoError(t, err)
+	err = d.AddGitleaksIgnore(ignorePath)
+	require.NoError(t, err)
+
+	source := sources.File{
+		Content: strings.NewReader("password=\"bFJxQkstejVrZjQtcGxlYXNlLWlnbm9yZS1tZS1YLVhJSk0yUGRkdw==\""),
+		Path:    "tmp.go",
+		Config:  &cfg,
+	}
+
+	findings, err := d.DetectSource(context.Background(), &source)
+	require.NoError(t, err)
+	assert.Empty(t, findings)
+	assert.Empty(t, d.Findings())
+}
+
 // region Windows-specific tests[]
 func TestNormalizeGitleaksIgnorePaths(t *testing.T) {
 	d, err := NewDetectorDefaultConfig()
