@@ -2771,3 +2771,48 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestWithinProximity(t *testing.T) {
+	intPtr := func(i int) *int { return &i }
+
+	tests := map[string]struct {
+		primary      report.Finding
+		required     report.Finding
+		requiredRule *config.Required
+		expected     bool
+	}{
+		"same line, within columns": {
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 1, StartColumn: 10},
+			requiredRule: &config.Required{WithinColumns: intPtr(10)},
+			expected:     true,
+		},
+		"same line, outside columns": {
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 1, StartColumn: 60},
+			requiredRule: &config.Required{WithinColumns: intPtr(10)},
+			expected:     false,
+		},
+		"different lines, close columns": {
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 300, StartColumn: 6},
+			requiredRule: &config.Required{WithinColumns: intPtr(10)},
+			expected:     false,
+		},
+		"different lines, withinLines also set and satisfied": {
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 1, StartColumn: 8},
+			requiredRule: &config.Required{WithinLines: intPtr(5), WithinColumns: intPtr(10)},
+			expected:     true,
+		},
+	}
+
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := d.withinProximity(test.primary, test.required, test.requiredRule)
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
