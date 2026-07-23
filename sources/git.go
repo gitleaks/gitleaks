@@ -417,7 +417,9 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				break
 			}
 
-			return yield(Fragment{}, err)
+			if err := yield(Fragment{}, err); err != nil {
+				return err
+			}
 		}
 	}
 
