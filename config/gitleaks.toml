@@ -2114,6 +2114,7 @@ regexTarget = "line"
 regexes = [
     '''--mount=type=secret,''',
     '''import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]''',
+    '''^\s*(?:[\w@()]+\s+)*(?:let|var)\s+\w+\s*:\s*[A-Z][\w.<>, ?]*$''',
 ]
 [[rules.allowlists]]
 condition = "AND"
