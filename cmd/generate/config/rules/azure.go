@@ -63,3 +63,52 @@ func AzureActiveDirectoryClientSecret() *config.Rule {
 	}
 	return utils.Validate(r, tps, fps)
 }
+
+// References:
+// - https://learn.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage
+// - https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
+//
+// Azure Storage connection strings begin with `DefaultEndpointsProtocol=`,
+// a literal that is unique enough to anchor on without an external identifier.
+// The embedded account key is 64 bytes encoded as 88 base64 characters that
+// always end in `==`.
+func AzureStorageConnectionString() *config.Rule {
+	r := config.Rule{
+		RuleID:      "azure-storage-connection-string",
+		Description: "Identified an Azure Storage account connection string, which embeds a 64-byte account key granting full access to the storage account.",
+		Regex: regexp.MustCompile(
+			`(?i)DefaultEndpointsProtocol=https?;` +
+				`(?:[A-Za-z]+=[^;\s"'<>]{1,128};){0,5}` +
+				`AccountKey=([A-Za-z0-9+/]{86}==)`,
+		),
+		SecretGroup: 1,
+		Entropy:     3,
+		Keywords:    []string{"defaultendpointsprotocol"},
+	}
+
+	// validate
+	tps := []string{
+		`AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{86}`) + `==;EndpointSuffix=core.windows.net"`,
+		`conn = "DefaultEndpointsProtocol=https;AccountName=examplestg01;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{86}`) + `=="`,
+		`AZURE_WEBJOBS_STORAGE = DefaultEndpointsProtocol=https;AccountName=funcsa;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{86}`) + `==;EndpointSuffix=core.windows.net`,
+		// AccountKey appearing first after the protocol.
+		`DefaultEndpointsProtocol=https;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{86}`) + `==;AccountName=funcsa`,
+		// HTTP (not HTTPS) variant -- still valid syntax.
+		`DefaultEndpointsProtocol=http;AccountName=local;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{86}`) + `==;BlobEndpoint=http://127.0.0.1:10000/local`,
+	}
+	fps := []string{
+		// Documentation placeholder.
+		`DefaultEndpointsProtocol=https;AccountName=<account>;AccountKey=<your-account-key>;EndpointSuffix=core.windows.net`,
+		// Wrong length on the key.
+		`DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=ABC123==`,
+		// Low-entropy (all-A) key.
+		`DefaultEndpointsProtocol=https;AccountName=acct;AccountKey=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==`,
+		// Connection string mentioned without an AccountKey field.
+		`DefaultEndpointsProtocol=https;AccountName=mystorageaccount;EndpointSuffix=core.windows.net`,
+		// Single-padding (87+1) is not a 64-byte key.
+		`DefaultEndpointsProtocol=https;AccountName=acct;AccountKey=` + secrets.NewSecret(`[A-Za-z0-9+/]{87}`) + `=`,
+		// Common ${...} templating placeholder.
+		`DefaultEndpointsProtocol=https;AccountName=${STORAGE_NAME};AccountKey=${STORAGE_KEY};EndpointSuffix=core.windows.net`,
+	}
+	return utils.Validate(r, tps, fps)
+}
