@@ -75,6 +75,7 @@ func main() {
 		rules.DiscordAPIToken(),
 		rules.DiscordClientID(),
 		rules.DiscordClientSecret(),
+		rules.DjangoInsecureSecret(),
 		rules.Doppler(),
 		rules.DropBoxAPISecret(),
 		rules.DropBoxLongLivedAPIToken(),
