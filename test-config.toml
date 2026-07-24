@@ -1,0 +1,7 @@
+title = "Test config with maxTargetMegaBytes"
+maxTargetMegaBytes = 1
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(?:key|api|token|secret)'''

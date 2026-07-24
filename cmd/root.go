@@ -289,8 +289,15 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
-	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
+	// Get max target megabytes from flag first, then config if flag is not set
+	maxTargetMegaBytes, err := cmd.Flags().GetInt("max-target-megabytes")
+	if err != nil {
 		logging.Fatal().Err(err).Send()
+	}
+	if maxTargetMegaBytes > 0 {
+		detector.MaxTargetMegaBytes = maxTargetMegaBytes
+	} else if cfg.MaxTargetMegaBytes > 0 {
+		detector.MaxTargetMegaBytes = cfg.MaxTargetMegaBytes
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
