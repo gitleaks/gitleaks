@@ -25,6 +25,20 @@ func TestDecode(t *testing.T) {
 			expected: `token: longer-encoded-secret-test`,
 		},
 		{
+			// decodes to "café-encoded-secret-token-value": previously the
+			// accented letter made the segment fail the printable-ASCII check
+			// and it was silently skipped (#2000).
+			name:     "decodes to text with an accented character",
+			chunk:    `token: Y2Fmw6ktZW5jb2RlZC1zZWNyZXQtdG9rZW4tdmFsdWU=`,
+			expected: `token: café-encoded-secret-token-value`,
+		},
+		{
+			// decodes to "encoded-secret-日本語-token-value" (#2000).
+			name:     "decodes to text with CJK characters",
+			chunk:    `token: ZW5jb2RlZC1zZWNyZXQt5pel5pys6KqeLXRva2VuLXZhbHVl`,
+			expected: `token: encoded-secret-日本語-token-value`,
+		},
+		{
 			name:     "no chunk",
 			chunk:    ``,
 			expected: ``,
