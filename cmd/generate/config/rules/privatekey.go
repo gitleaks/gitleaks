@@ -13,6 +13,20 @@ func PrivateKey() *config.Rule {
 		Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
 		Regex:       regexp.MustCompile(`(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]{64,}?KEY(?: BLOCK)?-----`),
 		Keywords:    []string{"-----BEGIN"},
+		Allowlists: []*config.Allowlist{
+			{
+				Description: "Ignore private keys within GCP service account JSON files to prevent duplicate findings",
+				RegexTarget: "line",
+				Regexes: []*regexp.Regexp{
+					// Match lines that contain service account type declarations unlikely to change
+					regexp.MustCompile(`.*"type":\s*"service_account".*`),
+					regexp.MustCompile(`.*"private_key":\s*"-----BEGIN PRIVATE KEY-----.*`),
+					regexp.MustCompile(`.*"project_id":\s*"[a-z][-a-z0-9]{4,28}[a-z0-9]{1}".*`),
+					regexp.MustCompile(`.*"private_key_id":\s*"[^"]*".*`),
+					regexp.MustCompile(`.*"client_id":\s*"[0-9]+".*`),
+				},
+			},
+		},
 	}
 
 	// validate
