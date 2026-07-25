@@ -16,6 +16,7 @@ func (d *Detector) DetectReader(r io.Reader, bufSize int) ([]report.Finding, err
 	file := sources.File{
 		Content:         r,
 		Buffer:          make([]byte, 1000*bufSize),
+		MaxFileSize:     d.MaxTargetMegaBytes * 1_000_000,
 		MaxArchiveDepth: d.MaxArchiveDepth,
 	}
 
@@ -79,6 +80,7 @@ func (d *Detector) StreamDetectReader(r io.Reader, bufSize int) (<-chan report.F
 	file := sources.File{
 		Content:         r,
 		Buffer:          make([]byte, 1000*bufSize),
+		MaxFileSize:     d.MaxTargetMegaBytes * 1_000_000,
 		MaxArchiveDepth: d.MaxArchiveDepth,
 	}
 

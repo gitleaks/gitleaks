@@ -92,6 +92,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		findings, err = detector.DetectSource(
 			cmd.Context(), &sources.File{
 				Content:         os.Stdin,
+				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
 		)
@@ -122,6 +123,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 				Config:          &detector.Config,
 				Remote:          sources.NewRemoteInfoContext(cmd.Context(), scmPlatform, sourcePath),
 				Sema:            detector.Sema,
+				MaxFileSize:     detector.MaxTargetMegaBytes * 1_000_000,
 				MaxArchiveDepth: detector.MaxArchiveDepth,
 			},
 		)

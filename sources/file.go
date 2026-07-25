@@ -39,6 +39,8 @@ type File struct {
 	// Config is the gitleaks config used for shouldSkipPath. If not set, then
 	// shouldSkipPath is ignored
 	Config *config.Config
+	// MaxFileSize is the largest file size, in bytes, that will be scanned.
+	MaxFileSize int
 	// outerPaths is the list of container paths (e.g. archives) that lead to
 	// this file
 	outerPaths []string
@@ -116,27 +118,38 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 			return nil
 		}
 
-		innerReader, err := d.Open()
-		if err != nil {
-			logging.Error().Err(err).Str("path", s.FullPath()).Msg("could not open archive inner file")
-			return nil
-		}
-		defer innerReader.Close()
 		path := filepath.Clean(d.NameInArchive)
+		file := &File{
+			Path:            path,
+			Symlink:         s.Symlink,
+			outerPaths:      append(s.outerPaths, filepath.ToSlash(s.Path)),
+			MaxArchiveDepth: s.MaxArchiveDepth,
+			MaxFileSize:     s.MaxFileSize,
+			archiveDepth:    s.archiveDepth + 1,
+		}
 
 		if s.Config != nil && shouldSkipPath(s.Config, path) {
 			logging.Debug().Str("path", s.FullPath()).Msg("skipping file: global allowlist")
 			return nil
 		}
 
-		file := &File{
-			Content:         innerReader,
-			Path:            path,
-			Symlink:         s.Symlink,
-			outerPaths:      append(s.outerPaths, filepath.ToSlash(s.Path)),
-			MaxArchiveDepth: s.MaxArchiveDepth,
-			archiveDepth:    s.archiveDepth + 1,
+		if s.MaxFileSize > 0 && d.Size() > int64(s.MaxFileSize) {
+			logging.Warn().
+				Str("path", file.FullPath()).
+				Msgf(
+					"skipping file: too large max_size=%dMB, size=%dMB",
+					s.MaxFileSize/1_000_000, d.Size()/1_000_000,
+				)
+			return nil
 		}
+
+		innerReader, err := d.Open()
+		if err != nil {
+			logging.Error().Err(err).Str("path", s.FullPath()).Msg("could not open archive inner file")
+			return nil
+		}
+		defer innerReader.Close()
+		file.Content = innerReader
 
 		if err := file.Fragments(ctx, yield); err != nil {
 			return err
@@ -154,7 +167,31 @@ func (s *File) decompressorFragments(ctx context.Context, decompressor archives.
 		return nil
 	}
 
-	if err := s.fileFragments(ctx, bufio.NewReader(innerReader), yield); err != nil {
+	content := io.Reader(innerReader)
+	if s.MaxFileSize > 0 {
+		limited := bytes.Buffer{}
+		n, err := io.CopyN(&limited, innerReader, int64(s.MaxFileSize)+1)
+		if err != nil && err != io.EOF {
+			_ = innerReader.Close()
+			return yield(
+				Fragment{FilePath: s.FullPath()},
+				fmt.Errorf("could not read compressed file: %w", err),
+			)
+		}
+		if n > int64(s.MaxFileSize) {
+			logging.Warn().
+				Str("path", s.FullPath()).
+				Msgf(
+					"skipping file: too large max_size=%dMB, size>%dMB",
+					s.MaxFileSize/1_000_000, s.MaxFileSize/1_000_000,
+				)
+			_ = innerReader.Close()
+			return nil
+		}
+		content = &limited
+	}
+
+	if err := s.fileFragments(ctx, bufio.NewReader(content), yield); err != nil {
 		_ = innerReader.Close()
 		return err
 	}
