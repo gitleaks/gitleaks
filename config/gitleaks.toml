@@ -654,6 +654,8 @@ keywords = [
 [[rules.allowlists]]
 regexes = [
     '''^[a-zA-Z_.-]+$''',
+    # ponytail: Swift/Kotlin/Java crypto type names (P256, Curve25519, etc.)
+    '''^(?:P(?:256|384|521)|Curve25519|SecP256[KR]1)\.[A-Za-z]+\.(?:Public|Private)Key$''',
 ]
 [[rules.allowlists]]
 description = "Allowlist for Generic API Keys"
