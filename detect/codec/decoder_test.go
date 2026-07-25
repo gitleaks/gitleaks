@@ -106,6 +106,16 @@ func TestDecode(t *testing.T) {
 			chunk:    `secret=\u0068\u0065\u006c\u006c\u006f\u0020\u0077\u006f\u0072\u006c\u0064 6C6F76656C792070656F706C65206F66206561727468`,
 			expected: "secret=hello world lovely people of earth",
 		},
+		{
+			name:     "b64 with utf8 characters",
+			chunk:    `c2VjcmV0LWNhZsOp`,
+			expected: `secret-café`,
+		},
+		{
+			name:     "b64 with chinese characters",
+			chunk:    `5L2g5aW95LiW55WM5Lit5paH5rWL6K+V`,
+			expected: `你好世界中文测试`,
+		},
 	}
 
 	decoder := NewDecoder()

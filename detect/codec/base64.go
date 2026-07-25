@@ -2,6 +2,7 @@ package codec
 
 import (
 	"encoding/base64"
+	"unicode/utf8"
 )
 
 // likelyBase64Chars is a set of characters that you would expect to find at
@@ -25,13 +26,13 @@ func decodeBase64(encodedValue string) string {
 
 	// Try standard base64 decoding
 	decodedValue, err := base64.StdEncoding.DecodeString(encodedValue)
-	if err == nil && isPrintableASCII(decodedValue) {
+	if err == nil && utf8.Valid(decodedValue) {
 		return string(decodedValue)
 	}
 
 	// Try base64url decoding
 	decodedValue, err = base64.RawURLEncoding.DecodeString(encodedValue)
-	if err == nil && isPrintableASCII(decodedValue) {
+	if err == nil && utf8.Valid(decodedValue) {
 		return string(decodedValue)
 	}
 
