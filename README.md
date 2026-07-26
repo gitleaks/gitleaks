@@ -148,7 +148,7 @@ Flags:
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
   -l, --log-level string              log level (trace, debug, info, warn, error, fatal) (default "info")
       --max-archive-depth int         allow scanning into nested archives up to this depth (default "0", no archive traversal is done)
-      --max-decode-depth int          allow recursive decoding up to this depth (default "0", no decoding is done)
+      --max-decode-depth int          allow recursive decoding up to this depth (default 5)
       --max-target-megabytes int      files larger than this will be skipped
       --no-banner                     suppress banner
       --no-color                      turn off color for verbose output
@@ -501,9 +501,9 @@ You can ignore specific findings by creating a `.gitleaksignore` file at the roo
 #### Decoding
 
 Sometimes secrets are encoded in a way that can make them difficult to find
-with just regex. Now you can tell gitleaks to automatically find and decode
-encoded text. The flag `--max-decode-depth` enables this feature (the default
-value "0" means the feature is disabled by default).
+with just regex. Gitleaks automatically finds and decodes encoded text, up to
+a recursion depth of 5 by default. The flag `--max-decode-depth` controls this
+recursion limit; set it to `0` to disable decoding entirely.
 
 Recursive decoding is supported since decoded text can also contain encoded
 text.  The flag `--max-decode-depth` sets the recursion limit. Recursion stops
