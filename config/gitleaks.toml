@@ -2130,7 +2130,7 @@ regexes = [
 [[rules]]
 id = "github-app-token"
 description = "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security."
-regex = '''(?:ghu|ghs)_[0-9a-zA-Z]{36}'''
+regex = '''(?:ghu_[0-9a-zA-Z]{36}|ghs_(?:[0-9a-zA-Z]{36}|[0-9]+_eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+))'''
 entropy = 3
 keywords = [
     "ghu_",
