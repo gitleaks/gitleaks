@@ -508,13 +508,13 @@ Every finding also has a `ContentFingerprint`, printed as `Content FP:` in verbo
 
 ```
 # default fingerprint: tied to this exact commit/file/line
-0b05e0e7749a5b2670d665279053fd93e85c83a0:secret.js:aws-access-token:1
+6dd007c09e20f2f37bfcd6ce7592e0763ef30231:secret.js:aws-access-token:1
 
 # content fingerprint: tied only to the rule + secret, survives refactors
-sha256:942c90e71fa8bdf7
+sha256:0a987a56f213b7d97147f604f4001084
 ```
 
-This is meant for cases where the positional fingerprint is too brittle to maintain — generated code where line numbers shift on every build, or a shared `.gitleaksignore` reused across many repos where commit SHAs never line up. Positional fingerprints remain the default and are unaffected.
+This is meant for cases where the positional fingerprint is too brittle to maintain — generated code where line numbers shift on every build, or the exact same known secret value (e.g. a shared test/fixture credential) reused across multiple repos with different commit histories, where positional fingerprints can never be reused as-is. It does not turn `.gitleaksignore` into a pattern-based allowlist (e.g. "ignore any email from our domain") — that's a separate, larger feature; this only suppresses one specific, already-known secret value. Positional fingerprints remain the default and are unaffected.
 
 Run with `--report-unused-ignores` to list any `.gitleaksignore` entries (of either kind) that didn't match a finding during the scan, so stale suppressions don't silently accumulate. Add `--fail-on-unused-ignores` to make CI fail when that happens:
 

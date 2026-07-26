@@ -175,9 +175,18 @@ const contentFingerprintPrefix = "sha256:"
 // surrounding code moves. It is opt-in: reported alongside the default
 // fingerprint on every finding, and only takes effect as an ignore
 // mechanism when a user adds it to .gitleaksignore.
+//
+// ruleID and secret are length-prefixed before hashing so that e.g.
+// ruleID="a", secret="b|c" and ruleID="a|b", secret="c" can never hash
+// to the same value, since secret values are attacker-controlled and may
+// contain any byte. The hash is truncated to 32 hex characters (128 bits)
+// rather than the full digest for a shorter, more usable ignore-file
+// entry; at 128 bits an accidental collision (which would silently
+// suppress an unrelated secret) is not a practical concern.
 func contentFingerprint(ruleID, secret string) string {
-	sum := sha256.Sum256([]byte(ruleID + "|" + secret))
-	return contentFingerprintPrefix + hex.EncodeToString(sum[:])[:16]
+	input := fmt.Sprintf("%d:%s|%d:%s", len(ruleID), ruleID, len(secret), secret)
+	sum := sha256.Sum256([]byte(input))
+	return contentFingerprintPrefix + hex.EncodeToString(sum[:])[:32]
 }
 
 // markIgnoreUsed records that a loaded .gitleaksignore entry matched a
