@@ -132,9 +132,9 @@ Available Commands:
 
 Flags:
   -b, --baseline-path string          path to baseline with issues that can be ignored
-  -c, --config string                 config file path
+  -c, --config string                 config file path, or an http(s):// url to fetch the config from
                                       order of precedence:
-                                      1. --config/-c
+                                      1. --config/-c (local path or http(s):// url)
                                       2. env var GITLEAKS_CONFIG
                                       3. env var GITLEAKS_CONFIG_TOML with the file content
                                       4. (target path)/.gitleaks.toml
@@ -214,10 +214,14 @@ your `.git/hooks/` directory.
 
 The order of precedence is:
 
-1. `--config/-c` option:
+1. `--config/-c` option, either a local file path or an `http(s)://` URL:
       ```bash
       gitleaks git --config /home/dev/customgitleaks.toml .
+
+      # fetch the config from a central location instead of keeping a local copy
+      gitleaks git --config https://example.com/path/to/gitleaks.toml .
       ```
+      Remote configs are fetched with a 10 second timeout and a 10MB size cap.
 2. Environment variable `GITLEAKS_CONFIG` with the file path:
       ```bash
       export GITLEAKS_CONFIG="/home/dev/customgitleaks.toml"

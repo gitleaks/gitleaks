@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,42 @@ import (
 	"github.com/zricethezav/gitleaks/v8/version"
 )
 
+// maxRemoteConfigBytes caps how much data we'll read from a --config URL,
+// so a misbehaving or malicious server can't stream unbounded data into memory.
+const maxRemoteConfigBytes int64 = 10 * MEGABYTE
+
+// fetchRemoteConfig downloads a gitleaks config from an http(s) URL passed to
+// --config. It enforces a request timeout and a response size cap; it does
+// not follow redirects to non-http(s) schemes.
+func fetchRemoteConfig(url string) ([]byte, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build request for remote config %s: %w", url, err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch remote config %s: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unable to fetch remote config %s: unexpected status %s", url, resp.Status)
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxRemoteConfigBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("unable to read remote config %s: %w", url, err)
+	}
+	if int64(len(body)) > maxRemoteConfigBytes {
+		return nil, fmt.Errorf("remote config %s exceeds max allowed size of %d bytes", url, maxRemoteConfigBytes)
+	}
+
+	return body, nil
+}
+
 const banner = `
     ○
     │╲
@@ -32,9 +69,9 @@ const banner = `
 
 `
 
-const configDescription = `config file path
+const configDescription = `config file path, or an http(s):// url to fetch the config from
 order of precedence:
-1. --config/-c
+1. --config/-c (local path or http(s):// url)
 2. env var GITLEAKS_CONFIG
 3. env var GITLEAKS_CONFIG_TOML with the file content
 4. (target path)/.gitleaks.toml
@@ -147,6 +184,17 @@ func initConfig(source string) {
 		logging.Fatal().Msg(err.Error())
 	}
 	if cfgPath != "" {
+		if strings.HasPrefix(cfgPath, "https://") || strings.HasPrefix(cfgPath, "http://") {
+			logging.Debug().Msgf("fetching gitleaks config from `--config` url %s", cfgPath)
+			remoteConfig, err := fetchRemoteConfig(cfgPath)
+			if err != nil {
+				logging.Fatal().Err(err).Msg("unable to load gitleaks config from --config url")
+			}
+			if err := viper.ReadConfig(bytes.NewBuffer(remoteConfig)); err != nil {
+				logging.Fatal().Err(err).Msgf("unable to parse gitleaks config fetched from %s", cfgPath)
+			}
+			return
+		}
 		viper.SetConfigFile(cfgPath)
 		logging.Debug().Msgf("using gitleaks config %s from `--config`", cfgPath)
 	} else if os.Getenv("GITLEAKS_CONFIG") != "" {
