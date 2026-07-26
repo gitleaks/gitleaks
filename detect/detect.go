@@ -3,8 +3,11 @@ package detect
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -96,6 +99,15 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	// gitleaksIgnoreUsed tracks which entries in gitleaksIgnore matched at
+	// least one finding during this run. Entries never marked here are
+	// reported as unused when --report-unused-ignores is set.
+	gitleaksIgnoreUsed map[string]struct{}
+
+	// ignoreUsedMutex guards concurrent writes to gitleaksIgnoreUsed, since
+	// AddFinding can be called from multiple goroutines.
+	ignoreUsedMutex *sync.Mutex
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -120,14 +132,16 @@ func NewDetector(cfg config.Config) *Detector {
 // context to use for timeouts
 func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		commitMutex:    &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(ctx, 40),
+		commitMap:          make(map[string]bool),
+		gitleaksIgnore:     make(map[string]struct{}),
+		gitleaksIgnoreUsed: make(map[string]struct{}),
+		ignoreUsedMutex:    &sync.Mutex{},
+		findingMutex:       &sync.Mutex{},
+		commitMutex:        &sync.Mutex{},
+		findings:           make([]report.Finding, 0),
+		Config:             cfg,
+		prefilter:          *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:               semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -150,6 +164,49 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 	return NewDetector(cfg), nil
 }
 
+// contentFingerprintPrefix identifies a .gitleaksignore entry as a content
+// fingerprint rather than a commit/file/line fingerprint.
+const contentFingerprintPrefix = "sha256:"
+
+// contentFingerprint returns a fingerprint derived only from the rule and
+// the secret value itself. Unlike the default fingerprint, it does not
+// depend on commit, file path, or line number, so it keeps matching a
+// known secret across commits, refactors, or repos even after the
+// surrounding code moves. It is opt-in: reported alongside the default
+// fingerprint on every finding, and only takes effect as an ignore
+// mechanism when a user adds it to .gitleaksignore.
+func contentFingerprint(ruleID, secret string) string {
+	sum := sha256.Sum256([]byte(ruleID + "|" + secret))
+	return contentFingerprintPrefix + hex.EncodeToString(sum[:])[:16]
+}
+
+// markIgnoreUsed records that a loaded .gitleaksignore entry matched a
+// finding during this run, so it isn't later reported as unused.
+func (d *Detector) markIgnoreUsed(fingerprint string) {
+	d.ignoreUsedMutex.Lock()
+	d.gitleaksIgnoreUsed[fingerprint] = struct{}{}
+	d.ignoreUsedMutex.Unlock()
+}
+
+// UnusedGitleaksIgnoreEntries returns, in sorted order, every fingerprint
+// loaded from .gitleaksignore file(s) that did not match any finding
+// during this scan. Intended for --report-unused-ignores so teams can
+// keep suppression lists from silently drifting out of sync with the
+// code they were written for.
+func (d *Detector) UnusedGitleaksIgnoreEntries() []string {
+	d.ignoreUsedMutex.Lock()
+	defer d.ignoreUsedMutex.Unlock()
+
+	unused := make([]string, 0)
+	for fingerprint := range d.gitleaksIgnore {
+		if _, ok := d.gitleaksIgnoreUsed[fingerprint]; !ok {
+			unused = append(unused, fingerprint)
+		}
+	}
+	sort.Strings(unused)
+	return unused
+}
+
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	logging.Debug().Str("path", gitleaksIgnorePath).Msgf("found .gitleaksignore file")
 	file, err := os.Open(gitleaksIgnorePath)
@@ -169,6 +226,13 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
 		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Content fingerprint: `sha256:<hash>`. Path/commit/line independent,
+		// so it's handled separately from the positional formats below.
+		if strings.HasPrefix(line, contentFingerprintPrefix) {
+			d.gitleaksIgnore[line] = struct{}{}
 			continue
 		}
 
@@ -715,10 +779,12 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	} else {
 		finding.Fingerprint = globalFingerprint
 	}
+	finding.ContentFingerprint = contentFingerprint(finding.RuleID, finding.Secret)
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+		d.markIgnoreUsed(globalFingerprint)
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
 			Msg("skipping finding: global fingerprint")
@@ -726,11 +792,20 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+			d.markIgnoreUsed(finding.Fingerprint)
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
 				Msgf("skipping finding: fingerprint")
 			return
 		}
+	}
+
+	if _, ok := d.gitleaksIgnore[finding.ContentFingerprint]; ok {
+		d.markIgnoreUsed(finding.ContentFingerprint)
+		logger.Debug().
+			Str("fingerprint", finding.ContentFingerprint).
+			Msg("skipping finding: content fingerprint")
+		return
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {

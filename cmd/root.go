@@ -125,6 +125,8 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	rootCmd.PersistentFlags().Bool("report-unused-ignores", false, "after scanning, report .gitleaksignore entries that did not match any finding")
+	rootCmd.PersistentFlags().Bool("fail-on-unused-ignores", false, "exit non-zero if --report-unused-ignores finds any stale entries (implies --report-unused-ignores)")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 5, "allow recursive decoding up to this depth")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
 	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
@@ -483,10 +485,25 @@ func bytesConvert(bytes uint64) string {
 	return fmt.Sprintf("%s %s", stringValue, unit)
 }
 
-func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
+func findingSummaryAndExit(cmd *cobra.Command, detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
 	if diagnosticsManager.Enabled {
 		logging.Debug().Msg("Finalizing diagnostics...")
 		diagnosticsManager.StopDiagnostics()
+	}
+
+	reportUnused, _ := cmd.Flags().GetBool("report-unused-ignores")
+	failOnUnused, _ := cmd.Flags().GetBool("fail-on-unused-ignores")
+	var unusedIgnores []string
+	if reportUnused || failOnUnused {
+		unusedIgnores = detector.UnusedGitleaksIgnoreEntries()
+		if len(unusedIgnores) == 0 {
+			logging.Info().Msg("no unused .gitleaksignore entries")
+		} else {
+			logging.Warn().Msgf("%d unused .gitleaksignore entries found:", len(unusedIgnores))
+			for _, fp := range unusedIgnores {
+				logging.Warn().Msgf("  - %s", fp)
+			}
+		}
 	}
 
 	totalBytes := detector.TotalBytes.Load()
@@ -544,6 +561,10 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 
 	if len(findings) != 0 {
 		os.Exit(exitCode)
+	}
+
+	if failOnUnused && len(unusedIgnores) != 0 {
+		os.Exit(1)
 	}
 }
 

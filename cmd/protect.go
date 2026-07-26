@@ -62,5 +62,5 @@ func runProtect(cmd *cobra.Command, args []string) {
 		// don't exit on error, just log it
 		logging.Error().Err(err).Msg("failed to scan Git repository")
 	}
-	findingSummaryAndExit(detector, findings, exitCode, start, err)
+	findingSummaryAndExit(cmd, detector, findings, exitCode, start, err)
 }

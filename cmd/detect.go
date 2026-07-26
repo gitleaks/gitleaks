@@ -132,5 +132,5 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	findingSummaryAndExit(detector, findings, exitCode, start, err)
+	findingSummaryAndExit(cmd, detector, findings, exitCode, start, err)
 }

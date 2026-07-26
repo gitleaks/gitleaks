@@ -50,5 +50,5 @@ func runStdIn(cmd *cobra.Command, _ []string) {
 		logging.Fatal().Err(err).Msg("failed scan input from stdin")
 	}
 
-	findingSummaryAndExit(detector, findings, exitCode, start, err)
+	findingSummaryAndExit(cmd, detector, findings, exitCode, start, err)
 }

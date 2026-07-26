@@ -143,6 +143,7 @@ Flags:
       --diagnostics-dir string        directory to store diagnostics output files when not using http mode (defaults to current directory)
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
+      --fail-on-unused-ignores         exit non-zero if --report-unused-ignores finds any stale entries (implies --report-unused-ignores)
   -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
   -h, --help                          help for gitleaks
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
@@ -156,6 +157,7 @@ Flags:
   -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
+      --report-unused-ignores         after scanning, report .gitleaksignore entries that did not match any finding
       --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
@@ -501,6 +503,25 @@ class CustomClass:
 #### .gitleaksignore
 
 You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+
+Every finding also has a `ContentFingerprint`, printed as `Content FP:` in verbose output and included in every report format. Unlike the default fingerprint, it's derived only from the rule ID and the secret value — not the commit, file path, or line number. Add it to `.gitleaksignore` as `sha256:<hash>` to suppress that exact secret wherever it appears, even after the surrounding code is refactored, the file is renamed, or the same secret shows up in a different repo entirely:
+
+```
+# default fingerprint: tied to this exact commit/file/line
+0b05e0e7749a5b2670d665279053fd93e85c83a0:secret.js:aws-access-token:1
+
+# content fingerprint: tied only to the rule + secret, survives refactors
+sha256:942c90e71fa8bdf7
+```
+
+This is meant for cases where the positional fingerprint is too brittle to maintain — generated code where line numbers shift on every build, or a shared `.gitleaksignore` reused across many repos where commit SHAs never line up. Positional fingerprints remain the default and are unaffected.
+
+Run with `--report-unused-ignores` to list any `.gitleaksignore` entries (of either kind) that didn't match a finding during the scan, so stale suppressions don't silently accumulate. Add `--fail-on-unused-ignores` to make CI fail when that happens:
+
+```bash
+gitleaks git --report-unused-ignores .
+gitleaks git --fail-on-unused-ignores .   # exits non-zero if any entry is stale
+```
 
 #### Decoding
 

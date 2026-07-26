@@ -46,6 +46,12 @@ type Finding struct {
 	// unique identifier
 	Fingerprint string
 
+	// ContentFingerprint identifies a finding by rule + secret value only,
+	// independent of commit, file, or line number. Add it to
+	// .gitleaksignore (as `sha256:<hash>`) to suppress this exact secret
+	// wherever it appears, even after the surrounding code moves.
+	ContentFingerprint string
+
 	// Fragment used for multi-part rule checking, CEL filtering,
 	// and eventually ML validation
 	Fragment *sources.Fragment `json:",omitempty"`

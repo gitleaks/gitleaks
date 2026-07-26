@@ -1317,8 +1317,9 @@ func TestFromGit(t *testing.T) {
 			findings, err := detector.DetectGit(gitCmd, remote)
 			require.NoError(t, err)
 
-			for _, f := range findings {
-				f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+			for i := range findings {
+				findings[i].Match = "" // remove lines cause copying and pasting them has some wack formatting
+				findings[i].ContentFingerprint = ""
 			}
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
@@ -1391,6 +1392,9 @@ func TestFromGitStaged(t *testing.T) {
 
 		for _, f := range findings {
 			f.Match = "" // remove lines cause copying and pasting them has some wack formatting
+		}
+		for i := range findings {
+			findings[i].ContentFingerprint = ""
 		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
@@ -1519,6 +1523,7 @@ func TestFromFiles(t *testing.T) {
 					f.EndColumn = f.EndColumn - 1
 					f.Match = strings.ReplaceAll(f.Match, "\r", "")
 				}
+				f.ContentFingerprint = ""
 				normalizedFindings[i] = f
 			}
 			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
@@ -2116,6 +2121,7 @@ func TestDetectWithArchives(t *testing.T) {
 					f.EndColumn = f.EndColumn - 1
 					f.Match = strings.ReplaceAll(f.Match, "\r", "")
 				}
+				f.ContentFingerprint = ""
 				normalizedFindings[i] = f
 			}
 			assert.ElementsMatch(t, tt.expectedFindings, normalizedFindings)
@@ -2179,6 +2185,9 @@ func TestDetectWithSymlinks(t *testing.T) {
 
 		findings, err := detector.DetectFiles(paths)
 		require.NoError(t, err)
+		for i := range findings {
+			findings[i].ContentFingerprint = ""
+		}
 		assert.ElementsMatch(t, tt.expectedFindings, findings)
 	}
 }
@@ -2770,4 +2779,97 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 			compare(t, test.expected, actual)
 		})
 	}
+}
+
+func TestContentFingerprint_DeterministicAndDistinct(t *testing.T) {
+	a := contentFingerprint("aws-access-key", "AKIALALEMEL33243OLIA")
+	b := contentFingerprint("aws-access-key", "AKIALALEMEL33243OLIA")
+	assert.Equal(t, a, b, "same rule+secret should always produce the same content fingerprint")
+	assert.True(t, strings.HasPrefix(a, contentFingerprintPrefix))
+
+	diffSecret := contentFingerprint("aws-access-key", "AKIADIFFERENTSECRETXX")
+	assert.NotEqual(t, a, diffSecret, "different secrets must not collide")
+
+	diffRule := contentFingerprint("some-other-rule", "AKIALALEMEL33243OLIA")
+	assert.NotEqual(t, a, diffRule, "the same secret under a different rule must not collide")
+}
+
+// TestAddFinding_ContentFingerprintIgnore verifies that a finding is
+// suppressed when its content fingerprint (rule+secret, independent of
+// file/line/commit) is present in .gitleaksignore, even though the file
+// and line differ from wherever the entry may have originally been
+// generated from. This is the core guarantee behind #1870 and #1325.
+func TestAddFinding_ContentFingerprintIgnore(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	ignored := contentFingerprint("aws-access-key", "AKIALALEMEL33243OLIA")
+	d.gitleaksIgnore[ignored] = struct{}{}
+
+	// Same rule+secret, but a completely different file/line than whatever
+	// generated the ignore entry - must still be suppressed.
+	d.AddFinding(report.Finding{
+		RuleID:    "aws-access-key",
+		Secret:    "AKIALALEMEL33243OLIA",
+		File:      "some/totally/different/path.go",
+		StartLine: 9999,
+	})
+	assert.Empty(t, d.findings, "finding matching a content fingerprint ignore entry should be suppressed")
+
+	// A different secret under the same rule must NOT be suppressed.
+	d.AddFinding(report.Finding{
+		RuleID:    "aws-access-key",
+		Secret:    "AKIASOMETHINGELSEXXXX",
+		File:      "some/totally/different/path.go",
+		StartLine: 9999,
+	})
+	assert.Len(t, d.findings, 1, "a different secret under the same rule must not be ignored")
+}
+
+// TestUnusedGitleaksIgnoreEntries verifies that entries which never matched
+// a finding during the run are reported as unused, and entries that did
+// match are not - addressing #2130.
+func TestUnusedGitleaksIgnoreEntries(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	used := contentFingerprint("aws-access-key", "AKIALALEMEL33243OLIA")
+	stale := contentFingerprint("aws-access-key", "AKIANOLONGERPRESENTXX")
+	d.gitleaksIgnore[used] = struct{}{}
+	d.gitleaksIgnore[stale] = struct{}{}
+
+	d.AddFinding(report.Finding{
+		RuleID:    "aws-access-key",
+		Secret:    "AKIALALEMEL33243OLIA",
+		File:      "auth.py",
+		StartLine: 7,
+	})
+
+	unused := d.UnusedGitleaksIgnoreEntries()
+	assert.Equal(t, []string{stale}, unused, "only the entry that never matched should be reported as unused")
+}
+
+// TestAddGitleaksIgnore_ContentFingerprintFormat verifies that .gitleaksignore
+// parsing recognizes `sha256:<hash>` lines as content fingerprints, alongside
+// the existing positional file/commit fingerprint formats in the same file.
+func TestAddGitleaksIgnore_ContentFingerprintFormat(t *testing.T) {
+	tmpDir := t.TempDir()
+	ignorePath := filepath.Join(tmpDir, ".gitleaksignore")
+	contents := strings.Join([]string{
+		"# a mix of formats in one file",
+		"foo/bar.go:aws-access-key:12",
+		"sha256:a1b2c3d4e5f6a7b8",
+		"",
+	}, "\n")
+	require.NoError(t, os.WriteFile(ignorePath, []byte(contents), 0o600))
+
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	require.NoError(t, d.AddGitleaksIgnore(ignorePath))
+
+	assert.Len(t, d.gitleaksIgnore, 2)
+	_, ok := d.gitleaksIgnore["sha256:a1b2c3d4e5f6a7b8"]
+	assert.True(t, ok, "sha256: prefixed line should be loaded verbatim as a content fingerprint")
+	_, ok = d.gitleaksIgnore["foo/bar.go:aws-access-key:12"]
+	assert.True(t, ok, "existing positional fingerprint format should still parse")
 }
