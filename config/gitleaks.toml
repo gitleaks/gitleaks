@@ -2469,6 +2469,16 @@ regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3
 keywords = ["kucoin"]
 
 [[rules]]
+id = "langsmith-api-key"
+description = "Detected a LangSmith API Key (personal access token or service key), which may expose LangChain/LangSmith tracing data, prompts, and connected LLM workloads."
+regex = '''\b(lsv2_(?:pt|sk)_[a-z0-9]{32}_[a-z0-9]{10})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = [
+    "lsv2_pt_",
+    "lsv2_sk_",
+]
+
+[[rules]]
 id = "launchdarkly-access-token"
 description = "Uncovered a Launchdarkly Access Token, potentially compromising feature flag management and application functionality."
 regex = '''(?i)[\w.-]{0,50}?(?:launchdarkly)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2720,6 +2730,13 @@ description = "Detected a Perplexity API key, which could lead to unauthorized a
 regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
 entropy = 4
 keywords = ["pplx-"]
+
+[[rules]]
+id = "pinecone-api-key"
+description = "Identified a Pinecone API Key, which may grant access to vector database indexes backing RAG and AI applications, risking exfiltration of embedded data."
+regex = '''\b(pcsk_[A-Za-z0-9]{5,6}_[A-Za-z0-9]{63})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["pcsk_"]
 
 [[rules]]
 id = "pkcs12-file"
