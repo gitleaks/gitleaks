@@ -1,6 +1,48 @@
 package sources
 
-// TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
+import (
+	"context"
+	"os"
+	"testing"
+
+	"github.com/fatih/semgroup"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+)
+
+// TestGitFragments_ErrorPropagation verifies that a git failure (e.g. running
+// in a directory that is not a git repository) propagates as a non-nil error
+// from Fragments() rather than being silently swallowed. Regression test for
+// https://github.com/gitleaks/gitleaks/issues/1981.
+func TestGitFragments_ErrorPropagation(t *testing.T) {
+	// Use a temp dir that is not a git repository.
+	dir, err := os.MkdirTemp("", "gitleaks-no-git-*")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	ctx := context.Background()
+
+	gitCmd, err := NewGitLogCmdContext(ctx, dir, "")
+	require.NoError(t, err)
+
+	cfg := config.Config{}
+	src := &Git{
+		Cmd:    gitCmd,
+		Config: &cfg,
+		Sema:   semgroup.NewGroup(ctx, 1),
+	}
+
+	err = src.Fragments(ctx, func(_ Fragment, _ error) error {
+		return nil
+	})
+
+	assert.Error(t, err, "expected a non-nil error when git runs in a non-repository directory")
+}
+
+// TODO: the tests below are commented out because they are flaky.
+// Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
 // const repoBasePath = "../../testdata/repos/"
