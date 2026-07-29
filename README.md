@@ -8,6 +8,9 @@
 └─░───┘
 ```
 
+> [!WARNING]
+> Gitleaks is feature complete. I'm not merging new features into Gitleaks. Future releases will be security patches only. I'm shifting my focus to [Betterleaks](https://github.com/betterleaks/betterleaks)
+
 [license]: ./LICENSE
 [badge-license]: https://img.shields.io/github/license/gitleaks/gitleaks.svg
 [go-docs-badge]: https://pkg.go.dev/badge/github.com/gitleaks/gitleaks/v8?status
