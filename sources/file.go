@@ -153,14 +153,9 @@ func (s *File) decompressorFragments(ctx context.Context, decompressor archives.
 		logging.Error().Str("path", s.FullPath()).Msg("could read compressed file")
 		return nil
 	}
+	defer innerReader.Close()
 
-	if err := s.fileFragments(ctx, bufio.NewReader(innerReader), yield); err != nil {
-		_ = innerReader.Close()
-		return err
-	}
-
-	_ = innerReader.Close()
-	return nil
+	return s.fileFragments(ctx, bufio.NewReader(innerReader), yield)
 }
 
 // fileFragments reads the file into fragments to yield
