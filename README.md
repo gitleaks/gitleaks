@@ -496,7 +496,20 @@ class CustomClass:
 
 #### .gitleaksignore
 
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret.
+
+`.gitleaksignore` also supports ignoring by the extracted `Secret` value in a finding. This matches the exact `finding.Secret` value that Gitleaks reports, not the full `Match` or the raw source text. For decoded findings, this means the ignored value may be the decoded secret. If you want to copy the exact secret value into `.gitleaksignore`, you may need unredacted report output.
+
+Supported secret ignore entries:
+
+```ini
+secret:AKIALALEMEL33243OLIA
+rule:aws-access-key:secret:AKIALALEMEL33243OLIA
+path:cmd/generate/config/rules/aws.go:secret:AKIALALEMEL33243OLIA
+path:cmd/generate/config/rules/aws.go:rule:aws-access-key:secret:AKIALALEMEL33243OLIA
+```
+
+See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
 
 #### Decoding
 
