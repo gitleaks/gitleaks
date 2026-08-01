@@ -1,0 +1,2 @@
+[allowlist]
+    paths = ['''.*/test/.*''', '''*.test.js''', '''*.stories.js''']
