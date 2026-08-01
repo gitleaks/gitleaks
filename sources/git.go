@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/fatih/semgroup"
 	"github.com/gitleaks/go-gitdiff/gitdiff"
@@ -22,8 +23,6 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
-
-var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 
 // GitCmd helps to work with Git's output.
 type GitCmd struct {
@@ -73,20 +72,10 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 	var cmd *exec.Cmd
 	if logOpts != "" {
 		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
-
-		// Ensure that the user-provided |logOpts| aren't wrapped in quotes.
-		// https://github.com/gitleaks/gitleaks/issues/1153
-		userArgs := strings.Split(logOpts, " ")
-		var quotedOpts []string
-		for _, element := range userArgs {
-			if quotedOptPattern.MatchString(element) {
-				quotedOpts = append(quotedOpts, element)
-			}
+		userArgs, err := parseLogOpts(logOpts)
+		if err != nil {
+			return nil, err
 		}
-		if len(quotedOpts) > 0 {
-			logging.Warn().Msgf("the following `--log-opts` values may not work as expected: %v\n\tsee https://github.com/gitleaks/gitleaks/issues/1153 for more information", quotedOpts)
-		}
-
 		args = append(args, userArgs...)
 		cmd = exec.CommandContext(ctx, "git", args...)
 	} else {
@@ -169,6 +158,70 @@ func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*Git
 		errCh:       errCh,
 		repoPath:    sourceClean,
 	}, nil
+}
+
+func parseLogOpts(logOpts string) ([]string, error) {
+	var (
+		args         []string
+		arg          strings.Builder
+		quote        rune
+		escaped      bool
+		tokenStarted bool
+	)
+
+	flush := func() {
+		if tokenStarted {
+			args = append(args, arg.String())
+			arg.Reset()
+			tokenStarted = false
+		}
+	}
+
+	for _, r := range logOpts {
+		if escaped {
+			arg.WriteRune(r)
+			escaped = false
+			tokenStarted = true
+			continue
+		}
+
+		if r == '\\' && quote != '\'' {
+			escaped = true
+			tokenStarted = true
+			continue
+		}
+
+		if quote != 0 {
+			if r == quote {
+				quote = 0
+				continue
+			}
+			arg.WriteRune(r)
+			tokenStarted = true
+			continue
+		}
+
+		switch {
+		case r == '\'' || r == '"':
+			quote = r
+			tokenStarted = true
+		case unicode.IsSpace(r):
+			flush()
+		default:
+			arg.WriteRune(r)
+			tokenStarted = true
+		}
+	}
+
+	if escaped {
+		arg.WriteRune('\\')
+	}
+	if quote != 0 {
+		return nil, fmt.Errorf("unterminated quote in --log-opts")
+	}
+	flush()
+
+	return args, nil
 }
 
 // DiffFilesCh returns a channel with *gitdiff.File.
