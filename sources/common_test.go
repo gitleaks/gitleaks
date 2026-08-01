@@ -4,10 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/config"
 )
 
 func Test_readUntilSafeBoundary(t *testing.T) {
@@ -69,4 +73,86 @@ func Test_readUntilSafeBoundary(t *testing.T) {
 			require.Equal(t, c.expected, peekBuf.String())
 		})
 	}
+}
+
+func TestShouldSkipPath(t *testing.T) {
+	mustCompile := func(pat string) []*regexp.Regexp {
+		return []*regexp.Regexp{regexp.MustCompile(pat)}
+	}
+
+	tests := map[string]struct {
+		allowlist *config.Allowlist
+		path      string
+		want      bool
+	}{
+		"or condition, path matches": {
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchOr,
+				Paths:          mustCompile(`\.md$`),
+			},
+			path: "docs/README.md",
+			want: true,
+		},
+		"or condition, path does not match": {
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchOr,
+				Paths:          mustCompile(`\.md$`),
+			},
+			path: "main.go",
+			want: false,
+		},
+		"or condition with regexes, path alone still allowlists": {
+			// Under OR any single criterion is sufficient, so skipping on the
+			// path without reading the file is correct.
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchOr,
+				Paths:          mustCompile(`\.md$`),
+				Regexes:        mustCompile(`PLACEHOLDER`),
+			},
+			path: "docs/README.md",
+			want: true,
+		},
+		"and condition with regexes, must not skip on path alone": {
+			// The regression this guards: the regex can only be evaluated
+			// against file content, so skipping here would hide real secrets in
+			// every .md file rather than allowlisting one pattern within them.
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Paths:          mustCompile(`\.md$`),
+				Regexes:        mustCompile(`PLACEHOLDER`),
+			},
+			path: "docs/README.md",
+			want: false,
+		},
+		"and condition with stopwords, must not skip on path alone": {
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Paths:          mustCompile(`\.md$`),
+				StopWords:      []string{"example"},
+			},
+			path: "docs/README.md",
+			want: false,
+		},
+		"and condition, paths are the only criterion": {
+			// Nothing else has to be checked, so the path is sufficient.
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Paths:          mustCompile(`\.md$`),
+			},
+			path: "docs/README.md",
+			want: true,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.NoError(t, tt.allowlist.Validate())
+			cfg := &config.Config{Allowlists: []*config.Allowlist{tt.allowlist}}
+			assert.Equal(t, tt.want, shouldSkipPath(cfg, tt.path))
+		})
+	}
+}
+
+func TestShouldSkipPathNilConfig(t *testing.T) {
+	assert.False(t, shouldSkipPath(nil, "any/path.md"))
 }
