@@ -1,0 +1,3 @@
+[[rules]]
+id = "bad-path-rule"
+path = '''*.test.js'''

@@ -105,6 +105,16 @@ func TestTranslate(t *testing.T) {
 			cfg:       Config{},
 			wantError: errors.New("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
 		},
+		{
+			cfgName:   "invalid/rule_bad_regex",
+			cfg:       Config{},
+			wantError: errors.New("bad-regex-rule: unable to compile regex '*.test.js': error parsing regexp: missing argument to repetition operator: `*`"),
+		},
+		{
+			cfgName:   "invalid/rule_bad_path",
+			cfg:       Config{},
+			wantError: errors.New("bad-path-rule: unable to compile path regex '*.test.js': error parsing regexp: missing argument to repetition operator: `*`"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.cfgName, func(t *testing.T) {
@@ -222,6 +232,16 @@ func TestTranslateAllowlists(t *testing.T) {
 			cfgName:   "invalid/allowlist_global_regextarget",
 			cfg:       Config{},
 			wantError: errors.New("[[allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
+		},
+		{
+			cfgName:   "invalid/allowlist_global_bad_path",
+			cfg:       Config{},
+			wantError: errors.New("[[allowlists]] unable to compile path regex '*.test.js': error parsing regexp: missing argument to repetition operator: `*`"),
+		},
+		{
+			cfgName:   "invalid/allowlist_global_bad_regex",
+			cfg:       Config{},
+			wantError: errors.New("[[allowlists]] unable to compile regex '*.test.js': error parsing regexp: missing argument to repetition operator: `*`"),
 		},
 
 		// Rule

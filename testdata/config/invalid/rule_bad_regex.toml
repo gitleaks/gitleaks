@@ -1,0 +1,3 @@
+[[rules]]
+id = "bad-regex-rule"
+regex = '''*.test.js'''
