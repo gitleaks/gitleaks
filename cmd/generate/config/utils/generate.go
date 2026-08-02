@@ -28,11 +28,10 @@ const (
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = identifierFiller + `(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)`
+	assignmentOperators = `=|>|:{1,3}=|\|\||:|=>|\?=`
+	operator            = identifierFiller + `(?:` + assignmentOperators + `|,)`
 
-	// Like operator, but the comma case requires the comma to immediately
-	// follow the identifier (only whitespace/quote stripping allowed in
-	// between, no identifierFiller).
+	// Like operator, but the comma alternative skips identifierFiller.
 	//
 	// identifierFiller is safe for the other operators because they don't
 	// appear as line noise between unrelated fields, but a bare comma does
@@ -44,7 +43,7 @@ const (
 	// enough to hit that (generic-api-key's bare "key"/"token"/"secret"/etc).
 	// See https://github.com/gitleaks/gitleaks/issues/2223.
 	//language=regexp
-	operatorStrictCommaGap = `(?:` + identifierFiller + `(?:=|>|:{1,3}=|\|\||:|=>|\?=)|[\s'"]{0,3},)`
+	operatorStrictCommaGap = `(?:` + identifierFiller + `(?:` + assignmentOperators + `)|[\s'"]{0,3},)`
 
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`

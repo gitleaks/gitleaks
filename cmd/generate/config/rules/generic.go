@@ -12,11 +12,8 @@ func GenericCredential() *config.Rule {
 	r := config.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-		// GenerateSemiGenericRegexStrictCommaGap instead of GenerateSemiGenericRegex: every identifier
-		// below is already a full, bare keyword (unlike provider-specific rules, where the identifier is
-		// a company name and needs filler like "_TOKEN" before a comma-separated value), so a broad
-		// filler before the comma just lets the match bleed into an unrelated field earlier on the line.
-		// See https://github.com/gitleaks/gitleaks/issues/2223.
+		// StrictCommaGap: these identifiers are bare keywords, broad enough to hit the substring-bleed
+		// issue that operatorStrictCommaGap guards against (see its doc comment).
 		Regex: utils.GenerateSemiGenericRegexStrictCommaGap([]string{
 			"access",
 			"auth",
