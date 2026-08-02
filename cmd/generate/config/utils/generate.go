@@ -19,11 +19,31 @@ const (
 	identifierCaseInsensitivePrefix = `[\w.-]{0,50}?(?i:`
 	identifierCaseInsensitiveSuffix = `)`
 	identifierPrefix                = `[\w.-]{0,50}?(?:`
-	identifierSuffix                = `)(?:[ \t\w.-]{0,20})[\s'"]{0,3}`
+	identifierSuffix                = `)`
+
+	// filler allowed between the identifier and the operator, e.g. the
+	// "_TOKEN" in an identifier like "STRIPE_TOKEN".
+	//language=regexp
+	identifierFiller = `(?:[ \t\w.-]{0,20})[\s'"]{0,3}`
 
 	// commonly used assignment operators or function call
 	//language=regexp
-	operator = `(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)`
+	assignmentOperators = `=|>|:{1,3}=|\|\||:|=>|\?=`
+	operator            = identifierFiller + `(?:` + assignmentOperators + `|,)`
+
+	// Like operator, but the comma alternative skips identifierFiller.
+	//
+	// identifierFiller is safe for the other operators because they don't
+	// appear as line noise between unrelated fields, but a bare comma does
+	// (e.g. JSON's field separator). Pairing identifierFiller with a comma
+	// lets a broad identifier list match as a substring inside an
+	// unrelated, earlier field on the line and treat that field's trailing
+	// comma as the assignment - e.g. "auth" matching inside `"operation":
+	// "AuthService.register",`. Use this variant for identifier lists broad
+	// enough to hit that (generic-api-key's bare "key"/"token"/"secret"/etc).
+	// See https://github.com/gitleaks/gitleaks/issues/2223.
+	//language=regexp
+	operatorStrictCommaGap = `(?:` + identifierFiller + `(?:` + assignmentOperators + `)|[\s'"]{0,3},)`
 
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`
@@ -32,6 +52,15 @@ const (
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
+	return generateSemiGenericRegex(identifiers, secretRegex, isCaseInsensitive, operator)
+}
+
+// GenerateSemiGenericRegexStrictCommaGap is like GenerateSemiGenericRegex, but see operatorStrictCommaGap.
+func GenerateSemiGenericRegexStrictCommaGap(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
+	return generateSemiGenericRegex(identifiers, secretRegex, isCaseInsensitive, operatorStrictCommaGap)
+}
+
+func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool, operatorPattern string) *regexp.Regexp {
 	var sb strings.Builder
 	// The identifiers should always be case-insensitive.
 	// This is inelegant but prevents an extraneous `(?i:)` from being added to the pattern; it could be removed.
@@ -43,7 +72,7 @@ func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseIn
 		writeIdentifiers(&sb, identifiers)
 		sb.WriteString(identifierCaseInsensitiveSuffix)
 	}
-	sb.WriteString(operator)
+	sb.WriteString(operatorPattern)
 	sb.WriteString(secretPrefix)
 	sb.WriteString(secretRegex)
 	sb.WriteString(secretSuffix)
