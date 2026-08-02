@@ -12,19 +12,22 @@ func GenericCredential() *config.Rule {
 	r := config.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-		// This does not use utils.GenerateSemiGenericRegex because, unlike
-		// provider-specific rules (where the identifier is a company name
-		// and needs a filler like "_TOKEN" before a comma-separated value,
-		// e.g. `setProperty("STRIPE_TOKEN", "…")`), every identifier below
-		// is already the full keyword. Allowing filler between the keyword
-		// and a comma here just lets the match bleed across an unrelated,
-		// comma-separated field earlier on the line (e.g. matching "auth"
-		// inside `"operation": "AuthService.register",`), which both misses
-		// the real secret later on the line and can capture a key name as
-		// if it were the secret. So the comma case is restricted to an
-		// empty gap between the keyword and the comma.
+		// GenerateSemiGenericRegexStrictCommaGap instead of GenerateSemiGenericRegex: every identifier
+		// below is already a full, bare keyword (unlike provider-specific rules, where the identifier is
+		// a company name and needs filler like "_TOKEN" before a comma-separated value), so a broad
+		// filler before the comma just lets the match bleed into an unrelated field earlier on the line.
 		// See https://github.com/gitleaks/gitleaks/issues/2223.
-		Regex: regexp.MustCompile(`(?i)[\w.-]{0,50}?(?:access|auth|(?-i:[Aa]pi|API)|credential|creds|key|passw(?:or)?d|secret|token)(?:(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=)|[\s'"]{0,3},)[\x60'"\s=]{0,5}([\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})(?:[\x60'"\s;]|\\[nr]|$)`),
+		Regex: utils.GenerateSemiGenericRegexStrictCommaGap([]string{
+			"access",
+			"auth",
+			`(?-i:[Aa]pi|API)`,
+			"credential",
+			"creds",
+			"key",
+			"passw(?:or)?d",
+			"secret",
+			"token",
+		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -157,10 +160,9 @@ func GenericCredential() *config.Rule {
 		//	`"env": {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
 
-		// Regression test: an unrelated key/value pair sitting between the
-		// object start and the credential key must not stop the real
-		// secret from being found.
-		// https://github.com/gitleaks/gitleaks/issues/2223
+		// Cross-field: an unrelated key/value pair between the object start
+		// and the credential key must not stop the real secret from being
+		// found. https://github.com/gitleaks/gitleaks/issues/2223
 		`{ "service": "svc", "operation": "AuthService.register", "auth_token": "`+newPlausibleSecret(`[a-zA-Z0-9]{36}`)+`" }`,
 	)
 	fps := []string{
@@ -198,8 +200,9 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 	CREDENTIALS_ID = "K8S_CRED"
 }`,
 		`dev.credentials.url=dev-lb1.api.f4ke.com:5215`,
-		// A key name following an unrelated comma-separated field must not
-		// be captured as if it were a secret value.
+
+		// Cross-field: a key name following an unrelated comma-separated
+		// field must not be captured as if it were a secret value.
 		// https://github.com/gitleaks/gitleaks/issues/2223
 		`{ "service": "svc", "operation": "AuthService.register", "duration_p50_ms": 45 }`,
 
