@@ -6,6 +6,7 @@ import (
 	"math"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/logging"
@@ -124,7 +125,9 @@ func shannonEntropy(data string) (entropy float64) {
 		charCounts[char]++
 	}
 
-	invLength := 1.0 / float64(len(data))
+	// charCounts is keyed by rune, so the frequencies have to be over the
+	// number of runes rather than the number of bytes.
+	invLength := 1.0 / float64(utf8.RuneCountInString(data))
 	for _, count := range charCounts {
 		freq := float64(count) * invLength
 		entropy -= freq * math.Log2(freq)
