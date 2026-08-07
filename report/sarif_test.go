@@ -84,3 +84,13 @@ func TestWriteSarif(t *testing.T) {
 		})
 	}
 }
+
+func TestGetLocationEscapesURIPath(t *testing.T) {
+	locations := getLocation(Finding{File: "ApplicationCode/Java/sensitive data exposure/keystore.p12"})
+
+	require.Len(t, locations, 1)
+	assert.Equal(t,
+		"ApplicationCode/Java/sensitive%20data%20exposure/keystore.p12",
+		locations[0].PhysicalLocation.ArtifactLocation.URI,
+	)
+}
