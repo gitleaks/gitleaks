@@ -687,9 +687,13 @@ func (d *Detector) withinProximity(primary, required report.Finding, requiredRul
 		}
 	}
 
-	// Check column proximity (horizontal distance)
+	// Check column proximity (horizontal distance). Columns restart at
+	// every newline, so comparing them across different lines is
+	// meaningless - treat that as out of range.
 	if requiredRule.WithinColumns != nil {
-		// Use the start column of each finding for proximity calculation
+		if primary.StartLine != required.StartLine {
+			return false
+		}
 		colDiff := abs(primary.StartColumn - required.StartColumn)
 		if colDiff > *requiredRule.WithinColumns {
 			return false
