@@ -48,6 +48,7 @@ func main() {
 		rules.Authress(),
 		rules.AWS(),
 		rules.AzureActiveDirectoryClientSecret(),
+		rules.AzureStorageAccountKey(),
 		rules.BitBucketClientID(),
 		rules.BitBucketClientSecret(),
 		rules.BittrexAccessKey(),
