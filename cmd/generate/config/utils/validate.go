@@ -13,9 +13,9 @@ import (
 	"github.com/zricethezav/gitleaks/v8/logging"
 )
 
-func Validate(rule config.Rule, truePositives []string, falsePositives []string) *config.Rule {
+func Validate(rule config.Rule, truePositives []string, falsePositives []string, requiredRules ...*config.Rule) *config.Rule {
 	r := &rule
-	d := createSingleRuleDetector(r)
+	d := createSingleRuleDetector(r, requiredRules...)
 	for _, tp := range truePositives {
 		if len(d.DetectString(tp)) < 1 {
 			logging.Fatal().
@@ -38,9 +38,9 @@ func Validate(rule config.Rule, truePositives []string, falsePositives []string)
 	return r
 }
 
-func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string) *config.Rule {
+func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falsePositives map[string]string, requiredRules ...*config.Rule) *config.Rule {
 	r := &rule
-	d := createSingleRuleDetector(r)
+	d := createSingleRuleDetector(r, requiredRules...)
 	for path, tp := range truePositives {
 		f := detect.Fragment{Raw: tp, FilePath: path}
 		if len(d.Detect(f)) != 1 {
@@ -66,28 +66,43 @@ func ValidateWithPaths(rule config.Rule, truePositives map[string]string, falseP
 	return r
 }
 
-func createSingleRuleDetector(r *config.Rule) *detect.Detector {
+func createSingleRuleDetector(r *config.Rule, requiredRules ...*config.Rule) *detect.Detector {
 	// normalize keywords like in the config package
 	var (
-		uniqueKeywords = make(map[string]struct{})
-		keywords       []string
+		configKeywords = make(map[string]struct{})
 	)
-	for _, keyword := range r.Keywords {
-		k := strings.ToLower(keyword)
-		if _, ok := uniqueKeywords[k]; ok {
-			continue
+	normalizeKeywords := func(rule *config.Rule) {
+		var (
+			uniqueKeywords = make(map[string]struct{})
+			keywords       []string
+		)
+		for _, keyword := range rule.Keywords {
+			k := strings.ToLower(keyword)
+			configKeywords[k] = struct{}{}
+			if _, ok := uniqueKeywords[k]; ok {
+				continue
+			}
+			keywords = append(keywords, k)
+			uniqueKeywords[k] = struct{}{}
 		}
-		keywords = append(keywords, k)
-		uniqueKeywords[k] = struct{}{}
+		rule.Keywords = keywords
 	}
-	r.Keywords = keywords
+	normalizeKeywords(r)
 
 	rules := map[string]config.Rule{
 		r.RuleID: *r,
 	}
+	for _, requiredRule := range requiredRules {
+		if requiredRule == nil {
+			continue
+		}
+		normalizeKeywords(requiredRule)
+		rules[requiredRule.RuleID] = *requiredRule
+	}
+
 	cfg := base.CreateGlobalConfig()
 	cfg.Rules = rules
-	cfg.Keywords = uniqueKeywords
+	cfg.Keywords = configKeywords
 	for _, a := range cfg.Allowlists {
 		if err := a.Validate(); err != nil {
 			logging.Fatal().Err(err).Msg("invalid global allowlist")
