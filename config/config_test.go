@@ -314,6 +314,12 @@ func TestTranslateAllowlists(t *testing.T) {
 			cfg:       Config{},
 			wantError: errors.New("example: [[rules.allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
 		},
+		// Bad regex in allowlist paths should return an error, not panic (regression: #1846)
+		{
+			cfgName:   "invalid/allowlist_bad_regex",
+			cfg:       Config{},
+			wantError: errors.New(`[[allowlists]] invalid allowlist |paths| pattern "*.test.js": error parsing regexp: missing argument to repetition operator: ` + "`*`"),
+		},
 	}
 
 	for _, tt := range tests {
