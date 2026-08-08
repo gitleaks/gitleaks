@@ -2183,6 +2183,54 @@ func TestDetectWithSymlinks(t *testing.T) {
 	}
 }
 
+func TestDetectSkipsUnreadableFileAndReportsPartialScan(t *testing.T) {
+	// chmod-based permission denial only reliably blocks reads for the
+	// owning user on POSIX; Windows and root both bypass it.
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-based permission denial is unreliable on windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("running as root bypasses file permission checks")
+	}
+
+	dir := t.TempDir()
+	const secret = "aws_access_key_id = AKIAIOSFODNN7EXAMPLE\n"
+
+	readablePath := filepath.Join(dir, "readable.txt")
+	require.NoError(t, os.WriteFile(readablePath, []byte(secret), 0o644))
+
+	unreadablePath := filepath.Join(dir, "unreadable.txt")
+	require.NoError(t, os.WriteFile(unreadablePath, []byte(secret), 0o644))
+	require.NoError(t, os.Chmod(unreadablePath, 0o000))
+
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("simple")
+	viper.SetConfigType("toml")
+	require.NoError(t, viper.ReadInConfig())
+
+	var vc config.ViperConfig
+	require.NoError(t, viper.Unmarshal(&vc))
+	cfg, _ := vc.Translate()
+
+	detector := NewDetector(cfg)
+	findings, err := detector.DetectSource(context.Background(), &sources.Files{
+		Path:   dir,
+		Sema:   detector.Sema,
+		Config: &cfg,
+	})
+
+	// A scan that silently missed a file must never report success
+	// indistinguishably from one that found nothing -- this is the whole
+	// point of the "partial scan" distinction cmd/root.go already draws.
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "could not be opened")
+
+	// The readable file's secret must still surface: an unreadable sibling
+	// must not take down the whole scan, only be reported alongside it.
+	require.Len(t, findings, 1)
+	assert.Equal(t, readablePath, findings[0].File)
+}
+
 func TestDetectRuleAllowlist(t *testing.T) {
 	cases := map[string]struct {
 		fragment  Fragment
