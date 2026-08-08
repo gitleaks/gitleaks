@@ -3,10 +3,12 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 
 	"github.com/fatih/semgroup"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -54,6 +56,11 @@ type Files struct {
 	Path            string
 	Sema            *semgroup.Group
 	MaxArchiveDepth int
+
+	// unreadableFiles counts scan targets that could not be opened, so a scan
+	// that silently missed files never reports success indistinguishably from
+	// one that found nothing. See Fragments.
+	unreadableFiles atomic.Int64
 }
 
 // scanTargets yields scan targets to a callback func
@@ -154,9 +161,8 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 
 				f, err := os.Open(scanTarget.Path)
 				if err != nil {
-					if os.IsPermission(err) {
-						logger.Warn().Msg("skipping file: permission denied")
-					}
+					logger.Warn().Err(err).Msg("skipping file: could not open")
+					s.unreadableFiles.Add(1)
 					wg.Done()
 					return nil
 				}
@@ -186,6 +192,22 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
-		return err
+		return s.withUnreadableFilesError(err)
 	}
+}
+
+// withUnreadableFilesError folds the count of files that could not be opened
+// during this scan into walkErr, so a scan that silently missed files is
+// never indistinguishable from one that found nothing. Returns walkErr
+// unchanged when no file was unreadable.
+func (s *Files) withUnreadableFilesError(walkErr error) error {
+	n := s.unreadableFiles.Load()
+	if n == 0 {
+		return walkErr
+	}
+	unreadableErr := fmt.Errorf("%d file(s) could not be opened and were skipped", n)
+	if walkErr != nil {
+		return errors.Join(walkErr, unreadableErr)
+	}
+	return unreadableErr
 }
