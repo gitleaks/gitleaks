@@ -177,6 +177,9 @@ The `git` command lets you scan local git repos. Under the hood, gitleaks uses t
 You can configure the behavior of `git log -p` with the `log-opts` option.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
 command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
+
+**Note:** `--log-opts` only scans additions that appear in `git log -p` patches. It does **not** scan pre-existing content in changed files. If a file already contains a secret and a commit edits a different line, that secret will not be reported. This limitation is especially relevant for pre-receive hooks that scan only a pushed commit range.
+
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir
