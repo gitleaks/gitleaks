@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"sync"
 	"testing"
@@ -39,16 +38,11 @@ func TestFragments_ErrDoesNotDropQueuedDiffFiles(t *testing.T) {
 	)
 
 	// Fragments' deferred cleanup unconditionally calls cmd.Wait()/String()
-	// on the unexported *exec.Cmd field, so it needs a real, already-started
-	// process - re-exec this test binary itself so the test stays portable
-	// across the ubuntu/windows CI matrix. Started once and reused for every
-	// iteration below: spawning a fresh process per iteration is what made
-	// an earlier version of this test take 50+s under -race.
-	cmd := exec.Command(os.Args[0], "-test.run=^$")
-	require.NoError(t, cmd.Start())
-	// Calling Wait() more than once on the same *exec.Cmd errors ("Wait was
-	// already called"), but Fragments only logs that error - it's harmless.
-	require.NoError(t, cmd.Wait())
+	// on the unexported *exec.Cmd field. Both are safe to call on a never-
+	// started *exec.Cmd (Wait returns "exec: not started"; String just
+	// formats Path/Args), so this doesn't need a real process - a command
+	// that's never Start()ed is enough, and can be shared across iterations.
+	cmd := exec.Command("gitleaks-test-never-started")
 
 	for i := 0; i < iterations; i++ {
 		diffFilesCh := make(chan *gitdiff.File, fileCount)
