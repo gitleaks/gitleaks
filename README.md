@@ -179,6 +179,13 @@ For example, if you wanted to run gitleaks on a range of commits you could use t
 command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
+Note that a `git log -p` scan, range-restricted or not, only looks at lines *added* by each commit in range - it does not
+scan a file's pre-existing, unchanged content. If a secret was already committed before the range you're scanning and a
+later commit in that range only edits a different line in the same file, that secret will not be found. This matters for
+enforcement scans over a commit range (e.g. a pre-receive hook scanning `oldrev..newrev`): such a scan only catches secrets
+newly introduced within that range, not ones already present in the repo beforehand. Pair range-restricted scans with a
+periodic full-history scan (`gitleaks git` with no `--log-opts` restricting the range) to catch those.
+
 #### Dir
 
 The `dir` (aliases include `files`, `directory`) command lets you scan directories and files. Example: `gitleaks dir -v path_to_directory_or_file`.
