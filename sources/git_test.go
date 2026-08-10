@@ -1,5 +1,100 @@
 package sources
 
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"sync"
+	"testing"
+
+	"github.com/fatih/semgroup"
+	"github.com/gitleaks/go-gitdiff/gitdiff"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+)
+
+// TestFragments_ErrDoesNotDropQueuedDiffFiles is a regression test for
+// https://github.com/gitleaks/gitleaks/issues/2129: an error on errCh (e.g.
+// git-crypt's textconv writing to stderr) must not cause Fragments to return
+// before diffFilesCh has been drained, as long as the caller's yield
+// callback treats the error as non-fatal (returns nil) - which is exactly
+// what detect.Detector.DetectSource does.
+//
+// diffFilesCh and errCh are both buffered and fully loaded before Fragments
+// runs, so select has both cases ready simultaneously and may pick errCh
+// before any diff file is read. Which case select actually picks is up to
+// the Go runtime and varies between runs, so a single iteration only
+// reproduces "stderr arrives while diff files remain queued" some of the
+// time (empirically caught the pre-fix bug in roughly 2 out of 3 runs).
+// Repeating drives the chance of never once reproducing it to effectively
+// zero, while the fixed code is expected to pass every single iteration.
+func TestFragments_ErrDoesNotDropQueuedDiffFiles(t *testing.T) {
+	const (
+		fileCount  = 3
+		iterations = 50
+	)
+
+	// Fragments' deferred cleanup unconditionally calls cmd.Wait()/String()
+	// on the unexported *exec.Cmd field, so it needs a real, already-started
+	// process - re-exec this test binary itself so the test stays portable
+	// across the ubuntu/windows CI matrix. Started once and reused for every
+	// iteration below: spawning a fresh process per iteration is what made
+	// an earlier version of this test take 50+s under -race.
+	cmd := exec.Command(os.Args[0], "-test.run=^$")
+	require.NoError(t, cmd.Start())
+	// Calling Wait() more than once on the same *exec.Cmd errors ("Wait was
+	// already called"), but Fragments only logs that error - it's harmless.
+	require.NoError(t, cmd.Wait())
+
+	for i := 0; i < iterations; i++ {
+		diffFilesCh := make(chan *gitdiff.File, fileCount)
+		for j := range fileCount {
+			diffFilesCh <- &gitdiff.File{
+				NewName: fmt.Sprintf("file%d.txt", j),
+				TextFragments: []*gitdiff.TextFragment{{
+					Lines: []gitdiff.Line{{Op: gitdiff.OpAdd, Line: fmt.Sprintf("content %d\n", j)}},
+				}},
+			}
+		}
+		close(diffFilesCh)
+
+		errCh := make(chan error, 1)
+		errCh <- errors.New("stderr is not empty")
+		close(errCh)
+
+		g := &Git{
+			Cmd: &GitCmd{
+				cmd:         cmd,
+				diffFilesCh: diffFilesCh,
+				errCh:       errCh,
+			},
+			Config: &config.Config{},
+			Sema:   semgroup.NewGroup(context.Background(), fileCount),
+		}
+
+		var (
+			mu      sync.Mutex
+			yielded []string
+		)
+		err := g.Fragments(context.Background(), func(fragment Fragment, err error) error {
+			if err != nil {
+				return nil
+			}
+			mu.Lock()
+			yielded = append(yielded, fragment.Raw)
+			mu.Unlock()
+			return nil
+		})
+		require.NoError(t, err)
+
+		assert.ElementsMatchf(t, []string{"content 0\n", "content 1\n", "content 2\n"}, yielded, "iteration %d", i)
+	}
+}
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
