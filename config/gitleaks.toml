@@ -3207,3 +3207,43 @@ description = "Detected a Zendesk Secret Key, risking unauthorized access to cus
 regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["zendesk"]
 
+[[rules]]
+id = "mercadopago-access-token"
+description = "Detected a Mercado Pago Access Token, which could allow unauthorized access to payment processing and financial transactions."
+regex = '''\b((?:APP_USR|TEST)-\d{10,20}-\d{6}-[a-zA-Z0-9]{10,40}-\d{5,12})\b'''
+entropy = 3.5
+keywords = ["app_usr", "test-"]
+
+[[rules]]
+id = "mercadopago-public-key"
+description = "Detected a Mercado Pago Public Key, which could expose payment integration credentials."
+regex = '''\b(APP_USR-[a-f0-9]{8}-[A-Z0-9]{6}-[a-f0-9]{12})\b'''
+keywords = ["app_usr"]
+
+[[rules]]
+id = "cielo-client-id"
+description = "Detected a Cielo Client ID, which could expose payment gateway credentials for Brazil's largest payment acquirer."
+regex = '''(?i)[\w.-]{0,50}?(?:cielo)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["cielo"]
+
+[[rules]]
+id = "cielo-client-secret"
+description = "Detected a Cielo Client Secret, which could allow unauthorized access to payment processing via Brazil's largest payment acquirer."
+regex = '''(?i)[\w.-]{0,50}?(?:cielo)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9]{20,64})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["cielo"]
+
+[[rules]]
+id = "pagseguro-token"
+description = "Detected a PagSeguro/PagBank authorization token, which could allow unauthorized access to payment processing and financial transactions."
+regex = '''(?i)[\w.-]{0,50}?(?:pagseguro|pagbank)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["pagseguro", "pagbank"]
+
+[[rules]]
+id = "pagseguro-api-key"
+description = "Detected a PagSeguro/PagBank API key, which could expose payment credentials and allow unauthorized financial transactions."
+regex = '''(?i)[\w.-]{0,50}?(?:pagseguro|pagbank)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-zA-Z0-9]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3.5
+keywords = ["pagseguro", "pagbank"]
