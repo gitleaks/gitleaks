@@ -57,8 +57,8 @@ github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707/go.mod h1:qssHWj6
 github.com/dsnet/golib v0.0.0-20171103203638-1ea166775780/go.mod h1:Lj+Z9rebOhdfkVLjJ8T6VcRQv3SXugXy999NBtR9aFY=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/fatih/semgroup v1.2.0 h1:h/OLXwEM+3NNyAdZEpMiH1OzfplU09i2qXPVThGZvyg=
-github.com/fatih/semgroup v1.2.0/go.mod h1:1KAD4iIYfXjE4U13B48VM4z9QUwV5Tt8O4rS879kgm8=
+github.com/fatih/semgroup v1.3.0 h1:pTEnmcEze/BUf4UmVn9f1ZT1OckkBTNRV9w9k/I2/y4=
+github.com/fatih/semgroup v1.3.0/go.mod h1:thVp+PGZMO9KJ+k96oNGJo06hWgsKOWxTfYfx5R2VaE=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
