@@ -27,6 +27,7 @@ func main() {
 	configRules := []*config.Rule{
 		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
+		rules.ActionGateProveToken(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
 		rules.AdobeClientSecret(),
@@ -146,6 +147,7 @@ func main() {
 		rules.KubernetesSecret(),
 		rules.KucoinAccessToken(),
 		rules.KucoinSecretKey(),
+		rules.LangGraphApiKey(),
 		rules.LaunchDarklyAccessToken(),
 		rules.LinearAPIToken(),
 		rules.LinearClientSecret(),

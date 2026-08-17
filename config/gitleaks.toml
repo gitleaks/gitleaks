@@ -83,6 +83,15 @@ entropy = 4
 keywords = ["ops_"]
 
 [[rules]]
+id = "actiongate-prove-token"
+description = "Detected an ActionGate Prove Token, risking unauthorized bypass of AI agent execution boundaries and cryptographic audit gates."
+regex = '''\b(prov_(?:live|test)_[0-9a-f]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = [
+    "prov_live_",
+    "prov_test_",
+]
+
+[[rules]]
 id = "adafruit-api-key"
 description = "Identified a potential Adafruit API Key, which could lead to unauthorized access to Adafruit services and sensitive data exposure."
 regex = '''(?i)[\w.-]{0,50}?(?:adafruit)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9_-]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2467,6 +2476,12 @@ id = "kucoin-secret-key"
 description = "Discovered a Kucoin Secret Key, which could lead to compromised cryptocurrency operations and financial data breaches."
 regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["kucoin"]
+
+[[rules]]
+id = "langgraph-api-key"
+description = "Detected a LangGraph / LangSmith API Key, which may expose AI agent graph execution traces, state checkpoints, and deployment credentials."
+regex = '''\b(lsv2_pt_[a-zA-Z0-9]{32}_[a-zA-Z0-9]{8})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["lsv2_pt_"]
 
 [[rules]]
 id = "launchdarkly-access-token"
