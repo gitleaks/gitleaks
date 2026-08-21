@@ -88,6 +88,8 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
+	rootCmd.PersistentFlags().Bool("report-unused-ignores", false, "after scanning, report .gitleaksignore entries that did not match any finding")
+	rootCmd.PersistentFlags().Bool("fail-on-unused-ignores", false, "exit non-zero if unused .gitleaksignore entries are found (implies --report-unused-ignores)")
 	rootCmd.PersistentFlags().Int("max-decode-depth", 5, "allow recursive decoding up to this depth")
 	rootCmd.PersistentFlags().Int("max-archive-depth", 0, "allow scanning into nested archives up to this depth (default \"0\", no archive traversal is done)")
 	rootCmd.PersistentFlags().Int("timeout", 0, "set a timeout for gitleaks commands in seconds (default \"0\", no timeout is set)")
@@ -296,6 +298,15 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
+	if detector.ReportUnusedIgnores, err = cmd.Flags().GetBool("report-unused-ignores"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	if detector.FailOnUnusedIgnores, err = cmd.Flags().GetBool("fail-on-unused-ignores"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	if detector.FailOnUnusedIgnores {
+		detector.ReportUnusedIgnores = true
+	}
 
 	gitleaksIgnorePath, err := cmd.Flags().GetString("gitleaks-ignore-path")
 	if err != nil {
@@ -441,6 +452,19 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 		diagnosticsManager.StopDiagnostics()
 	}
 
+	var unusedIgnores []string
+	if detector.ReportUnusedIgnores {
+		unusedIgnores = detector.UnusedGitleaksIgnoreEntries()
+		if len(unusedIgnores) == 0 {
+			logging.Info().Msg("no unused .gitleaksignore entries")
+		} else {
+			logging.Warn().Msgf("%d unused .gitleaksignore entries found:", len(unusedIgnores))
+			for _, fp := range unusedIgnores {
+				logging.Warn().Msgf("  - %s", fp)
+			}
+		}
+	}
+
 	totalBytes := detector.TotalBytes.Load()
 	bytesMsg := fmt.Sprintf("scanned ~%d bytes (%s)", totalBytes, bytesConvert(totalBytes))
 	if err == nil {
@@ -496,6 +520,10 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 
 	if len(findings) != 0 {
 		os.Exit(exitCode)
+	}
+
+	if detector.FailOnUnusedIgnores && len(unusedIgnores) != 0 {
+		os.Exit(1)
 	}
 }
 

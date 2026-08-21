@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -96,6 +97,21 @@ type Detector struct {
 	// gitleaksIgnore
 	gitleaksIgnore map[string]struct{}
 
+	// gitleaksIgnoreUsed tracks which .gitleaksignore fingerprints matched a
+	// finding during this scan. Used by --report-unused-ignores.
+	gitleaksIgnoreUsed map[string]struct{}
+
+	// gitleaksIgnoreUsedMutex guards concurrent writes to gitleaksIgnoreUsed.
+	gitleaksIgnoreUsedMutex *sync.Mutex
+
+	// ReportUnusedIgnores reports .gitleaksignore entries that did not match
+	// any finding during the scan.
+	ReportUnusedIgnores bool
+
+	// FailOnUnusedIgnores exits non-zero when unused ignore entries are found.
+	// Implies ReportUnusedIgnores.
+	FailOnUnusedIgnores bool
+
 	// Sema (https://github.com/fatih/semgroup) controls the concurrency
 	Sema *semgroup.Group
 
@@ -120,14 +136,16 @@ func NewDetector(cfg config.Config) *Detector {
 // context to use for timeouts
 func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 	return &Detector{
-		commitMap:      make(map[string]bool),
-		gitleaksIgnore: make(map[string]struct{}),
-		findingMutex:   &sync.Mutex{},
-		commitMutex:    &sync.Mutex{},
-		findings:       make([]report.Finding, 0),
-		Config:         cfg,
-		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
-		Sema:           semgroup.NewGroup(ctx, 40),
+		commitMap:               make(map[string]bool),
+		gitleaksIgnore:          make(map[string]struct{}),
+		gitleaksIgnoreUsed:      make(map[string]struct{}),
+		findingMutex:            &sync.Mutex{},
+		commitMutex:             &sync.Mutex{},
+		gitleaksIgnoreUsedMutex: &sync.Mutex{},
+		findings:                make([]report.Finding, 0),
+		Config:                  cfg,
+		prefilter:               *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
+		Sema:                    semgroup.NewGroup(ctx, 40),
 	}
 }
 
@@ -190,6 +208,28 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		d.gitleaksIgnore[strings.Join(s, ":")] = struct{}{}
 	}
 	return nil
+}
+
+func (d *Detector) markGitleaksIgnoreUsed(fingerprint string) {
+	d.gitleaksIgnoreUsedMutex.Lock()
+	d.gitleaksIgnoreUsed[fingerprint] = struct{}{}
+	d.gitleaksIgnoreUsedMutex.Unlock()
+}
+
+// UnusedGitleaksIgnoreEntries returns fingerprints from .gitleaksignore that
+// did not match any finding during this scan.
+func (d *Detector) UnusedGitleaksIgnoreEntries() []string {
+	d.gitleaksIgnoreUsedMutex.Lock()
+	defer d.gitleaksIgnoreUsedMutex.Unlock()
+
+	unused := make([]string, 0)
+	for fingerprint := range d.gitleaksIgnore {
+		if _, ok := d.gitleaksIgnoreUsed[fingerprint]; !ok {
+			unused = append(unused, fingerprint)
+		}
+	}
+	sort.Strings(unused)
+	return unused
 }
 
 // DetectBytes scans the given bytes and returns a list of findings
@@ -719,6 +759,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+		d.markGitleaksIgnoreUsed(globalFingerprint)
 		logger.Debug().
 			Str("fingerprint", globalFingerprint).
 			Msg("skipping finding: global fingerprint")
@@ -726,6 +767,7 @@ func (d *Detector) AddFinding(finding report.Finding) {
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+			d.markGitleaksIgnoreUsed(finding.Fingerprint)
 			logger.Debug().
 				Str("fingerprint", finding.Fingerprint).
 				Msgf("skipping finding: fingerprint")
