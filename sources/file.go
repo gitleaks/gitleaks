@@ -34,6 +34,9 @@ type File struct {
 	Path string
 	// Symlink represents a symlink to the file if that's how it was discovered
 	Symlink string
+	// Root is the directory the file was discovered under, when it was found
+	// by a directory scan. See Fragment.Root.
+	Root string
 	// Buffer is used for reading the content in chunks
 	Buffer []byte
 	// Config is the gitleaks config used for shouldSkipPath. If not set, then
@@ -133,6 +136,7 @@ func (s *File) extractorFragments(ctx context.Context, extractor archives.Extrac
 			Content:         innerReader,
 			Path:            path,
 			Symlink:         s.Symlink,
+			Root:            s.Root,
 			outerPaths:      append(s.outerPaths, filepath.ToSlash(s.Path)),
 			MaxArchiveDepth: s.MaxArchiveDepth,
 			archiveDepth:    s.archiveDepth + 1,
@@ -178,6 +182,7 @@ func (s *File) fileFragments(ctx context.Context, reader *bufio.Reader, yield Fr
 		default:
 			fragment := Fragment{
 				FilePath: s.FullPath(),
+				Root:     s.Root,
 			}
 
 			n, err := reader.Read(s.Buffer)

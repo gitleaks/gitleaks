@@ -54,10 +54,19 @@ type Files struct {
 	Path            string
 	Sema            *semgroup.Group
 	MaxArchiveDepth int
+
+	// root is Path when it names a directory, so that paths under it can be
+	// matched relative to it as well as spelled the way Path was given.
+	root string
 }
 
 // scanTargets yields scan targets to a callback func
 func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) error) error {
+	s.root = ""
+	if info, err := os.Stat(s.Path); err == nil && info.IsDir() {
+		s.root = s.Path
+	}
+
 	return filepath.WalkDir(s.Path, func(path string, d fs.DirEntry, err error) error {
 		scanTarget := ScanTarget{Path: path}
 		logger := logging.With().Str("path", path).Logger()
@@ -122,20 +131,32 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 
 		// handle dir cases (mainly just see if it should be skipped
 		if info.IsDir() {
-			if shouldSkipPath(s.Config, path) {
+			if s.shouldSkip(path) {
 				logger.Debug().Msg("skipping directory: global allowlist")
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		if shouldSkipPath(s.Config, path) {
+		if s.shouldSkip(path) {
 			logger.Debug().Msg("skipping file: global allowlist")
 			return nil
 		}
 
 		return yield(scanTarget, nil)
 	})
+}
+
+// shouldSkip reports whether an allowlist path matches the path as walked or
+// as relative to the scan root. `paths = ['^testdata/']` is written against
+// the root, and has to keep matching when the root is given as an absolute
+// path or from another directory.
+func (s *Files) shouldSkip(path string) bool {
+	if shouldSkipPath(s.Config, path) {
+		return true
+	}
+	rel := RootRelativePath(s.root, path)
+	return rel != "" && shouldSkipPath(s.Config, rel)
 }
 
 // Fragments yields fragments from files discovered under the path
@@ -166,6 +187,7 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 					Content:         f,
 					Path:            scanTarget.Path,
 					Symlink:         scanTarget.Symlink,
+					Root:            s.root,
 					Config:          s.Config,
 					MaxArchiveDepth: s.MaxArchiveDepth,
 				}

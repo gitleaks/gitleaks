@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -247,6 +248,9 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		}
 
 		for _, finding := range d.DetectContext(ctx, Fragment(fragment)) {
+			if d.knownRelativeToRoot(fragment, finding) {
+				continue
+			}
 			d.AddFinding(finding)
 		}
 
@@ -293,7 +297,7 @@ func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []repor
 	// check if filepath is allowed
 	if fragment.FilePath != "" {
 		// is the path our config or baseline file?
-		if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) {
+		if d.isConfigOrBaseline(fragment) {
 			logging.Trace().Msg("skipping file: matches config or baseline path")
 			return findings
 		}
@@ -699,6 +703,70 @@ func (d *Detector) withinProximity(primary, required report.Finding, requiredRul
 	return true
 }
 
+// isConfigOrBaseline reports whether the fragment is the config file or the
+// baseline report, neither of which should be scanned. The baseline path is
+// stored relative to the scan root (see AddBaseline) and the default config
+// path is joined onto the root, so both are compared against the fragment's
+// root-relative path as well as the path as reported.
+func (d *Detector) isConfigOrBaseline(fragment Fragment) bool {
+	if fragment.FilePath == d.Config.Path || (d.baselinePath != "" && fragment.FilePath == d.baselinePath) {
+		return true
+	}
+	rel := sources.RootRelativePath(fragment.Root, fragment.FilePath)
+	if rel == "" {
+		return false
+	}
+	if d.baselinePath != "" && rel == filepath.ToSlash(d.baselinePath) {
+		return true
+	}
+	// Both paths are spelled relative to the same place when the config was
+	// found under the root, so Rel needs no absolute form; when the config
+	// lives elsewhere (--config) Rel yields a path that never matches, which
+	// is the right answer.
+	if d.Config.Path != "" {
+		if relConfig, err := filepath.Rel(fragment.Root, d.Config.Path); err == nil && rel == filepath.ToSlash(relConfig) {
+			return true
+		}
+	}
+	return false
+}
+
+// knownRelativeToRoot reports whether a .gitleaksignore entry or a baseline
+// finding names this finding by its root-relative path. `src/x.py:rule:1` is
+// what `gitleaks dir .` prints and what the documentation shows; it has to
+// keep matching when the same tree is scanned as `gitleaks dir /abs/path`.
+// AddFinding still matches the path as reported, so nothing that matched
+// before stops matching.
+func (d *Detector) knownRelativeToRoot(fragment sources.Fragment, finding report.Finding) bool {
+	rel := sources.RootRelativePath(fragment.Root, finding.File)
+	if rel == "" || rel == finding.File {
+		return false
+	}
+	logger := logging.With().Str("finding", finding.Secret).Logger()
+
+	if finding.Commit == "" && len(d.gitleaksIgnore) > 0 {
+		fingerprint := fmt.Sprintf("%s:%s:%d", rel, finding.RuleID, finding.StartLine)
+		if _, ok := d.gitleaksIgnore[fingerprint]; ok {
+			logger.Debug().
+				Str("fingerprint", fingerprint).
+				Msg("skipping finding: global fingerprint relative to the scan root")
+			return true
+		}
+	}
+
+	if d.baseline != nil {
+		relative := finding
+		relative.File = rel
+		if !IsNew(relative, d.Redact, d.baseline) {
+			logger.Debug().
+				Str("file", rel).
+				Msg("skipping finding: baseline entry relative to the scan root")
+			return true
+		}
+	}
+	return false
+}
+
 // abs returns the absolute value of an integer
 func abs(x int) int {
 	if x < 0 {
@@ -760,6 +828,17 @@ func (d *Detector) addCommit(commit string) {
 	d.commitMutex.Unlock()
 }
 
+// pathAllowedRelativeToRoot matches an allowlist path against the fragment's
+// path relative to the scan root, so `paths = ['^src/vendor/']` means the same
+// thing for `gitleaks dir .` and `gitleaks dir /abs/path`.
+func pathAllowedRelativeToRoot(a *config.Allowlist, fragment Fragment) bool {
+	rel := sources.RootRelativePath(fragment.Root, fragment.FilePath)
+	if rel == "" || rel == fragment.FilePath {
+		return false
+	}
+	return a.PathAllowed(rel)
+}
+
 // checkCommitOrPathAllowed evaluates |fragment| against all provided |allowlists|.
 //
 // If the match condition is "OR", only commit and path are checked.
@@ -778,7 +857,9 @@ func checkCommitOrPathAllowed(
 			isAllowed        bool
 			allowlistChecks  []bool
 			commitAllowed, _ = a.CommitAllowed(fragment.CommitSHA)
-			pathAllowed      = a.PathAllowed(fragment.FilePath) || (fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath))
+			pathAllowed      = a.PathAllowed(fragment.FilePath) ||
+				(fragment.WindowsFilePath != "" && a.PathAllowed(fragment.WindowsFilePath)) ||
+				pathAllowedRelativeToRoot(a, fragment)
 		)
 		// If the condition is "AND" we need to check all conditions.
 		if a.MatchCondition == config.AllowlistMatchAnd {
