@@ -3,6 +3,7 @@ package detect
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -2768,6 +2769,91 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual := d.detectRule(test.fragment, test.fragment.Raw, test.rule, []*codec.EncodedSegment{})
 			compare(t, test.expected, actual)
+		})
+	}
+}
+
+// fragmentErrSource yields the fragments it is given, some of them paired with
+// an error, the way a source does when part of its input cannot be read.
+type fragmentErrSource struct {
+	fragments []sources.Fragment
+	errs      []error
+}
+
+func (s *fragmentErrSource) Fragments(_ context.Context, yield sources.FragmentsFunc) error {
+	for i, f := range s.fragments {
+		if err := yield(f, s.errs[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// A source error must reach the caller. It is only logged during the scan so
+// that one bad fragment does not abandon the rest of it, but if it stops there
+// the command prints "no leaks found" and exits 0, so a scan that read nothing
+// is indistinguishable from a clean one.
+func TestDetectSourceReportsFragmentErrors(t *testing.T) {
+	readErr := errors.New("stderr is not empty")
+
+	tests := map[string]struct {
+		fragments   []sources.Fragment
+		errs        []error
+		wantErr     error
+		wantFinding bool
+	}{
+		"no error": {
+			fragments:   []sources.Fragment{{Raw: "nothing to see"}},
+			errs:        []error{nil},
+			wantErr:     nil,
+			wantFinding: false,
+		},
+		"only an error": {
+			fragments: []sources.Fragment{{}},
+			errs:      []error{readErr},
+			wantErr:   readErr,
+		},
+		"an error alongside a readable fragment": {
+			fragments: []sources.Fragment{
+				{},
+				{Raw: `aws_secret="AKIALALEMEL33243OLIB"`, FilePath: "a.txt"},
+			},
+			errs:        []error{readErr, nil},
+			wantErr:     readErr,
+			wantFinding: true,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			viper.Reset()
+			viper.SetConfigType("toml")
+			require.NoError(t, viper.ReadConfig(strings.NewReader(config.DefaultConfig)))
+
+			var vc config.ViperConfig
+			require.NoError(t, viper.Unmarshal(&vc))
+			cfg, err := vc.Translate()
+			require.NoError(t, err)
+
+			detector := NewDetector(cfg)
+			findings, err := detector.DetectSource(
+				context.Background(),
+				&fragmentErrSource{fragments: tt.fragments, errs: tt.errs},
+			)
+
+			if tt.wantErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, tt.wantErr)
+			}
+
+			if tt.wantFinding {
+				// The readable fragment is still scanned; skipping the bad one
+				// does not cost us the rest of the source.
+				require.NotEmpty(t, findings)
+			} else {
+				require.Empty(t, findings)
+			}
 		})
 	}
 }
