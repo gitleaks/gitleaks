@@ -226,9 +226,13 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
-			logger.Error().Err(err).Send()
-			return nil
+			// Propagate the error instead of swallowing it. A git-scan
+			// failure (e.g. an invalid --log-opts range) must surface so
+			// callers can fail loudly rather than report a clean "no leaks
+			// found" pass (gitleaks/gitleaks#1464). Benign git warnings such
+			// as "rename detection was skipped" are not routed through this
+			// path, so partial scans are unaffected.
+			return err
 		}
 
 		// both the fragment's content and path should be empty for it to be

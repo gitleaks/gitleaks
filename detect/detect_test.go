@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -1323,6 +1324,61 @@ func TestFromGit(t *testing.T) {
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}
+}
+
+// TestDetectGitFailedScanPropagatesError is a regression test for
+// gitleaks/gitleaks#1464: a git scan that fails (for example an invalid
+// --log-opts range) must surface as a non-nil error so the caller can exit
+// non-zero instead of reporting a clean "no leaks found" pass. Unlike
+// TestFromGit, this does not skip on Windows because it builds its own throwaway
+// repository.
+func TestDetectGitFailedScanPropagatesError(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not available")
+	}
+
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("simple")
+	viper.SetConfigType("toml")
+	require.NoError(t, viper.ReadInConfig())
+	var vc config.ViperConfig
+	require.NoError(t, viper.Unmarshal(&vc))
+	cfg, err := vc.Translate()
+	require.NoError(t, err)
+	detector := NewDetector(cfg)
+
+	// Build a throwaway repository with one commit.
+	dir := t.TempDir()
+	runGit := func(args ...string) {
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Stdout = io.Discard
+		c.Stderr = io.Discard
+		require.NoError(t, c.Run())
+	}
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "a.txt"), []byte("hello"), 0o644))
+	runGit("init", "-q")
+	runGit("config", "user.email", "t@example.com")
+	runGit("config", "user.name", "test")
+	runGit("add", "a.txt")
+	runGit("commit", "-q", "-m", "init")
+
+	t.Run("invalid log-opts range surfaces an error", func(t *testing.T) {
+		gitCmd, err := sources.NewGitLogCmd(dir, "nonexistentref..HEAD")
+		require.NoError(t, err)
+		remote := NewRemoteInfo(scm.UnknownPlatform, dir)
+		_, err = detector.DetectGit(gitCmd, remote)
+		require.Error(t, err,
+			"a failed git scan must propagate as an error (gitleaks#1464)")
+	})
+
+	t.Run("valid scan still returns no error", func(t *testing.T) {
+		gitCmd, err := sources.NewGitLogCmd(dir, "")
+		require.NoError(t, err)
+		remote := NewRemoteInfo(scm.UnknownPlatform, dir)
+		_, err = detector.DetectGit(gitCmd, remote)
+		require.NoError(t, err,
+			"a successful git scan must not spuriously error")
+	})
 }
 
 func TestFromGitStaged(t *testing.T) {

@@ -59,7 +59,8 @@ func runProtect(cmd *cobra.Command, args []string) {
 	remote = &detect.RemoteInfo{Platform: scm.NoPlatform}
 
 	if findings, err = detector.DetectGit(gitCmd, remote); err != nil {
-		// don't exit on error, just log it
+		// A git-scan failure is propagated to findingSummaryAndExit, which
+		// exits non-zero (gitleaks/gitleaks#1464).
 		logging.Error().Err(err).Msg("failed to scan Git repository")
 	}
 	findingSummaryAndExit(detector, findings, exitCode, start, err)
