@@ -129,6 +129,64 @@ func compare(t *testing.T, a, b []report.Finding) {
 
 }
 
+func ptrInt(i int) *int { return &i }
+
+// TestWithinProximity covers bug #2122: within_columns must only compare
+// columns for findings on the same line, since column numbers reset per line.
+func TestWithinProximity(t *testing.T) {
+	d := &Detector{}
+	tests := []struct {
+		name         string
+		primary      report.Finding
+		required     report.Finding
+		requiredRule *config.Required
+		want         bool
+	}{
+		{
+			name:         "same line within columns",
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 1, StartColumn: 30},
+			requiredRule: &config.Required{WithinColumns: ptrInt(50)},
+			want:         true,
+		},
+		{
+			name:         "same line outside columns",
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 1, StartColumn: 60},
+			requiredRule: &config.Required{WithinColumns: ptrInt(50)},
+			want:         false,
+		},
+		{
+			name:         "different lines columns close (bug #2122)",
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 300, StartColumn: 6},
+			requiredRule: &config.Required{WithinColumns: ptrInt(50)},
+			want:         false,
+		},
+		{
+			name:         "different lines but within_lines also set",
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 3, StartColumn: 6},
+			requiredRule: &config.Required{WithinLines: ptrInt(5), WithinColumns: ptrInt(50)},
+			want:         false,
+		},
+		{
+			name:         "no proximity constraints",
+			primary:      report.Finding{StartLine: 1, StartColumn: 5},
+			required:     report.Finding{StartLine: 300, StartColumn: 6},
+			requiredRule: &config.Required{},
+			want:         true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := d.withinProximity(tt.primary, tt.required, tt.requiredRule); got != tt.want {
+				t.Errorf("withinProximity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDetect(t *testing.T) {
 	logging.Logger = logging.Logger.Level(zerolog.TraceLevel)
 	tests := map[string]struct {

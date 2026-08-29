@@ -673,7 +673,6 @@ func (d *Detector) hasAllRequiredRules(auxiliaryFindings []*report.RequiredFindi
 }
 
 func (d *Detector) withinProximity(primary, required report.Finding, requiredRule *config.Required) bool {
-	// fmt.Println(requiredRule.WithinLines)
 	// If neither within_lines nor within_columns is set, findings just need to be in the same fragment
 	if requiredRule.WithinLines == nil && requiredRule.WithinColumns == nil {
 		return true
@@ -687,9 +686,14 @@ func (d *Detector) withinProximity(primary, required report.Finding, requiredRul
 		}
 	}
 
-	// Check column proximity (horizontal distance)
+	// Check column proximity (horizontal distance).
+	// Column numbers reset at every new line, so column proximity is only
+	// meaningful for findings that live on the same line. Findings on different
+	// lines can never satisfy a within_columns constraint.
 	if requiredRule.WithinColumns != nil {
-		// Use the start column of each finding for proximity calculation
+		if primary.StartLine != required.StartLine {
+			return false
+		}
 		colDiff := abs(primary.StartColumn - required.StartColumn)
 		if colDiff > *requiredRule.WithinColumns {
 			return false
