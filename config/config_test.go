@@ -43,7 +43,7 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{"generic-api-key": {
 					RuleID:      "generic-api-key",
 					Description: "Generic API Key",
-					Regex:       regexp.MustCompile(`(?i)(?:key|api|token|secret|client|passwd|password|auth|access)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|\"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|\"|\n|\r|\s|\x60|;]|$)`),
+					Regex:       regexp.MustCompile(`(?i)(?:key|api|token|secret|client|passwd|password|auth|access)(?:[0-9a-z\-_\t .]{0,20})(?:[\s|']|[\s|"]){0,3}(?:=|>|:{1,3}=|\|\|:|<=|=>|:|\?=)(?:'|"|\s|=|\x60){0,5}([0-9a-z\-_.=]{10,150})(?:['|"\n|\r|\s|\x60|;]|$)`),
 					Entropy:     3.5,
 					Keywords:    []string{"key", "api", "token", "secret", "client", "passwd", "password", "auth", "access"},
 					Tags:        []string{},
@@ -80,7 +80,7 @@ func TestTranslate(t *testing.T) {
 				Rules: map[string]Rule{"discord-api-key": {
 					RuleID:      "discord-api-key",
 					Description: "Discord API key",
-					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['\"]([a-h0-9]{64})['\"]`),
+					Regex:       regexp.MustCompile(`(?i)(discord[a-z0-9_ .\-,]{0,25})(=|>|:=|\|\|:|<=|=>|:).{0,5}['"]([a-h0-9]{64})['"]`),
 					Entropy:     3.5,
 					SecretGroup: 3,
 					Keywords:    []string{},
@@ -93,7 +93,7 @@ func TestTranslate(t *testing.T) {
 		{
 			cfgName:   "invalid/rule_missing_id",
 			cfg:       Config{},
-			wantError: errors.New("rule |id| is missing or empty, description: Discord API key, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([a-h0-9]{64})['\\\"]"),
+			wantError: errors.New("rule |id| is missing or empty, description: Discord API key, regex: (?i)(discord[a-z0-9_ .\\-,]{0,25})(=|>|:=|\\|\\|:|<=|=>|:).{0,5}['\\\"]([ a-h0-9]{64})['\\\"]"),
 		},
 		{
 			cfgName:   "invalid/rule_no_regex_or_path",
@@ -104,6 +104,16 @@ func TestTranslate(t *testing.T) {
 			cfgName:   "invalid/rule_bad_entropy_group",
 			cfg:       Config{},
 			wantError: errors.New("discord-api-key: invalid regex secret group 5, max regex secret group 3"),
+		},
+		{
+			cfgName:   "invalid/rule_bad_regex",
+			cfg:       Config{},
+			wantError: errors.New("bad-regex-rule: invalid rule regex: error parsing regexp: missing closing ]: `[a-z`"),
+		},
+		{
+			cfgName:   "invalid/rule_bad_path_regex",
+			cfg:       Config{},
+			wantError: errors.New("bad-path-rule: invalid rule path regex: error parsing regexp: missing argument to repetition operator: `*`"),
 		},
 	}
 	for _, tt := range tests {
@@ -223,6 +233,16 @@ func TestTranslateAllowlists(t *testing.T) {
 			cfg:       Config{},
 			wantError: errors.New("[[allowlists]] unknown allowlist |regexTarget| 'mtach' (expected 'match', 'line')"),
 		},
+		{
+			cfgName:   "invalid/allowlist_global_bad_regex",
+			cfg:       Config{},
+			wantError: errors.New("invalid allowlist regex \"[a-z\": error parsing regexp: missing closing ]: `[a-z`"),
+		},
+		{
+			cfgName:   "invalid/allowlist_global_bad_path",
+			cfg:       Config{},
+			wantError: errors.New("invalid allowlist path regex \"*.test.js\": error parsing regexp: missing argument to repetition operator: `*`"),
+		},
 
 		// Rule
 		{
@@ -340,14 +360,14 @@ func TestTranslateExtend(t *testing.T) {
 					"aws-secret-key": {
 						RuleID:      "aws-secret-key",
 						Description: "AWS Secret Key",
-						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
 					},
 					"aws-secret-key-again": {
 						RuleID:      "aws-secret-key-again",
 						Description: "AWS Secret Key",
-						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
 					},
@@ -361,7 +381,7 @@ func TestTranslateExtend(t *testing.T) {
 				Rules: map[string]Rule{
 					"aws-secret-key": {
 						RuleID:   "aws-secret-key",
-						Regex:    regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:    regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Tags:     []string{"key", "AWS"},
 						Keywords: []string{},
 					},
@@ -381,7 +401,7 @@ func TestTranslateExtend(t *testing.T) {
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
-						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []*Allowlist{
@@ -511,7 +531,7 @@ func TestTranslateExtend(t *testing.T) {
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
-						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []*Allowlist{
@@ -540,7 +560,7 @@ func TestTranslateExtend(t *testing.T) {
 					"aws-secret-key-again-again": {
 						RuleID:      "aws-secret-key-again-again",
 						Description: "AWS Secret Key",
-						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\"0-9a-zA-Z\/+]{40}`),
+						Regex:       regexp.MustCompile(`(?i)aws_(.{0,20})?=?.[\'\'"0-9a-zA-Z\/+]{40}`),
 						Keywords:    []string{},
 						Tags:        []string{"key", "AWS"},
 						Allowlists: []*Allowlist{
