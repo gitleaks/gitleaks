@@ -1,6 +1,8 @@
 package report
 
 import (
+	"unicode/utf8"
+
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -74,11 +76,18 @@ func TestMaskSecret(t *testing.T) {
 		"high masking":    {secret: "secret", percent: 90, expect: "s..."},
 		"low masking":     {secret: "secret", percent: 10, expect: "secre..."},
 		"invalid masking": {secret: "secret", percent: 1000, expect: "..."},
+		// Counting bytes here used to cut a multi-byte rune in half, so the
+		// masked secret was not valid UTF-8 and the percentage described bytes
+		// rather than characters.
+		"multibyte secret":       {secret: "日本語のトークン", percent: 20, expect: "日本語のトー..."},
+		"multibyte high masking": {secret: "日本語のトークン", percent: 80, expect: "日本..."},
+		"mixed width secret":     {secret: "pässwörd", percent: 50, expect: "päss..."},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := maskSecret(test.secret, test.percent)
 			assert.Equal(t, test.expect, got)
+			assert.True(t, utf8.ValidString(got), "masked secret must be valid UTF-8")
 		})
 	}
 }

@@ -89,14 +89,18 @@ func maskSecret(secret string, percent uint) string {
 	if percent > 100 {
 		percent = 100
 	}
-	len := float64(len(secret))
-	if len <= 0 {
+	// Count in runes rather than bytes: slicing a multi-byte secret by a byte
+	// offset can cut a rune in half, which puts invalid UTF-8 into the report,
+	// and the percentage would describe bytes rather than characters.
+	runes := []rune(secret)
+	length := float64(len(runes))
+	if length <= 0 {
 		return secret
 	}
 	prc := float64(100 - percent)
-	lth := int64(math.RoundToEven(len * prc / float64(100)))
+	lth := int64(math.RoundToEven(length * prc / float64(100)))
 
-	return secret[:lth] + "..."
+	return string(runes[:lth]) + "..."
 }
 
 func (f *Finding) PrintRequiredFindings() {
