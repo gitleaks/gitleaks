@@ -2771,3 +2771,19 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkDetectRuleWithMatches(b *testing.B) {
+	raw := `token = "0123456789abcdef0123456789abcdef"`
+	detector := NewDetector(config.Config{})
+	fragment := Fragment{Raw: raw, FilePath: "config.txt"}
+	rule := config.Rule{
+		RuleID: "benchmark-rule",
+		Regex:  regexp.MustCompile(`0123456789abcdef0123456789abcdef`),
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = detector.detectRule(fragment, raw, rule, nil)
+	}
+}
