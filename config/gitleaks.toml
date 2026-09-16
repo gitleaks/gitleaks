@@ -338,6 +338,27 @@ regex = '''(?i)[\w.-]{0,50}?(?:coinbase)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1
 keywords = ["coinbase"]
 
 [[rules]]
+id = "composio-org-api-key"
+description = "Found a Composio organization API key, which grants administrative access across all projects in a Composio organization."
+regex = '''\b(oak_[A-Za-z0-9_-]{20})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["oak_"]
+
+[[rules]]
+id = "composio-project-api-key"
+description = "Found a Composio project API key, which grants access to a project's tools, connected accounts and triggers on the Composio platform."
+regex = '''\b(ak_[A-Za-z0-9_-]{20})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["ak_"]
+
+[[rules]]
+id = "composio-user-api-key"
+description = "Found a Composio user API key, which acts as the user across every organization and project they can access on the Composio platform."
+regex = '''\b(uak_[A-Za-z0-9_-]{43})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["uak_"]
+
+[[rules]]
 id = "confluent-access-token"
 description = "Identified a Confluent Access Token, which could compromise access to streaming data platforms and sensitive data flow."
 regex = '''(?i)[\w.-]{0,50}?(?:confluent)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{16})(?:[\x60'"\s;]|\\[nr]|$)'''
