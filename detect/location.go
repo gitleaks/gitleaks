@@ -13,6 +13,7 @@ type Location struct {
 func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 	var (
 		prevNewLine int
+		lineStart   int
 		location    Location
 		lineSet     bool
 		_lineNum    int
@@ -41,25 +42,27 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 			lineSet = true
 			location.startLine = lineNum
 			location.endLine = lineNum
-			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
+			location.startColumn = (start - lineStart) + 1 // +1 because counting starts at 1
 			location.startLineIndex = prevNewLine
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
 			location.endLine = lineNum
-			location.endColumn = (end - prevNewLine)
+			location.endColumn = (end - lineStart)
 			location.endLineIndex = newLineByteIndex
 		}
 
 		prevNewLine = pair[0]
+		// Columns are relative to the first byte after the newline.
+		lineStart = pair[1]
 	}
 
 	if !lineSet {
 		// if lines never get set then that means the secret is most likely
 		// on the last line of the diff output and the diff output does not have
 		// a newline
-		location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-		location.endColumn = (end - prevNewLine)
+		location.startColumn = (start - lineStart) + 1 // +1 because counting starts at 1
+		location.endColumn = (end - lineStart)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
 
