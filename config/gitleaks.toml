@@ -2333,7 +2333,7 @@ keywords = ["atlasv1"]
 [[rules]]
 id = "hashicorp-tf-password"
 description = "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches."
-regex = '''(?i)[\w.-]{0,50}?(?:administrator_login_password|password)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}("[a-z0-9=_\-]{8,20}")(?:[\x60'"\s;]|\\[nr]|$)'''
+regex = '''(?i)[\w.-]{0,50}?(?:administrator_login_password|password)[ \t]{0,20}(?:=|:{1,3}=|=>|\?=|:)[ \t]{0,5}("[a-z0-9=_\-]{8,20}")'''
 path = '''(?i)\.(?:tf|hcl)$'''
 entropy = 2
 keywords = [
