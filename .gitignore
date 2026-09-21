@@ -11,10 +11,6 @@ gitleaks
 build
 profile
 
-# configs
-.gitleaks.toml
-cmd/generate/config/gitleaks.toml
-
 # test results
 testdata/expected/report/*.got.*
 
