@@ -10,9 +10,16 @@ func SourceGraph() *config.Rule {
 	r := config.Rule{
 		RuleID:      "sourcegraph-access-token",
 		Description: "Sourcegraph is a code search and navigation engine.",
-		Regex:       utils.GenerateUniqueTokenRegex(`\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\b`, true),
-		Entropy:     3,
-		Keywords:    []string{"sgp_", "sourcegraph"},
+		// Two shapes for Sourcegraph access tokens:
+		//   1. sgp_-prefixed tokens are unique enough to match on their own.
+		//   2. Legacy bare 40-char hex tokens require a "sourcegraph" identifier
+		//      in proximity — otherwise they collide with git SHAs (#1898).
+		Regex: utils.MergeRegexps(
+			utils.GenerateUniqueTokenRegex(`sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}`, true),
+			utils.GenerateSemiGenericRegex([]string{"sourcegraph"}, `[a-fA-F0-9]{40}`, true),
+		),
+		Entropy:  3,
+		Keywords: []string{"sgp_", "sourcegraph"},
 	}
 
 	// validate
@@ -29,6 +36,9 @@ func SourceGraph() *config.Rule {
 		`sgp_652d9a2e48FC7E!FcDbEA1BC2E2A6CE23cFe7F7D`,                    // invalid character
 		`sgp_78Ad84a5B6e8A2fE5B_4085FB0ccaDDd29DB66Fd7FE9bA2C1cdCE8400CD`, // invalid length
 		`BcAeb6640ad7DAD46AD73687946Ce85047d5C9Bb`,
+		// Git SHAs without a sourcegraph context should not match (#1898).
+		`commit 6d2fabeb6add229bc199faba28fd3efb57df0bd3`,
+		`See git log: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`,
 	}
 	return utils.Validate(r, tps, fps)
 }
