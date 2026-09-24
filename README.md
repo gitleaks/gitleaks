@@ -174,9 +174,17 @@ There are three scanning modes: `git`, `dir`, and `stdin`.
 #### Git
 
 The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
-You can configure the behavior of `git log -p` with the `log-opts` option.
+By default it runs `git log -p -U0 --full-history --all --diff-filter=tuxdb`, so it scans every ref in the repository
+(all local branches, remote-tracking branches and tags), not only the branch you have checked out. If CI runs
+`gitleaks git` with these defaults on a full-history checkout (for example `actions/checkout` with `fetch-depth: 0`,
+which fetches every branch), a finding committed on one branch fails the scan on every other branch too. To leave out remote-tracking branches,
+use `--log-opts="--exclude=refs/remotes/* --all"`.
+
+You can configure the behavior of `git log -p` with the `log-opts` option. Setting it replaces `--full-history --all --diff-filter=tuxdb`.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
-command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
+command: `gitleaks git -v --log-opts="commitA..commitB" path_to_repo`. Don't add `--all` to a range: git reads
+`--all commitA..commitB` as every ref minus the ancestors of `commitA`, which scans far more than the range. To scan every branch's commits since `commitA`, use `--log-opts="--all ^commitA"`.
+See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir
