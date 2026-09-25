@@ -8,6 +8,9 @@
 └─░───┘
 ```
 
+> [!WARNING]
+> Gitleaks is feature complete. I'm not merging new features into Gitleaks. Future releases will be security patches only. I'm shifting my focus to [Betterleaks](https://github.com/betterleaks/betterleaks)
+
 [license]: ./LICENSE
 [badge-license]: https://img.shields.io/github/license/gitleaks/gitleaks.svg
 [go-docs-badge]: https://pkg.go.dev/badge/github.com/gitleaks/gitleaks/v8?status
@@ -20,13 +23,10 @@
 [dockerhub-badge]: https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg
 [gitleaks-action]: https://github.com/gitleaks/gitleaks-action
 [gitleaks-badge]: https://img.shields.io/badge/protected%20by-gitleaks-blue
-[gitleaks-playground-badge]: https://img.shields.io/badge/gitleaks%20-playground-blue
-[gitleaks-playground]: https://gitleaks.io/playground
 
 
 [![GitHub Action Test][badge-build]][build]
 [![Docker Hub][dockerhub-badge]][dockerhub]
-[![Gitleaks Playground][gitleaks-playground-badge]][gitleaks-playground]
 [![Gitleaks Action][gitleaks-badge]][gitleaks-action]
 [![GoDoc][go-docs-badge]][go-docs]
 [![GoReportCard][go-report-card-badge]][go-report-card]
@@ -83,27 +83,6 @@ docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:lat
 git clone https://github.com/gitleaks/gitleaks.git
 cd gitleaks
 make build
-```
-
-### GitHub Action
-
-Check out the official [Gitleaks GitHub Action](https://github.com/gitleaks/gitleaks-action)
-
-```
-name: gitleaks
-on: [pull_request, push, workflow_dispatch]
-jobs:
-  scan:
-    name: gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
 ```
 
 ### Pre-Commit

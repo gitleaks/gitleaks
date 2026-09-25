@@ -1,0 +1,8 @@
+# Default — every PR requires at least one org member review.
+*                          @bryanbeverly @dustin-decker @dxa4481 @zricethezav
+
+# Release-critical paths
+/.github/                  @bryanbeverly @dustin-decker @dxa4481 @zricethezav
+/.goreleaser.yml           @bryanbeverly @dustin-decker @dxa4481 @zricethezav
+/go.mod                    @bryanbeverly @dustin-decker @dxa4481 @zricethezav
+/go.sum                    @bryanbeverly @dustin-decker @dxa4481 @zricethezav
