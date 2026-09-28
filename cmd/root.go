@@ -85,6 +85,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("ignore-gitleaks-allow", "", false, "ignore gitleaks:allow comments")
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
+	rootCmd.PersistentFlags().Bool("use-fingerprint-v2", false, "use content-specific fingerprints; legacy location ignores do not suppress findings")
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
 	rootCmd.PersistentFlags().StringSlice("enable-rule", []string{}, "only enable specific rules by id")
 	rootCmd.PersistentFlags().StringP("gitleaks-ignore-path", "i", ".", "path to .gitleaksignore file or folder containing one")
@@ -251,6 +252,9 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 
 	// Setup common detector
 	detector := detect.NewDetectorContext(cmd.Context(), cfg)
+	if detector.UseFingerprintV2, err = cmd.Flags().GetBool("use-fingerprint-v2"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
 
 	if detector.MaxDecodeDepth, err = cmd.Flags().GetInt("max-decode-depth"); err != nil {
 		logging.Fatal().Err(err).Send()

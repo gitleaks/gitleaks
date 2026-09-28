@@ -3,6 +3,8 @@ package detect
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
@@ -26,6 +28,7 @@ import (
 
 const (
 	gitleaksAllowSignature = "gitleaks:allow"
+	gitleaksIgnoreV2Prefix = "v2:"
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
@@ -44,6 +47,9 @@ type Detector struct {
 	// so users using gitleaks as a library can set this flag
 	// without calling `detector.Start(cmd *cobra.Command)`
 	Redact uint
+
+	// UseFingerprintV2 opts into content-specific .gitleaksignore fingerprints.
+	UseFingerprintV2 bool
 
 	// verbose is a flag to print findings
 	Verbose bool
@@ -169,6 +175,14 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 		line := strings.TrimSpace(scanner.Text())
 		// Skip lines that start with a comment
 		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, gitleaksIgnoreV2Prefix) {
+			if !isValidFingerprintV2(line) {
+				logging.Warn().Str("fingerprint", line).Msg("Invalid .gitleaksignore entry")
+				continue
+			}
+			d.gitleaksIgnore[line] = struct{}{}
 			continue
 		}
 
@@ -410,6 +424,9 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 					finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
 					finding.Message = fragment.CommitInfo.Message
 				}
+				if d.UseFingerprintV2 {
+					finding.FingerprintV2 = finding.NewFingerprintV2()
+				}
 				return append(findings, finding)
 			}
 		} else {
@@ -564,6 +581,9 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			event.Msg("skipping finding: rule allowlist")
 			continue
 		}
+		if d.UseFingerprintV2 {
+			finding.FingerprintV2 = finding.NewFingerprintV2()
+		}
 		findings = append(findings, finding)
 	}
 
@@ -710,6 +730,13 @@ func abs(x int) int {
 // AddFinding synchronously adds a finding to the findings slice
 func (d *Detector) AddFinding(finding report.Finding) {
 	globalFingerprint := fmt.Sprintf("%s:%s:%d", finding.File, finding.RuleID, finding.StartLine)
+	fingerprintV2 := finding.FingerprintV2
+	if d.UseFingerprintV2 {
+		if fingerprintV2 == "" {
+			fingerprintV2 = finding.NewFingerprintV2()
+		}
+		finding.FingerprintV2 = fingerprintV2
+	}
 	if finding.Commit != "" {
 		finding.Fingerprint = fmt.Sprintf("%s:%s:%s:%d", finding.Commit, finding.File, finding.RuleID, finding.StartLine)
 	} else {
@@ -718,18 +745,26 @@ func (d *Detector) AddFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
-	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		logger.Debug().
-			Str("fingerprint", globalFingerprint).
-			Msg("skipping finding: global fingerprint")
-		return
-	} else if finding.Commit != "" {
-		// Awkward nested if because I'm not sure how to chain these two conditions.
-		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logger.Debug().
-				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint")
+	if d.UseFingerprintV2 {
+		if _, ok := d.gitleaksIgnore[fingerprintV2]; ok {
+			logger.Debug().Str("fingerprint", fingerprintV2).Msg("skipping finding: v2 fingerprint")
 			return
+		}
+	}
+	if !d.UseFingerprintV2 {
+		if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
+			logger.Debug().
+				Str("fingerprint", globalFingerprint).
+				Msg("skipping finding: global fingerprint")
+			return
+		} else if finding.Commit != "" {
+			// Awkward nested if because I'm not sure how to chain these two conditions.
+			if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
+				logger.Debug().
+					Str("fingerprint", finding.Fingerprint).
+					Msgf("skipping finding: fingerprint")
+				return
+			}
 		}
 	}
 
@@ -746,6 +781,18 @@ func (d *Detector) AddFinding(finding report.Finding) {
 		printFinding(finding, d.NoColor)
 	}
 	d.findingMutex.Unlock()
+}
+
+func isValidFingerprintV2(fingerprint string) bool {
+	if !strings.HasPrefix(fingerprint, gitleaksIgnoreV2Prefix) {
+		return false
+	}
+	encoded := strings.TrimPrefix(fingerprint, gitleaksIgnoreV2Prefix)
+	if len(encoded) != sha256.Size*2 {
+		return false
+	}
+	_, err := hex.DecodeString(encoded)
+	return err == nil
 }
 
 // Findings returns the findings added to the detector
