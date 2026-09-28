@@ -496,7 +496,7 @@ class CustomClass:
 
 #### .gitleaksignore
 
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. Pass `--use-fingerprint-v2` to include a versioned, content-specific `FingerprintV2` in each finding, then copy it into `.gitleaksignore` to ignore that finding without storing the raw secret in the ignore file. With this option, legacy location-only `Fingerprint` entries do not suppress findings; replace each legacy entry with the V2 token printed for the finding you intend to ignore. Without the option, existing `Fingerprint` entries keep their current location-wide behavior. Redacted baseline scans compare the V2 token with a stored V2 token or a token derived from an older baseline containing the original secret. A legacy redacted baseline without a V2 token cannot identify the original secret, so V2 mode reports the finding instead of silently treating it as unchanged; regenerate that baseline with V2 enabled. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
 
 #### Decoding
 

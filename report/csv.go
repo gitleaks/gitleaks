@@ -38,6 +38,16 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		"Fingerprint",
 		"Tags",
 	}
+	includeFingerprintV2 := false
+	for _, finding := range findings {
+		if finding.FingerprintV2 != "" {
+			includeFingerprintV2 = true
+			break
+		}
+	}
+	if includeFingerprintV2 {
+		columns = append(columns, "FingerprintV2")
+	}
 	// A miserable attempt at "omitempty" so tests don't yell at me.
 	if findings[0].Link != "" {
 		columns = append(columns, "Link")
@@ -63,6 +73,9 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 			f.Email,
 			f.Fingerprint,
 			strings.Join(f.Tags, " "),
+		}
+		if includeFingerprintV2 {
+			row = append(row, f.FingerprintV2)
 		}
 		if findings[0].Link != "" {
 			row = append(row, f.Link)

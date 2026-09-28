@@ -153,6 +153,57 @@ func TestIsNew(t *testing.T) {
 	}
 }
 
+func TestIsNewRedactedUsesFingerprintV2WhenAvailable(t *testing.T) {
+	oldSecret := "AaBbCcDd1122"
+	newSecret := "DdCcBbAa2211"
+	baseline := report.Finding{
+		RuleID:      "private-key",
+		Description: "secret",
+		StartLine:   1,
+		EndLine:     1,
+		StartColumn: 1,
+		EndColumn:   len(oldSecret),
+		Match:       oldSecret,
+		Secret:      oldSecret,
+		File:        "config.py",
+		Entropy:     3,
+	}
+	redactedCurrent := baseline
+	redactedCurrent.Match = "REDACTED"
+	redactedCurrent.Secret = "REDACTED"
+	redactedCurrent.FingerprintV2 = (report.Finding{
+		File: "config.py", RuleID: "private-key", StartLine: 1, Secret: newSecret,
+	}).NewFingerprintV2()
+
+	if !IsNew(redactedCurrent, 100, []report.Finding{baseline}) {
+		t.Fatal("replacement secret should be new even if redacted output metadata and entropy match")
+	}
+
+	sameSecretCurrent := redactedCurrent
+	sameSecretCurrent.FingerprintV2 = baseline.NewFingerprintV2()
+	if IsNew(sameSecretCurrent, 100, []report.Finding{baseline}) {
+		t.Fatal("same underlying secret should still match the baseline when redacted")
+	}
+
+	redactedBaseline := baseline
+	redactedBaseline.Match = "REDACTED"
+	redactedBaseline.Secret = "REDACTED"
+	redactedBaseline.FingerprintV2 = baseline.NewFingerprintV2()
+	if !IsNew(redactedCurrent, 100, []report.Finding{redactedBaseline}) {
+		t.Fatal("replacement secret should not match a redacted baseline carrying the original V2 token")
+	}
+	if IsNew(sameSecretCurrent, 100, []report.Finding{redactedBaseline}) {
+		t.Fatal("same underlying secret should match a redacted baseline carrying its V2 token")
+	}
+
+	legacyRedactedBaseline := baseline
+	legacyRedactedBaseline.Match = "REDACTED"
+	legacyRedactedBaseline.Secret = "REDACTED"
+	if !IsNew(redactedCurrent, 100, []report.Finding{legacyRedactedBaseline}) {
+		t.Fatal("V2 scans must not suppress a redacted legacy baseline that has no secret identity")
+	}
+}
+
 func TestFileLoadBaseline(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

@@ -1,10 +1,19 @@
 package report
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestFindingJSONIncludesFingerprintV2(t *testing.T) {
+	finding := Finding{File: "config.py", RuleID: "generic-api-key", StartLine: 1, Secret: "secret"}
+	finding.FingerprintV2 = finding.NewFingerprintV2()
+	data, err := json.Marshal(finding)
+	assert.NoError(t, err)
+	assert.Contains(t, string(data), `"FingerprintV2":"`+finding.FingerprintV2+`"`)
+}
 
 func TestRedact(t *testing.T) {
 	tests := []struct {
