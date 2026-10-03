@@ -16,7 +16,7 @@ func CreateGlobalConfig() config.Config {
 				Description: "global allow lists",
 				Regexes: []*regexp.Regexp{
 					// ----------- General placeholders -----------
-					regexp.MustCompile(`(?i)^true|false|null$`),
+					regexp.MustCompile(`(?i)^(?:true|false|null)$`),
 					// Awkward workaround to detect repeated characters.
 					func() *regexp.Regexp {
 						var (
