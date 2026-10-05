@@ -119,7 +119,7 @@ func NewDetector(cfg config.Config) *Detector {
 // NewDetectorContext is the same as NewDetector but supports passing in a
 // context to use for timeouts
 func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
-	return &Detector{
+	d := &Detector{
 		commitMap:      make(map[string]bool),
 		gitleaksIgnore: make(map[string]struct{}),
 		findingMutex:   &sync.Mutex{},
@@ -129,6 +129,10 @@ func NewDetectorContext(ctx context.Context, cfg config.Config) *Detector {
 		prefilter:      *ahocorasick.NewTrieBuilder().AddStrings(maps.Keys(cfg.Keywords)).Build(),
 		Sema:           semgroup.NewGroup(ctx, 40),
 	}
+	if cfg.Report.Redact != nil {
+		d.Redact = *cfg.Report.Redact
+	}
+	return d
 }
 
 // NewDetectorDefaultConfig creates a new detector with the default config

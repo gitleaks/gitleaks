@@ -2081,6 +2081,7 @@ func TestDetectWithArchives(t *testing.T) {
 			require.NoError(t, err)
 
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			if tt.expireContext {
 				cancel()
 			}
@@ -2771,3 +2772,62 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestDetectorConfigRedact(t *testing.T) {
+	uintPtr := func(u uint) *uint { return &u }
+
+	rule := config.Rule{
+		RuleID: "secret-rule",
+		Regex:  regexp.MustCompile(`SECRET=[a-zA-Z0-9]+`),
+	}
+
+	tests := []struct {
+		name         string
+		redactConfig *uint
+		expectedSec  string
+	}{
+		{
+			name:         "redact 100 percent from config",
+			redactConfig: uintPtr(100),
+			expectedSec:  "REDACTED",
+		},
+		{
+			name:         "redact 50 percent from config",
+			redactConfig: uintPtr(50),
+			expectedSec:  "SECRET=mys...",
+		},
+		{
+			name:         "redact nil in config",
+			redactConfig: nil,
+			expectedSec:  "SECRET=mysecretkey123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.Config{
+				Rules: map[string]config.Rule{
+					rule.RuleID: rule,
+				},
+				Report: config.Report{
+					Redact: tt.redactConfig,
+				},
+			}
+
+			d := NewDetector(cfg)
+			if tt.redactConfig != nil {
+				assert.Equal(t, *tt.redactConfig, d.Redact)
+			} else {
+				assert.Equal(t, uint(0), d.Redact)
+			}
+
+			findings := d.Detect(Fragment{
+				Raw: `SECRET=mysecretkey123`,
+			})
+
+			require.Len(t, findings, 1)
+			assert.Equal(t, tt.expectedSec, findings[0].Secret)
+		})
+	}
+}
+
