@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	gv "github.com/hashicorp/go-version"
@@ -58,8 +59,19 @@ type ViperConfig struct {
 	Allowlists []*viperGlobalAllowlist
 
 	MinVersion string
+	Report     ViperReport
 
 	configPath string
+}
+
+type ViperReport struct {
+	Path           string `mapstructure:"path"`
+	ReportPath     string `mapstructure:"report-path"`
+	Format         string `mapstructure:"format"`
+	ReportFormat   string `mapstructure:"report-format"`
+	Template       string `mapstructure:"template"`
+	ReportTemplate string `mapstructure:"report-template"`
+	Redact         any    `mapstructure:"redact"`
 }
 
 type viperRequired struct {
@@ -95,6 +107,14 @@ type Config struct {
 	OrderedRules []string
 	Allowlists   []*Allowlist
 	MinVersion   string
+	Report       Report
+}
+
+type Report struct {
+	Path     string
+	Format   string
+	Template string
+	Redact   *uint
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -193,6 +213,11 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		}
 	}
 
+	rep, err := vc.parseReport()
+	if err != nil {
+		return Config{}, err
+	}
+
 	// Assemble the config.
 	c := Config{
 		Title:        vc.Title,
@@ -202,6 +227,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		Keywords:     keywords,
 		OrderedRules: orderedRules,
 		MinVersion:   vc.MinVersion,
+		Report:       rep,
 	}
 
 	if extendDepth > 0 {
@@ -313,6 +339,146 @@ func validateMinVersion(minVer string, configPath string) error {
 	}
 
 	return nil
+}
+
+func (vc *ViperConfig) parseReport() (Report, error) {
+	var rep Report
+	if vc.Report.Path != "" {
+		rep.Path = vc.Report.Path
+	} else if vc.Report.ReportPath != "" {
+		rep.Path = vc.Report.ReportPath
+	}
+
+	if vc.Report.Format != "" {
+		rep.Format = vc.Report.Format
+	} else if vc.Report.ReportFormat != "" {
+		rep.Format = vc.Report.ReportFormat
+	}
+
+	if vc.Report.Template != "" {
+		rep.Template = vc.Report.Template
+	} else if vc.Report.ReportTemplate != "" {
+		rep.Template = vc.Report.ReportTemplate
+	}
+
+	if vc.Report.Redact != nil {
+		redactVal, err := parseRedact(vc.Report.Redact)
+		if err != nil {
+			return Report{}, err
+		}
+		rep.Redact = &redactVal
+	}
+
+	return rep, nil
+}
+
+func parseRedact(v any) (uint, error) {
+	switch val := v.(type) {
+	case bool:
+		if val {
+			return 100, nil
+		}
+		return 0, nil
+	case int:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %d: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case int8:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %d: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case int16:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %d: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case int32:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %d: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case int64:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %d: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case uint:
+		if val > 100 {
+			val = 100
+		}
+		return val, nil
+	case uint8:
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case uint16:
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case uint32:
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case uint64:
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case float32:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %v: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case float64:
+		if val < 0 {
+			return 0, fmt.Errorf("invalid redact value %v: must be between 0 and 100", val)
+		}
+		if val > 100 {
+			val = 100
+		}
+		return uint(val), nil
+	case string:
+		s := strings.TrimSpace(val)
+		if strings.EqualFold(s, "true") {
+			return 100, nil
+		}
+		if strings.EqualFold(s, "false") {
+			return 0, nil
+		}
+		u, err := strconv.ParseUint(s, 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("invalid redact value '%s'", s)
+		}
+		if u > 100 {
+			u = 100
+		}
+		return uint(u), nil
+	default:
+		return 0, fmt.Errorf("unsupported redact type %T", v)
+	}
 }
 
 func (vc *ViperConfig) parseAllowlist(a *viperRuleAllowlist) (*Allowlist, error) {
@@ -485,6 +651,19 @@ func (c *Config) extend(extensionConfig Config) {
 
 	// append allowlists, not attempting to merge
 	c.Allowlists = append(c.Allowlists, extensionConfig.Allowlists...)
+
+	if c.Report.Path == "" {
+		c.Report.Path = extensionConfig.Report.Path
+	}
+	if c.Report.Format == "" {
+		c.Report.Format = extensionConfig.Report.Format
+	}
+	if c.Report.Template == "" {
+		c.Report.Template = extensionConfig.Report.Template
+	}
+	if c.Report.Redact == nil {
+		c.Report.Redact = extensionConfig.Report.Redact
+	}
 
 	// sort to keep extended rules in order
 	sort.Strings(c.OrderedRules)

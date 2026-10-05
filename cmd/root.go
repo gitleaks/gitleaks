@@ -285,9 +285,17 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if detector.Verbose, err = cmd.Flags().GetBool("verbose"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
-	// set redact flag
-	if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
-		logging.Fatal().Err(err).Send()
+	// set redact flag: command line flag takes precedence over config
+	if cmd.Flags().Changed("redact") {
+		if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
+			logging.Fatal().Err(err).Send()
+		}
+	} else if cfg.Report.Redact != nil {
+		detector.Redact = *cfg.Report.Redact
+	} else {
+		if detector.Redact, err = cmd.Flags().GetUint("redact"); err != nil {
+			logging.Fatal().Err(err).Send()
+		}
 	}
 	if detector.MaxTargetMegaBytes, err = cmd.Flags().GetInt("max-target-megabytes"); err != nil {
 		logging.Fatal().Err(err).Send()
@@ -344,8 +352,16 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		detector.Config.Rules = ruleOverride
 	}
 
-	// Validate report settings.
-	reportPath := mustGetStringFlag(cmd, "report-path")
+	// Validate report settings: command line flags take precedence over config.
+	var reportPath string
+	if cmd.Flags().Changed("report-path") {
+		reportPath = mustGetStringFlag(cmd, "report-path")
+	} else if cfg.Report.Path != "" {
+		reportPath = cfg.Report.Path
+	} else {
+		reportPath = mustGetStringFlag(cmd, "report-path")
+	}
+
 	if reportPath != "" {
 		if reportPath != report.StdoutReportPath {
 			// Ensure the path is writable.
@@ -360,9 +376,29 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 		// Build report writer.
 		var (
 			reporter       report.Reporter
-			reportFormat   = mustGetStringFlag(cmd, "report-format")
-			reportTemplate = mustGetStringFlag(cmd, "report-template")
+			reportFormat   string
+			reportTemplate string
 		)
+		if cmd.Flags().Changed("report-format") {
+			reportFormat = mustGetStringFlag(cmd, "report-format")
+		} else if cfg.Report.Format != "" {
+			reportFormat = cfg.Report.Format
+		} else {
+			reportFormat = mustGetStringFlag(cmd, "report-format")
+		}
+
+		if cmd.Flags().Changed("report-template") {
+			reportTemplate = mustGetStringFlag(cmd, "report-template")
+		} else if cfg.Report.Template != "" {
+			reportTemplate = cfg.Report.Template
+		} else {
+			reportTemplate = mustGetStringFlag(cmd, "report-template")
+		}
+
+		if reportTemplate != "" && reportFormat == "" {
+			reportFormat = "template"
+		}
+
 		if reportFormat == "" {
 			ext := strings.ToLower(filepath.Ext(reportPath))
 			switch ext {
