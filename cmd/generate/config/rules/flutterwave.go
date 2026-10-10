@@ -27,13 +27,13 @@ func FlutterwaveSecretKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "flutterwave-secret-key",
 		Description: "Identified a Flutterwave Secret Key, risking unauthorized financial transactions and data breaches.",
-		Regex:       regexp.MustCompile(`FLWSECK_TEST-(?i)[a-h0-9]{32}-X`),
+		Regex:       regexp.MustCompile(`(?i)(FLWSECK(?:_TEST|_LIVE)?-[A-Za-z0-9]{32}-X)`),
 		Entropy:     2,
 		Keywords:    []string{"FLWSECK_TEST"},
 	}
 
 	// validate
-	tps := utils.GenerateSampleSecrets("flutterwavePubKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.Hex("32"))+"-X")
+	tps := utils.GenerateSampleSecrets("flutterwaveSecretKey", "FLWSECK_TEST-"+secrets.NewSecret(utils.AlphaNumeric("32"))+"-X")
 	return utils.Validate(r, tps, nil)
 }
 
