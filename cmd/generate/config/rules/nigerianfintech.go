@@ -31,7 +31,7 @@ func RemitaAPIKey() *config.Rule {
 		Keywords:    []string{"remita", "api_details_hash"},
 	}
 	tps := utils.GenerateSampleSecrets("remita", "remita_api_hash="+secrets.NewSecret(utils.Hex("128")))
-	tps = append(tps, utils.GenerateSampleSecrets("remita", "remita_api_key="+secrets.NewSecret(utils.Hex("48")))...
+	tps = append(tps, utils.GenerateSampleSecrets("remita", "remita_api_key="+secrets.NewSecret(utils.Hex("48")))...)
 	fps := []string{"remita_api_key=REDACTED_PLACEHOLDER"}
 	return utils.Validate(r, tps, fps)
 }
