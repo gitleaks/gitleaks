@@ -575,8 +575,8 @@ keywords = ["flwpubk_test"]
 id = "flutterwave-secret-key"
 description = "Identified a Flutterwave Secret Key, risking unauthorized financial transactions and data breaches."
 regex = '''(?i)(FLWSECK(?:_TEST|_LIVE)?-[A-Za-z0-9]{32}-X)'''
-secretGroup = 1
 entropy = 2
+secretGroup = 1
 keywords = ["flwseck_test", "flwseck_live"]
 
 [[rules]]
@@ -2396,7 +2396,6 @@ secretGroup = 1
 entropy = 3.5
 keywords = ["mackey"]
 
-[[rules]]
 id = "intra42-client-secret"
 description = "Found a Intra42 client secret, which could lead to unauthorized access to the 42School API and sensitive data."
 regex = '''\b(s-s4t2(?:ud|af)-(?i)[abcdef0123456789]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2665,7 +2664,6 @@ secretGroup = 1
 entropy = 3.5
 keywords = ["sportybet", "betking"]
 
-[[rules]]
 id = "notion-api-token"
 description = "Notion API token"
 regex = '''\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2739,7 +2737,6 @@ secretGroup = 1
 entropy = 3.5
 keywords = ["sk_live_", "sk_test_"]
 
-[[rules]]
 id = "perplexity-api-key"
 description = "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure."
 regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
@@ -2857,7 +2854,7 @@ regex = '''(?i)\b(?:remita[_-]?(?:api[_-]?(?:key|hash)|secret)|api[_-]?details[_
 secretGroup = 1
 entropy = 3.5
 keywords = ["remita", "api_details_hash"]
-[[rules]]
+
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
 regex = '''\b(rubygems_[a-f0-9]{48})(?:[\x60'"\s;]|\\[nr]|$)'''
