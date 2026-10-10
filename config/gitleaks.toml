@@ -2388,6 +2388,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:intercom)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1
 keywords = ["intercom"]
 
 [[rules]]
+id = "interswitch-mac-key"
+description = "Detected a hardcoded Interswitch Webpay MAC key."
+regex = '''(?i)\bmacKey["']?\s*[:=]\s*["']?([0-9a-f]{64})\b'''
+entropy = 3.5
+keywords = ["mackey"]
+
+[[rules]]
 id = "intra42-client-secret"
 description = "Found a Intra42 client secret, which could lead to unauthorized access to the 42School API and sensitive data."
 regex = '''\b(s-s4t2(?:ud|af)-(?i)[abcdef0123456789]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2649,6 +2656,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \t\w.-]{0,20})[
 keywords = ["nrak"]
 
 [[rules]]
+id = "nigerian-betting-jwt"
+description = "Detected a possible hardcoded JWT associated with SportyBet or BetKing."
+regex = '''(?i)\b(?:sportybet|betking)[^\r\n]{0,40}(eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b'''
+entropy = 3.5
+keywords = ["sportybet", "betking"]
+
+[[rules]]
 id = "notion-api-token"
 description = "Notion API token"
 regex = '''\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2713,6 +2727,13 @@ description = "Found an OpenShift user token, potentially compromising an OpenSh
 regex = '''\b(sha256~[\w-]{43})(?:[^\w-]|\z)'''
 entropy = 3.5
 keywords = ["sha256~"]
+
+[[rules]]
+id = "paystack-secret-key"
+description = "Detected a Paystack secret key that may allow unauthorized payment operations."
+regex = '''(?i)\b(sk_(?:live|test)_[a-z0-9]{40})\b'''
+entropy = 3.5
+keywords = ["sk_live_", "sk_test_"]
 
 [[rules]]
 id = "perplexity-api-key"
@@ -2825,6 +2846,12 @@ regex = '''\b(rdme_[a-z0-9]{70})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 2
 keywords = ["rdme_"]
 
+[[rules]]
+id = "remita-api-key"
+description = "Detected a Remita API key that may expose payment credentials."
+regex = '''(?i)\bremita[_-]?(?:api[_-])?key\s*[:=]\s*["']?([a-z0-9]{40,64})\b'''
+entropy = 3.5
+keywords = ["remita"]
 [[rules]]
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
@@ -3207,30 +3234,3 @@ description = "Detected a Zendesk Secret Key, risking unauthorized access to cus
 regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["zendesk"]
 
-[[rules]]
-id = "interswitch-mac-key"
-description = "Detected a hardcoded Interswitch Webpay MAC key."
-regex = '''(?i)\bmacKey["']?\s*[:=]\s*["']?([0-9a-f]{64})\b'''
-entropy = 3.5
-keywords = ["mackey"]
-
-[[rules]]
-id = "nigerian-betting-jwt"
-description = "Detected a possible hardcoded JWT associated with SportyBet or BetKing."
-regex = '''(?i)\b(?:sportybet|betking)[^\r\n]{0,40}(eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b'''
-entropy = 3.5
-keywords = ["sportybet", "betking"]
-
-[[rules]]
-id = "paystack-secret-key"
-description = "Detected a Paystack secret key that may allow unauthorized payment operations."
-regex = '''(?i)\b(sk_(?:live|test)_[a-z0-9]{40})\b'''
-entropy = 3.5
-keywords = ["sk_live_", "sk_test_"]
-
-[[rules]]
-id = "remita-api-key"
-description = "Detected a Remita API key that may expose payment credentials."
-regex = '''(?i)\bremita[_-]?(?:api[_-])?key\s*[:=]\s*["']?([a-z0-9]{40,64})\b'''
-entropy = 3.5
-keywords = ["remita"]
