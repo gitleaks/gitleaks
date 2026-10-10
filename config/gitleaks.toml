@@ -574,9 +574,10 @@ keywords = ["flwpubk_test"]
 [[rules]]
 id = "flutterwave-secret-key"
 description = "Identified a Flutterwave Secret Key, risking unauthorized financial transactions and data breaches."
-regex = '''FLWSECK_TEST-(?i)[a-h0-9]{32}-X'''
+regex = '''(?i)(FLWSECK(?:_TEST|_LIVE)?-[A-Za-z0-9]{32}-X)'''
 entropy = 2
-keywords = ["flwseck_test"]
+secretGroup = 1
+keywords = ["flwseck_test", "flwseck_live"]
 
 [[rules]]
 id = "flyio-access-token"
@@ -2388,6 +2389,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:intercom)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1
 keywords = ["intercom"]
 
 [[rules]]
+id = "interswitch-mac-key"
+description = "Detected a hardcoded Interswitch Webpay MAC key."
+regex = '''(?i)\bmacKey["']?\s*[:=]\s*["']?([0-9a-f]{64})\b'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["mackey"]
+
 id = "intra42-client-secret"
 description = "Found a Intra42 client secret, which could lead to unauthorized access to the 42School API and sensitive data."
 regex = '''\b(s-s4t2(?:ud|af)-(?i)[abcdef0123456789]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2649,6 +2657,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \t\w.-]{0,20})[
 keywords = ["nrak"]
 
 [[rules]]
+id = "nigerian-betting-jwt"
+description = "Detected a possible hardcoded JWT associated with SportyBet or BetKing."
+regex = '''(?i)\b(?:sportybet|betking)[^\r\n]{0,40}(eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["sportybet", "betking"]
+
 id = "notion-api-token"
 description = "Notion API token"
 regex = '''\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -2715,6 +2730,13 @@ entropy = 3.5
 keywords = ["sha256~"]
 
 [[rules]]
+id = "paystack-secret-key"
+description = "Detected a Paystack secret key that may allow unauthorized payment operations."
+regex = '''(?i)\b(sk_(?:live|test)_[a-z0-9]{40})\b'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["sk_live_", "sk_test_"]
+
 id = "perplexity-api-key"
 description = "Detected a Perplexity API key, which could lead to unauthorized access to Perplexity AI services and data exposure."
 regex = '''\b(pplx-[a-zA-Z0-9]{48})(?:[\x60'"\s;]|\\[nr]|$|\b)'''
@@ -2826,6 +2848,13 @@ entropy = 2
 keywords = ["rdme_"]
 
 [[rules]]
+id = "remita-api-key"
+description = "Detected a Remita API key that may expose payment credentials."
+regex = '''(?i)\b(?:remita[_-]?(?:api[_-]?(?:key|hash)|secret)|api[_-]?details[_-]?hash)\s*[:=]\s*["']?([a-z0-9]{40,64}|[a-f0-9]{128})\b'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["remita", "api_details_hash"]
+
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
 regex = '''\b(rubygems_[a-f0-9]{48})(?:[\x60'"\s;]|\\[nr]|$)'''
