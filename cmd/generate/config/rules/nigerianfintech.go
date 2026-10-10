@@ -25,12 +25,13 @@ func RemitaAPIKey() *config.Rule {
 	r := config.Rule{
 		RuleID:      "remita-api-key",
 		Description: "Detected a Remita API key that may expose payment credentials.",
-		Regex:       regexp.MustCompile(`(?i)\bremita[_-]?(?:api[_-])?key\s*[:=]\s*["']?([a-z0-9]{40,64})\b`),
+		Regex:       regexp.MustCompile(`(?i)\b(?:remita[_-]?(?:api[_-]?(?:key|hash)|secret)|api[_-]?details[_-]?hash)\s*[:=]\s*["']?([a-z0-9]{40,64}|[a-f0-9]{128})\b`),
 		SecretGroup: 1,
 		Entropy:     3.5,
-		Keywords:    []string{"remita"},
+		Keywords:    []string{"remita", "api_details_hash"},
 	}
-	tps := utils.GenerateSampleSecrets("remita", "remita_api_key="+secrets.NewSecret(utils.Hex("48")))
+	tps := utils.GenerateSampleSecrets("remita", "remita_api_hash="+secrets.NewSecret(utils.Hex("128")))
+	tps = append(tps, utils.GenerateSampleSecrets("remita", "remita_api_key="+secrets.NewSecret(utils.Hex("48")))...
 	fps := []string{"remita_api_key=REDACTED_PLACEHOLDER"}
 	return utils.Validate(r, tps, fps)
 }
