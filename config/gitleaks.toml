@@ -575,6 +575,7 @@ keywords = ["flwpubk_test"]
 id = "flutterwave-secret-key"
 description = "Identified a Flutterwave Secret Key, risking unauthorized financial transactions and data breaches."
 regex = '''(?i)(FLWSECK(?:_TEST|_LIVE)?-[A-Za-z0-9]{32}-X)'''
+secretGroup = 1
 entropy = 2
 keywords = ["flwseck_test", "flwseck_live"]
 
@@ -2391,6 +2392,7 @@ keywords = ["intercom"]
 id = "interswitch-mac-key"
 description = "Detected a hardcoded Interswitch Webpay MAC key."
 regex = '''(?i)\bmacKey["']?\s*[:=]\s*["']?([0-9a-f]{64})\b'''
+secretGroup = 1
 entropy = 3.5
 keywords = ["mackey"]
 
@@ -2659,6 +2661,7 @@ keywords = ["nrak"]
 id = "nigerian-betting-jwt"
 description = "Detected a possible hardcoded JWT associated with SportyBet or BetKing."
 regex = '''(?i)\b(?:sportybet|betking)[^\r\n]{0,40}(eyJ[a-z0-9_-]{10,}\.[a-z0-9_-]{10,}\.[a-z0-9_-]{10,})\b'''
+secretGroup = 1
 entropy = 3.5
 keywords = ["sportybet", "betking"]
 
@@ -2732,6 +2735,7 @@ keywords = ["sha256~"]
 id = "paystack-secret-key"
 description = "Detected a Paystack secret key that may allow unauthorized payment operations."
 regex = '''(?i)\b(sk_(?:live|test)_[a-z0-9]{40})\b'''
+secretGroup = 1
 entropy = 3.5
 keywords = ["sk_live_", "sk_test_"]
 
@@ -2850,6 +2854,7 @@ keywords = ["rdme_"]
 id = "remita-api-key"
 description = "Detected a Remita API key that may expose payment credentials."
 regex = '''(?i)\bremita[_-]?(?:api[_-])?key\s*[:=]\s*["']?([a-z0-9]{40,64})\b'''
+secretGroup = 1
 entropy = 3.5
 keywords = ["remita"]
 [[rules]]
