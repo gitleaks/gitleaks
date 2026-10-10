@@ -2853,10 +2853,10 @@ keywords = ["rdme_"]
 [[rules]]
 id = "remita-api-key"
 description = "Detected a Remita API key that may expose payment credentials."
-regex = '''(?i)\bremita[_-]?(?:api[_-])?key\s*[:=]\s*["']?([a-z0-9]{40,64})\b'''
+regex = '''(?i)\b(?:remita[_-]?(?:api[_-]?(?:key|hash)|secret)|api[_-]?details[_-]?hash)\s*[:=]\s*["']?([a-z0-9]{40,64}|[a-f0-9]{128})\b'''
 secretGroup = 1
 entropy = 3.5
-keywords = ["remita"]
+keywords = ["remita", "api_details_hash"]
 [[rules]]
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
