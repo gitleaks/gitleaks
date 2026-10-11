@@ -70,10 +70,16 @@ func NewGitLogCmd(source string, logOpts string) (*GitCmd, error) {
 // context to use for timeouts
 func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*GitCmd, error) {
 	sourceClean := filepath.Clean(source)
-	var cmd *exec.Cmd
+	// By default `git log -p` does not output a diff for merge commits, so
+	// changes introduced only by a merge commit (e.g. conflict resolutions or
+	// "evil merges") would never be scanned. `--diff-merges=first-parent` makes
+	// git emit a merge commit's diff against its first parent using the regular
+	// `diff --git` format that the patch parser already understands (a combined
+	// `--cc` diff would not be). Placing it before any user-supplied `--log-opts`
+	// lets users override it, e.g. `--log-opts="--no-diff-merges"`.
+	// https://github.com/gitleaks/gitleaks/issues/1028
+	args := []string{"-C", sourceClean, "log", "-p", "-U0", "--diff-merges=first-parent"}
 	if logOpts != "" {
-		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
-
 		// Ensure that the user-provided |logOpts| aren't wrapped in quotes.
 		// https://github.com/gitleaks/gitleaks/issues/1153
 		userArgs := strings.Split(logOpts, " ")
@@ -88,11 +94,10 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 		}
 
 		args = append(args, userArgs...)
-		cmd = exec.CommandContext(ctx, "git", args...)
 	} else {
-		cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "log", "-p", "-U0",
-			"--full-history", "--all", "--diff-filter=tuxdb")
+		args = append(args, "--full-history", "--all", "--diff-filter=tuxdb")
 	}
+	cmd := exec.CommandContext(ctx, "git", args...)
 
 	logging.Debug().Msgf("executing: %s", cmd.String())
 
