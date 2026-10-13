@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func Test_readUntilSafeBoundary(t *testing.T) {
@@ -133,6 +133,24 @@ func TestShouldSkipPath(t *testing.T) {
 			path: "docs/README.md",
 			want: false,
 		},
+		"and condition with commits, must not skip on path alone": {
+			// Commits cannot be evaluated during enumeration, and a non-git
+			// source has no commit at all, so this allowlist can never match
+			// there. Skipping on the path would drop the file for an allowlist
+			// that will never apply.
+			allowlist: &config.Allowlist{
+				MatchCondition: config.AllowlistMatchAnd,
+				Paths:          mustCompile(`\.md$`),
+				Commits:        []string{"0000000000000000000000000000000000000000"},
+			},
+			path: "docs/README.md",
+			want: false,
+		},
+		"nil allowlist entry is skipped rather than panicking": {
+			allowlist: nil,
+			path:      "docs/README.md",
+			want:      false,
+		},
 		"and condition, paths are the only criterion": {
 			// Nothing else has to be checked, so the path is sufficient.
 			allowlist: &config.Allowlist{
@@ -146,7 +164,12 @@ func TestShouldSkipPath(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.NoError(t, tt.allowlist.Validate())
+			// Validate is not nil-safe upstream, and a nil entry never arrives
+			// from a validated config -- it arrives from one built in code.
+			// shouldSkipPath still has to survive it.
+			if tt.allowlist != nil {
+				require.NoError(t, tt.allowlist.Validate())
+			}
 			cfg := &config.Config{Allowlists: []*config.Allowlist{tt.allowlist}}
 			assert.Equal(t, tt.want, shouldSkipPath(cfg, tt.path))
 		})
