@@ -42,6 +42,15 @@ func shouldSkipPath(cfg *config.Config, path string) bool {
 	}
 
 	for _, a := range cfg.Allowlists {
+		// A path match may only skip the file when the path is sufficient on its
+		// own. Under `condition = "AND"` the other criteria must hold too, and
+		// those are content-based — they can only be evaluated once the file is
+		// read. Skipping here would silently drop the file before detection runs,
+		// so real secrets in it would never be reported.
+		if !pathIsSufficientToSkip(a) {
+			continue
+		}
+
 		if a.PathAllowed(path) ||
 			// TODO: Remove this in v9.
 			// This is an awkward hack to mitigate https://github.com/gitleaks/gitleaks/issues/1641.
@@ -51,6 +60,31 @@ func shouldSkipPath(cfg *config.Config, path string) bool {
 	}
 
 	return false
+}
+
+// pathIsSufficientToSkip reports whether matching |a|'s paths is on its own
+// enough to allowlist a file, without reading its contents.
+//
+// With the default "OR" condition any single criterion allowlists the finding,
+// so a path match is sufficient. With "AND" it is only sufficient when paths are
+// the sole criterion; if regexes or stopwords are also set they have to be
+// checked against the file's content by the detector.
+//
+// Commits count against sufficiency under "AND" even though they are known
+// before a file is read: enumeration cannot evaluate them. A non-git source has
+// no commit at all, so an allowlist requiring both a path and a commit can never
+// match there, and treating the path as sufficient would skip the file for an
+// allowlist that will never apply.
+func pathIsSufficientToSkip(a *config.Allowlist) bool {
+	// Nil entries are reachable from a hand-written config; PathAllowed is
+	// nil-safe and this must be too, or enumeration panics instead of scanning.
+	if a == nil {
+		return false
+	}
+	if a.MatchCondition != config.AllowlistMatchAnd {
+		return true
+	}
+	return len(a.Regexes) == 0 && len(a.StopWords) == 0 && len(a.Commits) == 0
 }
 
 // readUntilSafeBoundary consumes |f| until it finds two consecutive `\n` characters, up to |maxPeekSize|.
