@@ -615,6 +615,7 @@ regex = '''\b(AIza[\w-]{35})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 4
 keywords = ["aiza"]
 [[rules.allowlists]]
+description = "Example keys from https://github.com/firebase/firebase-android-sdk"
 regexes = [
     '''AIzaSyabcdefghijklmnopqrstuvwxyz1234567''',
     '''AIzaSyAnLA7NfeLquW1tJFpx_eQCxoX-oo6YyIs''',
