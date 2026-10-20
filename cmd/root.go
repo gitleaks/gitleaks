@@ -349,7 +349,7 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	if reportPath != "" {
 		if reportPath != report.StdoutReportPath {
 			// Ensure the path is writable.
-			if f, err := os.Create(reportPath); err != nil {
+			if f, err := openReportFile(reportPath); err != nil {
 				logging.Fatal().Err(err).Msgf("Report path is not writable: %s", reportPath)
 			} else {
 				_ = f.Close()
@@ -471,7 +471,7 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 			file = os.Stdout
 		} else {
 			// Open the file.
-			if file, reportErr = os.Create(detector.ReportPath); reportErr != nil {
+			if file, reportErr = openReportFile(detector.ReportPath); reportErr != nil {
 				goto ReportEnd
 			}
 			defer func() {
@@ -497,6 +497,25 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 	if len(findings) != 0 {
 		os.Exit(exitCode)
 	}
+}
+
+// reportFilePerm is the file mode used for report files. Reports catalog every
+// secret a scan found, so they must not be readable by other local users.
+const reportFilePerm = 0o600
+
+// openReportFile creates or truncates the report file at path with restrictive
+// permissions (0600). The mode passed to OpenFile only applies when the file is
+// created, so an explicit Chmod is applied as well to cover pre-existing files.
+func openReportFile(path string) (*os.File, error) {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, reportFilePerm)
+	if err != nil {
+		return nil, err
+	}
+	if err := f.Chmod(reportFilePerm); err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	return f, nil
 }
 
 func fileExists(fileName string) bool {
