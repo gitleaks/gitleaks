@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -142,6 +143,13 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
+	// Files that could not be opened are collected here so the caller can
+	// report a partial scan instead of claiming a clean run.
+	var (
+		openErrs   []error
+		openErrsMu sync.Mutex
+	)
+
 	err := s.scanTargets(ctx, func(scanTarget ScanTarget, err error) error {
 		select {
 		case <-ctx.Done():
@@ -156,7 +164,12 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				if err != nil {
 					if os.IsPermission(err) {
 						logger.Warn().Msg("skipping file: permission denied")
+					} else {
+						logger.Warn().Err(err).Msg("skipping file: could not open")
 					}
+					openErrsMu.Lock()
+					openErrs = append(openErrs, fmt.Errorf("could not open %s: %w", scanTarget.Path, err))
+					openErrsMu.Unlock()
 					wg.Done()
 					return nil
 				}
@@ -186,6 +199,6 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
-		return err
+		return errors.Join(err, errors.Join(openErrs...))
 	}
 }
