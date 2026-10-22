@@ -21,6 +21,12 @@ import (
 const defaultBufferSize = 100 * 1_000 // 100kb
 const InnerPathSeparator = "!"
 
+// archivePeekSize bounds how much of a file's content is inspected when
+// verifying a filename-based archive match. It comfortably covers every
+// magic/header check in mholt/archives, including brotli's trial decode
+// which reads up to 1KB.
+const archivePeekSize = 64 * 1_000
+
 type seekReaderAt interface {
 	io.ReaderAt
 	io.Seeker
@@ -56,6 +62,18 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	// and fall back on treating it like a normal file and let fileFragments
 	// decide what to do with it.
 	if err == nil && format != nil {
+		// Identify matched on the filename alone (it was called with a nil
+		// stream), and the archives library matches the extension as a
+		// substring of the filename. A plain-text file like "notes.7z.txt"
+		// therefore "matches" and would be routed into archive extraction,
+		// silently yielding zero fragments. Verify the content really is that
+		// archive format before trusting the name; otherwise fall through to
+		// the plain-text path below.
+		if !s.contentMatchesArchive(ctx, format) {
+			format = nil
+		}
+	}
+	if err == nil && format != nil {
 		if s.archiveDepth+1 > s.MaxArchiveDepth {
 			var event *zerolog.Event
 
@@ -84,6 +102,49 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	}
 
 	return s.fileFragments(ctx, bufio.NewReader(s.Content), yield)
+}
+
+// contentMatchesArchive reports whether the file's content matches the given
+// archive format's stream signature. The peeked bytes are restored so the
+// rest of Fragments observes the full stream from the beginning: when the
+// underlying reader supports seeking it is rewound in place, otherwise the
+// peeked bytes are prepended to the stream.
+func (s *File) contentMatchesArchive(ctx context.Context, format archives.Format) bool {
+	peeked := make([]byte, archivePeekSize)
+	n, readErr := io.ReadFull(s.Content, peeked)
+	peeked = peeked[:n]
+
+	if seeker, ok := s.Content.(io.Seeker); ok {
+		if _, err := seeker.Seek(int64(-n), io.SeekCurrent); err != nil {
+			s.Content = io.MultiReader(bytes.NewReader(peeked), s.Content)
+		}
+	} else {
+		s.Content = io.MultiReader(bytes.NewReader(peeked), s.Content)
+	}
+
+	if readErr != nil && readErr != io.EOF && readErr != io.ErrUnexpectedEOF {
+		return false
+	}
+
+	match, err := verifyArchiveStream(ctx, format, s.Path, peeked)
+	if err != nil {
+		return false
+	}
+
+	return match.ByStream
+}
+
+// verifyArchiveStream checks the format's stream signature against peeked, a
+// prefix of the file's content. For combined formats (e.g. .tar.gz) only the
+// outermost (compression) layer is checked: verifying the inner layer would
+// require decompressing the whole stream, which a bounded peek cannot
+// support.
+func verifyArchiveStream(ctx context.Context, format archives.Format, name string, peeked []byte) (archives.MatchResult, error) {
+	if ca, ok := format.(archives.CompressedArchive); ok && ca.Compression != nil {
+		return ca.Compression.Match(ctx, name, bytes.NewReader(peeked))
+	}
+
+	return format.Match(ctx, name, bytes.NewReader(peeked))
 }
 
 // extractorFragments recursively crawls archives and yields fragments
