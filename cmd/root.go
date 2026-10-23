@@ -347,15 +347,8 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	// Validate report settings.
 	reportPath := mustGetStringFlag(cmd, "report-path")
 	if reportPath != "" {
-		if reportPath != report.StdoutReportPath {
-			// Ensure the path is writable.
-			if f, err := os.Create(reportPath); err != nil {
-				logging.Fatal().Err(err).Msgf("Report path is not writable: %s", reportPath)
-			} else {
-				_ = f.Close()
-				_ = os.Remove(reportPath)
-			}
-		}
+		// Do not create, truncate, or remove the destination during validation.
+		// The report writer opens it later and reports any write failure.
 
 		// Build report writer.
 		var (
