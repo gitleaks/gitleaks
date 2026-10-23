@@ -1,5 +1,65 @@
 package sources
 
+import (
+	"context"
+	"os/exec"
+	"sync"
+	"testing"
+
+	"github.com/fatih/semgroup"
+	"github.com/gitleaks/go-gitdiff/gitdiff"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+)
+
+func TestGitFragmentsSkipsAllowlistedCommit(t *testing.T) {
+	newFile := func(sha, name string) *gitdiff.File {
+		return &gitdiff.File{
+			NewName:     name,
+			PatchHeader: &gitdiff.PatchHeader{SHA: sha},
+			TextFragments: []*gitdiff.TextFragment{{
+				NewPosition: 1,
+				Lines:       []gitdiff.Line{{Op: gitdiff.OpAdd, Line: "secret\n"}},
+			}},
+		}
+	}
+
+	diffFilesCh := make(chan *gitdiff.File, 2)
+	diffFilesCh <- newFile("allowedsha", "allowed.txt")
+	diffFilesCh <- newFile("othersha", "other.txt")
+	close(diffFilesCh)
+	errCh := make(chan error)
+	close(errCh)
+
+	ctx := context.Background()
+	src := &Git{
+		// The command is never started; Fragments only calls Wait/String on it when it returns.
+		Cmd:    &GitCmd{cmd: exec.Command("git", "version"), diffFilesCh: diffFilesCh, errCh: errCh},
+		Config: &config.Config{Allowlists: []*config.Allowlist{{Commits: []string{"allowedsha"}}}},
+		Sema:   semgroup.NewGroup(ctx, 2),
+	}
+
+	var (
+		mu   sync.Mutex
+		seen = map[string]int{}
+	)
+	err := src.Fragments(ctx, func(f Fragment, err error) error {
+		mu.Lock()
+		defer mu.Unlock()
+		seen[f.CommitSHA]++
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := seen["allowedsha"]; n != 0 {
+		t.Errorf("expected no fragments for allowlisted commit, got %d", n)
+	}
+	if n := seen["othersha"]; n != 1 {
+		t.Errorf("expected 1 fragment for non-allowlisted commit, got %d", n)
+	}
+}
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
