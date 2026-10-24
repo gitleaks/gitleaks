@@ -6,52 +6,68 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestGetLocation tests the getLocation function.
+// TestGetLocation tests the location function.
 func TestGetLocation(t *testing.T) {
 	tests := []struct {
-		linePairs    [][]int
-		start        int
-		end          int
-		wantLocation Location
+		name          string
+		raw           string
+		start         int
+		end           int
+		wantStartLine int
+		wantEndLine   int
+		wantStartCol  int
+		wantEndCol    int
 	}{
 		{
-			linePairs: [][]int{
-				{0, 39},
-				{40, 55},
-				{56, 57},
-			},
-			start: 35,
-			end:   38,
-			wantLocation: Location{
-				startLine:      1,
-				startColumn:    36,
-				endLine:        1,
-				endColumn:      38,
-				startLineIndex: 0,
-				endLineIndex:   40,
-			},
+			name:          "match on first line",
+			raw:           "..f..\n..f..",
+			start:         2,
+			end:           3,
+			wantStartLine: 0,
+			wantEndLine:   0,
+			wantStartCol:  3,
+			wantEndCol:    3,
 		},
 		{
-			linePairs: [][]int{
-				{0, 39},
-				{40, 55},
-				{56, 57},
-			},
-			start: 40,
-			end:   44,
-			wantLocation: Location{
-				startLine:      2,
-				startColumn:    1,
-				endLine:        2,
-				endColumn:      4,
-				startLineIndex: 40,
-				endLineIndex:   56,
-			},
+			name:          "match on last line",
+			raw:           "..f..\n..f..",
+			start:         8,
+			end:           9,
+			wantStartLine: 1,
+			wantEndLine:   1,
+			wantStartCol:  3,
+			wantEndCol:    3,
+		},
+		{
+			name:          "match on middle line",
+			raw:           "first\nfoo\nthird",
+			start:         6,
+			end:           9,
+			wantStartLine: 1,
+			wantEndLine:   1,
+			wantStartCol:  1,
+			wantEndCol:    3,
+		},
+		{
+			name:          "match after CRLF",
+			raw:           "..f..\r\n..f..",
+			start:         9,
+			end:           10,
+			wantStartLine: 1,
+			wantEndLine:   1,
+			wantStartCol:  3,
+			wantEndCol:    3,
 		},
 	}
 
 	for _, test := range tests {
-		loc := location(test.linePairs, "", []int{test.start, test.end})
-		assert.Equal(t, test.wantLocation, loc)
+		t.Run(test.name, func(t *testing.T) {
+			linePairs := newLineRegexp.FindAllStringIndex(test.raw, -1)
+			loc := location(linePairs, test.raw, []int{test.start, test.end})
+			assert.Equal(t, test.wantStartLine, loc.startLine)
+			assert.Equal(t, test.wantEndLine, loc.endLine)
+			assert.Equal(t, test.wantStartCol, loc.startColumn)
+			assert.Equal(t, test.wantEndCol, loc.endColumn)
+		})
 	}
 }
