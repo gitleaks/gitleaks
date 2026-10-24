@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -670,3 +671,257 @@ func TestExtendedRuleKeywordsAreDowncase(t *testing.T) {
 		})
 	}
 }
+
+func TestTranslateReport(t *testing.T) {
+	uintPtr := func(u uint) *uint { return &u }
+
+	tests := []struct {
+		name      string
+		toml      string
+		want      Report
+		wantError string
+	}{
+		{
+			name: "redact boolean true",
+			toml: `
+[report]
+redact = true
+`,
+			want: Report{
+				Redact: uintPtr(100),
+			},
+		},
+		{
+			name: "redact boolean false",
+			toml: `
+[report]
+redact = false
+`,
+			want: Report{
+				Redact: uintPtr(0),
+			},
+		},
+		{
+			name: "redact percentage 50",
+			toml: `
+[report]
+redact = 50
+`,
+			want: Report{
+				Redact: uintPtr(50),
+			},
+		},
+		{
+			name: "redact percentage 100",
+			toml: `
+[report]
+redact = 100
+`,
+			want: Report{
+				Redact: uintPtr(100),
+			},
+		},
+		{
+			name: "redact percentage 0",
+			toml: `
+[report]
+redact = 0
+`,
+			want: Report{
+				Redact: uintPtr(0),
+			},
+		},
+		{
+			name: "redact capped at 100 if greater",
+			toml: `
+[report]
+redact = 120
+`,
+			want: Report{
+				Redact: uintPtr(100),
+			},
+		},
+		{
+			name: "redact string true",
+			toml: `
+[report]
+redact = "true"
+`,
+			want: Report{
+				Redact: uintPtr(100),
+			},
+		},
+		{
+			name: "redact string false",
+			toml: `
+[report]
+redact = "false"
+`,
+			want: Report{
+				Redact: uintPtr(0),
+			},
+		},
+		{
+			name: "redact string number",
+			toml: `
+[report]
+redact = "35"
+`,
+			want: Report{
+				Redact: uintPtr(35),
+			},
+		},
+		{
+			name: "report options with standard keys",
+			toml: `
+[report]
+path = "findings.json"
+format = "json"
+template = "custom.tmpl"
+redact = 80
+`,
+			want: Report{
+				Path:     "findings.json",
+				Format:   "json",
+				Template: "custom.tmpl",
+				Redact:   uintPtr(80),
+			},
+		},
+		{
+			name: "report options with flag-style keys",
+			toml: `
+[report]
+report-path = "findings.sarif"
+report-format = "sarif"
+report-template = "sarif.tmpl"
+redact = true
+`,
+			want: Report{
+				Path:     "findings.sarif",
+				Format:   "sarif",
+				Template: "sarif.tmpl",
+				Redact:   uintPtr(100),
+			},
+		},
+		{
+			name: "no report section leaves report empty",
+			toml: `
+title = "no report"
+`,
+			want: Report{},
+		},
+		{
+			name: "invalid negative redact returns error",
+			toml: `
+[report]
+redact = -10
+`,
+			wantError: "invalid redact value -10: must be between 0 and 100",
+		},
+		{
+			name: "invalid string redact returns error",
+			toml: `
+[report]
+redact = "invalid"
+`,
+			wantError: "invalid redact value 'invalid'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Cleanup(func() {
+				viper.Reset()
+			})
+
+			viper.SetConfigType("toml")
+			err := viper.ReadConfig(strings.NewReader(tt.toml))
+			require.NoError(t, err)
+
+			var vc ViperConfig
+			err = viper.Unmarshal(&vc)
+			require.NoError(t, err)
+
+			cfg, err := vc.Translate()
+			if tt.wantError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantError)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.want.Path, cfg.Report.Path)
+			assert.Equal(t, tt.want.Format, cfg.Report.Format)
+			assert.Equal(t, tt.want.Template, cfg.Report.Template)
+			if tt.want.Redact == nil {
+				assert.Nil(t, cfg.Report.Redact)
+			} else {
+				require.NotNil(t, cfg.Report.Redact)
+				assert.Equal(t, *tt.want.Redact, *cfg.Report.Redact)
+			}
+		})
+	}
+}
+
+func TestExtendReport(t *testing.T) {
+	uintPtr := func(u uint) *uint { return &u }
+
+	t.Run("child inherits report options from parent when not specified", func(t *testing.T) {
+		baseCfg := Config{
+			Report: Report{
+				Path:     "base.json",
+				Format:   "json",
+				Template: "base.tmpl",
+				Redact:   uintPtr(50),
+			},
+			Rules:    make(map[string]Rule),
+			Keywords: make(map[string]struct{}),
+		}
+
+		childCfg := Config{
+			Rules:    make(map[string]Rule),
+			Keywords: make(map[string]struct{}),
+		}
+
+		childCfg.extend(baseCfg)
+
+		assert.Equal(t, "base.json", childCfg.Report.Path)
+		assert.Equal(t, "json", childCfg.Report.Format)
+		assert.Equal(t, "base.tmpl", childCfg.Report.Template)
+		require.NotNil(t, childCfg.Report.Redact)
+		assert.Equal(t, uint(50), *childCfg.Report.Redact)
+	})
+
+	t.Run("child overrides report options from parent", func(t *testing.T) {
+		baseCfg := Config{
+			Report: Report{
+				Path:     "base.json",
+				Format:   "json",
+				Template: "base.tmpl",
+				Redact:   uintPtr(50),
+			},
+			Rules:    make(map[string]Rule),
+			Keywords: make(map[string]struct{}),
+		}
+
+		childCfg := Config{
+			Report: Report{
+				Path:     "child.sarif",
+				Format:   "sarif",
+				Template: "child.tmpl",
+				Redact:   uintPtr(100),
+			},
+			Rules:    make(map[string]Rule),
+			Keywords: make(map[string]struct{}),
+		}
+
+		childCfg.extend(baseCfg)
+
+		assert.Equal(t, "child.sarif", childCfg.Report.Path)
+		assert.Equal(t, "sarif", childCfg.Report.Format)
+		assert.Equal(t, "child.tmpl", childCfg.Report.Template)
+		require.NotNil(t, childCfg.Report.Redact)
+		assert.Equal(t, uint(100), *childCfg.Report.Redact)
+	})
+}
+
