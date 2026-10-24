@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
@@ -33,13 +34,19 @@ func HashiCorpTerraform() *config.Rule {
 func HashicorpField() *config.Rule {
 	keywords := []string{"administrator_login_password", "password"}
 	// define rule
+	// The identifier must *end* with the keyword and be followed only by whitespace before the
+	// operator. GenerateSemiGenericRegex allows word characters in between, which matches
+	// unrelated attributes such as `password_policy = "excellent"` and prose in comments.
 	r := config.Rule{
 		RuleID:      "hashicorp-tf-password",
 		Description: "Identified a HashiCorp Terraform password field, risking unauthorized infrastructure configuration and security breaches.",
-		Regex:       utils.GenerateSemiGenericRegex(keywords, fmt.Sprintf(`"%s"`, utils.AlphaNumericExtended("8,20")), true),
-		Entropy:     2,
-		Path:        regexp.MustCompile(`(?i)\.(?:tf|hcl)$`),
-		Keywords:    keywords,
+		Regex: regexp.MustCompile(
+			fmt.Sprintf(`(?i)[\w.-]{0,50}?(?:%s)[ \t]{0,20}(?:=|:{1,3}=|=>|\?=|:)[ \t]{0,5}("%s")`,
+				strings.Join(keywords, "|"), utils.AlphaNumericExtended("8,20")),
+		),
+		Entropy:  2,
+		Path:     regexp.MustCompile(`(?i)\.(?:tf|hcl)$`),
+		Keywords: keywords,
 	}
 
 	tps := map[string]string{
@@ -52,6 +59,10 @@ func HashicorpField() *config.Rule {
 		"file.tf":      "administrator_login_password = var.db_password",
 		"file.hcl":     `password = "${aws_db_instance.default.password}"`,
 		"unrelated.js": "password       = " + `"rootpasswd"`,
+		// https://github.com/gitleaks/gitleaks/issues/1832 - a different attribute that merely starts with the keyword
+		"policy.tf": `password_policy = "excellent"`,
+		// ... and prose in a comment that happens to mention a password
+		"comment.tf": `# Create secrets containing the database password, enabling "automatic rotation"`,
 	}
 
 	return utils.ValidateWithPaths(r, tps, fps)
