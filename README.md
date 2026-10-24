@@ -393,6 +393,22 @@ paths = ['''tests/expected/._\.json$''']
 
 Refer to the default [gitleaks config](https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/gitleaks/gitleaks/blob/master/CONTRIBUTING.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
 
+### Redistributing the default configuration
+
+Some rule allowlists contain literal example keys. The `gcp-api-key` allowlist,
+for example, includes keys from the
+[Firebase Android SDK](https://github.com/firebase/firebase-android-sdk).
+Preserve the allowlist descriptions and the Gitleaks version or commit when
+copying or converting this rule data so downstream maintainers can trace its origin.
+
+Other secret scanners may report these literals in redistributed rule data.
+Compare each reported value with the allowlist in the Gitleaks version you imported
+before dismissing an alert as an example used in rule data. Record that provenance
+in the dismissal reason and scope any exception to the verified value and location.
+An allowlist entry documents why Gitleaks excludes a value; it does not establish
+whether the key is active. Keep scanning other Google API keys and investigate
+values that do not match the imported examples.
+
 ### Additional Configuration
 
 #### Composite Rules (Multi-part or `required` Rules)
