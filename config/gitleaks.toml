@@ -278,6 +278,12 @@ entropy = 3
 keywords = ["meraki"]
 
 [[rules]]
+id = "claude-code-session-url"
+description = "Identified a Claude Code session URL, which could allow unauthorized remote-control access to an active Claude Code session if leaked."
+regex = '''(?i)\bhttps?://claude\.ai/code/session_[A-Za-z0-9]{16,}\b'''
+keywords = ["claude.ai/code/session_"]
+
+[[rules]]
 id = "clickhouse-cloud-api-secret-key"
 description = "Identified a pattern that may indicate clickhouse cloud API secret key, risking unauthorized clickhouse cloud api access and data breaches on ClickHouse Cloud platforms."
 regex = '''\b(4b1d[A-Za-z0-9]{38})\b'''
