@@ -379,6 +379,35 @@ regexes = [
 ]
 
 [[rules]]
+id = "database-connection-string"
+description = "Identified a database connection string containing an inline password, which could grant direct access to application data."
+regex = '''(?i)\b(?:postgres(?:ql)?|mysql|mariadb|mongodb(?:\+srv)?)://[^\s:@/\\]{1,64}:([^\s:@/\\]{3,128})@[^\s/\\?#'"]{1,256}'''
+secretGroup = 1
+entropy = 2
+keywords = [
+    "postgres",
+    "mysql",
+    "mariadb",
+    "mongodb",
+]
+[[rules.allowlists]]
+description = "local and container-internal hosts"
+regexTarget = "match"
+regexes = [
+    '''(?i)@(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[?::1]?|host\.docker\.internal|db|database|postgres(?:ql)?|mysql|mariadb|mongo(?:db)?)(?::\d+)?(?:[/?#]|$)''',
+]
+[[rules.allowlists]]
+description = "placeholder and templated passwords"
+regexes = [
+    '''(?i)^(?:pass(?:word)?|passwd|pwd|secret|change(?:it|me|_me)|example|sample|test|root|admin|user|your[_-]?password|my[_-]?password|x{3,}|\*{3,}|\.{3,})$''',
+    '''^\$(?:\w+|\{[^}]+})$''',
+    '''^\$?\{\{[^}]+}}$''',
+    '''^<[^>]+>$''',
+    '''^\[[^]]+]$''',
+    '''^%[A-Za-z_][A-Za-z0-9_]*%$''',
+]
+
+[[rules]]
 id = "databricks-api-token"
 description = "Uncovered a Databricks API token, which may compromise big data analytics platforms and sensitive data processing."
 regex = '''\b(dapi[a-f0-9]{32}(?:-\d)?)(?:[\x60'"\s;]|\\[nr]|$)'''
@@ -3100,6 +3129,12 @@ description = "Uncovered a SumoLogic Access Token, which could lead to unauthori
 regex = '''(?i)[\w.-]{0,50}?(?:(?-i:[Ss]umo|SUMO))(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 3
 keywords = ["sumo"]
+
+[[rules]]
+id = "supabase-service-role-key"
+description = "Detected a Supabase service_role key, which bypasses row level security and grants full access to the project database."
+regex = '''"role"\s*:\s*"service_role"'''
+keywords = ["service_role"]
 
 [[rules]]
 id = "telegram-bot-api-token"
