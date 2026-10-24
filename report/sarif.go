@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 )
@@ -112,6 +113,7 @@ func getLocation(f Finding) []Locations {
 	if f.SymlinkFile != "" {
 		uri = f.SymlinkFile
 	}
+	uri = (&url.URL{Path: uri}).String()
 	return []Locations{
 		{
 			PhysicalLocation: PhysicalLocation{
