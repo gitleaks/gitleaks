@@ -28,9 +28,13 @@ var quotedOptPattern = regexp.MustCompile(`^(?:"[^"]+"|'[^']+')$`)
 // GitCmd helps to work with Git's output.
 type GitCmd struct {
 	cmd         *exec.Cmd
+	stdout      *bufio.Reader
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
 	repoPath    string
+
+	drainOnce sync.Once
+	unparsed  int64
 }
 
 // blobReader provides a ReadCloser interface git cat-file blob to fetch
@@ -94,34 +98,7 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 			"--full-history", "--all", "--diff-filter=tuxdb")
 	}
 
-	logging.Debug().Msgf("executing: %s", cmd.String())
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-
-	errCh := make(chan error)
-	go listenForStdErr(stderr, errCh)
-
-	gitdiffFiles, err := gitdiff.Parse(stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	return &GitCmd{
-		cmd:         cmd,
-		diffFilesCh: gitdiffFiles,
-		errCh:       errCh,
-		repoPath:    sourceClean,
-	}, nil
+	return newGitCmd(cmd, sourceClean)
 }
 
 // NewGitDiffCmd returns `*DiffFilesCmd` with two channels: `<-chan *gitdiff.File` and `<-chan error`.
@@ -141,6 +118,13 @@ func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*Git
 		cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "diff", "-U0", "--no-ext-diff",
 			"--staged", ".")
 	}
+
+	return newGitCmd(cmd, sourceClean)
+}
+
+// newGitCmd starts cmd and hands its stdout to the diff parser. It backs both
+// `git log` and `git diff`.
+func newGitCmd(cmd *exec.Cmd, repoPath string) (*GitCmd, error) {
 	logging.Debug().Msgf("executing: %s", cmd.String())
 
 	stdout, err := cmd.StdoutPipe()
@@ -158,16 +142,21 @@ func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*Git
 	errCh := make(chan error)
 	go listenForStdErr(stderr, errCh)
 
-	gitdiffFiles, err := gitdiff.Parse(stdout)
+	// Buffer stdout ourselves. `gitdiff.Parse` reads a *bufio.Reader directly
+	// instead of wrapping it again, so holding on to the same reader is what
+	// lets `Wait` and `UnparsedBytes` see whatever the parser left behind.
+	buffered := bufio.NewReader(stdout)
+	gitdiffFiles, err := gitdiff.Parse(buffered)
 	if err != nil {
 		return nil, err
 	}
 
 	return &GitCmd{
 		cmd:         cmd,
+		stdout:      buffered,
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
-		repoPath:    sourceClean,
+		repoPath:    repoPath,
 	}, nil
 }
 
@@ -186,7 +175,34 @@ func (c *GitCmd) ErrCh() <-chan error {
 //
 // Wait also closes underlying stdout and stderr.
 func (c *GitCmd) Wait() error {
+	// `gitdiff.Parse` stops reading as soon as it fails to parse a hunk, which
+	// leaves `git` blocked writing into a full pipe: the process never exits and
+	// `cmd.Wait` never returns. Drain the leftovers first.
+	// https://github.com/gitleaks/gitleaks/issues/1338
+	c.drain()
 	return c.cmd.Wait()
+}
+
+// UnparsedBytes reports how much of git's output the diff parser did not read.
+//
+// `gitdiff.Parse` discards parse errors and just closes its channel, so a
+// malformed hunk header ends a scan early and looks exactly like a clean scan.
+// Leftover output is the only signal that this happened. Callers must wait for
+// the diff channel to close before reading this.
+func (c *GitCmd) UnparsedBytes() int64 {
+	c.drain()
+	return c.unparsed
+}
+
+// drain reads whatever the diff parser left on stdout, counting it. It is safe
+// to call more than once; only the first call reads.
+func (c *GitCmd) drain() {
+	c.drainOnce.Do(func() {
+		if c.stdout == nil {
+			return
+		}
+		c.unparsed, _ = io.Copy(io.Discard, c.stdout)
+	})
 }
 
 // String displays the command used for GitCmd
@@ -307,6 +323,7 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		diffFilesCh = s.Cmd.DiffFilesCh()
 		errCh       = s.Cmd.ErrCh()
 		wg          sync.WaitGroup
+		unparsed    int64
 	)
 
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
@@ -317,6 +334,13 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		case gitdiffFile, open := <-diffFilesCh:
 			if !open {
 				diffFilesCh = nil
+				// The parser closes this channel both when it reaches the end of the
+				// diff and when it gives up on one, and nothing reads stdout after
+				// this point. Drain it: leftover output means the scan is incomplete,
+				// and leaving it in the pipe blocks `git` from exiting, which in turn
+				// keeps stderr open and this loop running forever.
+				// https://github.com/gitleaks/gitleaks/issues/1338
+				unparsed = s.Cmd.UnparsedBytes()
 				break
 			}
 
@@ -426,6 +450,9 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
+		if unparsed > 0 {
+			return yield(Fragment{}, fmt.Errorf("diff parsing stopped early, leaving %d bytes of `%s` output unscanned: results are incomplete", unparsed, s.Cmd.String()))
+		}
 		return nil
 	}
 }
