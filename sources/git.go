@@ -72,7 +72,7 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 	sourceClean := filepath.Clean(source)
 	var cmd *exec.Cmd
 	if logOpts != "" {
-		args := []string{"-C", sourceClean, "log", "-p", "-U0"}
+		args := []string{"-c", "format.pretty=medium", "-C", sourceClean, "log", "-p", "-U0", "--no-color"}
 
 		// Ensure that the user-provided |logOpts| aren't wrapped in quotes.
 		// https://github.com/gitleaks/gitleaks/issues/1153
@@ -90,7 +90,7 @@ func NewGitLogCmdContext(ctx context.Context, source string, logOpts string) (*G
 		args = append(args, userArgs...)
 		cmd = exec.CommandContext(ctx, "git", args...)
 	} else {
-		cmd = exec.CommandContext(ctx, "git", "-C", sourceClean, "log", "-p", "-U0",
+		cmd = exec.CommandContext(ctx, "git", "-c", "format.pretty=medium", "-C", sourceClean, "log", "-p", "-U0", "--no-color",
 			"--full-history", "--all", "--diff-filter=tuxdb")
 	}
 
