@@ -58,7 +58,7 @@ If you want to add a new rule to the [default Gitleaks configuration](https://gi
 
    Feel free to use this example as a template when writing new rules.
    This file should be fairly self-explanatory except for a few items;
-   regex and secret generation. To help with maintence, _most_ rules should
+   regex and secret generation. To help with maintenance, _most_ rules should
    be uniform. The functions,
    [`GenerateSemiGenericRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L31) and [`GenerateUniqueTokenRegex`](https://github.com/zricethezav/gitleaks/blob/master/cmd/generate/config/rules/rule.go#L44) will generate rules
    that follow defined patterns.
