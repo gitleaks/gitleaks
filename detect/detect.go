@@ -3,6 +3,7 @@ package detect
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -206,6 +207,15 @@ func (d *Detector) DetectString(content string) []report.Finding {
 
 // DetectSource scans the given source and returns a list of findings
 func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]report.Finding, error) {
+	// A fragment that fails to read is logged and skipped rather than abandoning
+	// the rest of the scan, but the failure still has to reach the caller. Without
+	// that, a scan whose source produced nothing at all still reports "no leaks
+	// found" and exits 0, which reads as a clean result rather than a broken run.
+	var (
+		fragmentErrsMu sync.Mutex
+		fragmentErrs   []error
+	)
+
 	err := source.Fragments(ctx, func(fragment sources.Fragment, err error) error {
 		logContext := logging.With()
 
@@ -226,8 +236,12 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 		logger := logContext.Logger()
 
 		if err != nil {
-			// Log the error and move on to the next fragment
+			// Log the error and move on to the next fragment. yield is called from
+			// several goroutines, so guard the collection.
 			logger.Error().Err(err).Send()
+			fragmentErrsMu.Lock()
+			fragmentErrs = append(fragmentErrs, err)
+			fragmentErrsMu.Unlock()
 			return nil
 		}
 
@@ -261,6 +275,10 @@ func (d *Detector) DetectSource(ctx context.Context, source sources.Source) ([]r
 	if _, isGit := source.(*sources.Git); isGit {
 		logging.Info().Msgf("%d commits scanned.", len(d.commitMap))
 		logging.Debug().Msg("Note: this number might be smaller than expected due to commits with no additions")
+	}
+
+	if err == nil && len(fragmentErrs) > 0 {
+		err = errors.Join(fragmentErrs...)
 	}
 
 	return d.Findings(), err
