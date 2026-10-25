@@ -40,6 +40,7 @@ func main() {
 		rules.AmazonBedrockAPIKeyShortLived(),
 		rules.AnthropicAdminApiKey(),
 		rules.AnthropicApiKey(),
+		rules.AnthropicOauthRefreshToken(),
 		rules.ArtifactoryApiKey(),
 		rules.ArtifactoryReferenceToken(),
 		rules.AsanaClientID(),
