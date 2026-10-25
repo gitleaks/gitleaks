@@ -307,6 +307,7 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		diffFilesCh = s.Cmd.DiffFilesCh()
 		errCh       = s.Cmd.ErrCh()
 		wg          sync.WaitGroup
+		gitErr      error
 	)
 
 	// loop to range over both DiffFiles (stdout) and ErrCh (stderr)
@@ -417,7 +418,12 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				break
 			}
 
-			return yield(Fragment{}, err)
+			// Remember the failure so it is returned once the command
+			// finishes, instead of reporting a clean scan.
+			gitErr = err
+			if yerr := yield(Fragment{}, err); yerr != nil {
+				return yerr
+			}
 		}
 	}
 
@@ -426,7 +432,7 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
-		return nil
+		return gitErr
 	}
 }
 
