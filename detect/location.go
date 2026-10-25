@@ -13,6 +13,7 @@ type Location struct {
 func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 	var (
 		prevNewLine int
+		lineStart   int
 		location    Location
 		lineSet     bool
 		_lineNum    int
@@ -42,7 +43,7 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 			location.startLine = lineNum
 			location.endLine = lineNum
 			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-			location.startLineIndex = prevNewLine
+			location.startLineIndex = lineStart
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
@@ -52,6 +53,8 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		}
 
 		prevNewLine = pair[0]
+		// the next line starts after this newline, so it isn't part of the line
+		lineStart = pair[0] + 1
 	}
 
 	if !lineSet {
@@ -62,6 +65,7 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		location.endColumn = (end - prevNewLine)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
+		location.startLineIndex = lineStart
 
 		// search for new line byte index
 		i := 0
