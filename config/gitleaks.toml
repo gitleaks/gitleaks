@@ -2469,6 +2469,27 @@ regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3
 keywords = ["kucoin"]
 
 [[rules]]
+id = "langsmith-personal-access-token"
+description = "Detected a LangSmith Personal Access Token."
+regex = '''\b(lsv2_pt_[a-f0-9]{32}_[a-f0-9]{10})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["lsv2_pt_"]
+
+[[rules]]
+id = "langsmith-service-key"
+description = "Detected a LangSmith Service Key."
+regex = '''\b(lsv2_sk_[a-f0-9]{32}_[a-f0-9]{10})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["lsv2_sk_"]
+
+[[rules]]
+id = "langsmith-tracing-key"
+description = "Detected a LangSmith Tracing Key."
+regex = '''\b(lsv2_tr_[a-f0-9]{32}_[a-f0-9]{10})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["lsv2_tr_"]
+
+[[rules]]
 id = "launchdarkly-access-token"
 description = "Uncovered a Launchdarkly Access Token, potentially compromising feature flag management and application functionality."
 regex = '''(?i)[\w.-]{0,50}?(?:launchdarkly)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
