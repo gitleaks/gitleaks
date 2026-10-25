@@ -67,3 +67,50 @@ func AnthropicAdminApiKey() *config.Rule {
 
 	return utils.Validate(r, tps, fps)
 }
+
+func AnthropicOAuthToken() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "anthropic-oauth-token",
+		Description: "Found an Anthropic OAuth access token (sk-ant-oat01-), which is tied to a Claude.ai Pro/Max subscription and can be used to act on the account's behalf.",
+		// The sk-ant-oat01- prefix is highly specific, so anchor on it. Anthropic
+		// does not publish a fixed length for OAuth tokens, so use a conservative
+		// minimum rather than the {93}AA shape used by the api03/admin01 keys.
+		Regex: utils.GenerateUniqueTokenRegex(`sk-ant-oat01-[a-zA-Z0-9_\-]{40,}`, false),
+		Keywords: []string{
+			"sk-ant-oat01",
+		},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("anthropic", "sk-ant-oat01-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("100")))
+
+	fps := []string{
+		// Too short to be a real OAuth token
+		`anthropic_token = "sk-ant-oat01-tooShort"`,
+	}
+
+	return utils.Validate(r, tps, fps)
+}
+
+func AnthropicOAuthRefreshToken() *config.Rule {
+	// define rule
+	r := config.Rule{
+		RuleID:      "anthropic-oauth-refresh-token",
+		Description: "Uncovered an Anthropic OAuth refresh token (sk-ant-ort01-), which can mint new access tokens and allow prolonged unauthorized access to a Claude.ai account.",
+		Regex:       utils.GenerateUniqueTokenRegex(`sk-ant-ort01-[a-zA-Z0-9_\-]{40,}`, false),
+		Keywords: []string{
+			"sk-ant-ort01",
+		},
+	}
+
+	// validate
+	tps := utils.GenerateSampleSecrets("anthropic", "sk-ant-ort01-"+secrets.NewSecret(utils.AlphaNumericExtendedShort("100")))
+
+	fps := []string{
+		// Too short to be a real OAuth refresh token
+		`anthropic_token = "sk-ant-ort01-tooShort"`,
+	}
+
+	return utils.Validate(r, tps, fps)
+}

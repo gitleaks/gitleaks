@@ -153,6 +153,18 @@ regex = '''\b(sk-ant-api03-[a-zA-Z0-9_\-]{93}AA)(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["sk-ant-api03"]
 
 [[rules]]
+id = "anthropic-oauth-refresh-token"
+description = "Uncovered an Anthropic OAuth refresh token (sk-ant-ort01-), which can mint new access tokens and allow prolonged unauthorized access to a Claude.ai account."
+regex = '''\b(sk-ant-ort01-[a-zA-Z0-9_\-]{40,})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["sk-ant-ort01"]
+
+[[rules]]
+id = "anthropic-oauth-token"
+description = "Found an Anthropic OAuth access token (sk-ant-oat01-), which is tied to a Claude.ai Pro/Max subscription and can be used to act on the account's behalf."
+regex = '''\b(sk-ant-oat01-[a-zA-Z0-9_\-]{40,})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["sk-ant-oat01"]
+
+[[rules]]
 id = "artifactory-api-key"
 description = "Detected an Artifactory api key, posing a risk unauthorized access to the central repository."
 regex = '''\bAKCp[A-Za-z0-9]{69}\b'''
