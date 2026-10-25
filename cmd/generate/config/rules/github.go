@@ -76,7 +76,7 @@ func GitHubApp() *config.Rule {
 	r := config.Rule{
 		RuleID:      "github-app-token",
 		Description: "Identified a GitHub App Token, which may compromise GitHub application integrations and source code security.",
-		Regex:       regexp.MustCompile(`(?:ghu|ghs)_[0-9a-zA-Z]{36}`),
+		Regex:       regexp.MustCompile(`(?:ghu_[0-9a-zA-Z]{36}|ghs_(?:[0-9a-zA-Z]{36}|[0-9]+_eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+))`),
 		Entropy:     3,
 		Keywords:    []string{"ghu_", "ghs_"},
 		Allowlists:  githubAllowlist,
@@ -85,9 +85,12 @@ func GitHubApp() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("github", "ghs_"+secrets.NewSecret(utils.AlphaNumeric("36")))
 	tps = append(tps, utils.GenerateSampleSecrets("github", "ghu_"+secrets.NewSecret(utils.AlphaNumeric("36")))...)
+	tps = append(tps, utils.GenerateSampleSecrets("github", "ghs_123456_eyJ"+secrets.NewSecret(utils.AlphaNumericExtendedShort("24"))+"."+secrets.NewSecret(utils.AlphaNumericExtendedShort("160"))+"."+secrets.NewSecret(utils.AlphaNumericExtendedShort("64")))...)
 	fps := []string{
 		"ghu_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 		"ghs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		"ghs_123456_not-a-jwt",
+		"ghs_not-an-app-id_eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIifQ.signature",
 	}
 	return utils.Validate(r, tps, fps)
 }
