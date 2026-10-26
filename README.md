@@ -177,6 +177,10 @@ The `git` command lets you scan local git repos. Under the hood, gitleaks uses t
 You can configure the behavior of `git log -p` with the `log-opts` option.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
 command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
+Merge commits are scanned against their first parent (`--diff-merges=first-parent`), so secrets introduced only by a merge
+commit (for example during conflict resolution) are detected. This also means changes merged from a branch are reported
+both at the original commit and at the merge commit. To restore the previous behavior of skipping merge diffs, pass
+`--log-opts="--no-diff-merges"`; with git 2.36+, `--log-opts="--remerge-diff"` reports only what the merge itself changed.
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -1323,6 +1324,96 @@ func TestFromGit(t *testing.T) {
 			assert.ElementsMatch(t, tt.expectedFindings, findings)
 		})
 	}
+}
+
+// TestFromGitMergeCommit verifies that secrets introduced only by a merge commit
+// (an "evil merge") are detected. `git log -p` omits merge diffs unless
+// `--diff-merges` is set, so these were previously never scanned.
+// https://github.com/gitleaks/gitleaks/issues/1028
+func TestFromGitMergeCommit(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("TODO: git fixture setup is not tested on Windows")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+
+	repo := t.TempDir()
+	runGit := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		cmd.Env = append(os.Environ(),
+			"GIT_AUTHOR_NAME=Gitleaks Test",
+			"GIT_AUTHOR_EMAIL=gitleaks@example.com",
+			"GIT_COMMITTER_NAME=Gitleaks Test",
+			"GIT_COMMITTER_EMAIL=gitleaks@example.com",
+			"GIT_CONFIG_GLOBAL=/dev/null",
+			"GIT_CONFIG_SYSTEM=/dev/null",
+		)
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err, "git %v: %s", args, out)
+		return strings.TrimSpace(string(out))
+	}
+	writeFile := func(name, content string) {
+		t.Helper()
+		require.NoError(t, os.WriteFile(filepath.Join(repo, name), []byte(content), 0o644))
+	}
+
+	// main: README.md
+	runGit("init", "-q", "-b", "main")
+	writeFile("README.md", "hello\n")
+	runGit("add", ".")
+	runGit("commit", "-q", "-m", "initial commit")
+
+	// feature branch: adds a benign file
+	runGit("checkout", "-q", "-b", "feature")
+	writeFile("feature.txt", "feature\n")
+	runGit("add", ".")
+	runGit("commit", "-q", "-m", "add feature")
+
+	// evil merge: the merge commit itself introduces the secret
+	runGit("checkout", "-q", "main")
+	runGit("merge", "-q", "--no-ff", "-m", "merge feature", "feature")
+	writeFile("secret.go", "package main\n\nvar awsToken = \"AKIALALEMEL33243OLIA\"\n")
+	runGit("add", ".")
+	runGit("commit", "-q", "--amend", "--no-edit")
+	mergeSHA := runGit("rev-parse", "HEAD")
+
+	viper.Reset()
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("simple")
+	viper.SetConfigType("toml")
+	require.NoError(t, viper.ReadInConfig())
+	var vc config.ViperConfig
+	require.NoError(t, viper.Unmarshal(&vc))
+	cfg, err := vc.Translate()
+	require.NoError(t, err)
+
+	scan := func(logOpts string) []report.Finding {
+		t.Helper()
+		detector := NewDetector(cfg)
+		gitCmd, err := sources.NewGitLogCmd(repo, logOpts)
+		require.NoError(t, err)
+		findings, err := detector.DetectGit(gitCmd, NewRemoteInfo(scm.NoPlatform, repo))
+		require.NoError(t, err)
+		return findings
+	}
+
+	t.Run("default", func(t *testing.T) {
+		findings := scan("")
+		require.Len(t, findings, 1, "expected the secret introduced by the merge commit to be found")
+		assert.Equal(t, "aws-access-key", findings[0].RuleID)
+		assert.Equal(t, "secret.go", findings[0].File)
+		assert.Equal(t, mergeSHA, findings[0].Commit)
+		assert.Equal(t, "merge feature", findings[0].Message)
+		assert.Equal(t, mergeSHA+":secret.go:aws-access-key:3", findings[0].Fingerprint)
+	})
+
+	t.Run("log-opts can opt out", func(t *testing.T) {
+		// A later --diff-merges value overrides the default, restoring the
+		// previous behavior of not scanning merge diffs.
+		assert.Empty(t, scan("--no-diff-merges --all"))
+	})
 }
 
 func TestFromGitStaged(t *testing.T) {
