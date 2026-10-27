@@ -2826,6 +2826,13 @@ entropy = 2
 keywords = ["rdme_"]
 
 [[rules]]
+id = "resend-api-key"
+description = "Identified a Resend API key, which could allow unauthorized email sending and access to the Resend account."
+regex = '''\b(re_[1-9A-HJ-NP-Za-km-z]{8}_[1-9A-HJ-NP-Za-km-z]{24})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["re_"]
+
+[[rules]]
 id = "rubygems-api-token"
 description = "Identified a Rubygem API token, potentially compromising Ruby library distribution and package management."
 regex = '''\b(rubygems_[a-f0-9]{48})(?:[\x60'"\s;]|\\[nr]|$)'''
