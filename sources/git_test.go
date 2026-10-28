@@ -1,5 +1,50 @@
 package sources
 
+import (
+	"context"
+	"os"
+	"os/exec"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+// Test_NewGitDiffCmdContext_ColorForced reproduces
+// https://github.com/gitleaks/gitleaks/issues/2281: when a user has
+// `color.ui`/`color.diff` forced on in their git config, `--no-ext-diff`
+// alone doesn't stop `git diff` from emitting ANSI escape codes, which the
+// diff parser then silently fails to parse, dropping every finding.
+func Test_NewGitDiffCmdContext_ColorForced(t *testing.T) {
+	repoPath := t.TempDir()
+
+	runGit := func(args ...string) {
+		cmd := exec.Command("git", append([]string{"-C", repoPath}, args...)...)
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err, string(out))
+	}
+
+	runGit("init")
+	runGit("config", "user.email", "test@example.com")
+	runGit("config", "user.name", "test")
+	// Simulate a user who forces color output globally.
+	runGit("config", "color.ui", "always")
+	runGit("config", "color.diff", "always")
+
+	err := os.WriteFile(repoPath+"/secret.txt", []byte("SECRET_KEY_BASE: d4bc55107bd38130ea77e5b44cf37e2fda25cc79f312785369fc0681da9a5f36bc272b7c2891334d7346ed341b647c72235ac5e4e8895da3de03c638fb72d430\n"), 0o644)
+	require.NoError(t, err)
+	runGit("add", "secret.txt")
+
+	gitCmd, err := NewGitDiffCmdContext(context.Background(), repoPath, true)
+	require.NoError(t, err)
+
+	var files []string
+	for f := range gitCmd.DiffFilesCh() {
+		files = append(files, f.NewName)
+	}
+	require.NoError(t, gitCmd.Wait())
+	require.Contains(t, files, "secret.txt", "staged diff should still be parsed when color output is forced on")
+}
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
