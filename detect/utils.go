@@ -245,6 +245,9 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %d\n", "Line:", f.StartLine)
 	if f.Commit == "" {
 		fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
+		if f.FingerprintV2 != "" {
+			fmt.Printf("%-12s %s\n", "FingerprintV2:", f.FingerprintV2)
+		}
 		f.PrintRequiredFindings()
 		fmt.Println("")
 		return
@@ -254,6 +257,9 @@ func printFinding(f report.Finding, noColor bool) {
 	fmt.Printf("%-12s %s\n", "Email:", f.Email)
 	fmt.Printf("%-12s %s\n", "Date:", f.Date)
 	fmt.Printf("%-12s %s\n", "Fingerprint:", f.Fingerprint)
+	if f.FingerprintV2 != "" {
+		fmt.Printf("%-12s %s\n", "FingerprintV2:", f.FingerprintV2)
+	}
 	if f.Link != "" {
 		fmt.Printf("%-12s %s\n", "Link:", f.Link)
 	}

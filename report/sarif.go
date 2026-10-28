@@ -99,7 +99,8 @@ func getResults(findings []Finding) []Results {
 				Author:        f.Author,
 			},
 			Properties: Properties{
-				Tags: f.Tags,
+				Tags:          f.Tags,
+				FingerprintV2: f.FingerprintV2,
 			},
 		}
 		results = append(results, r)
@@ -200,7 +201,8 @@ type Locations struct {
 }
 
 type Properties struct {
-	Tags []string `json:"tags"`
+	Tags          []string `json:"tags"`
+	FingerprintV2 string   `json:"fingerprintV2,omitempty"`
 }
 
 type Results struct {

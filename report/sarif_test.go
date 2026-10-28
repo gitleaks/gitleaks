@@ -1,6 +1,7 @@
 package report
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,4 +84,13 @@ func TestWriteSarif(t *testing.T) {
 			assert.Equal(t, wantStr, gotStr)
 		})
 	}
+}
+
+func TestSarifIncludesFingerprintV2WhenAvailable(t *testing.T) {
+	finding := Finding{RuleID: "test-rule", File: "auth.py", FingerprintV2: "v2:abc123"}
+	results := getResults([]Finding{finding})
+	require.Len(t, results, 1)
+	encoded, err := json.Marshal(results[0])
+	require.NoError(t, err)
+	assert.Contains(t, string(encoded), `"fingerprintV2":"v2:abc123"`)
 }

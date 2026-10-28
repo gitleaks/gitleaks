@@ -1,6 +1,8 @@
 package report
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"strings"
@@ -45,6 +47,8 @@ type Finding struct {
 
 	// unique identifier
 	Fingerprint string
+	// FingerprintV2 is a content-specific .gitleaksignore token, populated when opted in.
+	FingerprintV2 string `json:",omitempty"`
 
 	// Fragment used for multi-part rule checking, CEL filtering,
 	// and eventually ML validation
@@ -52,6 +56,15 @@ type Finding struct {
 
 	// TODO keeping private for now to during experimental phase
 	requiredFindings []*RequiredFinding
+}
+
+// NewFingerprintV2 identifies a finding by its location and secret content.
+// It is versioned separately so legacy location-only .gitleaksignore entries
+// remain readable without making newly generated ignores ambiguous.
+func (f Finding) NewFingerprintV2() string {
+	globalFingerprint := fmt.Sprintf("%s:%s:%d", f.File, f.RuleID, f.StartLine)
+	sum := sha256.Sum256([]byte(globalFingerprint + "\x00" + f.Secret))
+	return "v2:" + hex.EncodeToString(sum[:])
 }
 
 type RequiredFinding struct {

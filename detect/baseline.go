@@ -19,7 +19,7 @@ func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool 
 			finding.EndLine == b.EndLine &&
 			finding.StartColumn == b.StartColumn &&
 			finding.EndColumn == b.EndColumn &&
-			(redact > 0 || (finding.Match == b.Match && finding.Secret == b.Secret)) &&
+			sameFindingContent(finding, b, redact) &&
 			finding.File == b.File &&
 			finding.Commit == b.Commit &&
 			finding.Author == b.Author &&
@@ -32,6 +32,27 @@ func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool 
 		}
 	}
 	return true
+}
+
+func sameFindingContent(finding, baseline report.Finding, redact uint) bool {
+	if redact == 0 {
+		return finding.Match == baseline.Match && finding.Secret == baseline.Secret
+	}
+
+	// Redacted output does not retain the content needed for a direct comparison.
+	// When V2 is enabled, compare its pre-redaction token instead. Older baseline
+	// reports may contain raw secrets, so derive their token when possible.
+	if finding.FingerprintV2 == "" {
+		return true
+	}
+	baselineFingerprintV2 := baseline.FingerprintV2
+	if baselineFingerprintV2 == "" && baseline.Secret != "REDACTED" {
+		baselineFingerprintV2 = baseline.NewFingerprintV2()
+	}
+	// Under the V2 opt-in, missing secret identity must not make a positional
+	// baseline match silently. This can add findings for legacy redacted
+	// baselines, but preserves the old behavior when V2 is disabled.
+	return baselineFingerprintV2 != "" && finding.FingerprintV2 == baselineFingerprintV2
 }
 
 func LoadBaseline(baselinePath string) ([]report.Finding, error) {
