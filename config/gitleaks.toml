@@ -278,6 +278,12 @@ entropy = 3
 keywords = ["meraki"]
 
 [[rules]]
+id = "claude-code-oauth-token"
+description = "Detected an Anthropic Claude Code OAuth token, which grants subscription-based access to Claude Code and may expose private code, prompts, and account usage if leaked."
+regex = '''\b(sk-ant-oat01-[a-zA-Z0-9_\-]{95})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["sk-ant-oat01"]
+
+[[rules]]
 id = "clickhouse-cloud-api-secret-key"
 description = "Identified a pattern that may indicate clickhouse cloud API secret key, risking unauthorized clickhouse cloud api access and data breaches on ClickHouse Cloud platforms."
 regex = '''\b(4b1d[A-Za-z0-9]{38})\b'''
@@ -2583,6 +2589,27 @@ description = "Discovered a potential MaxMind license key."
 regex = '''\b([A-Za-z0-9]{6}_[A-Za-z0-9]{29}_mmk)(?:[\x60'"\s;]|\\[nr]|$)'''
 entropy = 4
 keywords = ["_mmk"]
+
+[[rules]]
+id = "mcp-server-credential"
+description = "Detected a credential inside an MCP server configuration file (claude_desktop_config.json or .mcp.json), risking exposure of integrated service tokens such as Linear, GitHub, Slack, or custom MCP server keys."
+regex = '''(?i)"[A-Z0-9_]*(?:TOKEN|API[_-]?KEY|SECRET|PASSWORD|PASSWD|PAT|BEARER)"\s*:\s*"([^"\s$<{][^"]{15,})"'''
+path = '''(?i)(?:claude_desktop_config\.json|\.?mcp\.json)$'''
+entropy = 3.5
+keywords = [
+    "token",
+    "key",
+    "secret",
+    "password",
+    "bearer",
+    "pat",
+]
+[[rules.allowlists]]
+regexes = [
+    '''(?i)\b(?:your|example|placeholder|changeme|todo|fixme|xxx+|ABC+|REPLACE_ME|YOUR_TOKEN|YOUR_KEY|REDACTED|dummy|sample|test|mock|fake|lorem|insert)\b''',
+    '''^\$\{[^}]+\}$''',
+    '''^<[^>]+>$''',
+]
 
 [[rules]]
 id = "messagebird-api-token"
