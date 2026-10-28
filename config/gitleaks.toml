@@ -3102,6 +3102,20 @@ entropy = 3
 keywords = ["sumo"]
 
 [[rules]]
+id = "supabase-personal-access-token"
+description = "Identified a Supabase personal access token, which grants Management API control over every project owned by the account."
+regex = '''\b(sbp_(?:v[0-9]_)?[a-f0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["sbp_"]
+
+[[rules]]
+id = "supabase-secret-key"
+description = "Discovered a Supabase secret API key, potentially exposing a project's entire database, storage and auth by bypassing Row Level Security."
+regex = '''\b(sb_secret_[a-zA-Z0-9_-]{31})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["sb_secret_"]
+
+[[rules]]
 id = "telegram-bot-api-token"
 description = "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram."
 regex = '''(?i)[\w.-]{0,50}?(?:telegr)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\x60'"\s;]|\\[nr]|$)'''
