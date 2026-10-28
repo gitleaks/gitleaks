@@ -54,6 +54,32 @@ type Files struct {
 	Path            string
 	Sema            *semgroup.Group
 	MaxArchiveDepth int
+	// SourceRelativePaths, when true, makes Fragment.FilePath relative to the
+	// scan source rather than absolute. Directory sources strip the source
+	// prefix; single-file sources collapse to the file's basename. This makes
+	// findings share fingerprints with `gitleaks git` so the same
+	// .gitleaksignore works in both modes (#2107).
+	SourceRelativePaths bool
+}
+
+// displayPath rewrites a real filesystem path into the form used for Fragment
+// and finding fingerprints. With SourceRelativePaths disabled it returns the
+// path unchanged.
+func (s *Files) displayPath(targetPath string) string {
+	if !s.SourceRelativePaths {
+		return targetPath
+	}
+
+	base := s.Path
+	if info, err := os.Stat(s.Path); err == nil && !info.IsDir() {
+		base = filepath.Dir(s.Path)
+	}
+
+	rel, err := filepath.Rel(base, targetPath)
+	if err != nil || rel == "" || rel == "." {
+		return filepath.Base(targetPath)
+	}
+	return rel
 }
 
 // scanTargets yields scan targets to a callback func
@@ -164,7 +190,7 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				// Convert this to a file source
 				file := File{
 					Content:         f,
-					Path:            scanTarget.Path,
+					Path:            s.displayPath(scanTarget.Path),
 					Symlink:         scanTarget.Symlink,
 					Config:          s.Config,
 					MaxArchiveDepth: s.MaxArchiveDepth,
