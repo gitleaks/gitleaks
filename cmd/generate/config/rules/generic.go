@@ -12,7 +12,9 @@ func GenericCredential() *config.Rule {
 	r := config.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-		Regex: utils.GenerateSemiGenericRegex([]string{
+		// StrictCommaGap: these identifiers are bare keywords, broad enough to hit the substring-bleed
+		// issue that operatorStrictCommaGap guards against (see its doc comment).
+		Regex: utils.GenerateSemiGenericRegexStrictCommaGap([]string{
 			"access",
 			"auth",
 			`(?-i:[Aa]pi|API)`,
@@ -154,6 +156,11 @@ func GenericCredential() *config.Rule {
 		` utils.GetEnvOrDefault("api_token", "dafa7817-e246-48f3-91a7-e87653d587b8")`,
 		//	`"env": {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
+
+		// Cross-field: an unrelated key/value pair between the object start
+		// and the credential key must not stop the real secret from being
+		// found. https://github.com/gitleaks/gitleaks/issues/2223
+		`{ "service": "svc", "operation": "AuthService.register", "auth_token": "`+newPlausibleSecret(`[a-zA-Z0-9]{36}`)+`" }`,
 	)
 	fps := []string{
 		// Access
@@ -190,6 +197,11 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 	CREDENTIALS_ID = "K8S_CRED"
 }`,
 		`dev.credentials.url=dev-lb1.api.f4ke.com:5215`,
+
+		// Cross-field: a key name following an unrelated comma-separated
+		// field must not be captured as if it were a secret value.
+		// https://github.com/gitleaks/gitleaks/issues/2223
+		`{ "service": "svc", "operation": "AuthService.register", "duration_p50_ms": 45 }`,
 
 		// Key
 		`keyword: "Befaehigung_P2"`,
