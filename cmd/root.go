@@ -435,6 +435,22 @@ func bytesConvert(bytes uint64) string {
 	return fmt.Sprintf("%s %s", stringValue, unit)
 }
 
+// createReportFile creates or truncates the report file at path with
+// owner-only permissions (0600), since findings contain plaintext secrets.
+// The permissions passed to OpenFile only apply when the file is created,
+// so a pre-existing report file is tightened with an explicit Chmod.
+func createReportFile(path string) (*os.File, error) {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
+	}
+	if err := f.Chmod(0600); err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	return f, nil
+}
+
 func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding, exitCode int, start time.Time, err error) {
 	if diagnosticsManager.Enabled {
 		logging.Debug().Msg("Finalizing diagnostics...")
@@ -471,7 +487,7 @@ func findingSummaryAndExit(detector *detect.Detector, findings []report.Finding,
 			file = os.Stdout
 		} else {
 			// Open the file.
-			if file, reportErr = os.Create(detector.ReportPath); reportErr != nil {
+			if file, reportErr = createReportFile(detector.ReportPath); reportErr != nil {
 				goto ReportEnd
 			}
 			defer func() {
