@@ -438,6 +438,14 @@ entropy = 2
 keywords = ["discord"]
 
 [[rules]]
+id = "django-insecure-secret-key"
+description = "Detected a Django insecure secret key, potentially compromising Django’s security protections against privilege escalation and remote code execution."
+regex = '''["'](django-insecure-[^"']{1,250})["']'''
+path = '''(?i)\.py$'''
+secretGroup = 1
+keywords = ["django-insecure-"]
+
+[[rules]]
 id = "doppler-api-token"
 description = "Discovered a Doppler API token, posing a risk to environment and secrets management security."
 regex = '''dp\.pt\.(?i)[a-z0-9]{43}'''
