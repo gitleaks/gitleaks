@@ -2615,6 +2615,15 @@ keywords = [
 ]
 
 [[rules]]
+id = "mongodb-connection-string"
+description = "Detected a MongoDB connection string with embedded credentials, risking unauthorized database access."
+regex = '''mongodb(?:\+srv)?://[^:\s"']+:[^@\s"']+@[^\s"']+'''
+keywords = [
+    "mongodb://",
+    "mongodb+srv://",
+]
+
+[[rules]]
 id = "netlify-access-token"
 description = "Detected a Netlify Access Token, potentially compromising web hosting services and site management."
 regex = '''(?i)[\w.-]{0,50}?(?:netlify)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40,46})(?:[\x60'"\s;]|\\[nr]|$)'''
