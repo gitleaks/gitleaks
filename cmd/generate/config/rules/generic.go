@@ -45,6 +45,12 @@ func GenericCredential() *config.Rule {
 				},
 			},
 			{
+				Description: "Allow JS instance property assignments to identifiers",
+				Regexes: []*regexp.Regexp{
+					regexp.MustCompile(`^(?:this|self)\.[A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*$`),
+				},
+			},
+			{
 				Description:    "Allowlist for Generic API Keys",
 				MatchCondition: config.AllowlistMatchOr,
 				RegexTarget:    "match",
@@ -130,6 +136,7 @@ func GenericCredential() *config.Rule {
 
 		// API
 		`some_api_token_123 = "`+newPlausibleSecret(`[a-zA-Z0-9]{60}`)+`"`,
+		`this.api_key = "`+newPlausibleSecret(`[a-zA-Z0-9]{60}`)+`"`,
 
 		// Auth
 		`"user_auth": "am9obmRvZTpkMDY5NGIxYi1jMTcxLTQ4ODYt+TMyYS0wMmUwOWQ1/mIwNjc="`,
@@ -272,6 +279,8 @@ DYNATRACE_API_KEY=`,
 		`snowflake.password=
 jdbc.snowflake.url=`,
 		`import { chain_Anvil1_Key, chain_Anvil2_Key } from '../blockchain-tests/pallets/supported-chains/consts';`,
+		`function x(e){return e.unk_token=e.unk_token,this.vocab=new Array(this.tokens)}`,
+		`function x(e){return e.unk_token=e.unk_token,self.vocab=new Array(self.tokens)}`,
 
 		// Yocto/BitBake
 		`SRCREV_moby = "43fc912ef59a83054ea7f6706df4d53a7dea4d80"`,
