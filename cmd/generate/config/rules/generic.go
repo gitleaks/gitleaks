@@ -68,6 +68,8 @@ func GenericCredential() *config.Rule {
 						`|(?:bucket|foreign|hot|idx|natural|primary|pub(?:lic)?|schema|sequence)[_.-]?key` +
 						`|(?:turkey)` +
 						`|key[_.-]?(?:alias|board|code|frame|id|length|mesh|name|pair|press(?:ed)?|ring|selector|signature|size|stone|storetype|word|up|down|left|right)` +
+					// VS Code / editor keybinding chords (https://github.com/gitleaks/gitleaks/issues/1897)
+					`|(?:(?:ctrl|control|shift|alt|cmd|command|meta|win|super|option)\+){1,5}[a-z0-9]+` +
 						// Azure KeyVault
 						`|key[_.-]?vault[_.-]?(?:id|name)|keyVaultToStoreSecrets` +
 						`|key(?:store|tab)[_.-]?(?:file|path)` +
@@ -200,6 +202,11 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`primaryKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`foreignKey=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`key_down_event=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
+		// VS Code keybindings.json chords (issue #1897)
+		`"key": "ctrl+shift+down"`,
+		`"key": "shift+alt+down"`,
+		`"key": "ctrl+shift+alt+down"`,
+		`"key": "ctrl+k ctrl+c"`,
 		`issuerKeyHash=` + newPlausibleSecret(`[a-zA-Z0-9\-_.=]{30}`),
 		`<entry key="jetbrains.mps.v8_elimination" value="executed" />`,
 		`minisat-master-keying:x64-uwp=fail`,
