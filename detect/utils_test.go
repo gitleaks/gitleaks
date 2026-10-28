@@ -212,3 +212,46 @@ func Test_createScmLink(t *testing.T) {
 		})
 	}
 }
+
+func Test_shannonEntropy(t *testing.T) {
+	tests := []struct {
+		name string
+		data string
+		want float64
+	}{
+		{
+			name: "empty",
+			data: "",
+			want: 0,
+		},
+		{
+			name: "single character",
+			data: "aaaa",
+			want: 0,
+		},
+		{
+			name: "four distinct ascii characters",
+			data: "abcd",
+			want: 2,
+		},
+		{
+			// Same shape as the case above: four distinct characters, each
+			// appearing once, so the entropy is the same 2 bits. Counting the
+			// twelve bytes instead of the four runes gives 1.195.
+			name: "four distinct multi-byte characters",
+			data: "密码钥牌",
+			want: 2,
+		},
+		{
+			name: "mixed ascii and multi-byte",
+			data: "päss",
+			want: 1.5,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.InDelta(t, tt.want, shannonEntropy(tt.data), 0.0001)
+		})
+	}
+}
