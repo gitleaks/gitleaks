@@ -177,6 +177,7 @@ func main() {
 		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
 		rules.OpenAI(),
+		rules.OpenRouterAPIKey(),
 		rules.OpenshiftUserToken(),
 		rules.PerplexityAPIKey(),
 		rules.PlaidAccessID(),
