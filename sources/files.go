@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -142,6 +143,17 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	var wg sync.WaitGroup
 
+	// Files that could not be opened are collected here rather than being
+	// dropped. The per-file work runs on s.Sema, a semgroup shared with the
+	// other sources, and nothing in the codebase calls its Wait(), so an
+	// error returned from one of those goroutines is accumulated inside the
+	// group and never read. Keeping the list local means the failures reach
+	// the caller without changing the shared semaphore's semantics.
+	var (
+		skippedMu sync.Mutex
+		skipped   []error
+	)
+
 	err := s.scanTargets(ctx, func(scanTarget ScanTarget, err error) error {
 		select {
 		case <-ctx.Done():
@@ -156,7 +168,18 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				if err != nil {
 					if os.IsPermission(err) {
 						logger.Warn().Msg("skipping file: permission denied")
+					} else {
+						logger.Warn().Err(err).Msg("skipping file: could not open")
 					}
+					// Record it: a file gitleaks could not read is a file it
+					// did not scan, and reporting "no leaks found" over an
+					// incomplete scan is the failure this guards against.
+					// cmd/root.go already distinguishes a partial scan in both
+					// its message and its exit code; this is what makes that
+					// branch reachable from the most common failure.
+					skippedMu.Lock()
+					skipped = append(skipped, fmt.Errorf("%s: %w", scanTarget.Path, err))
+					skippedMu.Unlock()
 					wg.Done()
 					return nil
 				}
@@ -186,6 +209,12 @@ func (s *Files) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
+		skippedMu.Lock()
+		defer skippedMu.Unlock()
+		if len(skipped) > 0 {
+			logging.Warn().Msgf("%d file(s) could not be read and were not scanned", len(skipped))
+			return errors.Join(append([]error{err}, skipped...)...)
+		}
 		return err
 	}
 }
