@@ -2771,3 +2771,28 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestSwiftCryptoKitTypeNotFalsePositive(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	tests := []struct {
+		name string
+		raw  string
+	}{
+		{"P256.Signing.PrivateKey declaration", "let privateKey: P256.Signing.PrivateKey"},
+		{"P256.Signing.PublicKey declaration", "let publicKey: P256.Signing.PublicKey"},
+		{"P384.KeyAgreement.PrivateKey declaration", "let key: P384.KeyAgreement.PrivateKey"},
+		{"Curve25519.Signing.PrivateKey declaration", "let signingKey: Curve25519.Signing.PrivateKey"},
+		{"SecP256K1.Signing.PrivateKey declaration", "let x: SecP256K1.Signing.PrivateKey"},
+		{"P256 init call", "privateKey = try! P256.Signing.PrivateKey(rawRepresentation: Data())"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			f := Fragment{Raw: tc.raw, FilePath: "test.swift"}
+			findings := d.Detect(f)
+			assert.Empty(t, findings, "should not flag Swift CryptoKit type as secret")
+		})
+	}
+}
