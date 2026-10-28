@@ -40,6 +40,29 @@ func TestWriteCSV(t *testing.T) {
 				},
 			}},
 		{
+			testReportName: "multiline_message",
+			expected:       filepath.Join(expectPath, "report", "csv_multiline_message.csv"),
+			findings: []Finding{
+				{
+					RuleID:      "test-rule",
+					Match:       "line containing secret",
+					Secret:      "a secret",
+					StartLine:   1,
+					EndLine:     2,
+					StartColumn: 1,
+					EndColumn:   2,
+					Message:     "commit message\nwith multiple\nlines",
+					File:        "auth.py",
+					SymlinkFile: "",
+					Commit:      "0000000000000000",
+					Author:      "John Doe",
+					Email:       "johndoe@gmail.com",
+					Date:        "10-19-2003",
+					Fingerprint: "fingerprint",
+					Tags:        []string{"tag1"},
+				},
+			}},
+		{
 
 			wantEmpty:      true,
 			testReportName: "empty",

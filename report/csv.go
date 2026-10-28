@@ -47,6 +47,8 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 		return err
 	}
 	for _, f := range findings {
+		// ponytail: newlines in Message break naive CSV parsers
+		message := strings.ReplaceAll(f.Message, "\n", " ")
 		row := []string{f.RuleID,
 			f.Commit,
 			f.File,
@@ -58,7 +60,7 @@ func (r *CsvReporter) Write(w io.WriteCloser, findings []Finding) error {
 			strconv.Itoa(f.StartColumn),
 			strconv.Itoa(f.EndColumn),
 			f.Author,
-			f.Message,
+			message,
 			f.Date,
 			f.Email,
 			f.Fingerprint,
