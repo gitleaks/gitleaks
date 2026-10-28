@@ -3058,6 +3058,16 @@ keywords = [
 ]
 
 [[rules]]
+id = "spring-placeholder-with-secret"
+description = "Secret embedded as default value in Spring Boot property placeholders, such as `${VAR:secret}` in YAML files."
+regex = '''(?i)\$\{[A-Z0-9_]+:([A-Za-z0-9+/=_-]{20,})\}'''
+path = '''(?i)\.ya?ml$'''
+secretGroup = 1
+tags = [
+    "secret","spring","placeholder","default-value",
+]
+
+[[rules]]
 id = "square-access-token"
 description = "Detected a Square Access Token, risking unauthorized payment processing and financial transaction exposure."
 regex = '''\b((?:EAAA|sq0atp-)[\w-]{22,60})(?:[\x60'"\s;]|\\[nr]|$)'''

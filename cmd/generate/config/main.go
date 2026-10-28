@@ -226,6 +226,7 @@ func main() {
 		rules.Sonar(),
 		rules.SourceGraph(),
 		rules.StripeAccessToken(),
+		rules.SpringPlaceholderSecret(),		
 		rules.SquareAccessToken(),
 		rules.SquareSpaceAccessToken(),
 		rules.SumoLogicAccessID(),
