@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/zricethezav/gitleaks/v8/report"
+	"github.com/zricethezav/gitleaks/v8/sources"
 )
 
 func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool {
@@ -71,6 +72,18 @@ func (d *Detector) AddBaseline(baselinePath string, source string) error {
 			return err
 		}
 
+		// A directory scan spells File the way its root was given, and IsNew
+		// matches on File. Every entry that can be placed under the source is
+		// brought onto its root-relative form, so a baseline recorded with
+		// `dir .` still matches the same tree scanned as `dir /abs/path`, and
+		// the other way round. Entries that cannot be placed are kept as
+		// written and match exactly as before.
+		for i := range baseline {
+			if rel := sources.RootRelativePath(absoluteSource, absolutePath(baseline[i].File)); rel != "" {
+				baseline[i].File = rel
+			}
+		}
+
 		d.baseline = baseline
 		baselinePath = relativeBaseline
 
@@ -78,4 +91,13 @@ func (d *Detector) AddBaseline(baselinePath string, source string) error {
 
 	d.baselinePath = baselinePath
 	return nil
+}
+
+// absolutePath returns the path made absolute against the working directory,
+// or the path itself when that is not possible.
+func absolutePath(path string) string {
+	if abs, err := filepath.Abs(path); err == nil {
+		return abs
+	}
+	return path
 }
