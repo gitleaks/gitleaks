@@ -392,6 +392,14 @@ regex = '''(?i)[\w.-]{0,50}?(?:datadog)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,
 keywords = ["datadog"]
 
 [[rules]]
+id = "datafactory-shir-token"
+description = "Uncovered a Data Factory Self-Hosted Integration Runtime Key, which may compromise big data analytics platforms and sensitive data processing."
+regex = '''\b(IR@[0-9a-zA-Z-]{36}@(.*?)@[0-9a-zA-Z\-=]*@[A-Za-z0-9+\/=]{44})(?:['|\"|\n|\r|\s|\x60|;]|$)'''
+keywords = [
+    "ir@",
+]
+
+[[rules]]
 id = "defined-networking-api-token"
 description = "Identified a Defined Networking API token, which could lead to unauthorized network operations and data breaches."
 regex = '''(?i)[\w.-]{0,50}?(?:dnkey)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}(dnkey-[a-z0-9=_\-]{26}-[a-z0-9=_\-]{52})(?:[\x60'"\s;]|\\[nr]|$)'''
