@@ -69,6 +69,7 @@ func (d *Detector) DetectFiles(scanTargets <-chan sources.ScanTarget) ([]report.
 				Path:            scanTarget.Path,
 				Symlink:         scanTarget.Symlink,
 				Config:          &d.Config,
+				MaxFileSize:     d.MaxTargetMegaBytes * 1_000_000,
 				MaxArchiveDepth: d.MaxArchiveDepth,
 			}
 
