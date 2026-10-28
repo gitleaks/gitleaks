@@ -101,6 +101,9 @@ func GenericCredential() *config.Rule {
 					regexp.MustCompile(`--mount=type=secret,`),
 					//  https://github.com/gitleaks/gitleaks/issues/1800
 					regexp.MustCompile(`import[ \t]+{[ \t\w,]+}[ \t]+from[ \t]+['"][^'"]+['"]`),
+					// Swift type-only declarations like `let privateKey: P256.Signing.PrivateKey`.
+					// The generic rule can read the type annotation as an assignment and capture the type name.
+					regexp.MustCompile(`^\s*(?:[\w@()]+\s+)*(?:let|var)\s+\w+\s*:\s*[A-Z][\w.<>, ?]*$`),
 				},
 			},
 			{
@@ -225,6 +228,7 @@ _LIBCPP_CONSTEXPR_AFTER_CXX11 `,
 		`pub const SN_id_Gost28147_89_None_KeyMeshing = "id-Gost28147-89-None-KeyMeshing"`,
 		`KeyPair = X25519.KeyPair`,
 		`BlindKeySignatures = Ed25519.BlindKeySignatures`,
+		`let privateKey: P256.Signing.PrivateKey`,
 		`AVEncVideoMaxKeyframeDistance, "2987123a-ba93-4704-b489-ec1e5f25292c"`,
 		`            keyPressed = kVK_Return.u16`,
 		`timezone_mapping = {
