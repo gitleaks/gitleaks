@@ -143,6 +143,7 @@ Flags:
       --diagnostics-dir string        directory to store diagnostics output files when not using http mode (defaults to current directory)
       --enable-rule strings           only enable specific rules by id
       --exit-code int                 exit code when leaks have been encountered (default 1)
+      --fail-on-unused-ignores        exit non-zero if unused .gitleaksignore entries are found (implies --report-unused-ignores)
   -i, --gitleaks-ignore-path string   path to .gitleaksignore file or folder containing one (default ".")
   -h, --help                          help for gitleaks
       --ignore-gitleaks-allow         ignore gitleaks:allow comments
@@ -156,6 +157,7 @@ Flags:
   -f, --report-format string          output format (json, csv, junit, sarif, template)
   -r, --report-path string            report file
       --report-template string        template file used to generate the report (implies --report-format=template)
+      --report-unused-ignores         after scanning, report .gitleaksignore entries that did not match any finding
       --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
   -v, --verbose                       show verbose output from scan
       --version                       version for gitleaks
@@ -497,6 +499,13 @@ class CustomClass:
 #### .gitleaksignore
 
 You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
+
+Ignore files can drift when code moves or findings disappear. Run with `--report-unused-ignores` to list fingerprints that did not match any finding during the scan. Add `--fail-on-unused-ignores` to fail CI when stale entries remain:
+
+```bash
+gitleaks git --report-unused-ignores .
+gitleaks git --fail-on-unused-ignores .   # exits non-zero if any entry is unused
+```
 
 #### Decoding
 
