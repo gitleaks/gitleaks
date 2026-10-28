@@ -1,5 +1,7 @@
 package detect
 
+import "unicode/utf8"
+
 // Location represents a location in a file
 type Location struct {
 	startLine      int
@@ -41,13 +43,13 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 			lineSet = true
 			location.startLine = lineNum
 			location.endLine = lineNum
-			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
+			location.startColumn = columnOf(raw, prevNewLine, start) + 1 // +1 because counting starts at 1
 			location.startLineIndex = prevNewLine
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
 			location.endLine = lineNum
-			location.endColumn = (end - prevNewLine)
+			location.endColumn = columnOf(raw, prevNewLine, end)
 			location.endLineIndex = newLineByteIndex
 		}
 
@@ -58,8 +60,8 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		// if lines never get set then that means the secret is most likely
 		// on the last line of the diff output and the diff output does not have
 		// a newline
-		location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-		location.endColumn = (end - prevNewLine)
+		location.startColumn = columnOf(raw, prevNewLine, start) + 1 // +1 because counting starts at 1
+		location.endColumn = columnOf(raw, prevNewLine, end)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
 
@@ -77,4 +79,21 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		location.endLineIndex = end + i
 	}
 	return location
+}
+
+// columnOf returns how far into the line an offset is, counted in unicode
+// codepoints rather than bytes.
+//
+// The SARIF specification defines startColumn and endColumn in codepoints, and
+// subtracting byte offsets reported the byte distance instead: on a line
+// holding any multi-byte character -- Arabic, CJK, an emoji -- the reported
+// column pointed past where the secret actually is, and consumers that slice
+// the line by column got the wrong text. For an all-ASCII line the two counts
+// are identical, which is why this went unnoticed.
+func columnOf(raw string, lineStart, offset int) int {
+	if lineStart < 0 || offset > len(raw) || lineStart > offset {
+		// Out of range: fall back to the byte distance rather than panic.
+		return offset - lineStart
+	}
+	return utf8.RuneCountInString(raw[lineStart:offset])
 }
