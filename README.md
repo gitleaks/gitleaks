@@ -494,6 +494,25 @@ class CustomClass:
 
 ```
 
+When the file format does not support a comment on the same line, use
+`gitleaks:allow_line:<signed offset>` to point to the line containing the
+secret. The offset is relative to the line containing the directive:
+
+```
+# gitleaks:allow_line:+1
+discord_client_secret = '8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ'
+```
+
+The directive can also follow the secret:
+
+```
+discord_client_secret = '8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ'
+# gitleaks:allow_line:-1
+```
+
+For git scans, the directive and the target line must both be present in the
+scanned addition.
+
 #### .gitleaksignore
 
 You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/gitleaks/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.

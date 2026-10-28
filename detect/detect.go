@@ -25,7 +25,6 @@ import (
 )
 
 const (
-	gitleaksAllowSignature = "gitleaks:allow"
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
@@ -304,6 +303,11 @@ func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []repor
 		return findings
 	}
 
+	var allowLineTargets map[int]struct{}
+	if !d.IgnoreGitleaksAllow {
+		allowLineTargets = gitleaksAllowLineTargets(fragment.Raw)
+	}
+
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
 	encodedSegments := []*codec.EncodedSegment{}
@@ -332,14 +336,14 @@ ScanLoop:
 					if len(rule.Keywords) == 0 {
 						// if no keywords are associated with the rule always scan the
 						// fragment using the rule
-						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments, allowLineTargets)...)
 						continue
 					}
 
 					// check if keywords are in the fragment
 					for _, k := range rule.Keywords {
 						if _, ok := keywords[strings.ToLower(k)]; ok {
-							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments, allowLineTargets)...)
 							break
 						}
 					}
@@ -368,7 +372,7 @@ ScanLoop:
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, allowLineTargets map[int]struct{}) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -507,10 +511,10 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 			finding.Link = createScmLink(fragment.CommitInfo.Remote, finding)
 			finding.Message = fragment.CommitInfo.Message
 		}
-		if !d.IgnoreGitleaksAllow && strings.Contains(finding.Line, gitleaksAllowSignature) {
+		if !d.IgnoreGitleaksAllow && isGitleaksAllowed(finding.Line, loc.startLine, loc.endLine, allowLineTargets) {
 			logger.Trace().
 				Str("finding", finding.Secret).
-				Msg("skipping finding: 'gitleaks:allow' signature")
+				Msg("skipping finding: 'gitleaks:allow' directive")
 			continue
 		}
 
@@ -573,11 +577,11 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	}
 
 	// Process required rules and create findings with auxiliary findings
-	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, logger)
+	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, allowLineTargets, findings, logger)
 }
 
 // processRequiredRules handles the logic for multi-part rules with auxiliary findings
-func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, primaryFindings []report.Finding, logger zerolog.Logger) []report.Finding {
+func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, allowLineTargets map[int]struct{}, primaryFindings []report.Finding, logger zerolog.Logger) []report.Finding {
 	if len(primaryFindings) == 0 {
 		logger.Debug().Msg("no primary findings to process for required rules")
 		return primaryFindings
@@ -598,7 +602,7 @@ func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r 
 		inheritedFragment.InheritedFromFinding = true
 
 		// Call detectRule once for each required rule
-		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments)
+		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments, allowLineTargets)
 		allRequiredFindings[requiredRule.RuleID] = requiredFindings
 
 		logger.Debug().
