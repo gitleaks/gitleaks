@@ -20,6 +20,7 @@ func StripeAccessToken() *config.Rule {
 			"rk_test",
 			"rk_live",
 			"rk_prod",
+			"whsec",
 		},
 	}
 
