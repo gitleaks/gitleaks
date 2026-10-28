@@ -13,7 +13,6 @@ import (
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/codec"
 	"github.com/zricethezav/gitleaks/v8/logging"
-	"github.com/zricethezav/gitleaks/v8/regexp"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
 
@@ -29,10 +28,6 @@ const (
 	// SlowWarningThreshold is the amount of time to wait before logging that a file is slow.
 	// This is useful for identifying problematic files and tuning the allowlist.
 	SlowWarningThreshold = 5 * time.Second
-)
-
-var (
-	newLineRegexp = regexp.MustCompile("\n")
 )
 
 // Detector is the main detector struct
@@ -304,11 +299,25 @@ func (d *Detector) DetectContext(ctx context.Context, fragment Fragment) []repor
 		return findings
 	}
 
+	// Early size check. Was in detectRule
+	if d.MaxTargetMegaBytes > 0 {
+		rawLengthMB := len(fragment.Raw) / 1_000_000
+		if rawLengthMB > d.MaxTargetMegaBytes {
+			logger.Debug().
+				Int("size-mb", rawLengthMB).
+				Int("max-size-mb", d.MaxTargetMegaBytes).
+				Msg("skipping fragment: original content exceeds size limit")
+			return findings
+		}
+	}
+
 	// setup variables to handle different decoding passes
 	currentRaw := fragment.Raw
 	encodedSegments := []*codec.EncodedSegment{}
 	currentDecodeDepth := 0
 	decoder := codec.NewDecoder()
+
+	var newlineIndices [][]int
 
 ScanLoop:
 	for {
@@ -316,6 +325,11 @@ ScanLoop:
 		case <-ctx.Done():
 			break ScanLoop
 		default:
+
+			if newlineIndices == nil {
+				newlineIndices = computeNewlineIndices(fragment.Raw)
+			}
+
 			// build keyword map for prefiltering rules
 			keywords := make(map[string]bool)
 			normalizedRaw := strings.ToLower(currentRaw)
@@ -332,14 +346,14 @@ ScanLoop:
 					if len(rule.Keywords) == 0 {
 						// if no keywords are associated with the rule always scan the
 						// fragment using the rule
-						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments, newlineIndices)...)
 						continue
 					}
 
 					// check if keywords are in the fragment
 					for _, k := range rule.Keywords {
 						if _, ok := keywords[strings.ToLower(k)]; ok {
-							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments, newlineIndices)...)
 							break
 						}
 					}
@@ -361,6 +375,19 @@ ScanLoop:
 			if len(encodedSegments) == 0 {
 				break ScanLoop
 			}
+
+			// Check size of decoded content. Might expand during decoding
+			if d.MaxTargetMegaBytes > 0 && currentDecodeDepth > 0 {
+				currentRawLengthMB := len(currentRaw) / 1_000_000
+				if currentRawLengthMB > d.MaxTargetMegaBytes {
+					logger.Debug().
+						Int("size-mb", currentRawLengthMB).
+						Int("max-size-mb", d.MaxTargetMegaBytes).
+						Int("decode-depth", currentDecodeDepth).
+						Msg("skipping fragment: decoded content exceeds size limit")
+					break ScanLoop
+				}
+			}
 		}
 	}
 
@@ -368,7 +395,7 @@ ScanLoop:
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
-func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, newlineIndices [][]int) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -439,17 +466,18 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 	}
 
+	if newlineIndices == nil {
+		newlineIndices = computeNewlineIndices(fragment.Raw)
+	}
+
 	matches := r.Regex.FindAllStringIndex(currentRaw, -1)
 	if len(matches) == 0 {
 		return findings
 	}
 
-	// TODO profile this, probably should replace with something more efficient
-	newlineIndices := newLineRegexp.FindAllStringIndex(fragment.Raw, -1)
-
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
-	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
+	for _, matchIndex := range matches {
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
@@ -573,11 +601,11 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 	}
 
 	// Process required rules and create findings with auxiliary findings
-	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, logger)
+	return d.processRequiredRules(fragment, currentRaw, r, encodedSegments, findings, newlineIndices, logger)
 }
 
 // processRequiredRules handles the logic for multi-part rules with auxiliary findings
-func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, primaryFindings []report.Finding, logger zerolog.Logger) []report.Finding {
+func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment, primaryFindings []report.Finding, newlineIndices [][]int, logger zerolog.Logger) []report.Finding {
 	if len(primaryFindings) == 0 {
 		logger.Debug().Msg("no primary findings to process for required rules")
 		return primaryFindings
@@ -598,7 +626,7 @@ func (d *Detector) processRequiredRules(fragment Fragment, currentRaw string, r 
 		inheritedFragment.InheritedFromFinding = true
 
 		// Call detectRule once for each required rule
-		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments)
+		requiredFindings := d.detectRule(inheritedFragment, currentRaw, rule, encodedSegments, newlineIndices)
 		allRequiredFindings[requiredRule.RuleID] = requiredFindings
 
 		logger.Debug().
@@ -888,6 +916,22 @@ func checkFindingAllowed(
 		}
 	}
 	return false, nil
+}
+
+// computeNewlineIndices finds newline positions without regex overhead
+func computeNewlineIndices(raw string) [][]int {
+	count := strings.Count(raw, "\n")
+	if count == 0 {
+		return nil // Return nil for consistency with lazy computation check
+	}
+
+	indices := make([][]int, 0, count)
+	for i := 0; i < len(raw); i++ {
+		if raw[i] == '\n' {
+			indices = append(indices, []int{i, i + 1})
+		}
+	}
+	return indices
 }
 
 func allTrue(bools []bool) bool {
