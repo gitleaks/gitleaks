@@ -162,6 +162,7 @@ func main() {
 		rules.MapBox(),
 		rules.MattermostAccessToken(),
 		rules.MaxMindLicenseKey(),
+		rules.MercadoPagoAccessToken(),
 		rules.Meraki(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
