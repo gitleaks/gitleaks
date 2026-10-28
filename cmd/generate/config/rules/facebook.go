@@ -63,7 +63,7 @@ func FacebookPageAccessToken() *config.Rule {
 		`EAAM9GOnCB9kBO2frzOAWGN2zMnZClQshlWydZCrBNdodesbwimx1mfVJgqZBP5RSpMfUzWhtjTTXHG5I1UlvlwRZCgjm3ZBVGeTYiqAAoxyED6HaUdhpGVNoPUwAuAWWFsi9OvyYBQt22DGLqMIgD7VktuCTTZCWKasz81Q822FPhMTB9VFFyClNzQ0NLZClt9zxpsMMrUZCo1VU1rL3CKavir5QTfBjfCEzHNlWAUDUV2YZD`, // gitleaks:allow
 		`EAAM9GOnCB9kBO2zXpAtRBmCrsPPjdA3KeBl4tqsEpcYd09cpjm9MZCBIklZBjIQBKGIJgFwm8IE17G5pipsfRBRBEHMWxvJsL7iHLUouiprxKRQfAagw8BEEDucceqxTiDhVW2IZAQNNbf0d1JhcapAGntx5S1Csm4j0GgZB3DuUfI2HJ9aViTtdfH2vjBy0wtpXm2iamevohGfoF4NgyRHusDLjqy91uYMkfrkc`,          // gitleaks:allow
 		`- name: FACEBOOK_TOKEN
-		value: "EAACEdEose0cBA1bad3afsf286JZCOV1XmV4NobAXqUXZA7U9F1UaaOdQZABvz73030MJoC3gGoQrE8IEoMl4gFA6MmQadlJQBqtRsgIcIhtelIJOJaew"`, // gitleaks:allow
+		value: "EAACEdEose0cBAexamplefake12345JZCOV1XmV4NobAXqUXZA7U9F1UaaOdQZABvz73030MJoC3gGoQrE8IEoMl4gFA6MmQadlJQBqtRsgIcIhtelIJOJaew"`, // gitleaks:allow
 	}
 	fps := []string{
 		`eaaaC0b75a9329fded2ffa9a02b47e0117831b82`,
