@@ -17,7 +17,7 @@ func KubernetesSecret() *config.Rule {
 	// - valid base64 characters
 	// - longer than 10 characters (no "YmFyCg==")
 	//language=regexp
-	dataPat := `\bdata:(?s:.){0,100}?\s+([\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|''))`
+	dataPat := `\bdata:(?s:.){0,100}?\s+((?:[\w.-]+:(?:[ \t]*(?:\||>[-+]?)\s+)?[ \t]*(?:["']?[a-z0-9+/]{10,}={0,3}["']?|\{\{[ \t\w"|$:=,.-]+}}|""|'')\s*)+)`
 
 	// define rule
 	r := config.Rule{
@@ -130,6 +130,15 @@ metadata:
   name: secret-dockercfg
 type: kubernetes.io/dockercfg
 kind: Secret`,
+		"before-multiple-secerts.yaml": `apiVersion: v1
+data:
+  ca.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5BMTBCMjBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbg==
+  cert.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5DMzBENDBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbg==
+  key.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5FNTBGNjBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=
+kind: Secret
+metadata:
+  name: client-certs
+`,
 		// Sample Kubernetes Secret from https://kubernetes.io/docs/concepts/configuration/secret/
 		// The "data"-key is after the identifier "kind: Secret"
 		"after-kubernetes.yaml": `apiVersion: v1
@@ -195,6 +204,15 @@ type: kubernetes.io/dockercfg
 data:
   .dockercfg: >
     eyJhdXRocyI6eyJodHRwczovL2V4YW1wbGUvdjEvIjp7ImF1dGgiOiJvcGVuc2VzYW1lIn19fQo=`,
+		"after-multiple-secerts.yaml": `apiVersion: v1
+kind: Secret
+data:
+  ca.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5BMTBCMjBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbg==
+  cert.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5DMzBENDBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbg==
+  key.pem: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5FNTBGNjBzdXBlcnNlY3JldHBlbWRhdGFcbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0=
+metadata:
+  name: client-certs
+`,
 	}
 	fps := map[string]string{
 		"empty-quotes1.yml": `apiVersion: v1            
