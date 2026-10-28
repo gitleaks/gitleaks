@@ -116,6 +116,13 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	// Validate individual rules.
 	for _, vr := range vc.Rules {
+		// Skip completely empty rule blocks (e.g., a bare [[rules]] entry with no fields set).
+		// These are treated as no-ops so that configs like `[[rules]]` paired with `useDefault = true`
+		// continue to work without error.
+		if vr.ID == "" && vr.Regex == "" && vr.Path == "" && len(vr.Keywords) == 0 && len(vr.Tags) == 0 {
+			continue
+		}
+
 		var (
 			pathPat  *regexp.Regexp
 			regexPat *regexp.Regexp
