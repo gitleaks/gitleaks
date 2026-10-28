@@ -1,0 +1,4 @@
+[[rules]]
+id = "bad-path-rule"
+description = "Rule with an invalid path regex"
+path = "*.py"

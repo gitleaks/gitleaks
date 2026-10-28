@@ -1,0 +1,4 @@
+[[rules]]
+id = "bad-regex-rule"
+description = "Rule with an invalid regex"
+regex = "[a-z"
