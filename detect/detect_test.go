@@ -826,6 +826,66 @@ const token = "mockSecret";
 	}
 }
 
+func TestDetectCompositeWithinColumns(t *testing.T) {
+	viper.Reset()
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("composite_within_columns")
+	viper.SetConfigType("toml")
+	err := viper.ReadInConfig()
+	require.NoError(t, err)
+
+	var vc config.ViperConfig
+	err = viper.Unmarshal(&vc)
+	require.NoError(t, err)
+
+	cfg, err := vc.Translate()
+	require.NoError(t, err)
+	cfg.Path = filepath.Join(configPath, "composite_within_columns.toml")
+
+	tests := map[string]struct {
+		fragment         Fragment
+		expectedFindings []report.Finding
+	}{
+		"same line within columns": {
+			fragment: Fragment{
+				Raw: `username = "admin" password = "secret123"`,
+			},
+			expectedFindings: []report.Finding{
+				{
+					Description: "Primary rule",
+					RuleID:      "primary-rule",
+					StartLine:   0,
+					EndLine:     0,
+					StartColumn: 20,
+					EndColumn:   41,
+					Line:        `username = "admin" password = "secret123"`,
+					Match:       `password = "secret123"`,
+					Secret:      "secret123",
+					Entropy:     2.9477028,
+					Tags:        []string{},
+				},
+			},
+		},
+		"same line outside columns": {
+			fragment: Fragment{
+				Raw: `username = "admin"                     password = "secret123"`,
+			},
+		},
+		"different lines with close columns": {
+			fragment: Fragment{
+				Raw: "username = \"admin\"\npassword = \"secret123\"",
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			detector := NewDetector(cfg)
+			findings := detector.Detect(tt.fragment)
+			compare(t, findings, tt.expectedFindings)
+		})
+	}
+}
 func stripANSI(s string) string {
 	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	return ansiRegex.ReplaceAllString(s, "")
