@@ -83,6 +83,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("no-color", "", false, "turn off color for verbose output")
 	rootCmd.PersistentFlags().Int("max-target-megabytes", 0, "files larger than this will be skipped")
 	rootCmd.PersistentFlags().BoolP("ignore-gitleaks-allow", "", false, "ignore gitleaks:allow comments")
+	rootCmd.PersistentFlags().Bool("log-ignored", false, "log findings suppressed by .gitleaksignore or the baseline at info level")
 	rootCmd.PersistentFlags().Uint("redact", 0, "redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)")
 	rootCmd.Flag("redact").NoOptDefVal = "100"
 	rootCmd.PersistentFlags().Bool("no-banner", false, "suppress banner")
@@ -294,6 +295,10 @@ func Detector(cmd *cobra.Command, cfg config.Config, source string) *detect.Dete
 	}
 	// set ignore gitleaks:allow flag
 	if detector.IgnoreGitleaksAllow, err = cmd.Flags().GetBool("ignore-gitleaks-allow"); err != nil {
+		logging.Fatal().Err(err).Send()
+	}
+	// surface suppressed findings (from .gitleaksignore / baseline) at info level
+	if detector.LogIgnored, err = cmd.Flags().GetBool("log-ignored"); err != nil {
 		logging.Fatal().Err(err).Send()
 	}
 

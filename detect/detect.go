@@ -66,6 +66,12 @@ type Detector struct {
 	// IgnoreGitleaksAllow is a flag to ignore gitleaks:allow comments.
 	IgnoreGitleaksAllow bool
 
+	// LogIgnored, when true, promotes skip messages for findings filtered by
+	// .gitleaksignore or the baseline from debug to info so they show up at
+	// the default log level. Useful for auditing how often suppressions are
+	// applied (#1925).
+	LogIgnored bool
+
 	// commitMutex is to prevent concurrent access to the
 	// commit map when adding commits
 	commitMutex *sync.Mutex
@@ -718,25 +724,40 @@ func (d *Detector) AddFinding(finding report.Finding) {
 
 	// check if we should ignore this finding
 	logger := logging.With().Str("finding", finding.Secret).Logger()
+	skipEvent := func() *zerolog.Event {
+		if d.LogIgnored {
+			return logger.Info()
+		}
+		return logger.Debug()
+	}
 	if _, ok := d.gitleaksIgnore[globalFingerprint]; ok {
-		logger.Debug().
+		skipEvent().
 			Str("fingerprint", globalFingerprint).
+			Str("file", finding.File).
+			Int("line", finding.StartLine).
+			Str("rule", finding.RuleID).
 			Msg("skipping finding: global fingerprint")
 		return
 	} else if finding.Commit != "" {
 		// Awkward nested if because I'm not sure how to chain these two conditions.
 		if _, ok := d.gitleaksIgnore[finding.Fingerprint]; ok {
-			logger.Debug().
+			skipEvent().
 				Str("fingerprint", finding.Fingerprint).
-				Msgf("skipping finding: fingerprint")
+				Str("file", finding.File).
+				Int("line", finding.StartLine).
+				Str("rule", finding.RuleID).
+				Msg("skipping finding: fingerprint")
 			return
 		}
 	}
 
 	if d.baseline != nil && !IsNew(finding, d.Redact, d.baseline) {
-		logger.Debug().
+		skipEvent().
 			Str("fingerprint", finding.Fingerprint).
-			Msgf("skipping finding: baseline")
+			Str("file", finding.File).
+			Int("line", finding.StartLine).
+			Str("rule", finding.RuleID).
+			Msg("skipping finding: baseline")
 		return
 	}
 
