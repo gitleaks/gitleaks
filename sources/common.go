@@ -106,9 +106,11 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 			newlineCount = 0 // Reset if a non-newline character is found
 		}
 
-		// Stop growing the buffer if it reaches maxSize
+		// Stop looking for a blank line if the buffer reaches maxSize.
+		// Finish the current line instead, so that a secret on the line at the
+		// boundary isn't split across two fragments.
 		if (peekBuf.Len() - n) >= maxPeekSize {
-			break
+			return readUntilNewline(r, maxPeekSize, peekBuf)
 		}
 
 		// Read additional data into a temporary buffer
@@ -120,6 +122,29 @@ func readUntilSafeBoundary(r *bufio.Reader, n int, maxPeekSize int, peekBuf *byt
 			return err
 		}
 		peekBuf.WriteByte(b)
+	}
+	return nil
+}
+
+// readUntilNewline consumes |r| until the end of the current line, up to |maxPeekSize|.
+// Lines longer than that are still split.
+func readUntilNewline(r *bufio.Reader, maxPeekSize int, peekBuf *bytes.Buffer) error {
+	if data := peekBuf.Bytes(); len(data) > 0 && data[len(data)-1] == '\n' {
+		return nil
+	}
+
+	for i := 0; i < maxPeekSize; i++ {
+		b, err := r.ReadByte()
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+		peekBuf.WriteByte(b)
+		if b == '\n' {
+			return nil
+		}
 	}
 	return nil
 }

@@ -44,11 +44,22 @@ func Test_readUntilSafeBoundary(t *testing.T) {
 			r:        strings.NewReader("abcdefg\nhijklmnop\n\t  \t\nqrstuvwxyz"),
 			expected: "abcdefg\nhijklmnop\n\t  \t\n",
 		},
+		// Current split is bad and there is no blank line, finish the current line.
+		{
+			name:     "no blank line - finish the line",
+			r:        strings.NewReader("abcdefg\nhijklmnopqrstuvwxyz\n0123"),
+			expected: "abcdefg\nhijklmnopqrstuvwxyz\n",
+		},
+		{
+			name:     "no blank line - finish the line at EOF",
+			r:        strings.NewReader("abcdefg\nhijklmnopqrstuvwxyz"),
+			expected: "abcdefg\nhijklmnopqrstuvwxyz",
+		},
 		// Current split is bad, exhaust options.
 		{
 			name:     "no safe split",
-			r:        strings.NewReader("abcdefg\nhijklmnopqrstuvwxyz"),
-			expected: "abcdefg\nhijklmnopqrstuvwx",
+			r:        strings.NewReader("abcdefg\nhijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+			expected: "abcdefg\nhijklmnopqrstuvwxyz0123456789ABCDEFGH",
 		},
 	}
 
