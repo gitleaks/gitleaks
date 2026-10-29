@@ -171,6 +171,7 @@ func (s *File) fileFragments(ctx context.Context, reader *bufio.Reader, yield Fr
 	}
 
 	totalLines := 0
+	isFirstChunk := true
 	for {
 		select {
 		case <-ctx.Done():
@@ -190,7 +191,10 @@ func (s *File) fileFragments(ctx context.Context, reader *bufio.Reader, yield Fr
 			}
 
 			// Only check the filetype at the start of file.
-			if totalLines == 0 {
+			// totalLines can't tell this, because it stays 0 until the first
+			// newline, and a long first line can span several chunks.
+			if isFirstChunk {
+				isFirstChunk = false
 				// TODO: could other optimizations be introduced here?
 				if mimetype, err := filetype.Match(s.Buffer[:n]); err != nil {
 					return yield(
