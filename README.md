@@ -154,7 +154,7 @@ Flags:
       --no-color                      turn off color for verbose output
       --redact uint[=100]             redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
   -f, --report-format string          output format (json, csv, junit, sarif, template)
-  -r, --report-path string            report file
+  -r, --report-path string            report file (use "-" for stdout)
       --report-template string        template file used to generate the report (implies --report-format=template)
       --timeout int                   set a timeout for gitleaks commands in seconds (default "0", no timeout is set)
   -v, --verbose                       show verbose output from scan
@@ -569,6 +569,14 @@ are supported.
 #### Reporting
 
 Gitleaks has built-in support for several report formats: [`json`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/json_simple.json), [`csv`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/csv_simple.csv?plain=1), [`junit`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/junit_simple.xml), and [`sarif`](https://github.com/gitleaks/gitleaks/blob/master/testdata/expected/report/sarif_simple.sarif).
+
+To write a report to stdout instead of a file, use `-` as the report path:
+
+```sh
+$ gitleaks git --no-banner --no-color --log-level=fatal --report-format=json --report-path=-
+```
+
+Note that `--report-format` only takes effect together with `--report-path`: without a report path, no report is written and the `--report-format` value is ignored. When writing to stdout, an explicit `--report-format` is required, since the format cannot be inferred from `-` the way it can from a file extension such as `.json`.
 
 If none of these formats fit your need, you can create your own report format with a [Go `text/template` .tmpl file](https://www.digitalocean.com/community/tutorials/how-to-use-templates-in-go#step-4-writing-a-template) and the `--report-template` flag. The template can use [extended functionality from the `Masterminds/sprig` template library](https://masterminds.github.io/sprig/).
 
