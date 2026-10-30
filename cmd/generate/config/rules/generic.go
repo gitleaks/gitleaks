@@ -22,7 +22,7 @@ func GenericCredential() *config.Rule {
 			"passw(?:or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
+		}, `[\w.=-]{10,150}|[a-z0-9+/][a-z0-9+/]{11,}={0,3}`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -149,6 +149,10 @@ func GenericCredential() *config.Rule {
 		`"client_secret" : "6da89121079f83b2eb6acccf8219ea982c3d79bccc3e9c6a85856480661f8fde",`,
 		`mySecretString=`+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
 		`todo_secret_do_not_commit = `+newPlausibleSecret(`[a-zA-Z0-9]{30}`),
+		// base64 values whose first character is + or /
+		// https://github.com/gitleaks/gitleaks/issues/2327
+		`cookie_key = "+`+newPlausibleSecret(`[a-zA-Z0-9]{58}`)+`"`,
+		`"signing_secret": "/`+newPlausibleSecret(`[a-zA-Z0-9]{58}`)+`"`,
 
 		// Token
 		` utils.GetEnvOrDefault("api_token", "dafa7817-e246-48f3-91a7-e87653d587b8")`,
