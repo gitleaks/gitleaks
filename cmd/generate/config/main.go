@@ -173,6 +173,7 @@ func main() {
 		rules.Notion(),
 		rules.NPM(),
 		rules.NugetConfigPassword(),
+		rules.NuntiqAPIKey(),
 		rules.NytimesAccessToken(),
 		rules.OctopusDeployApiKey(),
 		rules.OktaAccessToken(),
