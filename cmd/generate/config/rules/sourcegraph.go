@@ -18,6 +18,9 @@ func SourceGraph() *config.Rule {
 	// validate
 	tps := []string{
 		`sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b`,
+		`environment(
+			"CODY_INTEGRATION_TEST_TOKEN",
+			"sgp_AaD80dc6E02eCAE1_d3cba16CC0F18fA14A2EFB61CbDFceEBf9fAD16b")`,
 		`sourcegraph: 6d2FabeB6ADd229Bc199FabA28fD3efb57dF0bD3`,
 		`sgp_0D697F54cb24238EefB29af05Abf1b505E90950F`,
 		`sgp_local_d7dfFD43cF2503B1da673EB560aAa3e80f16FA42`,
