@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -18,22 +20,37 @@ var directoryCmd = &cobra.Command{
 	Use:     "dir [flags] [path]",
 	Aliases: []string{"file", "directory"},
 	Short:   "scan directories or files for secrets",
+	Args:    cobra.MaximumNArgs(1),
 	Run:     runDirectory,
+}
+
+// resolveDirSource returns the scan target from the positional arguments,
+// defaulting to the current directory. It rejects extra arguments (e.g.
+// `gitleaks dir detect file`, where `detect` is not a valid subcommand) and
+// paths that do not exist instead of silently scanning the wrong target (#1979).
+func resolveDirSource(args []string) (string, error) {
+	if len(args) > 1 {
+		return "", fmt.Errorf("expected at most one path argument, got %d", len(args))
+	}
+	source := "."
+	if len(args) == 1 && args[0] != "" {
+		source = args[0]
+	}
+	if _, err := os.Stat(source); err != nil {
+		return "", fmt.Errorf("invalid scan path %q: %w", source, err)
+	}
+	return source, nil
 }
 
 func runDirectory(cmd *cobra.Command, args []string) {
 	// grab source
-	source := "."
-	if len(args) == 1 {
-		source = args[0]
-		if source == "" {
-			source = "."
-		}
+	source, err := resolveDirSource(args)
+	if err != nil {
+		logging.Fatal().Err(err).Send()
 	}
 
 	initConfig(source)
 	initDiagnostics()
-	var err error
 
 	// setup config (aka, the thing that defines rules)
 	cfg := Config(cmd)
