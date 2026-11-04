@@ -2708,6 +2708,12 @@ entropy = 3
 keywords = ["t3blbkfj"]
 
 [[rules]]
+id = "openrouter-api-key"
+description = "Detected an OpenRouter API Key, posing a risk of unauthorized access to AI models and budget consumption."
+regex = '''\b(sk-or(-v\d+)?-[a-f0-9]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
+keywords = ["sk-or"]
+
+[[rules]]
 id = "openshift-user-token"
 description = "Found an OpenShift user token, potentially compromising an OpenShift/Kubernetes cluster."
 regex = '''\b(sha256~[\w-]{43})(?:[^\w-]|\z)'''
