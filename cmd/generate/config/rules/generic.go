@@ -8,6 +8,8 @@ import (
 )
 
 func GenericCredential() *config.Rule {
+	// A leading '+' or '/' is accepted for padded Base64 values. Requiring
+	// padding for these prefixes avoids matching ordinary slash-led paths.
 	// define rule
 	r := config.Rule{
 		RuleID:      "generic-api-key",
@@ -22,7 +24,7 @@ func GenericCredential() *config.Rule {
 			"passw(?:or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
+		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}|[+/][a-z0-9+/]{11,}={1,3}`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -124,6 +126,9 @@ func GenericCredential() *config.Rule {
 	// validate
 	tps := utils.GenerateSampleSecrets("generic", "CLOJARS_34bf0e88955ff5a1c328d6a7491acc4f48e865a7b8dd4d70a70749037443") //gitleaks:allow
 	tps = append(tps, utils.GenerateSampleSecrets("generic", "Zf3D0LXCM3EIMbgJpUNnkRtOfOueHznB")...)
+	for _, prefix := range []string{"+", "/"} {
+		tps = append(tps, `cookie_key = "`+prefix+secrets.NewSecret(`[a-zA-Z0-9+/]{85}==`)+`"`)
+	}
 	tps = append(tps,
 		// Access
 		`'access_token': 'eyJ0eXAioiJKV1slS3oASx=='`,
@@ -156,6 +161,7 @@ func GenericCredential() *config.Rule {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
 	)
 	fps := []string{
+		`cookie_key = "/opts/config/alias/"`,
 		// Access
 		`"accessor":"rA1wk0Y45YCufyfq",`,
 		`report_access_id: e8e4df51-2054-49b0-ab1c-516ac95c691d`,
