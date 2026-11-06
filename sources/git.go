@@ -31,6 +31,10 @@ type GitCmd struct {
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
 	repoPath    string
+	// staged is true when the command was created with NewGitDiffCmd(..., true).
+	// Staged diffs omit PatchHeader, so git's "binary" marker is the only signal
+	// we get; we then read the index blob instead of skipping the file.
+	staged bool
 }
 
 // blobReader provides a ReadCloser interface git cat-file blob to fetch
@@ -168,6 +172,7 @@ func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*Git
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
 		repoPath:    sourceClean,
+		staged:      staged,
 	}, nil
 }
 
@@ -324,13 +329,21 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				continue
 			}
 
-			// skip non-archive binary files
-			yieldAsArchive := false
+			// Binary files: archives are always read via blob. For staged diffs,
+			// also read non-archive blobs from the index so git config that marks
+			// text as binary (core.bigFileThreshold, -diff attributes) cannot
+			// silently empty a pre-commit scan. Real binary content is still
+			// skipped later by File.Fragments via MIME detection. Historical
+			// git-log scans keep skipping non-archive binaries (#1541).
+			yieldFromBlob := false
 			if gitdiffFile.IsBinary {
-				if !isArchive(ctx, gitdiffFile.NewName) {
+				if isArchive(ctx, gitdiffFile.NewName) {
+					yieldFromBlob = true
+				} else if s.Cmd.staged {
+					yieldFromBlob = true
+				} else {
 					continue
 				}
-				yieldAsArchive = true
 			}
 
 			// Check if commit is allowed
@@ -362,10 +375,10 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 			s.Sema.Go(func() error {
 				defer wg.Done()
 
-				if yieldAsArchive {
+				if yieldFromBlob {
 					blob, err := s.Cmd.NewBlobReaderContext(ctx, commitSHA, gitdiffFile.NewName)
 					if err != nil {
-						logging.Error().Err(err).Msg("could not read archive blob")
+						logging.Error().Err(err).Msg("could not read blob")
 						return nil
 					}
 
