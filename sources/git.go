@@ -297,8 +297,20 @@ type CommitInfo struct {
 
 // Fragments yields fragments from a git repo
 func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
+	// waitCmd reaps the git process exactly once. It runs deferred so early
+	// returns still release the process, and explicitly on the normal path
+	// so a non-zero git exit becomes a scan error instead of a silent
+	// clean pass. See https://github.com/gitleaks/gitleaks/issues/1981
+	waited := false
+	waitCmd := func() error {
+		if waited {
+			return nil
+		}
+		waited = true
+		return s.Cmd.Wait()
+	}
 	defer func() {
-		if err := s.Cmd.Wait(); err != nil {
+		if err := waitCmd(); err != nil {
 			logging.Debug().Err(err).Str("cmd", s.Cmd.String()).Msg("command aborted")
 		}
 	}()
@@ -426,6 +438,9 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		return ctx.Err()
 	default:
 		wg.Wait()
+		if err := waitCmd(); err != nil {
+			return fmt.Errorf("git command failed: %w", err)
+		}
 		return nil
 	}
 }
