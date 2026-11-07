@@ -1,5 +1,19 @@
 package sources
 
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"testing"
+
+	"github.com/fatih/semgroup"
+	"github.com/stretchr/testify/require"
+
+	"github.com/zricethezav/gitleaks/v8/config"
+)
+
 // TODO: commenting out this test for now because it's flaky. Alternatives to consider to get this working:
 // -- use `git stash` instead of `restore()`
 
@@ -156,3 +170,63 @@ package sources
 // 	}
 // 	return nil
 // }
+
+// TestGitFragmentsPropagatesGitExitError covers a git subprocess that fails
+// without writing to stderr (for example, one killed by a signal). Its exit
+// status must surface as a scan error instead of a clean pass.
+// https://github.com/gitleaks/gitleaks/issues/1981
+func TestGitFragmentsPropagatesGitExitError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test shadows the git executable with a POSIX shell shim")
+	}
+
+	cases := []struct {
+		name      string
+		exitCode  int
+		wantError bool
+	}{
+		{
+			name:      "git exits non-zero with no output",
+			exitCode:  128,
+			wantError: true,
+		},
+		{
+			name:      "git exits zero with no output",
+			exitCode:  0,
+			wantError: false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			// Arrange: shadow the real git executable with a shim that
+			// exits silently, leaving both stdout and stderr empty.
+			shimDir := t.TempDir()
+			shim := "#!/bin/sh\nexit " + strconv.Itoa(c.exitCode) + "\n"
+			require.NoError(t, os.WriteFile(filepath.Join(shimDir, "git"), []byte(shim), 0o755))
+			t.Setenv("PATH", shimDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+			ctx := context.Background()
+			gitCmd, err := NewGitDiffCmdContext(ctx, ".", true)
+			require.NoError(t, err)
+
+			source := Git{
+				Cmd:    gitCmd,
+				Config: &config.Config{},
+				Sema:   semgroup.NewGroup(ctx, 1),
+			}
+
+			// Act
+			err = source.Fragments(ctx, func(_ Fragment, err error) error {
+				return err
+			})
+
+			// Assert
+			if c.wantError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
