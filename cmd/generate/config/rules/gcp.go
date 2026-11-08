@@ -7,22 +7,11 @@ import (
 	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
-// TODO this one could probably use some work
-func GCPServiceAccount() *config.Rule {
-	// define rule
-	r := config.Rule{
-		Description: "Google (GCP) Service-account",
-		RuleID:      "gcp-service-account",
-		Regex:       regexp.MustCompile(`\"type\": \"service_account\"`),
-		Keywords:    []string{`\"type\": \"service_account\"`},
-	}
-
-	// validate
-	tps := []string{
-		`"type": "service_account"`,
-	}
-	return utils.Validate(r, tps, nil)
-}
+// Note: there is intentionally no GCP service-account rule. Service-account
+// keys are JSON files embedding a standard PEM private-key block, which the
+// private-key rule already detects (see its test cases). A dedicated rule
+// would report the same leak twice. See
+// https://github.com/gitleaks/gitleaks/issues/1818
 
 func GCPAPIKey() *config.Rule {
 	// define rule

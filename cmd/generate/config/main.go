@@ -101,8 +101,8 @@ func main() {
 		rules.Freemius(),
 		rules.FreshbooksAccessToken(),
 		rules.GoCardless(),
-		// TODO figure out what makes sense for GCP
-		// rules.GCPServiceAccount(),
+		// No GCP service-account rule: those keys embed a PEM block the
+		// private-key rule already detects (see #1818).
 		rules.GCPAPIKey(),
 		rules.GitHubPat(),
 		rules.GitHubFineGrainedPat(),

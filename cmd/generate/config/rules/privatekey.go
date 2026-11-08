@@ -29,6 +29,9 @@ yxR5MsXFu9PRsrYQA7/4UTPHiC4y2sAVCBg4C2yyBpUEtMQjyCESi6Y=
 lQWGBGSVV4YBDAClvRnxezIRy2Yv7SFlzC0iFiRF/O/jePSw+XYhvcrTaqSYTGic
 =8xQN
 -----END PGP PRIVATE KEY BLOCK-----`,
+		// GCP service-account key: JSON embedding a PEM block (synthetic body).
+		// The private-key rule is what detects these; see #1818.
+		`{"type": "service_account", "private_key": "-----BEGIN PRIVATE KEY-----\nQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJDQUJD\n-----END PRIVATE KEY-----\n"}`,
 	} // gitleaks:allow
 	fps := []string{
 		`-----BEGIN PRIVATE KEY-----
