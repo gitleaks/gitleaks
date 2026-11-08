@@ -2615,6 +2615,15 @@ keywords = [
 ]
 
 [[rules]]
+id = "mssql-connection-string"
+description = "Discovered a Microsoft SQL Server connection string with embedded credentials, which could lead to unauthorized database access."
+regex = '''(?i)(?:data[ \t]+source|server)[ \t]*=[ \t]*[^;\r\n]+;[^\r\n]*?(?:password|pwd)[ \t]*=[ \t]*[^;\s'"]{3,}'''
+keywords = [
+    "data source",
+    "server",
+]
+
+[[rules]]
 id = "netlify-access-token"
 description = "Detected a Netlify Access Token, potentially compromising web hosting services and site management."
 regex = '''(?i)[\w.-]{0,50}?(?:netlify)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40,46})(?:[\x60'"\s;]|\\[nr]|$)'''
