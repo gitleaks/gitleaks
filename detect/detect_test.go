@@ -2771,3 +2771,32 @@ func TestWindowsFileSeparator_RuleAllowlistPaths(t *testing.T) {
 		})
 	}
 }
+
+// TestDetectTwoPrivateKeys is a regression test for
+// https://github.com/gitleaks/gitleaks/issues/1085: two private keys in one
+// document must yield two separate findings, not one greedy match spanning
+// both keys.
+func TestDetectTwoPrivateKeys(t *testing.T) {
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	raw := `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDAC4AWkdwKYSd8
+Ks14IReLcYgADhoXk56ZzXI=
+-----END PRIVATE KEY-----
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAn6/O8li+SX4m98LLYt/PKSzEmQ++ZBD7Loh9P13f4yQ92EF3
+yxR5MsXFu9PRsrYQA7/4UTPHiC4y2sAVCBg4C2yyBpUEtMQjyCESi6Y=
+-----END RSA PRIVATE KEY-----
+`
+	// StartLine mirrors how file sources number their first fragment line.
+	findings := d.Detect(Fragment{Raw: raw, StartLine: 1})
+	require.Len(t, findings, 2)
+	for _, f := range findings {
+		require.Equal(t, "private-key", f.RuleID)
+	}
+	require.Equal(t, 1, findings[0].StartLine)
+	require.Equal(t, 4, findings[0].EndLine)
+	require.Equal(t, 5, findings[1].StartLine)
+	require.Equal(t, 8, findings[1].EndLine)
+}
