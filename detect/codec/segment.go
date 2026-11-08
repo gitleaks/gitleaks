@@ -80,7 +80,7 @@ func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
 	for i := decoded.start; i > -1; i-- {
 		c := currentRaw[i]
 		if c == '\n' {
-			start = i
+			start = i + 1
 			break
 		}
 	}
