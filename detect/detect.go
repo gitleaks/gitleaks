@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 
 	"github.com/zricethezav/gitleaks/v8/config"
 	"github.com/zricethezav/gitleaks/v8/detect/codec"
@@ -34,6 +35,32 @@ const (
 var (
 	newLineRegexp = regexp.MustCompile("\n")
 )
+
+// sanitizeUTF8 replaces each invalid UTF-8 byte with '?' while keeping the
+// byte length unchanged. go-re2 stops consuming input at the first invalid
+// byte, which hides secrets later in a fragment; a same-length ASCII
+// replacement lets matching continue and keeps match offsets valid against
+// the original fragment.
+func sanitizeUTF8(s string) string {
+	if utf8.ValidString(s) {
+		return s
+	}
+	b := []byte(s)
+	for i := 0; i < len(b); {
+		if b[i] < utf8.RuneSelf {
+			i++
+			continue
+		}
+		r, size := utf8.DecodeRune(b[i:])
+		if r == utf8.RuneError && size == 1 {
+			b[i] = '?'
+			i++
+			continue
+		}
+		i += size
+	}
+	return string(b)
+}
 
 // Detector is the main detector struct
 type Detector struct {
@@ -316,9 +343,12 @@ ScanLoop:
 		case <-ctx.Done():
 			break ScanLoop
 		default:
-			// build keyword map for prefiltering rules
+			// build keyword map for prefiltering rules. matchRaw is a
+			// same-length copy of currentRaw with invalid UTF-8 replaced so
+			// that go-re2 does not stop at the first invalid byte.
+			matchRaw := sanitizeUTF8(currentRaw)
 			keywords := make(map[string]bool)
-			normalizedRaw := strings.ToLower(currentRaw)
+			normalizedRaw := strings.ToLower(matchRaw)
 			matches := d.prefilter.MatchString(normalizedRaw)
 			for _, m := range matches {
 				keywords[normalizedRaw[m.Pos():int(m.Pos())+len(m.Match())]] = true
@@ -332,14 +362,14 @@ ScanLoop:
 					if len(rule.Keywords) == 0 {
 						// if no keywords are associated with the rule always scan the
 						// fragment using the rule
-						findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+						findings = append(findings, d.detectRuleMatch(fragment, currentRaw, matchRaw, rule, encodedSegments)...)
 						continue
 					}
 
 					// check if keywords are in the fragment
 					for _, k := range rule.Keywords {
 						if _, ok := keywords[strings.ToLower(k)]; ok {
-							findings = append(findings, d.detectRule(fragment, currentRaw, rule, encodedSegments)...)
+							findings = append(findings, d.detectRuleMatch(fragment, currentRaw, matchRaw, rule, encodedSegments)...)
 							break
 						}
 					}
@@ -369,6 +399,12 @@ ScanLoop:
 
 // detectRule scans the given fragment for the given rule and returns a list of findings
 func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
+	return d.detectRuleMatch(fragment, currentRaw, sanitizeUTF8(currentRaw), r, encodedSegments)
+}
+
+// detectRuleMatch is detectRule with a pre-sanitized copy of currentRaw used
+// for regex matching. matchRaw must have the same byte length as currentRaw.
+func (d *Detector) detectRuleMatch(fragment Fragment, currentRaw, matchRaw string, r config.Rule, encodedSegments []*codec.EncodedSegment) []report.Finding {
 	var (
 		findings []report.Finding
 		logger   = func() zerolog.Logger {
@@ -439,7 +475,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 		}
 	}
 
-	matches := r.Regex.FindAllStringIndex(currentRaw, -1)
+	matches := r.Regex.FindAllStringIndex(matchRaw, -1)
 	if len(matches) == 0 {
 		return findings
 	}
@@ -449,7 +485,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 	// use currentRaw instead of fragment.Raw since this represents the current
 	// decoding pass on the text
-	for _, matchIndex := range r.Regex.FindAllStringIndex(currentRaw, -1) {
+	for _, matchIndex := range r.Regex.FindAllStringIndex(matchRaw, -1) {
 		// Extract secret from match
 		secret := strings.Trim(currentRaw[matchIndex[0]:matchIndex[1]], "\n")
 
@@ -520,7 +556,7 @@ func (d *Detector) detectRule(fragment Fragment, currentRaw string, r config.Rul
 
 		// Set the value of |secret|, if the pattern contains at least one capture group.
 		// (The first element is the full match, hence we check >= 2.)
-		groups := r.Regex.FindStringSubmatch(finding.Secret)
+		groups := r.Regex.FindStringSubmatch(sanitizeUTF8(finding.Secret))
 		if len(groups) >= 2 {
 			if r.SecretGroup > 0 {
 				if len(groups) <= r.SecretGroup {
