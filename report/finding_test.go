@@ -46,6 +46,11 @@ func TestMask(t *testing.T) {
 			expect:  Finding{Match: "line containing", Secret: ""},
 			percent: 75,
 		},
+		"empty secret fully redacted": {
+			finding: Finding{Match: "line containing", Line: "line containing", Secret: ""},
+			expect:  Finding{Match: "line containing", Line: "line containing", Secret: ""},
+			percent: 100,
+		},
 		"short secret": {
 			finding: Finding{Match: "line containing", Secret: "ss"},
 			expect:  Finding{Match: "line containing", Secret: "..."},
@@ -59,6 +64,7 @@ func TestMask(t *testing.T) {
 			f.Redact(test.percent)
 			assert.Equal(t, e.Secret, f.Secret)
 			assert.Equal(t, e.Match, f.Match)
+			assert.Equal(t, e.Line, f.Line)
 		})
 	}
 }

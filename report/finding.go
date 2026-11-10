@@ -76,6 +76,11 @@ func (f *Finding) AddRequiredFindings(afs []*RequiredFinding) {
 
 // Redact removes sensitive information from a finding.
 func (f *Finding) Redact(percent uint) {
+	// An empty secret has nothing to hide, and replacing "" would insert
+	// the mask between every character of Line and Match.
+	if f.Secret == "" {
+		return
+	}
 	secret := maskSecret(f.Secret, percent)
 	if percent >= 100 {
 		secret = "REDACTED"
