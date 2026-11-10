@@ -94,6 +94,12 @@ func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
 		}
 	}
 
+	if start > end {
+		// An empty decoded range starting on a newline moves start past
+		// end; clamp so the slice below cannot panic.
+		start = end
+	}
+
 	return currentRaw[start:end]
 }
 
