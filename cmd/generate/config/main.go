@@ -185,6 +185,7 @@ func main() {
 		rules.PlanetScalePassword(),
 		rules.PlanetScaleAPIToken(),
 		rules.PlanetScaleOAuthToken(),
+		rules.PostHogPersonalAPIKey(),
 		rules.PostManAPI(),
 		rules.Prefect(),
 		rules.PrivateAIToken(),
