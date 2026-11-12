@@ -4,6 +4,7 @@ import (
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/config/utils"
 	"github.com/zricethezav/gitleaks/v8/cmd/generate/secrets"
 	"github.com/zricethezav/gitleaks/v8/config"
+	"github.com/zricethezav/gitleaks/v8/regexp"
 )
 
 func TelegramBotToken() *config.Rule {
@@ -12,7 +13,13 @@ func TelegramBotToken() *config.Rule {
 		Description: "Detected a Telegram Bot API Token, risking unauthorized bot operations and message interception on Telegram.",
 		RuleID:      "telegram-bot-api-token",
 
-		Regex: utils.GenerateSemiGenericRegex([]string{"telegr"}, "[0-9]{5,16}:(?-i:A)[a-z0-9_\\-]{34}", true),
+		Regex: utils.MergeRegexps(
+			utils.GenerateSemiGenericRegex([]string{"telegr"}, "[0-9]{5,16}:(?-i:A)[a-z0-9_\\-]{34}", true),
+			// Object constructor, e.g. `new Telegraf("<token>")`. The
+			// semi-generic branch cannot match this shape because `(` is
+			// not one of its accepted operators.
+			regexp.MustCompile(`(?i:telegraf)\s*\(\s*[\x60'"\s=]{0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\x60'"\s;]|\\[nr]|$)`),
+		),
 		Keywords: []string{
 			"telegr",
 		},
@@ -35,7 +42,7 @@ func TelegramBotToken() *config.Rule {
 		// URL containing token TODO add another url based rule
 		// GenerateSampleSecret("url", "https://api.telegram.org/bot"+validToken+"/sendMessage"),
 		// object constructor
-		//TODO: `const bot = new Telegraf("`+validToken+`")`,
+		`const bot = new Telegraf("`+validToken+`")`,
 		// .env
 		`TELEGRAM_API_TOKEN = `+validToken,
 		// YAML
