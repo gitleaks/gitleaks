@@ -31,6 +31,7 @@ type GitCmd struct {
 	diffFilesCh <-chan *gitdiff.File
 	errCh       <-chan error
 	repoPath    string
+	staged      bool
 }
 
 // blobReader provides a ReadCloser interface git cat-file blob to fetch
@@ -168,6 +169,7 @@ func NewGitDiffCmdContext(ctx context.Context, source string, staged bool) (*Git
 		diffFilesCh: gitdiffFiles,
 		errCh:       errCh,
 		repoPath:    sourceClean,
+		staged:      staged,
 	}, nil
 }
 
@@ -324,13 +326,19 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 				continue
 			}
 
-			// skip non-archive binary files
 			yieldAsArchive := false
+			// git may classify a text file as binary because of attributes or
+			// core.bigFileThreshold. In staged scans, read the staged blob and
+			// scan it if it is text; otherwise, skip non-archive binary files.
+			yieldAsStagedText := false
 			if gitdiffFile.IsBinary {
-				if !isArchive(ctx, gitdiffFile.NewName) {
+				if isArchive(ctx, gitdiffFile.NewName) {
+					yieldAsArchive = true
+				} else if s.Cmd.staged {
+					yieldAsStagedText = true
+				} else {
 					continue
 				}
-				yieldAsArchive = true
 			}
 
 			// Check if commit is allowed
@@ -361,6 +369,10 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 			wg.Add(1)
 			s.Sema.Go(func() error {
 				defer wg.Done()
+
+				if yieldAsStagedText {
+					return s.stagedTextFragments(ctx, gitdiffFile.NewName, commitSHA, commitInfo, yield)
+				}
 
 				if yieldAsArchive {
 					blob, err := s.Cmd.NewBlobReaderContext(ctx, commitSHA, gitdiffFile.NewName)
@@ -428,6 +440,47 @@ func (s *Git) Fragments(ctx context.Context, yield FragmentsFunc) error {
 		wg.Wait()
 		return nil
 	}
+}
+
+// stagedTextFragments scans the staged blob of a file that git classified as
+// binary. Text files can be classified as binary by core.bigFileThreshold or a
+// -diff attribute, and skipping them would silently miss secrets.
+func (s *Git) stagedTextFragments(ctx context.Context, path, commitSHA string, commitInfo *CommitInfo, yield FragmentsFunc) error {
+	blob, err := s.Cmd.NewBlobReaderContext(ctx, "", path)
+	if err != nil {
+		logging.Error().Err(err).Str("path", path).Msg("could not read staged blob")
+		return nil
+	}
+	defer func() {
+		if err := blob.Close(); err != nil {
+			logging.Debug().Err(err).Msg("blobReader.Close() returned an error")
+		}
+	}()
+
+	// Git's own binary heuristic: a NUL byte in the first 8000 bytes.
+	head := make([]byte, 8000)
+	n, err := io.ReadFull(blob, head)
+	if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrUnexpectedEOF) {
+		return err
+	}
+	head = head[:n]
+	if bytes.IndexByte(head, 0) >= 0 {
+		logging.Debug().Str("path", path).Msg("skipping binary file")
+		return nil
+	}
+
+	file := File{
+		Content:         io.MultiReader(bytes.NewReader(head), blob),
+		Path:            path,
+		Config:          s.Config,
+		MaxArchiveDepth: s.MaxArchiveDepth,
+	}
+
+	return file.Fragments(ctx, func(fragment Fragment, err error) error {
+		fragment.CommitSHA = commitSHA
+		fragment.CommitInfo = commitInfo
+		return yield(fragment, err)
+	})
 }
 
 // NewRemoteInfo builds a new RemoteInfo for generating finding links
