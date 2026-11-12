@@ -80,7 +80,7 @@ func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
 	for i := decoded.start; i > -1; i-- {
 		c := currentRaw[i]
 		if c == '\n' {
-			start = i
+			start = i + 1
 			break
 		}
 	}
@@ -92,6 +92,12 @@ func CurrentLine(segments []*EncodedSegment, currentRaw string) string {
 			end = i
 			break
 		}
+	}
+
+	if start > end {
+		// An empty decoded range starting on a newline moves start past
+		// end; clamp so the slice below cannot panic.
+		start = end
 	}
 
 	return currentRaw[start:end]

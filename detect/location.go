@@ -16,6 +16,9 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		location    Location
 		lineSet     bool
 		_lineNum    int
+		// lineStart is the byte index where the current line starts,
+		// i.e. one byte after the newline ending the previous line.
+		lineStart int
 	)
 
 	start := matchIndex[0]
@@ -42,7 +45,7 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 			location.startLine = lineNum
 			location.endLine = lineNum
 			location.startColumn = (start - prevNewLine) + 1 // +1 because counting starts at 1
-			location.startLineIndex = prevNewLine
+			location.startLineIndex = lineStart
 			location.endLineIndex = newLineByteIndex
 		}
 		if prevNewLine < end && end <= newLineByteIndex {
@@ -52,6 +55,7 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		}
 
 		prevNewLine = pair[0]
+		lineStart = pair[0] + 1
 	}
 
 	if !lineSet {
@@ -62,6 +66,7 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		location.endColumn = (end - prevNewLine)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
+		location.startLineIndex = lineStart
 
 		// search for new line byte index
 		i := 0
@@ -75,6 +80,11 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 			i++
 		}
 		location.endLineIndex = end + i
+	}
+	if location.startLineIndex > location.endLineIndex {
+		// An empty trimmed match on a trailing newline moves lineStart past
+		// endLineIndex; clamp so Finding.Line slicing cannot panic.
+		location.startLineIndex = location.endLineIndex
 	}
 	return location
 }
