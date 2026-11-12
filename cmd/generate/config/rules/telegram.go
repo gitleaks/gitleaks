@@ -18,7 +18,7 @@ func TelegramBotToken() *config.Rule {
 			// Object constructor, e.g. `new Telegraf("<token>")`. The
 			// semi-generic branch cannot match this shape because `(` is
 			// not one of its accepted operators.
-			regexp.MustCompile(`telegraf\s*\(\s*[\x60'"\s=]{0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\x60'"\s;]|\\[nr]|$)`),
+			regexp.MustCompile(`(?i:telegraf)\s*\(\s*[\x60'"\s=]{0,5}([0-9]{5,16}:(?-i:A)[a-z0-9_\-]{34})(?:[\x60'"\s;]|\\[nr]|$)`),
 		),
 		Keywords: []string{
 			"telegr",
