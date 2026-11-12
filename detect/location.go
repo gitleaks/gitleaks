@@ -81,5 +81,10 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		}
 		location.endLineIndex = end + i
 	}
+	if location.startLineIndex > location.endLineIndex {
+		// An empty trimmed match on a trailing newline moves lineStart past
+		// endLineIndex; clamp so Finding.Line slicing cannot panic.
+		location.startLineIndex = location.endLineIndex
+	}
 	return location
 }

@@ -2494,6 +2494,17 @@ func TestDetectLineExcludesPreviousNewline(t *testing.T) {
 		assert.Empty(t, d.detectRule(f, raw, allowlisted, []*codec.EncodedSegment{}),
 			"^-anchored line allowlist should suppress a finding past the first line")
 	})
+
+	t.Run("empty trimmed match on trailing newline does not panic", func(t *testing.T) {
+		nlRule := config.Rule{
+			RuleID: "test-nl-rule",
+			Regex:  regexp.MustCompile(`\n`),
+		}
+		raw := "hello\n"
+		findings := d.detectRule(Fragment{Raw: raw}, raw, nlRule, []*codec.EncodedSegment{})
+		require.Len(t, findings, 1)
+		assert.Equal(t, "", findings[0].Line)
+	})
 }
 
 func moveDotGit(t *testing.T, from, to string) {
