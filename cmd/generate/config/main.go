@@ -165,6 +165,7 @@ func main() {
 		rules.Meraki(),
 		rules.MessageBirdAPIToken(),
 		rules.MessageBirdClientID(),
+		rules.MSSQLConnectionString(),
 		rules.NetlifyAccessToken(),
 		rules.NewRelicUserID(),
 		rules.NewRelicUserKey(),
