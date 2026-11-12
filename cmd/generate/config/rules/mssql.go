@@ -18,12 +18,12 @@ func MSSQLConnectionString() *config.Rule {
 	r := config.Rule{
 		Description: "Discovered a Microsoft SQL Server connection string with embedded credentials, which could lead to unauthorized database access.",
 		RuleID:      "mssql-connection-string",
-		Regex:       regexp.MustCompile(`(?i)(?:\b(?:data source|network address|server)[ \t\x{00A0}]*=[ \t\x{00A0}]*[^;\r\n]*[^;\r\n\s'"][^;\r\n]*;[^\r\n]*?\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}[^;\r\n'"]*|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"]{2,}[^;\s'"])|\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"]{2,}[^;\s'"])[^;\r\n]*;[^\r\n]*?\b(?:data source|network address|server)[ \t\x{00A0}]*=[ \t\x{00A0}]*[^;\r\n]*[^;\r\n\s'"][^;\r\n]*|\bjdbc:(?:jtds:)?sqlserver://[^;\r\n]*[^;\r\n\s\'"][^;\r\n]*;[^\r\n]*?\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}[^;\r\n'"]*|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"]{2,}[^;\s'"])|\bmssql(?:\+[a-z0-9_.-]+)?://(?:[^/\s:@;]+@)?[^/\s:@;]+:[^/@\s;]{3,}@[^/\s;]+)`),
+		Regex:       regexp.MustCompile(`(?i)(?:\b(?:data source|network address|server)[ \t\x{00A0}]*=[ \t\x{00A0}]*[^;\r\n]*[^;\r\n\s'"][^;\r\n]*;[^\r\n]*?\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}[^;\r\n'"]*|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"\r\n]{2,}[^;\s'"])|\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"\r\n]{2,}[^;\s'"])[^;\r\n]*;[^\r\n]*?\b(?:data source|network address|server)[ \t\x{00A0}]*=[ \t\x{00A0}]*[^;\r\n]*[^;\r\n\s'"][^;\r\n]*|\bjdbc:(?:jtds:)?sqlserver://[^;\r\n]*[^;\r\n\s\'"][^;\r\n]*;[^\r\n]*?\b(?:password|pwd)[ \t\x{00A0}]*=[ \t\x{00A0}]*(?:'(?:[^'\r\n]|'')+'|"(?:[^"\r\n]|"")+"|[^;\s'"]{3}[^;\r\n'"]*|'[^';\r\n]{3,}|"[^";\r\n]{3,}|[^;\s'"][^;'"\r\n]{2,}[^;\s'"])|\bmssql(?:\+[a-z0-9_.-]+)?://(?:[^/\s:@;]+@)?[^/\s:@;]+:[^/@\s;]{3,}@[^/\s;'"\x60)]+)`),
 		Keywords:    []string{"data source", "server", "network address", "jdbc:sqlserver", "jdbc:jtds", "mssql"},
 		Allowlists: []*config.Allowlist{
 			{
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`(?i)(?:^|;)(?:\s|\x{00A0})*(?:password|pwd)(?:\s|\x{00A0})*=(?:\s|\x{00A0})*['"\x60]?(?:change(?:it|[-_]?me)|pass(?:word)?|pwd|null|nil|none|undefined|todo|fixme|test|token|\*+|x+|\.+|\?+)['"\x60]?(?:\s|\x{00A0})*(?:;|$)`),                                                                                                                                                                                                     // literal placeholders and masks, password slot only
+					regexp.MustCompile(`(?i)(?:^|;)(?:\s|\x{00A0})*(?:password|pwd)(?:\s|\x{00A0})*=(?:\s|\x{00A0})*['"\x60]?(?:change(?:it|[-_]?me)|pass(?:word)?|pwd|null|nil|none|undefined|todo|fixme|test|token|\*+|x+|\.+|\?+|(?:\s|\x{00A0})+)['"\x60]?(?:\s|\x{00A0})*(?:;|$)`), // literal placeholders, masks, and whitespace-only values, password slot only
 					regexp.MustCompile(`(?i)(?:^|;)(?:\s|\x{00A0})*(?:password|pwd)(?:\s|\x{00A0})*=(?:\s|\x{00A0})*['"\x60]?(?:<[^>]*>|\[[^]]*\]|\$\{[^}]*\}|\$(?:(?-i:[A-Z][A-Z0-9_]*)|[0-9]|[_@*#?$!$-])|\$\([^)]*\)|\{\{[^}]*\}\}|\{[A-Za-z0-9_.]*[._][A-Za-z0-9_.]*\}|(?-i:\{[a-z]+\}|\{[A-Z][A-Z0-9_]*\})|\{[0-9]+\}|\{\}|%[^%]+%)['"\x60]?(?:\s|\x{00A0})*(?:;|$)`),                                                                                                 // $VAR/${}/$()/{{}}/{}/<>/[]/%VAR% templates, password slot only
 					regexp.MustCompile(`(?i)(?:^|;)(?:\s|\x{00A0})*(?:password|pwd)(?:\s|\x{00A0})*=(?:\s|\x{00A0})*['"\x60]?(?-i:[A-Z0-9_]*_(?:PASSWORD|PWD)(?:_[A-Z0-9_]+)?|(?:PASSWORD|PWD)_[A-Z0-9_]+)['"\x60]?(?:\s|\x{00A0})*(?:;|$)`),                                                                                                                                                                                                                               // SCREAMING_SNAKE placeholders (case-sensitive)
 					regexp.MustCompile(`(?i)://(?:[^/:@\s;]+@)?[^/:@\s;]+:(?:change(?:it|[-_]?me)|pass(?:word)?|pwd|null|nil|none|undefined|todo|fixme|test|token|\*+|x+|\.+|\?+|<[^>]*>|\[[^]]*\]|\$\{[^}]*\}|\$(?:(?-i:[A-Z][A-Z0-9_]*)|[0-9]|[_@*#?$!$-])|\$\([^)]*\)|\{\{[^}]*\}\}|\{[A-Za-z0-9_.]*[._][A-Za-z0-9_.]*\}|(?-i:\{[a-z]+\}|\{[A-Z][A-Z0-9_]*\})|\{[0-9]+\}|\{\}|%[^%]+%|(?-i:[A-Z0-9_]*_(?:PASSWORD|PWD)(?:_[A-Z0-9_]+)?|(?:PASSWORD|PWD)_[A-Z0-9_]+))@`), // same placeholder sets for mssql:// userinfo
@@ -253,6 +253,13 @@ func MSSQLConnectionString() *config.Rule {
 		// keys split across lines are not connection strings
 		"Data Source=dbserver1.example.com;\nPassword=SecureP@ss123;",
 		"Password=SecureP@ss123;\nData Source=db;",
+		"Server=db;Password=ab\nconst x = 123",
+		"Password=ab\nfoo=1;Server=db;",
+		"jdbc:sqlserver://db;password=ab\nnextline",
+		// whitespace-only quoted passwords are not secrets
+		`Server=db;Password=' ';`,
+		`Server=db;Password="   ";`,
+		`Password=' ';Server=db;`,
 	}
 	return utils.Validate(r, tps, fps)
 }
