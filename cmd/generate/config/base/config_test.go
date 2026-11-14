@@ -12,6 +12,9 @@ var allowlistRegexTests = map[string]struct {
 		invalid: []string{
 			`true`, `True`, `false`, `False`, `null`, `NULL`,
 		},
+		valid: []string{
+			`trueSuffix`, `TRUEsuffix`, `prefixfalseSuffix`, `prefixFALSEsuffix`, `prefixnull`, `prefixNULL`,
+		},
 	},
 	"general placeholders - repeated characters": {
 		invalid: []string{
