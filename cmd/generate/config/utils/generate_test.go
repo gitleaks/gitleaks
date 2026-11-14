@@ -123,6 +123,8 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				`api_key="xxx'`, // could try to match only same opening and closing quotes, might not be worth the complexity
 				`api_key="don't do it!"`,
 				`api_key="xxx;notpartofthematch"`,
+				"<api_key>xxx</api_key>",
+				"example.com?api_key=xxx&other=yyy",
 			},
 			invalidStrings: []string{
 				"api_key=_xxx",
@@ -133,8 +135,27 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"api_key=(xxx)",
 				"api_key=<xxx>",
 				"api_key={xxx}",
-				"<api_key>xxx</api_key>",            // potentially valid
-				"example.com?api_key=xxx&other=yyy", // potentially valid
+			},
+		},
+		{
+			name:              "secret may be followed by common delimiters",
+			identifiers:       []string{"api_key"},
+			secretRegex:       `[a-z]{3}`,
+			isCaseInsensitive: []bool{true, false},
+			validStrings: []string{
+				"api_key=xxx&other=yyy",
+				"api_key=xxx,",
+				"api_key=xxx)",
+				"api_key=xxx]",
+				"api_key=xxx}",
+				"api_key=xxx|",
+				"api_key=xxx<",
+				"api_key=xxx>",
+			},
+			invalidStrings: []string{
+				"api_key=xxx!",
+				"api_key=xxx?",
+				"api_key=xxx*",
 			},
 		},
 		// Note: these test cases do not necessarily prescribe the expected behavior of the function,
@@ -159,6 +180,36 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGenerateSemiGenericRegexWithNarrowSuffix(t *testing.T) {
+	regex := GenerateSemiGenericRegexWithNarrowSuffix([]string{"api_key"}, `[a-z]{3}`, true)
+	validStrings := []string{
+		"api_key=xxx",
+		"api_key=xxx ",
+		"api_key=xxx;",
+		"api_key=xxx&other=yyy",
+		"example.com?api_key=xxx&other=yyy",
+	}
+	invalidStrings := []string{
+		"api_key=xxx,",
+		"api_key=xxx)",
+		"api_key=xxx]",
+		"api_key=xxx}",
+		"api_key=xxx|",
+		"api_key=xxx<",
+		"api_key=xxx>",
+	}
+	for _, validString := range validStrings {
+		if !regex.MatchString(validString) {
+			t.Errorf("Expected match, but got none, for GenerateSemiGenericRegexWithNarrowSuffix.MatchString(`%v`)\n%v", validString, regex)
+		}
+	}
+	for _, invalidString := range invalidStrings {
+		if regex.MatchString(invalidString) {
+			t.Errorf("Expected no match, but got one, for GenerateSemiGenericRegexWithNarrowSuffix.MatchString(`%v`)\n%v", invalidString, regex)
+		}
 	}
 }
 
@@ -199,16 +250,20 @@ func TestGenerateUniqueTokenRegex(t *testing.T) {
 				"```abc```",
 				"my abc's",
 				".com?abc",
+				".com?abc&def",
+				"<abc>",
+				"<str>abc</str>",
+				"{{{abc}}}",
+				"abc, d",
+				"abc)",
+				"abc]",
+				"abc}",
+				"abc|d",
 			},
 			invalidStrings: []string{
 				"abcabc",
 				"_abc_",
-				".com?abc&def", // potentially valid
 				"/*abc*/",
-				"<abc>",
-				"<str>abc</str>", // potentially valid
-				"{{{abc}}}",
-				"abc, d",
 			},
 		},
 		// Note: these test cases do not necessarily prescribe the expected behavior of the function,

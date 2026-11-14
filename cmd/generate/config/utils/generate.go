@@ -28,10 +28,33 @@ const (
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `[\x60'"\s=]{0,5}(`
-	secretSuffix       = `)(?:[\x60'"\s;]|\\[nr]|$)`
+	// secretSuffix terminates the secret. Besides quotes, whitespace, ';'
+	// and the end of the line, an unquoted secret may be followed by the
+	// delimiters that show up where credentials get pasted by accident:
+	// '&' in URL query strings, ',' in env/CSV lines and call arguments,
+	// and the closing brackets of flow-style YAML, JS-like objects and
+	// call arguments, as well as '<', '>' and '|'. See #2354.
+	secretSuffix = `)(?:[\x60'"\s;,)\]}>&|<]|\\[nr]|$)`
+	// secretSuffixNarrow is the trailing boundary used by the
+	// generic-api-key rule only. The wider secretSuffix makes that rule
+	// match identifiers followed by ',' in struct literals and call
+	// arguments, so it only gains '&' (URL query strings). See #2354.
+	secretSuffixNarrow = `)(?:[\x60'"\s;&]|\\[nr]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
+	return generateSemiGenericRegex(identifiers, secretRegex, isCaseInsensitive, secretSuffix)
+}
+
+// GenerateSemiGenericRegexWithNarrowSuffix builds the same pattern as
+// GenerateSemiGenericRegex, but the secret may only be followed by a quote,
+// backtick, whitespace, ';', '&', a literal \n/\r escape, or the end of the
+// line. It exists for the generic-api-key rule; see secretSuffixNarrow.
+func GenerateSemiGenericRegexWithNarrowSuffix(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
+	return generateSemiGenericRegex(identifiers, secretRegex, isCaseInsensitive, secretSuffixNarrow)
+}
+
+func generateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool, suffix string) *regexp.Regexp {
 	var sb strings.Builder
 	// The identifiers should always be case-insensitive.
 	// This is inelegant but prevents an extraneous `(?i:)` from being added to the pattern; it could be removed.
@@ -46,7 +69,7 @@ func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseIn
 	sb.WriteString(operator)
 	sb.WriteString(secretPrefix)
 	sb.WriteString(secretRegex)
-	sb.WriteString(secretSuffix)
+	sb.WriteString(suffix)
 	return regexp.MustCompile(sb.String())
 }
 
