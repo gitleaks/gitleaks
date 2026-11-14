@@ -12,7 +12,10 @@ func GenericCredential() *config.Rule {
 	r := config.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-		Regex: utils.GenerateSemiGenericRegex([]string{
+		// The generic rule uses the narrow suffix: the wider boundary used
+		// by the provider-specific rules makes it match identifiers
+		// followed by ',' in struct literals and call arguments. See #2354.
+		Regex: utils.GenerateSemiGenericRegexWithNarrowSuffix([]string{
 			"access",
 			"auth",
 			`(?-i:[Aa]pi|API)`,
@@ -152,6 +155,8 @@ func GenericCredential() *config.Rule {
 
 		// Token
 		` utils.GetEnvOrDefault("api_token", "dafa7817-e246-48f3-91a7-e87653d587b8")`,
+		// Unquoted secret in a URL query string, terminated by '&'. See #2354.
+		`https://api.example.test/v1/items?api_key=`+newPlausibleSecret(`[a-zA-Z0-9]{30}`)+`&limit=10`,
 		//	`"env": {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
 	)
