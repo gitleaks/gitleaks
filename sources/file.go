@@ -21,6 +21,11 @@ import (
 const defaultBufferSize = 100 * 1_000 // 100kb
 const InnerPathSeparator = "!"
 
+// maxArchiveMagicPeek is how many leading bytes are inspected when sniffing
+// a file for an archive signature: 8 bytes cover every supported format
+// header, plus the tar "ustar" marker at offset 257.
+const maxArchiveMagicPeek = 262
+
 type seekReaderAt interface {
 	io.ReaderAt
 	io.Seeker
@@ -56,34 +61,142 @@ func (s *File) Fragments(ctx context.Context, yield FragmentsFunc) error {
 	// and fall back on treating it like a normal file and let fileFragments
 	// decide what to do with it.
 	if err == nil && format != nil {
-		if s.archiveDepth+1 > s.MaxArchiveDepth {
-			var event *zerolog.Event
+		if handled, err := s.dispatchArchiveFormat(ctx, format, s.Content, yield); handled {
+			return err
+		}
+	}
 
-			// Warn if the feature is enabled; else emit a trace log.
-			if s.MaxArchiveDepth != 0 {
-				event = logging.Warn()
-			} else {
-				event = logging.Trace()
+	// The extension was not recognized as an archive, so try the content:
+	// a zip saved as "compressed.other" is still a zip. Content sniffing
+	// only runs when archive traversal is enabled, and it is gated on a
+	// cheap magic-byte check before the archive library is asked to
+	// fully identify the stream. A content match is only a heuristic, so
+	// an extraction failure here is logged and skipped instead of failing
+	// the scan the way a corrupt named archive would. The reader returned
+	// by the sniff is reused on every fall-through path, so bytes peeked
+	// from a non-rewindable stream are never lost.
+	if format == nil {
+		contentFormat, reader, ok := s.identifyArchiveByContent(ctx)
+		if ok {
+			handled, err := s.dispatchArchiveFormat(ctx, contentFormat, reader, yield)
+			if handled {
+				if err != nil {
+					logging.Error().Err(err).Str("path", s.FullPath()).Msg("could not extract archive identified by content")
+				}
+				return nil
 			}
-
-			event.Str(
-				"path", s.FullPath(),
-			).Int(
-				"max_archive_depth", s.MaxArchiveDepth,
-			).Msg("skipping archive: exceeds max archive depth")
-
-			return nil
+			return s.fileFragments(ctx, bufio.NewReader(reader), yield)
 		}
-		if extractor, ok := format.(archives.Extractor); ok {
-			return s.extractorFragments(ctx, extractor, s.Content, yield)
+		if reader != nil {
+			return s.fileFragments(ctx, bufio.NewReader(reader), yield)
 		}
-		if decompressor, ok := format.(archives.Decompressor); ok {
-			return s.decompressorFragments(ctx, decompressor, s.Content, yield)
-		}
-		logging.Warn().Str("path", s.FullPath()).Msg("skipping unknown archive type")
 	}
 
 	return s.fileFragments(ctx, bufio.NewReader(s.Content), yield)
+}
+
+// dispatchArchiveFormat routes an identified archive format to extraction
+// or decompression. It reports whether the format was handled: when the
+// format is not one gitleaks can process, it reports unhandled so the
+// caller can fall back to scanning the file as plain text.
+func (s *File) dispatchArchiveFormat(ctx context.Context, format archives.Format, reader io.Reader, yield FragmentsFunc) (bool, error) {
+	if s.archiveDepth+1 > s.MaxArchiveDepth {
+		var event *zerolog.Event
+
+		// Warn if the feature is enabled; else emit a trace log.
+		if s.MaxArchiveDepth != 0 {
+			event = logging.Warn()
+		} else {
+			event = logging.Trace()
+		}
+
+		event.Str(
+			"path", s.FullPath(),
+		).Int(
+			"max_archive_depth", s.MaxArchiveDepth,
+		).Msg("skipping archive: exceeds max archive depth")
+
+		return true, nil
+	}
+	if extractor, ok := format.(archives.Extractor); ok {
+		return true, s.extractorFragments(ctx, extractor, reader, yield)
+	}
+	if decompressor, ok := format.(archives.Decompressor); ok {
+		return true, s.decompressorFragments(ctx, decompressor, reader, yield)
+	}
+	logging.Warn().Str("path", s.FullPath()).Msg("skipping unknown archive type")
+	return false, nil
+}
+
+// identifyArchiveByContent sniffs the content of a file whose extension was
+// not recognized as an archive. It first does a single cheap magic-byte
+// check and only then asks the archive library to fully identify the
+// stream, so the hot path for ordinary files is one small peek. It always
+// returns the reader to continue scanning with, positioned at the start of
+// the content, so bytes peeked from a non-rewindable stream are not lost
+// when the file turns out not to be an archive.
+func (s *File) identifyArchiveByContent(ctx context.Context) (archives.Format, io.Reader, bool) {
+	if s.Content == nil || s.archiveDepth+1 > s.MaxArchiveDepth {
+		return nil, nil, false
+	}
+
+	reader := s.Content
+	var prefix []byte
+	if seeker, ok := s.Content.(io.ReadSeeker); ok {
+		buf := make([]byte, maxArchiveMagicPeek)
+		n, _ := io.ReadFull(seeker, buf)
+		_, _ = seeker.Seek(0, io.SeekStart)
+		prefix = buf[:n]
+	} else {
+		// The reader cannot be rewound, so peek through a buffered
+		// reader and keep using it so no bytes are lost.
+		buffered := bufio.NewReader(s.Content)
+		prefix, _ = buffered.Peek(maxArchiveMagicPeek)
+		reader = buffered
+	}
+
+	if !hasArchiveMagic(prefix) {
+		return nil, reader, false
+	}
+
+	format, stream, err := archives.Identify(ctx, s.Path, reader)
+	if err != nil || format == nil {
+		return nil, stream, false
+	}
+
+	return format, stream, true
+}
+
+// hasArchiveMagic reports whether prefix looks like the start of a
+// supported archive or compressed stream. It is a single prefix check per
+// format, not a loop over format matchers: the archive library still does
+// the full validation before anything is extracted.
+func hasArchiveMagic(prefix []byte) bool {
+	switch {
+	case bytes.HasPrefix(prefix, []byte("PK\x03\x04")),
+		bytes.HasPrefix(prefix, []byte("PK\x05\x06")):
+		return true // zip
+	case bytes.HasPrefix(prefix, []byte{0x1f, 0x8b}):
+		return true // gzip
+	case bytes.HasPrefix(prefix, []byte("BZh")):
+		return true // bzip2
+	case bytes.HasPrefix(prefix, []byte{0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00}):
+		return true // xz
+	case bytes.HasPrefix(prefix, []byte{0x28, 0xb5, 0x2f, 0xfd}):
+		return true // zstd
+	case bytes.HasPrefix(prefix, []byte{0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c}):
+		return true // 7z
+	case bytes.HasPrefix(prefix, []byte("Rar!\x1a\x07")):
+		return true // rar
+	case bytes.HasPrefix(prefix, []byte{0x04, 0x22, 0x4d, 0x18}):
+		return true // lz4
+	case bytes.HasPrefix(prefix, []byte{0xff, 0x06, 0x00, 0x00, 0x73, 0x4e, 0x61, 0x50, 0x70, 0x59}):
+		return true // snappy framed
+	case len(prefix) >= maxArchiveMagicPeek && string(prefix[257:262]) == "ustar":
+		return true // tar
+	}
+
+	return false
 }
 
 // extractorFragments recursively crawls archives and yields fragments
