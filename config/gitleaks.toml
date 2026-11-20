@@ -2469,6 +2469,15 @@ regex = '''(?i)[\w.-]{0,50}?(?:kucoin)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3
 keywords = ["kucoin"]
 
 [[rules]]
+id = "langsmith-api-key"
+description = "Detected a LangSmith API key, which may expose traces, datasets and prompts in the workspace."
+regex = '''\b(lsv2_(?:pt|sk)_[a-f0-9]{32}_[a-f0-9]{10})\b'''
+keywords = [
+    "lsv2_pt_",
+    "lsv2_sk_",
+]
+
+[[rules]]
 id = "launchdarkly-access-token"
 description = "Uncovered a Launchdarkly Access Token, potentially compromising feature flag management and application functionality."
 regex = '''(?i)[\w.-]{0,50}?(?:launchdarkly)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9=_\-]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
