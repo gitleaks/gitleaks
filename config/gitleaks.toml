@@ -424,6 +424,12 @@ regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,
 keywords = ["discord"]
 
 [[rules]]
+id = "discord-bot-token"
+description = "Identified a Discord bot token, which could allow unauthorized access to a Discord bot account."
+regex = '''\b([A-Za-z0-9_-]{23,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,38})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+
+[[rules]]
 id = "discord-client-id"
 description = "Identified a Discord client ID, which may lead to unauthorized integrations and data exposure in Discord applications."
 regex = '''(?i)[\w.-]{0,50}?(?:discord)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([0-9]{18})(?:[\x60'"\s;]|\\[nr]|$)'''
