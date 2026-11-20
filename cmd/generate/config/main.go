@@ -73,6 +73,7 @@ func main() {
 		rules.DigitalOceanOAuthToken(),
 		rules.DigitalOceanRefreshToken(),
 		rules.DiscordAPIToken(),
+		rules.DiscordBotToken(),
 		rules.DiscordClientID(),
 		rules.DiscordClientSecret(),
 		rules.Doppler(),

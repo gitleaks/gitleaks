@@ -20,6 +20,23 @@ func DiscordAPIToken() *config.Rule {
 	return utils.Validate(r, tps, nil)
 }
 
+func DiscordBotToken() *config.Rule {
+	// Discord bot tokens consist of a base64url-encoded bot ID, timestamp and
+	// HMAC separated by dots. See https://discord.com/developers/docs/reference#authentication
+	r := config.Rule{
+		RuleID:      "discord-bot-token",
+		Description: "Identified a Discord bot token, which could allow unauthorized access to a Discord bot account.",
+		Regex:       utils.GenerateUniqueTokenRegex(`[A-Za-z0-9_-]{23,28}\.[A-Za-z0-9_-]{6,7}\.[A-Za-z0-9_-]{27,38}`, false),
+		Entropy:     3,
+	}
+
+	// validate
+	tps := []string{
+		"MTIwMTE0MDk0MDQ2Nzg3MTc1NA.GIA1aR.l4cyaDp557_lJ_AV_wFHanBKwFJlB1KOxfKG6I",
+	}
+	return utils.Validate(r, tps, nil)
+}
+
 func DiscordClientID() *config.Rule {
 	// define rule
 	r := config.Rule{
