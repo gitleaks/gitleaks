@@ -146,6 +146,7 @@ func main() {
 		rules.KubernetesSecret(),
 		rules.KucoinAccessToken(),
 		rules.KucoinSecretKey(),
+		rules.LangSmithAPIKey(),
 		rules.LaunchDarklyAccessToken(),
 		rules.LinearAPIToken(),
 		rules.LinearClientSecret(),
