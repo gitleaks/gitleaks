@@ -159,6 +159,7 @@ func main() {
 		rules.MailGunPubAPIToken(),
 		rules.MailGunPrivateAPIToken(),
 		rules.MailGunSigningKey(),
+		rules.MailkubeAPIKey(),
 		rules.MapBox(),
 		rules.MattermostAccessToken(),
 		rules.MaxMindLicenseKey(),

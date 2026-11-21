@@ -2566,6 +2566,13 @@ regex = '''(?i)[\w.-]{0,50}?(?:mailgun)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,
 keywords = ["mailgun"]
 
 [[rules]]
+id = "mailkube-api-key"
+description = "Detected a mailkube API key, which can send email from the key's verified domain and read its organization and plan details."
+regex = '''\b(mk_[a-z0-9]{24}_[A-Za-z0-9]{64}_[0-9a-z][0-9a-f]{32})(?:[\x60'"\s;]|\\[nr]|$)'''
+entropy = 3
+keywords = ["mk_"]
+
+[[rules]]
 id = "mapbox-api-token"
 description = "Detected a MapBox API token, posing a risk to geospatial services and sensitive location data exposure."
 regex = '''(?i)[\w.-]{0,50}?(?:mapbox)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}(pk\.[a-z0-9]{60}\.[a-z0-9]{22})(?:[\x60'"\s;]|\\[nr]|$)'''
