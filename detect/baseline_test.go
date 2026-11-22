@@ -103,6 +103,88 @@ func TestIsNew(t *testing.T) {
 			},
 			expect: false, // Updated tags doesn't make it a new finding
 		},
+		"new - rotated secret, full baseline entry, same fingerprint": {
+			findings: report.Finding{
+				RuleID:      "github-pat",
+				Description: "Identified a GitHub Personal Access Token, which may compromise the GitHub account linked to the token.",
+				StartLine:   1,
+				EndLine:     1,
+				StartColumn: 1,
+				EndColumn:   40,
+				Match:       `github_token = "ghp_Z9yX8wV7uT6sR5qP4oN3mL2kJ1hG0fE9dC8bA7zY6x"`,
+				Secret:      "ghp_Z9yX8wV7uT6sR5qP4oN3mL2kJ1hG0fE9dC8bA7zY6x",
+				File:        "secret.txt",
+				Entropy:     5.121928,
+				Fingerprint: "secret.txt:github-pat:1",
+			},
+			baseline: []report.Finding{
+				{
+					RuleID:      "github-pat",
+					Description: "Identified a GitHub Personal Access Token, which may compromise the GitHub account linked to the token.",
+					StartLine:   1,
+					EndLine:     1,
+					StartColumn: 1,
+					EndColumn:   40,
+					Match:       `github_token = "ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tU0vW1xY3zA5bC7dE"`,
+					Secret:      "ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tU0vW1xY3zA5bC7dE",
+					File:        "secret.txt",
+					Entropy:     5.121928,
+					Fingerprint: "secret.txt:github-pat:1",
+				},
+			},
+			expect: true,
+		},
+		"not new - fingerprint-only baseline entry matches": {
+			findings: report.Finding{
+				RuleID:      "github-pat",
+				Description: "Identified a GitHub Personal Access Token, which may compromise the GitHub account linked to the token.",
+				StartLine:   1,
+				EndLine:     1,
+				StartColumn: 1,
+				EndColumn:   40,
+				Match:       `github_token = "ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tU0vW1xY3zA5bC7dE"`,
+				Secret:      "ghp_aB3dE5fG7hJ9kL2mN4pQ6rS8tU0vW1xY3zA5bC7dE",
+				File:        "secret.txt",
+				Entropy:     5.121928,
+				Fingerprint: "secret.txt:github-pat:1",
+			},
+			baseline: []report.Finding{
+				{
+					Fingerprint: "secret.txt:github-pat:1",
+				},
+			},
+			expect: false,
+		},
+		"new - fingerprint-only baseline entry, different fingerprint": {
+			findings: report.Finding{
+				RuleID:      "github-pat",
+				File:        "secret.txt",
+				StartLine:   1,
+				Fingerprint: "secret.txt:github-pat:1",
+			},
+			baseline: []report.Finding{
+				{
+					Fingerprint: "other.txt:github-pat:1",
+				},
+			},
+			expect: true,
+		},
+		"new - empty fingerprint baseline entry never matches": {
+			findings: report.Finding{
+				RuleID:    "github-pat",
+				File:      "secret.txt",
+				StartLine: 1,
+				// No fingerprint set on the finding either: an empty
+				// baseline fingerprint must not match an empty one.
+				Fingerprint: "",
+			},
+			baseline: []report.Finding{
+				{
+					Fingerprint: "",
+				},
+			},
+			expect: true,
+		},
 		"not new - redacted, everything else matches": {
 			findings: report.Finding{
 				RuleID:      "private-key",
