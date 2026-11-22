@@ -10,6 +10,7 @@ import (
 func TestGetLocation(t *testing.T) {
 	tests := []struct {
 		linePairs    [][]int
+		raw          string
 		start        int
 		end          int
 		wantLocation Location
@@ -48,10 +49,30 @@ func TestGetLocation(t *testing.T) {
 				endLineIndex:   56,
 			},
 		},
+		{
+			// Fixes: https://github.com/gitleaks/gitleaks/issues/1243
+			// Match on the last line of a fragment with no trailing
+			// newline: the line must start after the previous newline,
+			// not at the beginning of the fragment.
+			linePairs: [][]int{
+				{4, 5},
+			},
+			raw:   "aaaa\nbbbb 1234567890123456",
+			start: 10,
+			end:   26,
+			wantLocation: Location{
+				startLine:      1,
+				startColumn:    7,
+				endLine:        1,
+				endColumn:      22,
+				startLineIndex: 4,
+				endLineIndex:   26,
+			},
+		},
 	}
 
 	for _, test := range tests {
-		loc := location(test.linePairs, "", []int{test.start, test.end})
+		loc := location(test.linePairs, test.raw, []int{test.start, test.end})
 		assert.Equal(t, test.wantLocation, loc)
 	}
 }

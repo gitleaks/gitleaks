@@ -62,6 +62,12 @@ func location(newlineIndices [][]int, raw string, matchIndex []int) Location {
 		location.endColumn = (end - prevNewLine)
 		location.startLine = _lineNum + 1
 		location.endLine = _lineNum + 1
+		// Fixes: https://github.com/gitleaks/gitleaks/issues/1243
+		// The match is on the last line, which has no trailing newline, so
+		// the line starts right after the previous newline. Without this,
+		// startLineIndex stays 0 and the finding's Line spans the whole
+		// fragment, leaking other lines' secrets past redaction.
+		location.startLineIndex = prevNewLine
 
 		// search for new line byte index
 		i := 0
