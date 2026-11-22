@@ -46,7 +46,7 @@ paths = [
     '''\.gem$''',
     '''verification-metadata\.xml''',
     '''Database.refactorlog''',
-    '''(?:^|/)\.git$''',
+    '''(?:^|/)\.git/''',
 ]
 regexes = [
     '''(?i)^true|false|null$''',

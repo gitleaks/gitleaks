@@ -107,7 +107,10 @@ func CreateGlobalConfig() config.Config {
 					regexp.MustCompile(`Database.refactorlog`),
 
 					// ----------- Git files ------------
-					regexp.MustCompile(`(?:^|/)\.git$`),
+					// Directories are tested against the allowlist with a
+					// trailing separator appended (see #1821), so this
+					// pattern must not be `$`-anchored.
+					regexp.MustCompile(`(?:^|/)\.git/`),
 				},
 				StopWords: []string{
 					"abcdefghijklmnopqrstuvwxyz", // character range

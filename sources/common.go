@@ -7,6 +7,7 @@ import (
 	"io"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/mholt/archives"
 	"github.com/zricethezav/gitleaks/v8/config"
@@ -51,6 +52,17 @@ func shouldSkipPath(cfg *config.Config, path string) bool {
 	}
 
 	return false
+}
+
+// shouldSkipDir checks a directory path against all the allowlists to see if
+// it can be skipped. The path is tested with a trailing separator so that
+// file-extension patterns (e.g. `\.v2$`) cannot match a directory name.
+// See https://github.com/gitleaks/gitleaks/issues/1821.
+func shouldSkipDir(cfg *config.Config, path string) bool {
+	if !strings.HasSuffix(path, string(filepath.Separator)) {
+		path += string(filepath.Separator)
+	}
+	return shouldSkipPath(cfg, path)
 }
 
 // readUntilSafeBoundary consumes |f| until it finds two consecutive `\n` characters, up to |maxPeekSize|.

@@ -122,7 +122,7 @@ func (s *Files) scanTargets(ctx context.Context, yield func(ScanTarget, error) e
 
 		// handle dir cases (mainly just see if it should be skipped
 		if info.IsDir() {
-			if shouldSkipPath(s.Config, path) {
+			if shouldSkipDir(s.Config, path) {
 				logger.Debug().Msg("skipping directory: global allowlist")
 				return filepath.SkipDir
 			}
