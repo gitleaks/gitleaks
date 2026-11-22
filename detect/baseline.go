@@ -13,6 +13,18 @@ func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool 
 	// Explicitly testing each property as it gives significantly better performance in comparison to cmp.Equal(). Drawback is that
 	// the code requires maintenance if/when the Finding struct changes
 	for _, b := range baseline {
+		// A baseline entry that carries no Match/Secret (e.g. a user-stripped
+		// baseline that omits them so no secret is stored on disk) cannot be
+		// compared field-by-field, so its Fingerprint alone identifies the
+		// finding: the fingerprint encodes commit (for git scans), file, rule
+		// and start line. Entries that do carry Match/Secret keep the
+		// field-by-field comparison below, so a rotated secret at the same
+		// location is still reported as new. Require a non-empty fingerprint
+		// so an empty entry never matches.
+		if b.Fingerprint != "" && b.Match == "" && b.Secret == "" &&
+			finding.Fingerprint == b.Fingerprint {
+			return false
+		}
 		if finding.RuleID == b.RuleID &&
 			finding.Description == b.Description &&
 			finding.StartLine == b.StartLine &&
@@ -26,7 +38,11 @@ func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool 
 			finding.Email == b.Email &&
 			finding.Date == b.Date &&
 			finding.Message == b.Message &&
-			// Omit checking finding.Fingerprint - if the format of the fingerprint changes, the users will see unexpected behaviour
+			// The fingerprint is intentionally not part of the field-by-field
+			// comparison below: it is checked as a shortcut above, so a
+			// fingerprint-only baseline entry still matches, while full
+			// entries keep matching on their fields even if the fingerprint
+			// format ever changes.
 			finding.Entropy == b.Entropy {
 			return false
 		}
