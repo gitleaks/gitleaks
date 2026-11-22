@@ -86,7 +86,6 @@ keywords = ["ops_"]
 id = "abltr-api-key"
 description = "Detected an abltr API key, which could allow unauthorized access to hosted inference models and services."
 regex = '''\b(abltr-ai-[a-f0-9]{64})(?:[\x60'"\s;]|\\[nr]|$)'''
-secretGroup = 1
 keywords = ["abltr-ai-"]
 
 [[rules]]
