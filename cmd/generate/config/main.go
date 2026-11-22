@@ -27,6 +27,7 @@ func main() {
 	configRules := []*config.Rule{
 		rules.OnePasswordSecretKey(),
 		rules.OnePasswordServiceAccountToken(),
+		rules.AbltrAPIKey(),
 		rules.AdafruitAPIKey(),
 		rules.AdobeClientID(),
 		rules.AdobeClientSecret(),
