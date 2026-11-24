@@ -92,9 +92,10 @@ type Config struct {
 	Rules       map[string]Rule
 	Keywords    map[string]struct{}
 	// used to keep sarif results consistent
-	OrderedRules []string
-	Allowlists   []*Allowlist
-	MinVersion   string
+	OrderedRules       []string
+	Allowlists         []*Allowlist
+	MinVersion         string
+	targetedAllowlists map[string][]*Allowlist
 }
 
 // Extend is a struct that allows users to define how they want their
@@ -195,13 +196,14 @@ func (vc *ViperConfig) Translate() (Config, error) {
 
 	// Assemble the config.
 	c := Config{
-		Title:        vc.Title,
-		Description:  vc.Description,
-		Extend:       vc.Extend,
-		Rules:        rulesMap,
-		Keywords:     keywords,
-		OrderedRules: orderedRules,
-		MinVersion:   vc.MinVersion,
+		Title:              vc.Title,
+		Description:        vc.Description,
+		Extend:             vc.Extend,
+		Rules:              rulesMap,
+		Keywords:           keywords,
+		OrderedRules:       orderedRules,
+		MinVersion:         vc.MinVersion,
+		targetedAllowlists: ruleAllowlists,
 	}
 
 	if extendDepth > 0 {
@@ -267,7 +269,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 		}
 
 		// Populate targeted configs.
-		for ruleID, allowlists := range ruleAllowlists {
+		for ruleID, allowlists := range c.targetedAllowlists {
 			rule, ok := c.Rules[ruleID]
 			if !ok {
 				return Config{}, fmt.Errorf("[[allowlists]] target rule ID '%s' does not exist", ruleID)
@@ -275,6 +277,7 @@ func (vc *ViperConfig) Translate() (Config, error) {
 			rule.Allowlists = append(rule.Allowlists, allowlists...)
 			c.Rules[ruleID] = rule
 		}
+		c.targetedAllowlists = nil
 	}
 
 	return c, nil
@@ -480,6 +483,13 @@ func (c *Config) extend(extensionConfig Config) {
 				c.Keywords[k] = struct{}{}
 			}
 			c.Rules[ruleID] = baseRule
+		}
+	}
+
+	// Carry rule-targeted allowlists forward until all rules have been assembled.
+	for ruleID, allowlists := range extensionConfig.targetedAllowlists {
+		if _, disabled := disabledRuleIDs[ruleID]; !disabled {
+			c.targetedAllowlists[ruleID] = append(c.targetedAllowlists[ruleID], allowlists...)
 		}
 	}
 
