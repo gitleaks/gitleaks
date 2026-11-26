@@ -123,6 +123,8 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				`api_key="xxx'`, // could try to match only same opening and closing quotes, might not be worth the complexity
 				`api_key="don't do it!"`,
 				`api_key="xxx;notpartofthematch"`,
+				"<api_key>xxx</api_key>",            // potentially valid
+				"example.com?api_key=xxx&other=yyy", // potentially valid
 			},
 			invalidStrings: []string{
 				"api_key=_xxx",
@@ -133,8 +135,26 @@ func TestGenerateSemiGenericRegex(t *testing.T) {
 				"api_key=(xxx)",
 				"api_key=<xxx>",
 				"api_key={xxx}",
-				"<api_key>xxx</api_key>",            // potentially valid
-				"example.com?api_key=xxx&other=yyy", // potentially valid
+			},
+		},
+		{
+			name:              "unquoted secret may be followed by a delimiter",
+			identifiers:       []string{"api_key"},
+			secretRegex:       `[a-z]{3}`,
+			isCaseInsensitive: []bool{true, false},
+			validStrings: []string{
+				"https://api.example.test/v1/items?api_key=xxx&limit=10",
+				"api_key=xxx,",
+				"connect(api_key=xxx)",
+				"{api_key: xxx}",
+				"api_key=xxx]",
+				"api_key=xxx}",
+				"api_key=xxx<",
+				"api_key=xxx>",
+				"api_key=xxx|",
+			},
+			invalidStrings: []string{
+				"api_key=xxx!",
 			},
 		},
 		// Note: these test cases do not necessarily prescribe the expected behavior of the function,
@@ -203,12 +223,25 @@ func TestGenerateUniqueTokenRegex(t *testing.T) {
 			invalidStrings: []string{
 				"abcabc",
 				"_abc_",
-				".com?abc&def", // potentially valid
 				"/*abc*/",
-				"<abc>",
-				"<str>abc</str>", // potentially valid
-				"{{{abc}}}",
+			},
+		},
+		{
+			name:              "unquoted secret may be followed by a delimiter",
+			secretRegex:       `[a-c]{3}`,
+			isCaseInsensitive: false,
+			validStrings: []string{
+				".com?abc&def",
 				"abc, d",
+				"connect(abc)",
+				"{abc}",
+				"abc]",
+				"abc<",
+				"abc>",
+				"abc|",
+			},
+			invalidStrings: []string{
+				"abc!",
 			},
 		},
 		// Note: these test cases do not necessarily prescribe the expected behavior of the function,

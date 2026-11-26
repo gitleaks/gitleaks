@@ -12,7 +12,7 @@ func GenericCredential() *config.Rule {
 	r := config.Rule{
 		RuleID:      "generic-api-key",
 		Description: "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-		Regex: utils.GenerateSemiGenericRegex([]string{
+		Regex: utils.GenerateSemiGenericRegexWithSuffix([]string{
 			"access",
 			"auth",
 			`(?-i:[Aa]pi|API)`,
@@ -22,7 +22,7 @@ func GenericCredential() *config.Rule {
 			"passw(?:or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
+		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true, utils.GenericSecretSuffix),
 		Keywords: []string{
 			"access",
 			"api",
@@ -130,6 +130,7 @@ func GenericCredential() *config.Rule {
 
 		// API
 		`some_api_token_123 = "`+newPlausibleSecret(`[a-zA-Z0-9]{60}`)+`"`,
+		`https://api.example.test/v1/items?api_key=`+newPlausibleSecret(`[a-zA-Z0-9]{32}`)+`&limit=10`,
 
 		// Auth
 		`"user_auth": "am9obmRvZTpkMDY5NGIxYi1jMTcxLTQ4ODYt+TMyYS0wMmUwOWQ1/mIwNjc="`,
@@ -266,6 +267,7 @@ R5: Regulatory--21`,
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
+		`api_key=` + newPlausibleSecret(`[a-zA-Z0-9]{32}`) + `, next=identifier`,
 		`clientId = "73082700-1f09-405b-80d0-3131bfd6272d"`,
 		`GITHUB_API_KEY=
 DYNATRACE_API_KEY=`,

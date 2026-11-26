@@ -28,10 +28,19 @@ const (
 	// boundaries for the secret
 	secretPrefixUnique = `\b(`
 	secretPrefix       = `[\x60'"\s=]{0,5}(`
-	secretSuffix       = `)(?:[\x60'"\s;]|\\[nr]|$)`
+	secretSuffix       = `)(?:[\x60'"\s;,)\]}>&|<]|\\[nr]|$)`
+	// GenericSecretSuffix keeps generic-api-key quiet when an identifier is
+	// followed by a comma or bracket; query strings still need `&` (see #2354).
+	GenericSecretSuffix = `)(?:[\x60'"\s;&]|\\[nr]|$)`
 )
 
 func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseInsensitive bool) *regexp.Regexp {
+	return GenerateSemiGenericRegexWithSuffix(identifiers, secretRegex, isCaseInsensitive, secretSuffix)
+}
+
+// GenerateSemiGenericRegexWithSuffix is GenerateSemiGenericRegex with a custom
+// secret terminator, for rules that need a narrower boundary than secretSuffix.
+func GenerateSemiGenericRegexWithSuffix(identifiers []string, secretRegex string, isCaseInsensitive bool, suffix string) *regexp.Regexp {
 	var sb strings.Builder
 	// The identifiers should always be case-insensitive.
 	// This is inelegant but prevents an extraneous `(?i:)` from being added to the pattern; it could be removed.
@@ -46,7 +55,7 @@ func GenerateSemiGenericRegex(identifiers []string, secretRegex string, isCaseIn
 	sb.WriteString(operator)
 	sb.WriteString(secretPrefix)
 	sb.WriteString(secretRegex)
-	sb.WriteString(secretSuffix)
+	sb.WriteString(suffix)
 	return regexp.MustCompile(sb.String())
 }
 
