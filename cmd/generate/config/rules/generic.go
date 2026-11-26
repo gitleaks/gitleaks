@@ -22,7 +22,7 @@ func GenericCredential() *config.Rule {
 			"passw(?:or)?d",
 			"secret",
 			"token",
-		}, `[\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3}`, true),
+		}, `[\w.=-]{10,150}|[a-z0-9+/]{12,}={0,3}`, true),
 		Keywords: []string{
 			"access",
 			"api",
@@ -41,7 +41,7 @@ func GenericCredential() *config.Rule {
 				// NOTE: this is a goofy hack to get around the fact there golang's regex engine does not support positive lookaheads.
 				// Ideally we would want to ensure the secret contains both numbers and alphabetical characters, not just alphabetical characters.
 				Regexes: []*regexp.Regexp{
-					regexp.MustCompile(`^[a-zA-Z_.-]+$`),
+					regexp.MustCompile(`^[a-zA-Z_./-]+$`),
 				},
 			},
 			{
@@ -152,6 +152,8 @@ func GenericCredential() *config.Rule {
 
 		// Token
 		` utils.GetEnvOrDefault("api_token", "dafa7817-e246-48f3-91a7-e87653d587b8")`,
+		`cookie_key = "+hwnIHN4aRNJTOGA3MsdyoGFspvPQqmoYza1o7CXwbaD30TxxAfxnnCRrZLYvYeJ8H+C/ocyzk8n5UiBGBaelg=="`,
+		`cookie_key = "/hwnIHN4aRNJTOGA3MsdyoGFspvPQqmoYza1o7CXwbaD30TxxAfxnnCRrZLYvYeJ8H+C/ocyzk8n5UiBGBaelg=="`,
 		//	`"env": {
 		//"API_TOKEN": "Lj2^5O%xi214"`,
 	)
@@ -266,6 +268,7 @@ R5: Regulatory--21`,
 		// TODO: `TOKEN_AUDIENCE = "25872395-ed3a-4703-b647-22ec53f3683c"`,
 
 		// General
+		`api_key = "/opts/config/alias/"`,
 		`clientId = "73082700-1f09-405b-80d0-3131bfd6272d"`,
 		`GITHUB_API_KEY=
 DYNATRACE_API_KEY=`,
