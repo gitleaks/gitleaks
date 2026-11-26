@@ -13,22 +13,40 @@ func IsNew(finding report.Finding, redact uint, baseline []report.Finding) bool 
 	// Explicitly testing each property as it gives significantly better performance in comparison to cmp.Equal(). Drawback is that
 	// the code requires maintenance if/when the Finding struct changes
 	for _, b := range baseline {
-		if finding.RuleID == b.RuleID &&
-			finding.Description == b.Description &&
-			finding.StartLine == b.StartLine &&
-			finding.EndLine == b.EndLine &&
-			finding.StartColumn == b.StartColumn &&
-			finding.EndColumn == b.EndColumn &&
-			(redact > 0 || (finding.Match == b.Match && finding.Secret == b.Secret)) &&
-			finding.File == b.File &&
-			finding.Commit == b.Commit &&
-			finding.Author == b.Author &&
-			finding.Email == b.Email &&
-			finding.Date == b.Date &&
-			finding.Message == b.Message &&
+		if finding.RuleID != b.RuleID ||
+			finding.Description != b.Description ||
+			finding.StartLine != b.StartLine ||
+			finding.EndLine != b.EndLine ||
+			finding.StartColumn != b.StartColumn ||
+			finding.EndColumn != b.EndColumn ||
+			finding.File != b.File ||
+			finding.Commit != b.Commit ||
+			finding.Author != b.Author ||
+			finding.Email != b.Email ||
+			finding.Date != b.Date ||
+			finding.Message != b.Message ||
 			// Omit checking finding.Fingerprint - if the format of the fingerprint changes, the users will see unexpected behaviour
-			finding.Entropy == b.Entropy {
+			finding.Entropy != b.Entropy {
+			continue
+		}
+
+		if finding.Match == b.Match && finding.Secret == b.Secret {
 			return false
+		}
+
+		if redact > 0 {
+			// The baseline may have been written with --redact applied, so its
+			// Match and Secret hold redacted values. Compare the redacted form
+			// of the current finding against them: an unchanged secret still
+			// matches, while a different secret on the same line is reported
+			// instead of being silently swallowed. With full redaction (100),
+			// both sides reduce to the same placeholder, matching previous
+			// behaviour for baselines that carry no recoverable secret.
+			redacted := finding
+			redacted.Redact(redact)
+			if redacted.Match == b.Match && redacted.Secret == b.Secret {
+				return false
+			}
 		}
 	}
 	return true

@@ -74,6 +74,62 @@ func TestIsNew(t *testing.T) {
 			expect: true,
 		},
 
+		"new - redact on, baseline holds a different raw secret": {
+			findings: report.Finding{
+				RuleID: "generic-api-key",
+				Match:  `api_key = "rotated-secret-value"`,
+				Secret: "rotated-secret-value",
+				File:   "config.py",
+			},
+			redact: 100,
+			baseline: []report.Finding{
+				{
+					RuleID: "generic-api-key",
+					Match:  `api_key = "original-secret-value"`,
+					Secret: "original-secret-value",
+					File:   "config.py",
+				},
+			},
+			expect: true,
+		},
+		"new - redact on, partially redacted baseline, rotated secret": {
+			findings: report.Finding{
+				RuleID: "generic-api-key",
+				Match:  `api_key = "rotated-secret-value"`,
+				Secret: "rotated-secret-value",
+				File:   "config.py",
+			},
+			redact: 25,
+			baseline: []report.Finding{
+				{
+					RuleID: "generic-api-key",
+					// baseline written with --redact=25: first 75% of the secret kept
+					Match:  `api_key = "original-secret-..."`,
+					Secret: "original-secret-...",
+					File:   "config.py",
+				},
+			},
+			expect: true,
+		},
+		"not new - redact on, partially redacted baseline, same secret": {
+			findings: report.Finding{
+				RuleID: "generic-api-key",
+				Match:  `api_key = "original-secret-value"`,
+				Secret: "original-secret-value",
+				File:   "config.py",
+			},
+			redact: 25,
+			baseline: []report.Finding{
+				{
+					RuleID: "generic-api-key",
+					Match:  `api_key = "original-secret-..."`,
+					Secret: "original-secret-...",
+					File:   "config.py",
+				},
+			},
+			expect: false,
+		},
+
 		// not new
 		"not new - commit+author matches": {
 			findings: report.Finding{
@@ -103,7 +159,14 @@ func TestIsNew(t *testing.T) {
 			},
 			expect: false, // Updated tags doesn't make it a new finding
 		},
-		"not new - redacted, everything else matches": {
+		// The previous version of this case modeled an already-redacted
+		// finding compared against a raw baseline. That input cannot occur
+		// in the fixed flow: the baseline is now checked in DetectContext
+		// before redaction, so IsNew always sees the raw finding. This
+		// case pins the real flow instead: a raw finding against a
+		// baseline written with --redact (placeholder values), which must
+		// still suppress the finding (#1441).
+		"not new - redact 100, baseline holds the redacted placeholder, same secret": {
 			findings: report.Finding{
 				RuleID:      "private-key",
 				Description: "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
@@ -111,8 +174,8 @@ func TestIsNew(t *testing.T) {
 				EndLine:     15,
 				StartColumn: 1,
 				EndColumn:   30,
-				Match:       "REDACTED",
-				Secret:      "REDACTED",
+				Match:       "-----BEGIN RSA PRIVATE KEY-----\nMIICWgIBAAKBgFIckgeuo80H6skLd1FKYfJC75/tnmtDWO4Rf2AFqrYZdu71VKGR\noGfEVl7AmvxTd9u6tnPtWjAeu9k2VMQcOtXEwgU0A6H09EBcS1EVN/I8pcNw1qjO\nkJ7ZA8AhZk/OpVAK7665CEny7ISRNZnx1nPaHjlb8lebPzlWOvxX9wjbAgMBAAEC\ngYBN6wqv+4s4juC/cwAAxeL4L4iQbL497yS+lSAYEIiUUMnJrEhpIXXjwi5rr73i\n35oHisCEdaF1tFRxpNr/VgKFsM1KqQUZvCVRE9Rokfe23QkQDvcxh9CI/Ah9Eofp\nx/m5DjSsRKrbIpOOAC3J3B/s02HRmxy8tRYnQVqWXzAH8QJBAJdBgXi62KI1eytU\n7l3Q8ymkS1OHzSOGBEYPpZZQ7WRpZlv/06cKfJBT/dGgA4z9i9ySs8cWUoh+FGYX\nlkDB4c0CQQCK+TwfAFvrkSWorZ9Gjb6y2LZQPUufTzJNhzhK5XObCDbwyMXEM/Vs\newiyUFljlI/A9PjcrmkgrDLUMD4+og1HAkAs2t01W1uhBvEm0YH6yltCDxnThKM+\nFKEx0bQOVqN/so4LXFt83uw/tNjBkI1dA1e1qr+rm6AQICuWdwo03ApFAkBktes4\nuCTk2GHHFFM5aN0KdHviOBlGULkub9B+jjsx3UkbQxP2dITlYV/TAOFWhcGLXru+\nCPKMR93p4TAqaXtfAkA+ZZDb0mA9rtaetJlSoo6XgwI/+kqltADch9dcyqYBHwjr\nAEkzUKvmCxNAK4GEPA79FZFp30kDx+buysyeX9qY\n-----END RSA PRIVATE KEY-----",
+				Secret:      "-----BEGIN RSA PRIVATE KEY-----\nMIICWgIBAAKBgFIckgeuo80H6skLd1FKYfJC75/tnmtDWO4Rf2AFqrYZdu71VKGR\noGfEVl7AmvxTd9u6tnPtWjAeu9k2VMQcOtXEwgU0A6H09EBcS1EVN/I8pcNw1qjO\nkJ7ZA8AhZk/OpVAK7665CEny7ISRNZnx1nPaHjlb8lebPzlWOvxX9wjbAgMBAAEC\ngYBN6wqv+4s4juC/cwAAxeL4L4iQbL497yS+lSAYEIiUUMnJrEhpIXXjwi5rr73i\n35oHisCEdaF1tFRxpNr/VgKFsM1KqQUZvCVRE9Rokfe23QkQDvcxh9CI/Ah9Eofp\nx/m5DjSsRKrbIpOOAC3J3B/s02HRmxy8tRYnQVqWXzAH8QJBAJdBgXi62KI1eytU\n7l3Q8ymkS1OHzSOGBEYPpZZQ7WRpZlv/06cKfJBT/dGgA4z9i9ySs8cWUoh+FGYX\nlkDB4c0CQQCK+TwfAFvrkSWorZ9Gjb6y2LZQPUufTzJNhzhK5XObCDbwyMXEM/Vs\newiyUFljlI/A9PjcrmkgrDLUMD4+og1HAkAs2t01W1uhBvEm0YH6yltCDxnThKM+\nFKEx0bQOVqN/so4LXFt83uw/tNjBkI1dA1e1qr+rm6AQICuWdwo03ApFAkBktes4\nuCTk2GHHFFM5aN0KdHviOBlGULkub9B+jjsx3UkbQxP2dITlYV/TAOFWhcGLXru+\nCPKMR93p4TAqaXtfAkA+ZZDb0mA9rtaetJlSoo6XgwI/+kqltADch9dcyqYBHwjr\nAEkzUKvmCxNAK4GEPA79FZFp30kDx+buysyeX9qY\n-----END RSA PRIVATE KEY-----",
 				File:        "key.txt",
 				Commit:      "e55e00ca1690a6b5b612d28b3d9ada3fd1775ac4",
 				Entropy:     5.9834013,
@@ -131,8 +194,8 @@ func TestIsNew(t *testing.T) {
 					EndLine:     15,
 					StartColumn: 1,
 					EndColumn:   30,
-					Match:       "-----BEGIN RSA PRIVATE KEY-----\nMIICWgIBAAKBgFIckgeuo80H6skLd1FKYfJC75/tnmtDWO4Rf2AFqrYZdu71VKGR\noGfEVl7AmvxTd9u6tnPtWjAeu9k2VMQcOtXEwgU0A6H09EBcS1EVN/I8pcNw1qjO\nkJ7ZA8AhZk/OpVAK7665CEny7ISRNZnx1nPaHjlb8lebPzlWOvxX9wjbAgMBAAEC\ngYBN6wqv+4s4juC/cwAAxeL4L4iQbL497yS+lSAYEIiUUMnJrEhpIXXjwi5rr73i\n35oHisCEdaF1tFRxpNr/VgKFsM1KqQUZvCVRE9Rokfe23QkQDvcxh9CI/Ah9Eofp\nx/m5DjSsRKrbIpOOAC3J3B/s02HRmxy8tRYnQVqWXzAH8QJBAJdBgXi62KI1eytU\n7l3Q8ymkS1OHzSOGBEYPpZZQ7WRpZlv/06cKfJBT/dGgA4z9i9ySs8cWUoh+FGYX\nlkDB4c0CQQCK+TwfAFvrkSWorZ9Gjb6y2LZQPUufTzJNhzhK5XObCDbwyMXEM/Vs\newiyUFljlI/A9PjcrmkgrDLUMD4+og1HAkAs2t01W1uhBvEm0YH6yltCDxnThKM+\nFKEx0bQOVqN/so4LXFt83uw/tNjBkI1dA1e1qr+rm6AQICuWdwo03ApFAkBktes4\nuCTk2GHHFFM5aN0KdHviOBlGULkub9B+jjsx3UkbQxP2dITlYV/TAOFWhcGLXru+\nCPKMR93p4TAqaXtfAkA+ZZDb0mA9rtaetJlSoo6XgwI/+kqltADch9dcyqYBHwjr\nAEkzUKvmCxNAK4GEPA79FZFp30kDx+buysyeX9qY\n-----END RSA PRIVATE KEY-----",
-					Secret:      "-----BEGIN RSA PRIVATE KEY-----\nMIICWgIBAAKBgFIckgeuo80H6skLd1FKYfJC75/tnmtDWO4Rf2AFqrYZdu71VKGR\noGfEVl7AmvxTd9u6tnPtWjAeu9k2VMQcOtXEwgU0A6H09EBcS1EVN/I8pcNw1qjO\nkJ7ZA8AhZk/OpVAK7665CEny7ISRNZnx1nPaHjlb8lebPzlWOvxX9wjbAgMBAAEC\ngYBN6wqv+4s4juC/cwAAxeL4L4iQbL497yS+lSAYEIiUUMnJrEhpIXXjwi5rr73i\n35oHisCEdaF1tFRxpNr/VgKFsM1KqQUZvCVRE9Rokfe23QkQDvcxh9CI/Ah9Eofp\nx/m5DjSsRKrbIpOOAC3J3B/s02HRmxy8tRYnQVqWXzAH8QJBAJdBgXi62KI1eytU\n7l3Q8ymkS1OHzSOGBEYPpZZQ7WRpZlv/06cKfJBT/dGgA4z9i9ySs8cWUoh+FGYX\nlkDB4c0CQQCK+TwfAFvrkSWorZ9Gjb6y2LZQPUufTzJNhzhK5XObCDbwyMXEM/Vs\newiyUFljlI/A9PjcrmkgrDLUMD4+og1HAkAs2t01W1uhBvEm0YH6yltCDxnThKM+\nFKEx0bQOVqN/so4LXFt83uw/tNjBkI1dA1e1qr+rm6AQICuWdwo03ApFAkBktes4\nuCTk2GHHFFM5aN0KdHviOBlGULkub9B+jjsx3UkbQxP2dITlYV/TAOFWhcGLXru+\nCPKMR93p4TAqaXtfAkA+ZZDb0mA9rtaetJlSoo6XgwI/+kqltADch9dcyqYBHwjr\nAEkzUKvmCxNAK4GEPA79FZFp30kDx+buysyeX9qY\n-----END RSA PRIVATE KEY-----",
+					Match:       "REDACTED",
+					Secret:      "REDACTED",
 					File:        "key.txt",
 					Commit:      "e55e00ca1690a6b5b612d28b3d9ada3fd1775ac4",
 					Entropy:     5.9834013,
@@ -151,6 +214,74 @@ func TestIsNew(t *testing.T) {
 			assert.Equal(t, test.expect, IsNew(test.findings, test.redact, test.baseline))
 		})
 	}
+}
+
+func TestDetectBaselineRedact(t *testing.T) {
+	// Regression test for #2355 at the scan-flow level: the baseline check
+	// in DetectContext must see the raw secret, because findings are
+	// redacted for output only after baseline matching. The baseline is
+	// built the way a user builds one: a scan of the original secret
+	// (raw here, redact 0).
+	original := "github_token = \"ghp_0123456789abcdefghij0123456789abcdef\"\n"
+	// Exact reversal of the secret: same length, same entropy, same
+	// position — only the secret value changes, i.e. a rotation.
+	rotated := "github_token = \"ghp_fedcba9876543210jihgfedcba9876543210\"\n"
+
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	baseline := d.Detect(Fragment{Raw: original, FilePath: "config.py"})
+	require.NotEmpty(t, baseline)
+
+	newDetector := func(redact uint) *Detector {
+		d, err := NewDetectorDefaultConfig()
+		require.NoError(t, err)
+		d.baseline = baseline
+		d.Redact = redact
+		return d
+	}
+
+	t.Run("unchanged secret, raw baseline, redact 100: suppressed", func(t *testing.T) {
+		assert.Empty(t, newDetector(100).Detect(Fragment{Raw: original, FilePath: "config.py"}))
+	})
+	t.Run("rotated secret, raw baseline, redact 100: reported", func(t *testing.T) {
+		findings := newDetector(100).Detect(Fragment{Raw: rotated, FilePath: "config.py"})
+		require.NotEmpty(t, findings)
+		var ruleIDs []string
+		for _, f := range findings {
+			ruleIDs = append(ruleIDs, f.RuleID)
+		}
+		assert.Contains(t, ruleIDs, "github-pat")
+	})
+
+	// Partial redaction: baseline written at --redact=25 holds the
+	// partially masked secret; a rotation must still be reported at the
+	// same redaction level, while the unchanged secret stays suppressed.
+	d25, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+	d25.Redact = 25
+	baseline25 := d25.Detect(Fragment{Raw: original, FilePath: "config.py"})
+	require.NotEmpty(t, baseline25)
+
+	t.Run("unchanged secret, redact-25 baseline, redact 25: suppressed", func(t *testing.T) {
+		d, err := NewDetectorDefaultConfig()
+		require.NoError(t, err)
+		d.baseline = baseline25
+		d.Redact = 25
+		assert.Empty(t, d.Detect(Fragment{Raw: original, FilePath: "config.py"}))
+	})
+	t.Run("rotated secret, redact-25 baseline, redact 25: reported", func(t *testing.T) {
+		d, err := NewDetectorDefaultConfig()
+		require.NoError(t, err)
+		d.baseline = baseline25
+		d.Redact = 25
+		findings := d.Detect(Fragment{Raw: rotated, FilePath: "config.py"})
+		require.NotEmpty(t, findings)
+		var ruleIDs []string
+		for _, f := range findings {
+			ruleIDs = append(ruleIDs, f.RuleID)
+		}
+		assert.Contains(t, ruleIDs, "github-pat")
+	})
 }
 
 func TestFileLoadBaseline(t *testing.T) {

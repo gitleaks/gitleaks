@@ -364,7 +364,36 @@ ScanLoop:
 		}
 	}
 
-	return filter(findings, d.Redact)
+	// Dedupe first, so a generic finding shadowed by a more specific rule
+	// on the same line is gone before baseline matching: dropping the
+	// shadowing finding via the baseline must not resurrect the generic
+	// one.
+	findings = dedupeFindings(findings)
+
+	// Check the baseline against the raw findings before redacting them:
+	// once a finding is redacted, a rotated secret can no longer be
+	// distinguished from the baselined one (see #2355). IsNew compares the
+	// raw secret first and falls back to the redacted form, which only
+	// works while the raw secret is still present. AddFinding repeats the
+	// check for direct callers; in the scan flows it only ever re-checks
+	// findings that already passed here.
+	if d.baseline != nil {
+		var kept []report.Finding
+		for _, finding := range findings {
+			if IsNew(finding, d.Redact, d.baseline) {
+				kept = append(kept, finding)
+			}
+		}
+		findings = kept
+	}
+
+	// Redact for output, after baseline matching.
+	if d.Redact > 0 {
+		for i := range findings {
+			findings[i].Redact(d.Redact)
+		}
+	}
+	return findings
 }
 
 // detectRule scans the given fragment for the given rule and returns a list of findings

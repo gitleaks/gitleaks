@@ -133,8 +133,9 @@ func shannonEntropy(data string) (entropy float64) {
 	return entropy
 }
 
-// filter will dedupe and redact findings
-func filter(findings []report.Finding, redact uint) []report.Finding {
+// dedupeFindings drops generic findings shadowed by a more specific rule
+// on the same line.
+func dedupeFindings(findings []report.Finding) []report.Finding {
 	var retFindings []report.Finding
 	for _, f := range findings {
 		include := true
@@ -155,9 +156,6 @@ func filter(findings []report.Finding, redact uint) []report.Finding {
 			}
 		}
 
-		if redact > 0 {
-			f.Redact(redact)
-		}
 		if include {
 			retFindings = append(retFindings, f)
 		}
