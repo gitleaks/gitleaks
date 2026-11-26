@@ -174,9 +174,10 @@ There are three scanning modes: `git`, `dir`, and `stdin`.
 #### Git
 
 The `git` command lets you scan local git repos. Under the hood, gitleaks uses the `git log -p` command to scan patches.
-You can configure the behavior of `git log -p` with the `log-opts` option.
+Without `log-opts`, it runs `git log -p -U0 --full-history --all --diff-filter=tuxdb`, so every ref in the clone is scanned, including remote-tracking branches.
+You can configure the behavior of `git log -p` with the `log-opts` option. These options replace the defaults above rather than adding to them.
 For example, if you wanted to run gitleaks on a range of commits you could use the following
-command: `gitleaks git -v --log-opts="--all commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
+command: `gitleaks git -v --log-opts="commitA..commitB" path_to_repo`. See the [git log](https://git-scm.com/docs/git-log) documentation for more information.
 If there is no target specified as a positional argument, then gitleaks will attempt to scan the current working directory as a git repo.
 
 #### Dir
