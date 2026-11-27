@@ -2474,6 +2474,41 @@ func TestNormalizeGitleaksIgnorePaths(t *testing.T) {
 	assert.ElementsMatch(t, maps.Keys(d.gitleaksIgnore), maps.Keys(expected))
 }
 
+func TestAddGitleaksIgnoreNonRegularFile(t *testing.T) {
+	// .gitleaksignore is untrusted input: a symlink to a device such as
+	// /dev/random would feed the scanner an unbounded stream. See #1572.
+	if runtime.GOOS == "windows" {
+		t.Skip("/dev/null and symlinks need unix semantics")
+	}
+
+	d, err := NewDetectorDefaultConfig()
+	require.NoError(t, err)
+
+	// A device file must be rejected.
+	err = d.AddGitleaksIgnore("/dev/null")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not a regular file")
+
+	dir := t.TempDir()
+
+	// A symlink to a device must be rejected too.
+	deviceLink := filepath.Join(dir, ".gitleaksignore")
+	require.NoError(t, os.Symlink("/dev/null", deviceLink))
+	err = d.AddGitleaksIgnore(deviceLink)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not a regular file")
+
+	// A symlink to a regular file is still accepted.
+	ignorePath := filepath.Join(dir, "real-ignore")
+	require.NoError(t, os.WriteFile(ignorePath, []byte("foo.go:generic-api-key:1\n"), 0o600))
+	fileLink := filepath.Join(dir, "linked-ignore")
+	require.NoError(t, os.Symlink(ignorePath, fileLink))
+	err = d.AddGitleaksIgnore(fileLink)
+	require.NoError(t, err)
+	_, ok := d.gitleaksIgnore["foo.go:generic-api-key:1"]
+	assert.True(t, ok)
+}
+
 func TestWindowsFileSeparator_RulePath(t *testing.T) {
 	unixRule := config.Rule{
 		RuleID: "test-rule",

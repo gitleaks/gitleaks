@@ -152,6 +152,20 @@ func NewDetectorDefaultConfig() (*Detector, error) {
 
 func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 	logging.Debug().Str("path", gitleaksIgnorePath).Msgf("found .gitleaksignore file")
+
+	// .gitleaksignore lives in the scanned tree, so it is untrusted input.
+	// Refuse anything that is not a regular file (e.g. a symlink to
+	// /dev/random or another device, or a FIFO): reading such a file would
+	// feed the scanner an unbounded stream. A symlink to a regular file is
+	// still accepted. See #1572.
+	// Check before opening so opening a FIFO cannot block, and check the
+	// opened file again in case the path was swapped in between.
+	if info, err := os.Stat(gitleaksIgnorePath); err != nil {
+		return err
+	} else if !info.Mode().IsRegular() {
+		return fmt.Errorf(".gitleaksignore is not a regular file: %s", gitleaksIgnorePath)
+	}
+
 	file, err := os.Open(gitleaksIgnorePath)
 	if err != nil {
 		return err
@@ -162,6 +176,12 @@ func (d *Detector) AddGitleaksIgnore(gitleaksIgnorePath string) error {
 			logging.Warn().Err(err).Msgf("Error closing .gitleaksignore file")
 		}
 	}()
+
+	if info, err := file.Stat(); err != nil {
+		return err
+	} else if !info.Mode().IsRegular() {
+		return fmt.Errorf(".gitleaksignore is not a regular file: %s", gitleaksIgnorePath)
+	}
 
 	scanner := bufio.NewScanner(file)
 	replacer := strings.NewReplacer("\\", "/")
