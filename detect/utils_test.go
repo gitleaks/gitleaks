@@ -3,7 +3,10 @@ package detect
 import (
 	"testing"
 
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zricethezav/gitleaks/v8/cmd/scm"
 	"github.com/zricethezav/gitleaks/v8/report"
@@ -211,4 +214,81 @@ func Test_createScmLink(t *testing.T) {
 			assert.Equal(t, tt.want, actual)
 		})
 	}
+}
+
+func TestPrintFindingDecodedMatchIsColoured(t *testing.T) {
+	previousProfile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.TrueColor)
+	t.Cleanup(func() {
+		lipgloss.SetColorProfile(previousProfile)
+	})
+
+	// A finding produced from a base64-decoded chunk: the match only exists
+	// in the decoded payload, not in the raw line that was scanned.
+	finding := report.Finding{
+		Description: "test rule",
+		Secret:      "decoded-secret-value",
+		Match:       "secret=decoded-secret-value",
+		Line:        `data: "c2VjcmV0PWRlY29kZWQtc2VjcmV0LXZhbHVl"`,
+		RuleID:      "test-rule",
+		File:        "tmp.txt",
+		StartLine:   1,
+		EndLine:     1,
+	}
+
+	output := captureStdout(func() {
+		printFinding(finding, false)
+	})
+
+	assert.Contains(t, output, "\x1b[", "decoded findings should be colourised")
+	assert.Contains(t, output, "decoded-secret-value")
+	assert.NotContains(t, stripANSI(output), "c2VjcmV0PWRlY29kZWQtc2VjcmV0LXZhbHVl", "decoded findings should not print line context")
+}
+
+func TestPrintFindingMatchInLineKeepsContext(t *testing.T) {
+	previousProfile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.TrueColor)
+	t.Cleanup(func() {
+		lipgloss.SetColorProfile(previousProfile)
+	})
+
+	finding := report.Finding{
+		Description: "test rule",
+		Secret:      "secret-value",
+		Match:       "token=secret-value",
+		Line:        "prefix token=secret-value suffix",
+		RuleID:      "test-rule",
+		File:        "tmp.txt",
+		StartLine:   1,
+		EndLine:     1,
+	}
+
+	output := captureStdout(func() {
+		printFinding(finding, false)
+	})
+
+	assert.Contains(t, output, "\x1b[", "findings should be colourised")
+	clean := stripANSI(output)
+	assert.Contains(t, clean, "prefix ")
+	assert.Contains(t, clean, " suffix")
+}
+
+func TestPrintFindingNoColor(t *testing.T) {
+	finding := report.Finding{
+		Description: "test rule",
+		Secret:      "decoded-secret-value",
+		Match:       "secret=decoded-secret-value",
+		Line:        `data: "c2VjcmV0PWRlY29kZWQtc2VjcmV0LXZhbHVl"`,
+		RuleID:      "test-rule",
+		File:        "tmp.txt",
+		StartLine:   1,
+		EndLine:     1,
+	}
+
+	output := captureStdout(func() {
+		printFinding(finding, true)
+	})
+
+	require.NotContains(t, output, "\x1b[", "colour should be disabled when noColor is set")
+	assert.Contains(t, output, "secret=decoded-secret-value")
 }

@@ -177,49 +177,52 @@ func printFinding(f report.Finding, noColor bool) {
 	var secret lipgloss.Style
 
 	// Matches from filenames do not have a |line| or |secret|
-	if !isFileMatch {
+	if !isFileMatch && !noColor {
 		matchInLineIDX := strings.Index(f.Line, f.Match)
 		secretInMatchIdx := strings.Index(f.Match, f.Secret)
 
-		skipColor = false
+		// Decoded findings (e.g. --max-decode-depth) hold the decoded match,
+		// which does not appear in the raw line. There is no meaningful line
+		// context to show, but the finding should still be coloured.
+		start := ""
+		lineEnd := ""
+		if matchInLineIDX != -1 {
+			start = f.Line[0:matchInLineIDX]
+			if matchInLineIDX > 20 {
+				start = "..." + f.Line[matchInLineIDX-20:matchInLineIDX]
+			}
 
-		if matchInLineIDX == -1 || noColor {
+			lineEndIdx := matchInLineIDX + len(f.Match)
+			if len(f.Line)-1 <= lineEndIdx {
+				lineEndIdx = len(f.Line)
+			}
+			lineEnd = f.Line[lineEndIdx:]
+			if len(lineEnd) > 20 {
+				lineEnd = lineEnd[0:20] + "..."
+			}
+		}
+
+		if secretInMatchIdx == -1 {
+			// Without a locatable secret there is nothing to highlight, so
+			// fall back to the plain representation.
 			skipColor = true
-			matchInLineIDX = 0
-		}
-
-		start := f.Line[0:matchInLineIDX]
-		startMatchIdx := 0
-		if matchInLineIDX > 20 {
-			startMatchIdx = matchInLineIDX - 20
-			start = "..." + f.Line[startMatchIdx:matchInLineIDX]
-		}
-
-		matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
-		secret = lipgloss.NewStyle().SetString(f.Secret).
-			Bold(true).
-			Italic(true).
-			Foreground(lipgloss.Color("#f05c07"))
-		matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
-
-		lineEndIdx := matchInLineIDX + len(f.Match)
-		if len(f.Line)-1 <= lineEndIdx {
-			lineEndIdx = len(f.Line)
-		}
-
-		lineEnd := f.Line[lineEndIdx:]
-
-		if len(f.Secret) > 100 {
-			secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
+		} else {
+			matchBeginning := lipgloss.NewStyle().SetString(f.Match[0:secretInMatchIdx]).Foreground(lipgloss.Color("#f5d445"))
+			secret = lipgloss.NewStyle().SetString(f.Secret).
 				Bold(true).
 				Italic(true).
 				Foreground(lipgloss.Color("#f05c07"))
-		}
-		if len(lineEnd) > 20 {
-			lineEnd = lineEnd[0:20] + "..."
-		}
+			matchEnd := lipgloss.NewStyle().SetString(f.Match[secretInMatchIdx+len(f.Secret):]).Foreground(lipgloss.Color("#f5d445"))
 
-		finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
+			if len(f.Secret) > 100 {
+				secret = lipgloss.NewStyle().SetString(f.Secret[0:100] + "...").
+					Bold(true).
+					Italic(true).
+					Foreground(lipgloss.Color("#f05c07"))
+			}
+
+			finding = fmt.Sprintf("%s%s%s%s%s\n", strings.TrimPrefix(strings.TrimLeft(start, " "), "\n"), matchBeginning, secret, matchEnd, lineEnd)
+		}
 	}
 
 	if skipColor || isFileMatch {
